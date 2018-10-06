@@ -1,0 +1,75 @@
+- name: check mysql is running
+  systemd:
+    name: mysql
+    state: started
+    
+- name: install apps
+  shell: "php {{htdocs_path}}nextcloud/occ app:install {{item}}"
+  become: yes
+  become_user: wwwrun
+  register: command_result
+  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout"
+  changed_when: "'enabled' in command_result.stdout"
+  with_items:
+    - bookmarks
+    - contacts
+    - calendar
+    - notes
+    - tasks
+    
+- name: check keeweb app
+  stat:
+    path: "{{htdocs_path}}nextcloud/apps/keeweb"
+  register: keeweb_exists
+  changed_when: not keeweb_exists.stat.exists
+  
+- name: install keeweb app
+  unarchive:
+    src: "roles/nextcloud/templates/apps/keeweb.tar.gz"
+    dest: "{{htdocs_path}}nextcloud/apps/"
+    owner: wwwrun
+    group: www
+  when: not keeweb_exists.stat.exists
+  
+- name: enable keeweb app
+  shell: "php {{htdocs_path}}nextcloud/occ app:enable keeweb"
+  become: yes
+  become_user: wwwrun
+  when: not keeweb_exists.stat.exists
+
+- name: install news app
+  unarchive:
+    src: "https://github.com/nextcloud/news/releases/download/13.0.1/news.tar.gz"
+    dest: "{{htdocs_path}}nextcloud/apps/"
+    remote_src: yes
+    creates: "{{htdocs_path}}nextcloud/apps/news/"
+    owner: wwwrun
+    group: www
+  register: news_installed
+  
+- name: prepare news config folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: wwwrun
+    group: www
+    mode: 0750
+  with_items:
+    - "{{nextcloud_data_path}}news"
+    - "{{nextcloud_data_path}}news/config"
+    
+- name: copy news config
+  template:
+    src: "roles/nextcloud/templates/apps/news.ini"
+    dest: "{{nextcloud_data_path}}news/config/config.ini"
+    owner: wwwrun
+    group: www
+    mode: 0640
+  
+- name: enable news app
+  shell: "php {{htdocs_path}}nextcloud/occ app:enable news"
+  become: yes
+  become_user: wwwrun
+  when: news_installed.changed
+
+ 

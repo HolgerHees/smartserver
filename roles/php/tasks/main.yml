@@ -1,0 +1,108 @@
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - php7 
+    - php7-mysql 
+    - php7-pcntl 
+    - php7-devel 
+    - php7-imagick
+    - php7-redis 
+    - php7-mbstring 
+    - php7-posix 
+    - php7-zip 
+    - php7-gd 
+    - php7-curl 
+    - php7-openssl 
+    - php7-fileinfo
+    - php7-json             # phpmyadmin
+    - php7-ctype            # nextcloud
+    - php7-dom              # nextcloud
+    - php7-iconv            # nextcloud
+    - php7-intl             # nextcloud
+    - php7-xmlwriter        # nextcloud
+    - php7-xmlreader        # nextcloud
+    - php7-APCu             # nextcloud & resize.php
+    - php7-opcache          # nextcloud
+    - systemd-devel         # php-systemd => nextcloud
+  notify: "restart apache"
+
+#- shell: "pecl info inotify"
+#  failed_when: "'command-not-found' in inotify_installed.stderr"
+#  changed_when: False
+#  register: inotify_installed
+        
+- name: install inotify pecl module
+  pear:
+    name: pecl/inotify
+    state: present
+#  when: inotify_installed.rc == 1
+  notify: "restart apache"
+  
+- name: "clone php-systemd git"
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/systemd/php-systemd.git'
+    dest: '{{global_build}}php-systemd'
+#    force: yes
+    version: 'master'
+  register: clone_status
+  
+- name: "install php-systemd"
+  shell: '{{ item }}'
+  args:
+    chdir: '{{global_build}}php-systemd'
+  with_items:
+    - 'phpize'
+    - './configure --with-systemd'
+    - 'make'
+    - 'make install'
+  notify: "restart apache"
+  when: clone_status.changed
+  
+- name: copy config
+  template:
+    src: roles/php/templates/etc/php7/conf.d/{{item}}
+    dest: /etc/php7/conf.d/{{item}}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - apcu.ini
+    - inotify.ini
+    - systemd.ini
+  notify: "restart apache"
+    
+- name: set cli config
+  lineinfile:
+    path: /etc/php7/cli/php.ini
+    insertafter: '^\[{{item.block}}\]'
+    regexp: '^{{item.field}}'
+    line: '{{item.field}}={{item.value}}'
+  with_items:
+    - { block: 'PHP', field: 'memory_limit', value: '512M' }
+    - { block: 'opcache', field: 'opcache.enable', value: '1' }
+    - { block: 'opcache', field: 'opcache.enable_cli', value: '1' }
+    - { block: 'opcache', field: 'opcache.interned_strings_buffer', value: '8' }
+    - { block: 'opcache', field: 'opcache.max_accelerated_files', value: '10000' }
+    - { block: 'opcache', field: 'opcache.memory_consumption', value: '128' }
+    - { block: 'opcache', field: 'opcache.save_comments', value: '1' }
+    - { block: 'opcache', field: 'opcache.revalidate_freq', value: '1' }
+
+- name: copy imagick config
+  template:
+    src: roles/php/templates/etc/ImageMagick-7_Q16HDRI6/policy.xml
+    dest: /etc/ImageMagick-7_Q16HDRI6/policy.xml
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart apache"
+
+#cp /etc/systemd/system/lognotifier.service
+#???cp /etc/systemd/system/doorkeeper.service
+#systemctl start lognotifier
+#systemctl enable lognotifier
+#???systemctl start doorkeeper
+#???systemctl enable doorkeeper
+

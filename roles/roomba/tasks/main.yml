@@ -1,0 +1,50 @@
+- name: install required python pip modules
+  pip:
+    name: "{{item}}"
+  with_items:
+    - paho-mqtt
+    - pillow
+  notify: "restart roomba"
+
+- name: prepare map htdocs folder
+  file:
+    path: "{{htdocs_path}}roomba"
+    state: directory
+    owner: wwwrun
+    group: www
+    mode: 0755
+
+- name: prepare app folder
+  file:
+    path: "/opt/roomba"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy roomba ressources
+  copy:
+    src: "roles/roomba/templates/opt/roomba/{{item}}"
+    dest: "/opt/roomba/"
+    owner: root
+    group: root
+  with_items:
+    - "res"
+    - "password.py"
+    - "roomba_rssi.py"
+    - "roomba.py"
+  notify: "restart roomba"
+  
+- name: copy config
+  template:
+    src: "roles/roomba/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "/opt/roomba/config.ini"
+    - "/opt/roomba/start_service.py"
+    - "/etc/systemd/system/roomba.service"
+  notify: "restart roomba"
+  when: "vault_active"

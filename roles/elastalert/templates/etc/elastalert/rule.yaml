@@ -1,0 +1,30 @@
+name: Error alerting
+index: fluentd-*
+type: any
+filter:
+- query:
+    query_string:
+        query: 'level: ALERT OR (level: ERROR AND NOT ( ( group: sshd AND ( message: "Failed to release session" ) ) OR group: netdata OR group: openvpn OR group: crony ))'
+
+#sshd  => Failed to release session
+
+#netdata => heartbeat missed
+#netdata => disconnected after
+#netdata => read failed
+#netdata => exited with code
+
+#openvpn => event_wait
+#openvpn => Connection reset
+
+#realert:
+#  minutes: 1
+    
+aggregation:
+  minutes: 1
+    
+alert:
+- "command"
+
+pipe_alert_text: true
+
+command: ["/usr/bin/mail", "-s", "LOG '%(group)s' %(level)s at %(@timestamp)s", "root"]

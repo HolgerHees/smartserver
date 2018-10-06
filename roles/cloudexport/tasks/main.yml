@@ -1,0 +1,32 @@
+- name: add user "philipp" with no login
+  user:
+    name: "{{philipp_username}}"
+    comment: Philipp Bolle
+    uid: 1005
+    shell: /sbin/nologin
+    home: "{{raid_path}}{{philipp_username}}/"
+    create_home: no
+    #password: "{{ philipp_linux_password }}"
+    #update_password: on_create
+    groups: users
+    append: no
+  when: "vault_active"
+    
+- name: prepare user "philipp" folder
+  file:
+    path: "{{raid_path}}{{philipp_username}}/"
+    state: directory
+    owner: "{{philipp_username}}"
+    group: users
+    mode: 0777
+    #recurse: true
+  when: "vault_active"
+
+- name: add nfs exported folder for user "philipp"
+  lineinfile:
+    path: /etc/exports
+    regexp: '^{{item.name}}'
+    line: '{{item.name}} {{item.options}}'
+  with_items:
+    - { name: '{{raid_path}}{{philipp_username}}/', options: '{{cloud_vpn_endpoint2}}(rw,root_squash,sync,no_subtree_check)' }
+  notify: "restart nfs-server"

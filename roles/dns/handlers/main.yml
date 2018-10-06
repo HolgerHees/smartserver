@@ -1,0 +1,8 @@
+- name: restart named
+  systemd:
+    name: named
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart named"

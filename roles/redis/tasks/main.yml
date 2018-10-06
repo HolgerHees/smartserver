@@ -1,0 +1,40 @@
+- name: install required packages
+  zypper:
+    name: redis
+    state: present
+  notify: "restart redis"
+
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: redis
+    group: redis
+    #mode: 0750
+    recurse: true
+  with_items:
+    - "{{ global_lib }}redis"
+    - "{{ global_lib }}redis/default"
+    
+- name: copy config
+  template:
+    src: /etc/redis/default.conf.example
+    dest: /etc/redis/default.conf
+    force: no
+    owner: root
+    group: redis
+    mode: 0640
+  notify: "restart redis"
+
+- name: set config
+  lineinfile:
+    path: /etc/redis/default.conf
+    regexp: '^{{item.field}} '
+    line: '{{item.field}} {{item.value}}'
+  with_items:
+    - { field: 'dir', value: '{{ global_lib }}redis/default/' }
+    - { field: 'logfile', value: '""' }
+    - { field: 'syslog-enabled', value: 'yes' }
+    - { field: 'unixsocket', value: '{{redis_socket_path}}' }
+    - { field: 'unixsocketperm', value: '777' }
+  notify: "restart redis"

@@ -1,0 +1,13 @@
+- name: install required packages
+  zypper:
+    name: "jq"
+    state: present
+
+- name: copy crony cmd
+  template:
+    src: "roles/cron/templates/crony.sh"
+    dest: "/usr/bin/crony.sh"
+    owner: root
+    group: root
+    mode: 0755
+

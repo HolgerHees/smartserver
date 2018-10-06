@@ -1,0 +1,11 @@
+[Unit]
+Description=Roomba cleaning bot mqtt proxy
+Requires=mosquitto.service
+
+[Service]
+ExecStart=/bin/sh -c '/usr/bin/python3 /opt/roomba/start_service.py'
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

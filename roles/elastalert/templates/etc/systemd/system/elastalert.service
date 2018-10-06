@@ -1,0 +1,11 @@
+[Unit]
+Description=ElastAlert - Easy & Flexible Alerting With Elasticsearch
+Documentation=https://elastalert.readthedocs.io
+Requires=elasticsearch.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/elastalert --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
+
+[Install]
+WantedBy=multi-user.target

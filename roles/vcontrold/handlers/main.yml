@@ -1,0 +1,8 @@
+- name: restart vcontrold
+  systemd:
+    name: vcontrold
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart vcontrold"

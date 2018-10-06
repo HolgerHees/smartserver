@@ -1,0 +1,45 @@
+- name: check installation
+  stat:
+    path: "{{htdocs_path}}mysql"
+  register: phpmyadmin_exists
+  changed_when: not phpmyadmin_exists.stat.exists
+  
+- name: install archive
+  unarchive:
+    src: "https://files.phpmyadmin.net/phpMyAdmin/4.8.3/phpMyAdmin-4.8.3-all-languages.zip"
+    dest: "{{htdocs_path}}"
+    remote_src: yes
+    owner: wwwrun
+    group: www
+    #mode: 0750
+  when: not phpmyadmin_exists.stat.exists
+
+- name: rename folder
+  command: "mv {{htdocs_path}}phpMyAdmin-4.8.3-all-languages/ {{htdocs_path}}mysql-phpMyAdmin-4.8.3-all-languages"
+  when: not phpmyadmin_exists.stat.exists
+  
+- name: set symbolic link
+  file:
+    src: "mysql-phpMyAdmin-4.8.3-all-languages"
+    dest: "{{htdocs_path}}mysql"
+    state: link
+    owner: wwwrun
+    group: www
+  when: not phpmyadmin_exists.stat.exists
+  
+- name: prepare config folder
+  file:
+    path: "{{htdocs_path}}mysql/config"
+    state: directory
+    owner: wwwrun
+    group: www
+    mode: 0770
+
+- name: copy config
+  template:
+    src: "roles/mysql_phpmyadmin/templates/config.inc.php"
+    dest: "{{htdocs_path}}mysql/config.inc.php"
+    owner: wwwrun
+    group: www
+    mode: 0640
+    

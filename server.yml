@@ -1,0 +1,127 @@
+---
+- hosts:
+    - production  # production machine (with vault usage)
+    - develop     # staging vm configured like production (with vault usage)
+    - test        # test vm configured with test data (without vault usage)
+  pre_tasks:
+    #- name: debug
+    #  debug: msg="{{ hostvars }}"
+    #  tags: always
+    - name: Set server facts
+      set_fact:
+        is_production: "{{inventory_hostname == 'production'}}"
+        config_path: "config/{%if inventory_hostname == 'test'%}test{%else%}marvin{%endif%}/"
+      tags: always
+    - name: Load env vars
+      include_vars: "{{config_path}}env.yml"
+      tags: always
+    - name: Load vault vars
+      include_vars: "{{config_path}}vault/vault.yml"
+      ignore_errors: true
+      tags: always
+    - name: Set pre facts
+      set_fact:
+        vault_active: "{{admin_mail is defined}}"
+      tags: always
+    - name: Load shared vars
+      include_vars: "config/shared.yml"
+      tags: always
+    - name: Set post facts
+      set_fact:
+        use_vault_files: "{{is_production and vault_active}}"
+        vault_files: "{{config_path}}vault/"
+        use_backup_files: "{{not is_production}}"
+        backup_files: "{{config_path}}backup/"
+      tags: always
+    - name: debug
+      debug:
+        msg: 
+          - "mode:    {{inventory_hostname}}"
+          - "server:  {{server_ip}}"
+          - "gateway: {{server_gateway}}"
+          - "network: {{server_network}}"
+          - "arpha:   {{server_arpa}}"
+          - "vault:   is {%if vault_active%}active{%else%}inactive{%endif%}"
+      tags: always
+  roles:
+    - { role: network, tags: [ 'network' ] }
+  
+    - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
+
+    - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server
+
+    - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
+    - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
+    - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
+    
+    - { role: ssh, tags: [ 'ssh' ] }                                            # settup allowed ssh user
+    
+    - { role: firewalld, tags: [ 'firewalld' ] }
+    - { role: dns, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
+    
+    - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
+
+    - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
+    - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
+
+    - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
+
+    - { role: samba, tags: [ 'samba' ] }                                        # smb file server
+
+    - { role: ftp, tags: [ 'ftp' ] }                                            # ftp file server
+    - { role: ftp_camera, tags: [ 'ftp_camera' ] }                              # camera ftp picture upload and cleanup
+
+    - { role: clamav, tags: [ 'clamav' ] }                                      # antivirus
+
+    - { role: php, tags: [ 'php' ] }                                            # php cli
+    
+    - { role: java, tags: [ 'java' ] }                                          # jdk 1.8
+    - { role: java_maven, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
+    - { role: java_ant, tags: [ 'java_ant' ] }                                  # apache ant
+    - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
+
+    - { role: apache, tags: [ 'apache' ] }                                      # web server
+    - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
+    
+    - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db
+    - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+
+    - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb
+    
+    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db (incl. kibana)
+    
+    - { role: redis, tags: [ 'redis' ] }                                        # redis db
+    
+    - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
+     
+    - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
+    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards
+
+    - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker
+
+    - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
+
+    - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating
+    - { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
+    - { role: openhab, tags: [ 'openhab' ] }                                    # openhab iot server
+    - { role: openhab_toolbox, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
+
+    - { role: alexa, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
+
+    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector
+    - { role: elastalert, tags: [ 'elastalert' ] }                              # log alerting
+
+    - { role: deployment, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
+
+    - { role: cloudsync, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
+    - { role: cloudexport, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (user "philipp" and nfs export)
+
+    - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
+    
+    - { role: backup_restore, tags: [ 'backup_restore' ], when: use_backup_files } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
+    
+  post_tasks:
+    # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 
+    - name: enable nextcloud apps                                               # enable nextcloud apps (news, keeweb ...).
+      import_tasks: roles/nextcloud/tasks/enable_apps.yml
+      tags: [ 'nextcloud' ]

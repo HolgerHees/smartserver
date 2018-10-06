@@ -1,0 +1,27 @@
+- name: clone git
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/HolgerHees/semanticdetection.git'
+    dest: '{{projects_path}}alexa_smarthome'
+    version: 'master'
+
+- name: prepare needed runtime folder
+  file:
+    path: "{{projects_path}}alexa_smarthome/config"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy configs
+  template:
+    src: "roles/alexa/templates/config/{{item}}"
+    dest: "{{projects_path}}alexa_smarthome/config/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - environment.js
+    - openhab.js
+    - test.js
+  when: "vault_active"

@@ -1,0 +1,16 @@
+$TTL 2d
+@		IN SOA		{{server_name}}.	root.{{server_name}}. (
+				2018072000	; serial
+				3h		; refresh
+				1h		; retry
+				1w		; expiry
+				1d )		; minimum
+
+{{server_arpa | regex_replace('^[\d]+\.','')}}.in-addr.arpa.	IN NS		ns.{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		ns.{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		local.{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		cloud.{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		office.{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		www.{{server_domain}}.
+{{server_arpa}}.in-addr.arpa.	IN PTR		wetter.{{server_domain}}.

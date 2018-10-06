@@ -1,0 +1,65 @@
+- name: prepare needed folder
+  file:
+    path: "{{item.dir}}"
+    state: directory
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
+    mode: 0755
+  with_items:
+    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}main/" }
+    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}img/" }
+    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}img/potd" }
+    - { owner: root, group: root, dir: "/opt/potd_fetcher/" }
+
+- name: copy htdocs
+  copy:
+    src: "roles/apache_webui/templates/htdocs/{{item}}"
+    dest: "{{htdocs_path}}{{item|dirname}}"
+    owner: wwwrun
+    group: www
+  with_items:
+    - main/css
+    - main/img
+    - main/js
+    - favicon.ico
+    - index.php
+    - info.php
+    - resize.php
+
+- name: copy htdocs manifest
+  template:
+    src: "roles/apache_webui/templates/htdocs/main/manifest.json"
+    dest: "{{htdocs_path}}/main/manifest.json"
+
+- name: copy fetchPOTD cmd
+  template:
+    src: "roles/apache_webui/templates/fetchPOTD.sh"
+    dest: "/opt/potd_fetcher/fetchPOTD.sh"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: check potd file
+  stat:
+    path: "{{htdocs_path}}img/potd/todayTitle.txt"
+  register: potd_exists
+  changed_when: not potd_exists.stat.exists
+  
+- name: fetch initial potd
+  shell: '/opt/potd_fetcher/fetchPOTD.sh'
+  when: not potd_exists.stat.exists
+  
+# Picture of the day fetcher
+- name: set potd fetcher job
+  vars:
+    cron_name: "POTD Fetcher"
+    cron_cmd: "/opt/potd_fetcher/fetchPOTD.sh"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_apache_webui
+    user: root
+    minute: "0"
+    hour: "3"
+    state: present
+  tags: ['cron_job']

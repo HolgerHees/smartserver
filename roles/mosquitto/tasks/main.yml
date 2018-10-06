@@ -1,0 +1,5 @@
+- name: install required packages
+  zypper:
+    name: "mosquitto"
+    state: present
+  notify: "restart mosquitto"

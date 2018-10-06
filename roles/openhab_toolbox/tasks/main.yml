@@ -1,0 +1,52 @@
+- name: clone git
+  git:
+#    accept_hostkey: yes
+    repo: 'https://bitbucket.org/hhees/toolbox.git'
+    dest: '{{projects_path}}toolbox'
+    version: 'master'
+
+- name: copy config
+  template:
+    src: "roles/openhab_toolbox/templates/config.php"
+    dest: "{{projects_path}}toolbox/_lib/config.php"
+    owner: root
+    group: root
+    mode: 0644
+  when: "vault_active"
+  
+- name: set symbolic link to htdocs
+  file:
+    src: "{{projects_path}}toolbox/web/"
+    dest: "{{htdocs_path}}tools"
+    state: link
+    owner: wwwrun
+    group: www  
+  when: "vault_active"
+      
+- name: check mysql is running
+  systemd:
+    name: mysql
+    state: started
+
+- name: check mysql table
+  shell: "mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM openhab;'"
+  register: mysql_data_exists
+  changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
+  
+- name: create missing table
+  shell: "cat roles/openhab_toolbox/templates/weather_forecast.sql | mysql -u root -h 127.0.0.1 openhab"
+  when: "'weather_forecast' not in mysql_data_exists.stdout"
+  
+# Weather data fetcher
+- name: set weather cron job
+  vars:
+    cron_name: "Weatherdata"
+    cron_cmd: "/usr/bin/php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_openhab_toolbox
+    user: root
+    minute: "0"
+    state: present
+  tags: ['cron_job']

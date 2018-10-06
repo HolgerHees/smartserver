@@ -1,0 +1,47 @@
+- name: install ansible deployment project
+  git:
+#    accept_hostkey: yes
+    repo: 'https://bitbucket.org/hhees/smartmarvin.git'
+    dest: '{{projects_path}}{{ansible_project_name}}'
+#    force: yes
+    version: 'master'
+  
+- name: prepare ansible deployment data folder
+  file:
+    path: "{{projects_path}}{{ansible_project_name}}/{{config_path}}backup/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/opt/backup_collector"
+    
+- name: copy cmd
+  template:
+    src: "roles/deployment/templates/collect_backup.sh"
+    dest: "/opt/backup_collector/collect_backup.sh"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: set cron job
+  vars:
+    cron_name: "Backup Collector"
+    cron_cmd: "/opt/backup_collector/collect_backup.sh;"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_deployment
+    user: root
+    minute: "0"
+    hour: "5"
+    state: present
+  tags: ['cron_job']

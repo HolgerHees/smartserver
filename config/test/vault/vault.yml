@@ -1,0 +1,75 @@
+admin_mail: "test@test.com"
+root_mail_account: "test@test.com"
+root_mail_password: "default123"
+
+holger_username: "holger"
+holger_samba_password: "default123"
+holger_web_password: "default123"
+
+philipp_username: "philipp"
+philipp_linux_password: "default123"
+
+vpn_username: "vpn"
+vpn_linux_password: "default123"
+
+vti_username: "vti"
+vti_samba_password: "default123"
+
+camera_username: "camera"
+camera_linux_password: "default123"
+camera_device_username: "admin"
+camera_device_password: "default123"
+camera_basic_auth: "{{ (camera_device_username + ':' + camera_device_password) | b64encode }}"
+
+admin_username: "admin"
+admin_web_password: "default123"
+
+alexa_username: "alexa"
+alexa_web_password: "default123"
+
+automower_device_username: "automower"
+automower_device_password: "default123"
+automower_basic_auth: "{{ (automower_device_username + ':' + automower_device_password) | b64encode }}"
+
+roomba_password: "default123"
+roomba_blid: "<blid>"
+
+pushover_user: "<userid>"
+pushover_password: "default123"
+
+hue_user_id: "<userid>"
+hue_device_id: "<device_id>"
+
+nextcloud_instance_id: "234sdgzw87399443s"
+nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
+nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+nextcloud_mysql_username: "nextcloud"
+nextcloud_mysql_password: "default123"
+
+openhab_mysql_username: "openhab"
+openhab_mysql_password: "default123"
+openhab_influxdb_username: "openhab"
+openhab_influxdb_password: "default123"
+
+grafana_influxdb_username: "grafana"
+grafana_influxdb_password: "default123"
+_grafana_app_username: "admin"
+_grafana_app_password: "admin"
+grafana_basic_auth: "{{ (_grafana_app_username + ':' + _grafana_app_password) | b64encode }}"
+
+alexa_rest_username: "alexa"
+alexa_rest_password: "default123"
+alexa_device_id1: "<alexa_device_id1>"
+alexa_device_id2: "<alexa_device_id2>"
+alexa_device_id3: "<alexa_device_id3>"
+alexa_device_id4: "<alexa_device_id4>"
+alexa_device_id5: "<alexa_device_id5>"
+server_alexa_domain: "public.{{server_domain}}"
+server_alexa_port: "22432"
+
+server_vpn_domain: "public.{{server_domain}}"
+server_vpn_pass_mobile: "default123"
+server_vpn_port_mobile: "277"
+server_vpn_port_cloud: "3421"
+
+cloudsync_password: "default123"

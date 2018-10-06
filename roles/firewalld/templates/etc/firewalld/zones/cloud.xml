@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone>
+  <source address="{{cloud_vpn_network}}/24"/>
+  <service name="nfs"/>
+  <service name="nfs3"/>
+  <service name="ssh"/>
+</zone>

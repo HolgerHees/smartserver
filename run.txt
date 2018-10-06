@@ -1,0 +1,39 @@
+# **** VAGRANT **** 
+# deploys a test machine (default)
+vagrant up 
+
+# deploys a staging machine with production data (vault is used)
+vagrant up develop
+
+
+# **** ANSIBLE PRODUCTION ****
+# run everything
+ansible-playbook -i server.ini -l production --ask-vault-pass server.yml
+
+# run everything [NO VAULT depending tasks]
+ansible-playbook -i server.ini -l production server.yml
+
+# run nextcloud
+ansible-playbook -i server.ini -l production --tags "nextcloud" --ask-vault-pass  server.yml
+
+# run nextcloud [NO VAULT depending tasks]
+ansible-playbook -i server.ini -l production --tags "nextcloud"  server.yml
+
+
+# **** ANSIBLE STAGING ****
+# run everything
+ansible-playbook -i server.ini -l develop --ask-vault-pass server.yml
+
+# run everything [NO VAULT depending tasks]
+ansible-playbook -i server.ini -l develop server.yml
+
+# run nextcloud
+ansible-playbook -i server.ini -l develop --tags "nextcloud" --ask-vault-pass  server.yml
+
+# run nextcloud [NO VAULT depending tasks]
+ansible-playbook -i server.ini -l develop --tags "nextcloud"  server.yml
+
+
+# **** ANSIBLE TEST ****
+# run everything (test)
+ansible-playbook -i server.ini -l test server.yml

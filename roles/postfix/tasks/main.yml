@@ -1,0 +1,99 @@
+---
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - postfix
+    - cyrus-sasl
+    - cyrus-sasl-plain
+  notify: "restart postfix"
+
+- name: set config
+  lineinfile:
+    path: /etc/sysconfig/postfix
+    regexp: '^{{item.field}}'
+    line: '{{item.field}}"{{item.value}}"'
+  with_items:
+    #- { field: 'POSTFIX_LISTEN=', value: '' }
+    - { field: 'POSTFIX_INET_PROTO=', value: 'all' }
+    - { field: 'POSTFIX_RELAYHOST=', value: '[smtp.gmail.com]:587' }
+    - { field: 'POSTFIX_TLS_CAFILE=', value: '/etc/postfix/ssl/cacerts/GlobalSign_Root_CA_-_R2.pem' }
+    - { field: 'POSTFIX_SMTP_AUTH=', value: 'yes' }
+    - { field: 'POSTFIX_SMTP_TLS_CLIENT=', value: 'must' }
+    - { field: 'POSTFIX_SMTP_AUTH_OPTIONS=', value: 'noanonymous' }
+    - { field: 'POSTFIX_SMTP_TLS_SERVER=', value: 'yes' } # needed to activate TLS engine
+    - { field: 'POSTFIX_TLS_CERTFILE=', value: '' }
+    - { field: 'POSTFIX_TLS_KEYFILE=', value: '' }
+    
+    #- { field: 'POSTFIX_MYHOSTNAME=', value: '{{server_name}}' }
+    - { field: 'POSTFIX_LOCALDOMAINS=', value: '{{server_name}}, {{server_domain}}, localhost' }
+#    - { field: 'alias_map', value: 'hash:/etc/aliases' }
+#    - { field: 'alias_database', value: 'hash:/etc/aliases' }
+#    - { field: 'smtp_enforce_tls', value: 'yes' }
+#POSTFIX_UPDATE_MAPS
+#POSTFIX_MAP_LIST
+  register: config_status
+  notify: "restart postfix"
+
+- name: check postfix is running
+  systemd:
+    name: postfix
+    state: started
+  when: config_status.changed
+    
+- name: refresh postfix
+  command: "/usr/sbin/config.postfix"
+  when: config_status.changed
+  notify: "restart postfix"
+  
+#- name: check backup
+#  command: /bin/true
+#  notify: "refresh postfix"
+
+#- name: set config
+#  lineinfile:
+#    path: /etc/postfix/main.cf
+#    regexp: '^{{item.field}}'
+#    line: '{{item.field}} = {{item.value}}'
+#  with_items:
+#    - { field: 'inet_interfaces', value: '127.0.0.1' }
+#    - { field: 'inet_protocols', value: 'all' }
+#    - { field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }
+#    - { field: 'myhostname', value: '{{server_name}}' }
+#    - { field: 'relayhost', value: '[smtp.gmail.com]:587' }
+#    - { field: 'alias_map', value: 'hash:/etc/aliases' }
+#    - { field: 'alias_database', value: 'hash:/etc/aliases' }
+#    - { field: 'smtp_sasl_auth_enable', value: 'yes' }
+#    - { field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }
+#    - { field: 'smtp_sasl_security_options', value: 'noanonymous' }
+#    - { field: 'smtp_tls_CAfile', value: '/etc/postfix/ssl/cacerts/GlobalSign_Root_CA_-_R2.pem' }
+#    - { field: 'smtp_use_tls', value: 'yes' }
+#    - { field: 'smtp_enforce_tls', value: 'yes' }
+#  notify: "restart postfix"
+
+- name: set sasl_passwd
+  lineinfile:
+    path: /etc/postfix/sasl_passwd
+    regexp: '^\[smtp.gmail.com\]:587'
+    line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
+  notify: "restart postfix"
+  when: "vault_active"
+  
+- name: set aliases
+  lineinfile:
+    path: /etc/aliases
+    regexp: '^{{item.name}}'
+    line: '{{item.name}}: {{item.alias}}'
+  with_items:
+    - { name: 'root', alias: '{{ admin_mail }}' }
+    - { name: 'postmaster', alias: '{{ admin_mail }}' }
+    - { name: 'default', alias: '{{ admin_mail }}' }
+  register: aliases_status
+  notify: "restart postfix"
+  when: "vault_active"
+
+- name: refresh aliases
+  command: "/usr/bin/newaliases"
+  when: aliases_status.changed
+  notify: "restart postfix"

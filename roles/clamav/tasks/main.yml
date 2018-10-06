@@ -1,0 +1,11 @@
+- name: install required packages
+  zypper:
+    name: clamav
+    state: present
+  register: install_status
+  notify: "restart clamav"
+
+- name: load initial database
+  shell: '/usr/bin/freshclam --no-warnings'
+  notify: "restart clamav"
+  when: install_status.changed

@@ -1,0 +1,8 @@
+- name: restart apache
+  systemd:
+    name: apache2
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart apache"

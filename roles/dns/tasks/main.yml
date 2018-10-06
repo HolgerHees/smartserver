@@ -1,0 +1,40 @@
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - bind
+    - yast2-dns-server
+  notify: "restart named"
+
+- name: copy config
+  template:
+    src: "roles/dns/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: named
+    mode: 0640
+  with_items:
+    - /etc/named.conf
+    - /etc/named.d/forwarders.conf
+  notify: "restart named"
+
+- name: copy var folder
+  template:
+    src: "roles/dns/templates/var/lib/named/master/{{item}}"
+    dest: "/var/lib/named/master/{{item}}"
+    owner: named
+    group: named
+    mode: 0640
+  with_items:
+    - "server_reverse.in-addr.arpa"
+    - "server_forward"
+  notify: "restart named"
+  
+- name: set forwarder config
+  lineinfile:
+    path: /etc/sysconfig/network/config
+    regexp: '^NETCONFIG_DNS_FORWARDER='
+    line: 'NETCONFIG_DNS_FORWARDER="bind"'
+  notify: "restart named"
+  

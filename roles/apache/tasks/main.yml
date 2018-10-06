@@ -1,0 +1,223 @@
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - apache2 
+    - python2-setuptools
+    - apache2-mod_php7
+    - python-certbot-apache
+  notify: "restart apache"
+
+- name: check letsencrypt (develop)
+  stat:
+    path: /etc/letsencrypt/live/{{server_domain}}/
+  register: letsencrypt_exists
+  changed_when: not letsencrypt_exists.stat.exists
+  when: "not use_vault_files"
+  
+- name: prepare needed folder (develop)
+  file:
+    path: "/etc/{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "letsencrypt/"
+    - "letsencrypt/live"
+    - "letsencrypt/live/{{server_domain}}"
+  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+
+- name: generate openssl privatekey (develop)
+  openssl_privatekey:
+    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+    
+- name: generate openssl csr (develop)
+  openssl_csr:
+    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    common_name: "{{server_domain}}"
+  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+    
+- name: generate openssl certificate (develop)
+  openssl_certificate:
+    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    provider: selfsigned
+  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+  
+- name: prepare needed folder (production)
+  file:
+    path: "/etc/{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "letsencrypt/"
+    - "letsencrypt/accounts"
+    - "letsencrypt/accounts/acme-v02.api.letsencrypt.org"
+    - "letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory"
+    - "letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da"
+    - "letsencrypt/archive"
+    - "letsencrypt/archive/{{server_domain}}"
+    - "letsencrypt/csr"
+    - "letsencrypt/keys"
+    - "letsencrypt/live"
+    - "letsencrypt/live/{{server_domain}}"
+    - "letsencrypt/renewal"
+  when: "use_vault_files"
+
+- name: copy letsencrypt certificates (production)
+  copy:
+    src: "{{ vault_files }}letsencrypt/{{item}}"
+    dest: "/etc/letsencrypt/{{item}}"
+    decrypt: yes
+    mode: 0640
+  with_items:
+    - "accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da/meta.json"
+    - "accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da/private_key.json"
+    - "accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da/regr.json"
+    - "archive/{{server_domain}}/chain1.pem"
+    - "archive/{{server_domain}}/privkey1.pem"
+    - "archive/{{server_domain}}/cert1.pem"
+    - "archive/{{server_domain}}/fullchain1.pem"
+    - "csr/0000_csr-certbot.pem"
+    - "keys/0000_key-certbot.pem"
+    - "renewal/{{server_domain}}.conf"
+  notify: "restart apache"
+  when: "use_vault_files"
+
+- name: set letsencrypt symlinks (production)
+  file:
+    src: "/etc/letsencrypt/archive/{{item.src}}"
+    dest: "/etc/letsencrypt/live/{{item.dest}}"
+    state: link
+  with_items:
+    - { src: "{{server_domain}}/fullchain1.pem", dest: "{{server_domain}}/fullchain.pem" }
+    - { src: "{{server_domain}}/privkey1.pem", dest: "{{server_domain}}/privkey.pem" }
+    - { src: "{{server_domain}}/chain1.pem", dest: "{{server_domain}}/chain.pem" }
+    - { src: "{{server_domain}}/cert1.pem", dest: "{{server_domain}}/cert.pem" }
+  notify: "restart apache"
+  when: "use_vault_files"
+
+# TODO add renew job
+#./certbot-auto certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
+
+- name: prepare needed folder
+  file:
+    path: "{{item.dir}}"
+    state: directory
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
+    mode: 0750
+  with_items:
+    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}" }
+    - { owner: root, group: root, dir: "/etc/apache2/_.ansible.d/" }
+    - { owner: root, group: root, dir: "{{global_log}}/apache2/" }
+
+- name: enable modules
+  apache2_module:
+    name: "{{item}}"
+    state: present
+  #register: mod_status
+  #changed_when: "'already present' in mod_status.stdout"
+  with_items:
+    #- authz_group 
+    #- header 
+    - headers 
+    - proxy 
+    - proxy_html 
+    - proxy_http 
+    - xml2enc
+    - deflate 
+    - filter 
+    #- apcu 
+    - proxy_wstunnel 
+    #- enable 
+    - rewrite 
+    - php7
+  notify: "restart apache"
+    
+- name: set php configs
+  lineinfile:
+    path: /etc/php7/apache2/php.ini
+    insertafter: '^\[{{item.block}}\]'
+    regexp: '^{{item.field}}'
+    line: '{{item.field}}={{item.value}}'
+  with_items:
+    - { block: 'opcache', field: 'opcache.enable', value: '1' }
+    - { block: 'opcache', field: 'opcache.enable_cli', value: '1' }
+    - { block: 'opcache', field: 'opcache.interned_strings_buffer', value: '8' }
+    - { block: 'opcache', field: 'opcache.max_accelerated_files', value: '10000' }
+    - { block: 'opcache', field: 'opcache.memory_consumption', value: '128' }
+    - { block: 'opcache', field: 'opcache.save_comments', value: '1' }
+    - { block: 'opcache', field: 'opcache.revalidate_freq', value: '1' }
+  notify: "restart apache"
+
+- name: copy config
+  template:
+    src: "roles/apache/templates/etc/apache2/{{item}}"
+    dest: "/etc/apache2/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - listen.conf
+    - _.ansible.d/auth.conf
+    - _.ansible.d/services.conf
+    - _.ansible.d/options.conf
+    - vhosts.d/vhost-ssl.conf
+  notify: "restart apache"
+  when: "vault_active"
+
+- name: disable http vhost
+  command: "mv /etc/apache2/vhosts.d/vhost.conf /etc/apache2/vhosts.d/vhost.conf.bak"
+  register: command_result
+  failed_when: "'command-not-found' in command_result.stderr"
+  changed_when: "command_result.rc == 0"
+  notify: "restart apache"
+
+- name: set config
+  lineinfile:
+    path: /etc/apache2/default-server.conf
+    regexp: '^{{item.field}}'
+    line: '{{item.field}} {{item.value}}'
+  with_items:
+    - { field: 'ErrorLog', value: '{{global_log}}apache2/error.log' }
+    - { field: 'Logformat', value: '"%t - %h - %u - \"%r\" - %s - %b (%D) - \"%{User-Agent}i\"" my_http_log' }
+    - { field: 'CustomLog', value: '{{global_log}}apache2/access.log my_http_log' }
+    - { field: 'DocumentRoot', value: '"{{htdocs_path}}"' }
+    - { field: 'ServerName', value: '"{{server_domain}}"' }
+  notify: "restart apache"
+
+- name: prepare .htpasswd file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htpasswd"
+    force: no
+    owner: wwwrun
+    group: www
+    mode: 0640
+
+- name: prepare .htgroups file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htgroups"
+    force: no
+    owner: wwwrun
+    group: www
+    mode: 0640
+
+- name: set logrotate job
+  vars:
+    logrotate_path: "{{global_log}}apache2/*.log"
+  copy:
+    content: "{{ lookup('template', 'templates/logrotate_apache') }}"
+    dest: "/etc/logrotate.d/ansible_apache"
+    owner: root
+    group: root
+    mode: 0640

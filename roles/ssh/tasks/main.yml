@@ -1,0 +1,8 @@
+- name: set config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^{{item.field}}'
+    line: '{{item.field}} {{item.value}}'
+  with_items:
+    - { field: 'AllowUsers', value: '*@{{server_network}}/24 *@{{cloud_net1_network}}/24 *@{{cloud_net2_network}}/24 *@{{mobile_vpn_network}}/24 vpn' }
+  notify: "restart sshd"

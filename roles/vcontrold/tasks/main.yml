@@ -1,0 +1,135 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - '/etc/vcontrold/'
+    - "{{global_log}}vcontrold/"
+    - "/opt/heating_control"
+    - "/opt/heating_sensors"
+    
+- name: install required packages
+  zypper:
+    name: cmake
+    state: present
+
+- name: copy config
+  template:
+    src: "roles/vcontrold/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - /etc/vcontrold/vcontrold.xml
+    - /etc/vcontrold/vito.xml
+    - /etc/systemd/system/vcontrold.service
+    - /etc/udev/rules.d/10-vcontrold.rules
+  notify: "restart vcontrold"
+
+- name: "clone git"
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/openv/vcontrold.git'
+    dest: '{{global_build}}vcontrold'
+#    force: yes
+    version: 'master'
+  register: clone_status
+#- debug: msg={{clone_status}}
+
+- name: "create build dir"
+  file: 
+    path: '{{global_build}}vcontrold/build'
+    state: directory
+  register: build_status
+  when: clone_status.changed
+
+- name: "install"
+  shell: '{{ item }}'
+  args:
+    chdir: '{{global_build}}vcontrold/build'
+  with_items:
+    - 'cmake .. -DMANPAGES=OFF'
+    - 'make'
+    - 'make install'
+  notify: "restart vcontrold"
+  when: clone_status.changed or build_status.changed
+
+- name: set logrotate job
+  vars:
+    logrotate_path: "{{global_log}}vcontrold/*.log"
+  copy:
+    content: "{{ lookup('template', 'templates/logrotate') }}"
+    dest: "/etc/logrotate.d/ansible_vcontrol"
+    owner: root
+    group: root
+    mode: 0640
+
+- name: copy cmd templates
+  template:
+    src: "roles/vcontrold/templates/opt/{{item}}"
+    dest: "/opt/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "heating_control/heizung.cmd"
+    - "heating_control/heizung.tpl"
+
+- name: copy cmd's
+  template:
+    src: "roles/vcontrold/templates/opt/{{item}}"
+    dest: "/opt/{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "heating_control/heizung.bash"
+    - "heating_control/heizungBetriebsart.bash"
+    - "heating_sensors/sensoren.bash"
+    - "heating_sensors/TempCmd"
+  
+- name: set control cron job
+  vars:
+    cron_name: "Heating Control"
+    cron_cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_vcontrold
+    user: root
+    minute: "*/1"
+    state: present
+  when: is_production
+  tags: ['cron_job']
+
+- name: set sensors cron job
+  vars:
+    cron_name: "Heating Sensors"
+    cron_cmd: "/opt/heating_sensors/sensoren.bash"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_vcontrold
+    user: root
+    minute: "*/1"
+    state: present
+  when: is_production
+  tags: ['cron_job']
+
+- name: set log cleanup (scripts) cron job
+  vars:
+    cron_name: "Heating Cleanup"
+    cron_cmd: "find {{global_log}}heizung/ -mtime +14 -exec rm {} +"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_vcontrold
+    user: root
+    minute: "50"
+    hour: "0"
+    state: present
+  tags: ['cron_job']

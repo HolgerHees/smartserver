@@ -1,0 +1,167 @@
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - openvpn
+    - openvpn-auth-pam-plugin
+    - easy-rsa
+
+# **** MOBILE VPN CERTIFICATES ****
+- name: check easyrsa
+  stat:
+    path: /etc/easy-rsa/pki
+  register: pki_exists
+  changed_when: not pki_exists.stat.exists
+  when: "not use_vault_files"
+  
+# https://en.opensuse.org/SDB:OpenVPN_Installation_and_Setup
+# cp /etc/easy-rsa
+# cd /etc/easy-rsa
+# easyrsa clean-all
+# easyrsa build-ca
+# easyrsa build-server-full server
+# easyrsa build-client-full mobile
+# easyrsa gen-dh
+- name: init easyrsa certificates
+  shell: "{{item}}"
+  args:
+    chdir: '/etc/easy-rsa'
+  with_items:
+    - "echo 'yes' | easyrsa clean-all"
+    - "echo 'yes' | easyrsa init-pki"
+  when: "not use_vault_files and not pki_exists.stat.exists"
+
+- name: prepare needed easyrsa folder
+  file:
+    path: '/etc/easy-rsa/pki/{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "issued"
+
+- name: init easyrsa (develop)
+  command: "echo 'yes' | easyrsa init-pki"
+  args:
+    chdir: '/etc/easy-rsa'
+  notify: "restart openvpn@mobile"
+  when: "not use_vault_files and not pki_exists.stat.exists"
+  
+- name: generate easyrsa ca (develop)
+  expect:
+    command: "easyrsa build-ca"
+    chdir: '/etc/easy-rsa'
+    responses:
+      Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
+      Verifying - Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
+      Common Name: "{{server_name}}"
+  notify: "restart openvpn@mobile"
+  when: "not use_vault_files and not pki_exists.stat.exists"
+    
+- name: generate easyrsa certificate (develop)
+  expect:
+    command: "{{item}}"
+    chdir: '/etc/easy-rsa'
+    responses:
+      Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
+      Verifying - Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
+      Enter pass phrase for: "{{server_vpn_pass_mobile}}"
+  notify: "restart openvpn@mobile"
+  with_items:
+    - "easyrsa build-server-full server"
+    - "easyrsa build-client-full mobile"
+  when: "not use_vault_files and not pki_exists.stat.exists"
+
+- name: init easyrsa gen-dh (develop)
+  shell: "easyrsa gen-dh"
+  args:
+    chdir: '/etc/easy-rsa'
+  notify: "restart openvpn@mobile"
+  when: "not use_vault_files and not pki_exists.stat.exists"
+
+- name: copy easy-rsa certificates (production)
+  copy:
+    src: "{{ vault_files }}easy-rsa/{{item}}"
+    dest: "/etc/easy-rsa/pki/{{ item }}"
+    decrypt: yes
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+#    - "certs_by_serial/76C34AF12707764CFBBE86AA4BB64751.pem"  // server.crt
+#    - "certs_by_serial/B0C6214224191008AE8BF1D26F09D2B1.pem"  // mobile.crt
+    - "issued/server.crt"
+    - "issued/mobile.crt"
+    - "private/ca.key"
+    - "private/server.key"
+    - "private/mobile.key"
+#    - "private/server.pass"
+    - "reqs/server.req"
+    - "reqs/mobile.req"
+#    - "serial"
+    - "ca.crt"
+#    - "index.txt.attr"
+#    - "index.txt"
+    - "dh.pem"
+  notify: "restart openvpn@mobile"
+  when: "use_vault_files"
+
+- name: copy server pass
+  copy:
+    content: "{{server_vpn_pass_mobile}}"
+    dest: "/etc/openvpn/mobile_certificate.pass"
+    decrypt: yes
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart openvpn@mobile"
+  when: "vault_active"
+  
+# **** CLOUD VPN SHARED KEY ****
+- name: check shared key
+  stat:
+    path: /etc/openvpn/cloud_shared.key
+  register: key_exists
+  changed_when: not key_exists.stat.exists
+  when: "not use_vault_files"
+  
+- name: generate shared key (develop)
+  shell: "openvpn --genkey --secret /etc/openvpn/cloud_shared.key"
+  notify: "restart openvpn@cloud"
+  when: "not use_vault_files and not key_exists.stat.exists"
+    
+- name: copy shared keys (production)
+  template:
+    src: "{{ vault_files }}openvpn/cloud_shared.key"
+    dest: "/etc/openvpn/cloud_shared.key"
+    decrypt: yes
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart openvpn@cloud"
+  when: "use_vault_files"
+
+# **** CONFIGS ****
+- name: prepare ovpn certificate vars
+  set_fact:
+    ca_crt: "{{ lookup('file', '/etc/easy-rsa/pki/ca.crt')}}"
+    mobile_crt: "-----BEGIN CERTIFICATE-----{{ lookup('file','/etc/easy-rsa/pki/issued/mobile.crt').split('-----BEGIN CERTIFICATE-----')[1]}}"
+    mobile_key: "{{ lookup('file','/etc/easy-rsa/pki/private/mobile.key')}}"
+  changed_when: no
+  when: "vault_active"
+  
+- name: copy config
+  template:
+    src: "roles/openvpn/templates/{{item}}"
+    dest: "/etc/openvpn/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "cloud.conf"
+    - "mobile.conf"
+    - "mobile.ovpn"
+  notify: "restart openvpn"
+  when: "vault_active"

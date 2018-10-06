@@ -1,0 +1,16 @@
+- name: clone git
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/jythontools/jython.git'
+    dest: '/opt/jython'
+    # commit key from 27.09.2018
+    version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
+  register: clone_status
+
+- name: run install
+  shell: '{{ item }}'
+  args:
+    chdir: '/opt/jython'
+  with_items:
+    - 'ant installer'
+  when: clone_status.changed

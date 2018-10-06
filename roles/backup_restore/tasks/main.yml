@@ -1,0 +1,79 @@
+# **** MYSQL ****
+- name: check mysql backup folder
+  stat:
+    path: "{{backup_files}}mysql/"
+  register: mysql_backup_exists
+  changed_when: mysql_backup_exists.stat.exists
+  
+- name: check mysql is running
+  systemd:
+    name: mysql
+    state: started
+  when: mysql_backup_exists.stat.exists
+
+- name: import nextcloud database
+  shell: "bzcat {{backup_files}}mysql/nextcloud* | mysql -u root -h 127.0.0.1 nextcloud"
+  when: mysql_backup_exists.stat.exists
+
+# force a rebuild of cached files like merged js and css files
+- name: clean nextcloud database
+  shell: "mysql -u root -h 127.0.0.1 -e \"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\""
+  when: mysql_backup_exists.stat.exists
+
+- name: import openhab database
+  shell: "bzcat {{backup_files}}mysql/openhab* | mysql -u root -h 127.0.0.1 openhab"
+  when: mysql_backup_exists.stat.exists
+
+# **** INFLUXDB ****
+- name: check influxdb backup folder
+  stat:
+    path: "{{backup_files}}influxdb"
+  register: influxdb_backup_exists
+  changed_when: influxdb_backup_exists.stat.exists
+  
+- name: check influxdb is running
+  systemd:
+    name: influxdb
+    state: started
+  when: influxdb_backup_exists.stat.exists
+
+- name: import influxdb metadata backup
+  shell: "influxd restore -metadir {{ global_lib }}influxdb/meta {{backup_files}}influxdb/openhab*"
+  become: yes
+  become_user: influxdb
+  when: influxdb_backup_exists.stat.exists
+  
+- name: import influxdb openhab backup
+  shell: "influxd restore -database openhab_db -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/openhab*"
+  become: yes
+  become_user: influxdb
+  when: influxdb_backup_exists.stat.exists
+
+- name: restart influxdb
+  systemd:
+    name: influxdb
+    state: restarted
+  when: influxdb_backup_exists.stat.exists
+  
+# **** OPENHAB MAPDB ****
+- name: check openhab mapdb backup folder
+  stat:
+    path: "{{backup_files}}openhab/mapdb"
+  register: mapdb_backup_exists
+  changed_when: mapdb_backup_exists.stat.exists
+
+- name: check openhab is stopped
+  systemd:
+    name: openhab
+    state: stopped
+  when: mapdb_backup_exists.stat.exists
+  
+- name: import openhab mapdb backup
+  copy:
+    src: "{{backup_files}}openhab/mapdb"
+    dest: "{{global_lib}}openhab/"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart openhab"
+  when: mapdb_backup_exists.stat.exists

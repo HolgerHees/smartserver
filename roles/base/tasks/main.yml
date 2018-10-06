@@ -1,0 +1,64 @@
+- name: prepare global folder
+  file:
+    path: "{{item.path}}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{data_path}}" }
+    
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}" }
+    - { mode: "u=rwx,g=rwx,o=rwx", path: "{{global_tmp}}" }
+    - { mode: "u=rwx,g=,o=", path: "{{global_build}}" }
+    
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{raid_path}}" }
+
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{local_backup_path}}" }
+
+- name: install base packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+       - mc
+       - subversion
+       - git
+       - autoconf
+       - automake
+       - gcc
+       - libxml2-devel
+       - sensors
+       - ImageMagick
+       - htop
+       - sysstat
+       - iotop
+       - npm8
+       - zip
+       - python2-pip
+       - mail               # used by elastalert
+    
+- name: install pexpect
+  pip:
+    name: pexpect
+#  become: yes
+  
+- name: change vagrant user
+  user:
+    name: vagrant
+    uid: 2000
+  when: not is_production
+  
+- name: prepare vagrant backup folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{local_backup_path}}archive"
+    - "{{local_backup_path}}intranet-der-dinge.de"
+  when: not is_production

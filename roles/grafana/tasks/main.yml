@@ -1,0 +1,155 @@
+- name: add yum repository
+  yum_repository:
+    name: grafana
+    description: Grafana repository for 5.x packages
+    baseurl: https://packagecloud.io/grafana/stable/el/7/$basearch
+    gpgcheck: yes
+    gpgkey: https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
+    repo_gpgcheck: yes
+    sslverify: yes
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+    reposdir: "/etc/zypp/repos.d/"
+  register: yum_status
+    
+- name: refresh yum repository
+  expect:
+    command: "zypper refresh"
+    responses:
+      # Continue with GPG key validation
+      immer vertrauen?: "i"
+      trust always?: "a"
+  changed_when: yum_status.changed
+  
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+    #disable_gpg_check: yes
+  with_items:
+    - insserv-compat
+    - libopenssl1_0_0
+  notify: "restart grafana"
+
+- name: install grafana
+  expect:
+    command: "zypper install grafana"
+    responses:
+      # Ignore missing dependencies (some fonts)
+      Wählen Sie aus den: "2"
+      Choose from above: "2"
+      Weiter: "j"
+      Fortfahren: "j"
+      Continue: "y"
+  register: command_result
+  changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
+  notify: "restart grafana"
+  
+#- name: install required packages (3/3)
+#  command: "rpm -Uvh --nodeps grafana"
+#  args:
+#    warn: false
+#  register: command_result
+#  failed_when: "command_result.rc == 1 and 'already installed' not in command_result.stderr"
+#  changed_when: "command_result.rc == 0"
+#  notify: "restart grafana"
+#- name: install required packages (2/2)
+#  zypper:
+#    name: "grafana"
+#    state: present
+#  notify: "restart grafana"
+
+#- name: install required packages (2/2)
+#  zypper:
+#    name: "{{item}}"
+#    state: present
+#    disable_gpg_check: yes
+#  with_items:
+#    - "sources/phantomjs-2.1.1.0-1.d_t.3.x86_64.rpm"
+#  notify: "restart grafana"
+
+#- name: install required packages (3/3)
+#  command: "rpm -Uvh --nodeps sources/grafana-5.2.4-1.x86_64.rpm"
+#  args:
+#    warn: false
+#  register: command_result
+#  failed_when: "command_result.rc == 1 and 'already installed' not in command_result.stderr"
+#  changed_when: "command_result.rc == 0"
+#  notify: "restart grafana"
+  
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: grafana
+    group: grafana
+    #mode: 0770
+    recurse: true
+  with_items:
+    - "{{ global_lib }}grafana/"
+    - "{{ global_lib }}grafana/dashboards/"
+    - "{{ global_lib }}grafana/provisioning"
+    - "{{ global_lib }}grafana/provisioning/dashboards/"
+    - "{{ global_lib }}grafana/provisioning/datasources/"
+
+- name: copy grafana dashboards
+  copy:
+    src: "{{item}}"
+    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
+    decrypt: yes
+    owner: grafana
+    group: grafana
+    mode: 0640
+  notify: "restart grafana"
+  with_fileglob:
+    - "roles/grafana/templates/dashboards/*"
+
+- name: copy grafana provisioning
+  template:
+    src: "roles/grafana/templates/{{item}}"
+    dest: "{{ global_lib }}grafana/{{item}}"
+    decrypt: yes
+    owner: grafana
+    group: grafana
+    mode: 0640
+  notify: "restart grafana"
+  with_items:
+    - "provisioning/dashboards/provider.yaml"
+    - "provisioning/datasources/datasource.yaml"
+  when: "vault_active"
+
+- name: set domain config
+  lineinfile:
+    path: /etc/grafana/grafana.ini
+    insertafter: '^\[server\]'
+    regexp: '^{{item.field}}'
+    line: '{{item.field}} = {{item.value}}'
+  with_items:
+    - { field: 'domain', value: '{{server_domain}}' }
+    - { field: 'http_addr', value: '127.0.0.1' }
+  notify: "restart grafana"
+
+- name: set config
+  lineinfile:
+    path: /etc/grafana/grafana.ini
+    insertafter: '^\[{{item.block}}\]'
+    regexp: '^{{item.field}}'
+    line: '{{item.field}} = {{item.value}}'
+  with_items:
+    - { block: 'server', field: 'root_url', value: '%(protocol)s://%(domain)s:/grafana' }
+    - { block: 'paths', field: 'data', value: '{{global_lib}}grafana' }
+    - { block: 'paths', field: 'plugins', value: '{{global_lib}}grafana/plugins' }
+    - { block: 'paths', field: 'provisioning', value: '{{global_lib}}grafana/provisioning' }
+    - { block: 'log', field: 'mode', value: 'syslog' }
+    - { block: 'log.syslog', field: 'tag', value: 'grafana' }
+  notify: "restart grafana"
+    
+- name: copy apache config
+  template:
+    src: "roles/grafana/templates/etc/apache2/_.ansible.d/grafana.conf"
+    dest: "/etc/apache2/_.ansible.d/grafana.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart apache"
+  tags: ['apache_conf']
+  when: "vault_active"

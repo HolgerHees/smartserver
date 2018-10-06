@@ -1,0 +1,16 @@
+network:pingdevice:livingroomTV [ hostname="{{tv_livingroom_ip}}", retry=1, timeout=5000, refreshInterval=5000, allowSystemPings="true", allowDHCPlisten="true" ]
+robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInterval="15", offlineTimeout="300", user="{{automower_device_username}}", password = "{{automower_device_password}}"]
+
+//exec:command:heatingMode [command="/opt/heating_control/heizungBetriebsart.bash -t %2$s", interval=0, timeout=10, autorun=true]
+ 
+astro:moon:local [ geolocation="52.34772,13.62140,39", interval=300 ]
+astro:sun:local [ geolocation="52.34772,13.62140,39", interval=300 ]
+ntp:ntp:local [ hostname="de.pool.ntp.org", refreshInterval=60, refreshNtp=30 ]
+
+Bridge hue:bridge:{{hue_device_id}} [ ipAddress="{{hue_ip}}", userName="{{hue_user_id}}" ] {
+	0210 1 [ lightId="1" ]
+	0210 2 [ lightId="2" ]
+	0210 3 [ lightId="3" ]
+	0210 4 [ lightId="4" ]
+	0210 5 [ lightId="5" ]
+}

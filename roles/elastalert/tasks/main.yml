@@ -1,0 +1,75 @@
+- name: prepare needed folder
+  file:
+    path: '/etc/elastalert/'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - python2-devel
+    - python2-python-dateutil 
+    - python2-boto3
+  notify: "restart elastalert"
+  
+- name: install required python pip modules
+  pip: 
+    name: aws-requests-auth
+  notify: "restart elastalert"
+
+- name: copy config
+  template:
+    src: "roles/elastalert/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - /etc/elastalert/config.yaml
+    - /etc/elastalert/rule.yaml
+    - /etc/systemd/system/elastalert.service
+  notify: "restart elastalert"
+
+- name: "clone git"
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/Yelp/elastalert.git'
+    dest: '{{global_build}}elastalert'
+#    force: yes
+    version: 'master'
+  register: clone_status
+  #changed_when: yes
+#- debug: msg={{clone_status}}
+
+- name: "install"
+  shell: '{{ item }}'
+  args:
+    chdir: '{{global_build}}elastalert'
+  with_items:
+    - 'pip install --upgrade cryptography==2.3.1'
+    - 'python setup.py install'
+  when: clone_status.changed
+
+- name: check elasticsearch is running
+  systemd:
+    name: elasticsearch
+    state: started
+  when: clone_status.changed
+  
+- name: wait for elastic search to become ready
+  wait_for:
+    port: 9200
+  changed_when: yes
+  when: clone_status.changed
+
+- name: create search index
+  shell: '/usr/bin/elastalert-create-index --config /etc/elastalert/config.yaml'
+  notify: "restart elastalert"
+  when: clone_status.changed
+  
+# first test run
+#elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml

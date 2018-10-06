@@ -1,0 +1,57 @@
+- name: install required packages
+  zypper:
+    name: "ruby-devel"
+    state: present
+
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/etc/fluent/"
+    - "{{global_log}}fluentd/"
+
+- name: install
+  gem:
+    name: '{{ item }}'
+    state: present
+    user_install: no
+  with_items:
+    - fluentd
+    - fluent-plugin-systemd
+    - fluent-plugin-elasticsearch
+    - fluent-plugin-record-modifier
+    - fluent-plugin-rewrite-tag-filter
+  notify: "restart fluentd"
+
+- name: copy config
+  template:
+    src: "roles/fluentd/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - /etc/fluent/fluent.conf
+    - /etc/systemd/system/fluentd.service
+  notify: "restart fluentd"
+
+# first test run
+#./bin/fluentd -c ./fluent/fluent.conf
+
+- name: set clean cron job
+  vars:
+    cron_name: "Fluentd elasticsearch index cleanup"
+    cron_cmd: "/usr/bin/curator_cli --host 127.0.0.1 delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_fluentd
+    user: root
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']

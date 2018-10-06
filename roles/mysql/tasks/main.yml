@@ -1,0 +1,71 @@
+- name: install required packages
+  zypper:
+    name: mysql
+    state: present
+  notify: "restart mysql"
+    
+- name: prepare needed folder
+  file:
+    path: '{{ global_lib }}mysql/'
+    state: directory
+    owner: mysql
+    group: mysql
+    #mode: 0770
+    recurse: true
+
+- name: set data path config
+  lineinfile:
+    path: /etc/my.cnf
+    insertafter: '^\[mysqld\]'
+    regexp: '^datadir'
+    line: 'datadir = {{ global_lib }}mysql/'
+  notify: "restart mysql"
+  
+- name: check enabled mysql
+  systemd:
+    enabled: yes
+    name: mysql
+
+- name: set syslog indetifier
+  lineinfile:
+    path: /etc/systemd/system/mysql.service
+    insertafter: '^\[Service\]'
+    regexp: '^SyslogIdentifier'
+    line: 'SyslogIdentifier = mysql'
+  notify: "restart mysql"
+
+- name: prepare backup folder
+  file:
+    path: '{{local_backup_path}}mysql'
+    state: directory
+    owner: root
+    group: root
+    
+- name: set core backup cron job
+  vars:
+    cron_name: "MySQL Core Backup"
+    cron_cmd: "/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_mysql
+    user: root
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']
+
+- name: set clean backup cron job
+  vars:
+    cron_name: "MySQL Clean Backup"
+    cron_cmd: "find {{local_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_mysql
+    user: root
+    minute: "45"
+    hour: "00"
+    state: present
+  tags: ['cron_job']
+

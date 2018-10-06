@@ -1,0 +1,156 @@
+- name: check nextcloud
+  stat:
+    path: "{{htdocs_path}}nextcloud"
+  register: nextcloud_exists
+  changed_when: not nextcloud_exists.stat.exists
+  
+- name: install archive
+  unarchive:
+    src: "https://download.nextcloud.com/server/releases/nextcloud-14.0.0.zip"
+    dest: "{{htdocs_path}}"
+    remote_src: yes
+    owner: wwwrun
+    group: www
+    #mode: 0750
+  when: not nextcloud_exists.stat.exists
+
+- name: rename folder
+  command: "mv {{htdocs_path}}nextcloud/ {{htdocs_path}}nextcloud-14.0.0"
+  when: not nextcloud_exists.stat.exists
+
+- name: set symbolic link to htdocs
+  file:
+    src: "nextcloud-14.0.0"
+    dest: "{{htdocs_path}}nextcloud"
+    state: link
+    owner: wwwrun
+    group: www
+  when: not nextcloud_exists.stat.exists
+  
+- name: copy config
+  template:
+    src: "roles/nextcloud/templates/config.php"
+    dest: "{{htdocs_path}}nextcloud/config/config.php"
+    owner: wwwrun
+    group: www
+    mode: 0640
+  when: "vault_active"
+
+- name: prepare data folder
+  file:
+    path: "{{nextcloud_data_path}}"
+    state: directory
+    owner: wwwrun
+    group: www
+    mode: 0750
+    
+- name: prepare .ocdata file
+  copy:
+    content: ""
+    dest: "{{nextcloud_data_path}}.ocdata"
+    owner: wwwrun
+    group: www
+    mode: 0640
+  
+# ***** DATABASE ****
+- name: check mysql is running
+  systemd:
+    name: mysql
+    state: started
+
+- name: check mysql databases
+  shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
+  register: mysql_data_exists
+  changed_when: "'nextcloud' not in mysql_data_exists.stdout"
+
+- name: create missing mysql databases
+  shell: "mysqladmin -u root -h 127.0.0.1 create nextcloud"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  
+#- mysql_user:
+#    name: "{{nextcloud_mysql_username}}"
+#    host: "127.0.0.1"
+#    password: "{{nextcloud_mysql_password}}"
+#    priv: 'nextcloud.*:ALL,GRANT'
+#    state: present
+
+- name: create missing mysql user
+  shell: "echo \"CREATE USER '{{nextcloud_mysql_username}}'@'127.0.0.1' IDENTIFIED BY '{{nextcloud_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+
+- name: grant permissions to mysql user
+  shell: "echo \"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'127.0.0.1';\" | mysql -u root -h 127.0.0.1"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+
+- name: refresh mysql privileges
+  shell: "mysqladmin -u root -h 127.0.0.1 flush-privileges"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+
+- name: initialise mysql database
+  shell: "cat roles/nextcloud/templates/nextcloud.sql | mysql -u root -h 127.0.0.1 nextcloud"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  
+- name: check redis is running
+  systemd:
+    name: redis@default
+    state: started
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  
+- name: add user "holger"
+  shell: "export OC_PASS={{holger_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{holger_username}}"
+  become: yes
+  become_user: "wwwrun"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+
+# **** OTHER ****
+- name: copy apache config
+  template:
+    src: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
+    dest: "/etc/apache2/_.ansible.d/nextcloud.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart apache"
+  tags: ['apache_conf']
+
+- name: set updates cron job
+  vars:
+    cron_name: "Nextcloud Updates"
+    cron_cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_nextcloud
+    user: wwwrun
+    minute: "*/15"
+    state: present
+  tags: ['cron_job']
+
+- name: set fileindex cron job
+  vars:
+    cron_name: "Nextcloud Fileindex"
+    cron_cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_nextcloud
+    user: wwwrun
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']
+
+- name: set mysql backup cron job
+  vars:
+    cron_name: "Nextcloud MySQL Backup"
+    cron_cmd: "/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_nextcloud
+    user: root
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']
+

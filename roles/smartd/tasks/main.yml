@@ -1,0 +1,14 @@
+- name: install required packages
+  zypper:
+    name: "smartmontools"
+    state: present
+  notify: "restart smartd"
+
+- name: copy config
+  template:
+    src: roles/smartd/templates/smartd.conf
+    dest: /etc/smartd.conf
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart smartd"

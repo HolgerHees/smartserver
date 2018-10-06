@@ -1,0 +1,11 @@
+- name: restart clamav
+  systemd:
+    name: "{{item}}"
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  with_items:
+    - clamd
+    - freshclam
+  listen: "restart clamav"

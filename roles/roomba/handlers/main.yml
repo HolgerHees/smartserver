@@ -1,0 +1,9 @@
+- name: restart roomba
+  systemd:
+    name: roomba
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart roomba"
+  when: is_production

@@ -1,0 +1,92 @@
+- name: install required packages
+  zypper:
+    name: "netdata"
+    state: present
+  notify: "restart netdata"
+  
+- name: prepare needed folder
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: netdata
+    group: netdata
+    mode: 0750
+    #recurse: true
+  with_items:
+    - "{{ global_lib }}netdata"
+    - "{{ global_lib }}netdata/cache"
+
+#- name: install required packages
+#  zypper:
+#    name: "libuuid-devel"
+#    state: present
+#
+#- name: "clone git"
+#  git:
+##    accept_hostkey: yes
+#    repo: 'https://github.com/firehol/netdata.git'
+#    dest: '{{global_build}}netdata'
+##    force: yes
+#    version: 'v1.10.0'
+#  register: clone_status
+
+#- name: "install"
+#  shell: '{{ item }}'
+#  args:
+#    chdir: '{{global_build}}netdata'
+#  with_items:
+#    - './autogen.sh'
+#    - './configure --with-zlib --with-math --with-user=root'
+#    - 'make'
+#    - 'make install'
+#  when: clone_status.changed
+  
+- name: copy config
+  template:
+    src: "roles/netdata/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - /etc/netdata/netdata.conf
+    - /etc/netdata/health.d/disks.conf
+    - /etc/netdata/health.d/softnet.conf
+    - /etc/netdata/health.d/net.conf
+  notify: "restart netdata"
+  
+- name: disable plugins
+  lineinfile:
+    path: /etc/netdata/python.d.conf
+    regexp: '^{{item}}:'
+    line: '{{item}}: no'
+  with_items:
+    - mysql
+    - redis
+    - elasticsearch
+    - postfix
+    - web_log
+  notify: "restart netdata"
+  
+#- name: disable plugins
+#  command: "mv {{item}} {{item}}.bak"
+#  register: command_result
+#  failed_when: "'command-not-found' in command_result.stderr"
+#  changed_when: "command_result.rc == 0"
+#  with_items:
+#    - /etc/netdata/python.d/mysql.conf
+#    - /etc/netdata/python.d/redis.conf
+#    - /etc/netdata/python.d/elasticsearch.conf
+#  when: mysql_conf.stat.exists == True
+#  notify: "restart netdata"
+
+- name: copy apache config
+  template:
+    src: "roles/netdata/templates/etc/apache2/_.ansible.d/netdata.conf"
+    dest: "/etc/apache2/_.ansible.d/netdata.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart apache"
+  tags: ['apache_conf']
+  

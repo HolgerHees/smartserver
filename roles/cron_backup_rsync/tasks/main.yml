@@ -1,0 +1,23 @@
+# DataDisk rsync
+- name: prepare needed folder
+  file:
+    path: '{{local_backup_path}}dataDisk'
+    state: directory
+    owner: root
+    group: root
+    
+- name: set cron job
+  vars:
+    cron_name: "DataDisk RSync Backup"
+    cron_cmd: "/usr/bin/rsync --quiet -av --delete {{data_path}} {{local_backup_path}}dataDisk/ --exclude=var --exclude=tmp "
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_cron_backup_rsync
+    user: root
+    minute: "0"
+    hour: "5"
+    state: present
+  when: is_production
+  tags: ['cron_job']
+

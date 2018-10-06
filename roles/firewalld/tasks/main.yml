@@ -1,0 +1,17 @@
+- name: install required packages
+  zypper:
+    name: "firewall-config"
+    state: present
+
+- name: copy zone config
+  template:
+    src: "roles/firewalld/templates/etc/firewalld/zones/{{item}}"
+    dest: "/etc/firewalld/zones/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - cloud.xml
+    - public.xml
+    - trusted.xml
+  notify: "restart firewalld"

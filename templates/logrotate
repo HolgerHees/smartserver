@@ -1,0 +1,9 @@
+{{logrotate_path}} {
+    compress
+    dateext
+    rotate 3
+    size=+10M
+    notifempty
+    missingok
+    copytruncate
+}

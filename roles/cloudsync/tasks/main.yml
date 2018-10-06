@@ -1,0 +1,74 @@
+- name: prepare needed cloud folder
+  file:
+    path: '{{item}}'
+    state: directory
+    #recurse: true
+  with_items:
+    - "{{cloud_backup_source_path}}"
+    - "{{cloud_backup_target_path}}"
+
+- name: prepare needed log folder
+  file:
+    path: '{{global_log}}cloudsync/'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: mount cloud data folder
+  mount:
+    name: "{{cloud_backup_target_path}}"
+    src: "{{cloud_net2_server_ip}}:/data/backup/{{holger_username}}"
+    fstype: nfs
+    opts: "rw,noauto,rsize=8192,wsize=8192"
+    state: mounted
+  when: "is_production and vault_active"
+
+- name: "clone git"
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/HolgerHees/cloudsync.git'
+    dest: '{{projects_path}}cloudsync'
+    version: 'master'
+  register: clone_status
+ 
+- name: copy config
+  template:
+    src: "roles/cloudsync/templates/cloudsync.config"
+    dest: "{{projects_path}}cloudsync/config/cloudsync.config"
+  when: "vault_active"
+  
+- name: install
+  shell: '/usr/bin/mvn clean install'
+  args:
+    chdir: '{{projects_path}}cloudsync'
+  when: clone_status.changed
+  
+- name: set backup links
+  file:
+    src: "{{item.src}}"
+    dest: "{{cloud_backup_source_path}}{{item.name}}"
+    state: link
+    owner: root
+    group: root
+  with_items:
+    - {name: 'archive', src: '{{local_backup_path}}archive'}
+    - {name: 'clouddata', src: '{{nextcloud_data_path}}'}
+    - {name: 'intranet-der-dinge.de', src: '{{local_backup_path}}intranet-der-dinge.de'}
+    - {name: 'mysql', src: '{{local_backup_path}}mysql'}
+    - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
+    
+- name: set backup cron job
+  vars:
+    cron_name: "Cloudsync"
+    cron_cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_cloudsync
+    user: root
+    minute: "0"
+    hour: "2"
+    state: present
+  when: is_production
+  tags: ['cron_job']

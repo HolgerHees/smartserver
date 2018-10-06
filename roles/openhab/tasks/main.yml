@@ -1,0 +1,299 @@
+- name: check openhab-runtime
+  stat:
+    path: "{{data_path}}openhab-runtime"
+  register: openhab_exists
+  changed_when: not openhab_exists.stat.exists
+  
+- name: check openhab-runtime
+  stat:
+    path: "{{data_path}}openhab-runtime-2.3.0"
+  register: openhab_version_exists
+  changed_when: not openhab_version_exists.stat.exists
+  
+# **** PREPARATION and CLEANUP ****
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{data_path}}openhab-runtime-2.3.0/"
+    - "{{global_log}}openhab"
+    - "{{global_lib}}openhab"
+
+- name: set runtime link
+  file:
+    src: "openhab-runtime-2.3.0"
+    dest: "{{data_path}}openhab-runtime"
+    state: link
+    owner: root
+    group: root
+
+- name: clean old installation
+  file:
+    dest: "{{data_path}}openhab-runtime-2.3.0/{{item}}"
+    state: absent
+  with_items:
+    - "conf"
+    - "conf.bak"
+    - "userdata/logs"
+    - "userdata/persistence"
+    - "python"
+    - "start.sh"
+    - "start.sh.bak"
+  when: not openhab_exists.stat.exists
+    
+# **** INSTALL ****
+- name: install archive
+  unarchive:
+    src: "https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F2.3.0%2Fopenhab-2.3.0.zip"
+    dest: "{{data_path}}openhab-runtime-2.3.0/"
+    remote_src: yes
+  when: not openhab_exists.stat.exists or not openhab_version_exists.stat.exists
+
+- name: clone config git
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/HolgerHees/openhab-config.git'
+    dest: '{{projects_path}}openhab2'
+    version: 'master'
+
+# **** BACKUP ****
+- name: backup original conf and start.sh
+  command: "mv {{data_path}}openhab-runtime/{{item}} {{data_path}}openhab-runtime/{{item}}.bak"
+  with_items:
+    - "conf"
+    - "start.sh"
+  when: not openhab_exists.stat.exists or not openhab_version_exists.stat.exists
+
+# **** PREPARE FOLDER ****
+- name: prepare needed runtime folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{data_path}}openhab-runtime/conf"
+    - "{{data_path}}openhab-runtime/conf/things"
+    - "{{data_path}}openhab-runtime/conf/rules"
+    - "{{data_path}}openhab-runtime/conf/scripts"
+    - "{{data_path}}openhab-runtime/conf/services"
+    - "{{data_path}}openhab-runtime/conf/sounds"
+    - "{{data_path}}openhab-runtime/userdata/config"
+    - "{{data_path}}openhab-runtime/userdata/config/org"
+    - "{{data_path}}openhab-runtime/userdata/config/org/openhab"
+  notify: "restart openhab"
+
+# **** SET BASE LINKS ****
+- name: link base folder and start.sh
+  file:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    state: link
+    owner: root
+    group: root
+  with_items:
+    - { src: "{{projects_path}}openhab2/python", dest: "{{data_path}}openhab-runtime/python" }
+    - { src: "{{projects_path}}openhab2/start.sh", dest: "{{data_path}}openhab-runtime/start.sh" }
+    - { src: "{{global_log}}openhab", dest: "{{data_path}}openhab-runtime/userdata/logs" }
+    - { src: "{{global_lib}}openhab", dest: "{{data_path}}openhab-runtime/userdata/persistence" }
+  notify: "restart openhab"
+    
+# ***** CONFIGS *****
+- name: copy habpanel config
+  copy:
+    src: "roles/openhab/templates/habpanel.config"
+    dest: "{{data_path}}openhab-runtime/userdata/config/org/openhab/habpanel.config"
+    owner: root
+    group: root
+    mode: 0640
+  when: not openhab_exists.stat.exists or not openhab_version_exists.stat.exists
+  
+- name: set log config
+  lineinfile:
+    path: "{{data_path}}openhab-runtime/userdata/etc/org.ops4j.pax.logging.cfg"
+    regexp: '^{{item.field}}'
+    line: '{{item.field}} = {{item.value}}'
+  with_items:
+    - { field: 'log4j2.logger.jsr223Default.name', value: 'org.eclipse.smarthome.automation' }
+    - { field: 'log4j2.logger.jsr223Default.level', value: 'DEBUG' }
+    - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.eclipse.smarthome.automation.core.internal.RuleEngine' }
+    - { field: 'log4j2.logger.jsr223Trigger.level', value: 'ERROR' }
+  notify: "restart openhab"
+
+- name: copy service and rules
+  template:
+    src: "roles/openhab/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - /etc/systemd/system/openhab.service
+    - /etc/udev/rules.d/10-openhab.rules
+  notify: "restart openhab"
+
+- name: copy configs
+  template:
+    src: "roles/openhab/templates/conf/{{item}}"
+    dest: "{{data_path}}openhab-runtime/conf/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - things/items.things
+    - services/addons.cfg
+    - services/basicui.cfg
+    - services/comfoair.cfg
+    - services/fs20.cfg
+    - services/influxdb.cfg
+    - services/jdbc.cfg
+    - services/knx.cfg
+    - services/logging.cfg
+    - services/mail.cfg
+    - services/mqtt.cfg
+    - services/ntp.cfg
+    - services/pushover.cfg
+    - services/runtime.cfg
+    - services/s300th.cfg
+  notify: "restart openhab"
+  when: "vault_active"
+
+- name: link configs
+  file:
+    src: "{{projects_path}}openhab2/{{item}}"
+    dest: "{{data_path}}openhab-runtime/{{item}}"
+    state: link
+    owner: root
+    group: root
+  with_items:
+    - conf/automation
+    - conf/html
+    - conf/icons
+    - conf/items
+    - conf/persistence
+    - conf/sitemaps
+    - conf/transform
+  notify: "restart openhab"
+
+- name: copy addons
+  copy:
+    src: "roles/openhab/templates/conf/addons/org.openhab.binding.s300th-1.11.0.jar"
+    dest: "{{data_path}}openhab-runtime/addons"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart openhab"
+# *******************
+
+# ***** DATABASE ****
+- name: check mysql is running
+  systemd:
+    name: mysql
+    state: started
+  when: "vault_active"
+
+- name: check mysql databases
+  shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
+  register: mysql_data_exists
+  changed_when: "'openhab' not in mysql_data_exists.stdout"
+  when: "vault_active"
+
+- name: create missing mysql databases
+  shell: "mysqladmin -u root -h 127.0.0.1 create openhab"
+  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+
+- name: create missing mysql user
+  shell: "echo \"CREATE USER '{{openhab_mysql_username}}'@'127.0.0.1' IDENTIFIED BY '{{openhab_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
+  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+
+- name: grant permissions to mysql user
+  shell: "echo \"GRANT ALL PRIVILEGES ON openhab.* TO '{{openhab_mysql_username}}'@'127.0.0.1';\" | mysql -u root -h 127.0.0.1"
+  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+
+- name: refresh mysql privileges
+  shell: "mysqladmin -u root -h 127.0.0.1 flush-privileges"
+  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+  
+- name: check influxdb database
+  stat:
+    path: "{{ global_lib }}influxdb/data/openhab_db"
+  register: influxdb_data_exists
+  changed_when: not influxdb_data_exists.stat.exists
+  when: "vault_active"
+  
+- name: check influxdb is running
+  systemd:
+    name: influxdb
+    state: started
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+  
+- name: wait for influxdb to become ready
+  wait_for:
+    port: 8086
+  changed_when: yes
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+
+- name: create missing influx databases
+  shell: "influx -execute 'CREATE DATABASE openhab_db'"
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+  
+- name: create missing influx openhab user
+  shell: "influx -execute \"CREATE USER {{openhab_influxdb_username}} WITH PASSWORD '{{openhab_influxdb_password}}'\""
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+  
+- name: grant permissions to influx openhab user
+  shell: "influx -execute 'GRANT ALL ON openhab_db TO {{openhab_influxdb_username}}'"
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+
+- name: create missing influx grafana user
+  shell: "influx -execute \"CREATE USER {{grafana_influxdb_username}} WITH PASSWORD '{{grafana_influxdb_password}}'\""
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+
+- name: grant permissions to influx openhab user
+  shell: "influx -execute 'GRANT READ ON openhab_db TO {{grafana_influxdb_username}}'"
+  when: "vault_active and not influxdb_data_exists.stat.exists"
+
+# ***** OTHER *****
+- name: copy apache config
+  template:
+    src: "roles/openhab/templates/etc/apache2/_.ansible.d/openhab.conf"
+    dest: "/etc/apache2/_.ansible.d/openhab.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart apache"
+  tags: ['apache_conf']
+  
+- name: set mysql backup cron job
+  vars:
+    cron_name: "MySQL Openhab Backup"
+    cron_cmd: "/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_openhab
+    user: root
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']
+
+- name: set influxdb backup cron job
+  vars:
+    cron_name: "Influxdb Openhab Backup"
+    cron_cmd: "influxd backup -database openhab_db {{local_backup_path}}influxdb/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_openhab
+    user: root
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']
+

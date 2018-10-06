@@ -1,0 +1,108 @@
+- name: add zypper repository
+  zypper_repository:
+    name: influxdb
+    repo: 'http://download.opensuse.org/repositories/server:/database/openSUSE_Leap_15.0/'
+    auto_import_keys: yes
+    priority: 100
+    state: present
+
+- name: install required packages
+  zypper:
+    name: "influxdb"
+    state: present
+  notify: "restart influxdb"
+
+#- name: install required packages
+#  zypper:
+#    name: "sources/influxdb-1.4.2-2.2.x86_64.rpm"
+#    state: present
+#    disable_gpg_check: yes
+#  notify: "restart influxdb"
+
+#- name: add yum repository
+#  yum_repository:
+#    name: influxdb
+#    description: InfluxDB repository for 5.x packages
+#    baseurl: https://repos.influxdata.com/centos/7/x86_64/stable/
+#    gpgcheck: yes
+#    gpgkey: https://repos.influxdata.com/influxdb.key
+#    repo_gpgcheck: yes
+#    sslverify: yes
+#    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+#    reposdir: "/etc/zypp/repos.d/"
+#  register: yum_status
+#  
+#- name: refresh yum repository
+#  expect:
+#    command: "zypper refresh"
+#    responses:
+#      # Continue with GPG key validation
+#      #immer vertrauen?: "i"
+#      #trust always?: "a"
+#      Weiter: "ja"
+#  changed_when: yum_status.changed
+  
+#- name: install influxdb
+#  expect:
+#    command: "zypper install influxdb"
+#    responses:
+#      # Ignore missing dependencies (some fonts)
+#      Wählen Sie aus den: "2"
+#      Choose from above: "2"
+#      Weiter: "j"
+#      Fortfahren: "j"
+#      Continue: "y"
+#  register: command_result
+#  changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
+#  notify: "restart grafana"
+  
+#- name: install required packages
+#  zypper:
+#    name: "influxdb"
+#    state: present
+#    #disable_gpg_check: yes
+#  notify: "restart influxdb"
+
+- name: prepare needed folder
+  file:
+    path: '{{ global_lib }}influxdb/{{item}}'
+    state: directory
+    owner: influxdb
+    group: influxdb
+    #mode: 0750
+    recurse: true
+  with_items:
+    - hh
+    - meta
+    - data
+    - wal
+
+- name: copy config
+  template:
+    src: roles/influxdb/templates/etc/influxdb/config.toml
+    dest: /etc/influxdb/config.toml
+    owner: root
+    group: influxdb
+    mode: 0640
+  notify: "restart influxdb"
+
+- name: prepare backup folder
+  file:
+    path: '{{local_backup_path}}influxdb'
+    state: directory
+    owner: root
+    group: root
+    
+- name: set clean backup cron job
+  vars:
+    cron_name: "Influxdb Cleanup"
+    cron_cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_influxdb
+    user: root
+    minute: "45"
+    hour: "00"
+    state: present
+  tags: ['cron_job']

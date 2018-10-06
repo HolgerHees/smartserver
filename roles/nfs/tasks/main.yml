@@ -1,0 +1,8 @@
+- name: install required packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - nfs-kernel-server
+    - yast2-nfs-server
+  notify: "restart nfs-server"

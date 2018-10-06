@@ -1,0 +1,37 @@
+- name: set hostname
+  shell: 'hostname {{server_name}}'
+  changed_when: "ansible_hostname != server_name"
+
+- name: set hostname file
+  copy:
+    content: "{{server_name}}"
+    dest: /etc/hostname
+    force: yes
+    owner: root
+    group: root
+    mode: 0644
+
+- name: set hosts config
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^{{server_ip}}'
+    line: '{{server_ip}} {{server_name}}'
+    
+#- name: set network intferface eth0
+#  nmcli:
+#    conn_name: eth0
+#    ifname: eth0
+#    type: ethernet
+#    ip4: "{{server_ip}}/24"
+#    gw4: "{{server_gateway}}"
+#    dns4: "{{dns1}} {{dns2}}"
+#    state: present
+
+#- name: set network intferface eth0:1
+#  nmcli:
+#    conn_name: eth0:1
+#    ifname: eth0
+#    type: ethernet
+#    ip4: "{{cloud_net1_server_ip}}/24"
+#    gw4: "{{cloud_net1_gateway}}"
+#    state: present

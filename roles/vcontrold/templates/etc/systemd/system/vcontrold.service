@@ -1,0 +1,14 @@
+[Unit]
+Description=VitoControl Daemon
+
+[Service]
+Type=forking
+GuessMainPID=yes
+ExecStart=/usr/sbin/vcontrold
+ExecStop=/usr/bin/kill -SIGKILL $MAINPID
+User=root
+Group=root
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

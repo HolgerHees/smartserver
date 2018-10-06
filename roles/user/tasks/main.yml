@@ -1,0 +1,122 @@
+# **** HHEES (SSH, SMB, WEB) ****
+- name: add user "holger" with no login
+  user:
+    name: "{{holger_username}}"
+    comment: Holger Hees
+    uid: 1000
+    shell: /bin/false
+    home: "/home/{{holger_username}}/"
+    #password: "{{ holger_linux_password | password_hash('sha512') }}"
+    #update_password: on_create
+    groups: users
+    append: no
+  when: "vault_active"
+
+- name: prepare user "holger" folder
+  file:
+    path: "/home/{{holger_username}}/"
+    state: directory
+    owner: "{{holger_username}}"
+    group: users
+    mode: 0750
+    #recurse: true
+  when: "vault_active"
+
+- name: add user "holger" to samba
+  shell: "( (pdbedit -L | grep {{holger_username}}) && echo 'skipped' ) || ( ( printf '{{ holger_samba_password }}\n{{ holger_samba_password }}\n' | smbpasswd -a {{holger_username}} ) && echo 'created' )"
+  register: command_result
+  #failed_when: "'command-not-found' in command_result.stderr"
+  changed_when: "'created' in command_result.stdout"
+  notify: "restart samba"
+  when: "vault_active"
+
+- name: add user "holger" to apache
+  htpasswd:
+    path: "{{htdocs_path}}.htpasswd"
+    name: "{{holger_username}}"
+    password: "{{holger_web_password}}"
+  when: "vault_active"
+
+# **** VTI ACCESS USER ****
+- name: add user vti with no login
+  user:
+    name: "{{vti_username}}"
+    comment: Sat receiver
+    uid: 1001
+    shell: /bin/false
+    home: "{{media_path}}"
+    create_home: no
+    groups: users
+    append: no
+  when: "vault_active"
+
+- name: prepare user vti folder
+  file:
+    path: "{{media_path}}"
+    state: directory
+    owner: "{{vti_username}}"
+    group: users
+    mode: 0700
+    #recurse: true
+  when: "vault_active"
+
+- name: add user vti to samba
+  shell: "( (pdbedit -L | grep {{vti_username}}) && echo 'skipped' ) || ( ( printf '{{ vti_samba_password }}\n{{ vti_samba_password }}\n' | smbpasswd -a {{vti_username}} ) && echo 'created' )"
+  register: command_result
+  #failed_when: "'command-not-found' in command_result.stderr"
+  changed_when: "'created' in command_result.stdout"
+  notify: "restart samba"
+  when: "vault_active"
+
+  
+  
+# **** VPN SSH USER ****
+- name: add user vpn
+  user:
+    name: "{{vpn_username}}"
+    comment: VPN ssh
+    uid: 1003
+    shell: /bin/bash
+    home: "/home/{{vpn_username}}/"
+    password: "{{ vpn_linux_password | password_hash('sha512') }}"
+    update_password: on_create
+    groups: users
+    append: no
+  when: "vault_active"
+
+- name: prepare user vpn folder
+  file:
+    path: "/home/{{vpn_username}}/"
+    owner: "{{vpn_username}}"
+    group: users
+    mode: 0750
+    recurse: true
+  when: "vault_active"
+    
+    
+
+    
+    
+# **** APACHE USERS (WEB) ****
+- name: create apache user admin
+  htpasswd:
+    path: "{{htdocs_path}}.htpasswd"
+    name: "{{admin_username}}"
+    password: "{{admin_web_password}}"
+  when: "vault_active"
+
+- name: create apache user alexa
+  htpasswd:
+    path: "{{htdocs_path}}.htpasswd"
+    name: "{{alexa_username}}"
+    password: "{{alexa_web_password}}"
+  when: "vault_active"
+
+- name: add apache user to groups
+  lineinfile:
+    path: "{{htdocs_path}}.htgroups"
+    regexp: '^{{item.group}}'
+    line: '{{item.group}}: {{item.user}}'
+  with_items:
+    - { group: 'USER', user: '{{holger_username}} {{admin_username}}' }
+  when: "vault_active"
