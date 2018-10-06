@@ -1,7 +1,7 @@
 - name: install ansible deployment project
   git:
 #    accept_hostkey: yes
-    repo: 'https://bitbucket.org/hhees/smartmarvin.git'
+    repo: 'https://github.com/HolgerHees/smartserver.git'
     dest: '{{projects_path}}{{ansible_project_name}}'
 #    force: yes
     version: 'master'

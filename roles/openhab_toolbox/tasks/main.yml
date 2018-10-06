@@ -1,7 +1,7 @@
 - name: clone git
   git:
 #    accept_hostkey: yes
-    repo: 'https://bitbucket.org/hhees/toolbox.git'
+    repo: 'https://github.com/HolgerHees/toolbox.git'
     dest: '{{projects_path}}toolbox'
     version: 'master'
 
