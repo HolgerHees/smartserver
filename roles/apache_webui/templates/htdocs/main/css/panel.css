@@ -9,7 +9,7 @@
 	position: fixed;
 	top: 0;
 	bottom: 0;
-	background: $white;
+	background: white;
 	z-index: 1003;
 	overflow-y: auto;
 	-webkit-overflow-scrolling: touch;
@@ -42,7 +42,7 @@
 }
 
 .vm-animate.vm-panel-dismiss {
-	@include transition(opacity, 150ms, ease-out);
+	transition: opacity 150ms ease-out;
 }
 
 .vm-animate.vm-page,
