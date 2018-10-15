@@ -319,7 +319,7 @@
 					xhr.onload = function() 
 					{  
                         imageTitle = this.response;
-                        openHome();
+                        if( !activeMenu ) openHome();
 					}
 					xhr.send();
                 };
