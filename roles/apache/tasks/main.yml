@@ -9,11 +9,11 @@
     - python-certbot-apache
   notify: "restart apache"
 
-- name: check letsencrypt (develop)
+- name: check certificate (develop)
   stat:
-    path: /etc/letsencrypt/live/{{server_domain}}/
-  register: letsencrypt_exists
-  changed_when: not letsencrypt_exists.stat.exists
+    path: /etc/certbot/live/{{server_domain}}/
+  register: certificate_exists
+  changed_when: not certificate_exists.stat.exists
   when: "not use_vault_files"
   
 - name: prepare needed folder (develop)
@@ -24,83 +24,37 @@
     group: root
     mode: 0750
   with_items:
-    - "letsencrypt/"
-    - "letsencrypt/live"
-    - "letsencrypt/live/{{server_domain}}"
-  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+    - "certbot/"
+    - "certbot/live"
+    - "certbot/live/{{server_domain}}"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
 
 - name: generate openssl privatekey (develop)
   openssl_privatekey:
-    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+    path: "/etc/certbot/live/{{server_domain}}/privkey.pem"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
     
 - name: generate openssl csr (develop)
   openssl_csr:
-    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
-    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    path: "/etc/certbot/live/{{server_domain}}/cert.csr"
+    privatekey_path: "/etc/certbot/live/{{server_domain}}/privkey.pem"
     common_name: "{{server_domain}}"
-  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
     
 - name: generate openssl certificate (develop)
   openssl_certificate:
-    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
-    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    path: "/etc/certbot/live/{{server_domain}}/fullchain.pem"
+    privatekey_path: "/etc/certbot/live/{{server_domain}}/privkey.pem"
+    csr_path: "/etc/certbot/live/{{server_domain}}/cert.csr"
     provider: selfsigned
-  when: "not use_vault_files and not letsencrypt_exists.stat.exists"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
   
-- name: prepare needed folder (production)
-  file:
-    path: "/etc/{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "letsencrypt/"
-    - "letsencrypt/accounts"
-    - "letsencrypt/accounts/acme-v02.api.letsencrypt.org"
-    - "letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory"
-    - "letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da"
-    - "letsencrypt/archive"
-    - "letsencrypt/archive/{{server_domain}}"
-    - "letsencrypt/csr"
-    - "letsencrypt/keys"
-    - "letsencrypt/live"
-    - "letsencrypt/live/{{server_domain}}"
-    - "letsencrypt/renewal"
-  when: "use_vault_files"
-
-- name: copy letsencrypt certificates (production)
-  copy:
-    src: "{{ vault_files }}letsencrypt/{{item}}"
-    dest: "/etc/letsencrypt/{{item}}"
+- name: install certificate (production)
+  unarchive:
+    src: "{{ vault_files }}letsencrypt/certbot.tgz"
+    dest: "/etc/"
+    creates: "/etc/certbot/"
     decrypt: yes
-    mode: 0640
-  with_items:
-    - "accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da/meta.json"
-    - "accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da/private_key.json"
-    - "accounts/acme-v02.api.letsencrypt.org/directory/dda983f361b088ebe3cd729b20e2a6da/regr.json"
-    - "archive/{{server_domain}}/chain1.pem"
-    - "archive/{{server_domain}}/privkey1.pem"
-    - "archive/{{server_domain}}/cert1.pem"
-    - "archive/{{server_domain}}/fullchain1.pem"
-    - "csr/0000_csr-certbot.pem"
-    - "keys/0000_key-certbot.pem"
-    - "renewal/{{server_domain}}.conf"
-  notify: "restart apache"
-  when: "use_vault_files"
-
-- name: set letsencrypt symlinks (production)
-  file:
-    src: "/etc/letsencrypt/archive/{{item.src}}"
-    dest: "/etc/letsencrypt/live/{{item.dest}}"
-    state: link
-  with_items:
-    - { src: "{{server_domain}}/fullchain1.pem", dest: "{{server_domain}}/fullchain.pem" }
-    - { src: "{{server_domain}}/privkey1.pem", dest: "{{server_domain}}/privkey.pem" }
-    - { src: "{{server_domain}}/chain1.pem", dest: "{{server_domain}}/chain.pem" }
-    - { src: "{{server_domain}}/cert1.pem", dest: "{{server_domain}}/cert.pem" }
   notify: "restart apache"
   when: "use_vault_files"
 
