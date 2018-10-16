@@ -336,53 +336,36 @@
         }
         $(document).ready( init );
         
-        <?php
-        $entries = array(
-            'nextcloud' => array(
-                array( '/nextcloud/', 'Dokumente', null, false ),
-                array( '/nextcloud/index.php/apps/news/', 'News', null, false ),
-                array( '/nextcloud/index.php/apps/keeweb/', 'Keys', 'Keeweb', true )
-            ),
-            'openhab' => array(
-                array( '/basicui/app', 'Sitemap', 'Basic UI', false ),
-                array( '/paperui/index.html', 'Administration', 'Paper UI', false ),
-                array( '/habpanel/index.html', 'HabPanel', null, false )
-            ),
-            'roboter' => array(
-                array( '/automowerDevice/', 'Automower', 'Robonect', false )
-            ),
-            'camera' => array(
-                array( 'initCamera', '<div class="strasse"><img data-name="Strasse" data-src="/cameraStrasseImage" data-interval="3000"></div><div class="automower"><img data-name="Automower" data-src="/cameraAutomowerImage" data-interval="10000"></div>' )
-            ),
-            'camera1' => array(
-                array( '/cameraAutomowerImage', 'Automower', 'Robonect', false ),
-                array( '/cameraStrasseImage', 'Strasse', 'Instar', false )
-            ),
-            'tools' => array(
-                array( '/grafana/d/consumption/verbrauchsubersicht', 'Charts', 'Grafana', false ),
-                array( '/kibana/app/kibana#/dashboard/3c82b6c0-a57b-11e8-afe6-f9511c1edcd5', 'Analytics', 'Kibana', false ),
-                array( '/netdata/', 'Status', 'Netdata', false )
-            ),
-            'admin' => array(
-                array( '/vti/', 'Sat Receiver', 'VTI', false ),
-                array( '/mysql/', 'MySQL', 'phpMyAdmin', false ),
-            )
-        );
-        echo 'var subMenus = [];'."\n";
-        foreach( $entries as $key => $subentries ) {
-            echo 'subMenus[\''.$key.'\'] = [];'."\n";
-            foreach( $subentries as $entry ) {
-                if( count($entry) == 2 )
-                {
-                    echo 'subMenus[\''.$key.'\'].push( [\'' . $entry[0] . '\',\'' . $entry[1] . '\'] );'."\n";
-                }
-                else
-                {
-                    echo 'subMenus[\''.$key.'\'].push( [\'' . $entry[0] . '\',\'' . $entry[1] . '\',\'' . $entry[2] . '\',' . ( $entry[3] ? 'true' : 'false' ) . '] );'."\n";
-                }
-            }
-        }
-        ?>
+        var subMenus = [];
+        subMenus['nextcloud'] = [
+          ['/nextcloud/','Dokumente','',false],
+          ['/nextcloud/index.php/apps/news/','News','',false],
+          ['/nextcloud/index.php/apps/keeweb/','Keys','Keeweb',true]
+        ];
+        subMenus['openhab'] = [
+          ['/basicui/app','Sitemap','Basic UI',false],
+          ['/paperui/index.html','Administration','Paper UI',false],
+          ['/habpanel/index.html','HabPanel','',false]
+        ];
+        subMenus['roboter'] = [
+          ['/automowerDevice/','Automower','Robonect',false]
+        ];
+        subMenus['camera'] = [
+          ['initCamera','<div class="strasse"><img data-name="Strasse" data-src="/cameraStrasseImage" data-interval="3000"></div><div class="automower"><img data-name="Automower" data-src="/cameraAutomowerImage" data-interval="10000"></div>']
+        ];
+        subMenus['camera1'] = [
+          ['/cameraAutomowerImage','Automower','Robonect',false],
+          ['/cameraStrasseImage','Strasse','Instar',false]
+        ];
+        subMenus['tools'] = [
+          ['/grafana/d/consumption/verbrauchsubersicht','Charts','Grafana',false],
+          ['/kibana/app/kibana#/dashboard/3c82b6c0-a57b-11e8-afe6-f9511c1edcd5','Analytics','Kibana',false],
+          ['/netdata/','Status','Netdata',false]
+        ];
+        subMenus['admin'] = [
+          ['/vti/','Sat Receiver','VTI',false],
+          ['/mysql/','MySQL','phpMyAdmin',false]
+        ];
 	</script>
 </head>
 <body>
