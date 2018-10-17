@@ -50,6 +50,7 @@ ansible-playbook -i server.ini -l develop --tags "nextcloud" --ask-vault-pass  s
 # run nextcloud in staging without vault depending tasks
 ansible-playbook -i server.ini -l develop --tags "nextcloud"  server.yml
 
+
 # run everything in test environment
 ansible-playbook -i server.ini -l test server.yml
 ```
