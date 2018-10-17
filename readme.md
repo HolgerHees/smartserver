@@ -2,7 +2,7 @@
 
 This project contains my complete automated IoT Server deployment setup.
 
-[http://www.intranet-der-dinge.de/smarthome/infrastruktur/server/setup/](http://www.intranet-der-dinge.de/smarthome/infrastruktur/server/setup/)
+[http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/)
 
 ## Requirements
 
