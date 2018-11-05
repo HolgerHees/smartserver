@@ -70,6 +70,7 @@
     mode: 0750
   with_items:
     - { owner: wwwrun, group: www, dir: "{{htdocs_path}}" }
+    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}fallback/" }
     - { owner: root, group: root, dir: "/etc/apache2/_.ansible.d/" }
     - { owner: root, group: root, dir: "{{global_log}}/apache2/" }
 
@@ -86,6 +87,9 @@
     - proxy 
     - proxy_html 
     - proxy_http 
+    - proxy_balancer
+    - lbmethod_bytraffic # used by proxy_balancer
+    - slotmem_shm # used by proxy_balancer
     - xml2enc
     - deflate 
     - filter 
@@ -127,6 +131,16 @@
     - vhosts.d/vhost-ssl.conf
   notify: "restart apache"
   when: "vault_active"
+
+- name: copy balancer fallback files
+  copy:
+    src: "roles/apache/templates/device404.jpg"
+    dest: "{{htdocs_path}}fallback/{{item}}"
+    owner: wwwrun
+    group: www
+  with_items:
+    - cam.jpg
+    - cam.mjpg
 
 - name: disable http vhost
   command: "mv /etc/apache2/vhosts.d/vhost.conf /etc/apache2/vhosts.d/vhost.conf.bak"
