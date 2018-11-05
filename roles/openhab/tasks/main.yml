@@ -125,16 +125,16 @@
     - { field: 'log4j2.logger.jsr223Trigger.level', value: 'ERROR' }
   notify: "restart openhab"
 
-- name: copy service and rules
+- name: copy udev rule and service
   template:
-    src: "roles/openhab/templates{{item}}"
-    dest: "{{item}}"
+    src: "roles/openhab/templates{{item.path}}"
+    dest: "{{item.path}}"
     owner: root
     group: root
-    mode: 0640
+    mode: "{{item.mode}}"
   with_items:
-    - /etc/systemd/system/openhab.service
-    - /etc/udev/rules.d/10-openhab.rules
+    - { mode: "u=rw,g=r,o=", path: "/etc/udev/rules.d/10-openhab.rules" }
+    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/openhab.service" }
   notify: "restart openhab"
 
 - name: copy configs

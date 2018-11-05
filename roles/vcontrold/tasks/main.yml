@@ -16,18 +16,18 @@
     name: cmake
     state: present
 
-- name: copy config
+- name: copy config and service
   template:
-    src: "roles/vcontrold/templates{{item}}"
-    dest: "{{item}}"
+    src: "roles/vcontrold/templates{{item.path}}"
+    dest: "{{item.path}}"
     owner: root
     group: root
-    mode: 0640
+    mode: "{{item.mode}}"
   with_items:
-    - /etc/vcontrold/vcontrold.xml
-    - /etc/vcontrold/vito.xml
-    - /etc/systemd/system/vcontrold.service
-    - /etc/udev/rules.d/10-vcontrold.rules
+    - { mode: "u=rw,g=r,o=", path: "/etc/vcontrold/vcontrold.xml" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/vcontrold/vito.xml" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/udev/rules.d/10-vcontrold.rules" }
+    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/vcontrold.service" }
   notify: "restart vcontrold"
 
 - name: "clone git"

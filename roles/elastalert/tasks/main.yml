@@ -21,17 +21,17 @@
     name: aws-requests-auth
   notify: "restart elastalert"
 
-- name: copy config
+- name: copy config and service
   template:
-    src: "roles/elastalert/templates{{item}}"
-    dest: "{{item}}"
+    src: "roles/elastalert/templates{{item.path}}"
+    dest: "{{item.path}}"
     owner: root
     group: root
-    mode: 0640
+    mode: "{{item.mode}}"
   with_items:
-    - /etc/elastalert/config.yaml
-    - /etc/elastalert/rule.yaml
-    - /etc/systemd/system/elastalert.service
+    - { mode: "u=rw,g=r,o=", path: "/etc/elastalert/config.yaml" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/elastalert/rule.yaml" }
+    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/elastalert.service" }
   notify: "restart elastalert"
 
 - name: "clone git"
