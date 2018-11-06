@@ -83,31 +83,31 @@
 
 - name: copy easy-rsa certificates (production)
   copy:
-    src: "{{ vault_files }}easy-rsa/{{item}}"
-    dest: "/etc/easy-rsa/pki/{{ item }}"
+    src: "{{ vault_files }}easy-rsa/{{item.path}}"
+    dest: "/etc/easy-rsa/pki/{{item.path}}"
     decrypt: yes
     owner: root
     group: root
-    mode: 0640
+    mode: "{{item.mode}}"
   with_items:
 #    - "certs_by_serial/76C34AF12707764CFBBE86AA4BB64751.pem"  // server.crt
 #    - "certs_by_serial/B0C6214224191008AE8BF1D26F09D2B1.pem"  // mobile.crt
-    - "issued/server.crt"
-    - "issued/mobile.crt"
-    - "private/ca.key"
-    - "private/server.key"
-    - "private/mobile.key"
+    - { mode: "u=rw,g=r,o=", path: "issued/server.crt" }
+    - { mode: "u=rw,g=r,o=", path: "issued/mobile.crt" }
+    - { mode: "u=rw,g=,o=", path: "private/ca.key" }
+    - { mode: "u=rw,g=,o=", path: "private/server.key" }
+    - { mode: "u=rw,g=,o=", path: "private/mobile.key" }
 #    - "private/server.pass"
-    - "reqs/server.req"
-    - "reqs/mobile.req"
+    - { mode: "u=rw,g=,o=", path: "reqs/server.req" }
+    - { mode: "u=rw,g=,o=", path: "reqs/mobile.req" }
 #    - "serial"
-    - "ca.crt"
+    - { mode: "u=rw,g=r,o=", path: "ca.crt" }
 #    - "index.txt.attr"
 #    - "index.txt"
-    - "dh.pem"
+    - { mode: "u=rw,g=r,o=", path: "dh.pem" }
   notify: "restart openvpn@mobile"
   when: "use_vault_files"
-
+  
 - name: copy server pass
   copy:
     content: "{{server_vpn_pass_mobile}}"
@@ -115,7 +115,7 @@
     decrypt: yes
     owner: root
     group: root
-    mode: 0640
+    mode: 0600
   notify: "restart openvpn@mobile"
   when: "vault_active"
   
@@ -139,7 +139,7 @@
     decrypt: yes
     owner: root
     group: root
-    mode: 0640
+    mode: 0600
   notify: "restart openvpn@cloud"
   when: "use_vault_files"
 
