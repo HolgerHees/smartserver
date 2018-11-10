@@ -1,7 +1,10 @@
 - name: install required packages
   zypper:
-    name: "netdata"
+    name: "{{item}}"
     state: present
+  with_items:
+    - netdata
+    - fping
   notify: "restart netdata"
   
 - name: prepare needed folder
@@ -50,6 +53,7 @@
     mode: 0640
   with_items:
     - /etc/netdata/netdata.conf
+    - /etc/netdata/fping.conf
     - /etc/netdata/health.d/disks.conf
     - /etc/netdata/health.d/softnet.conf
     - /etc/netdata/health.d/net.conf
