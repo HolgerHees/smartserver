@@ -57,6 +57,7 @@
     - /etc/netdata/health.d/disks.conf
     - /etc/netdata/health.d/softnet.conf
     - /etc/netdata/health.d/net.conf
+    - /etc/netdata/health.d/fping.conf
   notify: "restart netdata"
   
 - name: disable plugins
