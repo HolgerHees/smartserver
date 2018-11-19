@@ -1,3 +1,19 @@
+- name: add zypper repository
+  zypper_repository:
+    name: influxdb
+    repo: 'https://download.opensuse.org/repositories/devel:/languages:/nodejs/openSUSE_Leap_15.0/'
+    auto_import_keys: yes
+    priority: 100
+    state: present
+    
+- name: install nodejs packages
+  zypper:
+    name: "{{item}}"
+    state: present
+  with_items:
+       - nodejs6
+       - npm6
+
 - name: clone git
   git:
 #    accept_hostkey: yes
@@ -11,7 +27,7 @@
     state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: 0755
 
 - name: copy configs
   template:
@@ -19,7 +35,7 @@
     dest: "{{projects_path}}alexa_smarthome/config/{{item}}"
     owner: root
     group: root
-    mode: 0640
+    mode: 0644
   with_items:
     - environment.js
     - openhab.js
