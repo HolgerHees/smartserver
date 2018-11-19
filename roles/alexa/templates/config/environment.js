@@ -25,7 +25,7 @@ module.exports = {
         {"id":"amzn1.ask.device.{{alexa_device_id2}}","area":"bedroom"},
         {"id":"amzn1.ask.device.{{alexa_device_id3}}","area":"floor"},
         {"id":"amzn1.ask.device.{{alexa_device_id4}}","area":"bathroom"},
-        {"id":"amzn1.ask.device.{{alexa_device_id5}}","area":null}
+        {"id":"amzn1.ask.device.{{alexa_device_id5}}","area":null},
         {"id":"amzn1.ask.device.{{alexa_device_id6}}","area":"livingroom"}
     ],
     "groups": [
