@@ -52,7 +52,9 @@ cloud_net1_server_ip:             "10.1.{{netgroup}}.50"
 cloud_net1_gateway:               "10.1.{{netgroup}}.1"
 cloud_net1_network:               "10.1.{{netgroup}}.0"
 
-cloud_net2_server_ip:             "10.2.0.88"
+# temporary fix
+cloud_net2_server_ip:             "10.0.{{netgroup}}.2"
+# cloud_net2_server_ip:             "10.2.0.88"
 cloud_net2_gateway:               "10.2.0.1"
 cloud_net2_network:               "10.2.0.0"
 
