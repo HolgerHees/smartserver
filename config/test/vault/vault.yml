@@ -26,6 +26,10 @@ admin_web_password: "default123"
 
 alexa_username: "alexa"
 alexa_web_password: "default123"
+alexa_deployment_access_key_id: "<access_key_id>"
+alexa_deployment_secret_access_key: "<secret_access_key>"
+alexa_deployment_role: "arn:aws:iam::<role_id>:role/AlexaTestSkill"
+alexa_deployment_function_name: "test-custom-skill"
 
 automower_device_username: "automower"
 automower_device_password: "default123"

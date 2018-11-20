@@ -21,23 +21,16 @@
     dest: '{{projects_path}}alexa_smarthome'
     version: 'master'
 
-- name: prepare needed runtime folder
-  file:
-    path: "{{projects_path}}alexa_smarthome/config"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-
 - name: copy configs
   template:
-    src: "roles/alexa/templates/config/{{item}}"
-    dest: "{{projects_path}}alexa_smarthome/config/{{item}}"
+    src: "roles/alexa/templates{{item}}"
+    dest: "{{projects_path}}alexa_smarthome{{item}}"
     owner: root
     group: root
     mode: 0644
   with_items:
-    - environment.js
-    - openhab.js
-    - test.js
+    - /config/environment.js
+    - /config/openhab.js
+    - /config/test.js
+    - /.env
   when: "vault_active"
