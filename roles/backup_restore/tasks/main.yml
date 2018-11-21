@@ -37,6 +37,7 @@
     state: started
   when: influxdb_backup_exists.stat.exists
 
+# ??? check if this is enough or if we need to import metadata from opentsdb too
 - name: import influxdb metadata backup
   shell: "influxd restore -metadir {{ global_lib }}influxdb/meta {{backup_files}}influxdb/openhab*"
   become: yes
@@ -45,6 +46,12 @@
   
 - name: import influxdb openhab backup
   shell: "influxd restore -database openhab_db -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/openhab*"
+  become: yes
+  become_user: influxdb
+  when: influxdb_backup_exists.stat.exists
+
+- name: import influxdb opentsdb backup
+  shell: "influxd restore -database opentsdb -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/opentsdb*"
   become: yes
   become_user: influxdb
   when: influxdb_backup_exists.stat.exists

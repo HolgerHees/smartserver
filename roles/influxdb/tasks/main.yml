@@ -93,6 +93,20 @@
     owner: root
     group: root
     
+- name: set opentsdb backup cron job
+  vars:
+    cron_name: "Influxdb OpenTSDB Backup"
+    cron_cmd: "influxd backup -database opentsdb {{local_backup_path}}influxdb/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_influxdb
+    user: root
+    minute: "0"
+    hour: "1"
+    state: present
+  tags: ['cron_job']
+
 - name: set clean backup cron job
   vars:
     cron_name: "Influxdb Cleanup"
