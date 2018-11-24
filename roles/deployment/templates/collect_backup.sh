@@ -24,3 +24,7 @@ FILE=$(ls -td {{local_backup_path}}influxdb/openhab* 2>/dev/null | head -n 1)
 if [ ! -z $FILE ]; then
     cp -r $FILE/ {{projects_path}}{{ansible_project_name}}/{{config_path}}backup/influxdb/
 fi
+FILE=$(ls -td {{local_backup_path}}influxdb/opentsdb* 2>/dev/null | head -n 1)
+if [ ! -z $FILE ]; then
+    cp -r $FILE/ {{projects_path}}{{ansible_project_name}}/{{config_path}}backup/influxdb/
+fi

@@ -114,7 +114,8 @@
   notify: "restart grafana"
   with_items:
     - "provisioning/dashboards/provider.yaml"
-    - "provisioning/datasources/datasource.yaml"
+    - "provisioning/datasources/openhab.yaml"
+    - "provisioning/datasources/opentsdb.yaml"
   when: "vault_active"
 
 - name: set domain config
