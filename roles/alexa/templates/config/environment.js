@@ -21,12 +21,13 @@ module.exports = {
         "group_other": { "id": "others", "area_prefix": "others_" }
     },
     "clients": [
-        {"id":"amzn1.ask.device.{{alexa_device_id1}}","area":null},
+        {"id":"amzn1.ask.device.{{alexa_device_id1}}","area":"childroom1"},
         {"id":"amzn1.ask.device.{{alexa_device_id2}}","area":"bedroom"},
-        {"id":"amzn1.ask.device.{{alexa_device_id3}}","area":"floor"},
+        {"id":"amzn1.ask.device.{{alexa_device_id3}}","area":null},
         {"id":"amzn1.ask.device.{{alexa_device_id4}}","area":"bathroom"},
         {"id":"amzn1.ask.device.{{alexa_device_id5}}","area":null},
-        {"id":"amzn1.ask.device.{{alexa_device_id6}}","area":"livingroom"}
+        {"id":"amzn1.ask.device.{{alexa_device_id6}}","area":"floor"},
+        {"id":"amzn1.ask.device.{{alexa_device_id7}}","area":"livingroom"}
     ],
     "groups": [
         { "id": "rollershutter", "phrase": ["OR","rolläden","rolladen","rollladen","rollläden"] },
