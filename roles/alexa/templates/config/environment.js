@@ -85,8 +85,8 @@ module.exports = {
                         {"id": "others_good_morning", "phrase": ["OR", "guten morgen", "aufstehen"]},
                         {"id": "others_go_sleeping", "phrase": ["AND", "$schlafen$", "$geh"]},
                         {"id": "others_good_night", "phrase": "gute nacht"},
-                        {"id": "others_smoking", "phrase": ["AND", "$rauchen$", ["OR","$bin", "$geh"]]},
-                        {"id": "others_back", "phrase": ["AND", ["OR","$bin$","$wieder$"], ["OR", "$da$", "$zurück$"]]},
+                        {"id": "others_going_out", "phrase": ["AND", [ "OR", "$raus$", "$draußen$"],["OR", "$bin", "$gehe"]]},
+                        {"id": "others_coming_back", "phrase": ["AND", ["OR","$bin$","$wieder$"], ["OR", "$da$", "$zurück$"]]},
 
                         {"id": "livingroom", "phrase": ["OR", "$wohnzimmer", "$wohn$"]}, // im wohn und schlafzimmer
                         {"id": "boxroom", "phrase": ["OR", "$abstellkammer", "$kammer"]},
@@ -454,8 +454,8 @@ module.exports = {
             { "id": "Scene2", "areas": ["others_good_morning"], "items": ["Scene2"], "cmds": ["DEFAULT_ON"], "i18n": "guten morgen" },
             { "id": "Scene3", "areas": ["others_go_sleeping"], "items": ["Scene3"], "cmds": ["DEFAULT_ON"] },
             { "id": "Scene4", "areas": ["others_good_night"], "items": ["Scene4"], "cmds": ["DEFAULT_ON"], "i18n": "gute nacht" },
-            { "id": "Scene5", "areas": ["others_smoking"], "items": ["Scene5"], "cmds": ["DEFAULT_ON"], "i18n": "ok. Ich habe die automatische Beleuchtung dafür teilweise ausgeschaltet" },
-            { "id": "Scene5", "areas": ["others_back"], "items": ["Motiondetector_Outdoor_Switch"], "cmds": ["DEFAULT_ON"], "i18n": "ok. Ich habe die automatische Beleuchtung wieder komplett eingeschaltet" },
+            { "id": "Scene5", "areas": ["others_going_out"], "items": ["Scene5"], "cmds": ["DEFAULT_ON"], "i18n": "ok. Ich habe die automatische Beleuchtung dafür teilweise ausgeschaltet" },
+            { "id": "Scene5", "areas": ["others_coming_back"], "items": ["Motiondetector_Outdoor_Switch"], "cmds": ["DEFAULT_ON"], "i18n": "ok. Ich habe die automatische Beleuchtung wieder komplett eingeschaltet" },
         ]
     }
 }
