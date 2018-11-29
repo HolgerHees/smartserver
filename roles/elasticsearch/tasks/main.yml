@@ -86,12 +86,15 @@
     line: 'Requires=elasticsearch.service'
   notify: "restart kibana"
 
-- name: copy apache kibana config
+- name: copy apache configs
   template:
-    src: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/kibana.conf"
-    dest: "/etc/apache2/_.ansible.d/kibana.conf"
+    src: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/{{item}}"
+    dest: "/etc/apache2/_.ansible.d/{{item}}"
     owner: root
     group: root
     mode: 0640
+  with_items:
+    - kibana.conf
+    - elasticsearch.conf
   notify: "restart apache"
   tags: ['apache_conf']
