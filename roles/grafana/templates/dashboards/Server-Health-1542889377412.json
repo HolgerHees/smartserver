@@ -1569,7 +1569,7 @@
     ]
   },
   "timezone": "",
-  "title": "Server",
-  "uid": "server",
+  "title": "Server Health",
+  "uid": "server-health",
   "version": 30
 }
