@@ -13,8 +13,12 @@
     
 - name: install required packages
   zypper:
-    name: cmake
+    name: "{{item}}"
     state: present
+  with_items:
+    - cmake
+    - libusb-compat-devel # needed to compile sensors
+    - libudev-devel # needed to compile sensors
 
 - name: copy config and service
   template:
@@ -90,8 +94,17 @@
     - "heating_control/heizung.bash"
     - "heating_control/heizungBetriebsart.bash"
     - "heating_sensors/sensoren.bash"
-    - "heating_sensors/TempCmd"
   
+- name: copy cmd binaries
+  copy:
+    src: "roles/vcontrold/templates/opt/{{item}}"
+    dest: "/opt/{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "heating_sensors/TempCmd"
+
 - name: set control cron job
   vars:
     cron_name: "Heating Control"

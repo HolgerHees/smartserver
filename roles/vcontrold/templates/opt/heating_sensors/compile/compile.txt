@@ -1,0 +1,16 @@
+1. extract Software-Temperaturesensor.zip
+
+2. change to directory CMDLINE
+
+3. change Makefile "OS = LINUX"
+
+4. append "libusb" to the end of the LIBS row like
+    LIBS      = `pkg-config libusb-1.0 libudev --libs libusb`
+
+5. create .deps folder
+
+6. install libusb-compat-devel and libudev-devel
+
+7. copy main.c to CMDLINE
+
+6. make
