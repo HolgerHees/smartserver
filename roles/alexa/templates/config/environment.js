@@ -85,7 +85,7 @@ module.exports = {
                         {"id": "others_good_morning", "phrase": ["OR", "guten morgen", "aufstehen"]},
                         {"id": "others_go_sleeping", "phrase": ["AND", "$schlafen$", "$geh"]},
                         {"id": "others_good_night", "phrase": "gute nacht"},
-                        {"id": "others_going_out", "phrase": ["AND", [ "OR", "$raus$", "$draußen$"],["OR", "$bin", "$gehe"]]},
+                        {"id": "others_going_out", "phrase": ["AND", [ "OR", "$raus$", "$draußen$"],["OR", "$bin", "$geh"]]},
                         {"id": "others_coming_back", "phrase": ["AND", ["OR","$bin$","$wieder$"], ["OR", "$da$", "$zurück$"]]},
 
                         {"id": "livingroom", "phrase": ["OR", "$wohnzimmer", "$wohn$"]}, // im wohn und schlafzimmer
