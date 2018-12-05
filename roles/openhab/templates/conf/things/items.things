@@ -13,4 +13,6 @@ Bridge hue:bridge:{{hue_device_id}} [ ipAddress="{{hue_ip}}", userName="{{hue_us
 	0210 3 [ lightId="3" ]
 	0210 4 [ lightId="4" ]
 	0210 5 [ lightId="5" ]
+	0010 socket1 [ lightId="6" ]
+	0010 socket2 [ lightId="7" ]
 }
