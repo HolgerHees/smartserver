@@ -47,6 +47,13 @@
     group: www
   register: news_installed
   
+- name: patch news app min required version
+  lineinfile:
+    path: "{{htdocs_path}}nextcloud/apps/news/appinfo/info.xml"
+    regexp: '<nextcloud min-version='
+    line: '<nextcloud min-version="14" max-version="20"/>'
+  when: news_installed.changed
+  
 - name: prepare news config folder
   file:
     path: "{{item}}"

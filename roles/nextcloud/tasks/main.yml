@@ -63,6 +63,12 @@
   register: mysql_data_exists
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
 
+- name: upgrade existing database
+  shell: "php {{htdocs_path}}nextcloud/occ upgrade"
+  become: yes
+  become_user: "wwwrun"
+  when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
+
 - name: create missing mysql databases
   shell: "mysqladmin -u root -h 127.0.0.1 create nextcloud"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
