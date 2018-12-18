@@ -1,6 +1,6 @@
 - name: set openhab version
   set_fact:
-    openhab_version: '2.3.0'
+    openhab_version: '2.4.0'
     
 - name: check openhab-runtime
   stat:
@@ -111,8 +111,10 @@
   with_items:
     - { field: 'log4j2.logger.jsr223Default.name', value: 'org.eclipse.smarthome.automation' }
     - { field: 'log4j2.logger.jsr223Default.level', value: 'DEBUG' }
-    - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.eclipse.smarthome.automation.core.internal.RuleEngine' }
+    - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.eclipse.smarthome.automation.core.internal.RuleEngineImpl' }
     - { field: 'log4j2.logger.jsr223Trigger.level', value: 'ERROR' }
+    - { field: 'log4j2.logger.jsr223Binding.name', value: 'org.openhab.binding.knx.internal.bus.KNXBinding' }
+    - { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
   notify: "restart openhab"
 
 - name: copy udev rule and service
