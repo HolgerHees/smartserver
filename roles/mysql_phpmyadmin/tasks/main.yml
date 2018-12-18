@@ -1,12 +1,16 @@
+- name: set phpmyadmin version
+  set_fact:
+    phpmyadmin_version: '4.8.3'
+    
 - name: check installation
   stat:
-    path: "{{htdocs_path}}mysql"
+    path: "{{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
   register: phpmyadmin_exists
   changed_when: not phpmyadmin_exists.stat.exists
   
 - name: install archive
   unarchive:
-    src: "https://files.phpmyadmin.net/phpMyAdmin/4.8.3/phpMyAdmin-4.8.3-all-languages.zip"
+    src: "https://files.phpmyadmin.net/phpMyAdmin/{{phpmyadmin_version}}/phpMyAdmin-{{phpmyadmin_version}}-all-languages.zip"
     dest: "{{htdocs_path}}"
     remote_src: yes
     owner: wwwrun
@@ -15,12 +19,12 @@
   when: not phpmyadmin_exists.stat.exists
 
 - name: rename folder
-  command: "mv {{htdocs_path}}phpMyAdmin-4.8.3-all-languages/ {{htdocs_path}}mysql-phpMyAdmin-4.8.3-all-languages"
+  command: "mv {{htdocs_path}}phpMyAdmin-{{phpmyadmin_version}}-all-languages/ {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
   when: not phpmyadmin_exists.stat.exists
   
 - name: set symbolic link
   file:
-    src: "mysql-phpMyAdmin-4.8.3-all-languages"
+    src: "mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
     dest: "{{htdocs_path}}mysql"
     state: link
     owner: wwwrun

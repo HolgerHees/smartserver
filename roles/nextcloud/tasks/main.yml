@@ -1,12 +1,23 @@
+- name: set nextcloud version
+  set_fact:
+    nextcloud_version: '15.0.0'
+    nextcloud_upgrade_from: '15.0.0.10' # the current installed version to be able to run "./occ upgrade"
+    
 - name: check nextcloud
   stat:
-    path: "{{htdocs_path}}nextcloud"
+    path: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/"
   register: nextcloud_exists
   changed_when: not nextcloud_exists.stat.exists
   
+- name: clean old symlink
+  file:
+    dest: "{{htdocs_path}}nextcloud"
+    state: absent
+  when: not nextcloud_exists.stat.exists
+
 - name: install archive
   unarchive:
-    src: "https://download.nextcloud.com/server/releases/nextcloud-15.0.0.zip"
+    src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
     dest: "{{htdocs_path}}"
     remote_src: yes
     owner: wwwrun
@@ -15,17 +26,16 @@
   when: not nextcloud_exists.stat.exists
 
 - name: rename folder
-  command: "mv {{htdocs_path}}nextcloud/ {{htdocs_path}}nextcloud-15.0.0"
+  command: "mv {{htdocs_path}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: not nextcloud_exists.stat.exists
 
 - name: set symbolic link to htdocs
   file:
-    src: "nextcloud-15.0.0"
+    src: "nextcloud-{{nextcloud_version}}"
     dest: "{{htdocs_path}}nextcloud"
     state: link
     owner: wwwrun
     group: www
-  when: not nextcloud_exists.stat.exists
   
 - name: copy config
   template:

@@ -1,16 +1,20 @@
+- name: set openhab version
+  set_fact:
+    openhab_version: '2.3.0'
+    
 - name: check openhab-runtime
   stat:
-    path: "{{data_path}}openhab-runtime"
+    path: "{{data_path}}openhab-runtime-{{openhab_version}}"
   register: openhab_exists
   changed_when: not openhab_exists.stat.exists
   
-- name: check openhab-runtime
-  stat:
-    path: "{{data_path}}openhab-runtime-2.3.0"
-  register: openhab_version_exists
-  changed_when: not openhab_version_exists.stat.exists
-  
 # **** PREPARATION and CLEANUP ****
+- name: clean old symlink
+  file:
+    dest: "{{data_path}}openhab-runtime"
+    state: absent
+  when: not openhab_exists.stat.exists
+
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -19,39 +23,25 @@
     group: root
     mode: 0750
   with_items:
-    - "{{data_path}}openhab-runtime-2.3.0/"
+    - "{{data_path}}openhab-runtime-{{openhab_version}}/"
     - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
 
 - name: set runtime link
   file:
-    src: "openhab-runtime-2.3.0"
+    src: "openhab-runtime-{{openhab_version}}"
     dest: "{{data_path}}openhab-runtime"
     state: link
     owner: root
     group: root
 
-- name: clean old installation
-  file:
-    dest: "{{data_path}}openhab-runtime-2.3.0/{{item}}"
-    state: absent
-  with_items:
-    - "conf"
-    - "conf.bak"
-    - "userdata/logs"
-    - "userdata/persistence"
-    - "python"
-    - "start.sh"
-    - "start.sh.bak"
-  when: not openhab_exists.stat.exists
-    
 # **** INSTALL ****
 - name: install archive
   unarchive:
-    src: "https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F2.3.0%2Fopenhab-2.3.0.zip"
-    dest: "{{data_path}}openhab-runtime-2.3.0/"
+    src: "https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F{{openhab_version}}%2Fopenhab-{{openhab_version}}.zip"
+    dest: "{{data_path}}openhab-runtime-{{openhab_version}}/"
     remote_src: yes
-  when: not openhab_exists.stat.exists or not openhab_version_exists.stat.exists
+  when: not openhab_exists.stat.exists
 
 - name: clone config git
   git:
@@ -66,7 +56,7 @@
   with_items:
     - "conf"
     - "start.sh"
-  when: not openhab_exists.stat.exists or not openhab_version_exists.stat.exists
+  when: not openhab_exists.stat.exists
 
 # **** PREPARE FOLDER ****
 - name: prepare needed runtime folder
@@ -111,7 +101,7 @@
     owner: root
     group: root
     mode: 0640
-  when: not openhab_exists.stat.exists or not openhab_version_exists.stat.exists
+  when: not openhab_exists.stat.exists
   
 - name: set log config
   lineinfile:
