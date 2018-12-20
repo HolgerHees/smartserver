@@ -43,12 +43,12 @@
     remote_src: yes
   when: not openhab_exists.stat.exists
 
-#- name: clone config git
-#  git:
-##    accept_hostkey: yes
-#    repo: 'https://github.com/HolgerHees/openhab-config.git'
-#    dest: '{{projects_path}}openhab2'
-#    version: 'master'
+- name: clone config git
+  git:
+#    accept_hostkey: yes
+    repo: 'https://github.com/HolgerHees/openhab-config.git'
+    dest: '{{projects_path}}openhab2'
+    version: 'master'
 
 # **** BACKUP ****
 - name: backup original conf and start.sh
@@ -113,8 +113,13 @@
     - { field: 'log4j2.logger.jsr223Default.level', value: 'DEBUG' }
     - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.eclipse.smarthome.automation.core.internal.RuleEngineImpl' }
     - { field: 'log4j2.logger.jsr223Trigger.level', value: 'ERROR' }
-    - { field: 'log4j2.logger.jsr223Binding.name', value: 'org.openhab.binding.knx.internal.bus.KNXBinding' }
-    - { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
+    # hide warning like this
+    # > 2018-12-20 14:38:30.140 [WARN ] [calimero.link.192.168.0.51:3671     ] - negative confirmation of 1/7/11: 2e009de0fffa0f0b010000
+    # temperature sensor is working fine
+    #- { field: 'log4j2.logger.jsr223Binding.name', value: 'calimero.link.192.168.0.51:3671' }
+    #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
+    #- { field: 'log4j2.logger.jsr223Binding.name', value: 'org.openhab.binding.knx.internal.bus.KNXBinding' }
+    #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
   notify: "restart openhab"
 
 - name: copy udev rule and service
@@ -138,13 +143,13 @@
     mode: 0640
   with_items:
     - things/items.things
+    - things/knx.things
     - services/addons.cfg
     - services/basicui.cfg
     - services/comfoair.cfg
     - services/fs20.cfg
     - services/influxdb.cfg
     - services/jdbc.cfg
-    - services/knx.cfg
     - services/logging.cfg
     - services/mail.cfg
     - services/mqtt.cfg
