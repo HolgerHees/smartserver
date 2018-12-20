@@ -343,9 +343,10 @@
           ['/nextcloud/index.php/apps/keeweb/','Keys','Keeweb',true]
         ];
         subMenus['openhab'] = [
-          ['/basicui/app','Sitemap','Basic UI',false],
+          ['/basicui/app','Control','Basic UI',false],
           ['/paperui/index.html','Administration','Paper UI',false],
-          ['/habpanel/index.html','HabPanel','',false]
+          ['/habpanel/index.html','Tablet UI','HabPanel',false],
+          ['/habot','Chatbot','Habot',false]
         ];
         subMenus['roboter'] = [
           ['/automowerDevice/','Automower','Robonect',false]
@@ -353,17 +354,12 @@
         subMenus['camera'] = [
           ['initCamera','<div class="strasse"><img data-name="Strasse" data-src="/cameraStrasseImage" data-interval="3000"></div><div class="automower"><img data-name="Automower" data-src="/cameraAutomowerImage" data-interval="10000"></div>']
         ];
-        subMenus['camera1'] = [
-          ['/cameraAutomowerImage','Automower','Robonect',false],
-          ['/cameraStrasseImage','Strasse','Instar',false]
-        ];
         subMenus['tools'] = [
           ['/grafana/d/server-health/server-health','Charts','Grafana',false],
           ['/kibana/app/kibana#/dashboard/3c82b6c0-a57b-11e8-afe6-f9511c1edcd5','Analytics','Kibana',false],
           ['/netdata/','Status','Netdata',false]
         ];
         subMenus['admin'] = [
-          ['/vti/','Sat Receiver','VTI',false],
           ['/mysql/','MySQL','phpMyAdmin',false]
         ];
 	</script>
