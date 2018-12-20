@@ -1,0 +1,179 @@
+Bridge	knx:ip:bridge [
+	type="TUNNEL",
+	ipAddress="{{knx_gateway_ip}}",
+	portNumber=3671,
+	localIp="{{server_ip}}",
+	readingPause=50,
+	responseTimeout=10,
+	readRetriesLimit=3,
+	autoReconnectPeriod=30,
+	localSourceAddr="0.0.0" 
+] {
+    Thing device other
+    {
+        Type    number  :       gasCounter              "Gas Counter"                [ ga="13.001:<0/4/6" ]
+        Type    switch  :       stateNotify             "Benachrichtigen"            [ ga="<0/4/1" ]
+        Type    switch  :       stateHoliday            "Urlaubsmodus"               [ ga="<0/4/8" ]
+        Type    contact :       switchBell              "Klingeltaster"              [ ga="<0/4/7" ]
+        Type    switch  :       switchDooropener        "Türöffner"                  [ ga="0/4/4" ]
+        Type    contact :       receiverState           "Receiverstatus"             [ ga="<0/4/9" ]
+
+        Type    switch  :       bedroomLeftLongPressed  "Schlafz. Bett Fenster (lang)" [ ga="1/1/10" ]
+        Type    switch  :       bedroomRightLongPressed "Schlafz. Bett Wand (lang)"  [ ga="1/1/11" ]
+    }
+    Thing device sensors_ff
+    {
+        Type    number  :       temperatureLivingroom   "Wohnzimmer Temperatur"      [ ga="0/7/1" ]
+        Type    number  :       humidityLivingroom      "Wohnzimmer Feuchtigkeit"    [ ga="0/7/2" ]
+        Type    number  :       temperatureBoxroom      "Abstellkammer Temperatur"   [ ga="0/7/3" ]
+        Type    number  :       humidityBoxroom         "Abstellkammer Feuchtigkeit" [ ga="0/7/4" ]
+        Type    number  :       temperatureGuestroom    "Gästezimmer Temperatur"     [ ga="0/7/5" ]
+        Type    number  :       humidityGuestroom       "Gästezimmer Feuchtigkeit"   [ ga="0/7/6" ]
+        Type    number  :       temperatureGuestWC      "Gäste WC Temperatur"        [ ga="0/7/7" ]
+        Type    number  :       humidityGuestWC         "Gäste WC Feuchtigkeit"      [ ga="0/7/8" ]
+        Type    number  :       temperatureFloor        "Flur EG Temperatur"         [ ga="0/7/9" ]
+        Type    number  :       humidityFloor           "Flur EG Feuchtigkeit"       [ ga="0/7/10" ]
+        Type    number  :       temperatureUtilityroom  "HWR Temperatur"             [ ga="0/7/11" ]
+        Type    number  :       humidityUtilityroom     "HWR Feuchtigkeit"           [ ga="0/7/12" ]
+        Type    number  :       temperatureGarage       "Schuppen Temperatur"        [ ga="0/7/13" ]
+        Type    number  :       humidityGarage          "Schuppen Feuchtigkeit"      [ ga="0/7/14" ]
+    }
+    Thing device sensors_sf
+    {
+        Type    number  :       temperatureBedroom      "Schlafzimmer Temperatur"    [ ga="1/7/1" ]
+        Type    number  :       humidityBedroom         "Schlafzimmer Feuchtigkeit"  [ ga="1/7/2" ]
+        Type    number  :       temperatureDressingroom "Ankleide Temperatur"        [ ga="1/7/3" ]
+        Type    number  :       humidityDressingroom    "Ankleide Feuchtigkeit"      [ ga="1/7/4" ]
+        Type    number  :       temperatureChild1       "Kind 1 Temperatur"          [ ga="1/7/5" ]
+        Type    number  :       humidityChild1          "Kind 1 Feuchtigkeit"        [ ga="1/7/6" ]
+        Type    number  :       temperatureChild2       "Kind 2 Temperatur"          [ ga="1/7/7" ]
+        Type    number  :       humidityChild2          "Kind 2 Feuchtigkeit"        [ ga="1/7/8" ]
+        Type    number  :       temperatureBathroom     "Badezimmer Temperatur"      [ ga="1/7/9" ]
+        Type    number  :       humidityBathroom        "Badezimmer Feuchtigkeit"    [ ga="1/7/10" ]
+        Type    number  :       temperatureFloor        "Flur OG Temperatur"         [ ga="1/7/11" ]
+        Type    number  :       humidityFloor           "Flur OG Feuchtigkeit"       [ ga="1/7/12" ]
+        Type    number  :       temperatureAttic        "Dachboden Temperatur"       [ ga="1/7/13" ]
+        Type    number  :       humidityAttic           "Dachboden Feuchtigkeit"     [ ga="1/7/14" ]
+    }
+    Thing device lights_ff
+    {
+        Type    dimmer  :       kitchenCeiling          "Küche Licht"                [ switch="0/0/1", increaseDecrease="0/0/2", position="0/0/30+<0/0/31" ]
+        Type    switch  :       kitchenCupboard         "Küche Schrank"              [ ga="0/0/6+<0/0/7" ]
+        Type    dimmer  :       livingroomDiningtable   "Wohnzimmer Esstisch Licht"  [ switch="0/0/8", increaseDecrease="0/0/9", position="0/0/32+<0/0/33" ]
+        Type    dimmer  :       livingroomCouch         "Wohnzimmer Couch Licht"     [ switch="0/0/11", increaseDecrease="0/0/12", position="0/0/34+<0/0/35" ]
+        Type    switch  :       garage                  "Schuppen Licht"             [ ga="0/0/14+<0/0/15" ]
+        Type    switch  :       boxroomCeiling          "Kammer"                     [ ga="0/0/16+<0/0/17" ]
+        Type    switch  :       utilityroomCeiling      "HWR"                        [ ga="0/0/18+<0/0/19" ]
+        Type    switch  :       guestWCCeiling          "Gäste WC Decke"             [ ga="0/0/20+<0/0/21" ]
+        Type    switch  :       guestWCMirror           "Gäste WC Spiegel"           [ ga="0/0/22+<0/0/23" ]
+        Type    switch  :       guestroomCeiling        "Gästezimmer"                [ ga="0/0/24+<0/0/25" ]
+        Type    switch  :       floorCeiling            "Flur Decke"                 [ ga="0/0/26+<0/0/27" ]
+        Type    switch  :       floorMirror             "Flur Spiegel"               [ ga="0/0/28+<0/0/29" ]
+    }
+    Thing device lights_sf
+    {
+        Type    switch  :       floorCeiling            "Flur oben"                  [ ga="1/0/0+<1/0/1" ]
+        Type    switch  :       bathroomCeiling         "Badezimmer Decke"           [ ga="1/0/2+<1/0/3" ]
+        Type    switch  :       bathroomMirror          "Badezimmer Spiegel"         [ ga="1/0/4+<1/0/5" ]
+        Type    switch  :       dressingroomCeiling     "Ankleide"                   [ ga="1/0/6+<1/0/7" ]
+        Type    switch  :       bedroomCeiling          "Schlafzimmer"               [ ga="1/0/8+<1/0/9" ]
+        Type    switch  :       child1Ceiling           "Kinderzimmer eins"          [ ga="1/0/10+<1/0/11" ]
+        Type    switch  :       child2Ceiling           "Kinderzimmer zwei"          [ ga="1/0/12+<1/0/13" ]
+        Type    switch  :       attic                   "Dachboden"                  [ ga="1/0/14+<1/0/15" ]
+    }
+    Thing device lights_outdoor
+    {
+        Type    switch  :       garageStreedside        "Schuppen Strassenseite"     [ ga="2/0/0+<2/0/1" ]
+        Type    switch  :       frontdoor               "Haupteingang"               [ ga="2/0/3+<2/0/4" ]
+        Type    switch  :       carport                 "Carport"                    [ ga="2/0/6+<2/0/7" ]
+        Type    switch  :       garageGardenside        "Schuppen Gartenseite"       [ ga="2/0/9+<2/0/10" ]
+        Type    dimmer  :       outdoorTerrace          "Terassen Licht"             [ switch="2/0/12", increaseDecrease="2/0/16", position="2/0/17+<0/0/18" ]
+    }
+    Thing device sockets_ff
+    {
+        Type    switch  :       guestWC                 "WC Radio"                   [ ga="0/1/1+<0/1/2" ]
+        Type    switch  :       livingroomBassbox       "Wohnzimmersteckdose Bassbox" [ ga="0/1/3+<0/1/4" ]
+        Type    switch  :       livingroomCouch         "Wohnzimmersteckdose Stehlampe" [ ga="0/1/5+<0/1/6" ]
+        Type    switch  :       floor                   "Flursteckdose"              [ ga="0/1/7+<0/1/8" ]
+        Type    switch  :       livingroomFireplace     "Wohnzimmersteckdose Kamin"  [ ga="0/1/9+<0/1/10" ]
+    }
+    Thing device sockets_sf
+    {
+        Type    switch  :       bathroomLeft            "Badezimmer links"           [ ga="1/1/0+<1/1/1" ]
+        Type    switch  :       bathroomRight           "Badezimmer links"           [ ga="1/1/2+<1/1/3" ]
+        Type    switch  :       bedroomLeft             "Schlafzimmer Nachttisch links"  [ ga="1/1/4+<1/1/5" ]
+        Type    switch  :       bedroomRight            "Schlafzimmer Nachttisch rechts" [ ga="1/1/6+<1/1/7" ]
+        Type    switch  :       attic                   "Dachbodensteckdose"         [ ga="1/1/8+<1/1/9" ]
+    }
+    Thing device sockets_outdoor
+    {
+        Type    switch  :       streedside              "Aussensteckdosen vorne"     [ ga="2/1/0+<2/1/1" ]
+        Type    switch  :       gardenside              "Aussensteckdosen hinten"    [ ga="2/1/2+<2/1/3" ]
+    }
+    Thing device shutter_ff
+    {
+        Type    rollershutter : kitchen                 "Küche"                      [ upDown="0/2/1", stopMove="0/2/2", position="<0/2/3" ]
+        Type    rollershutter : livingroomTerrace       "Terasse"                    [ upDown="0/2/4", stopMove="0/2/5", position="<0/2/6" ]
+        Type    rollershutter : livingroomCouch         "Couch"                      [ upDown="0/2/7", stopMove="0/2/8", position="<0/2/9" ]
+        Type    rollershutter : guestroom               "Gästezimmer"                [ upDown="0/2/13", stopMove="0/2/14", position="<0/2/15" ]
+        Type    rollershutter : guestWC                 "Gäste WC"                   [ upDown="0/2/10", stopMove="0/2/11", position="<0/2/12" ]
+    }
+    Thing device shutter_sf
+    {
+        Type    rollershutter : bathroom                "Badezimmer"                 [ upDown="1/2/1", stopMove="1/2/2", position="<1/2/3" ]
+        Type    rollershutter : dressingroom            "Ankleide"                   [ upDown="1/2/4", stopMove="1/2/5", position="<1/2/6" ]
+        Type    rollershutter : bedroom                 "Schlafzimmer"               [ upDown="1/2/7", stopMove="1/2/8", position="<1/2/9" ]
+        Type    rollershutter : child1                  "Kindzimmer 1"               [ upDown="1/2/10", stopMove="1/2/11", position="<1/2/12" ]
+        Type    rollershutter : child2                  "Kindzimmer 2"               [ upDown="1/2/13", stopMove="1/2/14", position="<1/2/15" ]
+        Type    rollershutter : attic                   "Dachboden"                  [ upDown="1/2/16", stopMove="1/2/17", position="<1/2/18" ]
+    }
+    Thing device contacts_door
+    {
+        Type    contact :       main                    "Haustür"                    [ ga="<0/3/5" ]
+        Type    contact :       garageStreedside        "Schuppentür Strasse"        [ ga="<0/3/6" ]
+        Type    contact :       garageGardenside        "Schuppentür Garten"         [ ga="<0/3/7" ]
+    }
+    Thing device contacts_window_ff
+    {
+        Type    contact :       guestWC                 "Gäste WC"                   [ ga="<0/3/0" ]
+        Type    contact :       kitchen                 "Küche"                      [ ga="<0/3/1" ]
+        Type    contact :       livingroomTerrace       "Terasse"                    [ ga="<0/3/2" ]
+        Type    contact :       livingroomCouch         "Couch"                      [ ga="<0/3/3" ]
+        Type    contact :       guestroom               "Gästezimmer"                [ ga="<0/3/4" ]
+        Type    contact :       garage                  "Schuppenfenster"            [ ga="<0/3/8" ]
+    }
+    Thing device contacts_window_sf
+    {
+        Type    contact :       bathroom                "Badezimmer"                 [ ga="<1/3/0" ]
+        Type    contact :       dressingroom            "Ankleide"                   [ ga="<1/3/1" ]
+        Type    contact :       bedroom                 "Schlafzimmer"               [ ga="<1/3/2" ]
+        Type    contact :       child1                  "Kind 1"                     [ ga="<1/3/3" ]
+        Type    contact :       child2                  "Kind 2"                     [ ga="<1/3/4" ]
+        Type    contact :       attic                   "Dachboden"                  [ ga="<1/3/5" ]
+    }
+    Thing device motion_outdoor
+    {
+        Type    contact :       garageStreetside        "Schuppen (vorne)"           [ ga="<2/0/2" ]
+        Type    contact :       frontdoor               "Haustür"                    [ ga="<2/0/5" ]
+        Type    contact :       carport                 "Carport"                    [ ga="<2/0/8" ]
+        Type    contact :       garageGardenside        "Schuppen (hinten)"          [ ga="<2/0/11" ]
+        Type    contact :       terrace1                "Terasse 1"                  [ ga="<2/0/14" ]
+        Type    contact :       terrace2                "Terasse 2"                  [ ga="<2/0/15" ]
+        Type    switch  :       main                    "Gartenlicht autom."         [ ga="<2/0/30" ]
+    }
+    Thing device motion_indoor
+    {
+        Type    contact :       livingroom              "Wohnzimmer"                 [ ga="<0/4/2" ]
+        Type    contact :       ffFloor                 "Flur unten"                 [ ga="<0/4/3" ]
+        Type    contact :       sfFloor                 "Flur oben"                  [ ga="<1/4/0" ]
+    }
+    Thing device wattering
+    {
+        Type    switch  :       gardensideLawnLeft      "Bewässerung Rasen links"    [ ga="2/3/0+<2/3/1" ]
+        Type    switch  :       gardensideLawnRight     "Bewässerung Rasen rechts"   [ ga="2/3/2+<2/3/3" ]
+        Type    switch  :       gardensideBedsFront     "Bewässerung Beete Terasse"  [ ga="2/3/4+<2/3/5" ]
+        Type    switch  :       gardensideBedsBack      "Bewässerung Beete hinten"   [ ga="2/3/6+<2/3/7" ]
+        Type    switch  :       streetsideLawn          "Bewässerung Rasen vorn"     [ ga="2/3/8+<2/3/9" ]
+        Type    switch  :       streetsideBeds          "Bewässerung Beete vorne"    [ ga="2/3/10+<2/3/11" ]
+    }
+}
