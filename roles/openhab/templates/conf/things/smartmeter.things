@@ -1,0 +1,9 @@
+#smartmeter:meter:energy [
+#    port="/dev/ttyOpenHabStrom", 
+#    mode="ABC",
+#    baudrateChangeDelay=250,
+#    refresh=60
+#] {
+#    Channels:
+#        Type 1-0_1-8-0 : 1-0_1-8-0
+#} 
