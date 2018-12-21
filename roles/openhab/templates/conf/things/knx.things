@@ -20,6 +20,8 @@ Bridge	knx:ip:bridge [
 
         Type    switch  :       bedroomLeftLongPressed  "Schlafz. Bett Fenster (lang)" [ ga="1/1/10" ]
         Type    switch  :       bedroomRightLongPressed "Schlafz. Bett Wand (lang)"  [ ga="1/1/11" ]
+
+        Type    switch  :       livingroomHeating       "Heizkreis Wohnzimmer"       [ ga="0/5/0+<0/5/1" ]
     }
     Thing device sensors_ff
     {
