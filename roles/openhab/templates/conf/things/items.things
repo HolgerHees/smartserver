@@ -7,12 +7,13 @@ astro:moon:local [ geolocation="52.34772,13.62140,39", interval=300 ]
 astro:sun:local [ geolocation="52.34772,13.62140,39", interval=300 ]
 ntp:ntp:local [ hostname="de.pool.ntp.org", refreshInterval=60, refreshNtp=30 ]
 
-Bridge hue:bridge:{{hue_device_id}} [ ipAddress="{{hue_ip}}", userName="{{hue_user_id}}" ] {
-	0210 1 [ lightId="1" ]
-	0210 2 [ lightId="2" ]
-	0210 3 [ lightId="3" ]
-	0210 4 [ lightId="4" ]
-	0210 5 [ lightId="5" ]
+Bridge hue:bridge:default [ ipAddress="{{hue_ip}}", userName="{{hue_user_id}}" ] {
+	0210 lamp1 [ lightId="1" ]
+	0210 lamp2 [ lightId="2" ]
+	0210 lamp3 [ lightId="3" ]
+	0210 strip1 [ lightId="4" ]
+	0210 lamp4 [ lightId="5" ]
 	0010 socket1 [ lightId="6" ]
 	0010 socket2 [ lightId="8" ]
+	0210 strip2 [ lightId="9" ]
 }

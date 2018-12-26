@@ -42,7 +42,6 @@ pushover_user: "<userid>"
 pushover_password: "default123"
 
 hue_user_id: "<userid>"
-hue_device_id: "<device_id>"
 
 nextcloud_instance_id: "234sdgzw87399443s"
 nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
