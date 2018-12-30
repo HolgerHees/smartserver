@@ -1,4 +1,9 @@
-network:pingdevice:livingroomTV [ hostname="{{tv_livingroom_ip}}", retry=1, timeout=5000, refreshInterval=5000, allowSystemPings="true", allowDHCPlisten="true" ]
+network:pingdevice:livingroomTV [ hostname="{{tv_livingroom_ip}}", retry=1, refreshInterval=5000 ]
+
+// log:set DEBUG org.openhab.binding.network
+network:pingdevice:phone1 [ hostname="{{phone1_ip}}", retry=12, timeout=5000, refreshInterval=5000 ]
+network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=60, timeout=5000, refreshInterval=5000 ]
+
 robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInterval="15", offlineTimeout="300", user="{{automower_device_username}}", password = "{{automower_device_password}}"]
 
 //exec:command:heatingMode [command="/opt/heating_control/heizungBetriebsart.bash -t %2$s", interval=0, timeout=10, autorun=true]

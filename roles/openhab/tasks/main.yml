@@ -153,6 +153,7 @@
     - services/logging.cfg
     - services/mail.cfg
     - services/mqtt.cfg
+    - services/network.cfg
     - services/ntp.cfg
     - services/pushover.cfg
     - services/runtime.cfg
