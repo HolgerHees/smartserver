@@ -147,7 +147,6 @@
     - services/addons.cfg
     - services/basicui.cfg
     - services/comfoair.cfg
-    - services/fs20.cfg
     - services/influxdb.cfg
     - services/jdbc.cfg
     - services/logging.cfg
