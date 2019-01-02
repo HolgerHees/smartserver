@@ -269,6 +269,7 @@ body.nobackground #submenu .service.button div:last-child {
     justify-content: space-evenly;
     flex-direction: column;
     flex-grow: 1;
+    margin-top: -5vh;
 }
 #submenu .service.camera img {
     width: 100%;
@@ -277,14 +278,17 @@ body.nobackground #submenu .service.button div:last-child {
     #submenu .service.camera {
         flex-direction: row;
         flex-grow: 0;
+        margin-top: 0;
     }
     #submenu .service.camera div.strasse {
-        min-width:640px;
-        min-height:480px;
+        min-width:48.5%;
+        max-width:640px;
+        margin: 0 0.5% 0 1%;
     }
     #submenu .service.camera div.automower {
-        min-width:320px;
-        min-height:240px;
+        min-width:48.5%;
+        max-width:640px;
+        margin: 0 1% 0 0.5%;
     }
 }
 #submenu .service.camera > div {
@@ -296,10 +300,10 @@ body.nobackground #submenu .service.button div:last-child {
     color: yellow;
 }
 #submenu .service.camera > div span.name {
-    left: 3px;
+    left: 1%;    
 }
 #submenu .service.camera > div span.time {
-    right: 3px;
+    right: 1%;
 }
 
 body.desktop #menu {
@@ -320,6 +324,7 @@ body.desktop #side.fullsize #header {
     width: 56px;
     background-color: rgba(0,0,0,0.7);
     position: absolute;
+    z-index: 1000;
 }
 body.desktop #side.fullsize .alarm.button {
     padding: 16px 6px;
