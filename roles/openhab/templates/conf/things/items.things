@@ -1,8 +1,8 @@
 network:pingdevice:livingroomTV [ hostname="{{tv_livingroom_ip}}", retry=1, refreshInterval=5000 ]
 
 // log:set DEBUG org.openhab.binding.network
-network:pingdevice:phone1 [ hostname="{{phone1_ip}}", retry=6, timeout=10000, refreshInterval=5000 ] // max 1.5 min
-network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=24, timeout=10000, refreshInterval=5000 ] // max 6.0 min
+network:pingdevice:phone1 [ hostname="{{phone1_ip}}", retry=12, timeout=10000, refreshInterval=5000 ] // max 3.0 min
+network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=40, timeout=10000, refreshInterval=5000 ] // max 10.0 min
 
 robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInterval="15", offlineTimeout="300", user="{{automower_device_username}}", password = "{{automower_device_password}}"]
 
