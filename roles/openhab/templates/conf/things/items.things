@@ -4,6 +4,8 @@ network:pingdevice:livingroomTV [ hostname="{{tv_livingroom_ip}}", retry=1, refr
 network:pingdevice:phone1 [ hostname="{{phone1_ip}}", retry=12, timeout=10000, refreshInterval=5000 ] // max 3.0 min
 network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=40, timeout=10000, refreshInterval=5000 ] // max 10.0 min
 
+network:pingdevice:roomba [ hostname="{{roomba_ip}}", retry=1, refreshInterval=60000 ]
+
 robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInterval="15", offlineTimeout="300", user="{{automower_device_username}}", password = "{{automower_device_password}}"]
 
 //exec:command:heatingMode [command="/opt/heating_control/heizungBetriebsart.bash -t %2$s", interval=0, timeout=10, autorun=true]
