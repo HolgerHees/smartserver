@@ -18,19 +18,21 @@ echo -n "Ansible Password: "
 read -s PWD
 echo ""
 
-echo -n "Verify Password : "
-read -s PWD_check
-echo ""
-
-if [ "${PWD}" != "${PWD_check}" ]; then
-    echo "password not equal"
-    exit;
-fi
-
 vaultpipe=$(mktemp)
 echo "${PWD}" > $vaultpipe &
 
+trap "{ rm -f $vaultpipe; }" TERM KILL QUIT INT HUP EXIT
+
 if [ "${ACTION}" = "encrypt" ]; then
+  echo -n "Verify Password : "
+  read -s PWD_check
+  echo ""
+
+  if [ "${PWD}" != "${PWD_check}" ]; then
+      echo "password not equal"
+      exit;
+  fi
+
   grep -rilL ANSIBLE_VAULT ./config/marvin/vault/ | while read N 
   do 
     echo encrypt $N
@@ -43,5 +45,3 @@ elif [ "${ACTION}" = "decrypt" ]; then
     ansible-vault --vault-password-file $vaultpipe decrypt $N
   done
 fi
-
-trap "{ rm -f $vaultpipe; }" EXIT
