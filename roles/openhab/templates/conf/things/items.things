@@ -10,8 +10,8 @@ robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInter
 
 //exec:command:heatingMode [command="/opt/heating_control/heizungBetriebsart.bash -t %2$s", interval=0, timeout=10, autorun=true]
  
-astro:moon:local [ geolocation="52.34772,13.62140,39", interval=300 ]
-astro:sun:local [ geolocation="52.34772,13.62140,39", interval=300 ]
+astro:moon:local [ geolocation="{{location}}", interval=300 ]
+astro:sun:local [ geolocation="{{location}}", interval=300 ]
 ntp:ntp:local [ hostname="de.pool.ntp.org", refreshInterval=60, refreshNtp=30 ]
 
 Bridge hue:bridge:default [ ipAddress="{{hue_ip}}", userName="{{hue_user_id}}" ] {
