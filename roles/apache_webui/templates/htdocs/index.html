@@ -159,15 +159,15 @@
             {
                 var entry = subMenus[key][i];
 
-                if( entry.length == 2 )
+                if( entry[0] == 'html' )
                 {
-                    entries.push('<div class="service ' + key + '">' + entry[1] + '</div>');
-                    postInit = this[entry[0]];
+                    entries.push('<div class="service ' + key + '">' + entry[2] + '</div>');
+                    postInit = this[entry[1]];
                     break;
                 }
                 else
                 {
-                    entries.push('<div class="service button ' + key + '" onClick="openUrl(event,this,\'' + entry[0] + '\',' + entry[3] + ')"><div>' + entry[1] + '</div><div>' + entry[2] + '</div></div>');
+                    entries.push('<div class="service button ' + key + '" onClick="openUrl(event,this,\'' + entry[1] + '\',' + entry[4] + ')"><div>' + entry[2] + '</div><div>' + entry[3] + '</div></div>');
                 }
             }
             
@@ -338,29 +338,29 @@
         
         var subMenus = [];
         subMenus['nextcloud'] = [
-          ['/nextcloud/','Dokumente','',false],
-          ['/nextcloud/index.php/apps/news/','News','',false],
-          ['/nextcloud/index.php/apps/keeweb/','Keys','Keeweb',true]
+          ['url','/nextcloud/','Dokumente','',false],
+          ['url','/nextcloud/index.php/apps/news/','News','',false],
+          ['url','/nextcloud/index.php/apps/keeweb/','Keys','Keeweb',true]
         ];
         subMenus['openhab'] = [
-          ['/basicui/app','Control','Basic UI',false],
-          ['/paperui/index.html','Administration','Paper UI',false],
-          ['/habpanel/index.html','Tablet UI','HabPanel',false],
-          ['/habot','Chatbot','Habot',false]
+          ['url','/basicui/app','Control','Basic UI',false],
+          ['url','/paperui/index.html','Administration','Paper UI',false],
+          ['url','/habpanel/index.html','Tablet UI','HabPanel',false],
+          ['url','/habot','Chatbot','Habot',false]
         ];
         subMenus['roboter'] = [
-          ['/automowerDevice/','Automower','Robonect',false]
+          ['url','/automowerDevice/','Automower','Robonect',false]
         ];
         subMenus['camera'] = [
-          ['initCamera','<div class="strasse"><a href="/cameraStrasseDevice/" target="_blank"><img data-name="Strasse" data-src="/cameraStrasseImage" data-interval="3000"></a></div><div class="automower"><a href="/automowerDevice/" target="_blank"><img data-name="Automower" data-src="/cameraAutomowerImage" data-interval="10000"></a></div>']
+          ['html','initCamera','<div class="strasse"><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="Strasse" data-src="/cameraStrasseImage" data-interval="3000"></a></div><div class="automower"><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png"  data-name="Automower" data-src="/cameraAutomowerImage" data-interval="10000"></a></div>']
         ];
         subMenus['tools'] = [
-          ['/grafana/d/server-health/server-health','Charts','Grafana',false],
-          ['/kibana/app/kibana#/dashboard/3c82b6c0-a57b-11e8-afe6-f9511c1edcd5','Analytics','Kibana',false],
-          ['/netdata/','Status','Netdata',false]
+          ['url','/grafana/d/server-health/server-health','Charts','Grafana',false],
+          ['url','/kibana/app/kibana#/dashboard/3c82b6c0-a57b-11e8-afe6-f9511c1edcd5','Analytics','Kibana',false],
+          ['url','/netdata/','Status','Netdata',false]
         ];
         subMenus['admin'] = [
-          ['/mysql/','MySQL','phpMyAdmin',false]
+          ['url','/mysql/','MySQL','phpMyAdmin',false]
         ];
 	</script>
 </head>
