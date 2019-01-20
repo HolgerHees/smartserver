@@ -147,6 +147,7 @@
     - services/addons.cfg
     - services/basicui.cfg
     - services/comfoair.cfg
+    - services/fritzboxtr064.cfg
     - services/influxdb.cfg
     - services/jdbc.cfg
     - services/logging.cfg

@@ -55,6 +55,8 @@ openhab_mysql_username: "openhab"
 openhab_mysql_password: "default123"
 openhab_influxdb_username: "openhab"
 openhab_influxdb_password: "default123"
+openhab_fritzbox_username: "openhab"
+openhab_fritzbox_password: "default123"
 
 grafana_influxdb_username: "grafana"
 grafana_influxdb_password: "default123"
