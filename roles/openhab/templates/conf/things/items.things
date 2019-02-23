@@ -23,4 +23,6 @@ Bridge hue:bridge:default [ ipAddress="{{hue_ip}}", userName="{{hue_user_id}}" ]
 	0010 socket2 [ lightId="6" ]
 	0210 strip1 [ lightId="7" ]
 	0210 strip2 [ lightId="8" ]
+	0210 lamp5 [ lightId="14" ]
+	0210 lamp6 [ lightId="15" ]
 }
