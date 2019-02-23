@@ -33,6 +33,9 @@ alexa_deployment_secret_access_key: "<secret_access_key>"
 alexa_deployment_role: "arn:aws:iam::<role_id>:role/AlexaTestSkill"
 alexa_deployment_function_name: "test-custom-skill"
 
+weather_api_username: "<username>"
+weather_api_password: "<password>"
+
 automower_device_username: "automower"
 automower_device_password: "default123"
 automower_basic_auth: "{{ (automower_device_username + ':' + automower_device_password) | b64encode }}"
