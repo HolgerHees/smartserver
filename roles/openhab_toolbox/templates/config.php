@@ -21,5 +21,16 @@ class Setup
 	{
 		return new RestConnectorOpenhab( "127.0.0.1", "8080" );
 	}
+	
+	public static function getWeatherAuth()
+	{
+        return new GenericAuth("{{weather_api_username}}","{{weather_api_password}}");
+	}
+
+	public static function getGeoLocation()
+	{
+        $pos = explode(",","{{location}}");
+        return new GeoLocation($pos[0],$pos[1]);
+	}
 }
  
