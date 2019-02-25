@@ -118,6 +118,12 @@
   become_user: "wwwrun"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
+- name: add user "sandra"
+  shell: "export OC_PASS={{sandra_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{sandra_username}}"
+  become: yes
+  become_user: "wwwrun"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+
 # **** OTHER ****
 - name: copy apache config
   template:

@@ -1,8 +1,7 @@
 # **** HHEES (SSH, SMB, WEB) ****
-- name: add user "holger" with no login
+- name: add user "{{holger_username}}" with no login
   user:
     name: "{{holger_username}}"
-    comment: Holger Hees
     uid: 1000
     shell: /bin/false
     home: "/home/{{holger_username}}/"
@@ -12,7 +11,7 @@
     append: no
   when: "vault_active"
 
-- name: prepare user "holger" folder
+- name: prepare user "{{holger_username}}" folder
   file:
     path: "/home/{{holger_username}}/"
     state: directory
@@ -22,7 +21,7 @@
     #recurse: true
   when: "vault_active"
 
-- name: add user "holger" to samba
+- name: add user "{{holger_username}}" to samba
   shell: "( (pdbedit -L | grep {{holger_username}}) && echo 'skipped' ) || ( ( printf '{{ holger_samba_password }}\n{{ holger_samba_password }}\n' | smbpasswd -a {{holger_username}} ) && echo 'created' )"
   register: command_result
   #failed_when: "'command-not-found' in command_result.stderr"
@@ -30,11 +29,47 @@
   notify: "restart samba"
   when: "vault_active"
 
-- name: add user "holger" to apache
+- name: add user "{{holger_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{holger_username}}"
     password: "{{holger_web_password}}"
+  when: "vault_active"
+
+# **** HHEES (SSH, SMB, WEB) ****
+- name: add user "{{sandra_username}}" with no login
+  user:
+    name: "{{sandra_username}}"
+    uid: 1006
+    shell: /bin/false
+    home: "/home/{{sandra_username}}/"
+    groups: users
+    append: no
+  when: "vault_active"
+
+- name: prepare user "{{sandra_username}}" folder
+  file:
+    path: "/home/{{sandra_username}}/"
+    state: directory
+    owner: "{{sandra_username}}"
+    group: users
+    mode: 0750
+    #recurse: true
+  when: "vault_active"
+
+- name: add user "{{sandra_username}}" to samba
+  shell: "( (pdbedit -L | grep {{sandra_username}}) && echo 'skipped' ) || ( ( printf '{{ sandra_samba_password }}\n{{ sandra_samba_password }}\n' | smbpasswd -a {{sandra_username}} ) && echo 'created' )"
+  register: command_result
+  #failed_when: "'command-not-found' in command_result.stderr"
+  changed_when: "'created' in command_result.stdout"
+  notify: "restart samba"
+  when: "vault_active"
+
+- name: add user "{{sandra_username}}" to apache
+  htpasswd:
+    path: "{{htdocs_path}}.htpasswd"
+    name: "{{sandra_username}}"
+    password: "{{sandra_web_password}}"
   when: "vault_active"
 
 # **** VTI ACCESS USER ****
@@ -118,5 +153,5 @@
     regexp: '^{{item.group}}'
     line: '{{item.group}}: {{item.user}}'
   with_items:
-    - { group: 'USER', user: '{{holger_username}} {{admin_username}}' }
+    - { group: 'USER', user: '{{holger_username}} {{sandra_username}} {{admin_username}}' }
   when: "vault_active"

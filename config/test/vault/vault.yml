@@ -8,6 +8,10 @@ holger_username: "holger"
 holger_samba_password: "default123"
 holger_web_password: "default123"
 
+sandra_username: "sandra"
+sandra_samba_password: "default123"
+sandra_web_password: "default123"
+
 philipp_username: "philipp"
 philipp_linux_password: "default123"
 
