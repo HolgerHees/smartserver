@@ -6,7 +6,7 @@
     - apache2 
     - python2-setuptools
     - apache2-mod_php7
-    - python-certbot-apache
+    - python2-certbot-apache
   notify: "restart apache"
 
 - name: check certificate (develop)
