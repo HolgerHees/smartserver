@@ -1,12 +1,12 @@
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        apache2 
+      , python2-setuptools
+      , apache2-mod_php7
+      , python2-certbot-apache
+    ]
     state: present
-  with_items:
-    - apache2 
-    - python2-setuptools
-    - apache2-mod_php7
-    - python2-certbot-apache
   notify: "restart apache"
 
 - name: check certificate (develop)

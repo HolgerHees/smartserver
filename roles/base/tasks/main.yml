@@ -20,26 +20,26 @@
 
 - name: install base packages
   zypper:
-    name: "{{item}}"
+    name: [  
+        mc
+      , subversion
+      , git
+      , autoconf
+      , automake
+      , gcc
+      , libxml2-devel
+      , sensors
+      , ImageMagick
+      , htop
+      , sysstat
+      , iotop
+      , npm8
+      , zip
+      , python2-pip
+      , mail               # used by elastalert
+    ]
     state: present
-  with_items:
-       - mc
-       - subversion
-       - git
-       - autoconf
-       - automake
-       - gcc
-       - libxml2-devel
-       - sensors
-       - ImageMagick
-       - htop
-       - sysstat
-       - iotop
-       - npm8
-       - zip
-       - python2-pip
-       - mail               # used by elastalert
-    
+       
 - name: install pexpect
   pip:
     name: pexpect

@@ -13,12 +13,12 @@
     
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        cmake
+      , libusb-compat-devel # needed to compile sensors
+      , libudev-devel # needed to compile sensors
+    ]
     state: present
-  with_items:
-    - cmake
-    - libusb-compat-devel # needed to compile sensors
-    - libudev-devel # needed to compile sensors
 
 - name: copy config and service
   template:

@@ -1,10 +1,10 @@
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        bind
+      , yast2-dns-server
+    ]
     state: present
-  with_items:
-    - bind
-    - yast2-dns-server
   notify: "restart named"
 
 - name: copy config

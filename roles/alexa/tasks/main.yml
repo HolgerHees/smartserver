@@ -8,11 +8,11 @@
     
 - name: install nodejs packages
   zypper:
-    name: "{{item}}"
+    name: [
+        nodejs6
+      , npm6
+    ]
     state: present
-  with_items:
-       - nodejs6
-       - npm6
 
 - name: clone git
   git:

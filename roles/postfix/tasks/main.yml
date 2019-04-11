@@ -1,12 +1,12 @@
 ---
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        postfix
+      , cyrus-sasl
+      , cyrus-sasl-plain
+    ]
     state: present
-  with_items:
-    - postfix
-    - cyrus-sasl
-    - cyrus-sasl-plain
   notify: "restart postfix"
 
 - name: set config

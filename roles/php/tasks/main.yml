@@ -1,31 +1,31 @@
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        php7 
+      , php7-mysql 
+      , php7-pcntl 
+      , php7-devel 
+      , php7-imagick
+      , php7-redis 
+      , php7-mbstring 
+      , php7-posix 
+      , php7-zip 
+      , php7-gd 
+      , php7-curl 
+      , php7-openssl 
+      , php7-fileinfo
+      , php7-json             # phpmyadmin
+      , php7-ctype            # nextcloud
+      , php7-dom              # nextcloud
+      , php7-iconv            # nextcloud
+      , php7-intl             # nextcloud
+      , php7-xmlwriter        # nextcloud
+      , php7-xmlreader        # nextcloud
+      , php7-APCu             # nextcloud & resize.php
+      , php7-opcache          # nextcloud
+      , systemd-devel         # php-systemd => nextcloud
+    ]
     state: present
-  with_items:
-    - php7 
-    - php7-mysql 
-    - php7-pcntl 
-    - php7-devel 
-    - php7-imagick
-    - php7-redis 
-    - php7-mbstring 
-    - php7-posix 
-    - php7-zip 
-    - php7-gd 
-    - php7-curl 
-    - php7-openssl 
-    - php7-fileinfo
-    - php7-json             # phpmyadmin
-    - php7-ctype            # nextcloud
-    - php7-dom              # nextcloud
-    - php7-iconv            # nextcloud
-    - php7-intl             # nextcloud
-    - php7-xmlwriter        # nextcloud
-    - php7-xmlreader        # nextcloud
-    - php7-APCu             # nextcloud & resize.php
-    - php7-opcache          # nextcloud
-    - systemd-devel         # php-systemd => nextcloud
   notify: "restart apache"
 
 #- shell: "pecl info inotify"

@@ -1,11 +1,11 @@
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        openvpn
+      , openvpn-auth-pam-plugin
+      , easy-rsa
+    ]
     state: present
-  with_items:
-    - openvpn
-    - openvpn-auth-pam-plugin
-    - easy-rsa
 
 # **** MOBILE VPN CERTIFICATES ****
 - name: check easyrsa

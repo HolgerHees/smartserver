@@ -19,13 +19,13 @@
 
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+       elasticsearch
+     , kibana
+    ]
     state: present
     disable_gpg_check: yes
   notify: "restart elasticsearch"
-  with_items:
-    - "elasticsearch"
-    - "kibana"
     
 - name: install required python pip modules
   pip: 

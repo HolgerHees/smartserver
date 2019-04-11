@@ -1,10 +1,10 @@
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        netdata
+      , fping
+    ]
     state: present
-  with_items:
-    - netdata
-    - fping
   notify: "restart netdata"
   
 - name: prepare needed folder

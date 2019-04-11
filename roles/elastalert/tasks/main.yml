@@ -8,12 +8,12 @@
 
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        python2-devel
+      , python2-python-dateutil 
+      , python2-boto3
+    ]
     state: present
-  with_items:
-    - python2-devel
-    - python2-python-dateutil 
-    - python2-boto3
   notify: "restart elastalert"
   
 - name: install required python pip modules

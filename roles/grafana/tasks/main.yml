@@ -22,12 +22,12 @@
   
 - name: install required packages
   zypper:
-    name: "{{item}}"
+    name: [
+        insserv-compat
+      , libopenssl1_0_0
+    ]
     state: present
     #disable_gpg_check: yes
-  with_items:
-    - insserv-compat
-    - libopenssl1_0_0
   notify: "restart grafana"
 
 - name: install grafana

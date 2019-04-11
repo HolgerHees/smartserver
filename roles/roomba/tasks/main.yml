@@ -1,9 +1,9 @@
 - name: install required python pip modules
   pip:
-    name: "{{item}}"
-  with_items:
-    - paho-mqtt
-    - pillow
+    name: [
+        paho-mqtt
+      , pillow
+    ]
   notify: "restart roomba"
 
 - name: prepare map htdocs folder
