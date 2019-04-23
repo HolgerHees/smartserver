@@ -6,7 +6,7 @@ Bridge modbus:tcp:solarGarage 		[ host="{{pv_inverter_garage_ip}}", port=502, id
     Bridge poller power         	[ start=30769, length=8, type="input", refresh=5000] {
         Thing data dc_current 		[ readStart="30769", readValueType="int32", readTransform="JS(solar_fixed3.js)"] // 30769 = DC current input
         Thing data dc_voltage 		[ readStart="30771", readValueType="int32", readTransform="JS(solar_fixed2.js)"] // 30771 = DC voltage input
-        Thing data dc_power 		[ readStart="30773", readValueType="int32"] // 30773 = DC power input
-        Thing data ac_power 		[ readStart="30775", readValueType="int32"] // 30775 = AC power output
+        Thing data dc_power 		[ readStart="30773", readValueType="int32", readTransform="JS(solar_default.js)"] // 30773 = DC power input
+        Thing data ac_power 		[ readStart="30775", readValueType="int32", readTransform="JS(solar_default.js)"] // 30775 = AC power output
     }
 }
