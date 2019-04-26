@@ -37,7 +37,7 @@
   "graphTooltip": 0,
   "hideControls": false,
   "id": null,
-  "uid": "solar",
+  "uid": "solar-waerme",
   "links": [],
   "rows": [
     {
@@ -781,6 +781,6 @@
     ]
   },
   "timezone": "",
-  "title": "Solar",
+  "title": "Solar Waerme",
   "version": 22
 }
