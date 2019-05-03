@@ -15,6 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": 18,
   "links": [],
   "panels": [
     {
@@ -295,7 +296,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -366,6 +367,7 @@
       }
     }
   ],
+  "refresh": false,
   "schemaVersion": 16,
   "style": "dark",
   "tags": [],
@@ -373,7 +375,7 @@
     "list": []
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {
@@ -404,5 +406,5 @@
   "timezone": "",
   "title": "Solar Strom",
   "uid": "solar-strom",
-  "version": 2
+  "version": 1
 }

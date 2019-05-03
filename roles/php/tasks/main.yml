@@ -81,7 +81,7 @@
     regexp: '^{{item.field}}'
     line: '{{item.field}}={{item.value}}'
   with_items:
-    - { block: 'PHP', field: 'memory_limit', value: '512M' }
+    - { block: 'PHP', field: 'memory_limit', value: '1024M' }
     - { block: 'opcache', field: 'opcache.enable', value: '1' }
     - { block: 'opcache', field: 'opcache.enable_cli', value: '1' }
     - { block: 'opcache', field: 'opcache.interned_strings_buffer', value: '8' }
