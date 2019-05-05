@@ -102,7 +102,7 @@
     - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
 
     - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating
-    - { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
+    #- { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
     - { role: openhab, tags: [ 'openhab' ] }                                    # openhab iot server
     - { role: openhab_toolbox, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
 
