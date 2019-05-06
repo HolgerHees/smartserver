@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 18,
+  "id": 21,
   "links": [],
   "panels": [
     {
@@ -55,6 +55,7 @@
       "steppedLine": false,
       "targets": [
         {
+          "alias": "Ertrag",
           "groupBy": [
             {
               "params": [
@@ -91,6 +92,44 @@
             ]
           ],
           "tags": []
+        },
+        {
+          "alias": "Eigenverbrauch",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "thresholds": [],
@@ -117,7 +156,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
@@ -171,6 +210,7 @@
       "steppedLine": false,
       "targets": [
         {
+          "alias": "Ertrag",
           "groupBy": [
             {
               "params": [
@@ -207,6 +247,44 @@
             ]
           ],
           "tags": []
+        },
+        {
+          "alias": "Eigenverbrauch",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "thresholds": [],
@@ -233,7 +311,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
@@ -269,7 +347,7 @@
         "current": false,
         "max": false,
         "min": false,
-        "show": true,
+        "show": false,
         "total": false,
         "values": false
       },
@@ -287,6 +365,7 @@
       "steppedLine": false,
       "targets": [
         {
+          "alias": "Leistung",
           "groupBy": [
             {
               "params": [
@@ -349,7 +428,7 @@
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
