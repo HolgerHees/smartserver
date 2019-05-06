@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 21,
+  "id": 22,
   "links": [],
   "panels": [
     {
@@ -33,13 +33,14 @@
       },
       "id": 2,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
         "show": true,
-        "total": false,
-        "values": false
+        "total": true,
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -188,13 +189,14 @@
       },
       "id": 3,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
         "show": true,
-        "total": false,
-        "values": false
+        "total": true,
+        "values": true
       },
       "lines": false,
       "linewidth": 1,
