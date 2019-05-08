@@ -9,11 +9,7 @@ Bridge modbus:tcp:solarGarage 		[ host="{{pv_inverter_garage_ip}}", port=502, id
         Thing data dc_power 		[ readStart="30773", readValueType="int32", readTransform="JS(solar_default.js)"] // 30773 = DC power input
         Thing data ac_power 		[ readStart="30775", readValueType="int32", readTransform="JS(solar_default.js)"] // 30775 = AC power output
     }
-    Bridge poller control         	[ start=41255, length=1, type="holding", refresh=15000] {
-        Thing data power_limitation [ readStart="41255", readValueType="uint16", readTransform="JS(solar_fixed2.js)", writeStart="41255", writeValueType="uint16", writeType="holding", writeTransform="JS(solar_write_fixed2.js)" ] // 41255 = Normalized active power limitation by PV system ctrl
+    Bridge poller control         	[ start=40016, length=1, type="holding", refresh=0 ] {
+        Thing data power_limitation [ writeStart="40016", writeValueType="int16", writeType="holding" ]
     }
-    //Bridge poller test           	[ start=40016, length=1, type="holding" ] {
-    //    Thing data power_control    [ writeStart="40016", writeValueType="int16", writeType="holding" ]
-    //}
-
 }
