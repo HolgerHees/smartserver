@@ -1,0 +1,31 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/opt/service_check"
+
+- name: copy cmd
+  template:
+    src: "roles/cron_service_check/templates/service_check.sh"
+    dest: "/opt/service_check/service_check.sh"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: set cron job
+  vars:
+    cron_name: "Systemd service check"
+    cron_cmd: "/opt/service_check/service_check.sh;"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_cron_service_check
+    user: root
+    minute: "0"
+    state: present
+  when: is_production
+  tags: ['cron_job']
