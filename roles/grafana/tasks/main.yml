@@ -9,6 +9,7 @@
     sslverify: yes
     sslcacert: /etc/pki/tls/certs/ca-bundle.crt
     reposdir: "/etc/zypp/repos.d/"
+    priority: 100
   register: yum_status
     
 - name: refresh yum repository
