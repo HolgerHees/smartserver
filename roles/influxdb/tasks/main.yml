@@ -1,6 +1,6 @@
 - name: add zypper repository
   zypper_repository:
-    name: influxdb
+    name: Database (influxdb)
     repo: 'http://download.opensuse.org/repositories/server:/database/openSUSE_Leap_15.0/'
     auto_import_keys: yes
     priority: 100
