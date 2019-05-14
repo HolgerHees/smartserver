@@ -1,7 +1,15 @@
+- name: add zypper repository
+  zypper_repository:
+    name: Network (netdata)
+    repo: http://download.opensuse.org/repositories/network/openSUSE_Leap_15.0/
+    auto_import_keys: yes
+    priority: 100
+    state: present
+    
 - name: install required packages
   zypper:
     name: [
-        netdata
+        netdata>=1.14
       , fping
     ]
     state: present
@@ -18,31 +26,6 @@
   with_items:
     - "{{ global_lib }}netdata"
     - "{{ global_lib }}netdata/cache"
-
-#- name: install required packages
-#  zypper:
-#    name: "libuuid-devel"
-#    state: present
-#
-#- name: "clone git"
-#  git:
-##    accept_hostkey: yes
-#    repo: 'https://github.com/firehol/netdata.git'
-#    dest: '{{global_build}}netdata'
-##    force: yes
-#    version: 'v1.10.0'
-#  register: clone_status
-
-#- name: "install"
-#  shell: '{{ item }}'
-#  args:
-#    chdir: '{{global_build}}netdata'
-#  with_items:
-#    - './autogen.sh'
-#    - './configure --with-zlib --with-math --with-user=root'
-#    - 'make'
-#    - 'make install'
-#  when: clone_status.changed
   
 - name: copy config
   template:
@@ -53,6 +36,7 @@
     mode: 0640
   with_items:
     - /etc/netdata/netdata.conf
+    - /etc/netdata/python.d.conf
     - /etc/netdata/fping.conf
     - /etc/netdata/health.d/disks.conf
     - /etc/netdata/health.d/softnet.conf
@@ -60,30 +44,12 @@
     - /etc/netdata/health.d/fping.conf
   notify: "restart netdata"
   
-- name: disable plugins
+- name: change runtime user
   lineinfile:
-    path: /etc/netdata/python.d.conf
-    regexp: '^{{item}}:'
-    line: '{{item}}: no'
-  with_items:
-    - mysql
-    - redis
-    - elasticsearch
-    - postfix
-    - web_log
+    path: /usr/lib/systemd/system/netdata.service
+    regexp: '^User='
+    line: 'User=root'
   notify: "restart netdata"
-  
-#- name: disable plugins
-#  command: "mv {{item}} {{item}}.bak"
-#  register: command_result
-#  failed_when: "'command-not-found' in command_result.stderr"
-#  changed_when: "command_result.rc == 0"
-#  with_items:
-#    - /etc/netdata/python.d/mysql.conf
-#    - /etc/netdata/python.d/redis.conf
-#    - /etc/netdata/python.d/elasticsearch.conf
-#  when: mysql_conf.stat.exists == True
-#  notify: "restart netdata"
 
 - name: copy apache config
   template:
