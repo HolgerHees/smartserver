@@ -1,6 +1,14 @@
+- name: add zypper repository
+  zypper_repository:
+    name: Security (clamav)
+    repo: http://download.opensuse.org/repositories/security/openSUSE_Leap_15.0/
+    auto_import_keys: yes
+    priority: 100
+    state: present
+
 - name: install required packages
   zypper:
-    name: clamav
+    name: clamav>=0.101.2
     state: present
   register: install_status
   notify: "restart clamav"
