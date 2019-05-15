@@ -1,11 +1,9 @@
 <?php
+include "{{projects_path}}toolbox/_lib/init.php";
 
-$url = "http://localhost:19999/api/v1/alarms?active";
-$ch = curl_init(); 
-curl_setopt($ch, CURLOPT_URL, $url); 
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-$content = curl_exec($ch); 
-curl_close($ch); 
+$rest = Setup::getOpenHabRest();
+
+$content = Request::makeRequest("http://localhost:19999/api/v1/alarms?active",[],null,200);
 
 if($content)
 {
@@ -26,26 +24,7 @@ if($content)
         }
     }
     
-    $url = "http://localhost:8080/rest/items/State_Server";
-
-    $headers = array(
-        'Accept: application/json',
-        'Content-Type: text/plain',
-    );
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS,$level);
-
-    $response = curl_exec($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    if( $code != 200 )
-    {
-        exit("Openhab is down. Can't inform openhab about system status.");
-    }
+    $rest->updateItem("State_Server",$level);
 }
 else
 {
