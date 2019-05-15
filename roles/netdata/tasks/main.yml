@@ -19,29 +19,32 @@
   file:
     path: '{{ item }}'
     state: directory
-    owner: netdata
-    group: netdata
+    owner: root
+    group: root
     mode: 0750
     #recurse: true
   with_items:
     - "{{ global_lib }}netdata"
     - "{{ global_lib }}netdata/cache"
+    - "/etc/netdata/custom-plugins.d"
   
 - name: copy config
   template:
-    src: "roles/netdata/templates{{item}}"
-    dest: "{{item}}"
+    src: "roles/netdata/templates{{item.path}}"
+    dest: "{{item.path}}"
     owner: root
     group: root
-    mode: 0640
+    mode: "{{item.mode}}"
   with_items:
-    - /etc/netdata/netdata.conf
-    - /etc/netdata/python.d.conf
-    - /etc/netdata/fping.conf
-    - /etc/netdata/health.d/disks.conf
-    - /etc/netdata/health.d/softnet.conf
-    - /etc/netdata/health.d/net.conf
-    - /etc/netdata/health.d/fping.conf
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/netdata/send_notification.sh" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/netdata.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/python.d.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health_alarm_notify.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/fping.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/disks.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/softnet.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/net.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/fping.conf" }
   notify: "restart netdata"
   
 - name: change runtime user
