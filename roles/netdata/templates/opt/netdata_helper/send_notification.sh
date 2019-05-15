@@ -19,4 +19,4 @@ case $2 in
 esac
 
 #line=$(echo "$i" | xargs)
-echo "$message"  | systemd-cat -t netdata -p $level
+echo "$message"  | systemd-cat -t system -p $level

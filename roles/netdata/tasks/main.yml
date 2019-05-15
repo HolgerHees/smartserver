@@ -31,24 +31,33 @@
   
 - name: copy config
   template:
-    src: "roles/netdata/templates{{item.path}}"
-    dest: "{{item.path}}"
+    src: "roles/netdata/templates{{item}}"
+    dest: "{{item}}"
     owner: root
     group: root
-    mode: "{{item.mode}}"
+    mode: 0640
   with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "/opt/netdata_helper/send_notification.sh" }
-    - { mode: "u=rwx,g=rx,o=", path: "/opt/netdata_helper/inform_openhab.php" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/netdata.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/python.d.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health_alarm_notify.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/fping.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/disks.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/softnet.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/net.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health.d/fping.conf" }
+    - "/etc/netdata/netdata.conf"
+    - "/etc/netdata/python.d.conf"
+    - "/etc/netdata/health_alarm_notify.conf"
+    - "/etc/netdata/fping.conf"
+    - "/etc/netdata/health.d/disks.conf"
+    - "/etc/netdata/health.d/softnet.conf"
+    - "/etc/netdata/health.d/net.conf"
+    - "/etc/netdata/health.d/fping.conf"
   notify: "restart netdata"
   
+- name: copy helper
+  template:
+    src: "roles/netdata/templates{{item}}"
+    dest: "{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/opt/netdata_helper/send_notification.sh"
+    - "/opt/netdata_helper/inform_openhab.php"
+
 - name: change runtime user
   lineinfile:
     path: /usr/lib/systemd/system/netdata.service
