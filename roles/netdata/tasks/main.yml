@@ -27,6 +27,7 @@
     - "{{ global_lib }}netdata"
     - "{{ global_lib }}netdata/cache"
     - "/etc/netdata/custom-plugins.d"
+    - "/opt/netdata_helper"
   
 - name: copy config
   template:
@@ -36,7 +37,8 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "/etc/netdata/send_notification.sh" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/netdata_helper/send_notification.sh" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/netdata_helper/inform_openhab.php" }
     - { mode: "u=rw,g=r,o=", path: "/etc/netdata/netdata.conf" }
     - { mode: "u=rw,g=r,o=", path: "/etc/netdata/python.d.conf" }
     - { mode: "u=rw,g=r,o=", path: "/etc/netdata/health_alarm_notify.conf" }
@@ -64,3 +66,15 @@
   notify: "restart apache"
   tags: ['apache_conf']
   
+- name: set cron job
+  vars:
+    cron_name: "Netdata error check"
+    cron_cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php;"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_cron_service_check
+    user: root
+    state: present
+  when: is_production
+  tags: ['cron_job']
