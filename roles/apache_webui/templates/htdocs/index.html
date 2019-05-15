@@ -80,7 +80,7 @@
             
             $('.alarm.button').click(function()
             {
-                openUrl(null,"/netdata/",false);
+                openUrl(null,null,"/netdata/",false);
             });
         }    
         
@@ -237,7 +237,7 @@
         {
             activeMenu = "";
         
-            if( event.ctrlKey || newWindow )
+            if( (event && event.ctrlKey) || newWindow )
             {
                 var win = window.open(url, '_blank');
                 win.focus();
