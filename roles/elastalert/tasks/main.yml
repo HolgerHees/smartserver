@@ -40,7 +40,7 @@
     repo: 'https://github.com/Yelp/elastalert.git'
     dest: '{{global_build}}elastalert'
 #    force: yes
-    version: 'master'
+    version: 'v0.1.39'
   register: clone_status
   #changed_when: yes
 #- debug: msg={{clone_status}}
