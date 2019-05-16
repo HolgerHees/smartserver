@@ -92,8 +92,8 @@
 
 - name: copy imagick config
   template:
-    src: roles/php/templates/etc/ImageMagick-7_Q16HDRI6/policy.xml
-    dest: /etc/ImageMagick-7_Q16HDRI6/policy.xml
+    src: roles/php/templates/etc/ImageMagick-7/policy.xml
+    dest: /etc/ImageMagick-7/policy.xml
     owner: root
     group: root
     mode: 0644
