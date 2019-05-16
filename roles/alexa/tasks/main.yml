@@ -1,6 +1,6 @@
 - name: add zypper repository
   zypper_repository:
-    name: influxdb
+    name: Nodejs
     repo: 'https://download.opensuse.org/repositories/devel:/languages:/nodejs/openSUSE_Leap_15.0/'
     auto_import_keys: yes
     priority: 100

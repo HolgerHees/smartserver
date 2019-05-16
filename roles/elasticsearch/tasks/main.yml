@@ -1,6 +1,6 @@
 - name: add yum repository
   yum_repository:
-    name: elasticsearch
+    name: Elasticsearch
     description: Elasticsearch repository for 6.x packages
     baseurl: https://artifacts.elastic.co/packages/6.x/yum
     gpgcheck: yes
