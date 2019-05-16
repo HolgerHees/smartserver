@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 23,
+  "id": 17,
   "links": [],
   "panels": [
     {
@@ -24,7 +24,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "decimals": null,
       "fill": 1,
       "gridPos": {
         "h": 7,
@@ -32,8 +31,7 @@
         "x": 0,
         "y": 0
       },
-      "height": "",
-      "id": 6,
+      "id": 1,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -42,7 +40,7 @@
         "min": true,
         "rightSide": false,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": true,
@@ -59,7 +57,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Eigenverbrauch",
+          "alias": "Solarpower",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -75,10 +73,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "Heating_Solar_Power_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"Heating_Solar_Power_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -103,7 +101,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Eigenverbrauch",
+      "title": "Solar Leistung",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -119,9 +117,8 @@
       },
       "yaxes": [
         {
-          "decimals": null,
-          "format": "kwatth",
-          "label": "",
+          "format": "kwatt",
+          "label": null,
           "logBase": 1,
           "max": null,
           "min": "0",
@@ -147,7 +144,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "decimals": null,
       "fill": 1,
       "gridPos": {
         "h": 7,
@@ -155,18 +151,16 @@
         "x": 12,
         "y": 0
       },
-      "height": "",
-      "id": 8,
+      "id": 5,
       "legend": {
         "alignAsTable": true,
         "avg": true,
         "current": true,
-        "hideEmpty": false,
         "max": true,
         "min": true,
         "rightSide": false,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": false,
@@ -183,7 +177,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Eigenverbrauch",
+          "alias": "Solarpower",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -199,10 +193,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "Heating_Solar_Power_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"Heating_Solar_Power_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -227,7 +221,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Eigenverbrauch",
+      "title": "Solar Leistung",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -243,257 +237,8 @@
       },
       "yaxes": [
         {
-          "decimals": null,
-          "format": "kwatth",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
+          "format": "kwatt",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "decimals": null,
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 7
-      },
-      "height": "",
-      "hideTimeOverride": true,
-      "id": 10,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": true,
-        "rightSide": false,
-        "show": true,
-        "total": true,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "Eigenverbrauch",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "1d"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Electricity_Current_Daily_Consumption",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": "1y",
-      "title": "Eigenverbrauch (Letztes Jahr)",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "kwatth",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": true,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "decimals": null,
-      "fill": 1,
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 7
-      },
-      "height": "",
-      "hideTimeOverride": true,
-      "id": 12,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": true,
-        "rightSide": false,
-        "show": true,
-        "total": true,
-        "values": true
-      },
-      "lines": false,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "Eigenverbrauch",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "1d"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Electricity_Current_Daily_Consumption",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": "1y",
-      "title": "Eigenverbrauch (Letztes Jahr)",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "kwatth",
-          "label": "",
           "logBase": 1,
           "max": null,
           "min": "0",
@@ -521,10 +266,10 @@
       "datasource": "InfluxDB",
       "fill": 1,
       "gridPos": {
-        "h": 9,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 14
+        "y": 7
       },
       "id": 2,
       "legend": {
@@ -534,7 +279,7 @@
         "max": true,
         "min": true,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
       "lines": true,
@@ -551,7 +296,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Ertrag",
+          "alias": "Solarpower",
+          "dsType": "influxdb",
           "groupBy": [
             {
               "params": [
@@ -561,55 +307,15 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Solar_AC_Power",
+          "measurement": "Heating_Solar_Power_Current5Min",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Yield\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Eigenverbrauch",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
-          "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
@@ -632,7 +338,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Ertrag",
+      "title": "Solar Leistung (Aktuell 5 Min)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -648,7 +354,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "kwatt",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -671,15 +377,16 @@
     },
     {
       "aliasColors": {},
-      "bars": true,
+      "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "decimals": 0,
       "fill": 1,
       "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
+        "h": 7,
+        "w": 24,
+        "x": 0,
         "y": 14
       },
       "id": 3,
@@ -690,10 +397,10 @@
         "max": true,
         "min": true,
         "show": true,
-        "total": true,
+        "total": false,
         "values": true
       },
-      "lines": false,
+      "lines": true,
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
@@ -707,7 +414,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Ertrag",
+          "alias": "Solarpumpe",
+          "dsType": "influxdb",
           "groupBy": [
             {
               "params": [
@@ -717,55 +425,15 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Solar_AC_Power",
+          "measurement": "Heating_Solar_Pump_State",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Yield\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Eigenverbrauch",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
-          "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
@@ -788,7 +456,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Ertrag",
+      "title": "Solarpumpe",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -804,10 +472,11 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "decimals": null,
+          "format": "percentunit",
           "label": null,
           "logBase": 1,
-          "max": null,
+          "max": "1.1",
           "min": "0",
           "show": true
         },
@@ -831,12 +500,12 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "fill": 1,
+      "fill": 0,
       "gridPos": {
-        "h": 9,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 23
+        "y": 21
       },
       "id": 4,
       "legend": {
@@ -844,7 +513,7 @@
         "current": false,
         "max": false,
         "min": false,
-        "show": false,
+        "show": true,
         "total": false,
         "values": false
       },
@@ -862,7 +531,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Leistung",
+          "alias": "Solarpower",
+          "dsType": "influxdb",
           "groupBy": [
             {
               "params": [
@@ -877,11 +547,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "Solar_AC_Power",
+          "measurement": "Solar_Power",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_AC_Power\" WHERE $timeFilter",
-          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -894,7 +562,121 @@
               },
               {
                 "params": [],
-                "type": "last"
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Wasser",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Heating_Temperature_Wather_Storage",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Kollektor",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Heating_Temperature_Solar_Collector",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Storage",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Heating_Temperature_Solar_Storage",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
               }
             ]
           ],
@@ -905,7 +687,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Leistung",
+      "title": "Temperaturen",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -921,11 +703,11 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "celsius",
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
@@ -943,15 +725,14 @@
       }
     }
   ],
-  "refresh": false,
-  "schemaVersion": 16,
+  "schemaVersion": 18,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {
@@ -980,7 +761,7 @@
     ]
   },
   "timezone": "",
-  "title": "Solar Strom",
-  "uid": "solar-strom",
-  "version": 1
+  "title": "Solar Waerme",
+  "uid": "solar-waerme",
+  "version": 2
 }

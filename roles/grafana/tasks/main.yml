@@ -111,6 +111,7 @@
     - "{{ global_lib }}grafana/provisioning"
     - "{{ global_lib }}grafana/provisioning/dashboards/"
     - "{{ global_lib }}grafana/provisioning/datasources/"
+    - "{{ global_lib }}grafana/provisioning/notifiers/"
 
 - name: copy grafana dashboards
   copy:
