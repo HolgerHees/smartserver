@@ -61,6 +61,8 @@
       Weiter: "j"
       Fortfahren: "j"
       Continue: "y"
+      Abbrechen, wiederholen, ignorieren: "i"
+      Abort, retry, ignore: "i"
   register: command_result
   changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
   notify: "restart grafana"
