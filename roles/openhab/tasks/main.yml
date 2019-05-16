@@ -43,12 +43,12 @@
     remote_src: yes
   when: not openhab_exists.stat.exists
 
-#- name: clone config git
-#  git:
-#    accept_hostkey: yes
-#    repo: 'https://github.com/HolgerHees/openhab-config.git'
-#    dest: '{{projects_path}}openhab2'
-#    version: 'master'
+- name: clone config git
+  git:
+    accept_hostkey: yes
+    repo: 'https://github.com/HolgerHees/openhab-config.git'
+    dest: '{{projects_path}}openhab2'
+    version: 'master'
 
 # **** BACKUP ****
 - name: backup original conf and start.sh
