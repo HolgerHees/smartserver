@@ -1,45 +1,45 @@
+- name: add yum repository
+  yum_repository:
+    name: grafana
+    description: Grafana repository
+    baseurl: https://packages.grafana.com/oss/rpm
+    gpgcheck: yes
+    gpgkey: https://packages.grafana.com/gpg.key
+    reposdir: "/etc/zypp/repos.d/"
+    priority: 100
+  register: yum_status
+
+- name: refresh yum repository
+  expect:
+    command: "zypper refresh"
+    responses:
+       # Continue with GPG key validation
+       immer vertrauen?: "i"
+       trust always?: "a"
+  changed_when: yum_status.changed
+  
 #- name: add yum repository
 #  yum_repository:
 #    name: grafana
-#    description: Grafana repository
-#    baseurl: https://packages.grafana.com/oss/rpm
+#    description: Grafana repository for 5.x packages
+#    baseurl: https://packagecloud.io/grafana/stable/el/7/$basearch
 #    gpgcheck: yes
-#    gpgkey: https://packages.grafana.com/gpg.key
+#    gpgkey: https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
+#    repo_gpgcheck: yes
+#    sslverify: yes
+#    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
 #    reposdir: "/etc/zypp/repos.d/"
 #    priority: 100
 #  register: yum_status
-
+    
 #- name: refresh yum repository
 #  expect:
 #    command: "zypper refresh"
 #    responses:
 #      # Continue with GPG key validation
-#      Weiter?: "ja"
-#      Continue?: "yes"
+#      immer vertrauen?: "i"
+#      trust always?: "a"
 #  changed_when: yum_status.changed
-  
-- name: add yum repository
-  yum_repository:
-    name: grafana
-    description: Grafana repository for 5.x packages
-    baseurl: https://packagecloud.io/grafana/stable/el/7/$basearch
-    gpgcheck: yes
-    gpgkey: https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
-    repo_gpgcheck: yes
-    sslverify: yes
-    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
-    reposdir: "/etc/zypp/repos.d/"
-    priority: 100
-  register: yum_status
-    
-- name: refresh yum repository
-  expect:
-    command: "zypper refresh"
-    responses:
-      # Continue with GPG key validation
-      immer vertrauen?: "i"
-      trust always?: "a"
-  changed_when: yum_status.changed
   
 - name: install required packages
   zypper:
