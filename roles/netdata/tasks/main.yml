@@ -41,6 +41,7 @@
     - "/etc/netdata/python.d.conf"
     - "/etc/netdata/health_alarm_notify.conf"
     - "/etc/netdata/fping.conf"
+    - "/etc/netdata/.environment"
     - "/etc/netdata/health.d/disks.conf"
     - "/etc/netdata/health.d/softnet.conf"
     - "/etc/netdata/health.d/net.conf"
