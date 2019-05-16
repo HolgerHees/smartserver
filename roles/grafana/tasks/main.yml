@@ -13,12 +13,9 @@
   expect:
     command: "zypper refresh"
     responses:
-       # Continue with GPG key validation
-       immer vertrauen?: "i"
-       trust always?: "a"
-       Weiter: "j"
-       Fortfahren: "j"
-       Continue: "y"
+      # Continue with GPG key validation
+      Weiter: "ja"
+      Continue: "yes"
   changed_when: yum_status.changed
   
 #- name: add yum repository
