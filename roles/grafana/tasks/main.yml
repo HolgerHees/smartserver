@@ -16,6 +16,9 @@
        # Continue with GPG key validation
        immer vertrauen?: "i"
        trust always?: "a"
+       Weiter: "j"
+       Fortfahren: "j"
+       Continue: "y"
   changed_when: yum_status.changed
   
 #- name: add yum repository
