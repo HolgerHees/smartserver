@@ -66,8 +66,8 @@
     line: '{{item.line}}'
   with_items:
     - { regex: "^User=", line: "User=root" }
-    - { regex: "^CPUSchedulingPolicy=", line: "CPUSchedulingPolicy=other" } # was "idle" before
-    - { regex: "^[#]+Nice=", line: "Nice=0" } # was "#Nice=0" before
+    #- { regex: "^CPUSchedulingPolicy=", line: "CPUSchedulingPolicy=other" } # was "idle" before
+    #- { regex: "^[#]+Nice=", line: "Nice=0" } # was "#Nice=0" before
   notify: "restart netdata"
 
 - name: copy apache config
