@@ -19,6 +19,31 @@
     - { mode: "u=rwx,g=rx,o=", path: "{{local_backup_path}}" }
 
 - name: install base packages
+  yum:
+    name: [
+        mc
+      , subversion
+      , git
+      , autoconf
+      , automake
+      , gcc
+      , libxml2-devel
+      , sensors
+      , ImageMagick
+      , htop
+      , sysstat
+      , iotop
+      , npm8
+      , zip
+      , python2-pip
+      , python2-passlib    # used by ansible htpasswd module (user role)
+      , mail               # used by elastalert
+      , libselinux-python  # used by ansible on fedora
+    ]
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: install base packages
   zypper:
     name: [  
         mc
@@ -40,6 +65,7 @@
       , mail               # used by elastalert
     ]
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
        
 - name: install pexpect
   pip:

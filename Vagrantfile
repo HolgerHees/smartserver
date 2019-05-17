@@ -126,6 +126,8 @@ Vagrant.configure(2) do |config|
       ansible.vault_password_file = "/tmp/vault_pass"
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
+      ansible.become = true
+      ansible.become_user = "root"
       #ansible.raw_arguments = "--ask-vault-pass"
       #ansible.ask_vault_pass = true
     end  

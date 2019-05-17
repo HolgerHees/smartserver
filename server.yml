@@ -45,10 +45,10 @@
           - "vault:   is {%if vault_active%}active{%else%}inactive{%endif%}"
       tags: always
   roles:
-    - { role: network, tags: [ 'network' ] }
-  
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
+    - { role: network, tags: [ 'network' ] }
+  
     - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server
 
     - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
