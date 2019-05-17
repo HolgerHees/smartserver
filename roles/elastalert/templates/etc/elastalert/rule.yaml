@@ -4,7 +4,7 @@ type: any
 filter:
 - query:
     query_string:
-        query: 'level: ALERT OR (level: ERROR AND NOT ( ( group: sshd AND ( message: "Failed to release session" ) ) OR group: netdata OR group: openvpn ))'
+        query: 'level: ALERT OR (level: ERROR AND NOT ( ( group: sshd AND ( message: "Failed to release session" ) ) OR group: netdata OR group: openvpn OR group: crony ))'
 
 #sshd  => Failed to release session
 
