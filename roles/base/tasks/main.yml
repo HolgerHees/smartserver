@@ -36,6 +36,7 @@
       , npm8
       , zip
       , python2-pip
+      , python2-passlib    # used by ansible htpasswd module (user role)
       , mail               # used by elastalert
     ]
     state: present
