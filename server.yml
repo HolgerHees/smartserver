@@ -41,6 +41,7 @@
           - "gateway: {{server_gateway}}"
           - "network: {{server_network}}"
           - "arpha:   {{server_arpa}}"
+          - "os:      {{ansible_distribution}}"
           - "vault:   is {%if vault_active%}active{%else%}inactive{%endif%}"
       tags: always
   roles:
