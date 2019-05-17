@@ -84,7 +84,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "develop_fedora", autostart: false do |develop_fedora|
     develop_fedora.vm.box = "fedora/30-cloud-base"
-    develop_fedora.ssh.username = 'root'
+    develop_fedora.ssh.username = 'vagrant'
     develop_fedora.ssh.password = 'vagrant'
     develop_fedora.ssh.insert_key = 'true'
     develop_fedora.vm.network "private_network", ip: "192.168.1.50"
@@ -116,7 +116,7 @@ Vagrant.configure(2) do |config|
     SHELL
 
     develop_fedora.vm.provision "shell", inline: <<-SHELL
-      sudo zypper --non-interactive install ansible
+      sudo yum --assumeyes install ansible python
     SHELL
 
     develop_fedora.vm.provision "ansible_local" do |ansible|
