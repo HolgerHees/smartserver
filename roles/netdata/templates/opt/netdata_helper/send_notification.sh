@@ -20,3 +20,5 @@ esac
 
 #line=$(echo "$i" | xargs)
 echo "$message"  | systemd-cat -t system -p $level
+
+/usr/bin/php -f /opt/netdata_helper/inform_openhab.php
