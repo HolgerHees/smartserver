@@ -131,7 +131,7 @@ Vagrant.configure(2) do |config|
     end  
     
     # Delete temp vault password file
-    develop.vm.provision "shell", inline: <<-SHELL
+    develop_fedora.vm.provision "shell", inline: <<-SHELL
         rm /tmp/vault_pass
     SHELL
   end
