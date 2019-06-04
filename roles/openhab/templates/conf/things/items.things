@@ -1,4 +1,5 @@
-network:pingdevice:livingroomTV [ hostname="{{tv_livingroom_ip}}", retry=1, refreshInterval=5000 ]
+// log:set TRACE org.openhab.binding.samsungtv
+samsungtv:tv:livingroom [ hostName="{{tv_livingroom_ip}}", port=55000, refreshInterval=1000 ]
 
 // log:set DEBUG org.openhab.binding.network
 network:pingdevice:phone1 [ hostname="{{phone1_ip}}", retry=12, timeout=10000, refreshInterval=5000 ] // max 3.0 min
