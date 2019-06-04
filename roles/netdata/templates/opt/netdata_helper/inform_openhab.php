@@ -3,7 +3,7 @@ include "{{projects_path}}toolbox/_lib/init.php";
 
 $rest = Setup::getOpenHabRest();
 
-$content = Request::makeRequest("http://localhost:19999/api/v1/alarms?active",[],null,200);
+$content = Request::makeRequest("http://localhost:19999/api/v1/alarms?active&_=" . time(),[],null,200);
 
 if($content)
 {
