@@ -141,6 +141,8 @@
   with_items:
     - cam.jpg
     - cam.mjpg
+    - snapshot.cgi
+    - videostream.cgi
 
 - name: disable http vhost
   command: "mv /etc/apache2/vhosts.d/vhost.conf /etc/apache2/vhosts.d/vhost.conf.bak"
