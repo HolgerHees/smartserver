@@ -17,3 +17,11 @@
   shell: '/usr/bin/freshclam --no-warnings'
   notify: "restart clamav"
   when: install_status.changed
+
+- name: change clamd startup timeout
+  lineinfile:
+    path: /usr/lib/systemd/system/clamd.service
+    insertafter: '^\[Service\]'
+    regexp: 'TimeoutSec'
+    line: 'TimeoutSec=5min'
+  notify: "restart clamav"
