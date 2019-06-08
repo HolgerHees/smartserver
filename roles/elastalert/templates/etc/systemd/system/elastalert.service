@@ -5,6 +5,8 @@ Requires=elasticsearch.service
 
 [Service]
 Type=simple
+# wait max 5 minutes to give elasticsearch enough time to be ready
+ExecStartPre=/usr/bin/timeout 300 bash -c 'while [[ "$(/usr/bin/curl -s -o /dev/null -w ''%{http_code}'' localhost:9200)" != "200" ]]; do sleep 5; done' || false
 ExecStart=/usr/bin/elastalert --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
 
 [Install]
