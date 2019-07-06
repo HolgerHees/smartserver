@@ -36,13 +36,14 @@
     - name: debug
       debug:
         msg: 
-          - "mode:    {{inventory_hostname}}"
-          - "server:  {{server_ip}}"
-          - "gateway: {{server_gateway}}"
-          - "network: {{server_network}}"
-          - "arpha:   {{server_arpa}}"
-          - "os:      {{ansible_distribution}}"
-          - "vault:   is {%if vault_active%}active{%else%}inactive{%endif%}"
+          - "mode:       {{inventory_hostname}}"
+          - "server:     {{server_ip}}"
+          - "gateway:    {{server_gateway}}"
+          - "network:    {{server_network}}"
+          - "arpha:      {{server_arpa}}"
+          - "os-name:    {{ansible_distribution}}"
+          - "os-version: {{ansible_distribution_version}}"
+          - "vault:      is {%if vault_active%}active{%else%}inactive{%endif%}"
       tags: always
   roles:
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
