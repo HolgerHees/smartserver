@@ -106,7 +106,7 @@
 #    - "index.txt"
     - { mode: "u=rw,g=r,o=", path: "dh.pem" }
   notify: "restart openvpn@mobile"
-  when: "use_vault_files"
+  when: "use_vault_files|bool"
   
 - name: copy server pass
   copy:
@@ -117,7 +117,7 @@
     group: root
     mode: 0600
   notify: "restart openvpn@mobile"
-  when: "vault_active"
+  when: "vault_active|bool"
   
 # **** CLOUD VPN SHARED KEY ****
 - name: check shared key
@@ -141,7 +141,7 @@
     group: root
     mode: 0600
   notify: "restart openvpn@cloud"
-  when: "use_vault_files"
+  when: "use_vault_files|bool"
 
 # **** CONFIGS ****
 - name: prepare ovpn certificate vars
@@ -150,7 +150,7 @@
     mobile_crt: "-----BEGIN CERTIFICATE-----{{ lookup('file','/etc/easy-rsa/pki/issued/mobile.crt').split('-----BEGIN CERTIFICATE-----')[1]}}"
     mobile_key: "{{ lookup('file','/etc/easy-rsa/pki/private/mobile.key')}}"
   changed_when: no
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: copy config
   template:
@@ -164,4 +164,4 @@
     - "mobile.conf"
     - "mobile.ovpn"
   notify: "restart openvpn"
-  when: "vault_active"
+  when: "vault_active|bool"

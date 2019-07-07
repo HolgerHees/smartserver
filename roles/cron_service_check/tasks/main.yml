@@ -27,5 +27,5 @@
     user: root
     minute: "0"
     state: present
-  when: is_production
+  when: "is_production|bool"
   tags: ['cron_job']

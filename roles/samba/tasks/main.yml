@@ -12,4 +12,4 @@
     group: root
     mode: 0640
   notify: "restart samba"
-  when: "vault_active"
+  when: "vault_active|bool"

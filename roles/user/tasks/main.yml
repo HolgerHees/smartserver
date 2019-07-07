@@ -9,7 +9,7 @@
     #update_password: on_create
     groups: users
     append: no
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: prepare user "{{holger_username}}" folder
   file:
@@ -19,7 +19,7 @@
     group: users
     mode: 0750
     #recurse: true
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add user "{{holger_username}}" to samba
   shell: "( (pdbedit -L | grep {{holger_username}}) && echo 'skipped' ) || ( ( printf '{{ holger_samba_password }}\n{{ holger_samba_password }}\n' | smbpasswd -a {{holger_username}} ) && echo 'created' )"
@@ -27,14 +27,14 @@
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "'created' in command_result.stdout"
   notify: "restart samba"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add user "{{holger_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{holger_username}}"
     password: "{{holger_web_password}}"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 # **** HHEES (SSH, SMB, WEB) ****
 - name: add user "{{sandra_username}}" with no login
@@ -45,7 +45,7 @@
     home: "/home/{{sandra_username}}/"
     groups: users
     append: no
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: prepare user "{{sandra_username}}" folder
   file:
@@ -55,7 +55,7 @@
     group: users
     mode: 0750
     #recurse: true
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add user "{{sandra_username}}" to samba
   shell: "( (pdbedit -L | grep {{sandra_username}}) && echo 'skipped' ) || ( ( printf '{{ sandra_samba_password }}\n{{ sandra_samba_password }}\n' | smbpasswd -a {{sandra_username}} ) && echo 'created' )"
@@ -63,14 +63,14 @@
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "'created' in command_result.stdout"
   notify: "restart samba"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add user "{{sandra_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{sandra_username}}"
     password: "{{sandra_web_password}}"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 # **** VTI ACCESS USER ****
 - name: add user vti with no login
@@ -83,7 +83,7 @@
     create_home: no
     groups: users
     append: no
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: prepare user vti folder
   file:
@@ -93,7 +93,7 @@
     group: users
     mode: 0700
     #recurse: true
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add user vti to samba
   shell: "( (pdbedit -L | grep {{vti_username}}) && echo 'skipped' ) || ( ( printf '{{ vti_samba_password }}\n{{ vti_samba_password }}\n' | smbpasswd -a {{vti_username}} ) && echo 'created' )"
@@ -101,7 +101,7 @@
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "'created' in command_result.stdout"
   notify: "restart samba"
-  when: "vault_active"
+  when: "vault_active|bool"
 
   
   
@@ -117,7 +117,7 @@
     update_password: on_create
     groups: users
     append: no
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: prepare user vpn folder
   file:
@@ -126,7 +126,7 @@
     group: users
     mode: 0750
     recurse: true
-  when: "vault_active"
+  when: "vault_active|bool"
     
     
 
@@ -138,14 +138,14 @@
     path: "{{htdocs_path}}.htpasswd"
     name: "{{admin_username}}"
     password: "{{admin_web_password}}"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: create apache user alexa
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{alexa_username}}"
     password: "{{alexa_web_password}}"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add apache user to groups
   lineinfile:
@@ -154,4 +154,4 @@
     line: '{{item.group}}: {{item.user}}'
   with_items:
     - { group: 'USER', user: '{{holger_username}} {{sandra_username}} {{admin_username}}' }
-  when: "vault_active"
+  when: "vault_active|bool"

@@ -78,7 +78,7 @@
     regexp: '^\[smtp.gmail.com\]:587'
     line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
   notify: "restart postfix"
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: set aliases
   lineinfile:
@@ -91,7 +91,7 @@
     - { name: 'default', alias: '{{ admin_mail }}' }
   register: aliases_status
   notify: "restart postfix"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: refresh aliases
   command: "/usr/bin/newaliases"

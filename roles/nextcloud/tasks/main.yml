@@ -44,7 +44,7 @@
     owner: wwwrun
     group: www
     mode: 0640
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: prepare data folder
   file:

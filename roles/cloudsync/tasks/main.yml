@@ -36,7 +36,7 @@
   template:
     src: "roles/cloudsync/templates/cloudsync.config"
     dest: "{{projects_path}}cloudsync/config/cloudsync.config"
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: install
   shell: '/usr/bin/mvn clean install'
@@ -68,5 +68,5 @@
     minute: "0"
     hour: "2"
     state: present
-  when: is_production
+  when: "is_production|bool"
   tags: ['cron_job']

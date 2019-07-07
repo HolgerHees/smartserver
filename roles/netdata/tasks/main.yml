@@ -90,5 +90,5 @@
     cron_file: ansible_cron_service_check
     user: root
     state: present
-  when: is_production
+  when: "is_production|bool"
   tags: ['cron_job']

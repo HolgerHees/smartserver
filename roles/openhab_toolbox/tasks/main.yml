@@ -12,7 +12,7 @@
     owner: root
     group: root
     mode: 0644
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: set symbolic link to htdocs
   file:
@@ -21,7 +21,7 @@
     state: link
     owner: wwwrun
     group: www  
-  when: "vault_active"
+  when: "vault_active|bool"
       
 - name: check mysql is running
   systemd:

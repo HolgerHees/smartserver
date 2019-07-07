@@ -10,7 +10,7 @@
     #update_password: on_create
     groups: users
     append: no
-  when: "vault_active"
+  when: "vault_active|bool"
     
 - name: prepare user "philipp" folder
   file:
@@ -20,7 +20,7 @@
     group: users
     mode: 0777
     #recurse: true
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: add nfs exported folder for user "philipp"
   lineinfile:

@@ -10,7 +10,7 @@
     update_password: on_create
     group: ftp
     append: no
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: prepare user camera folder
   file:
@@ -19,7 +19,7 @@
     owner: "{{camera_username}}"
     group: ftp
     mode: 0750
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: add user camera to ftp
   lineinfile:
@@ -27,7 +27,7 @@
     regexp: '^{{camera_username}}'
     line: '{{camera_username}}'
   notify: "restart vsftpd"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: set cleanup cron job
   vars:

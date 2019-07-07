@@ -39,5 +39,5 @@
     user: root
     minute: "*/5"
     state: present
-  when: is_production
+  when: "is_production|bool"
   tags: ['cron_job']

@@ -116,7 +116,7 @@
     user: root
     minute: "*/1"
     state: present
-  when: is_production
+  when: "is_production|bool"
   tags: ['cron_job']
 
 - name: set sensors cron job
@@ -130,7 +130,7 @@
     user: root
     minute: "*/1"
     state: present
-  when: is_production
+  when: "is_production|bool"
   tags: ['cron_job']
 
 - name: set log cleanup (scripts) cron job

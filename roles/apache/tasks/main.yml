@@ -56,7 +56,7 @@
     creates: "/etc/certbot/"
     decrypt: yes
   notify: "restart apache"
-  when: "use_vault_files"
+  when: "use_vault_files|bool"
 
 # TODO add renew job
 #certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
@@ -131,7 +131,7 @@
     - _.ansible.d/options.conf
     - vhosts.d/vhost-ssl.conf
   notify: "restart apache"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: copy balancer fallback files
   copy:

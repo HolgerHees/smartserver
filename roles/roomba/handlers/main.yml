@@ -6,4 +6,4 @@
     enabled: yes
     masked: no
   listen: "restart roomba"
-  when: is_production
+  when: "is_production|bool"

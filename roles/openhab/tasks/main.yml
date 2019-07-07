@@ -160,7 +160,7 @@
     - services/runtime.cfg
     - services/s300th.cfg
   notify: "restart openhab"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: link configs
   file:
@@ -194,13 +194,13 @@
   systemd:
     name: mysql
     state: started
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: check mysql databases
   shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
   register: mysql_data_exists
   changed_when: "'openhab' not in mysql_data_exists.stdout"
-  when: "vault_active"
+  when: "vault_active|bool"
 
 - name: create missing mysql databases
   shell: "mysqladmin -u root -h 127.0.0.1 create openhab"
@@ -223,7 +223,7 @@
     path: "{{ global_lib }}influxdb/data/openhab_db"
   register: influxdb_data_exists
   changed_when: not influxdb_data_exists.stat.exists
-  when: "vault_active"
+  when: "vault_active|bool"
   
 - name: check influxdb is running
   systemd:
