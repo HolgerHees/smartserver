@@ -6,7 +6,7 @@
     gpgcheck: yes
     gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     reposdir: "/etc/zypp/repos.d/"
-    priority: 100
+    priority: "100"
   register: yum_status
     
 - name: refresh yum repository
