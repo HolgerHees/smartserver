@@ -1,7 +1,7 @@
 - name: set nextcloud version
   set_fact:
-    nextcloud_version: '15.0.7'
-    nextcloud_upgrade_from: '15.0.7.0' # the current installed version to be able to run "./occ upgrade"
+    nextcloud_version: '16.0.2'
+    nextcloud_upgrade_from: '16.0.2.1' # the current installed version to be able to run "./occ upgrade"
     
 - name: check nextcloud
   stat:
