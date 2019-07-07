@@ -33,4 +33,4 @@
     - /config/openhab.js
     - /config/test.js
     - /.env
-  when: "vault_active"
+  when: "vault_active|bool"
