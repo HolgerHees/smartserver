@@ -121,7 +121,7 @@
 
     - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
-    - { role: backup_restore, tags: [ 'backup_restore' ], when: use_backup_files } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
+    - { role: backup_restore, tags: [ 'backup_restore' ], when: "use_backup_files|bool" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
     
   post_tasks:
     # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 
