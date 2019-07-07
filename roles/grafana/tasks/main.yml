@@ -166,6 +166,7 @@
     - { block: 'paths', field: 'provisioning', value: '{{global_lib}}grafana/provisioning' }
     - { block: 'log', field: 'mode', value: 'syslog' }
     - { block: 'log.syslog', field: 'tag', value: 'grafana' }
+    - { block: 'security', field: 'allow_embedding', value: 'true' }
   notify: "restart grafana"
     
 - name: copy apache config
