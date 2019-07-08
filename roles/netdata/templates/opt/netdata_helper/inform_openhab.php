@@ -1,5 +1,5 @@
 <?php
-include "{{projects_path}}toolbox/_lib/init.php";
+include "/dataRaid/projects/toolbox/_lib/init.php";
 
 $rest = Setup::getOpenHabRest();
 
@@ -28,5 +28,6 @@ if($content)
 }
 else
 {
-    exit("Netdata is down. Can't inform openhab about system status.");
+    echo "Netdata is down. Can't inform openhab about system status.";
+    exit(1);
 }

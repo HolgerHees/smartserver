@@ -83,11 +83,11 @@
 - name: set cron job
   vars:
     cron_name: "Netdata error check"
-    cron_cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php;"
+    cron_cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php"
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_cron_service_check
+    cron_file: ansible_netdata
     user: root
     state: present
   when: "is_production|bool"

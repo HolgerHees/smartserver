@@ -21,4 +21,16 @@ esac
 #line=$(echo "$i" | xargs)
 echo "$message"  | systemd-cat -t system -p $level
 
-/usr/bin/php -f /opt/netdata_helper/inform_openhab.php
+notify_openhab()
+{
+  touch {{global_tmp}}netdata_notification.lock
+  /usr/bin/php -f /opt/netdata_helper/inform_openhab.php
+  sleep 60
+  rm {{global_tmp}}netdata_notification.lock
+}
+
+if [ ! -f "{{global_tmp}}netdata_notification.lock" ]; then
+  notify_openhab &
+else 
+  echo "Openhab notification not possible"  | systemd-cat -t system -p "warning"
+fi
