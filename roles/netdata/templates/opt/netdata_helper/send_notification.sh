@@ -29,7 +29,7 @@ notify_openhab()
   rm {{global_tmp}}netdata_notification.lock
 }
 
-if [ ! -f "{{global_tmp}}netdata_notification.lock" ]; then
+if [ ! -f "{{global_tmp}}netdata_notification.lock" ] || [ -n "$(find {{global_tmp}} -name netdata_notification.lock -mmin +1)" ]; then
   notify_openhab &
 else 
   echo "Openhab notification not possible"  | systemd-cat -t netdata -p "warning"
