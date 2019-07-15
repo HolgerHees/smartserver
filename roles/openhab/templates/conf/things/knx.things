@@ -11,11 +11,11 @@ Bridge	knx:ip:bridge [
 ] {
     Thing device other
     {
-        Type    number  :       energyDemand            "Wirkenergie Bezug"          [ ga="13.010:0/4/10" ]
-        Type    number  :       energySupply            "Wirkenergie Lieferung"      [ ga="13.010:0/4/11" ]
-        Type    number  :       powerDemand             "Wirkleistung Bezug"         [ ga="14.056:0/4/12" ]
-        Type    number  :       powerSupply             "Wirkleistung Lieferung"     [ ga="14.056:0/4/13" ]
-        
+        Type    number  :       energyDemandActive      "Wirkenergie Bezug"          [ ga="13.010:0/4/10" ]
+        Type    number  :       energySupplyActive      "Wirkenergie Lieferung"      [ ga="13.010:0/4/11" ]
+        Type    number  :       powerDemandActive       "Wirkleistung Bezug"         [ ga="14.056:0/4/12" ]
+        Type    number  :       powerSupplyActive       "Wirkleistung Lieferung"     [ ga="14.056:0/4/13" ]
+
         Type    number  :       gasCounter              "Gas Counter"                [ ga="13.001:<0/4/6" ]
         Type    switch  :       stateNotify             "Benachrichtigen"            [ ga="<0/4/1" ]
         Type    switch  :       stateHoliday            "Urlaubsmodus"               [ ga="<0/4/8" ]
