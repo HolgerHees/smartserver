@@ -1,3 +1,12 @@
+- name: prepare digest file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htdigest"
+    force: no
+    owner: wwwrun
+    group: www
+    mode: 0640
+
 # **** HHEES (SSH, SMB, WEB) ****
 - name: add user "{{holger_username}}" with no login
   user:
@@ -21,15 +30,6 @@
     #recurse: true
   when: "vault_active|bool"
   
-#- name: prepare empty digest file
-#  copy:
-#    content: ""
-#    dest: "{{htdocs_path}}.htdigest"
-#    force: yes
-#    owner: wwwrun
-#    group: www
-#    mode: 0640
-
 - name: add user "{{holger_username}}" to samba
   shell: "( (pdbedit -L | grep {{holger_username}}) && echo 'skipped' ) || ( ( printf '{{ holger_samba_password }}\n{{ holger_samba_password }}\n' | smbpasswd -a {{holger_username}} ) && echo 'created' )"
   register: command_result
@@ -45,9 +45,18 @@
     password: "{{holger_web_password}}"
   when: "vault_active|bool"
 
-#- name: add user "{{holger_username}}" to apache (htdigest)
-#  shell: "echo `echo -n \"{{holger_username}}:{{server_name}}:\" && echo -n \"{{holger_username}}:{{server_name}}:{{holger_web_password}}\" | md5sum - | cut -d' ' -f1` >> {{htdocs_path}}.htdigest"
-#  when: "vault_active|bool"
+- name: create user "{{holger_username}}" digest
+  shell: "echo \"{{holger_username}}:{{server_name}}:{{holger_web_password}}\" | md5sum - | cut -d' ' -f1"
+  register: htdigest
+  changed_when: false
+  when: "vault_active|bool"
+
+- name: add user "{{holger_username}}" to apache (htdigest)
+  lineinfile:
+    path: "{{htdocs_path}}.htdigest"
+    regexp: '{{holger_username}}:{{server_name}}'
+    line: '{{holger_username}}:{{server_name}}:{{htdigest.stdout}}'
+  when: "vault_active|bool"
   
 # **** HHEES (SSH, SMB, WEB) ****
 - name: add user "{{sandra_username}}" with no login
@@ -83,6 +92,19 @@
     path: "{{htdocs_path}}.htpasswd"
     name: "{{sandra_username}}"
     password: "{{sandra_web_password}}"
+  when: "vault_active|bool"
+
+- name: create user "{{sandra_username}}" digest
+  shell: "echo \"{{sandra_username}}:{{server_name}}:{{sandra_web_password}}\" | md5sum - | cut -d' ' -f1"
+  register: htdigest
+  changed_when: false
+  when: "vault_active|bool"
+
+- name: add user "{{sandra_username}}" to apache (htdigest)
+  lineinfile:
+    path: "{{htdocs_path}}.htdigest"
+    regexp: '{{sandra_username}}:{{server_name}}'
+    line: '{{sandra_username}}:{{server_name}}:{{htdigest.stdout}}'
   when: "vault_active|bool"
 
 # **** VTI ACCESS USER ****
@@ -152,6 +174,19 @@
     name: "{{admin_username}}"
     password: "{{admin_web_password}}"
   when: "vault_active|bool"
+  
+- name: create user "{{admin_username}}" digest
+  shell: "echo \"{{admin_username}}:{{server_name}}:{{admin_web_password}}\" | md5sum - | cut -d' ' -f1"
+  register: htdigest
+  changed_when: false
+  when: "vault_active|bool"
+
+- name: add user "{{admin_username}}" to apache (htdigest)
+  lineinfile:
+    path: "{{htdocs_path}}.htdigest"
+    regexp: '{{admin_username}}:{{server_name}}'
+    line: '{{admin_username}}:{{server_name}}:{{htdigest.stdout}}'
+  when: "vault_active|bool"
 
 - name: add user "{{alexa_username}}" to apache (htpasswd)
   htpasswd:
@@ -160,6 +195,19 @@
     password: "{{alexa_web_password}}"
   when: "vault_active|bool"
 
+- name: create user "{{alexa_username}}" digest
+  shell: "echo \"{{alexa_username}}:{{server_name}}:{{alexa_web_password}}\" | md5sum - | cut -d' ' -f1"
+  register: htdigest
+  changed_when: false
+  when: "vault_active|bool"
+
+- name: add user "{{alexa_username}}" to apache (htdigest)
+  lineinfile:
+    path: "{{htdocs_path}}.htdigest"
+    regexp: '{{alexa_username}}:{{server_name}}'
+    line: '{{alexa_username}}:{{server_name}}:{{htdigest.stdout}}'
+  when: "vault_active|bool"
+  
 - name: add apache user to groups
   lineinfile:
     path: "{{htdocs_path}}.htgroups"
