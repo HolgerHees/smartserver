@@ -83,6 +83,7 @@
   with_items:
     #- authz_group 
     #- header 
+    - auth_digest
     - headers 
     - proxy 
     - proxy_html 

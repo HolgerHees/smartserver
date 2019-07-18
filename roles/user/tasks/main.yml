@@ -20,6 +20,15 @@
     mode: 0750
     #recurse: true
   when: "vault_active|bool"
+  
+#- name: prepare empty digest file
+#  copy:
+#    content: ""
+#    dest: "{{htdocs_path}}.htdigest"
+#    force: yes
+#    owner: wwwrun
+#    group: www
+#    mode: 0640
 
 - name: add user "{{holger_username}}" to samba
   shell: "( (pdbedit -L | grep {{holger_username}}) && echo 'skipped' ) || ( ( printf '{{ holger_samba_password }}\n{{ holger_samba_password }}\n' | smbpasswd -a {{holger_username}} ) && echo 'created' )"
@@ -29,13 +38,17 @@
   notify: "restart samba"
   when: "vault_active|bool"
 
-- name: add user "{{holger_username}}" to apache
+- name: add user "{{holger_username}}" to apache (htpasswd)
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{holger_username}}"
     password: "{{holger_web_password}}"
   when: "vault_active|bool"
 
+#- name: add user "{{holger_username}}" to apache (htdigest)
+#  shell: "echo `echo -n \"{{holger_username}}:{{server_name}}:\" && echo -n \"{{holger_username}}:{{server_name}}:{{holger_web_password}}\" | md5sum - | cut -d' ' -f1` >> {{htdocs_path}}.htdigest"
+#  when: "vault_active|bool"
+  
 # **** HHEES (SSH, SMB, WEB) ****
 - name: add user "{{sandra_username}}" with no login
   user:
@@ -65,7 +78,7 @@
   notify: "restart samba"
   when: "vault_active|bool"
 
-- name: add user "{{sandra_username}}" to apache
+- name: add user "{{sandra_username}}" to apache (htpasswd)
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{sandra_username}}"
@@ -133,14 +146,14 @@
     
     
 # **** APACHE USERS (WEB) ****
-- name: create apache user admin
+- name: add user "{{admin_username}}" to apache (htpasswd)
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{admin_username}}"
     password: "{{admin_web_password}}"
   when: "vault_active|bool"
 
-- name: create apache user alexa
+- name: add user "{{alexa_username}}" to apache (htpasswd)
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{alexa_username}}"
