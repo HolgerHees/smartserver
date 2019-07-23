@@ -175,6 +175,15 @@
     group: www
     mode: 0640
 
+- name: prepare .htdigest file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htdigest"
+    force: no
+    owner: wwwrun
+    group: www
+    mode: 0640
+
 - name: prepare .htgroups file
   copy:
     content: ""

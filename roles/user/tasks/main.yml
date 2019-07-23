@@ -1,12 +1,3 @@
-- name: prepare digest file
-  copy:
-    content: ""
-    dest: "{{htdocs_path}}.htdigest"
-    force: no
-    owner: wwwrun
-    group: www
-    mode: 0640
-
 # **** HHEES (SSH, SMB, WEB) ****
 - name: add user "{{holger_username}}" with no login
   user:
@@ -45,17 +36,15 @@
     password: "{{holger_web_password}}"
   when: "vault_active|bool"
 
-- name: create user "{{holger_username}}" digest
-  shell: "echo \"{{holger_username}}:{{server_name}}:{{holger_web_password}}\" | md5sum - | cut -d' ' -f1"
-  register: htdigest
-  changed_when: false
-  when: "vault_active|bool"
-
 - name: add user "{{holger_username}}" to apache (htdigest)
+  vars:
+    username: "{{holger_username}}"
+    password: "{{holger_web_password}}"
+    realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
     regexp: '{{holger_username}}:{{server_name}}'
-    line: '{{holger_username}}:{{server_name}}:{{htdigest.stdout}}'
+    line: "{{ lookup('template', 'templates/htdigest') }}"
   when: "vault_active|bool"
   
 # **** HHEES (SSH, SMB, WEB) ****
@@ -94,17 +83,15 @@
     password: "{{sandra_web_password}}"
   when: "vault_active|bool"
 
-- name: create user "{{sandra_username}}" digest
-  shell: "echo \"{{sandra_username}}:{{server_name}}:{{sandra_web_password}}\" | md5sum - | cut -d' ' -f1"
-  register: htdigest
-  changed_when: false
-  when: "vault_active|bool"
-
 - name: add user "{{sandra_username}}" to apache (htdigest)
+  vars:
+    username: "{{sandra_username}}"
+    password: "{{sandra_web_password}}"
+    realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
     regexp: '{{sandra_username}}:{{server_name}}'
-    line: '{{sandra_username}}:{{server_name}}:{{htdigest.stdout}}'
+    line: "{{ lookup('template', 'templates/htdigest') }}"
   when: "vault_active|bool"
 
 # **** VTI ACCESS USER ****
@@ -175,17 +162,15 @@
     password: "{{admin_web_password}}"
   when: "vault_active|bool"
   
-- name: create user "{{admin_username}}" digest
-  shell: "echo \"{{admin_username}}:{{server_name}}:{{admin_web_password}}\" | md5sum - | cut -d' ' -f1"
-  register: htdigest
-  changed_when: false
-  when: "vault_active|bool"
-
 - name: add user "{{admin_username}}" to apache (htdigest)
+  vars:
+    username: "{{admin_username}}"
+    password: "{{admin_web_password}}"
+    realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
     regexp: '{{admin_username}}:{{server_name}}'
-    line: '{{admin_username}}:{{server_name}}:{{htdigest.stdout}}'
+    line: "{{ lookup('template', 'templates/htdigest') }}"
   when: "vault_active|bool"
 
 - name: add user "{{alexa_username}}" to apache (htpasswd)
@@ -195,17 +180,15 @@
     password: "{{alexa_web_password}}"
   when: "vault_active|bool"
 
-- name: create user "{{alexa_username}}" digest
-  shell: "echo \"{{alexa_username}}:{{server_name}}:{{alexa_web_password}}\" | md5sum - | cut -d' ' -f1"
-  register: htdigest
-  changed_when: false
-  when: "vault_active|bool"
-
 - name: add user "{{alexa_username}}" to apache (htdigest)
+  vars:
+    username: "{{alexa_username}}"
+    password: "{{alexa_web_password}}"
+    realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
     regexp: '{{alexa_username}}:{{server_name}}'
-    line: '{{alexa_username}}:{{server_name}}:{{htdigest.stdout}}'
+    line: "{{ lookup('template', 'templates/htdigest') }}"
   when: "vault_active|bool"
   
 - name: add apache user to groups
