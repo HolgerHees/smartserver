@@ -363,6 +363,10 @@
           ['url','/mysql/','MySQL','phpMyAdmin',false],
           ['url','/tools/weatherDetailOverview/', 'Wetterbericht','Meteo Group',false]
         ];
+        subMenus['devices'] = [
+          ['url','/pvInverterGarage', 'Wechselrichter','Solar (Extern)',false],
+          ['url','/printerLaserJet', 'Lasterdrucker','HPLaserJet',false]
+        ];
 	</script>
 </head>
 <body>
@@ -392,6 +396,7 @@
             <div class="header">Administration</div>
             <div class="service button" onClick="openMenu(this,'tools')"><div>Logs &amp; Status</div><div></div></div>
             <div class="service button" onClick="openMenu(this,'admin')"><div>Tools</div><div></div></div>
+            <div class="service button" onClick="openMenu(this,'devices')"><div>Geräte</div><div></div></div>
         </div>
     </div>
     <div id="side" data-role="page" class="fullsize">
