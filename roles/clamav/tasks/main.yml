@@ -8,7 +8,7 @@
 
 - name: install required packages
   zypper:
-    name: clamav>=0.101.2
+    name: clamav>=0.101.3
     state: present
   register: install_status
   notify: "restart clamav"
