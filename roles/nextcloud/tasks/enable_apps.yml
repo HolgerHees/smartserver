@@ -39,7 +39,7 @@
 
 - name: install news app
   unarchive:
-    src: "https://github.com/nextcloud/news/releases/download/13.0.3/news.tar.gz"
+    src: "https://github.com/nextcloud/news/releases/download/13.1.6/news.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"
@@ -47,12 +47,12 @@
     group: www
   register: news_installed
   
-- name: patch news app min required version
-  lineinfile:
-    path: "{{htdocs_path}}nextcloud/apps/news/appinfo/info.xml"
-    regexp: '<nextcloud min-version='
-    line: '<nextcloud min-version="14" max-version="20"/>'
-  when: news_installed.changed
+#- name: patch news app min required version
+#  lineinfile:
+#    path: "{{htdocs_path}}nextcloud/apps/news/appinfo/info.xml"
+#    regexp: '<nextcloud min-version='
+#    line: '<nextcloud min-version="14" max-version="20"/>'
+#  when: news_installed.changed
   
 - name: prepare news config folder
   file:
