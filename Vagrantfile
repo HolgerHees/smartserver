@@ -1,9 +1,7 @@
 
 Vagrant.configure(2) do |config|
   config.vm.define "test" do |test|
-    test.vm.box = "dcermak/openSUSE-Leap-15.1-Vagrant.x86_64"
-    #test.vm.box = "opensuse/openSUSE-15.0-x86_64"
-    #test.vm.box = "opensuse/openSUSE-Tumbleweed-x86_64"
+    test.vm.box = "generic/opensuse15"
     test.ssh.username = 'root'
     test.ssh.password = 'vagrant'
     test.ssh.insert_key = 'true'
@@ -29,10 +27,8 @@ Vagrant.configure(2) do |config|
   end
   
   config.vm.define "develop", autostart: false do |develop|
-    develop.vm.box = "dcermak/openSUSE-Leap-15.1-Vagrant.x86_64"
-    develop.vm.box_version = "15.1.7.2"
+    develop.vm.box = "generic/opensuse15"
     #develop.vm.box = "opensuse/openSUSE-15.0-x86_64"
-    #develop.vm.box = "opensuse/openSUSE-Tumbleweed-x86_64"
     develop.ssh.username = 'root'
     develop.ssh.password = 'vagrant'
     develop.ssh.insert_key = 'true'
