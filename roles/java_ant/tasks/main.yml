@@ -1,12 +1,12 @@
 - name: install archive
   unarchive:
-    src: "http://apache.mirror.digionline.de/ant/binaries/apache-ant-1.10.5-bin.zip"
+    src: "http://apache.mirror.digionline.de/ant/binaries/apache-ant-1.10.7-bin.zip"
     dest: "/opt"
     remote_src: yes
-    creates: "/opt/apache-ant-1.10.5/"
+    creates: "/opt/apache-ant-1.10.7/"
     
 - name: create symlink to /usr/bin
   file:
-    src: "/opt/apache-ant-1.10.5/bin/ant"
+    src: "/opt/apache-ant-1.10.7/bin/ant"
     dest: /usr/bin/ant
     state: link  
