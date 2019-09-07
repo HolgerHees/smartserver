@@ -2,7 +2,7 @@
 - name: add user "{{holger_username}}" with no login
   user:
     name: "{{holger_username}}"
-    uid: 1000
+#    uid: 1001
     shell: /bin/false
     home: "/home/{{holger_username}}/"
     #password: "{{ holger_linux_password | password_hash('sha512') }}"
@@ -51,7 +51,7 @@
 - name: add user "{{sandra_username}}" with no login
   user:
     name: "{{sandra_username}}"
-    uid: 1006
+#    uid: 1006
     shell: /bin/false
     home: "/home/{{sandra_username}}/"
     groups: users
@@ -93,38 +93,6 @@
     regexp: '{{sandra_username}}:{{server_name}}'
     line: "{{ lookup('template', 'templates/htdigest') }}"
   when: "vault_active|bool"
-
-# **** VTI ACCESS USER ****
-- name: add user vti with no login
-  user:
-    name: "{{vti_username}}"
-    comment: Sat receiver
-    uid: 1001
-    shell: /bin/false
-    home: "{{media_path}}"
-    create_home: no
-    groups: users
-    append: no
-  when: "vault_active|bool"
-
-- name: prepare user vti folder
-  file:
-    path: "{{media_path}}"
-    state: directory
-    owner: "{{vti_username}}"
-    group: users
-    mode: 0700
-    #recurse: true
-  when: "vault_active|bool"
-
-- name: add user vti to samba
-  shell: "( (pdbedit -L | grep {{vti_username}}) && echo 'skipped' ) || ( ( printf '{{ vti_samba_password }}\n{{ vti_samba_password }}\n' | smbpasswd -a {{vti_username}} ) && echo 'created' )"
-  register: command_result
-  #failed_when: "'command-not-found' in command_result.stderr"
-  changed_when: "'created' in command_result.stdout"
-  notify: "restart samba"
-  when: "vault_active|bool"
-
   
   
 # **** VPN SSH USER ****
@@ -132,7 +100,7 @@
   user:
     name: "{{vpn_username}}"
     comment: VPN ssh
-    uid: 1003
+#    uid: 1003
     shell: /bin/bash
     home: "/home/{{vpn_username}}/"
     password: "{{ vpn_linux_password | password_hash('sha512') }}"

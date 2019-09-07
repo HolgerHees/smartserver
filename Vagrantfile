@@ -1,45 +1,20 @@
 
 Vagrant.configure(2) do |config|
-  config.vm.define "test" do |test|
-    test.vm.box = "generic/opensuse15"
-    test.ssh.username = 'root'
-    test.ssh.password = 'vagrant'
-    test.ssh.insert_key = 'true'
-    test.vm.network "private_network", ip: "192.168.1.50"
-    #test.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
-    #test.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
-    test.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "6144"]
-        vb.customize ["modifyvm", :id, "--cpus", "2"]
-    end
-    
-    test.vm.provision "shell", inline: <<-SHELL
-      sudo zypper --non-interactive install ansible
-    SHELL
-
-    test.vm.provision "ansible_local" do |ansible|
-      ansible.limit = "test"
-      ansible.playbook = "server.yml"
-      ansible.inventory_path = "server.ini"
-      ansible.compatibility_mode = "2.0"
-      ansible.provisioning_path = "/vagrant/"
-    end  
-  end
-  
   config.vm.define "develop", autostart: false do |develop|
     develop.vm.box = "generic/opensuse15"
     #develop.vm.box = "opensuse/openSUSE-15.0-x86_64"
-    develop.ssh.username = 'root'
+    develop.ssh.username = 'vagrant'
     develop.ssh.password = 'vagrant'
     develop.ssh.insert_key = 'true'
     develop.vm.network "private_network", ip: "192.168.1.50"
     #develop.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     #develop.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
+    develop.vm.synced_folder ".", "/vagrant"
     develop.vm.provider :virtualbox do |vb|
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
-
+    
     # Password Input Function
     class Password
         def to_s
@@ -61,7 +36,7 @@ Vagrant.configure(2) do |config|
     SHELL
 
     develop.vm.provision "shell", inline: <<-SHELL
-      sudo zypper --non-interactive install ansible
+      sudo zypper --non-interactive install ansible python-xml
     SHELL
 
     develop.vm.provision "ansible_local" do |ansible|
@@ -89,6 +64,7 @@ Vagrant.configure(2) do |config|
     develop_fedora.vm.network "private_network", ip: "192.168.1.50"
     #develop_fedora.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     #develop_fedora.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
+    develop_fedora.vm.synced_folder ".", "/vagrant"
     develop_fedora.vm.provider :virtualbox do |vb|
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]

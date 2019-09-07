@@ -3,6 +3,8 @@
     - production  # production machine (with vault usage)
     - develop     # staging vm configured like production (with vault usage)
     - test        # test vm configured with test data (without vault usage)
+  become: yes
+  become_user: root
   pre_tasks:
     #- name: debug
     #  debug: msg="{{ hostvars }}"

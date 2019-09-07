@@ -54,8 +54,8 @@
     command: "easyrsa build-ca"
     chdir: '/etc/easy-rsa'
     responses:
-      Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
-      Verifying - Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
+      Enter New CA Key Passphrase: "{{server_vpn_pass_mobile}}"
+      Verifying - Enter New CA Key Passphrase: "{{server_vpn_pass_mobile}}"
       Common Name: "{{server_name}}"
   notify: "restart openvpn@mobile"
   when: "not use_vault_files and not pki_exists.stat.exists"
@@ -144,13 +144,39 @@
   when: "use_vault_files|bool"
 
 # **** CONFIGS ****
-- name: prepare ovpn certificate vars
-  set_fact:
-    ca_crt: "{{ lookup('file', '/etc/easy-rsa/pki/ca.crt')}}"
-    mobile_crt: "-----BEGIN CERTIFICATE-----{{ lookup('file','/etc/easy-rsa/pki/issued/mobile.crt').split('-----BEGIN CERTIFICATE-----')[1]}}"
-    mobile_key: "{{ lookup('file','/etc/easy-rsa/pki/private/mobile.key')}}"
+- name: get ca content.
+  shell: cat /etc/easy-rsa/pki/ca.crt
+  register: file_ca_crt
   changed_when: no
   when: "vault_active|bool"
+  
+- name: get crt content.
+  shell: cat /etc/easy-rsa/pki/issued/mobile.crt
+  register: file_mobile_crt
+  changed_when: no
+  when: "vault_active|bool"
+  
+- name: get key content.
+  shell: cat /etc/easy-rsa/pki/private/mobile.key
+  register: file_mobile_key
+  changed_when: no
+  when: "vault_active|bool"
+  
+- name: prepare ovpn certificate vars
+  set_fact:
+    ca_crt: "{{file_ca_crt.stdout}}"
+    mobile_crt: "-----BEGIN CERTIFICATE-----{{file_mobile_crt.stdout.split('-----BEGIN CERTIFICATE-----')[1]}}"
+    mobile_key: "{{file_mobile_key.stdout}}"
+  changed_when: no
+  when: "vault_active|bool"
+  
+#- name: prepare ovpn certificate vars
+#  set_fact:
+#    ca_crt: "{{ lookup('file', '/etc/easy-rsa/pki/ca.crt')}}"
+#    mobile_crt: "-----BEGIN CERTIFICATE-----{{ lookup('file','/etc/easy-rsa/pki/issued/mobile.crt').split('-----BEGIN CERTIFICATE-----')[1]}}"
+#    mobile_key: "{{ lookup('file','/etc/easy-rsa/pki/private/mobile.key')}}"
+#  changed_when: no
+#  when: "vault_active|bool"
   
 - name: copy config
   template:

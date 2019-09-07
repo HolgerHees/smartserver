@@ -72,11 +72,11 @@
     name: pexpect
 #  become: yes
   
-- name: change vagrant user
-  user:
-    name: vagrant
-    uid: 2000
-  when: not is_production
+#- name: change vagrant user
+#  user:
+#    name: vagrant
+#    uid: 2000
+#  when: not is_production
   
 - name: prepare vagrant backup folder
   file:
