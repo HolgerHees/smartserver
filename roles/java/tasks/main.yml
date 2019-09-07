@@ -27,6 +27,7 @@
     dest: "/opt"
 #    creates: "/opt/jdk1.8.0_181/"
     creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
+    remote_src: true
 
 # *** ORACLE JDK POLICY ***
 #- name: check jce policy
