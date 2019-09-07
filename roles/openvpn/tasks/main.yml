@@ -144,19 +144,19 @@
   when: "use_vault_files|bool"
 
 # **** CONFIGS ****
-- name: get ca content.
+- name: get ca content
   shell: cat /etc/easy-rsa/pki/ca.crt
   register: file_ca_crt
   changed_when: no
   when: "vault_active|bool"
   
-- name: get crt content.
+- name: get crt content
   shell: cat /etc/easy-rsa/pki/issued/mobile.crt
   register: file_mobile_crt
   changed_when: no
   when: "vault_active|bool"
   
-- name: get key content.
+- name: get key content
   shell: cat /etc/easy-rsa/pki/private/mobile.key
   register: file_mobile_key
   changed_when: no
