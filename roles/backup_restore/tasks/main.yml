@@ -45,13 +45,13 @@
   when: influxdb_backup_exists.stat.exists
   
 - name: import influxdb openhab backup
-  shell: "influxd restore -database openhab_db -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/openhab*"
+  shell: "influxd restore -db openhab_db -newdb openhab_db -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/openhab*"
   become: yes
   become_user: influxdb
   when: influxdb_backup_exists.stat.exists
 
 - name: import influxdb opentsdb backup
-  shell: "influxd restore -database opentsdb -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/opentsdb*"
+  shell: "influxd restore -db opentsdb -newdb opentsdb -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/opentsdb*"
   become: yes
   become_user: influxdb
   when: influxdb_backup_exists.stat.exists
