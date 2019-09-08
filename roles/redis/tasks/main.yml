@@ -17,9 +17,10 @@
     - "{{ global_lib }}redis/default"
     
 - name: copy config
-  template:
+  copy:
     src: /etc/redis/default.conf.example
     dest: /etc/redis/default.conf
+    remote_src: true
     force: no
     owner: root
     group: redis
