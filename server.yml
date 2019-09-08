@@ -50,25 +50,25 @@
   roles:
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
-    - { role: network, tags: [ 'network' ] }
-  
+    - { role: network, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
+      
+    - { role: firewalld, tags: [ 'firewalld' ] }                                # firewalld configuration
+    - { role: dns, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
+    
     - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server
+
+    - { role: ssh, tags: [ 'ssh' ] }                                            # settup allowed ssh user
+
+    - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
+
+    - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
+    - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
 
     - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
     - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
     - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
     
-    - { role: ssh, tags: [ 'ssh' ] }                                            # settup allowed ssh user
-    
-    - { role: firewalld, tags: [ 'firewalld' ] }
-    - { role: dns, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
-    
-    - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
-
-    - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
-    - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
-
     - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
 
     - { role: samba, tags: [ 'samba' ] }                                        # smb file server

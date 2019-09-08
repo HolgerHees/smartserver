@@ -18,9 +18,6 @@ philipp_linux_password: "default123"
 vpn_username: "vpn"
 vpn_linux_password: "default123"
 
-vti_username: "vti"
-vti_samba_password: "default123"
-
 camera_username: "camera"
 camera_linux_password: "default123"
 camera_device_username: "admin"
