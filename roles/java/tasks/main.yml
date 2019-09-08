@@ -1,74 +1,43 @@
 # *** Download and install JDK ***
-- name: check jdk
-  stat:
-#    path: "{{ global_build }}jdk-8u181-linux-x64.tar.gz"
-    path: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-  register: jdk_exists
-  changed_when: not jdk_exists.stat.exists
-
-- name: download jdk archive
-  get_url:
-#    headers: 'Cookie:gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie'
-#    dest: "{{ global_build }}jdk-8u181-linux-x64.tar.gz"
-#    url: "http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.tar.gz"
-    dest: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-    url: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-    validate_certs: yes
-    timeout: 60
-    force: no
-  register: oracle_jdk_task_download
-  until: oracle_jdk_task_download is succeeded 
-  when: not jdk_exists.stat.exists
-
-- name: install jdk archive
-  unarchive:
-#    src: "{{ global_build }}jdk-8u181-linux-x64.tar.gz"
-    src: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-    dest: "/opt"
-#    creates: "/opt/jdk1.8.0_181/"
-    creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
-    remote_src: true
-
-# *** ORACLE JDK POLICY ***
-#- name: check jce policy
+#- name: check jdk
 #  stat:
-#    path: "{{ global_build }}jce_policy-8.zip"
-#  register: jdk_policy_exists
-#  changed_when: not jdk_policy_exists.stat.exists
+#    path: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
+#  register: jdk_exists
+#  changed_when: not jdk_exists.stat.exists
 
-#- name: download policy archive
+#- name: download jdk archive
 #  get_url:
-#    headers: 'Cookie:gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie'
-#    dest: "{{ global_build }}jce_policy-8.zip"
-#    url: "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip"
+#    dest: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
+#    url: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
 #    validate_certs: yes
 #    timeout: 60
 #    force: no
-#  register: oracle_policy_task_download
-#  until: oracle_policy_task_download is succeeded 
-#  when: not jdk_policy_exists.stat.exists
+#  register: oracle_jdk_task_download
+#  until: oracle_jdk_task_download is succeeded 
+#  when: not jdk_exists.stat.exists
 
-#- name: extract policy archive
+#- name: install jdk archive
 #  unarchive:
-#    src: "{{ global_build }}jce_policy-8.zip"
-#    dest: "{{ global_build }}"
-#    creates: "{{ global_build }}UnlimitedJCEPolicyJDK8"
+#    src: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
+#    dest: "/opt"
+#    creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
+#    remote_src: true
     
-#- name: copy jce policy files
-#  copy:
-#    src: "{{ global_build }}UnlimitedJCEPolicyJDK8/{{item}}"
-#    dest: "/opt/jdk1.8.0_181/jre/lib/security/{{item}}"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  with_items:
-#    - local_policy.jar
-#    - US_export_policy.jar
+- name: install jdk archive
+  unarchive:
+    src: "https://d3pxv6yz143wms.cloudfront.net/8.222.10.1/amazon-corretto-8.222.10.1-linux-x64.tar.gz"
+#    src: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
+    dest: "/opt"
+    remote_src: true
+    creates: "/opt/amazon-corretto-8.222.10.1-linux-x64/"
+#    creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
+    register: jdk_exists
 
 # *** ACTIVATE NEW JDK ***
 - name: set alternatives
   alternatives:
     name: java
-#    path: "/opt/jdk1.8.0_181/bin/java"
-    path: "/opt/amazon-corretto-8.212.04.2-linux-x64/bin/java"
+    path: "/opt/amazon-corretto-8.222.10.1-linux-x64//bin/java"
+#    path: "/opt/amazon-corretto-8.212.04.2-linux-x64/bin/java"
     link: /usr/bin/java
+    when: jdk_exists.changed
