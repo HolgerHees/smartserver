@@ -18,15 +18,7 @@
         var netdataTheme = 'default'; // this is white
         var netdataShowAlarms = true;
         var netdataNoBootstrap = true;
-	</script>
-	<script type="text/javascript" src="/netdata/dashboard.js?v20170724-7"></script>
 
-	<script type="text/javascript">
-        $menuPanel = false;
-        isPhone = false;
-        imageTitle = "";
-        activeMenu = "";
-        
         function handleAlarms(data) 
         { 
             var warnCount = 0;
@@ -70,19 +62,34 @@
 
         function initDashboards()
         {
-            NETDATA.options.current.destroy_on_hide = false;
-            NETDATA.options.current.eliminate_zero_dimensions = true;
-            NETDATA.options.current.concurrent_refreshes = false;
-            NETDATA.options.current.parallel_refresher = true;
-            NETDATA.options.current.stop_updates_when_focus_is_lost = true;
-            NETDATA.alarms.server = "/netdata/";
-            NETDATA.alarms.callback = handleAlarms;
-            
-            $('.alarm.button').click(function()
+            var script = document.createElement("script");
+            var timer;
+            script.setAttribute("type","text/javascript");
+            script.setAttribute("src","/netdata/dashboard.js?v20170724-7");
+            script.onload = function()
             {
-                openUrl(null,null,"/netdata/",false);
-            });
+                window.clearTimeout(timer);
+                NETDATA.options.current.destroy_on_hide = false;
+                NETDATA.options.current.eliminate_zero_dimensions = true;
+                NETDATA.options.current.concurrent_refreshes = false;
+                NETDATA.options.current.parallel_refresher = true;
+                NETDATA.options.current.stop_updates_when_focus_is_lost = true;
+                NETDATA.alarms.server = "/netdata/";
+                NETDATA.alarms.callback = handleAlarms;
+                
+                $('.alarm.button').click(function()
+                {
+                    openUrl(null,null,"/netdata/",false);
+                });
+            }
+            document.body.appendChild(script);
+            timer = window.setTimeout(function() { alert("netdata alert api not avaiable"); },5000)
         }    
+        
+        var $menuPanel = false;
+        var isPhone = false;
+        var imageTitle = "";
+        var activeMenu = "";
         
         var refreshTimer = [];
         
