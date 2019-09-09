@@ -9,7 +9,7 @@
 - name: install required packages
   zypper:
     name: [
-        netdata>=1.16
+        netdata>=1.17
       , fping
     ]
     state: present
