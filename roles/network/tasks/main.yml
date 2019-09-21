@@ -17,6 +17,14 @@
     regexp: '^{{server_ip}}'
     line: '{{server_ip}} {{server_name}}'
     
+# needed to fix "netdev budget ran outs" on a atom cpu
+# https://github.com/netdata/netdata/issues/4624
+- name: increase netdev budget
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^net.core.netdev_budget_usecs'
+    line: 'net.core.netdev_budget_usecs = 20000'
+
 - name: enable ipv6
   lineinfile:
     path: /etc/sysctl.conf
