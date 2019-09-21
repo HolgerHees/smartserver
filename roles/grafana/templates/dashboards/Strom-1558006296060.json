@@ -350,7 +350,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Stromlieferung (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -474,7 +474,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Stromlieferung (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -845,7 +845,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Strombezug (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -970,7 +970,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Strombezug (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -1573,7 +1573,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Stromverbrauch (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -1736,7 +1736,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Stromverbrauch (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -1856,7 +1856,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Stromverbrauch (Aktuell 5 Min - Letztes Jahr)",
       "tooltip": {
         "shared": true,

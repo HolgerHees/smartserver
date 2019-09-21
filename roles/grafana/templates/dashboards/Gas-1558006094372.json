@@ -505,7 +505,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Gasverbrauch (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -642,7 +642,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Gasverbrauch (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -762,7 +762,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Gasverbrauch (Aktuell 5 Min - Letztes Jahr)",
       "tooltip": {
         "shared": true,

@@ -1,5 +1,5 @@
 Bridge modbus:tcp:solarGarage 		[ host="{{pv_inverter_garage_ip}}", port=502, id=3, connectMaxTries=3, connectTimeoutMillis=2000] {
-    Bridge poller earnings       	[ start=30513, length=8, type="input", refresh=60000] {
+    Bridge poller earnings       	[ start=30513, length=8, type="input", refresh=0] {
         Thing data total_yield 		[ readStart="30513", readValueType="uint64", readTransform="JS(solar_fixed3.js)"] // 30513 = Energy fed in on the current day all line conductors
     }
     Bridge poller power         	[ start=30769, length=8, type="input", refresh=0] {

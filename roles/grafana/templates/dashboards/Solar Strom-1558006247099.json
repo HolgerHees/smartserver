@@ -350,7 +350,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Eigenverbrauch (Letztes Jahr)",
       "tooltip": {
         "shared": true,
@@ -474,7 +474,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Eigenverbrauch (Letztes Jahr)",
       "tooltip": {
         "shared": true,

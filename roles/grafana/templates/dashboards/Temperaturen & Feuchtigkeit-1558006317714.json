@@ -1598,7 +1598,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": "1y",
+      "timeShift": "364d",
       "title": "Garten Temperatur (Letztes Jahr)",
       "tooltip": {
         "shared": true,
