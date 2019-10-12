@@ -13,14 +13,17 @@
 
 - name: install required packages
   zypper:
-    name: "ghostscript>=9.27"
+    name: [
+      "ghostscript>=9.27",
+      "php7-gmp"            # needed by bookmark app
+    ]
     state: present
     force: yes
 
 - name: set nextcloud version
   set_fact:
-    nextcloud_version: '16.0.2'
-    nextcloud_upgrade_from: '16.0.2.1' # the current installed version to be able to run "./occ upgrade"
+    nextcloud_version: '17.0.0'
+    nextcloud_upgrade_from: '17.0.0.9' # the current installed version to be able to run "./occ upgrade"
     
 - name: check nextcloud
   stat:
