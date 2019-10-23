@@ -11,6 +11,16 @@
     name: [
         netdata>=1.18
       , fping
+      # needed to rebuild rpm package
+      #, rpm-build
+      #, cups-devel
+      #, judy-devel
+      #, libcap-devel
+      #, liblz4-devel
+      #, libmnl-devel
+      #, libnetfilter_acct-devel
+      #, libuv-devel
+      #, freeipmi-devel
     ]
     state: present
   notify: "restart netdata"
