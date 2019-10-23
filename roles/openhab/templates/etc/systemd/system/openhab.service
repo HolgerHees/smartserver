@@ -2,7 +2,7 @@
 Description=Open Home Automation Bus
 Documentation=http://docs.openhab.org
 Documentation=https://community.openhab.org
-Requires=network-online.target influxdb.service mysqld.service
+Requires=network-online.target influxdb.service mariadb.service
 
 [Service]
 SyslogIdentifier=openhab
