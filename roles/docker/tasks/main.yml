@@ -1,7 +1,8 @@
 - name: install required packages
   zypper:
     name: [
-        docker
+        docker,
+        python2-docker  # used by ansible docker module
     ]
     state: present
   notify: "restart docker"
