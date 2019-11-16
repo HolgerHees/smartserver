@@ -11,7 +11,7 @@
 
 - name: check certificate (develop)
   stat:
-    path: /etc/certbot/live/{{server_domain}}/
+    path: /etc/letsencrypt/live/{{server_domain}}/
   register: certificate_exists
   changed_when: not certificate_exists.stat.exists
   when: "not use_vault_files"
@@ -24,39 +24,48 @@
     group: root
     mode: 0750
   with_items:
-    - "certbot/"
-    - "certbot/live"
-    - "certbot/live/{{server_domain}}"
+    - "letsencrypt/"
+    - "letsencrypt/live"
+    - "letsencrypt/live/{{server_domain}}"
   when: "not use_vault_files and not certificate_exists.stat.exists"
 
 - name: generate openssl privatekey (develop)
   openssl_privatekey:
-    path: "/etc/certbot/live/{{server_domain}}/privkey.pem"
+    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
   when: "not use_vault_files and not certificate_exists.stat.exists"
     
 - name: generate openssl csr (develop)
   openssl_csr:
-    path: "/etc/certbot/live/{{server_domain}}/cert.csr"
-    privatekey_path: "/etc/certbot/live/{{server_domain}}/privkey.pem"
+    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "{{server_domain}}"
   when: "not use_vault_files and not certificate_exists.stat.exists"
     
 - name: generate openssl certificate (develop)
   openssl_certificate:
-    path: "/etc/certbot/live/{{server_domain}}/fullchain.pem"
-    privatekey_path: "/etc/certbot/live/{{server_domain}}/privkey.pem"
-    csr_path: "/etc/certbot/live/{{server_domain}}/cert.csr"
+    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
   when: "not use_vault_files and not certificate_exists.stat.exists"
   
 - name: install certificate (production)
   unarchive:
-    src: "{{ vault_files }}letsencrypt/certbot.tgz"
+    src: "{{ vault_files }}letsencrypt/letsencrypt.tgz"
     dest: "/etc/"
-    creates: "/etc/certbot/"
+    creates: "/etc/letsencrypt/"
     decrypt: yes
   notify: "restart apache"
   when: "use_vault_files|bool"
+
+- name: create certificate symlink (production)
+  file:
+    src: "letsencrypt"
+    dest: "/etc/certbot"
+    state: link
+    owner: root
+    group: root
+    mode: 0777
 
 # TODO add renew job
 #certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
