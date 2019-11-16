@@ -1,0 +1,5 @@
+{
+  "log-level": "warn",
+  "log-driver": "journald",
+  "graph":"{{ global_lib }}docker"
+}

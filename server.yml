@@ -50,6 +50,8 @@
   roles:
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
+    - { role: docker, tags: [ 'docker' ] }                                      # installs and initializes the container infrastructure
+
     - { role: network, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
       
     - { role: firewalld, tags: [ 'firewalld' ] }                                # firewalld configuration
