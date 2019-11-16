@@ -12,57 +12,6 @@
     state: present
   notify: "restart influxdb"
 
-#- name: install required packages
-#  zypper:
-#    name: "sources/influxdb-1.4.2-2.2.x86_64.rpm"
-#    state: present
-#    disable_gpg_check: yes
-#  notify: "restart influxdb"
-
-#- name: add yum repository
-#  yum_repository:
-#    name: influxdb
-#    description: InfluxDB repository for 5.x packages
-#    baseurl: https://repos.influxdata.com/centos/7/x86_64/stable/
-#    gpgcheck: yes
-#    gpgkey: https://repos.influxdata.com/influxdb.key
-#    repo_gpgcheck: yes
-#    sslverify: yes
-#    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
-#    reposdir: "/etc/zypp/repos.d/"
-#  register: yum_status
-#  
-#- name: refresh yum repository
-#  expect:
-#    command: "zypper refresh"
-#    responses:
-#      # Continue with GPG key validation
-#      #immer vertrauen?: "i"
-#      #trust always?: "a"
-#      Weiter: "ja"
-#  changed_when: yum_status.changed
-  
-#- name: install influxdb
-#  expect:
-#    command: "zypper install influxdb"
-#    responses:
-#      # Ignore missing dependencies (some fonts)
-#      Wählen Sie aus den: "2"
-#      Choose from above: "2"
-#      Weiter: "j"
-#      Fortfahren: "j"
-#      Continue: "y"
-#  register: command_result
-#  changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
-#  notify: "restart grafana"
-  
-#- name: install required packages
-#  zypper:
-#    name: "influxdb"
-#    state: present
-#    #disable_gpg_check: yes
-#  notify: "restart influxdb"
-
 - name: prepare needed folder
   file:
     path: '{{ global_lib }}influxdb/{{item}}'
@@ -85,6 +34,44 @@
     group: influxdb
     mode: 0640
   notify: "restart influxdb"
+  
+
+  
+  
+  
+  
+  
+#- name: prepare needed folder
+#  file:
+#    path: '{{ global_lib }}influxdb_new/{{item}}'
+#    state: directory
+#    owner: influxdb
+#    group: influxdb
+#    #mode: 0750
+#    recurse: true
+#  with_items:
+#    - hh
+#    - meta
+#    - data
+#    - wal  
+
+#- name: create docker container
+#  docker_container:
+#    name: influxdb
+#    image: influxdb
+#    volumes:
+#      - {{ global_lib }}influxdb_new:/var/lib/influxdb
+#      - /etc/influxdb/config.toml:/etc/influxdb/config.toml
+#    ports:
+#     - "9000:8086"
+  
+  
+  
+  
+  
+  
+  
+  
 
 - name: prepare backup folder
   file:
