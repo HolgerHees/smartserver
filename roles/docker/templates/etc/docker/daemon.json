@@ -1,5 +1,4 @@
 {
-  "log-level": "warn",
   "log-driver": "journald",
-  "graph":"{{ global_lib }}docker"
+  "graph":"/dataDisk/var/lib/docker"
 }
