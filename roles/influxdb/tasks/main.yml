@@ -60,11 +60,13 @@
 #    name: influxdb
 #    image: influxdb
 #    recreate: true
-#    log_driver: journald
-#    log_options:
-#      tag: influxdb
+#    log_driver: syslog
+##    log_options:
+##      tag: influxdb
 #    volumes:
 #      - '{{ global_lib }}influxdb_new:/var/lib/influxdb'
+#      - '/dev/log:/dev/log'
+#      - '/var/run/systemd/journal/socket:/var/run/systemd/journal/socket'
 ##      - /etc/influxdb/config.toml:/etc/influxdb/config.toml
 #    ports:
 #     - "9000:8086"  
