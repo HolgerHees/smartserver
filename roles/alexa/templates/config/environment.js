@@ -83,7 +83,7 @@ module.exports = {
                     "sub_areas": [
                         {"id": "others_automower", "phrase": ["OR", "mower", "rasen"]},
                         {"id": "others_good_morning", "phrase": ["OR", "guten morgen", "aufstehen"]},
-                        {"id": "others_go_sleeping", "phrase": ["AND", "$schlafen$", "$geh"]},
+                        {"id": "others_go_sleeping", "phrase": ["AND", "$schlafen", "geh"]},
                         {"id": "others_good_night", "phrase": "gute nacht"},
                         {"id": "others_going_out", "phrase": ["AND", [ "OR", "$raus$", "$draußen$"],["OR", "$bin", "$geh"]]},
                         {"id": "others_coming_back", "phrase": ["AND", ["OR","$bin$","$wieder$"], ["OR", "$da$", "$zurück$"]]},
