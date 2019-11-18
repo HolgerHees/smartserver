@@ -295,4 +295,13 @@
     hour: "1"
     state: present
   tags: ['cron_job']
+  
+- name: copy fluentd config
+  template:
+    src: "roles/openhab/templates/etc/fluent/_.ansible.d/openhab.conf"
+    dest: "/etc/fluent/_.ansible.d/openhab.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
 

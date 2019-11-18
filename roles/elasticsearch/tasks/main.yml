@@ -1,3 +1,21 @@
+#- name: add zypper repository
+#  zypper_repository:
+#    name: Security:logging (elasticsearch)
+#    repo: 'http://download.opensuse.org/repositories/security:/logging/openSUSE_Leap_{{ansible_distribution_version}}/'
+#    auto_import_keys: yes
+#    autorefresh: no
+#    priority: "100"
+#    state: present
+
+#- name: install required packages
+#  zypper:
+#    name: [
+#       elasticsearch
+#     , kibana
+#    ]
+#    state: present
+#  notify: "restart elasticsearch"
+  
 - name: add yum repository
   yum_repository:
     name: Elasticsearch

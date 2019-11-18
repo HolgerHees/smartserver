@@ -12,6 +12,7 @@
     mode: 0750
   with_items:
     - "/etc/fluent/"
+    - "/etc/fluent/_.ansible.d"
     - "{{global_log}}fluentd/"
 
 - name: install
@@ -36,6 +37,7 @@
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rw,g=r,o=", path: "/etc/fluent/fluent.conf" }
+    - { mode: "u=rw,g=r,o=", path: "/etc/fluent/_.ansible.d/systemd.conf" }
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/fluentd.service" }
   notify: "restart fluentd"
 

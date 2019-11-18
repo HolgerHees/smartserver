@@ -1,39 +1,41 @@
-- name: add yum repository
-  yum_repository:
-    name: Grafana
-    description: Grafana repository
-    baseurl: https://packages.grafana.com/oss/rpm
-    gpgcheck: yes
-    gpgkey: https://packages.grafana.com/gpg.key
-    reposdir: "/etc/zypp/repos.d/"
+- name: add zypper repository
+  zypper_repository:
+    name: Server:monitoring (grafana)
+    repo: 'http://download.opensuse.org/repositories/server:/monitoring/openSUSE_Leap_{{ansible_distribution_version}}/'
+    auto_import_keys: yes
+    autorefresh: no
     priority: "100"
-  register: yum_status
+    state: present
 
-- name: refresh yum repository
-  expect:
-    command: "zypper refresh"
-    responses:
-      # Continue with GPG key validation
-      immer vertrauen?: "i"
-      trust always?: "a"
-      Weiter: "ja"
-      Continue: "yes"
-  changed_when: yum_status.changed
+- name: install required packages
+  zypper:
+    name: "grafana"
+    state: present
+  notify: "restart grafana"
   
+# (was missing in rpm package)
+- name: copy sysconfig file
+  template:
+    src: "roles/grafana/templates{{item.path}}"
+    dest: "{{item.path}}"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rw,g=r,o=r", path: "/etc/sysconfig/grafana-server" }
+  notify: "restart grafana"
+
 #- name: add yum repository
 #  yum_repository:
-#    name: grafana
-#    description: Grafana repository for 5.x packages
-#    baseurl: https://packagecloud.io/grafana/stable/el/7/$basearch
+#    name: Grafana
+#    description: Grafana repository
+#    baseurl: https://packages.grafana.com/oss/rpm
 #    gpgcheck: yes
-#    gpgkey: https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
-#    repo_gpgcheck: yes
-#    sslverify: yes
-#    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+#    gpgkey: https://packages.grafana.com/gpg.key
 #    reposdir: "/etc/zypp/repos.d/"
-#    priority: 100
+#    priority: "100"
 #  register: yum_status
-    
+
 #- name: refresh yum repository
 #  expect:
 #    command: "zypper refresh"
@@ -41,64 +43,34 @@
 #      # Continue with GPG key validation
 #      immer vertrauen?: "i"
 #      trust always?: "a"
+#      Weiter: "ja"
+#      Continue: "yes"
 #  changed_when: yum_status.changed
   
-- name: install required packages
-  zypper:
-    name: [
-        insserv-compat
-      , libopenssl1_0_0
-    ]
-    state: present
-    #disable_gpg_check: yes
-  notify: "restart grafana"
-
-- name: install grafana
-  expect:
-    command: "zypper install grafana"
-    responses:
-      # Ignore missing dependencies (some fonts)
-      Wählen Sie aus den: "2"
-      Choose from above: "2"
-      Weiter: "j"
-      Fortfahren: "j"
-      Continue: "y"
-      Abbrechen, wiederholen, ignorieren: "i"
-      Abort, retry, ignore: "i"
-  register: command_result
-  changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
-  notify: "restart grafana"
-  
-#- name: install required packages (3/3)
-#  command: "rpm -Uvh --nodeps grafana"
-#  args:
-#    warn: false
-#  register: command_result
-#  failed_when: "command_result.rc == 1 and 'already installed' not in command_result.stderr"
-#  changed_when: "command_result.rc == 0"
-#  notify: "restart grafana"
-#- name: install required packages (2/2)
+#- name: install required packages
 #  zypper:
-#    name: "grafana"
+#    name: [
+#        insserv-compat
+#      , libopenssl1_0_0
+#    ]
 #    state: present
+#    #disable_gpg_check: yes
 #  notify: "restart grafana"
 
-#- name: install required packages (2/2)
-#  zypper:
-#    name: "{{item}}"
-#    state: present
-#    disable_gpg_check: yes
-#  with_items:
-#    - "sources/phantomjs-2.1.1.0-1.d_t.3.x86_64.rpm"
-#  notify: "restart grafana"
-
-#- name: install required packages (3/3)
-#  command: "rpm -Uvh --nodeps sources/grafana-5.2.4-1.x86_64.rpm"
-#  args:
-#    warn: false
+#- name: install grafana
+#  expect:
+#    command: "zypper install grafana"
+#    responses:
+#      # Ignore missing dependencies (some fonts)
+#      Wählen Sie aus den: "2"
+#      Choose from above: "2"
+#      Weiter: "j"
+#      Fortfahren: "j"
+#      Continue: "y"
+#      Abbrechen, wiederholen, ignorieren: "i"
+#      Abort, retry, ignore: "i"
 #  register: command_result
-#  failed_when: "command_result.rc == 1 and 'already installed' not in command_result.stderr"
-#  changed_when: "command_result.rc == 0"
+#  changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
 #  notify: "restart grafana"
   
 - name: prepare needed folder

@@ -18,6 +18,15 @@
     - daemon.json
   notify: "restart docker"
 
+- name: copy fluentd config
+  template:
+    src: "roles/docker/templates/etc/fluent/_.ansible.d/_docker.conf"
+    dest: "/etc/fluent/_.ansible.d/_docker.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  
 - name: check enabled docker
   systemd:
     enabled: yes
