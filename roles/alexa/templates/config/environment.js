@@ -331,10 +331,10 @@ module.exports = {
             { "id": "Light_SF_Child2_Ceiling", "areas": ["childroom2"], "items": ["Light_SF_Child2_Ceiling"], "cmds": ["ACTION_ON","ACTION_OFF"] },
 
             { "id": "Light_SF_Bedroom_Ceiling", "areas": ["bedroom_ceiling"], "items": ["Light_SF_Bedroom_Ceiling"], "cmds": ["ACTION_ON","ACTION_OFF"] },
-            { "id": "Light_SF_Bedroom_Left", "areas": ["bedroom_left"], "items": ["Light_SF_Bedroom_Left"], "cmds": ["ACTION_ON","ACTION_OFF"] },
-            { "id": "Light_SF_Bedroom_Right", "areas": ["bedroom_right"], "items": ["Light_SF_Bedroom_Right"], "cmds": ["ACTION_ON","ACTION_OFF"] },
+            { "id": "Light_SF_Bedroom_Left", "areas": ["bedroom_left"], "items": ["Light_SF_Bedroom_Left_Hue_Brightness"], "cmds": ["ACTION_ON","ACTION_OFF","ACTION_PERCENT"] },
+            { "id": "Light_SF_Bedroom_Right", "areas": ["bedroom_right"], "items": ["Light_SF_Bedroom_Right_Hue_Brightness"], "cmds": ["ACTION_ON","ACTION_OFF","ACTION_PERCENT"] },
             { "id": "Light_SF_Bedroom_On", "areas": ["bedroom"], "items": ["Light_SF_Bedroom_Ceiling"], "cmds": ["ACTION_ON"] },
-            { "id": "Light_SF_Bedroom_Off", "areas": ["bedroom"], "items": ["Light_SF_Bedroom_Ceiling","Light_SF_Bedroom_Left","Light_SF_Bedroom_Right"], "cmds": ["ACTION_OFF"] },
+            { "id": "Light_SF_Bedroom_Off", "areas": ["bedroom"], "items": ["Light_SF_Bedroom_Ceiling","Light_SF_Bedroom_Left_Hue_Brightness","Light_SF_Bedroom_Right_Hue_Brightness"], "cmds": ["ACTION_OFF"] },
 
             { "id": "Light_SF_Dressingroom_Ceiling", "areas": ["dressingroom"], "items": ["Light_SF_Dressingroom_Ceiling"], "cmds": ["ACTION_ON","ACTION_OFF"] },
 

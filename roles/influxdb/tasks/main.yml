@@ -13,19 +13,19 @@
 #    state: present
 #  notify: "restart influxdb"
 
-- name: prepare needed folder
-  file:
-    path: '{{ global_lib }}influxdb/{{item}}'
-    state: directory
-    owner: influxdb
-    group: influxdb
-    #mode: 0750
-    recurse: true
-  with_items:
-    - hh
-    - meta
-    - data
-    - wal
+#- name: prepare needed folder
+#  file:
+#    path: '{{ global_lib }}influxdb/{{item}}'
+#    state: directory
+#    owner: influxdb
+#    group: influxdb
+#    #mode: 0750
+#    recurse: true
+#  with_items:
+#    - hh
+#    - meta
+#    - data
+#    - wal
 
 #- name: copy config
 #  template:
@@ -43,19 +43,19 @@
 #    owner: root
 #    group: root
     
-- name: set opentsdb backup cron job
-  vars:
-    cron_name: "Influxdb OpenTSDB Backup"
-    cron_cmd: "influxd backup -database opentsdb {{local_backup_path}}influxdb/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_influxdb
-    user: root
-    minute: "0"
-    hour: "1"
-    state: present
-  tags: ['cron_job']
+#- name: set opentsdb backup cron job
+#  vars:
+#    cron_name: "Influxdb OpenTSDB Backup"
+#    cron_cmd: "influxd backup -database opentsdb {{local_backup_path}}influxdb/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
+#  cron:
+#    name: "{{cron_name}}"
+#    job: "{{ lookup('template', 'templates/cron_job') }}"
+#    cron_file: ansible_influxdb
+#    user: root
+#    minute: "0"
+#    hour: "1"
+#    state: present
+#  tags: ['cron_job']
 
  
   
@@ -78,28 +78,39 @@
     #mode: 0750
     recurse: true
   with_items:
-    - '{{ global_lib }}influxdb_new/hh'
-    - '{{ global_lib }}influxdb_new/meta'
-    - '{{ global_lib }}influxdb_new/data'
-    - '{{ global_lib }}influxdb_new/wal'  
-    - '{{local_backup_path}}influxdb_new'
+    - '{{ global_lib }}influxdb/hh'
+    - '{{ global_lib }}influxdb/meta'
+    - '{{ global_lib }}influxdb/data'
+    - '{{ global_lib }}influxdb/wal'  
+    - '{{local_backup_path}}influxdb'
 
 - name: create docker container
   docker_container:
     name: influxdb
     image: influxdb
-    recreate: true
-    log_driver: fluentd
-    log_options:
-      tag: docker.influxdb
+    state: present
+#    recreate: true
+    env:
+      INFLUXDB_OPENTSDB_0_ENABLED: "true"
+    log_driver: none
     volumes:
-      - '{{ global_lib }}influxdb_new:/var/lib/influxdb'
-      - '{{local_backup_path}}influxdb_new:/var/lib/influxdb_backup'
-#      - '/dev/log:/dev/log'
-#      - '/var/run/systemd/journal/socket:/var/run/systemd/journal/socket'
-#      - /etc/influxdb/config.toml:/etc/influxdb/config.toml
+      - '{{ global_lib }}influxdb:/var/lib/influxdb'
+      - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup'
     ports:
-     - "9000:8086"  
+     - "8086:8086"  
+     - "4242:4242"  
+  notify: "restart influxdb"
+    
+- name: set docker service
+  vars:
+    container_name: "influxdb"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/influxdb.service"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart influxdb"
   
 - name: copy fluentd config
   template:
@@ -109,10 +120,11 @@
     group: root
     mode: 0640
   notify: "restart fluentd"
-    
+  tags: ['fluentd']
+
 - name: set opentsdb backup cron job
   vars:
-    cron_name: "Influxdb OpenTSDB Backup New"
+    cron_name: "Influxdb OpenTSDB Backup"
     cron_cmd: "docker exec influxdb influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
   cron:
     name: "{{cron_name}}"
@@ -123,16 +135,6 @@
     hour: "1"
     state: present
   tags: ['cron_job']
-
-# Failed to connect to '127.0.0.1', port '4242'
-  
-  
-
-
-
-  
-
-  
   
 - name: set clean backup cron job
   vars:

@@ -304,4 +304,5 @@
     group: root
     mode: 0640
   notify: "restart fluentd"
+  tags: ['fluentd']
 
