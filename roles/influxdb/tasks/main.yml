@@ -110,7 +110,7 @@
     owner: root
     group: root
     mode: 0640
-  notify: "restart influxdb"
+#  notify: "restart influxdb"
   
 - name: copy fluentd config
   template:
