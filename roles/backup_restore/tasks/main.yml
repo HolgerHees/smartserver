@@ -1,7 +1,7 @@
 # **** MYSQL ****
 - name: check mysql backup folder
   stat:
-    path: "{{backup_files}}mysql/"
+    path: "{{local_import_path}}mysql/"
   register: mysql_backup_exists
   changed_when: mysql_backup_exists.stat.exists
   
@@ -12,7 +12,7 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import nextcloud database
-  shell: "bzcat {{backup_files}}mysql/nextcloud* | mysql -u root -h 127.0.0.1 nextcloud"
+  shell: "bzcat {{local_import_path}}mysql/nextcloud* | mysql -u root -h 127.0.0.1 nextcloud"
   when: mysql_backup_exists.stat.exists
 
 # force a rebuild of cached files like merged js and css files
@@ -21,51 +21,38 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import openhab database
-  shell: "bzcat {{backup_files}}mysql/openhab* | mysql -u root -h 127.0.0.1 openhab"
+  shell: "bzcat {{local_import_path}}mysql/openhab* | mysql -u root -h 127.0.0.1 openhab"
   when: mysql_backup_exists.stat.exists
 
 # **** INFLUXDB ****
 - name: check influxdb backup folder
-  stat:
-    path: "{{backup_files}}influxdb"
+  shell: "docker exec influxdb ls /var/lib/influxdb_import/"
   register: influxdb_backup_exists
-  changed_when: influxdb_backup_exists.stat.exists
+  changed_when: influxdb_backup_exists.rc == 0
   
 - name: check influxdb is running
   systemd:
     name: influxdb
     state: started
-  when: influxdb_backup_exists.stat.exists
+  when: influxdb_backup_exists.rc == 0
 
 # ??? check if this is enough or if we need to import metadata from opentsdb too
 - name: import influxdb metadata backup
-  shell: "influxd restore -metadir {{ global_lib }}influxdb/meta {{backup_files}}influxdb/openhab*"
-  become: yes
-  become_user: influxdb
-  when: influxdb_backup_exists.stat.exists
+  shell: "docker exec influxdb influxd restore -metadir /var/lib/influxdb/meta /var/lib/influxdb_import/openhab*"
+  when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
   
 - name: import influxdb openhab backup
-  shell: "influxd restore -db openhab_db -newdb openhab_db -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/openhab*"
-  become: yes
-  become_user: influxdb
-  when: influxdb_backup_exists.stat.exists
+  shell: "docker exec influxdb influxd restore -db openhab_db -newdb openhab_db -datadir /var/lib/influxdb/data /var/lib/influxdb_import/openhab*"
+  when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
 
 - name: import influxdb opentsdb backup
-  shell: "influxd restore -db opentsdb -newdb opentsdb -datadir {{ global_lib }}influxdb/data {{backup_files}}influxdb/opentsdb*"
-  become: yes
-  become_user: influxdb
-  when: influxdb_backup_exists.stat.exists
+  shell: "docker exec influxdb influxd restore -db opentsdb -newdb opentsdb -datadir /var/lib/influxdb/data /var/lib/influxdb_import/opentsdb*"
+  when: influxdb_backup_exists.rc == 0 and 'opentsdb' in influxdb_backup_exists.stdout
 
-- name: restart influxdb
-  systemd:
-    name: influxdb
-    state: restarted
-  when: influxdb_backup_exists.stat.exists
-  
 # **** OPENHAB MAPDB ****
 - name: check openhab mapdb backup folder
   stat:
-    path: "{{backup_files}}openhab/mapdb"
+    path: "{{local_import_path}}openhab/mapdb"
   register: mapdb_backup_exists
   changed_when: mapdb_backup_exists.stat.exists
 
@@ -77,7 +64,7 @@
   
 - name: import openhab mapdb backup
   copy:
-    src: "{{backup_files}}openhab/mapdb"
+    src: "{{local_import_path}}openhab/mapdb"
     dest: "{{global_lib}}openhab/"
     owner: root
     group: root

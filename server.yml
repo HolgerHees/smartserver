@@ -32,8 +32,8 @@
       set_fact:
         use_vault_files: "{{is_production and vault_active}}"
         vault_files: "{{config_path}}vault/"
-        use_backup_files: "{{not is_production}}"
-        backup_files: "{{config_path}}backup/"
+        use_import_files: "{{not is_production}}"
+        local_import_path: "{{playbook_dir}}/{{config_path}}backup/"
       tags: always
     - name: debug
       debug:
@@ -125,7 +125,7 @@
 
     - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
-    - { role: backup_restore, tags: [ 'backup_restore' ], when: "use_backup_files|bool" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
+    - { role: backup_restore, tags: [ 'backup_restore' ], when: "use_import_files|bool" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
     
   post_tasks:
     # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 

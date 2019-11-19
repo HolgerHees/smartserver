@@ -13,4 +13,4 @@ ExecStop=/usr/bin/docker stop {{container_name}}
 SyslogIdentifier={{container_name}}
 
 [Install]
-WantedBy=default.target_job
+WantedBy=multi-user.target

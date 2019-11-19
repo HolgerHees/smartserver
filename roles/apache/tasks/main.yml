@@ -176,6 +176,16 @@
     - { field: 'ServerName', value: '"{{server_domain}}"' }
   notify: "restart apache"
 
+- name: copy fluentd config
+  template:
+    src: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
+    dest: "/etc/fluent/_.ansible.d/apache.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']
+
 - name: prepare .htpasswd file
   copy:
     content: ""
@@ -212,14 +222,4 @@
     owner: root
     group: root
     mode: 0640
-
-- name: copy fluentd config
-  template:
-    src: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
-    dest: "/etc/fluent/_.ansible.d/apache.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']
 

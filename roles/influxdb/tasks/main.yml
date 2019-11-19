@@ -1,74 +1,3 @@
-#- name: add zypper repository
-#  zypper_repository:
-#    name: Server:database (influxdb)
-#    repo: 'http://download.opensuse.org/repositories/server:/database/openSUSE_Leap_{{ansible_distribution_version}}/'
-#    auto_import_keys: yes
-#    autorefresh: no
-#    priority: "100"
-#    state: present
-
-#- name: install required packages
-#  zypper:
-#    name: "influxdb"
-#    state: present
-#  notify: "restart influxdb"
-
-#- name: prepare needed folder
-#  file:
-#    path: '{{ global_lib }}influxdb/{{item}}'
-#    state: directory
-#    owner: influxdb
-#    group: influxdb
-#    #mode: 0750
-#    recurse: true
-#  with_items:
-#    - hh
-#    - meta
-#    - data
-#    - wal
-
-#- name: copy config
-#  template:
-#    src: roles/influxdb/templates/etc/influxdb/config.toml
-#    dest: /etc/influxdb/config.toml
-#    owner: root
-#    group: influxdb
-#    mode: 0640
-#  notify: "restart influxdb"
-  
-#- name: prepare backup folder
-#  file:
-#    path: '{{local_backup_path}}influxdb'
-#    state: directory
-#    owner: root
-#    group: root
-    
-#- name: set opentsdb backup cron job
-#  vars:
-#    cron_name: "Influxdb OpenTSDB Backup"
-#    cron_cmd: "influxd backup -database opentsdb {{local_backup_path}}influxdb/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
-#  cron:
-#    name: "{{cron_name}}"
-#    job: "{{ lookup('template', 'templates/cron_job') }}"
-#    cron_file: ansible_influxdb
-#    user: root
-#    minute: "0"
-#    hour: "1"
-#    state: present
-#  tags: ['cron_job']
-
- 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
 - name: prepare needed folder
   file:
     path: '{{item}}'
@@ -83,6 +12,7 @@
     - '{{ global_lib }}influxdb/data'
     - '{{ global_lib }}influxdb/wal'  
     - '{{local_backup_path}}influxdb'
+    - '{{local_import_path}}influxdb'
 
 - name: create docker container
   docker_container:
@@ -96,6 +26,7 @@
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb'
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup'
+      - '{{local_import_path}}influxdb:/var/lib/influxdb_import'
     ports:
      - "8086:8086"  
      - "4242:4242"  
@@ -109,7 +40,7 @@
     dest: "/etc/systemd/system/influxdb.service"
     owner: root
     group: root
-    mode: 0640
+    mode: 0644
 #  notify: "restart influxdb"
   
 - name: copy fluentd config
