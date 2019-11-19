@@ -28,7 +28,7 @@
     group: root
     mode: 0750
 
-- name: set cron job
+- name: create cron job
   vars:
     cron_name: "Electric Meter"
     cron_cmd: "/opt/electricmeter/strom.perl"

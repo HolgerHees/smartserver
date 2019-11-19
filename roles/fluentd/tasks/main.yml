@@ -44,7 +44,7 @@
 # first test run
 #./bin/fluentd -c ./fluent/fluent.conf
 
-- name: set clean cron job
+- name: create clean cron job
   vars:
     cron_name: "Fluentd elasticsearch index cleanup"
     cron_cmd: "/usr/bin/curator_cli --host 127.0.0.1 delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"

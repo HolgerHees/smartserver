@@ -1,0 +1,10 @@
+- name: check elasticsearch is running
+  systemd:
+    name: elasticsearch
+    state: started
+  changed_when: yes
+  
+- name: wait for elasticsearch to become ready
+  wait_for:
+    port: 9200
+  changed_when: yes

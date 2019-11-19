@@ -190,12 +190,10 @@
 # *******************
 
 # ***** DATABASE ****
-- name: check mysql is running
-  systemd:
-    name: mysql
-    state: started
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
   when: "vault_active|bool"
-
+  
 - name: check mysql databases
   shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
   register: mysql_data_exists
@@ -218,23 +216,15 @@
   shell: "mysqladmin -u root -h 127.0.0.1 flush-privileges"
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
   
-- name: check influxdb database
+- name: check influxdb data
   stat:
     path: "{{ global_lib }}influxdb/data/openhab_db"
   register: influxdb_data_exists
   changed_when: not influxdb_data_exists.stat.exists
   when: "vault_active|bool"
   
-- name: check influxdb is running
-  systemd:
-    name: influxdb
-    state: started
-  when: "vault_active and not influxdb_data_exists.stat.exists"
-  
-- name: wait for influxdb to become ready
-  wait_for:
-    port: 8086
-  changed_when: yes
+- name: check influxdb service
+  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 - name: create missing influx databases
@@ -278,7 +268,7 @@
   notify: "restart fluentd"
   tags: ['fluentd']
 
-- name: set mysql backup cron job
+- name: create mysql backup cron job
   vars:
     cron_name: "MySQL Openhab Backup"
     cron_cmd: "/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2"
@@ -292,7 +282,7 @@
     state: present
   tags: ['cron_job']
 
-- name: set influxdb backup cron job
+- name: create influxdb backup cron job
   vars:
     cron_name: "Influxdb Openhab Backup"
     cron_cmd: "docker exec influxdb influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"

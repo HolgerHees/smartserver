@@ -23,10 +23,8 @@
     group: www  
   when: "vault_active|bool"
       
-- name: check mysql is running
-  systemd:
-    name: mysql
-    state: started
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
 - name: check mysql table
   shell: "mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM openhab;'"
@@ -38,7 +36,7 @@
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
 # Weather data fetcher
-- name: set weather cron job
+- name: create weather cron job
   vars:
     cron_name: "Weatherdata"
     cron_cmd: "/usr/bin/php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php"

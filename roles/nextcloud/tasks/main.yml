@@ -85,10 +85,8 @@
     mode: 0640
   
 # ***** DATABASE ****
-- name: check mysql is running
-  systemd:
-    name: mysql
-    state: started
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
 - name: check mysql databases
   shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
@@ -157,7 +155,7 @@
   notify: "restart apache"
   tags: ['apache_conf']
 
-- name: set updates cron job
+- name: create updates cron job
   vars:
     cron_name: "Nextcloud Updates"
     cron_cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
@@ -170,7 +168,7 @@
     state: present
   tags: ['cron_job']
 
-- name: set fileindex cron job
+- name: create fileindex cron job
   vars:
     cron_name: "Nextcloud Fileindex"
     cron_cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
@@ -184,7 +182,7 @@
     state: present
   tags: ['cron_job']
 
-- name: set mysql backup cron job
+- name: create mysql backup cron job
   vars:
     cron_name: "Nextcloud MySQL Backup"
     cron_cmd: "/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2"

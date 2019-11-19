@@ -1,0 +1,5 @@
+- name: check mysql is running
+  systemd:
+    name: mysql
+    state: started
+  changed_when: yes

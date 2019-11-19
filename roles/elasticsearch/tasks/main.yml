@@ -94,6 +94,7 @@
     - { field: 'server.rewriteBasePath', value: 'true' }
   notify: "restart kibana"
     
+# needed to modify kibana.service
 - name: check enabled kibana
   systemd:
     enabled: yes

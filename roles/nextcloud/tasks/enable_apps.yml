@@ -1,7 +1,5 @@
-- name: check mysql is running
-  systemd:
-    name: mysql
-    state: started
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
     
 - name: install apps
   shell: "php {{htdocs_path}}nextcloud/occ app:install {{item}}"
@@ -39,7 +37,7 @@
 
 - name: install news app
   unarchive:
-    src: "https://github.com/nextcloud/news/releases/download/13.1.6/news.tar.gz"
+    src: "https://github.com/nextcloud/news/releases/download/14.0.1/news.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"

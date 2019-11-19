@@ -54,18 +54,10 @@
     - 'python setup.py install'
   when: clone_status.changed
 
-- name: check elasticsearch is running
-  systemd:
-    name: elasticsearch
-    state: started
+- name: check elasticsearch service
+  import_tasks: roles/elasticsearch/tasks/wait_until_ready.yml
   when: clone_status.changed
   
-- name: wait for elastic search to become ready
-  wait_for:
-    port: 9200
-  changed_when: yes
-  when: clone_status.changed
-
 - name: create search index
   shell: '/usr/bin/elastalert-create-index --config /etc/elastalert/config.yaml'
   notify: "restart elastalert"

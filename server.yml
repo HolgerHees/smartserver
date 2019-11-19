@@ -71,6 +71,10 @@
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
     - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
     
+    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
+
+    - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating /etc/apache2/_.ansible.d
+
     - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
 
     - { role: samba, tags: [ 'samba' ] }                                        # smb file server
@@ -88,7 +92,6 @@
     - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
 
     - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab
-    - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
 
     - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata
     
@@ -96,12 +99,11 @@
     
     - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud
     
-    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector
     - { role: elastalert, tags: [ 'elastalert' ] }                              # log alerting
 
-    - { role: apache, tags: [ 'apache' ] }                                      # web server
     - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
-    
+    - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+
     - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
      
     - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring

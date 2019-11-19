@@ -17,8 +17,3 @@
   with_items:
     - daemon.json
   notify: "restart docker"
-
-- name: check enabled docker
-  systemd:
-    enabled: yes
-    name: docker

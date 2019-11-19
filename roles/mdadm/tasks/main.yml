@@ -27,7 +27,7 @@
     user: root
   tags: cron
     
-- name: set check (start) cron job
+- name: create check (start) cron job
   vars:
     cron_name: "RAID Check (Start)"
     cron_cmd: "/usr/share/mdadm/mdcheck --duration 4 hours"
@@ -42,7 +42,7 @@
     state: present
   tags: ['cron_job']
   
-- name: set check (continue) cron job
+- name: create check (continue) cron job
   vars:
     cron_name: "RAID Check (Continue)"
     cron_cmd: "/usr/share/mdadm/mdcheck --continue --duration 4 hours"

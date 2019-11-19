@@ -16,7 +16,7 @@
     group: root
     mode: 0750
 
-- name: set cron job
+- name: create cron job
   vars:
     cron_name: "Systemd service check"
     cron_cmd: "/opt/service_check/service_check.sh;"

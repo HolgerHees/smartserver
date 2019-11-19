@@ -56,7 +56,7 @@
     - {name: 'mysql', src: '{{local_backup_path}}mysql'}
     - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
     
-- name: set backup cron job
+- name: create backup cron job
   vars:
     cron_name: "Cloudsync"
     cron_cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"

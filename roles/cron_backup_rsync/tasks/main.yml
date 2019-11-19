@@ -6,7 +6,7 @@
     owner: root
     group: root
     
-- name: set cron job
+- name: create cron job
   vars:
     cron_name: "DataDisk RSync Backup"
     cron_cmd: "/usr/bin/rsync --quiet -av --delete {{data_path}} {{local_backup_path}}dataDisk/ --exclude=var --exclude=tmp "

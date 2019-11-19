@@ -17,7 +17,7 @@
     group: root
     mode: 0750
 
-- name: set cron job
+- name: create cron job
   vars:
     cron_name: "Axxus"
     cron_cmd: "/opt/axxus_backup/axxus_backup.sh;"

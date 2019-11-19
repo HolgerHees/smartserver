@@ -21,12 +21,13 @@
     line: 'datadir = {{ global_lib }}mysql/'
   notify: "restart mysql"
   
+# needed to modify mysql.service
 - name: check enabled mysql
   systemd:
     enabled: yes
     name: mysql
 
-- name: set syslog indetifier
+- name: set syslog indentifier
   lineinfile:
     path: /etc/systemd/system/mysql.service
     insertafter: '^\[Service\]'
@@ -41,7 +42,7 @@
     owner: root
     group: root
     
-- name: set core backup cron job
+- name: create core backup cron job
   vars:
     cron_name: "MySQL Core Backup"
     cron_cmd: "/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
@@ -55,7 +56,7 @@
     state: present
   tags: ['cron_job']
 
-- name: set clean backup cron job
+- name: create clean backup cron job
   vars:
     cron_name: "MySQL Clean Backup"
     cron_cmd: "find {{local_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"

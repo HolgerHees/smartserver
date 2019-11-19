@@ -29,7 +29,7 @@
   notify: "restart vsftpd"
   when: "vault_active|bool"
 
-- name: set cleanup cron job
+- name: create cleanup cron job
   vars:
     cron_name: "Camera Cleanup"
     cron_cmd: "find {{ftp_path}} -name \"*.jpg\" -mtime +2 -exec rm {} +"

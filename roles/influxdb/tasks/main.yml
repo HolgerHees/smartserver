@@ -14,6 +14,11 @@
     - '{{local_backup_path}}influxdb'
     - '{{local_import_path}}influxdb'
 
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
 - name: create docker container
   docker_container:
     name: influxdb
@@ -26,13 +31,13 @@
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb'
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup'
-      - '{{local_import_path}}influxdb:/var/lib/influxdb_import'
+      - '{{local_import_path}}influxdb:/var/lib/influxdb_import:ro'
     ports:
      - "8086:8086"  
      - "4242:4242"  
   notify: "restart influxdb"
     
-- name: set docker service
+- name: create systemd service
   vars:
     container_name: "influxdb"
   copy:
@@ -41,7 +46,7 @@
     owner: root
     group: root
     mode: 0644
-#  notify: "restart influxdb"
+  notify: "restart influxdb"
   
 - name: copy fluentd config
   template:
@@ -53,7 +58,7 @@
   notify: "restart fluentd"
   tags: ['fluentd']
 
-- name: set opentsdb backup cron job
+- name: create opentsdb backup cron job
   vars:
     cron_name: "Influxdb OpenTSDB Backup"
     cron_cmd: "docker exec influxdb influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
@@ -67,7 +72,7 @@
     state: present
   tags: ['cron_job']
   
-- name: set clean backup cron job
+- name: create clean backup cron job
   vars:
     cron_name: "Influxdb Cleanup"
     cron_cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
