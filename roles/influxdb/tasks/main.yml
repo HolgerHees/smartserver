@@ -22,7 +22,7 @@
 - name: create docker container
   docker_container:
     name: influxdb
-    image: influxdb
+    image: influxdb:1.7.9
     state: present
 #    recreate: true
     env:

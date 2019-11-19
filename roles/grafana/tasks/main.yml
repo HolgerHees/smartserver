@@ -24,54 +24,6 @@
   with_items:
     - { mode: "u=rw,g=r,o=r", path: "/etc/sysconfig/grafana-server" }
   notify: "restart grafana"
-
-#- name: add yum repository
-#  yum_repository:
-#    name: Grafana
-#    description: Grafana repository
-#    baseurl: https://packages.grafana.com/oss/rpm
-#    gpgcheck: yes
-#    gpgkey: https://packages.grafana.com/gpg.key
-#    reposdir: "/etc/zypp/repos.d/"
-#    priority: "100"
-#  register: yum_status
-
-#- name: refresh yum repository
-#  expect:
-#    command: "zypper refresh"
-#    responses:
-#      # Continue with GPG key validation
-#      immer vertrauen?: "i"
-#      trust always?: "a"
-#      Weiter: "ja"
-#      Continue: "yes"
-#  changed_when: yum_status.changed
-  
-#- name: install required packages
-#  zypper:
-#    name: [
-#        insserv-compat
-#      , libopenssl1_0_0
-#    ]
-#    state: present
-#    #disable_gpg_check: yes
-#  notify: "restart grafana"
-
-#- name: install grafana
-#  expect:
-#    command: "zypper install grafana"
-#    responses:
-#      # Ignore missing dependencies (some fonts)
-#      Wählen Sie aus den: "2"
-#      Choose from above: "2"
-#      Weiter: "j"
-#      Fortfahren: "j"
-#      Continue: "y"
-#      Abbrechen, wiederholen, ignorieren: "i"
-#      Abort, retry, ignore: "i"
-#  register: command_result
-#  changed_when: "'already installed' not in command_result.stdout and 'bereits installiert' not in command_result.stdout"
-#  notify: "restart grafana"
   
 - name: prepare needed folder
   file:
@@ -115,6 +67,109 @@
     - "provisioning/datasources/openhab.yaml"
     - "provisioning/datasources/opentsdb.yaml"
   when: "vault_active|bool"
+  
+  
+  
+  
+  
+  
+#- name: create docker container
+#  shell: |
+#    docker create 
+#    --name grafana 
+#    --log-driver none 
+#    --user root 
+#    --volume "{{global_lib}}grafana:/var/lib/grafana" 
+#    -p 3000:3000 
+#    grafana/grafana:5.4.3
+
+#- name: check started docker
+#  systemd:
+#    name: docker
+#    state: started
+    
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+    recurse: true
+  with_items:
+    - "{{ global_lib }}grafanaNew/"
+    - "{{ global_lib }}grafanaNew/dashboards/"
+    - "{{ global_lib }}grafanaNew/provisioning"
+    - "{{ global_lib }}grafanaNew/provisioning/dashboards/"
+    - "{{ global_lib }}grafanaNew/provisioning/datasources/"
+    - "{{ global_lib }}grafanaNew/provisioning/notifiers/"
+
+- name: create docker container
+  docker_container:
+    name: grafana
+    image: grafana/grafana:6.4.4
+    state: present
+    network_mode: "host"
+    user: "root:root"
+    recreate: true
+    env:
+      GF_SERVER_DOMAIN: "{{server_domain}}"
+      GF_SERVER_HTTP_ADDR: "127.0.0.1"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:/grafana"
+      GF_LOG_MODE: "syslog"
+      GF_LOG_SYSLOG_TAG: "grafana"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+    log_driver: journald
+    volumes:
+      - '{{global_lib}}grafanaNew:/tmp/grafana'
+    ports:
+     - "9000:3000"  
+    #notify: "restart grafana"
+    
+#- name: create systemd service
+#  vars:
+#    container_name: "grafana"
+#  copy:
+#    content: "{{ lookup('template', 'templates/docker_service') }}"
+#    dest: "/etc/systemd/system/grafana_new.service"
+#    owner: root
+#    group: root
+#    mode: 0644
+  #notify: "restart grafana"
+  
+#- name: copy fluentd config
+#  template:
+#    src: "roles/grafana/templates/etc/fluent/_.ansible.d/grafana.conf"
+#    dest: "/etc/fluent/_.ansible.d/grafana.conf"
+#    owner: root
+#    group: root
+#    mode: 0640
+#  notify: "restart fluentd"
+#  tags: ['fluentd']    
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 - name: set domain config
   lineinfile:
