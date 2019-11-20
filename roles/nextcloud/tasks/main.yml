@@ -1,20 +1,22 @@
-- name: add zypper repository
-  zypper_repository:
-    name: Printing (ghostscript)
-    repo: 'http://download.opensuse.org/repositories/Printing/openSUSE_Leap_{{ansible_distribution_version}}/'
-    auto_import_keys: yes
-    priority: "100"
-    state: present
+#- name: add zypper repository
+#  zypper_repository:
+#    name: Printing (ghostscript)
+#    repo: 'http://download.opensuse.org/repositories/Printing/openSUSE_Leap_{{ansible_distribution_version}}/'
+#    auto_import_keys: yes
+#    priority: "100"
+#    state: present
 
-- name: uninstall blocking packages
-  zypper:
-    name: "ghostscript-x11"
-    state: absent
+#- name: uninstall blocking packages
+#  zypper:
+#    name: "ghostscript-x11"
+#    state: absent
+
+# ghostscript version 9.27 is available since suse 15.1 (is needed to fix a PDF indexation bug)
 
 - name: install required packages
   zypper:
     name: [
-      "ghostscript>=9.27",
+#     "ghostscript>=9.27",
       "php7-gmp"            # needed by bookmark app
     ]
     state: present
