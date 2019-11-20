@@ -25,9 +25,12 @@
     image: influxdb:1.7.9
     state: present
 #    recreate: true
+    entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
     env:
       INFLUXDB_OPENTSDB_0_ENABLED: "true"
-    log_driver: none
+    log_driver: journald
+    log_options:
+      tag: influxdb
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb'
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup'

@@ -10,7 +10,9 @@ Restart=always
 ExecStart=/usr/bin/docker start -a {{container_name}}
 ExecStop=/usr/bin/docker stop {{container_name}}
 #ExecStop=/usr/bin/docker stop -t {{container_stop_timeout | default('300')}} {{container_name}}
-SyslogIdentifier={{container_name}}
+#SyslogIdentifier={{container_name}}
+StandardOutput=null
+StandardError=null
 
 [Install]
 WantedBy=multi-user.target
