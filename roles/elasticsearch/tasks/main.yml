@@ -107,6 +107,92 @@
     regexp: '^Requires='
     line: 'Requires=elasticsearch.service'
   notify: "restart kibana"
+  
+  
+  
+  
+  
+  
+  
+  
+  
+- name: prepare needed folder
+  file:
+    path:  "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    #mode: 0750
+    #recurse: true
+  with_items:
+    - '{{ global_lib }}elasticsearchNew'
+    - '{{ global_log }}elasticsearchNew'
+  
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.7.2
+    state: present
+#    recreate: true
+    env:
+      network.host: "127.0.0.1"
+    log_driver: journald
+    log_options:
+      tag: elasticsearch
+    volumes:
+      - '{{ global_lib }}elasticsearchNew:/var/lib/elasticsearch'
+      - '{{ global_log }}elasticsearchNew:/var/log/elasticsearch'
+    ports:
+     - "9201:9200"  
+     - "9301:9300"  
+#  notify: "restart elasticsearch"
+    
+#- name: create systemd service
+#  vars:
+#    container_name: "elasticsearch"
+#  copy:
+#    content: "{{ lookup('template', 'templates/docker_service') }}"
+#    dest: "/etc/systemd/system/elasticsearch.service"
+#    owner: root
+#    group: root
+#    mode: 0644
+#  notify: "restart elasticsearch"
+  
+#- name: copy fluentd config
+#  template:
+#    src: "roles/elasticsearch/templates/etc/fluent/_.ansible.d/elasticsearch.conf"
+#    dest: "/etc/fluent/_.ansible.d/elasticsearch.conf"
+#    owner: root
+#    group: root
+#    mode: 0640
+#  notify: "restart fluentd"
+#  tags: ['fluentd']
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 - name: copy apache configs
   template:
