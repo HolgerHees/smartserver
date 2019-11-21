@@ -6,12 +6,3 @@
     enabled: yes
     masked: no
   listen: "restart elasticsearch"
-
-- name: restart kibana
-  systemd:
-    name: kibana
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart kibana"

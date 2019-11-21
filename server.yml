@@ -93,9 +93,10 @@
 
     - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab
 
-    - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata
+    - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb [docker] => needed by openhab and netdata
     
-    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db (incl. kibana) => needed by elastalert and fluentd
+    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd
+    - { role: kibana, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana [docker]
     
     - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud
     
@@ -107,7 +108,7 @@
     - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
      
     - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
-    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards
+    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards [docker]
 
     - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker
 

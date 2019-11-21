@@ -28,6 +28,7 @@
     entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
     env:
       INFLUXDB_OPENTSDB_0_ENABLED: "true"
+      INFLUXDB_LOGGING_FORMAT: "json"
     log_driver: journald
     log_options:
       tag: influxdb

@@ -1,53 +1,3 @@
-#- name: add zypper repository
-#  zypper_repository:
-#    name: Security:logging (elasticsearch)
-#    repo: 'http://download.opensuse.org/repositories/security:/logging/openSUSE_Leap_{{ansible_distribution_version}}/'
-#    auto_import_keys: yes
-#    autorefresh: no
-#    priority: "100"
-#    state: present
-
-#- name: install required packages
-#  zypper:
-#    name: [
-#       elasticsearch
-#     , kibana
-#    ]
-#    state: present
-#  notify: "restart elasticsearch"
-  
-- name: add yum repository
-  yum_repository:
-    name: Elasticsearch
-    description: Elasticsearch repository for 6.x packages
-    baseurl: https://artifacts.elastic.co/packages/6.x/yum
-    gpgcheck: yes
-    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-    reposdir: "/etc/zypp/repos.d/"
-    priority: "100"
-  register: yum_status
-    
-- name: refresh yum repository
-  expect:
-    command: "zypper refresh"
-    responses:
-      # Continue with GPG key validation
-      immer vertrauen?: "i"
-      trust always?: "a"
-      Weiter?: "ja"
-      Continue?: "yes"
-  changed_when: yum_status.changed
-
-- name: install required packages
-  zypper:
-    name: [
-       elasticsearch
-     , kibana
-    ]
-    state: present
-    disable_gpg_check: yes
-  notify: "restart elasticsearch"
-    
 - name: install required python pip modules
   pip: 
     name: elasticsearch-curator
@@ -56,77 +6,12 @@
   file:
     path:  "{{item}}"
     state: directory
-    owner: elasticsearch
-    group: elasticsearch
-    #mode: 0750
-    #recurse: true
-  with_items:
-    - '{{ global_lib }}elasticsearch'
-    - '{{ global_log }}elasticsearch'
-
-#- name: prepare keystore file
-#  copy:
-#    content: ""
-#    dest: /etc/elasticsearch/elasticsearch.keystore
-#    force: no
-#    owner: elasticsearch
-#    group: elasticsearch
-#    mode: 0660
-
-- name: set elasticsearch config
-  lineinfile:
-    path: /etc/elasticsearch/elasticsearch.yml
-    regexp: '^{{item.field}}:'
-    line: '{{item.field}}: {{item.value}}'
-  with_items:
-    - { field: 'path.data', value: '{{ global_lib }}elasticsearch' }
-    - { field: 'path.logs', value: '{{ global_log }}elasticsearch' }
-    - { field: 'network.host', value: '127.0.0.1' }
-  notify: "restart elasticsearch"
-
-- name: set kibana config
-  lineinfile:
-    path: /etc/kibana/kibana.yml
-    regexp: '^{{item.field}}:'
-    line: '{{item.field}}: {{item.value}}'
-  with_items:
-    - { field: 'server.basePath', value: '"/kibana"' }
-    - { field: 'server.rewriteBasePath', value: 'true' }
-  notify: "restart kibana"
-    
-# needed to modify kibana.service
-- name: check enabled kibana
-  systemd:
-    enabled: yes
-    name: kibana
-    
-- name: set systemd dependency elasticsearch config
-  lineinfile:
-    path: /etc/systemd/system/kibana.service
-    insertafter: '^\[Unit\]'
-    regexp: '^Requires='
-    line: 'Requires=elasticsearch.service'
-  notify: "restart kibana"
-  
-  
-  
-  
-  
-  
-  
-  
-  
-- name: prepare needed folder
-  file:
-    path:  "{{item}}"
-    state: directory
-    owner: root
+    owner: "1000"
     group: root
     #mode: 0750
-    #recurse: true
+    recurse: true
   with_items:
-    - '{{ global_lib }}elasticsearchNew'
-    - '{{ global_log }}elasticsearchNew'
+    - '{{ global_lib }}elasticsearch'
   
 - name: check started docker
   systemd:
@@ -136,73 +21,53 @@
 - name: create docker container
   docker_container:
     name: elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.7.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
     state: present
-#    recreate: true
+    recreate: true
     env:
-      network.host: "127.0.0.1"
+       discovery.type: "single-node"
+#       DISCOVERY_TYPE: "single-node"
+#       DISCOVERY_SEED_HOSTS: ""
+#       DISCOVERY_SEED_PROVIDERS: ""
+#       CLUSTER_INITIAL_MASTER_NODES[0]: "localhost"
+#      APPENDER_ROLLING_LAYOUT_TYPE: "ESJsonLayout"
     log_driver: journald
     log_options:
       tag: elasticsearch
     volumes:
-      - '{{ global_lib }}elasticsearchNew:/var/lib/elasticsearch'
-      - '{{ global_log }}elasticsearchNew:/var/log/elasticsearch'
+      - '{{ global_lib }}elasticsearch:/usr/share/elasticsearch/data'
     ports:
-     - "9201:9200"  
-     - "9301:9300"  
-#  notify: "restart elasticsearch"
+     - "9200:9200"  
+     - "9300:9300"  
+  notify: "restart elasticsearch"
     
-#- name: create systemd service
-#  vars:
-#    container_name: "elasticsearch"
-#  copy:
-#    content: "{{ lookup('template', 'templates/docker_service') }}"
-#    dest: "/etc/systemd/system/elasticsearch.service"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  notify: "restart elasticsearch"
+- name: create systemd service
+  vars:
+    container_name: "elasticsearch"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/elasticsearch.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart elasticsearch"
   
-#- name: copy fluentd config
-#  template:
-#    src: "roles/elasticsearch/templates/etc/fluent/_.ansible.d/elasticsearch.conf"
-#    dest: "/etc/fluent/_.ansible.d/elasticsearch.conf"
-#    owner: root
-#    group: root
-#    mode: 0640
-#  notify: "restart fluentd"
-#  tags: ['fluentd']
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-- name: copy apache configs
+- name: copy fluentd config
   template:
-    src: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/{{item}}"
-    dest: "/etc/apache2/_.ansible.d/{{item}}"
+    src: "roles/elasticsearch/templates/etc/fluent/_.ansible.d/elasticsearch.conf"
+    dest: "/etc/fluent/_.ansible.d/elasticsearch.conf"
     owner: root
     group: root
     mode: 0640
-  with_items:
-    - kibana.conf
-    - elasticsearch.conf
+  notify: "restart fluentd"
+  tags: ['fluentd']
+
+- name: copy apache config
+  template:
+    src: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/elasticsearch.conf"
+    dest: "/etc/apache2/_.ansible.d/elasticsearch.conf"
+    owner: root
+    group: root
+    mode: 0640
   notify: "restart apache"
   tags: ['apache_conf']

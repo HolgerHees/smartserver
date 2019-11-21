@@ -26,6 +26,7 @@
     - fluent-plugin-elasticsearch
     - fluent-plugin-record-modifier
     - fluent-plugin-rewrite-tag-filter
+    - oj
   notify: "restart fluentd"
 
 - name: copy config and service

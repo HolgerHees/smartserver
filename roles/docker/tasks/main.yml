@@ -9,11 +9,21 @@
 
 - name: copy config
   template:
-    src: "roles/docker/templates/etc/docker/{{item}}"
+    src: "roles/docker/templates/etc/{{item}}"
     dest: "/etc/docker/{{item}}"
     owner: root
     group: root
     mode: 0644
   with_items:
-    - daemon.json
+    - docker/daemon.json
   notify: "restart docker"
+
+- name: copy fluentd config
+  template:
+    src: "roles/docker/templates/etc/fluent/_.ansible.d/docker.conf"
+    dest: "/etc/fluent/_.ansible.d/docker.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']  

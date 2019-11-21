@@ -1,0 +1,52 @@
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: kibana
+    image: docker.elastic.co/kibana/kibana:7.4.2
+    state: present
+    network_mode: "host"
+#    recreate: true
+    env:
+      SERVER_BASEPATH: "/kibana"
+      SERVER_REWRITEBASEPATH: "true"
+      ELASTICSEARCH_HOSTS: "http://localhost:9200"
+#      XPACK_SECURITY_ENABLED: "false"
+    log_driver: journald
+    log_options:
+      tag: kibana
+  notify: "restart kibana"
+    
+- name: create systemd service
+  vars:
+    container_name: "kibana"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/kibana.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart kibana"
+  
+- name: copy fluentd config
+  template:
+    src: "roles/kibana/templates/etc/fluent/_.ansible.d/kibana.conf"
+    dest: "/etc/fluent/_.ansible.d/kibana.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']
+  
+- name: copy apache config
+  template:
+    src: "roles/kibana/templates/etc/apache2/_.ansible.d/kibana.conf"
+    dest: "/etc/apache2/_.ansible.d/kibana.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart apache"
+  tags: ['apache_conf']
