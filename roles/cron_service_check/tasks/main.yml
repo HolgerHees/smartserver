@@ -19,7 +19,7 @@
 - name: create cron job
   vars:
     cron_name: "Systemd service check"
-    cron_cmd: "/opt/service_check/service_check.sh;"
+    cron_cmd: "/opt/service_check/service_check.sh"
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"

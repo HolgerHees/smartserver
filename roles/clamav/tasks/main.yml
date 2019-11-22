@@ -25,3 +25,18 @@
     regexp: 'TimeoutSec'
     line: 'TimeoutSec=5min'
   notify: "restart clamav"
+
+#- name: create cron job
+#  vars:
+#    cron_name: "ClamAV file check"
+#    cron_cmd: "clamscan -r -i {{nextcloud_data_path}}"
+#  cron:
+#    name: "{{cron_name}}"
+#    job: "{{ lookup('template', 'templates/cron_job') }}"
+#    cron_file: ansible_clamav_check
+#    user: root
+#    hour: "3"
+#    minute: "0"
+#    state: present
+#  when: "is_production|bool"
+#  tags: ['cron_job']

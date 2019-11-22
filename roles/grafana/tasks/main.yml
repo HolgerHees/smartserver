@@ -66,6 +66,7 @@
       tag: grafana
     volumes:
       - '{{global_lib}}grafana:/var/lib/grafana'
+      - '{{global_lib}}grafana/provisioning:/etc/grafana/provisioning'
     #ports:
     # - "9000:3000"  
   notify: "restart grafana"

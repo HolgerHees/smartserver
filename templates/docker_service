@@ -6,7 +6,7 @@ After=docker.service
 [Service]
 TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
-Restart=always
+Restart=on-failure
 ExecStart=/usr/bin/docker start -a {{container_name}}
 ExecStop=/usr/bin/docker stop {{container_name}}
 #ExecStop=/usr/bin/docker stop -t {{container_stop_timeout | default('300')}} {{container_name}}

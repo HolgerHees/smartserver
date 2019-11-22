@@ -95,7 +95,7 @@
 
     - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb [docker] => needed by openhab and netdata
     
-    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd
+    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd [docker]
     - { role: kibana, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana [docker]
     
     - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud
