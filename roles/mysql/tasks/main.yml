@@ -34,6 +34,95 @@
     regexp: '^SyslogIdentifier'
     line: 'SyslogIdentifier = mysql'
   notify: "restart mysql"
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+- name: prepare needed folder
+  file:
+    path: '{{ global_lib }}mysqlNew/'
+    state: directory
+    owner: root
+    group: root
+    #mode: 0770
+    recurse: true  
+  
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: mysql
+    image: mariadb:10.4.10
+    state: present
+#    recreate: true
+    env:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+    log_driver: journald
+    log_options:
+      tag: mysql
+    volumes:
+      - '{{ global_lib }}mysqlNew:/var/lib/mysql'
+    ports:
+     - "13306:3306"  
+#  notify: "restart mysql"
+    
+#- name: create systemd service
+#  vars:
+#    container_name: "mysql"
+#  copy:
+#    content: "{{ lookup('template', 'templates/docker_service') }}"
+#    dest: "/etc/systemd/system/mysql.service"
+#    owner: root
+#    group: root
+#    mode: 0644
+#  notify: "restart mysql"
+  
+- name: copy fluentd config
+  template:
+    src: "roles/mysql/templates/etc/fluent/_.ansible.d/mysql.conf"
+    dest: "/etc/fluent/_.ansible.d/mysql.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 - name: prepare backup folder
   file:

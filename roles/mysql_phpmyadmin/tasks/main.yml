@@ -31,13 +31,13 @@
     group: www
   when: not phpmyadmin_exists.stat.exists
   
-- name: prepare config folder
-  file:
-    path: "{{htdocs_path}}mysql/config"
-    state: directory
-    owner: wwwrun
-    group: www
-    mode: 0770
+#- name: prepare config folder
+#  file:
+#    path: "{{htdocs_path}}mysql/config"
+#    state: directory
+#    owner: wwwrun
+#    group: www
+#    mode: 0770
 
 - name: copy config
   template:

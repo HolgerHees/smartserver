@@ -104,6 +104,7 @@
 
     - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
     - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+    - { role: mysql_adminer, tags: [ 'mysql_adminer' ] }                        # mysql management ui adminer 
 
     - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
      
