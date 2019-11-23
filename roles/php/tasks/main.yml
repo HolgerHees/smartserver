@@ -33,12 +33,12 @@
 #  changed_when: False
 #  register: inotify_installed
         
-- name: install inotify pecl module
-  pear:
-    name: pecl/inotify
-    state: present
+#- name: install inotify pecl module
+#  pear:
+#    name: pecl/inotify
+#    state: present
 #  when: inotify_installed.rc == 1
-  notify: "restart apache"
+#  notify: "restart apache"
   
 - name: "clone php-systemd git"
   git:
@@ -70,7 +70,7 @@
     mode: 0644
   with_items:
     - apcu.ini
-    - inotify.ini
+#    - inotify.ini
     - systemd.ini
   notify: "restart apache"
     
