@@ -205,11 +205,11 @@
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
 
 - name: create missing mysql user
-  shell: "echo \"CREATE USER '{{openhab_mysql_username}}'@'127.0.0.1' IDENTIFIED BY '{{openhab_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"CREATE USER '{{openhab_mysql_username}}'@'%' IDENTIFIED BY '{{openhab_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
 
 - name: grant permissions to mysql user
-  shell: "echo \"GRANT ALL PRIVILEGES ON openhab.* TO '{{openhab_mysql_username}}'@'127.0.0.1';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"GRANT ALL PRIVILEGES ON openhab.* TO '{{openhab_mysql_username}}'@'%';\" | mysql -u root -h 127.0.0.1"
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
 
 - name: refresh mysql privileges

@@ -12,7 +12,6 @@
     - '{{ global_lib }}influxdb/data'
     - '{{ global_lib }}influxdb/wal'  
     - '{{local_backup_path}}influxdb'
-    - '{{local_import_path}}influxdb'
 
 - name: check started docker
   systemd:
@@ -35,10 +34,9 @@
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb'
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup'
-      - '{{local_import_path}}influxdb:/var/lib/influxdb_import:ro'
     ports:
-     - "8086:8086"  
-     - "4242:4242"  
+     - "127.0.0.1:8086:8086"  
+     - "127.0.0.1:4242:4242"  
   notify: "restart influxdb"
     
 - name: create systemd service

@@ -113,11 +113,11 @@
 #    state: present
 
 - name: create missing mysql user
-  shell: "echo \"CREATE USER '{{nextcloud_mysql_username}}'@'127.0.0.1' IDENTIFIED BY '{{nextcloud_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: grant permissions to mysql user
-  shell: "echo \"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'127.0.0.1';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\" | mysql -u root -h 127.0.0.1"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: refresh mysql privileges

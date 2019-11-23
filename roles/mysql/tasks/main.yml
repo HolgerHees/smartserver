@@ -1,64 +1,15 @@
-- name: install required packages
-  zypper:
-    name: mysql
-    state: present
-  notify: "restart mysql"
-    
 - name: prepare needed folder
   file:
-    path: '{{ global_lib }}mysql/'
-    state: directory
-    owner: mysql
-    group: mysql
-    #mode: 0770
-    recurse: true
-
-- name: set data path config
-  lineinfile:
-    path: /etc/my.cnf
-    insertafter: '^\[mysqld\]'
-    regexp: '^datadir'
-    line: 'datadir = {{ global_lib }}mysql/'
-  notify: "restart mysql"
-  
-# needed to modify mysql.service
-- name: check enabled mysql
-  systemd:
-    enabled: yes
-    name: mysql
-
-- name: set syslog indentifier
-  lineinfile:
-    path: /etc/systemd/system/mysql.service
-    insertafter: '^\[Service\]'
-    regexp: '^SyslogIdentifier'
-    line: 'SyslogIdentifier = mysql'
-  notify: "restart mysql"
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-- name: prepare needed folder
-  file:
-    path: '{{ global_lib }}mysqlNew/'
+    path: '{{item}}'
     state: directory
     owner: root
     group: root
-    #mode: 0770
-    recurse: true  
-  
+    mode: 0750
+    recurse: true
+  with_items:
+    - '{{ global_lib }}mysql'
+    - '{{local_backup_path}}mysql'
+
 - name: check started docker
   systemd:
     name: docker
@@ -69,29 +20,33 @@
     name: mysql
     image: mariadb:10.4.10
     state: present
-#    recreate: true
+    #recreate: true
     env:
+      PUID: "0"
+      GUID: "0"
+      MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
     log_driver: journald
     log_options:
       tag: mysql
     volumes:
-      - '{{ global_lib }}mysqlNew:/var/lib/mysql'
+      - '{{ global_lib }}mysql:/var/lib/mysql'
+      - '{{local_backup_path}}mysql:/var/lib/mysql_backup'
     ports:
-     - "13306:3306"  
-#  notify: "restart mysql"
+      - "127.0.0.1:3306:3306"  
+  notify: "restart mysql"
     
-#- name: create systemd service
-#  vars:
-#    container_name: "mysql"
-#  copy:
-#    content: "{{ lookup('template', 'templates/docker_service') }}"
-#    dest: "/etc/systemd/system/mysql.service"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  notify: "restart mysql"
+- name: create systemd service
+  vars:
+    container_name: "mysql"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/mysql.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart mysql"
   
 - name: copy fluentd config
   template:
@@ -103,38 +58,10 @@
   notify: "restart fluentd"
   tags: ['fluentd']
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-- name: prepare backup folder
-  file:
-    path: '{{local_backup_path}}mysql'
-    state: directory
-    owner: root
-    group: root
-    
 - name: create core backup cron job
   vars:
     cron_name: "MySQL Core Backup"
-    cron_cmd: "/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cron_cmd: "docker exec mysql /usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"

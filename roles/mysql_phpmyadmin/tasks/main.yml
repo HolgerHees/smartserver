@@ -1,6 +1,6 @@
 - name: set phpmyadmin version
   set_fact:
-    phpmyadmin_version: '4.8.3'
+    phpmyadmin_version: '4.9.2'
     
 - name: check installation
   stat:

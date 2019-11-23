@@ -91,12 +91,12 @@
     - { role: java_ant, tags: [ 'java_ant' ] }                                  # apache ant
     - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
 
-    - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab
+    - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker]
 
-    - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb [docker] => needed by openhab and netdata
+    - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata                         [docker]
     
-    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd [docker]
-    - { role: kibana, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana [docker]
+    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker]
+    - { role: kibana, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker]
     
     - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud
     
@@ -104,12 +104,11 @@
 
     - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
     - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
-    - { role: mysql_adminer, tags: [ 'mysql_adminer' ] }                        # mysql management ui adminer 
 
     - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
      
     - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
-    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards [docker]
+    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker]
 
     - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker
 
