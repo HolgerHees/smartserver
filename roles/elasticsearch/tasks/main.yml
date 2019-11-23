@@ -1,6 +1,6 @@
 - name: install required python pip modules
   pip: 
-    name: elasticsearch-curator
+    name: elasticsearch-curator # provides "curator-cli" and is used by fluent to clean old log files
 
 - name: prepare needed folder
   file:
