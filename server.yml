@@ -50,6 +50,8 @@
   roles:
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
+    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
+
     - { role: docker, tags: [ 'docker' ] }                                      # installs and initializes the container infrastructure
 
     - { role: network, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
@@ -71,8 +73,6 @@
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
     - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
     
-    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
-
     - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating /etc/apache2/_.ansible.d
 
     - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
