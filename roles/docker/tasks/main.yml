@@ -7,23 +7,13 @@
     state: present
   notify: "restart docker"
 
-- name: prepare needed folder
-  file:
-    path: '/etc/docker/'
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-    
 - name: copy config
   template:
-    src: "roles/docker/templates/etc/{{item}}"
-    dest: "/etc/docker/{{item}}"
+    src: "roles/docker/templates/etc/docker/daemon.json"
+    dest: "/etc/docker/daemon.json"
     owner: root
     group: root
     mode: 0644
-  with_items:
-    - docker/daemon.json
   notify: "restart docker"
 
 - name: copy fluentd config
