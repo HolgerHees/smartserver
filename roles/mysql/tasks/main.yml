@@ -61,7 +61,7 @@
 - name: create core backup cron job
   vars:
     cron_name: "MySQL Core Backup"
-    cron_cmd: "docker exec mysql /usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cron_cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"

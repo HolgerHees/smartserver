@@ -271,7 +271,7 @@
 - name: create mysql backup cron job
   vars:
     cron_name: "MySQL Openhab Backup"
-    cron_cmd: "/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > {{local_backup_path}}mysql/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cron_cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"
@@ -285,7 +285,7 @@
 - name: create influxdb backup cron job
   vars:
     cron_name: "Influxdb Openhab Backup"
-    cron_cmd: "docker exec influxdb influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
+    cron_cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"

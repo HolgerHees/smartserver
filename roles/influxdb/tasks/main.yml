@@ -63,7 +63,7 @@
 - name: create opentsdb backup cron job
   vars:
     cron_name: "Influxdb OpenTSDB Backup"
-    cron_cmd: "docker exec influxdb influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null"
+    cron_cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"
