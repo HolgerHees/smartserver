@@ -71,7 +71,7 @@
   with_items:
     - apcu.ini
 #    - inotify.ini
-#    - systemd.ini
+    - systemd.ini
   notify: "restart apache"
     
 - name: set cli config
