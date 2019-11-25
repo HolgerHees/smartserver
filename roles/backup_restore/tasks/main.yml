@@ -24,10 +24,9 @@
   
 # **** INFLUXDB ****     
 - name: check influxdb backup import folder
-  stat:
-    path: "{{local_import_path}}influxdb/"
+  shell: "ls {{local_import_path}}influxdb/"
   register: influxdb_backup_exists
-  changed_when: influxdb_backup_exists.stat.exists
+  changed_when: influxdb_backup_exists.rc == 0
 
 - name: mount influxdb backup import folder
   mount:
@@ -36,30 +35,30 @@
     opts: bind
     state: mounted
     fstype: none
-  when: influxdb_backup_exists.stat.exists
+  when: influxdb_backup_exists.rc == 0
   
 - name: check influxdb service
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
-  when: influxdb_backup_exists.stat.exists
+  when: influxdb_backup_exists.rc == 0
   
 # ??? check if this is enough or if we need to import metadata from opentsdb too
 - name: import influxdb metadata backup
   shell: "docker exec influxdb sh -c \"influxd restore -metadir /var/lib/influxdb/meta /var/lib/influxdb_backup/import/openhab*\""
-  when: influxdb_backup_exists.stat.exists and 'openhab' in influxdb_backup_exists.stdout
+  when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
   
 - name: import influxdb openhab backup
   shell: "docker exec influxdb sh -c \"influxd restore -db openhab_db -newdb openhab_db -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/openhab*\""
-  when: influxdb_backup_exists.stat.exists and 'openhab' in influxdb_backup_exists.stdout
+  when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
 
 - name: import influxdb opentsdb backup
   shell: "docker exec influxdb sh -c \"influxd restore -db opentsdb -newdb opentsdb -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/opentsdb*\""
-  when: influxdb_backup_exists.stat.exists and 'opentsdb' in influxdb_backup_exists.stdout
+  when: influxdb_backup_exists.rc == 0 and 'opentsdb' in influxdb_backup_exists.stdout
   
 - name: unmount influxdb backup import folder
   mount:
     path: "{{local_backup_path}}influxdb/import"
     state: unmounted
-  when: influxdb_backup_exists.stat.exists
+  when: influxdb_backup_exists.rc == 0
   
 # **** OPENHAB MAPDB ****
 - name: check openhab mapdb backup folder

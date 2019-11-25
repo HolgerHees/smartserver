@@ -125,7 +125,7 @@
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: initialise mysql database
-  shell: "docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t < roles/nextcloud/templates/nextcloud.sql"
+  shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: check redis is running
