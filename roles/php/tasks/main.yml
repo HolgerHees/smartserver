@@ -40,26 +40,26 @@
 #  when: inotify_installed.rc == 1
 #  notify: "restart apache"
   
-- name: "clone php-systemd git"
-  git:
-#    accept_hostkey: yes
-    repo: 'https://github.com/systemd/php-systemd.git'
-    dest: '{{global_build}}php-systemd'
-#    force: yes
-    version: 'master'
-  register: clone_status
+#- name: "clone php-systemd git"
+#  git:
+##    accept_hostkey: yes
+#    repo: 'https://github.com/systemd/php-systemd.git'
+#    dest: '{{global_build}}php-systemd'
+##    force: yes
+#    version: 'master'
+#  register: clone_status
   
-- name: "install php-systemd"
-  shell: '{{ item }}'
-  args:
-    chdir: '{{global_build}}php-systemd'
-  with_items:
-    - 'phpize'
-    - './configure --with-systemd'
-    - 'make'
-    - 'make install'
-  notify: "restart apache"
-  when: clone_status.changed
+#- name: "install php-systemd"
+#  shell: '{{ item }}'
+#  args:
+#    chdir: '{{global_build}}php-systemd'
+#  with_items:
+#    - 'phpize'
+#    - './configure --with-systemd'
+#    - 'make'
+#    - 'make install'
+#  notify: "restart apache"
+#  when: clone_status.changed
   
 - name: copy config
   template:
@@ -71,7 +71,7 @@
   with_items:
     - apcu.ini
 #    - inotify.ini
-    - systemd.ini
+#    - systemd.ini
   notify: "restart apache"
     
 - name: set cli config
