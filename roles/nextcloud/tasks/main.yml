@@ -113,11 +113,11 @@
 #    state: present
 
 - name: create missing mysql user
-  shell: "echo \"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\" | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\\\"\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: grant permissions to mysql user
-  shell: "echo \"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\" | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\\\"\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: refresh mysql privileges
@@ -125,7 +125,7 @@
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: initialise mysql database
-  shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" < roles/nextcloud/templates/nextcloud.sql"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: check redis is running
