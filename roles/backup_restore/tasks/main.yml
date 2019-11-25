@@ -24,7 +24,7 @@
 
 # force a rebuild of cached files like merged js and css files
 - name: clean nextcloud database
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';'\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
   when: mysql_backup_exists.stat.exists
 
 - name: import openhab database
