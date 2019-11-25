@@ -4,8 +4,14 @@
     state: started
   changed_when: yes
 
-- name: wait for mysql to become ready
-  wait_for:
-    port: 3306
-  changed_when: yes
+#- name: wait for mysql to become ready
+#  wait_for:
+#    port: 3306
+#  changed_when: yes
 
+- name: wait for mysql to become ready
+  command: "docker exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
+  register: result
+  until: not result.rc  # or result.rc == 0 if you prefer
+  retries: 60
+  delay: 1
