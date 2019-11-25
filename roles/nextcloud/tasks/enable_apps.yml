@@ -6,7 +6,7 @@
   become: yes
   become_user: wwwrun
   register: command_result
-  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout"
+  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
   changed_when: "'enabled' in command_result.stdout"
   with_items:
     - bookmarks
