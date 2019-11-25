@@ -4,19 +4,14 @@
     state: started
   changed_when: yes
   
-- name: wait for elasticsearch port becomes ready
-  wait_for:
-    port: 9200
-  changed_when: yes
-
-- name: wait for elasticsearch status becomes ready
+- name: wait for elasticsearch to become ready
   uri:
-    url: "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s"
+    url: "http://localhost:9200/_cluster/health"
     status_code: 200
+  return_content: yes
   register: result
-  until: result.status == 200
-  timeout: 60
-  retries: 5
+  until: "result.status == 200 and ('\"status\":\"yellow\"' in result.content or '\"status\":\"green\"' in result.content)"
+  retries: 60
   delay: 1
   changed_when: yes
 
