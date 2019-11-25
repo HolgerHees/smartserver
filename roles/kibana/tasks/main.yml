@@ -6,6 +6,7 @@
 - name: create docker container
   docker_container:
     name: kibana
+#    image: amazon/opendistro-for-elasticsearch-kibana:1.2.1
     image: docker.elastic.co/kibana/kibana:7.4.2
     state: present
     network_mode: "host"
