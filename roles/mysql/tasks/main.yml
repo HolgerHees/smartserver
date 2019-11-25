@@ -2,7 +2,7 @@
   file:
     path: '{{item}}'
     state: directory
-    owner: root
+    owner: "999" # 999 is mysql user inside the container
     group: root
     mode: 0750
     recurse: true
@@ -20,10 +20,8 @@
     name: mysql
     image: mariadb:10.4.10
     state: present
-    #recreate: true
+    recreate: true
     env:
-      PUID: "0"
-      GUID: "0"
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
