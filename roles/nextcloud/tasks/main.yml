@@ -91,7 +91,7 @@
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
 - name: check mysql databases
-  shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
   register: mysql_data_exists
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
 
@@ -102,7 +102,7 @@
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
 
 - name: create missing mysql databases
-  shell: "mysqladmin -u root -h 127.0.0.1 create nextcloud"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 #- mysql_user:
@@ -113,19 +113,19 @@
 #    state: present
 
 - name: create missing mysql user
-  shell: "echo \"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\" | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: grant permissions to mysql user
-  shell: "echo \"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\" | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: refresh mysql privileges
-  shell: "mysqladmin -u root -h 127.0.0.1 flush-privileges"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: initialise mysql database
-  shell: "cat roles/nextcloud/templates/nextcloud.sql | mysql -u root -h 127.0.0.1 nextcloud"
+  shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: check redis is running

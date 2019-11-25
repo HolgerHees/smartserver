@@ -8,7 +8,7 @@
 
 # **** MYSQL ****
 - name: check mysql backup folder
-  shell: "docker exec mysql ls /var/lib/mysql_backup/import/mysql"
+  shell: "docker exec mysql sh -c \"ls /var/lib/mysql_backup/import/mysql\""
   register: mysql_backup_exists
   changed_when: mysql_backup_exists.rc == 0
   
@@ -22,7 +22,7 @@
 
 # force a rebuild of cached files like merged js and css files
 - name: clean nextcloud database
-  shell: "docker exec mysql mysql -u root -h 127.0.0.1 -e \"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';'\""
   when: mysql_backup_exists.rc == 0
 
 - name: import openhab database
@@ -31,7 +31,7 @@
 
 # **** INFLUXDB ****      
 - name: check influxdb backup folder
-  shell: "docker exec influxdb ls /var/lib/influxdb_backup/import/influxdb"
+  shell: "docker exec influxdb sh -c \"ls /var/lib/influxdb_backup/import/influxdb\""
   register: influxdb_backup_exists
   changed_when: influxdb_backup_exists.rc == 0
   

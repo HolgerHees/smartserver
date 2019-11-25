@@ -195,25 +195,25 @@
   when: "vault_active|bool"
   
 - name: check mysql databases
-  shell: "mysql -u root -h 127.0.0.1 -e 'show databases;'"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
   register: mysql_data_exists
   changed_when: "'openhab' not in mysql_data_exists.stdout"
   when: "vault_active|bool"
 
 - name: create missing mysql databases
-  shell: "mysqladmin -u root -h 127.0.0.1 create openhab"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create openhab\""
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
 
 - name: create missing mysql user
-  shell: "echo \"CREATE USER '{{openhab_mysql_username}}'@'%' IDENTIFIED BY '{{openhab_mysql_password}}';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"CREATE USER '{{openhab_mysql_username}}'@'%' IDENTIFIED BY '{{openhab_mysql_password}}';\" | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1\""
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
 
 - name: grant permissions to mysql user
-  shell: "echo \"GRANT ALL PRIVILEGES ON openhab.* TO '{{openhab_mysql_username}}'@'%';\" | mysql -u root -h 127.0.0.1"
+  shell: "echo \"GRANT ALL PRIVILEGES ON openhab.* TO '{{openhab_mysql_username}}'@'%';\" | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1\""
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
 
 - name: refresh mysql privileges
-  shell: "mysqladmin -u root -h 127.0.0.1 flush-privileges"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
   when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
   
 - name: check influxdb data
@@ -228,23 +228,23 @@
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 - name: create missing influx databases
-  shell: "docker exec influxdb influx -execute 'CREATE DATABASE openhab_db'"
+  shell: "docker exec influxdb sh -c \"influx -execute 'CREATE DATABASE openhab_db'\""
   when: "vault_active and not influxdb_data_exists.stat.exists"
   
 - name: create missing influx openhab user
-  shell: "docker exec influxdb influx -execute \"CREATE USER {{openhab_influxdb_username}} WITH PASSWORD '{{openhab_influxdb_password}}'\""
+  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{openhab_influxdb_username}} WITH PASSWORD '{{openhab_influxdb_password}}'\\\"\""
   when: "vault_active and not influxdb_data_exists.stat.exists"
   
 - name: grant permissions to influx openhab user
-  shell: "docker exec influxdb influx -execute 'GRANT ALL ON openhab_db TO {{openhab_influxdb_username}}'"
+  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT ALL ON openhab_db TO {{openhab_influxdb_username}}'"
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 - name: create missing influx grafana user
-  shell: "docker exec influxdb influx -execute \"CREATE USER {{grafana_influxdb_username}} WITH PASSWORD '{{grafana_influxdb_password}}'\""
+  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{grafana_influxdb_username}} WITH PASSWORD '{{grafana_influxdb_password}}'\\\"\""
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 - name: grant permissions to influx openhab user
-  shell: "docker exec influxdb influx -execute 'GRANT READ ON openhab_db TO {{grafana_influxdb_username}}'"
+  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT READ ON openhab_db TO {{grafana_influxdb_username}}'\""
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 # ***** OTHER *****

@@ -27,12 +27,12 @@
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
 - name: check mysql table
-  shell: "mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM openhab;'"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM openhab;'\""
   register: mysql_data_exists
   changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
   
 - name: create missing table
-  shell: "cat roles/openhab_toolbox/templates/weather_forecast.sql | mysql -u root -h 127.0.0.1 openhab"
+  shell: "cat roles/openhab_toolbox/templates/weather_forecast.sql | docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
 # Weather data fetcher
