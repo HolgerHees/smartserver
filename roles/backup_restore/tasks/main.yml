@@ -5,21 +5,12 @@
   register: mysql_backup_exists
   changed_when: mysql_backup_exists.stat.exists
 
-- name: mount mysql backup import folder
-  mount:
-    path: "{{local_backup_path}}mysql/import"
-    src: "{{local_import_path}}mysql/"
-    opts: bind
-    state: mounted
-    fstype: none
-  when: mysql_backup_exists.stat.exists
-  
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
   when: mysql_backup_exists.stat.exists
 
 - name: import nextcloud database
-  shell: "docker exec mysql sh -c \"bzcat /var/lib/mysql_backup/import/mysql/nextcloud* | mysql -u root -h 127.0.0.1 nextcloud\""
+  shell: "bzcat {{local_import_path}}mysql/nextcloud* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
   when: mysql_backup_exists.stat.exists
 
 # force a rebuild of cached files like merged js and css files
@@ -28,15 +19,9 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import openhab database
-  shell: "docker exec mysql sh -c \"bzcat /var/lib/mysql_backup/import/mysql/openhab* | mysql -u root -h 127.0.0.1 openhab\""
+  shell: "bzcat {{local_import_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\" -t"
   when: mysql_backup_exists.stat.exists
   
-- name: unmount backup import folder
-  mount:
-    path: "{{local_backup_path}}mysql/import"
-    state: unmounted
-  when: mysql_backup_exists.stat.exists
-
 # **** INFLUXDB ****     
 - name: check influxdb backup import folder
   stat:
@@ -59,15 +44,15 @@
   
 # ??? check if this is enough or if we need to import metadata from opentsdb too
 - name: import influxdb metadata backup
-  shell: "docker exec influxdb sh -c \"influxd restore -metadir /var/lib/influxdb/meta /var/lib/influxdb_backup/import/influxdb/openhab*\""
+  shell: "docker exec influxdb sh -c \"influxd restore -metadir /var/lib/influxdb/meta /var/lib/influxdb_backup/import/openhab*\""
   when: influxdb_backup_exists.stat.exists and 'openhab' in influxdb_backup_exists.stdout
   
 - name: import influxdb openhab backup
-  shell: "docker exec influxdb sh -c \"influxd restore -db openhab_db -newdb openhab_db -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/influxdb/openhab*\""
+  shell: "docker exec influxdb sh -c \"influxd restore -db openhab_db -newdb openhab_db -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/openhab*\""
   when: influxdb_backup_exists.stat.exists and 'openhab' in influxdb_backup_exists.stdout
 
 - name: import influxdb opentsdb backup
-  shell: "docker exec influxdb sh -c \"influxd restore -db opentsdb -newdb opentsdb -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/influxdb/opentsdb*\""
+  shell: "docker exec influxdb sh -c \"influxd restore -db opentsdb -newdb opentsdb -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/opentsdb*\""
   when: influxdb_backup_exists.stat.exists and 'opentsdb' in influxdb_backup_exists.stdout
   
 - name: unmount influxdb backup import folder
