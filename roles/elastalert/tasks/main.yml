@@ -9,18 +9,24 @@
 - name: install required packages
   zypper:
     name: [
-        python2-devel
-      , python2-python-dateutil 
-      , python2-boto3
+      python3-boto3
+      , python3-python-dateutil 
+      , python3-devel
     ]
     state: present
   notify: "restart elastalert"
   
-- name: install required python pip modules
-  pip: 
-    name: aws-requests-auth
-  notify: "restart elastalert"
-
+#- name: install required python pip modules
+#  pip: 
+#    name: [
+#      #- aws-requests-auth
+#      PyYAML
+#    ]
+#    extra_args: "--ignore-installed"
+#    executable: pip3 
+#  with_items:
+#  notify: "restart elastalert"
+  
 - name: copy config and service
   template:
     src: "roles/elastalert/templates{{item.path}}"
@@ -40,7 +46,7 @@
     repo: 'https://github.com/Yelp/elastalert.git'
     dest: '{{global_build}}elastalert'
 #    force: yes
-    version: 'v0.1.39'
+    version: '325f1dfe7a45f3ca2a2cc00127ab71fcd4f9cead' # => master of 25.11. 'v0.2.1'
   register: clone_status
   #changed_when: yes
 #- debug: msg={{clone_status}}
@@ -50,8 +56,10 @@
   args:
     chdir: '{{global_build}}elastalert'
   with_items:
-    - 'pip install --upgrade cryptography==2.3.1'
-    - 'python setup.py install'
+    - 'pip3 install aws-requests-auth'
+    - 'pip3 install --ignore-installed PyYAML'
+    - 'pip3 install --upgrade cryptography==2.3.1'
+    - 'python3 setup.py install'
   when: clone_status.changed
 
 - name: check elasticsearch service
@@ -65,3 +73,13 @@
   
 # first test run
 #elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
+
+- name: copy fluentd config
+  template:
+    src: "roles/elastalert/templates/etc/fluent/_.ansible.d/elastalert.conf"
+    dest: "/etc/fluent/_.ansible.d/elastalert.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']  
