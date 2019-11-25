@@ -236,7 +236,7 @@
   when: "vault_active and not influxdb_data_exists.stat.exists"
   
 - name: grant permissions to influx openhab user
-  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT ALL ON openhab_db TO {{openhab_influxdb_username}}'"
+  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT ALL ON openhab_db TO {{openhab_influxdb_username}}'\""
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 - name: create missing influx grafana user
