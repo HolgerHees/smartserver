@@ -4,7 +4,21 @@
     state: started
   changed_when: yes
   
+#- name: wait for elasticsearch to become ready
+#  wait_for:
+#    port: 9200
+#  changed_when: yes
+
 - name: wait for elasticsearch to become ready
-  wait_for:
-    port: 9200
+  uri:
+    url: "http://localhost:9200/_cluster/health?pretty=true"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 1
   changed_when: yes
+
+  
+  
+  
