@@ -3,3 +3,9 @@
     name: mysql
     state: started
   changed_when: yes
+
+- name: wait for mysql to become ready
+  wait_for:
+    port: 3306
+  changed_when: yes
+
