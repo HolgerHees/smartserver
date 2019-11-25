@@ -11,11 +11,11 @@
 
 - name: wait for elasticsearch to become ready
   uri:
-    url: "http://localhost:9200/_cluster/health?pretty=true"
+    url: "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s"
     status_code: 200
   register: result
   until: result.status == 200
-  retries: 60
+  retries: 5
   delay: 1
   changed_when: yes
 
