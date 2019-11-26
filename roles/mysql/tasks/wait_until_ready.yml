@@ -2,7 +2,7 @@
   systemd:
     name: mysql
     state: started
-  changed_when: yes
+  changed_when: no
 
 #- name: wait for mysql to become ready
 #  wait_for:
@@ -15,3 +15,4 @@
   until: not result.rc  # or result.rc == 0 if you prefer
   retries: 120
   delay: 1
+  changed_when: no
