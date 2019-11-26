@@ -1,11 +1,22 @@
+- name: install base packages
+  yum:
+    name: [
+        docker
+        , python3-docker  # used by ansible docker module
+    ]
+    state: present
+  when: ansible_distribution == 'Fedora'
+  notify: "restart docker"
+  
 - name: install required packages
   zypper:
     name: [
         docker
-        #, python2-docker  # used by ansible docker module
-        , python3-docker  # used by ansible docker module
+        , python2-docker  # used by ansible docker module
+        #, python3-docker  # used by ansible docker module
     ]
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
   notify: "restart docker"
 
 - name: copy config

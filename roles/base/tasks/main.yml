@@ -34,7 +34,7 @@
       , sysstat
       , iotop
       , zip
-      #, python2-pip
+      #, python2-pip        # used for ansible pip module
       , python3-pip
       , bzip2              # used to import databases with bzcat
       #, python2-passlib    # used by ansible htpasswd module (user role)
@@ -61,11 +61,11 @@
       , sysstat
       , iotop
       , zip
-      #, python2-pip
-      , python3-pip
+      , python2-pip        # used for ansible pip module
+      #, python3-pip
       , bzip2              # used to import databases with bzcat
-      #, python2-passlib    # used by ansible htpasswd module (user role)
-      , python3-passlib    # used by ansible htpasswd module (user role)
+      , python2-passlib    # used by ansible htpasswd module (user role)
+      #, python3-passlib    # used by ansible htpasswd module (user role)
       , insserv-compat     # used by ansible systemd module
       , mail               # used by elastalert
     ]
@@ -74,8 +74,8 @@
        
 - name: install pexpect
   pip:
-    name: pexpect
-#  become: yes
+    name: pexpect          # needed for ansible expect module (openvpn)
+  become: yes
   
 #- name: change vagrant user
 #  user:
