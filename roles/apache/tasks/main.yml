@@ -2,9 +2,11 @@
   zypper:
     name: [
         apache2 
-      , python2-setuptools
+      #, python2-setuptools
+      , python3-setuptools
       , apache2-mod_php7
-      , python2-certbot-apache
+      #, python2-certbot-apache
+      , python3-certbot-apache
     ]
     state: present
   notify: "restart apache"

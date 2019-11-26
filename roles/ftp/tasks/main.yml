@@ -1,29 +1,90 @@
-- name: install required packages
-  zypper:
-    name: "vsftpd"
+- name: prepare user camera folder
+  file:
+    path: "{{ftp_path}}"
+    state: directory
+    owner: "2000"
+    group: "2000"
+    mode: 0750
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+    
+- name: check docker image exists
+  shell: "docker images vsftpd:1.0.0"
+  register: image_exists
+  changed_when: "'vsftpd' not in image_exists.stdout"
+  
+- name: compose docker image
+  shell: "docker build -t vsftpd:1.0.0 roles/ftp/templates/container/"
+  register: output
+  when: "'vsftpd' not in image_exists.stdout"
+  
+#- name: debug
+#  debug:
+#    var: output
+
+- name: create docker container
+  docker_container:
+    name: vsftpd
+    image: vsftpd:1.0.0
     state: present
+    recreate: true
+    env:
+      FTP_USER: "{{camera_username}}"
+      FTP_PASS: "{{camera_linux_password}}"
+      FTP_UID: "2000"
+      FTP_GID: "2000"
+      ONLY_UPLOAD: "YES"
+      ONLY_DOWNLOAD: "NO"
+      PASV_ENABLE: "YES"
+      PASV_ADDRESS: "127.0.0.1"
+      PASV_MIN: "30000"
+      PASV_MAX: "30100"
+      UMASK: "022"
+    log_driver: journald
+    log_options:
+      tag: vsftpd
+    volumes:
+      - '{{ftp_path}}:/home/{{camera_username}}'
+    ports:
+      - "21:21"
+      - "30000-30100:30000-30100"
   notify: "restart vsftpd"
 
-- name: set config
-  lineinfile:
-    path: /etc/vsftpd.conf
-    regexp: '^{{item.field}}'
-    line: '{{item.field}}={{item.value}}'
-  with_items:
-    - { field: 'anonymous_enable', value: 'false' }
-    - { field: 'chroot_local_user', value: 'YES' }
-    - { field: 'allow_writeable_chroot', value: 'YES' }
-    - { field: 'write_enable', value: 'YES' }
-    - { field: 'userlist_enable', value: 'YES' }
-    - { field: 'userlist_deny', value: 'NO' }
-    - { field: 'userlist_file', value: '/etc/vsftpd.userlist' }
-  notify: "restart vsftpd"
+#- name: clean old docker images
+#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
+#  when: "'vsftpd' not in image_exists.stdout"
   
-- name: prepare userlist file
+- name: create systemd service
+  vars:
+    container_name: "vsftpd"
   copy:
-    content: ""
-    dest: /etc/vsftpd.userlist
-    force: no
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/vsftpd.service"
     owner: root
     group: root
-    mode: 0600
+    mode: 0644
+  notify: "restart vsftpd"
+
+- name: create cleanup cron job
+  vars:
+    cron_name: "Camera Cleanup"
+    cron_cmd: "find {{ftp_path}} -name \"*.jpg\" -mtime +2 -exec rm {} +"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'templates/cron_job') }}"
+    cron_file: ansible_ftp_camera
+    user: root
+    minute: "50"
+    hour: "0"
+    state: present
+  tags: ['cron_job']
+
+          
+          
+          
+          
+    
+    

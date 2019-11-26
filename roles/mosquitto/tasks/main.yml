@@ -1,5 +1,35 @@
-- name: install required packages
-  zypper:
-    name: "mosquitto"
+#- name: install required packages
+#  zypper:
+#    name: "mosquitto"
+#    state: present
+#  notify: "restart mosquitto"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: mosquitto
+    image: eclipse-mosquitto:1.6.7
     state: present
+#    recreate: true
+    log_driver: journald
+    log_options:
+      tag: mosquitto
+    ports:
+     - "127.0.0.1:1883:1883"  
+     - "127.0.0.1:9001:9001"  
+  notify: "restart mosquitto"
+    
+- name: create systemd service
+  vars:
+    container_name: "mosquitto"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/mosquitto.service"
+    owner: root
+    group: root
+    mode: 0644
   notify: "restart mosquitto"

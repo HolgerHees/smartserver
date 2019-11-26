@@ -13,5 +13,5 @@
   command: "docker exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
   register: result
   until: not result.rc  # or result.rc == 0 if you prefer
-  retries: 60
+  retries: 120
   delay: 1

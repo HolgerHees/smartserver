@@ -37,6 +37,12 @@
     fstype: none
   when: influxdb_backup_exists.rc == 0
   
+- name: restart influxdb container to get aware of mounted import folder
+  systemd:
+    state: restarted
+    name: influxdb
+  when: influxdb_backup_exists.rc == 0
+  
 - name: check influxdb service
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
   when: influxdb_backup_exists.rc == 0
@@ -60,6 +66,12 @@
     state: unmounted
   when: influxdb_backup_exists.rc == 0
   
+- name: restart influxdb container to get aware of unmounted import folder
+  systemd:
+    state: restarted
+    name: influxdb
+  when: influxdb_backup_exists.rc == 0
+
 # **** OPENHAB MAPDB ****
 - name: check openhab mapdb backup folder
   stat:

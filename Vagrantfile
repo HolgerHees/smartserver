@@ -57,7 +57,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.define "develop_fedora", autostart: false do |develop_fedora|
-    develop_fedora.vm.box = "fedora/30-cloud-base"
+    develop_fedora.vm.box = "fedora/31-cloud-base"
     develop_fedora.ssh.username = 'vagrant'
     develop_fedora.ssh.password = 'vagrant'
     develop_fedora.ssh.insert_key = 'true'

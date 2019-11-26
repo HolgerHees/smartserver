@@ -50,10 +50,6 @@
   roles:
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
-    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
-
-    - { role: docker, tags: [ 'docker' ] }                                      # installs and initializes the container infrastructure
-
     - { role: network, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
       
     - { role: firewalld, tags: [ 'firewalld' ] }                                # firewalld configuration
@@ -68,6 +64,17 @@
     - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
     - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
 
+    - { role: php, tags: [ 'php' ] }                                            # php cli
+    
+    - { role: java, tags: [ 'java' ] }                                          # jdk 1.8
+    - { role: java_maven, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
+    - { role: java_ant, tags: [ 'java_ant' ] }                                  # apache ant
+    - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
+
+    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
+
+    - { role: docker, tags: [ 'docker' ] }                                      # installs and initializes the container infrastructure
+
     - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
     - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
@@ -79,17 +86,9 @@
 
     - { role: samba, tags: [ 'samba' ] }                                        # smb file server
 
-    - { role: ftp, tags: [ 'ftp' ] }                                            # ftp file server
-    - { role: ftp_camera, tags: [ 'ftp_camera' ] }                              # camera ftp picture upload and cleanup
+    - { role: ftp, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker]
 
     - { role: clamav, tags: [ 'clamav' ] }                                      # antivirus
-
-    - { role: php, tags: [ 'php' ] }                                            # php cli
-    
-    - { role: java, tags: [ 'java' ] }                                          # jdk 1.8
-    - { role: java_maven, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
-    - { role: java_ant, tags: [ 'java_ant' ] }                                  # apache ant
-    - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
 
     - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker]
 
@@ -100,6 +99,8 @@
     
     - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud
     
+    - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker]
+
     - { role: elastalert, tags: [ 'elastalert' ] }                              # log alerting
 
     - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
@@ -109,8 +110,6 @@
      
     - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
     - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker]
-
-    - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker
 
     - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
 

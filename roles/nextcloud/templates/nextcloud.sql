@@ -1,10 +1,10 @@
 -- phpMyAdmin SQL Dump
--- version 4.8.3
+-- version 4.9.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 08, 2019 at 09:06 AM
--- Server version: 10.2.22-MariaDB
+-- Generation Time: Nov 26, 2019 at 08:38 AM
+-- Server version: 10.4.10-MariaDB-1:10.4.10+maria~bionic
 -- PHP Version: 7.2.5
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -157,7 +157,8 @@ CREATE TABLE `oc_bookmarks` (
   `public` smallint(6) DEFAULT 0,
   `added` int(10) UNSIGNED DEFAULT 0,
   `lastmodified` int(10) UNSIGNED DEFAULT 0,
-  `clickcount` int(10) UNSIGNED NOT NULL DEFAULT 0
+  `clickcount` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `last_preview` int(10) UNSIGNED DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 -- --------------------------------------------------------
@@ -327,6 +328,28 @@ CREATE TABLE `oc_calendar_invitations` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `oc_calendar_reminders`
+--
+
+CREATE TABLE `oc_calendar_reminders` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `calendar_id` bigint(20) NOT NULL,
+  `object_id` bigint(20) NOT NULL,
+  `is_recurring` smallint(6) NOT NULL,
+  `uid` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `recurrence_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `is_recurrence_exception` smallint(6) NOT NULL,
+  `event_hash` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `alarm_hash` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `type` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `is_relative` smallint(6) NOT NULL,
+  `notification_date` bigint(20) UNSIGNED NOT NULL,
+  `is_repeat_based` smallint(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `oc_calendar_resources`
 --
 
@@ -342,6 +365,19 @@ CREATE TABLE `oc_calendar_resources` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `oc_calendar_resources_md`
+--
+
+CREATE TABLE `oc_calendar_resources_md` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `resource_id` bigint(20) UNSIGNED NOT NULL,
+  `key` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `value` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `oc_calendar_rooms`
 --
 
@@ -352,6 +388,19 @@ CREATE TABLE `oc_calendar_rooms` (
   `email` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `displayname` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `group_restrictions` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `oc_calendar_rooms_md`
+--
+
+CREATE TABLE `oc_calendar_rooms_md` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `room_id` bigint(20) UNSIGNED NOT NULL,
+  `key` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `value` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 -- --------------------------------------------------------
@@ -467,6 +516,19 @@ CREATE TABLE `oc_credentials` (
   `user` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `identifier` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `credentials` longtext COLLATE utf8mb4_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `oc_dav_cal_proxy`
+--
+
+CREATE TABLE `oc_dav_cal_proxy` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `owner_id` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `proxy_id` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `permissions` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 -- --------------------------------------------------------
@@ -682,6 +744,19 @@ CREATE TABLE `oc_filecache_bak` (
   `etag` varchar(40) COLLATE utf8mb4_bin DEFAULT NULL,
   `permissions` int(11) DEFAULT 0,
   `checksum` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `oc_filecache_extended`
+--
+
+CREATE TABLE `oc_filecache_extended` (
+  `fileid` int(10) UNSIGNED NOT NULL,
+  `metadata_etag` varchar(40) COLLATE utf8mb4_bin DEFAULT NULL,
+  `creation_time` bigint(20) NOT NULL DEFAULT 0,
+  `upload_time` bigint(20) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 -- --------------------------------------------------------
@@ -1445,6 +1520,51 @@ CREATE TABLE `oc_talk_signaling` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `oc_text_documents`
+--
+
+CREATE TABLE `oc_text_documents` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `current_version` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
+  `last_saved_version` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
+  `last_saved_version_time` bigint(20) UNSIGNED NOT NULL,
+  `last_saved_version_etag` varchar(64) COLLATE utf8mb4_bin DEFAULT '',
+  `base_version_etag` varchar(64) COLLATE utf8mb4_bin DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `oc_text_sessions`
+--
+
+CREATE TABLE `oc_text_sessions` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
+  `guest_name` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
+  `color` varchar(7) COLLATE utf8mb4_bin DEFAULT NULL,
+  `token` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `document_id` bigint(20) NOT NULL,
+  `last_contact` bigint(20) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `oc_text_steps`
+--
+
+CREATE TABLE `oc_text_steps` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `document_id` bigint(20) UNSIGNED NOT NULL,
+  `session_id` bigint(20) UNSIGNED NOT NULL,
+  `data` longtext COLLATE utf8mb4_bin NOT NULL,
+  `version` bigint(20) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `oc_trusted_servers`
 --
 
@@ -1613,7 +1733,8 @@ ALTER TABLE `oc_authtoken`
 --
 ALTER TABLE `oc_bookmarks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `IDX_3EE1CD04A76ED395` (`user_id`);
+  ADD KEY `IDX_3EE1CD04A76ED395` (`user_id`),
+  ADD KEY `IDX_3EE1CD04DF091378` (`last_preview`);
 
 --
 -- Indexes for table `oc_bookmarks_folders`
@@ -1687,6 +1808,14 @@ ALTER TABLE `oc_calendar_invitations`
   ADD KEY `calendar_invitation_tokens` (`token`);
 
 --
+-- Indexes for table `oc_calendar_reminders`
+--
+ALTER TABLE `oc_calendar_reminders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `calendar_reminder_objid` (`object_id`),
+  ADD KEY `calendar_reminder_uidrec` (`uid`,`recurrence_id`);
+
+--
 -- Indexes for table `oc_calendar_resources`
 --
 ALTER TABLE `oc_calendar_resources`
@@ -1696,6 +1825,13 @@ ALTER TABLE `oc_calendar_resources`
   ADD KEY `calendar_resources_name` (`displayname`);
 
 --
+-- Indexes for table `oc_calendar_resources_md`
+--
+ALTER TABLE `oc_calendar_resources_md`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `calendar_resources_md_idk` (`resource_id`,`key`);
+
+--
 -- Indexes for table `oc_calendar_rooms`
 --
 ALTER TABLE `oc_calendar_rooms`
@@ -1703,6 +1839,13 @@ ALTER TABLE `oc_calendar_rooms`
   ADD KEY `calendar_rooms_bkdrsc` (`backend_id`,`resource_id`),
   ADD KEY `calendar_rooms_email` (`email`),
   ADD KEY `calendar_rooms_name` (`displayname`);
+
+--
+-- Indexes for table `oc_calendar_rooms_md`
+--
+ALTER TABLE `oc_calendar_rooms_md`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `calendar_rooms_md_idk` (`room_id`,`key`);
 
 --
 -- Indexes for table `oc_cards`
@@ -1764,6 +1907,15 @@ ALTER TABLE `oc_comments_read_markers`
 ALTER TABLE `oc_credentials`
   ADD PRIMARY KEY (`user`,`identifier`),
   ADD KEY `credentials_user` (`user`);
+
+--
+-- Indexes for table `oc_dav_cal_proxy`
+--
+ALTER TABLE `oc_dav_cal_proxy`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `dav_cal_proxy_uidx` (`owner_id`,`proxy_id`,`permissions`),
+  ADD KEY `dav_cal_proxy_ioid` (`owner_id`),
+  ADD KEY `dav_cal_proxy_ipid` (`proxy_id`);
 
 --
 -- Indexes for table `oc_dav_shares`
@@ -1839,6 +1991,14 @@ ALTER TABLE `oc_filecache_bak`
   ADD KEY `fs_storage_mimetype` (`storage`,`mimetype`),
   ADD KEY `fs_storage_mimepart` (`storage`,`mimepart`),
   ADD KEY `fs_storage_size` (`storage`,`size`,`fileid`);
+
+--
+-- Indexes for table `oc_filecache_extended`
+--
+ALTER TABLE `oc_filecache_extended`
+  ADD UNIQUE KEY `fce_fileid_idx` (`fileid`),
+  ADD KEY `fce_ctime_idx` (`creation_time`),
+  ADD KEY `fce_utime_idx` (`upload_time`);
 
 --
 -- Indexes for table `oc_files_trash`
@@ -2141,6 +2301,27 @@ ALTER TABLE `oc_talk_signaling`
   ADD KEY `ts_recipient_time` (`recipient`,`timestamp`);
 
 --
+-- Indexes for table `oc_text_documents`
+--
+ALTER TABLE `oc_text_documents`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `oc_text_sessions`
+--
+ALTER TABLE `oc_text_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `rd_session_token_idx` (`token`);
+
+--
+-- Indexes for table `oc_text_steps`
+--
+ALTER TABLE `oc_text_steps`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `rd_steps_did_idx` (`document_id`),
+  ADD KEY `rd_steps_version_idx` (`version`);
+
+--
 -- Indexes for table `oc_trusted_servers`
 --
 ALTER TABLE `oc_trusted_servers`
@@ -2288,15 +2469,33 @@ ALTER TABLE `oc_calendar_invitations`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `oc_calendar_reminders`
+--
+ALTER TABLE `oc_calendar_reminders`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `oc_calendar_resources`
 --
 ALTER TABLE `oc_calendar_resources`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `oc_calendar_resources_md`
+--
+ALTER TABLE `oc_calendar_resources_md`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `oc_calendar_rooms`
 --
 ALTER TABLE `oc_calendar_rooms`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `oc_calendar_rooms_md`
+--
+ALTER TABLE `oc_calendar_rooms_md`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -2321,6 +2520,12 @@ ALTER TABLE `oc_collres_collections`
 -- AUTO_INCREMENT for table `oc_comments`
 --
 ALTER TABLE `oc_comments`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `oc_dav_cal_proxy`
+--
+ALTER TABLE `oc_dav_cal_proxy`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -2538,6 +2743,24 @@ ALTER TABLE `oc_systemtag`
 --
 ALTER TABLE `oc_talk_rooms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `oc_text_documents`
+--
+ALTER TABLE `oc_text_documents`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `oc_text_sessions`
+--
+ALTER TABLE `oc_text_sessions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `oc_text_steps`
+--
+ALTER TABLE `oc_text_steps`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `oc_trusted_servers`

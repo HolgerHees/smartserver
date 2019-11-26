@@ -33,11 +33,11 @@
       , htop
       , sysstat
       , iotop
-      , npm8
       , zip
-      , python2-pip
+      #, python2-pip
+      , python3-pip
       , bzip2              # used to import databases with bzcat
-      , python2-passlib    # used by ansible htpasswd module (user role)
+      , python3-passlib    # used by ansible htpasswd module (user role)
       , mail               # used by elastalert
       , libselinux-python  # used by ansible on fedora
     ]
@@ -59,11 +59,11 @@
       , htop
       , sysstat
       , iotop
-      , npm8
       , zip
-      , python2-pip
+      #, python2-pip
+      , python3-pip
       , bzip2              # used to import databases with bzcat
-      , python2-passlib    # used by ansible htpasswd module (user role)
+      , python3-passlib    # used by ansible htpasswd module (user role)
       , insserv-compat     # used by ansible systemd module
       , mail               # used by elastalert
     ]
