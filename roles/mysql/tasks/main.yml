@@ -5,7 +5,6 @@
     owner: "999" # 999 is mysql user inside the container
     group: root
     mode: 0750
-    recurse: true
   with_items:
     - '{{ global_lib }}mysql'
     - '{{local_backup_path}}mysql'
