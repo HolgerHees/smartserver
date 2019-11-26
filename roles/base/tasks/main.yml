@@ -37,6 +37,7 @@
       #, python2-pip
       , python3-pip
       , bzip2              # used to import databases with bzcat
+      #, python2-passlib    # used by ansible htpasswd module (user role)
       , python3-passlib    # used by ansible htpasswd module (user role)
       , mail               # used by elastalert
       , libselinux-python  # used by ansible on fedora
@@ -63,6 +64,7 @@
       #, python2-pip
       , python3-pip
       , bzip2              # used to import databases with bzcat
+      #, python2-passlib    # used by ansible htpasswd module (user role)
       , python3-passlib    # used by ansible htpasswd module (user role)
       , insserv-compat     # used by ansible systemd module
       , mail               # used by elastalert
