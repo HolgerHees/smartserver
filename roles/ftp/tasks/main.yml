@@ -30,7 +30,7 @@
     name: vsftpd
     image: vsftpd:1.0.0
     state: present
-    recreate: true
+#    recreate: true
     env:
       FTP_USER: "{{camera_username}}"
       FTP_PASS: "{{camera_linux_password}}"
