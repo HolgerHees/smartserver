@@ -1,7 +1,13 @@
 #!/bin/sh
 
-addgroup -g $FTP_GID -S $FTP_USER
-adduser -u $FTP_UID -D -G $FTP_USER -h /home/$FTP_USER -s /bin/false  $FTP_USER
+if ! id -g "$FTP_USER" >/dev/null 2>&1; then
+    addgroup -g $FTP_GID -S $FTP_USER
+fi
+
+if ! id -u "$FTP_USER" >/dev/null 2>&1; then
+    adduser -u $FTP_UID -D -G $FTP_USER -h /home/$FTP_USER -s /bin/false $FTP_USER
+fi
+
 chown $FTP_USER:$FTP_USER /home/$FTP_USER/ -R
 
 echo "$FTP_USER:$FTP_PASS" | /usr/sbin/chpasswd > /dev/null 2>&1
