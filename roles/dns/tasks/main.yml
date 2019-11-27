@@ -26,8 +26,8 @@
     mode: 0640
   with_items:
     - { ansible_distribution: ""              , src: "/etc/named.conf"              , target: "/etc/named.conf" }
-    - { ansible_distribution: "openSUSE Leap" , src: "/etc/named.d/forwarders.conf" , target: "/etc/named.d/forwarders.conf" }
-    - { ansible_distribution: "Fedora"        , src: "/etc/named.d/forwarders.conf" , target: "/etc/named/forwarders.conf" }
+#    - { ansible_distribution: "openSUSE Leap" , src: "/etc/named.d/forwarders.conf" , target: "/etc/named.d/forwarders.conf" }
+#    - { ansible_distribution: "Fedora"        , src: "/etc/named.d/forwarders.conf" , target: "/etc/named/forwarders.conf" }
   when: item.ansible_distribution == "" or item.ansible_distribution == ansible_distribution
   notify: "restart named"
   
@@ -72,7 +72,14 @@
 - name: set forwarder config on suse
   lineinfile:
     path: /etc/sysconfig/network/config
-    regexp: '^NETCONFIG_DNS_FORWARDER='
-    line: 'NETCONFIG_DNS_FORWARDER="bind"'
+    regexp: '^{{item.key}}='
+    line: '{{item.key}}="{{item.value}}"'
+  with_items:
+    - { key: "NETCONFIG_DNS_STATIC_SERVERS", value: "8.8.8.8 9.9.9.9"}
+    - { key: "NETCONFIG_DNS_FORWARDER", value: "bind"}
   notify: "refresh netconfig"
+  notify: "restart named"
   when: ansible_distribution == 'openSUSE Leap'
+
+  
+  NETCONFIG_DNS_STATIC_SERVERS="8.8.8.8 9.9.9.9"
