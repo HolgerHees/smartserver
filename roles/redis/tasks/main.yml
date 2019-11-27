@@ -1,3 +1,11 @@
+- name: prepare folder
+  file:
+    path: "{{redis_socket_path}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0777
+    
 - name: check started docker
   systemd:
     name: docker

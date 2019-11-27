@@ -19,16 +19,11 @@
   
 - name: copy config
   template:
-    src: "roles/dns/templates{{item.src}}"
-    dest: "{{item.target}}"
+    src: "roles/dns/templates/etc/named.conf"
+    dest: "/etc/named.conf"
     owner: root
     group: named
     mode: 0640
-  with_items:
-    - { ansible_distribution: ""              , src: "/etc/named.conf"              , target: "/etc/named.conf" }
-#    - { ansible_distribution: "openSUSE Leap" , src: "/etc/named.d/forwarders.conf" , target: "/etc/named.d/forwarders.conf" }
-#    - { ansible_distribution: "Fedora"        , src: "/etc/named.d/forwarders.conf" , target: "/etc/named/forwarders.conf" }
-  when: item.ansible_distribution == "" or item.ansible_distribution == ansible_distribution
   notify: "restart named"
   
 - name: Create a symbolic link on fedora
@@ -72,11 +67,8 @@
 - name: set forwarder config on suse
   lineinfile:
     path: /etc/sysconfig/network/config
-    regexp: '^{{item.key}}='
-    line: '{{item.key}}="{{item.value}}"'
-  with_items:
-  #  - { key: "NETCONFIG_DNS_STATIC_SERVERS", value: "8.8.8.8 9.9.9.9"}
-    - { key: "NETCONFIG_DNS_FORWARDER", value: "bind"}
+    regexp: '^NETCONFIG_DNS_FORWARDER='
+    line: 'NETCONFIG_DNS_FORWARDER="bind"'
   notify:
     - "refresh netconfig"
     - "restart named"
