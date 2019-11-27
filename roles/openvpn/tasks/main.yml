@@ -2,7 +2,7 @@
   yum:
     name: [
         openvpn
-#      , openvpn-auth-pam-plugin
+      #, openvpn-auth-pam-plugin
       , easy-rsa
     ]
     state: present
@@ -12,7 +12,7 @@
   zypper:
     name: [
         openvpn
-      , openvpn-auth-pam-plugin
+      #, openvpn-auth-pam-plugin
       , easy-rsa
     ]
     state: present
