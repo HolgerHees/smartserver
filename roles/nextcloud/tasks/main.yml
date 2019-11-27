@@ -128,10 +128,8 @@
   shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
-- name: check redis is running
-  systemd:
-    name: redis@default
-    state: started
+- name: check redis service
+  import_tasks: roles/redis/tasks/wait_until_ready.yml
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: add user "holger"

@@ -75,7 +75,7 @@
     regexp: '^{{item.key}}='
     line: '{{item.key}}="{{item.value}}"'
   with_items:
-    - { key: "NETCONFIG_DNS_STATIC_SERVERS", value: "8.8.8.8 9.9.9.9"}
+  #  - { key: "NETCONFIG_DNS_STATIC_SERVERS", value: "8.8.8.8 9.9.9.9"}
     - { key: "NETCONFIG_DNS_FORWARDER", value: "bind"}
   notify:
     - "refresh netconfig"
