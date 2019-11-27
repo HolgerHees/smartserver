@@ -1,5 +1,15 @@
----
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        postfix
+      , cyrus-sasl
+      , cyrus-sasl-plain
+    ]
+    state: present
+  notify: "restart postfix"
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
         postfix
@@ -8,7 +18,8 @@
     ]
     state: present
   notify: "restart postfix"
-
+  when: ansible_distribution == 'openSUSE Leap'
+  
 - name: set config
   lineinfile:
     path: /etc/sysconfig/postfix

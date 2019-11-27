@@ -5,10 +5,10 @@ if ! id -g "$FTP_USER" >/dev/null 2>&1; then
 fi
 
 if ! id -u "$FTP_USER" >/dev/null 2>&1; then
-    adduser -u $FTP_UID -D -G $FTP_USER -h /home/$FTP_USER -s /bin/false $FTP_USER
+    adduser -u $FTP_UID -D -G $FTP_USER -h /home/uploads -s /bin/false --no-create-home $FTP_USER
 fi
 
-chown $FTP_USER:$FTP_USER /home/$FTP_USER/ -R
+chown $FTP_USER:$FTP_USER /home/uploads/ -R
 
 echo "$FTP_USER:$FTP_PASS" | /usr/sbin/chpasswd > /dev/null 2>&1
 
@@ -46,8 +46,8 @@ echo "	create 640 root adm" >> /etc/logrotate.d/vsftpd
 echo "	# ftpd doesn't handle SIGHUP properly" >> /etc/logrotate.d/vsftpd
 echo "	missingok" >> /etc/logrotate.d/vsftpd
 echo "	notifempty" >> /etc/logrotate.d/vsftpd
-echo "	rotate 4" >> /etc/logrotate.d/vsftpd
-echo "	weekly" >> /etc/logrotate.d/vsftpd
+echo "	rotate 0" >> /etc/logrotate.d/vsftpd
+echo "	daily" >> /etc/logrotate.d/vsftpd
 echo "}" >> /etc/logrotate.d/vsftpd
 
 #/bin/ln -sf /dev/stdout $LOG_FILE

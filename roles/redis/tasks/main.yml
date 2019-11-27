@@ -1,41 +1,47 @@
-- name: install required packages
-  zypper:
-    name: redis
-    state: present
-  notify: "restart redis"
-
-- name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: redis
-    group: redis
-    #mode: 0750
-    recurse: true
-  with_items:
-    - "{{ global_lib }}redis"
-    - "{{ global_lib }}redis/default"
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
     
-- name: copy config
-  copy:
-    src: /etc/redis/default.conf.example
-    dest: /etc/redis/default.conf
-    remote_src: true
-    force: no
-    owner: root
-    group: redis
-    mode: 0640
+- name: check docker image exists
+  shell: "docker images custom_redis:1.0.0"
+  register: image_exists
+  changed_when: "'custom_redis' not in image_exists.stdout"
+  
+- name: compose docker image
+  shell: "docker build -t custom_redis:1.0.0 roles/redis/templates/container/"
+  register: output
+  when: "'custom_redis' not in image_exists.stdout"
+  
+#- name: debug
+#  debug:
+#    var: output
+
+- name: create docker container
+  docker_container:
+    name: redis
+    image: custom_redis:1.0.0
+    state: present
+    network_mode: "none"
+#    recreate: true
+    log_driver: journald
+    log_options:
+      tag: redis
+    volumes:
+      - '{{redis_socket_path}}:/var/run/redis/'
   notify: "restart redis"
 
-- name: set config
-  lineinfile:
-    path: /etc/redis/default.conf
-    regexp: '^{{item.field}} '
-    line: '{{item.field}} {{item.value}}'
-  with_items:
-    - { field: 'dir', value: '{{ global_lib }}redis/default/' }
-    - { field: 'logfile', value: '""' }
-    - { field: 'syslog-enabled', value: 'yes' }
-    - { field: 'unixsocket', value: '{{redis_socket_path}}' }
-    - { field: 'unixsocketperm', value: '777' }
+#- name: clean old docker images
+#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
+#  when: "'custom_redis' not in image_exists.stdout"
+  
+- name: create systemd service
+  vars:
+    container_name: "redis"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/redis.service"
+    owner: root
+    group: root
+    mode: 0644
   notify: "restart redis"

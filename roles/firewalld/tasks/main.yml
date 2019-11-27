@@ -1,7 +1,14 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: "firewall-config"
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: "firewall-config"
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: copy zone config
   template:

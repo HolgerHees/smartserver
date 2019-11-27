@@ -2,6 +2,7 @@
   systemd:
     name: mysql
     state: started
+    daemon_reload: yes
   changed_when: no
 
 #- name: wait for mysql to become ready

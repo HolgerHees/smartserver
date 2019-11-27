@@ -97,7 +97,7 @@
     - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker]
     - { role: kibana, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker]
     
-    - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud
+    - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud                                   [docker]
     
     - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker]
 

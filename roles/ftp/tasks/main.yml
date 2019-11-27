@@ -5,6 +5,8 @@
     owner: "2000"
     group: "2000"
     mode: 0750
+#    mode: u=rwX,g=rX,o=
+#    recurse: yes
 
 - name: check started docker
   systemd:
@@ -12,14 +14,14 @@
     state: started
     
 - name: check docker image exists
-  shell: "docker images vsftpd:1.0.0"
+  shell: "docker images custom_vsftpd:1.0.0"
   register: image_exists
-  changed_when: "'vsftpd' not in image_exists.stdout"
+  changed_when: "'custom_vsftpd' not in image_exists.stdout"
   
 - name: compose docker image
-  shell: "docker build -t vsftpd:1.0.0 roles/ftp/templates/container/"
+  shell: "docker build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
   register: output
-  when: "'vsftpd' not in image_exists.stdout"
+  when: "'custom_vsftpd' not in image_exists.stdout"
   
 #- name: debug
 #  debug:
@@ -28,7 +30,7 @@
 - name: create docker container
   docker_container:
     name: vsftpd
-    image: vsftpd:1.0.0
+    image: custom_vsftpd:1.0.0
     state: present
 #    recreate: true
     env:
@@ -42,20 +44,21 @@
       PASV_ADDRESS: "127.0.0.1"
       PASV_MIN: "30000"
       PASV_MAX: "30100"
-      UMASK: "022"
+      UMASK: "027"
     log_driver: journald
     log_options:
       tag: vsftpd
     volumes:
-      - '{{ftp_path}}:/home/{{camera_username}}'
+      - '{{ftp_path}}:/home/uploads'
     ports:
       - "21:21"
       - "30000-30100:30000-30100"
   notify: "restart vsftpd"
+  when: "vault_active|bool"
 
 #- name: clean old docker images
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "'vsftpd' not in image_exists.stdout"
+#  when: "'custom_vsftpd' not in image_exists.stdout"
   
 - name: create systemd service
   vars:

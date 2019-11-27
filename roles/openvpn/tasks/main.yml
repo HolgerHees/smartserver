@@ -1,4 +1,14 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        openvpn
+#      , openvpn-auth-pam-plugin
+      , easy-rsa
+    ]
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
         openvpn
@@ -6,7 +16,29 @@
       , easy-rsa
     ]
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
+  
+- name: prepare needed easyrsa folder on fedora
+  file:
+    path: '/etc/easy-rsa'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: ansible_distribution == 'Fedora'
 
+- name: copy files on fedora
+  copy:
+    src: "{{item.src}}"
+    dest: "{{item.target}}"
+    owner: root
+    group: root
+    mode: "{{item.permissions}}"
+  with_items:
+    - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/openssl-easyrsa.cnf", target: "/etc/easy-rsa/" }
+    - { permissions: "u=rwx,g=rx,o=rx", src: "/usr/share/easy-rsa/3/easyrsa", target: "/usr/bin/easyrsa" }
+  when: ansible_distribution == 'Fedora'
+  
 # **** MOBILE VPN CERTIFICATES ****
 - name: check easyrsa
   stat:
@@ -32,22 +64,21 @@
     - "echo 'yes' | easyrsa init-pki"
   when: "not use_vault_files and not pki_exists.stat.exists"
 
-- name: prepare needed easyrsa folder
+- name: Create a symbolic config link on fedora
   file:
-    path: '/etc/easy-rsa/pki/{{item}}'
-    state: directory
+    src: /etc/easy-rsa/openssl-easyrsa.cnf
+    dest: /etc/easy-rsa/pki/openssl-easyrsa.cnf
     owner: root
     group: root
-    mode: 0750
-  with_items:
-    - "issued"
-
-- name: init easyrsa (develop)
-  command: "echo 'yes' | easyrsa init-pki"
-  args:
-    chdir: '/etc/easy-rsa'
-  notify: "restart openvpn@mobile"
-  when: "not use_vault_files and not pki_exists.stat.exists"
+    state: link
+  when: ansible_distribution == 'Fedora'
+  
+#- name: init easyrsa (develop)
+#  command: "echo 'yes' | easyrsa init-pki"
+#  args:
+#    chdir: '/etc/easy-rsa'
+#  notify: "restart openvpn@mobile"
+#  when: "not use_vault_files and not pki_exists.stat.exists"
   
 - name: generate easyrsa ca (develop)
   expect:

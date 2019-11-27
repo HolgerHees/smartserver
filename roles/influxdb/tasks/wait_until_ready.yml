@@ -2,6 +2,7 @@
   systemd:
     name: influxdb
     state: started
+    daemon_reload: yes
   changed_when: yes
   
 - name: wait for influxdb to become ready

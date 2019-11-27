@@ -16,7 +16,7 @@ local_backup_path:                "/dataRaid/backups/"
 cloud_backup_source_path:         "/dataBackup/"
 cloud_backup_target_path:         "/mnt/dataCloud/"
 
-redis_socket_path:                "/var/run/redis/redis.sock"
+redis_socket_path:                "/var/run/redis/"
 
 nextcloud_data_path:              "/dataRaid/clouddata/"
 

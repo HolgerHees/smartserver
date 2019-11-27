@@ -1,4 +1,13 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        bind
+    ]
+    state: present
+  notify: "restart named"
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
         bind
@@ -6,18 +15,39 @@
     ]
     state: present
   notify: "restart named"
-
+  when: ansible_distribution == 'openSUSE Leap'
+  
 - name: copy config
   template:
-    src: "roles/dns/templates{{item}}"
-    dest: "{{item}}"
+    src: "roles/dns/templates{{item.src}}"
+    dest: "{{item.target}}"
     owner: root
     group: named
     mode: 0640
   with_items:
-    - /etc/named.conf
-    - /etc/named.d/forwarders.conf
+    - { ansible_distribution: ""              , src: "/etc/named.conf"              , target: "/etc/named.conf" }
+    - { ansible_distribution: "openSUSE Leap" , src: "/etc/named.d/forwarders.conf" , target: "/etc/named.d/forwarders.conf" }
+    - { ansible_distribution: "Fedora"        , src: "/etc/named.d/forwarders.conf" , target: "/etc/named/forwarders.conf" }
+  when: item.ansible_distribution == "" or item.ansible_distribution == ansible_distribution
   notify: "restart named"
+  
+- name: Create a symbolic link on fedora
+  file:
+    src: /var/named/
+    dest: /var/lib/named
+    owner: root
+    group: named
+    state: link
+  when: ansible_distribution == 'Fedora'
+  
+- name: prepare master folder on fedora
+  file:
+    path: "/var/lib/named/master/"
+    state: directory
+    owner: root
+    group: named
+    mode: 0770
+  when: ansible_distribution == 'Fedora'
 
 - name: copy var folder
   template:
@@ -31,10 +61,18 @@
     - "server_forward"
   notify: "restart named"
   
-- name: set forwarder config
+- name: set resolv config on fedora
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-eth0
+    regexp: '^DNS1='
+    line: 'DNS1=127.0.0.1'
+  notify: "restart networkmanager"
+  when: ansible_distribution == 'Fedora'
+
+- name: set forwarder config on suse
   lineinfile:
     path: /etc/sysconfig/network/config
     regexp: '^NETCONFIG_DNS_FORWARDER='
     line: 'NETCONFIG_DNS_FORWARDER="bind"'
-  notify: "restart named"
-  
+  notify: "refresh netconfig"
+  when: ansible_distribution == 'openSUSE Leap'

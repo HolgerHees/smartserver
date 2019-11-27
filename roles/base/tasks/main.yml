@@ -18,7 +18,7 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
     - { mode: "u=rwx,g=rx,o=", path: "{{local_backup_path}}" }
 
-- name: install base packages
+- name: install fedora base packages
   yum:
     name: [
         mc
@@ -28,7 +28,7 @@
       , automake
       , gcc
       , libxml2-devel
-      , sensors
+      , lm_sensors
       , ImageMagick
       , htop
       , sysstat
@@ -39,13 +39,13 @@
       , bzip2              # used to import databases with bzcat
       #, python2-passlib    # used by ansible htpasswd module (user role)
       , python3-passlib    # used by ansible htpasswd module (user role)
-      , mail               # used by elastalert
-      , libselinux-python  # used by ansible on fedora
+      , mailx              # used by elastalert
+      , python3-libselinux # used by ansible on fedora
     ]
     state: present
   when: ansible_distribution == 'Fedora'
 
-- name: install base packages
+- name: install suse base packages
   zypper:
     name: [  
         mc
@@ -67,7 +67,7 @@
       , python2-passlib    # used by ansible htpasswd module (user role)
       #, python3-passlib    # used by ansible htpasswd module (user role)
       , insserv-compat     # used by ansible systemd module
-      , mail               # used by elastalert
+      , mailx              # used by elastalert
     ]
     state: present
   when: ansible_distribution == 'openSUSE Leap'

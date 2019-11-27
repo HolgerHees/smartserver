@@ -49,7 +49,7 @@ $CONFIG = array (
   'memcache.locking' => '\\OC\\Memcache\\Redis',
   'redis' => 
   array (
-    'host' => '{{redis_socket_path}}',
+    'host' => '{{redis_socket_path}}redis.sock',
     'port' => 0,
     'timeout' => 0,
     'dbindex' => 0,

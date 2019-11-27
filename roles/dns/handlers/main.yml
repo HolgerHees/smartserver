@@ -6,3 +6,16 @@
     enabled: yes
     masked: no
   listen: "restart named"
+
+- name: restart networkmanager
+  systemd:
+    name: NetworkManager
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart networkmanager"
+  
+- name: restart networkmanager
+  shell: "netconfig update -f"
+  listen: "refresh netconfig"
