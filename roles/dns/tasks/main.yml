@@ -77,9 +77,7 @@
   with_items:
     - { key: "NETCONFIG_DNS_STATIC_SERVERS", value: "8.8.8.8 9.9.9.9"}
     - { key: "NETCONFIG_DNS_FORWARDER", value: "bind"}
-  notify: "refresh netconfig"
-  notify: "restart named"
+  notify:
+    - "refresh netconfig"
+    - "restart named"
   when: ansible_distribution == 'openSUSE Leap'
-
-  
-  NETCONFIG_DNS_STATIC_SERVERS="8.8.8.8 9.9.9.9"
