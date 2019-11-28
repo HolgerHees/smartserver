@@ -82,7 +82,7 @@
   notify: "restart postfix"
 
 - name: disable sysconfig based configuration on suse
-  shell: "mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org"
+  shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; fi"
   when: ansible_distribution == 'openSUSE Leap'
 
 - name: set master.cf config on suse
