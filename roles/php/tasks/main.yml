@@ -8,7 +8,7 @@
       , php-pecl-imagick
       , php-pecl-redis
       , php-mbstring 
-      #, php-posix 
+      , php-process          # posix 
       , php-pecl-zip 
       , php-gd 
       , php-pear-Net-Curl
@@ -34,7 +34,7 @@
       , php7-imagick
       , php7-redis 
       , php7-mbstring 
-      #, php7-posix 
+      , php7-posix            # nextcloud
       , php7-zip 
       , php7-gd 
       , php7-curl 
