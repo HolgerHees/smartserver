@@ -82,7 +82,9 @@
   notify: "restart postfix"
 
 - name: disable sysconfig based configuration on suse
-  shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; fi"
+  shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; echo \"1\"; else echo \"0\"; fi"
+  register: sysconfig_change
+  changed_when: "'1' in sysconfig_change.stdout"
   when: ansible_distribution == 'openSUSE Leap'
 
 - name: set master.cf config on suse
@@ -107,11 +109,13 @@
   when: "vault_active|bool"
   
 - name: rebuild sasl_passwd.db
-  shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; fi"
+  shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; echo \"1\"; else echo \"0\"; fi"
   with_items:
     - generic
     - sasl_passwd
     - relay
+  register: postmap_change
+  changed_when: "'1' in postmap_change.stdout"
   when: config_changed.changed or password_changed.changed
   
 #mkfifo /var/spool/postfix/public/pickup
