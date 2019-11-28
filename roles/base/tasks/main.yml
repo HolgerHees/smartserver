@@ -24,6 +24,7 @@
         mc
       , subversion
       , git
+      , make
       , autoconf
       , automake
       , gcc
@@ -51,6 +52,7 @@
         mc
       , subversion
       , git
+      , make
       , autoconf
       , automake
       , gcc

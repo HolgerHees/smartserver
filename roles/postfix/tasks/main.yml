@@ -63,21 +63,19 @@
     regexp: '^{{item.field}}'
     line: '{{item.field}} = {{item.value}}'
   with_items:
-    - { os: "",               field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
-    - { os: "",               field: 'relayhost', value: '[smtp.gmail.com]:587' }                                          # POSTFIX_RELAYHOST
+    - { field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
+    - { field: 'relayhost', value: '[smtp.gmail.com]:587' }                                          # POSTFIX_RELAYHOST
 
-    - { os: "",               field: 'smtp_sasl_auth_enable', value: 'yes' }                                               # POSTFIX_SMTP_AUTH = yes
-    - { os: "",               field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }                   # POSTFIX_SMTP_AUTH = yes
-    - { os: "",               field: 'smtp_sasl_security_options', value: 'noanonymous' }                                  # POSTFIX_SMTP_AUTH = yes && POSTFIX_SMTP_AUTH_OPTIONS
+    - { field: 'smtp_sasl_auth_enable', value: 'yes' }                                               # POSTFIX_SMTP_AUTH = yes
+    - { field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }                   # POSTFIX_SMTP_AUTH = yes
+    - { field: 'smtp_sasl_security_options', value: 'noanonymous' }                                  # POSTFIX_SMTP_AUTH = yes && POSTFIX_SMTP_AUTH_OPTIONS
 
-    - { os: "",               field: 'smtp_use_tls', value: 'yes' }                                                        # POSTFIX_SMTP_TLS_CLIENT = yes
-    - { os: "",               field: 'smtp_enforce_tls', value: 'yes' }                                                    # POSTFIX_SMTP_TLS_CLIENT = yes
-    - { os: "Fedora",         field: 'smtp_tls_CAfile', value: '/etc/ssl/certs/ca-bundle.crt' }                            # POSTFIX_SMTP_TLS_CLIENT = yes && POSTFIX_TLS_CAFILE
-    - { os: "openSUSE Leap",  field: 'smtp_tls_CAfile', value: '/etc/ssl/ca-bundle.pem' }
+    - { field: 'smtp_use_tls', value: 'yes' }                                                        # POSTFIX_SMTP_TLS_CLIENT = yes
+    - { field: 'smtp_enforce_tls', value: 'yes' }                                                    # POSTFIX_SMTP_TLS_CLIENT = yes
+    - { field: 'smtp_tls_CAfile', value: "/etc/ssl/{{ 'ca-bundle.pem' if ansible_distribution == 'openSUSE Leap' else 'certs/ca-bundle.crt' }}" }
 
-    - { os: "",               field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }             # POSTFIX_LOCALDOMAINS
-    - { os: "",               field: 'myhostname', value: '{{server_name}}' }                                              # POSTFIX_MYHOSTNAME
-  when: item.os == "" or item.os == ansible_distribution
+    - { field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }             # POSTFIX_LOCALDOMAINS
+    - { field: 'myhostname', value: '{{server_name}}' }                                              # POSTFIX_MYHOSTNAME
   register: config_changed
   notify: "restart postfix"
 

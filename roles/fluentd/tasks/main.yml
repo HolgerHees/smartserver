@@ -1,8 +1,15 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: "ruby-devel"
+    state: present
+  when: ansible_distribution == 'Fedora'
+  
+- name: install required suse packages
   zypper:
     name: "ruby-devel"
     state: present
-
+  when: ansible_distribution == 'openSUSE Leap'
+  
 - name: prepare needed folder
   file:
     path: '{{item}}'

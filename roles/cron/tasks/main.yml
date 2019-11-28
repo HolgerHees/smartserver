@@ -1,4 +1,4 @@
-- name: install required packages on fedora
+- name: install required fedora packages
   yum:
     name: [
         jq
@@ -7,7 +7,7 @@
     state: present
   when: ansible_distribution == 'Fedora'
   
-- name: install required packages on suse
+- name: install required suse packages
   zypper:
     name: [
         jq

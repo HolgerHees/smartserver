@@ -91,7 +91,7 @@
 - name: copy config
   template:
     src: roles/php/templates/etc/php7/conf.d/{{item}}
-    dest: /etc/php7/conf.d/{{item}}
+    dest: "/etc/{{ 'php7/conf.d/' if ansible_distribution == 'openSUSE Leap' else 'php.d/90-' }}{{item}}"
     owner: root
     group: root
     mode: 0644
@@ -101,11 +101,17 @@
     - systemd.ini
   notify: "restart apache"
     
+- name: prepare opcache config
+  lineinfile:
+    path: /etc/{{ 'php7/cli/' if ansible_distribution == 'openSUSE Leap' else '' }}php.ini
+    regexp: '^\[opcache\]'
+    line: '[opcache]'
+
 - name: set cli config
   lineinfile:
-    path: /etc/php7/cli/php.ini
+    path: /etc/{{ 'php7/cli/' if ansible_distribution == 'openSUSE Leap' else '' }}php.ini
     insertafter: '^\[{{item.block}}\]'
-    regexp: '^{{item.field}}'
+    regexp: '^{{item.field}}[\s=]{1}'
     line: '{{item.field}}={{item.value}}'
   with_items:
     - { block: 'PHP', field: 'memory_limit', value: '1024M' }
@@ -120,7 +126,7 @@
 - name: copy imagick config
   template:
     src: roles/php/templates/etc/ImageMagick-7/policy.xml
-    dest: /etc/ImageMagick-7/policy.xml
+    dest: /etc/ImageMagick-{{ '7' if ansible_distribution == 'openSUSE Leap' else '6' }}/policy.xml
     owner: root
     group: root
     mode: 0644
