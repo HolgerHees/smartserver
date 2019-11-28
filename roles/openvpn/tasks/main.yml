@@ -36,6 +36,7 @@
     mode: "{{item.permissions}}"
   with_items:
     - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/openssl-easyrsa.cnf", target: "/etc/easy-rsa/" }
+    - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/x509-types", target: "/etc/easy-rsa/" }
     - { permissions: "u=rwx,g=rx,o=rx", src: "/usr/share/easy-rsa/3/easyrsa", target: "/usr/bin/easyrsa" }
   when: ansible_distribution == 'Fedora'
   
@@ -55,7 +56,7 @@
 # easyrsa build-server-full server
 # easyrsa build-client-full mobile
 # easyrsa gen-dh
-- name: init easyrsa certificates
+- name: init easyrsa certificates (develop)
   shell: "{{item}}"
   args:
     chdir: '/etc/easy-rsa'
@@ -64,14 +65,17 @@
     - "echo 'yes' | easyrsa init-pki"
   when: "not use_vault_files and not pki_exists.stat.exists"
 
-- name: Create a symbolic config link on fedora
+- name: Create a symbolic config link on fedora (develop)
   file:
-    src: /etc/easy-rsa/openssl-easyrsa.cnf
-    dest: /etc/easy-rsa/pki/openssl-easyrsa.cnf
+    src: "/etc/easy-rsa/{{item}}"
+    dest: "/etc/easy-rsa/pki/{{item}}"
     owner: root
     group: root
     state: link
-  when: ansible_distribution == 'Fedora'
+  with_items:
+    - openssl-easyrsa.cnf
+    - x509-types
+  when: "ansible_distribution == 'Fedora' and not use_vault_files and not pki_exists.stat.exists"
   
 #- name: init easyrsa (develop)
 #  command: "echo 'yes' | easyrsa init-pki"

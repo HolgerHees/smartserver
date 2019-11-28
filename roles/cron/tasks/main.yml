@@ -1,7 +1,20 @@
-- name: install required packages
-  zypper:
-    name: "jq"
+- name: install required packages on fedora
+  yum:
+    name: [
+        jq
+      , cronie
+    ]
     state: present
+  when: ansible_distribution == 'Fedora'
+  
+- name: install required packages on suse
+  zypper:
+    name: [
+        jq
+      , cronie
+    ]
+    state: present
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: copy crony cmd
   template:

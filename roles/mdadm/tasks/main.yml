@@ -1,9 +1,18 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: "mdadm"
+    state: present
+  notify: "restart mdmonitor"
+  when: ansible_distribution == 'Fedora'
+  
+- name: install required suse packages
   zypper:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-
+  when: ansible_distribution == 'openSUSE Leap'
+  
+  
 - name: copy config
   template:
     src: roles/mdadm/templates/mdadm

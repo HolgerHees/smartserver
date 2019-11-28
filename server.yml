@@ -61,6 +61,9 @@
 
     - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
+    - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
+    - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
+
     - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
     - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
 
@@ -75,11 +78,6 @@
 
     - { role: docker, tags: [ 'docker' ] }                                      # installs and initializes the container infrastructure
 
-    - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
-    - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
-    - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
-    - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
-    
     - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating /etc/apache2/_.ansible.d
 
     - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
@@ -125,6 +123,9 @@
     - { role: cloudsync, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
     - { role: cloudexport, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (user "philipp" and nfs export)
 
+    - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
+    - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
+    
     - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
     - { role: backup_restore, tags: [ 'backup_restore' ], when: "use_import_files|bool" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases

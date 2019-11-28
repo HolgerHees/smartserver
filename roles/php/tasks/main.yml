@@ -1,14 +1,40 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        php 
+      , php-mysqlnd
+      #, php-cli              # pcntl & posix
+      , php-devel 
+      , php-pecl-imagick
+      , php-pecl-redis
+      , php-mbstring 
+      #, php-posix 
+      , php-pecl-zip 
+      , php-gd 
+      , php-pear-Net-Curl
+      , php-common           # openssl, fileinfo, ctype & iconv
+      , php-json             
+      , php-xml              # dom, xmlwriter, xmlreader
+      , php-intl             
+      , php-pecl-apcu
+      , php-opcache          
+      , systemd-devel         # php-systemd => nextcloud
+    ]
+    state: present
+  notify: "restart apache"
+  when: ansible_distribution == 'Fedora'
+  
+- name: install required suse packages
   zypper:
     name: [
         php7 
       , php7-mysql 
-      , php7-pcntl 
+      #, php7-pcntl 
       , php7-devel 
       , php7-imagick
       , php7-redis 
       , php7-mbstring 
-      , php7-posix 
+      #, php7-posix 
       , php7-zip 
       , php7-gd 
       , php7-curl 
@@ -27,7 +53,8 @@
     ]
     state: present
   notify: "restart apache"
-
+  when: ansible_distribution == 'openSUSE Leap'
+  
 #- shell: "pecl info inotify"
 #  failed_when: "'command-not-found' in inotify_installed.stderr"
 #  changed_when: False

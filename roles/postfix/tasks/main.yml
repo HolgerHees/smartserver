@@ -20,76 +20,101 @@
   notify: "restart postfix"
   when: ansible_distribution == 'openSUSE Leap'
   
-- name: set config
-  lineinfile:
-    path: /etc/sysconfig/postfix
-    regexp: '^{{item.field}}'
-    line: '{{item.field}}"{{item.value}}"'
-  with_items:
-    #- { field: 'POSTFIX_LISTEN=', value: '' }
-    - { field: 'POSTFIX_INET_PROTO=', value: 'all' }
-    - { field: 'POSTFIX_RELAYHOST=', value: '[smtp.gmail.com]:587' }
-    - { field: 'POSTFIX_TLS_CAFILE=', value: '/etc/postfix/ssl/cacerts/GlobalSign_Root_CA_-_R2.pem' }
-    - { field: 'POSTFIX_SMTP_AUTH=', value: 'yes' }
-    - { field: 'POSTFIX_SMTP_TLS_CLIENT=', value: 'must' }
-    - { field: 'POSTFIX_SMTP_AUTH_OPTIONS=', value: 'noanonymous' }
-    - { field: 'POSTFIX_SMTP_TLS_SERVER=', value: 'yes' } # needed to activate TLS engine
-    - { field: 'POSTFIX_TLS_CERTFILE=', value: '' }
-    - { field: 'POSTFIX_TLS_KEYFILE=', value: '' }
-
-    #- { field: 'POSTFIX_MYHOSTNAME=', value: '{{server_name}}' }
-    - { field: 'POSTFIX_LOCALDOMAINS=', value: '{{server_name}}, {{server_domain}}, localhost' }
-#    - { field: 'alias_map', value: 'hash:/etc/aliases' }
-#    - { field: 'alias_database', value: 'hash:/etc/aliases' }
-#    - { field: 'smtp_enforce_tls', value: 'yes' }
-#POSTFIX_UPDATE_MAPS
-#POSTFIX_MAP_LIST
-  register: config_status
-  notify: "restart postfix"
-
-- name: check postfix is running
-  systemd:
-    name: postfix
-    state: started
-  when: config_status.changed
-    
-- name: refresh postfix
-  command: "/usr/sbin/config.postfix"
-  when: config_status.changed
-  notify: "restart postfix"
-  
-#- name: check backup
-#  command: /bin/true
-#  notify: "refresh postfix"
-
 #- name: set config
 #  lineinfile:
-#    path: /etc/postfix/main.cf
+#    path: /etc/sysconfig/postfix
 #    regexp: '^{{item.field}}'
-#    line: '{{item.field}} = {{item.value}}'
+#    line: '{{item.field}}"{{item.value}}"'
 #  with_items:
-#    - { field: 'inet_interfaces', value: '127.0.0.1' }
-#    - { field: 'inet_protocols', value: 'all' }
-#    - { field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }
-#    - { field: 'myhostname', value: '{{server_name}}' }
-#    - { field: 'relayhost', value: '[smtp.gmail.com]:587' }
-#    - { field: 'alias_map', value: 'hash:/etc/aliases' }
-#    - { field: 'alias_database', value: 'hash:/etc/aliases' }
-#    - { field: 'smtp_sasl_auth_enable', value: 'yes' }
-#    - { field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }
-#    - { field: 'smtp_sasl_security_options', value: 'noanonymous' }
-#    - { field: 'smtp_tls_CAfile', value: '/etc/postfix/ssl/cacerts/GlobalSign_Root_CA_-_R2.pem' }
-#    - { field: 'smtp_use_tls', value: 'yes' }
-#    - { field: 'smtp_enforce_tls', value: 'yes' }
+#    #- { field: 'POSTFIX_LISTEN=', value: '' }
+#    - { field: 'POSTFIX_INET_PROTO=', value: 'all' }
+#    - { field: 'POSTFIX_RELAYHOST=', value: '[smtp.gmail.com]:587' }
+#    - { field: 'POSTFIX_SMTP_AUTH=', value: 'yes' }
+#    - { field: 'POSTFIX_SMTP_AUTH_OPTIONS=', value: 'noanonymous' }
+#    - { field: 'POSTFIX_SMTP_TLS_CLIENT=', value: 'must' }
+##    - { field: 'POSTFIX_SMTP_TLS_SERVER=', value: 'yes' } # needed to activate TLS engine
+##    - { field: 'POSTFIX_TLS_CAFILE=', value: '/etc/ssl/certs/GlobalSign_Root_CA_-_R2.pem' }
+#    - { field: 'POSTFIX_TLS_CAFILE=', value: '/etc/ssl/ca-bundle.pem' }
+#    - { field: 'POSTFIX_TLS_CERTFILE=', value: '' }
+#    - { field: 'POSTFIX_TLS_KEYFILE=', value: '' }
+
+#    - { field: 'POSTFIX_MYHOSTNAME=', value: '{{server_name}}' }
+#    - { field: 'POSTFIX_LOCALDOMAINS=', value: '{{server_name}}, {{server_domain}}, localhost' }
+#  register: config_status
 #  notify: "restart postfix"
+#  when: ansible_distribution == 'openSUSE Leap'
+
+#- name: check postfix is running
+#  systemd:
+#    name: postfix
+#    state: started
+#  when: ansible_distribution == 'openSUSE Leap' and config_status.changed
+
+#- name: refresh postfix
+#  command: "/usr/sbin/config.postfix"
+#  when: ansible_distribution == 'openSUSE Leap' and config_status.changed
+#  notify: "restart postfix"
+  
+# https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
+
+- name: set main.cf config
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^{{item.field}}'
+    line: '{{item.field}} = {{item.value}}'
+  with_items:
+    - { os: "",               field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
+    - { os: "",               field: 'relayhost', value: '[smtp.gmail.com]:587' }                                          # POSTFIX_RELAYHOST
+
+    - { os: "",               field: 'smtp_sasl_auth_enable', value: 'yes' }                                               # POSTFIX_SMTP_AUTH = yes
+    - { os: "",               field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }                   # POSTFIX_SMTP_AUTH = yes
+    - { os: "",               field: 'smtp_sasl_security_options', value: 'noanonymous' }                                  # POSTFIX_SMTP_AUTH = yes && POSTFIX_SMTP_AUTH_OPTIONS
+
+    - { os: "",               field: 'smtp_use_tls', value: 'yes' }                                                        # POSTFIX_SMTP_TLS_CLIENT = yes
+    - { os: "",               field: 'smtp_enforce_tls', value: 'yes' }                                                    # POSTFIX_SMTP_TLS_CLIENT = yes
+    - { os: "Fedora",         field: 'smtp_tls_CAfile', value: '/etc/ssl/certs/ca-bundle.crt' }                            # POSTFIX_SMTP_TLS_CLIENT = yes && POSTFIX_TLS_CAFILE
+    - { os: "openSUSE Leap",  field: 'smtp_tls_CAfile', value: '/etc/ssl/ca-bundle.pem' }
+
+    - { os: "",               field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }             # POSTFIX_LOCALDOMAINS
+    - { os: "",               field: 'myhostname', value: '{{server_name}}' }                                              # POSTFIX_MYHOSTNAME
+  when: item.os == "" or item.os == ansible_distribution
+  register: config_changed
+  notify: "restart postfix"
+
+- name: disable sysconfig based configuration on suse
+  shell: "mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org"
+  when: ansible_distribution == 'openSUSE Leap'
+
+- name: set master.cf config on suse
+  lineinfile:
+    path: /etc/postfix/master.cf
+    regexp: '^tlsmgr'
+    line: 'tlsmgr    unix  -       -       n       1000?   1       tlsmgr'
+  notify: "restart postfix"
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
     regexp: '^\[smtp.gmail.com\]:587'
     line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
+    create: true # needed for fedora
+    owner: root
+    group: root
+    mode: 0600
+  register: password_changed
   notify: "restart postfix"
   when: "vault_active|bool"
+  
+- name: rebuild sasl_passwd.db
+  shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; fi"
+  with_items:
+    - generic
+    - sasl_passwd
+    - relay
+  when: config_changed.changed or password_changed.changed
+  
+#mkfifo /var/spool/postfix/public/pickup
   
 - name: set aliases
   lineinfile:
