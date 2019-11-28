@@ -22,12 +22,12 @@
     group: root
     mode: 0640
   with_items:
-    - { field: 'MDADM_DELAY=', value: '60' }
-    - { field: 'MDADM_MAIL=', value: 'root' }
-    - { field: 'MDADM_RAIDDEVICES=', value: '/dev/md0' }
-    - { field: 'MDADM_SCAN=', value: 'yes' }
-    - { field: 'MDADM_SEND_MAIL_ON_START=', value: 'yes' }
-    - { field: 'MDADM_DEVICE_TIMEOUT=', value: '60' }
+    - { field: 'MDADM_DELAY', value: '60' }
+    - { field: 'MDADM_MAIL', value: 'root' }
+    - { field: 'MDADM_RAIDDEVICES', value: '/dev/md0' }
+    - { field: 'MDADM_SCAN', value: 'yes' }
+    - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
+    - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
   notify: "restart mdmonitor"
 
 - name: disable default check cron jobs
