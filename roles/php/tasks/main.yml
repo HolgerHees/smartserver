@@ -111,7 +111,7 @@
   lineinfile:
     path: /etc/{{ 'php7/cli/' if ansible_distribution == 'openSUSE Leap' else '' }}php.ini
     insertafter: '^\[{{item.block}}\]'
-    regexp: '^{{item.field}}[\s=]{1}'
+    regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}}={{item.value}}'
   with_items:
     - { block: 'PHP', field: 'memory_limit', value: '1024M' }

@@ -72,12 +72,12 @@
 - name: change runtime user
   lineinfile:
     path: /usr/lib/systemd/system/netdata.service
-    regexp: '{{item.regex}}'
-    line: '{{item.line}}'
+    regexp: '^[#]*{{item.field}}\s*='
+    line: '{{item.field}}={{item.value}}'
   with_items:
-    - { regex: "^User=", line: "User=root" }
-    #- { regex: "^CPUSchedulingPolicy=", line: "CPUSchedulingPolicy=other" } # was "idle" before
-    #- { regex: "^[#]+Nice=", line: "Nice=0" } # was "#Nice=0" before
+    - { field: "User", value: "root" }
+    #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
+    #- { field: "Nice", value: "0" } # was "#Nice=0" before
   notify: "restart netdata"
 
 - name: copy apache config

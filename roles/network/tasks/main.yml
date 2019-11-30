@@ -14,7 +14,7 @@
 - name: set hosts config
   lineinfile:
     path: /etc/hosts
-    regexp: '^{{server_ip}}'
+    regexp: '^[#]*{{server_ip}} '
     line: '{{server_ip}} {{server_name}}'
     
 # needed to fix "netdev budget ran outs" on a atom cpu
@@ -22,13 +22,13 @@
 - name: increase netdev budget
   lineinfile:
     path: /etc/sysctl.conf
-    regexp: '^net.core.netdev_budget_usecs'
+    regexp: '^[#]*net.core.netdev_budget_usecs\s*='
     line: 'net.core.netdev_budget_usecs = 20000'
 
 - name: enable ipv6
   lineinfile:
     path: /etc/sysctl.conf
-    regexp: '^net.ipv6.conf.all.disable_ipv6'
+    regexp: '^[#]*net.ipv6.conf.all.disable_ipv6\s*='
     line: 'net.ipv6.conf.all.disable_ipv6 = 0'
   register: ipv6enabled
     

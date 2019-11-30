@@ -59,7 +59,7 @@
 - name: set resolv config on fedora
   lineinfile:
     path: /etc/sysconfig/network-scripts/ifcfg-eth0
-    regexp: '^DNS1='
+    regexp: '^[#]*DNS1\s*='
     line: 'DNS1=127.0.0.1'
   notify: "restart networkmanager"
   when: ansible_distribution == 'Fedora'
@@ -67,7 +67,7 @@
 - name: set forwarder config on suse
   lineinfile:
     path: /etc/sysconfig/network/config
-    regexp: '^NETCONFIG_DNS_FORWARDER='
+    regexp: '^[#]*NETCONFIG_DNS_FORWARDER\s*='
     line: 'NETCONFIG_DNS_FORWARDER="bind"'
   notify:
     - "refresh netconfig"

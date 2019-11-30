@@ -25,7 +25,7 @@
 - name: add nfs exported folder for user "philipp"
   lineinfile:
     path: /etc/exports
-    regexp: '^{{item.name}}'
+    regexp: '^[#]*{{item.name}} '
     line: '{{item.name}} {{item.options}}'
   with_items:
     - { name: '{{raid_path}}{{philipp_username}}/', options: '{{cloud_vpn_endpoint2}}(rw,root_squash,sync,no_subtree_check)' }

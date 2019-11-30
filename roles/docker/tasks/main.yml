@@ -48,6 +48,21 @@
   when: ansible_distribution == 'openSUSE Leap'
   notify: "restart docker"
 
+- name: set config
+  lineinfile:
+    path: /etc/containers/{{item.file}}
+    regexp: '^[#]*{{item.field}}\s*='
+    line: '{{item.field}}="{{item.value}}"'
+    create: true
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
+    - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
+    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
+    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
+
 - name: copy config
   template:
     src: "roles/docker/templates/etc/docker/daemon.json"

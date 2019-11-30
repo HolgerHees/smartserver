@@ -23,23 +23,23 @@
 #- name: set config
 #  lineinfile:
 #    path: /etc/sysconfig/postfix
-#    regexp: '^{{item.field}}'
-#    line: '{{item.field}}"{{item.value}}"'
+#    regexp: '^[#]*{{item.field}}\s*='
+#    line: '{{item.field}} "{{item.value}}"'
 #  with_items:
-#    #- { field: 'POSTFIX_LISTEN=', value: '' }
-#    - { field: 'POSTFIX_INET_PROTO=', value: 'all' }
-#    - { field: 'POSTFIX_RELAYHOST=', value: '[smtp.gmail.com]:587' }
-#    - { field: 'POSTFIX_SMTP_AUTH=', value: 'yes' }
-#    - { field: 'POSTFIX_SMTP_AUTH_OPTIONS=', value: 'noanonymous' }
-#    - { field: 'POSTFIX_SMTP_TLS_CLIENT=', value: 'must' }
-##    - { field: 'POSTFIX_SMTP_TLS_SERVER=', value: 'yes' } # needed to activate TLS engine
-##    - { field: 'POSTFIX_TLS_CAFILE=', value: '/etc/ssl/certs/GlobalSign_Root_CA_-_R2.pem' }
-#    - { field: 'POSTFIX_TLS_CAFILE=', value: '/etc/ssl/ca-bundle.pem' }
-#    - { field: 'POSTFIX_TLS_CERTFILE=', value: '' }
-#    - { field: 'POSTFIX_TLS_KEYFILE=', value: '' }
+#    #- { field: 'POSTFIX_LISTEN', value: '' }
+#    - { field: 'POSTFIX_INET_PROTO', value: 'all' }
+#    - { field: 'POSTFIX_RELAYHOST', value: '[smtp.gmail.com]:587' }
+#    - { field: 'POSTFIX_SMTP_AUTH', value: 'yes' }
+#    - { field: 'POSTFIX_SMTP_AUTH_OPTIONS', value: 'noanonymous' }
+#    - { field: 'POSTFIX_SMTP_TLS_CLIENT', value: 'must' }
+##    - { field: 'POSTFIX_SMTP_TLS_SERVER', value: 'yes' } # needed to activate TLS engine
+##    - { field: 'POSTFIX_TLS_CAFILE', value: '/etc/ssl/certs/GlobalSign_Root_CA_-_R2.pem' }
+#    - { field: 'POSTFIX_TLS_CAFILE', value: '/etc/ssl/ca-bundle.pem' }
+#    - { field: 'POSTFIX_TLS_CERTFILE', value: '' }
+#    - { field: 'POSTFIX_TLS_KEYFILE', value: '' }
 
-#    - { field: 'POSTFIX_MYHOSTNAME=', value: '{{server_name}}' }
-#    - { field: 'POSTFIX_LOCALDOMAINS=', value: '{{server_name}}, {{server_domain}}, localhost' }
+#    - { field: 'POSTFIX_MYHOSTNAME', value: '{{server_name}}' }
+#    - { field: 'POSTFIX_LOCALDOMAINS', value: '{{server_name}}, {{server_domain}}, localhost' }
 #  register: config_status
 #  notify: "restart postfix"
 #  when: ansible_distribution == 'openSUSE Leap'
@@ -60,7 +60,7 @@
 - name: set main.cf config
   lineinfile:
     path: /etc/postfix/main.cf
-    regexp: '^{{item.field}}'
+    regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}} = {{item.value}}'
   with_items:
     - { field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
@@ -88,7 +88,7 @@
 - name: set master.cf config on suse
   lineinfile:
     path: /etc/postfix/master.cf
-    regexp: '^tlsmgr'
+    regexp: '^[#]*tlsmgr '
     line: 'tlsmgr    unix  -       -       n       1000?   1       tlsmgr'
   notify: "restart postfix"
   when: ansible_distribution == 'openSUSE Leap'
@@ -96,7 +96,7 @@
 - name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
-    regexp: '^\[smtp.gmail.com\]:587'
+    regexp: '^[#]*\[smtp.gmail.com\]:587 '
     line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
     create: true # needed for fedora
     owner: root
@@ -121,7 +121,7 @@
 - name: set aliases
   lineinfile:
     path: /etc/aliases
-    regexp: '^{{item.name}}'
+    regexp: '^[#]*{{item.name}}[\s:]{1}'
     line: '{{item.name}}: {{item.alias}}'
   with_items:
     - { name: 'root', alias: '{{ admin_mail }}' }

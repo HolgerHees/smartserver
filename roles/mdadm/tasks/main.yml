@@ -15,7 +15,7 @@
 - name: set config
   lineinfile:
     path: /etc/sysconfig/{{ 'mdadm' if ansible_distribution == 'openSUSE Leap' else 'mdmonitor' }}
-    regexp: '^{{item.field}}'
+    regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}}="{{item.value}}"'
     create: true
     owner: root

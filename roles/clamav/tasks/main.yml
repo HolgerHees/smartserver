@@ -22,7 +22,7 @@
   lineinfile:
     path: /usr/lib/systemd/system/clamd.service
     insertafter: '^\[Service\]'
-    regexp: 'TimeoutSec'
+    regexp: '^[#]*TimeoutSec\s*='
     line: 'TimeoutSec=5min'
   notify: "restart clamav"
 

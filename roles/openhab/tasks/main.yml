@@ -106,7 +106,7 @@
 - name: set log config
   lineinfile:
     path: "{{data_path}}openhab-runtime/userdata/etc/org.ops4j.pax.logging.cfg"
-    regexp: '^{{item.field}}'
+    regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}} = {{item.value}}'
   with_items:
     - { field: 'log4j2.logger.jsr223Default.name', value: 'org.eclipse.smarthome.automation' }

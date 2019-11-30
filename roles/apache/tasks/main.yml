@@ -132,7 +132,7 @@
   lineinfile:
     path: /etc/php7/apache2/php.ini
     insertafter: '^\[{{item.block}}\]'
-    regexp: '^{{item.field}}'
+    regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}}={{item.value}}'
   with_items:
     - { block: 'PHP', field: 'memory_limit', value: '512M' }
@@ -183,7 +183,7 @@
 - name: set config
   lineinfile:
     path: /etc/apache2/default-server.conf
-    regexp: '^{{item.field}}'
+    regexp: '^[#]*{{item.field}} '
     line: '{{item.field}} {{item.value}}'
   with_items:
     - { field: 'ErrorLog', value: '{{global_log}}apache2/error.log' }
