@@ -35,13 +35,15 @@
       , sysstat
       , iotop
       , zip
-      #, python2-pip        # used for ansible pip module
+      #, python2-pip        # ansible pip module
       , python3-pip
       , bzip2              # used to import databases with bzcat
       #, python2-passlib    # used by ansible htpasswd module (user role)
       , python3-passlib    # used by ansible htpasswd module (user role)
       , mailx              # used by elastalert
+      
       , python3-libselinux # used by ansible on fedora
+      , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
   when: ansible_distribution == 'Fedora'

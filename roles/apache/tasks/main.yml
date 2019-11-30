@@ -1,4 +1,18 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        apache2 
+      , python2-setuptools      # needed by openssl ansible module
+      #, python3-setuptools
+      , apache2-mod_php
+      , python2-certbot-apache
+      #, python3-certbot-apache
+    ]
+    state: present
+  when: ansible_distribution == 'Fedora'
+  notify: "restart apache"
+  
+- name: install required suse packages
   zypper:
     name: [
         apache2 
@@ -9,8 +23,9 @@
       #, python3-certbot-apache
     ]
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
   notify: "restart apache"
-
+  
 - name: check certificate (develop)
   stat:
     path: /etc/letsencrypt/live/{{server_domain}}/

@@ -72,18 +72,63 @@ Vagrant.configure(2) do |config|
 
     # Password Input Function
     class Password
+        #require 'socket'
+        #require 'timeout'
+        #require 'net/ssh'
+        
         def to_s
-        begin
-        system 'stty -echo'
-        print "Ansible Vault Password: "
-        pass = URI.escape(STDIN.gets.chomp)
-        ensure
-        system 'stty echo'
-        end
-        print "\n"
-        pass
+            
+            #print "test ssh"
+            #begin
+            #    session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
+            #    session.close
+            #    #Socket.tcp("192.168.1.50", 22, connect_timeout: 60) {}
+            #    print "... ok\n"
+            #rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+                
+            #    print "... reboot\n"
+            #    system("vagrant reload") 
+            #end
+
+            #is_port_open?("192.168.1.50", 22, 60, 1) {}
+            
+            #print "done\n"
+            
+            begin
+                system 'stty -echo'
+                print "Ansible Vault Password: "
+                pass = URI.escape(STDIN.gets.chomp)
+            ensure
+                system 'stty echo'
+            end
+            print "\n"
+            pass
         end
     end
+
+    #$script = <<-SHELL
+    #    if ! grep -q "unified_cgroup_hierarchy" /etc/default/grub; then
+    #        echo "change cgroup config for docker"
+    #        sed -e 's/\\(GRUB_CMDLINE_LINUX="[^"]*\\)\\(".*\\)/\\1 systemd.unified_cgroup_hierarchy=0\\2/' /etc/default/grub > /etc/default/grub
+    #        cat /etc/default/grub
+            
+    #        grub2-mkconfig -o /boot/grub2/grub.cfg
+            
+    #        echo "reboot to activate cgroup changes"
+
+    #        sync
+            
+    #        echo "1"
+
+    #        systemctl stop sshd
+            
+    #        echo "2"
+            
+    #        exit
+    #    fi
+    #SHELL
+    
+    #develop_fedora.vm.provision "shell", inline: $script
 
     # Ask for vault password
     develop_fedora.vm.provision "shell", env: {"VAULT_PASS" => Password.new}, inline: <<-SHELL

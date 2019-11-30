@@ -1,19 +1,48 @@
-- name: install base packages
+- name: install required fedora packages
   yum:
     name: [
         docker
         , python3-docker  # used by ansible docker module
+        , podman
     ]
     state: present
   when: ansible_distribution == 'Fedora'
   notify: "restart docker"
   
-- name: install required packages
+#- name: modify fedora cgroup parameter on fedora
+#  lineinfile:
+#    state: present
+#    dest: /etc/default/grub
+#    backrefs: yes
+#    regexp: '^(GRUB_CMDLINE_LINUX=(?!.*systemd\.unified_cgroup_hierarchy)\"[^\"]+)(\".*)'
+#    line: '\1 systemd.unified_cgroup_hierarchy=0\2'
+#  register: group_result
+  
+#- name: update group boot parameter on fedora
+#  shell: "grub2-mkconfig -o /boot/grub2/grub.cfg"
+#  when: ansible_distribution == 'Fedora' and group_result is changed
+
+#- name: reboot to activate cgroup changes on fedora
+#  shell: "sleep 5 && reboot"
+#  async: 1
+#  poll: 0
+#  when: ansible_distribution == 'Fedora' and group_result is changed
+
+#- name: wait for the reboot to complete on fedora
+#  wait_for_connection:
+#    connect_timeout: 20
+#    sleep: 5
+#    delay: 5
+#    timeout: 300
+#  when: ansible_distribution == 'Fedora' and group_result is changed
+  
+- name: install required suse packages
   zypper:
     name: [
         docker
         , python2-docker  # used by ansible docker module
         #, python3-docker  # used by ansible docker module
+        , podman
     ]
     state: present
   when: ansible_distribution == 'openSUSE Leap'
