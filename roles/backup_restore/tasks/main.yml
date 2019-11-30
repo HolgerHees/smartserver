@@ -26,6 +26,7 @@
 - name: check influxdb backup import folder
   shell: "ls {{local_import_path}}influxdb/"
   register: influxdb_backup_exists
+  failed_when: no
   changed_when: influxdb_backup_exists.rc == 0
 
 - name: mount influxdb backup import folder
