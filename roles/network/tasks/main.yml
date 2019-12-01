@@ -19,22 +19,23 @@
     
 # needed to fix "netdev budget ran outs" on a atom cpu
 # https://github.com/netdata/netdata/issues/4624
-- name: increase netdev budget
+- name: set netdev budget
   lineinfile:
     path: /etc/sysctl.conf
-    regexp: '^[#]*net.core.netdev_budget_usecs\s*='
+    regexp: '^[#]*net\.core\.netdev_budget_usecs\s*='
     line: 'net.core.netdev_budget_usecs = 20000'
+  register: netdevchanged
 
-- name: enable ipv6
+- name: set ipv6
   lineinfile:
     path: /etc/sysctl.conf
-    regexp: '^[#]*net.ipv6.conf.all.disable_ipv6\s*='
+    regexp: '^[#]*net\.ipv6\.conf\.all\.disable_ipv6\s*='
     line: 'net.ipv6.conf.all.disable_ipv6 = 0'
-  register: ipv6enabled
+  register: ipv6changed
     
-- name: refresh network
+- name: refresh sysctl to activate ipv6
   shell: sysctl -p
-  when: ipv6enabled.changed
+  when: netdevchanged.changed or ipv6changed.changed
   
 #- name: set network intferface eth0
 #  nmcli:

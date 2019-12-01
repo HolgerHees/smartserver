@@ -96,7 +96,7 @@
 - name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
-    regexp: '^[#]*\[smtp.gmail.com\]:587 '
+    regexp: '^[#]*\[smtp\.gmail\.com\]:587 '
     line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
     create: true # needed for fedora
     owner: root

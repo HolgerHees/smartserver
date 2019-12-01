@@ -98,3 +98,14 @@
     - "{{local_backup_path}}archive"
     - "{{local_backup_path}}intranet-der-dinge.de"
   when: not is_production
+
+- name: set swappiness
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^[#]*vm\.swappiness\s*='
+    line: 'vm.swappiness = 10'
+  register: swappinesschanged
+    
+- name: refresh sysctl to activate swappiness
+  shell: sysctl -p
+  when: swappinesschanged.changed
