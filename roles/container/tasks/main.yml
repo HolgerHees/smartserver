@@ -48,7 +48,7 @@
   when: ansible_distribution == 'openSUSE Leap'
   notify: "restart docker"
 
-- name: set config
+- name: set podman config
   lineinfile:
     path: /etc/containers/{{item.file}}
     regexp: '^[#]*{{item.field}}\s*='
@@ -60,21 +60,32 @@
   with_items:
     - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
     - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
+    - { file: 'libpod.conf', field: 'cgroup_manager', value: "{{ 'systemd' if ansible_distribution == 'openSUSE Leap' else 'systemd' }}" }
     - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
     - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
 
-- name: copy config
+- name: copy podman fluentd config
   template:
-    src: "roles/docker/templates/etc/docker/daemon.json"
+    src: "roles/container/templates/etc/fluent/_.ansible.d/podman.conf"
+    dest: "/etc/fluent/_.ansible.d/podman.conf"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']  
+
+- name: copy docker config
+  template:
+    src: "roles/container/templates/etc/docker/daemon.json"
     dest: "/etc/docker/daemon.json"
     owner: root
     group: root
     mode: 0644
   notify: "restart docker"
 
-- name: copy fluentd config
+- name: copy docker fluentd config
   template:
-    src: "roles/docker/templates/etc/fluent/_.ansible.d/docker.conf"
+    src: "roles/container/templates/etc/fluent/_.ansible.d/docker.conf"
     dest: "/etc/fluent/_.ansible.d/docker.conf"
     owner: root
     group: root

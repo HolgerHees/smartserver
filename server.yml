@@ -76,7 +76,7 @@
 
     - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
 
-    - { role: docker, tags: [ 'docker' ] }                                      # installs and initializes the container infrastructure
+    - { role: container, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
     - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating /etc/apache2/_.ansible.d
 

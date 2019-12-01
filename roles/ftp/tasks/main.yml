@@ -8,6 +8,67 @@
 #    mode: u=rwX,g=rX,o=
 #    recurse: yes
 
+
+
+
+
+- name: check podman image exists
+  shell: "podman images custom_vsftpd:1.0.0"
+  register: image_exists
+  changed_when: "'custom_vsftpd' not in image_exists.stdout"
+  when: "vault_active|bool"
+  
+- name: compose podman image
+  shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
+  register: output
+  when: "vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
+
+- name: check podman container exists
+  shell: "podman ps -a --filter \"name=vsftpd\""
+  register: container_exists
+  changed_when: "'vsftpd' not in container_exists.stdout"
+  when: "vault_active|bool"
+
+- name: compose podman image
+  shell: >
+    podman create \
+    --name=vsftpd \
+    --env "FTP_USER={{camera_username}}" \
+    --env "FTP_PASS={{camera_linux_password}}" \
+    --env "FTP_UID=2000" \
+    --env "FTP_GID=2000" \
+    --env "ONLY_UPLOAD=YES" \
+    --env "ONLY_DOWNLOAD=NO" \
+    --env "PASV_ENABLE=YES" \
+    --env "PASV_ADDRESS=127.0.0.1" \
+    --env "PASV_MIN=50000" \
+    --env "PASV_MAX=50100" \
+    --env "UMASK=027" \
+    --log-driver=journald \
+    --volume="{{ftp_path}}:/home/uploads:rw" \
+    -p 9021:21 \
+    -p 50000-50100:30000-30100 \
+    custom_vsftpd:1.0.0
+  register: output
+#  notify: "restart vsftpd"
+  when: "vault_active|bool and 'vsftpd' not in container_exists.stdout"
+
+#- name: create systemd service
+#  vars:
+#    container_name: "vsftpd"
+#  copy:
+#    content: "{{ lookup('template', 'templates/podman_service') }}"
+#    dest: "/etc/systemd/system/vsftpd.service"
+#    owner: root
+#    group: root
+#    mode: 0644
+#  notify: "restart vsftpd"
+
+
+
+
+
+
 - name: check started docker
   systemd:
     name: docker
@@ -17,16 +78,12 @@
   shell: "docker images custom_vsftpd:1.0.0"
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
-  
+ 
 - name: compose docker image
   shell: "docker build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
   register: output
   when: "'custom_vsftpd' not in image_exists.stdout"
   
-#- name: debug
-#  debug:
-#    var: output
-
 - name: create docker container
   docker_container:
     name: vsftpd
@@ -71,6 +128,13 @@
     mode: 0644
   notify: "restart vsftpd"
 
+
+  
+  
+  
+  
+  
+  
 - name: create cleanup cron job
   vars:
     cron_name: "Camera Cleanup"
