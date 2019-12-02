@@ -1,12 +1,10 @@
 - name: install required fedora packages
   yum:
     name: [
-        apache2 
-      , python2-setuptools      # needed by openssl ansible module
-      #, python3-setuptools
-      , apache2-mod_php
-      , python2-certbot-apache
-      #, python3-certbot-apache
+        httpd 
+      #, python2-setuptools      # needed by openssl ansible module
+      , python3-setuptools
+      , certbot-apache
     ]
     state: present
   when: ansible_distribution == 'Fedora'
@@ -95,20 +93,19 @@
     group: "{{item.group}}"
     mode: 0750
   with_items:
-    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}" }
-    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}fallback/" }
+    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
+    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
     - { owner: root, group: root, dir: "/etc/apache2/_.ansible.d/" }
     - { owner: root, group: root, dir: "{{global_log}}/apache2/" }
 
+- name: check modules
+  shell: "{{ 'apachectl -M' if ansible_distribution == 'openSUSE Leap' else 'httpd -M' }}"
+  register: enabledmodules
+  when: ansible_distribution == 'Fedora'
+
 - name: enable modules
-  apache2_module:
-    name: "{{item}}"
-    state: present
-  #register: mod_status
-  #changed_when: "'already present' in mod_status.stdout"
+  shell: ""
   with_items:
-    #- authz_group 
-    #- header 
     - auth_digest
     - headers 
     - proxy 
@@ -126,6 +123,32 @@
     - rewrite 
     - php7
     - substitute # needed for instar camera webui
+  when: "ansible_distribution == 'Fedora' and '{{item}} ' not in enabledmodules.stdout"
+  notify: "restart apache"
+  
+- name: enable modules
+  apache2_module:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - auth_digest
+    - headers 
+    - proxy 
+    - proxy_html 
+    - proxy_http 
+    - proxy_balancer
+    - lbmethod_bytraffic # used by proxy_balancer
+    - slotmem_shm # used by proxy_balancer
+    - xml2enc
+    - deflate 
+    - filter 
+    #- apcu 
+    - proxy_wstunnel 
+    #- enable 
+    - rewrite 
+    - php7
+    - substitute # needed for instar camera webui
+  when: ansible_distribution == 'openSUSE Leap'
   notify: "restart apache"
     
 - name: set php configs
@@ -165,8 +188,8 @@
   copy:
     src: "roles/apache/templates/device404.jpg"
     dest: "{{htdocs_path}}fallback/{{item}}"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
   with_items:
     - cam.jpg
     - cam.mjpg
@@ -208,8 +231,8 @@
     content: ""
     dest: "{{htdocs_path}}.htpasswd"
     force: no
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0640
 
 - name: prepare .htdigest file
@@ -217,8 +240,8 @@
     content: ""
     dest: "{{htdocs_path}}.htdigest"
     force: no
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0640
 
 - name: prepare .htgroups file
@@ -226,8 +249,8 @@
     content: ""
     dest: "{{htdocs_path}}.htgroups"
     force: no
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0640
 
 - name: set logrotate job

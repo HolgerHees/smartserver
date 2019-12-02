@@ -6,17 +6,17 @@
     group: "{{item.group}}"
     mode: 0755
   with_items:
-    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}main/" }
-    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}img/" }
-    - { owner: wwwrun, group: www, dir: "{{htdocs_path}}img/potd" }
+    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}main/" }
+    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}img/" }
+    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}img/potd" }
     - { owner: root, group: root, dir: "/opt/potd_fetcher/" }
 
 - name: copy htdocs
   copy:
     src: "roles/apache_webui/templates/htdocs/{{item}}"
     dest: "{{htdocs_path}}{{item|dirname}}"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
   with_items:
     - main/css
     - main/img

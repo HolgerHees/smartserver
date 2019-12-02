@@ -7,36 +7,7 @@
     ]
     state: present
   when: ansible_distribution == 'Fedora'
-  notify: "restart docker"
   
-#- name: modify fedora cgroup parameter on fedora
-#  lineinfile:
-#    state: present
-#    dest: /etc/default/grub
-#    backrefs: yes
-#    regexp: '^(GRUB_CMDLINE_LINUX=(?!.*systemd\.unified_cgroup_hierarchy)\"[^\"]+)(\".*)'
-#    line: '\1 systemd.unified_cgroup_hierarchy=0\2'
-#  register: group_result
-  
-#- name: update group boot parameter on fedora
-#  shell: "grub2-mkconfig -o /boot/grub2/grub.cfg"
-#  when: ansible_distribution == 'Fedora' and group_result is changed
-
-#- name: reboot to activate cgroup changes on fedora
-#  shell: "sleep 5 && reboot"
-#  async: 1
-#  poll: 0
-#  when: ansible_distribution == 'Fedora' and group_result is changed
-
-#- name: wait for the reboot to complete on fedora
-#  wait_for_connection:
-#    connect_timeout: 20
-#    sleep: 5
-#    delay: 5
-#    timeout: 300
-#  when: ansible_distribution == 'Fedora' and group_result is changed
-  
-
 #- name: add suse zypper repository
 #  zypper_repository:
 #    name: Devel:Kubic (podman)
@@ -76,31 +47,42 @@
     - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
     - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
 
-- name: copy podman fluentd config
+- name: disable docker daemon.json
+  shell: "if [ -f /etc/docker/daemon.json ]; then mv /etc/docker/daemon.json /etc/docker/daemon.json.org; echo \"1\"; else echo \"0\"; fi"
+  register: dockerjson_change
+  changed_when: "'1' in dockerjson_change.stdout"
+    
+- name: change docker config on fedora
+  lineinfile:
+    path: /etc/sysconfig/docker
+    insertafter: '^OPTIONS='
+    regexp: '^\s*--{{item.field}}\s*='
+    line: '  --{{item.field}}={{item.value}} \'
+  with_items:
+    - { field: "log-driver", value: "journald" }
+    - { field: "graph", value: "{{global_lib}}docker" }
+  when: ansible_distribution == 'Fedora'
+
+- name: change docker config on suse
+  lineinfile:
+    path: /etc/sysconfig/docker
+    backrefs: yes
+    regexp: '^(\s*DOCKER_OPTS\s*=(?!.*{{item.field}})\s*)"(.*)"'
+    line: '\1"\2 --{{item.field}}={{item.value}}"'
+  with_items:
+    - { field: "log-driver", value: "journald" }
+    - { field: "graph", value: "{{global_lib}}docker" }
+  when: ansible_distribution == 'openSUSE Leap'
+
+- name: copy fluentd config
   template:
-    src: "roles/container/templates/etc/fluent/_.ansible.d/podman.conf"
-    dest: "/etc/fluent/_.ansible.d/podman.conf"
+    src: "roles/container/templates/etc/fluent/_.ansible.d/{{item}}"
+    dest: "/etc/fluent/_.ansible.d/{{item}}"
     owner: root
     group: root
     mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']  
-
-- name: copy docker config
-  template:
-    src: "roles/container/templates/etc/docker/daemon.json"
-    dest: "/etc/docker/daemon.json"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart docker"
-
-- name: copy docker fluentd config
-  template:
-    src: "roles/container/templates/etc/fluent/_.ansible.d/docker.conf"
-    dest: "/etc/fluent/_.ansible.d/docker.conf"
-    owner: root
-    group: root
-    mode: 0640
+  with_items:
+    - docker.conf
+    - podman.conf
   notify: "restart fluentd"
   tags: ['fluentd']  

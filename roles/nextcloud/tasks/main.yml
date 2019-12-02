@@ -44,8 +44,8 @@
     src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
     dest: "{{htdocs_path}}"
     remote_src: yes
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     #mode: 0750
   when: not nextcloud_exists.stat.exists
 
@@ -58,15 +58,15 @@
     src: "nextcloud-{{nextcloud_version}}"
     dest: "{{htdocs_path}}nextcloud"
     state: link
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
   
 - name: copy config
   template:
     src: "roles/nextcloud/templates/config.php"
     dest: "{{htdocs_path}}nextcloud/config/config.php"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0640
   when: "vault_active|bool"
 
@@ -74,16 +74,16 @@
   file:
     path: "{{nextcloud_data_path}}"
     state: directory
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0750
     
 - name: prepare .ocdata file
   copy:
     content: ""
     dest: "{{nextcloud_data_path}}.ocdata"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0640
   
 # ***** DATABASE ****
@@ -98,7 +98,7 @@
 - name: upgrade existing database
   shell: "php {{htdocs_path}}nextcloud/occ upgrade"
   become: yes
-  become_user: "wwwrun"
+  become_user: "{{www_username}}"
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
 
 - name: create missing mysql databases
@@ -135,13 +135,13 @@
 - name: add user "holger"
   shell: "export OC_PASS={{holger_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{holger_username}}"
   become: yes
-  become_user: "wwwrun"
+  become_user: "{{www_username}}"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 - name: add user "sandra"
   shell: "export OC_PASS={{sandra_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{sandra_username}}"
   become: yes
-  become_user: "wwwrun"
+  become_user: "{{www_username}}"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
 
 # **** OTHER ****
@@ -163,7 +163,7 @@
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"
     cron_file: ansible_nextcloud
-    user: wwwrun
+    user: "{{www_username}}"
     minute: "*/15"
     state: present
   tags: ['cron_job']
@@ -176,7 +176,7 @@
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'templates/cron_job') }}"
     cron_file: ansible_nextcloud
-    user: wwwrun
+    user: "{{www_username}}"
     minute: "0"
     hour: "1"
     state: present

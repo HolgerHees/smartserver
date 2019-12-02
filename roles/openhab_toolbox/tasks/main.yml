@@ -19,8 +19,8 @@
     src: "{{projects_path}}toolbox/web/"
     dest: "{{htdocs_path}}tools"
     state: link
-    owner: wwwrun
-    group: www  
+    owner: "{{www_username}}"
+    group: "{{www_group}}"  
   when: "vault_active|bool"
       
 - name: check mysql service

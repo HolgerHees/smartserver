@@ -1,4 +1,0 @@
-{
-  "log-driver": "journald",
-  "graph":"/dataDisk/var/lib/docker"
-}

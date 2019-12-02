@@ -1,9 +1,3 @@
-#- name: install required packages
-#  zypper:
-#    name: "mosquitto"
-#    state: present
-#  notify: "restart mosquitto"
-
 - name: check started docker
   systemd:
     name: docker

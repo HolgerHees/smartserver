@@ -14,7 +14,7 @@
   
 - name: set config
   lineinfile:
-    path: /etc/sysconfig/{{ 'mdadm' if ansible_distribution == 'openSUSE Leap' else 'mdmonitor' }}
+    path: "/etc/sysconfig/{{ 'mdadm' if ansible_distribution == 'openSUSE Leap' else 'mdmonitor' }}"
     regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}}="{{item.value}}"'
     create: true
@@ -29,6 +29,11 @@
     - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
     - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
   notify: "restart mdmonitor"
+
+- name: disable default check cron jobs
+  file: 
+    path: "/etc/{{ 'cron.d/mdadm' if ansible_distribution == 'openSUSE Leap' else 'cron.weekly/raid-check' }}"
+    state: absent
 
 - name: disable default check cron jobs
   file: 

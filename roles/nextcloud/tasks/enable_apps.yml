@@ -4,7 +4,7 @@
 - name: install apps
   shell: "php {{htdocs_path}}nextcloud/occ app:install {{item}}"
   become: yes
-  become_user: wwwrun
+  become_user: "{{www_username}}"
   register: command_result
   failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
   changed_when: "'enabled' in command_result.stdout"
@@ -25,14 +25,14 @@
   unarchive:
     src: "roles/nextcloud/templates/apps/keeweb.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
   when: not keeweb_exists.stat.exists
   
 - name: enable keeweb app
   shell: "php {{htdocs_path}}nextcloud/occ app:enable keeweb"
   become: yes
-  become_user: wwwrun
+  become_user: "{{www_username}}"
   when: not keeweb_exists.stat.exists
 
 - name: install news app
@@ -41,8 +41,8 @@
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
   register: news_installed
   
 #- name: patch news app min required version
@@ -56,8 +56,8 @@
   file:
     path: "{{item}}"
     state: directory
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0750
   with_items:
     - "{{nextcloud_data_path}}news"
@@ -67,14 +67,14 @@
   template:
     src: "roles/nextcloud/templates/apps/news.ini"
     dest: "{{nextcloud_data_path}}news/config/config.ini"
-    owner: wwwrun
-    group: www
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0640
   
 - name: enable news app
   shell: "php {{htdocs_path}}nextcloud/occ app:enable news"
   become: yes
-  become_user: wwwrun
+  become_user: "{{www_username}}"
   when: news_installed.changed
 
  
