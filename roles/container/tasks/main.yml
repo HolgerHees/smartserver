@@ -36,6 +36,16 @@
 #    timeout: 300
 #  when: ansible_distribution == 'Fedora' and group_result is changed
   
+
+#- name: add suse zypper repository
+#  zypper_repository:
+#    name: Devel:Kubic (podman)
+#    repo: 'http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Leap_{{ansible_distribution_version}}/'
+#    auto_import_keys: yes
+#    priority: "100"
+#    state: present
+#  when: ansible_distribution == 'openSUSE Leap'
+
 - name: install required suse packages
   zypper:
     name: [
@@ -43,10 +53,12 @@
         , python2-docker  # used by ansible docker module
         #, python3-docker  # used by ansible docker module
         , podman
+#        , podman>=1.6.2
+#        , cni>=0.7.1
+#        , cni-plugins>=0.8.3
     ]
     state: present
   when: ansible_distribution == 'openSUSE Leap'
-  notify: "restart docker"
 
 - name: set podman config
   lineinfile:

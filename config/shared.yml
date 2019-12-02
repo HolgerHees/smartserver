@@ -40,7 +40,7 @@ camera_streedside_ip:             "{{server_subnet}}.111"
 automower_ip:                     "{{server_subnet}}.133"
 printer_ip:                       "{{server_subnet}}.74"
 phone1_ip:                        "{{server_subnet}}.69"
-phone2_ip:                        "{{server_subnet}}.44"
+phone2_ip:                        "{{server_subnet}}.26"
 
 # 0 => production, 1 => production
 netgroup:                         "{{server_ip_r[2]}}"

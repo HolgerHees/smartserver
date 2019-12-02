@@ -3,7 +3,7 @@ samsungtv:tv:livingroom [ hostName="{{tv_livingroom_ip}}", port=55000, refreshIn
 
 // log:set DEBUG org.openhab.binding.network
 network:pingdevice:phone1 [ hostname="{{phone1_ip}}", retry=12, timeout=10000, refreshInterval=5000 ] // max 3.0 min
-network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=40, timeout=10000, refreshInterval=5000 ] // max 10.0 min
+network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=12, timeout=10000, refreshInterval=5000 ] // max 3.0 min
 
 network:pingdevice:roomba [ hostname="{{roomba_ip}}", retry=1, refreshInterval=60000 ]
 
