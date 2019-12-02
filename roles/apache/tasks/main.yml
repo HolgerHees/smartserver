@@ -98,32 +98,32 @@
     - { owner: root, group: root, dir: "/etc/apache2/_.ansible.d/" }
     - { owner: root, group: root, dir: "{{global_log}}/apache2/" }
 
-- name: enable modules
-  lineinfile:
-    state: present
-    dest: /etc/sysconfig/apache2
-    backrefs: yes
-    regexp: '^(APACHE_MODULES\s*=\s*\"(?!.*\s*{{item}}\s*)[^\"]+)(\".*)'
-    line: '\1 {{item}}\2'
-  with_items:
-    - auth_digest
-    - headers 
-    - proxy 
-    - proxy_html 
-    - proxy_http 
-    - proxy_balancer
-    - lbmethod_bytraffic # used by proxy_balancer
-    - slotmem_shm # used by proxy_balancer
-    - xml2enc
-    - deflate 
-    - filter 
-    #- apcu 
-    - proxy_wstunnel 
-    #- enable 
-    - rewrite 
-    - php7
-    - substitute # needed for instar camera webui
-  notify: "restart apache"
+#- name: enable modules
+#  lineinfile:
+#    state: present
+#    dest: /etc/sysconfig/apache2
+#    backrefs: yes
+#    regexp: '^(APACHE_MODULES\s*=\s*\"(?!.*\s*{{item}}\s*)[^\"]+)(\".*)'
+#    line: '\1 {{item}}\2'
+#  with_items:
+#    - auth_digest
+#    - headers 
+#    - proxy 
+#    - proxy_html 
+#    - proxy_http 
+#    - proxy_balancer
+#    - lbmethod_bytraffic # used by proxy_balancer
+#    - slotmem_shm # used by proxy_balancer
+#    - xml2enc
+#    - deflate 
+#    - filter 
+#    #- apcu 
+#    - proxy_wstunnel 
+#    #- enable 
+#    - rewrite 
+#    - php7
+#    - substitute # needed for instar camera webui
+#  notify: "restart apache"
 
 #- name: check modules
 #  shell: "{{ 'apachectl -M' if ansible_distribution == 'openSUSE Leap' else 'httpd -M' }}"
@@ -154,32 +154,32 @@
 #  notify: "restart apache"
   
 # *** disabled because it does not work on fedora ***
-#- name: enable modules
-#  apache2_module:
-#    name: "{{item}}"
-#    state: present
-#  with_items:
-#    - auth_digest
-#    - headers 
-#    - proxy 
-#    - proxy_html 
-#    - proxy_http 
-#    - proxy_balancer
-#    - lbmethod_bytraffic # used by proxy_balancer
-#    - slotmem_shm # used by proxy_balancer
-#    - xml2enc
-#    - deflate 
-#    - filter 
-#    #- apcu 
-#    - proxy_wstunnel 
-#    #- enable 
-#    - rewrite 
-#    - php7
-#    - substitute # needed for instar camera webui
-#  when: ansible_distribution == 'openSUSE Leap'
-#  notify: "restart apache"
+- name: enable modules
+  apache2_module:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - auth_digest
+    - headers 
+    - proxy 
+    - proxy_html 
+    - proxy_http 
+    - proxy_balancer
+    - lbmethod_bytraffic # used by proxy_balancer
+    - slotmem_shm # used by proxy_balancer
+    - xml2enc
+    - deflate 
+    - filter 
+    #- apcu 
+    - proxy_wstunnel 
+    #- enable 
+    - rewrite 
+    - php7
+    - substitute # needed for instar camera webui
+  notify: "restart apache"
+  when: ansible_distribution == 'openSUSE Leap'
     
-- name: set php configs
+- name: set php config on suse # fedora is using a shared one (cli & web)
   lineinfile:
     path: /etc/php7/apache2/php.ini
     insertafter: '^\[{{item.block}}\]'
@@ -195,6 +195,7 @@
     - { block: 'opcache', field: 'opcache.save_comments', value: '1' }
     - { block: 'opcache', field: 'opcache.revalidate_freq', value: '1' }
   notify: "restart apache"
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: copy config
   template:
@@ -225,10 +226,9 @@
     - videostream.cgi
 
 - name: disable http vhost
-  command: "mv /etc/apache2/vhosts.d/vhost.conf /etc/apache2/vhosts.d/vhost.conf.bak"
-  register: command_result
-  failed_when: "'command-not-found' in command_result.stderr"
-  changed_when: "command_result.rc == 0"
+  shell: "if [ -f /etc/apache2/vhosts.d/vhost.conf ]; then mv /etc/apache2/vhosts.d/vhost.conf /etc/apache2/vhosts.d/vhost.conf.org; echo \"1\"; else echo \"0\"; fi"
+  register: vhost_change
+  changed_when: "'1' in vhost_change.stdout"
   notify: "restart apache"
 
 - name: set config
