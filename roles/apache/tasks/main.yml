@@ -103,7 +103,6 @@
     state: present
     dest: /etc/sysconfig/apache2
     backrefs: yes
-    #regexp: '^(APACHE_MODULES=(?!.*{{item}})\"[^\"]+)(\".*)'
     regexp: '^(APACHE_MODULES\s*=\s*\"(?!.*\s*{{item}}\s*)[^\"]+)(\".*)'
     line: '\1 {{item}}\2'
   with_items:
