@@ -9,7 +9,7 @@
         state: present
         dest: /etc/default/grub
         backrefs: yes
-        regexp: '^(GRUB_CMDLINE_LINUX=(?!.*systemd\.unified_cgroup_hierarchy)\"[^\"]+)(\".*)'
+        regexp: '^(GRUB_CMDLINE_LINUX\s*=\s*\"(?!.*systemd\.unified_cgroup_hierarchy)[^\"]+)(\".*)'
         line: '\1 systemd.unified_cgroup_hierarchy=0\2'
       register: group_result
       

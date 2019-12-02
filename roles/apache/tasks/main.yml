@@ -98,38 +98,14 @@
     - { owner: root, group: root, dir: "/etc/apache2/_.ansible.d/" }
     - { owner: root, group: root, dir: "{{global_log}}/apache2/" }
 
-- name: check modules
-  shell: "{{ 'apachectl -M' if ansible_distribution == 'openSUSE Leap' else 'httpd -M' }}"
-  register: enabledmodules
-  when: ansible_distribution == 'Fedora'
-
 - name: enable modules
-  shell: ""
-  with_items:
-    - auth_digest
-    - headers 
-    - proxy 
-    - proxy_html 
-    - proxy_http 
-    - proxy_balancer
-    - lbmethod_bytraffic # used by proxy_balancer
-    - slotmem_shm # used by proxy_balancer
-    - xml2enc
-    - deflate 
-    - filter 
-    #- apcu 
-    - proxy_wstunnel 
-    #- enable 
-    - rewrite 
-    - php7
-    - substitute # needed for instar camera webui
-  when: "ansible_distribution == 'Fedora' and '{{item}} ' not in enabledmodules.stdout"
-  notify: "restart apache"
-  
-- name: enable modules
-  apache2_module:
-    name: "{{item}}"
+  lineinfile:
     state: present
+    dest: /etc/sysconfig/apache2
+    backrefs: yes
+    #regexp: '^(APACHE_MODULES=(?!.*{{item}})\"[^\"]+)(\".*)'
+    regexp: '^(APACHE_MODULES\s*=\s*\"(?!.*\s*{{item}}\s*)[^\"]+)(\".*)'
+    line: '\1 {{item}}\2'
   with_items:
     - auth_digest
     - headers 
@@ -148,8 +124,61 @@
     - rewrite 
     - php7
     - substitute # needed for instar camera webui
-  when: ansible_distribution == 'openSUSE Leap'
   notify: "restart apache"
+
+#- name: check modules
+#  shell: "{{ 'apachectl -M' if ansible_distribution == 'openSUSE Leap' else 'httpd -M' }}"
+#  register: enabledmodules
+#  changed_when: no
+
+#- name: enable modules
+#  shell: "sysconf_addword /etc/sysconfig/apache2 APACHE_MODULES {{item}}"
+#  with_items:
+#    - auth_digest
+#    - headers 
+#    - proxy 
+#    - proxy_html 
+#    - proxy_http 
+#    - proxy_balancer
+#    - lbmethod_bytraffic # used by proxy_balancer
+#    - slotmem_shm # used by proxy_balancer
+#    - xml2enc
+#    - deflate 
+#    - filter 
+#    #- apcu 
+#    - proxy_wstunnel 
+#    #- enable 
+#    - rewrite 
+#    - php7
+#    - substitute # needed for instar camera webui
+#  when: enabledmodules.stdout.find(' '+item) == -1
+#  notify: "restart apache"
+  
+# *** disabled because it does not work on fedora ***
+#- name: enable modules
+#  apache2_module:
+#    name: "{{item}}"
+#    state: present
+#  with_items:
+#    - auth_digest
+#    - headers 
+#    - proxy 
+#    - proxy_html 
+#    - proxy_http 
+#    - proxy_balancer
+#    - lbmethod_bytraffic # used by proxy_balancer
+#    - slotmem_shm # used by proxy_balancer
+#    - xml2enc
+#    - deflate 
+#    - filter 
+#    #- apcu 
+#    - proxy_wstunnel 
+#    #- enable 
+#    - rewrite 
+#    - php7
+#    - substitute # needed for instar camera webui
+#  when: ansible_distribution == 'openSUSE Leap'
+#  notify: "restart apache"
     
 - name: set php configs
   lineinfile:
