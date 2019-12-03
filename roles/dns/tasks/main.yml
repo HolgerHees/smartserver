@@ -37,30 +37,55 @@
   
 - name: prepare master folder on fedora
   file:
-    path: "/var/lib/named/master/"
+    path: "/var/lib/named/{{item}}"
     state: directory
     owner: root
     group: named
     mode: 0770
+  with_items
+    - master/
+    - dyn/
   when: ansible_distribution == 'Fedora'
-
+  
 - name: copy var folder
   template:
-    src: "roles/dns/templates/var/lib/named/master/{{item}}"
-    dest: "/var/lib/named/master/{{item}}"
+    src: "roles/dns/templates/var/lib/named/{{item}}"
+    dest: "/var/lib/named/{{item}}"
     owner: named
     group: named
     mode: 0640
   with_items:
-    - "server_reverse.in-addr.arpa"
-    - "server_forward"
+    - "master/server_reverse.in-addr.arpa"
+    - "master/server_forward"
+    - "127.0.0.zone"
+    - "localhost.zone"
+    - "root.hint"
   notify: "restart named"
   
+#chcon -v --type=named_conf_t /etc/named.xxxx.zones
+#chcon -v --user=system_u /etc/named.xxxx.zones  
+- name: set docker selinux configuration on fedora
+  shell: "{{item}}"
+  with_items:
+    - "semanage fcontext -a -t named_zone_t /var/lib/named"
+    - "semanage fcontext -a -t named_conf_t /var/lib/named/127.0.0.zone"
+    - "semanage fcontext -a -t named_conf_t /var/lib/named/localhost.zone"
+    - "semanage fcontext -a -t named_conf_t /var/lib/named/root.hint"
+    - "restorecon -Rv /var/lib/named"
+  register: selinux_config_exists
+  changed_when: "'already defined' not in selinux_config_exists.stderr"
+  failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
+  when: ansible_distribution == 'Fedora'
+
 - name: set resolv config on fedora
   lineinfile:
     path: /etc/sysconfig/network-scripts/ifcfg-eth0
-    regexp: '^[#]*DNS1\s*='
-    line: 'DNS1=127.0.0.1'
+    regexp: '^[#]*{{item.field}}\s*='
+    line: '{{item.field}}="{{item.value}}"'
+  with_items:
+    - { field: "PEERDNS", value: "no" }
+    - { field: "DNS1", value: "127.0.0.1" }
+    - { field: "SEARCH", value: "{{server_domain}}" }
   notify: "restart networkmanager"
   when: ansible_distribution == 'Fedora'
 

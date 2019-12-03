@@ -13,14 +13,21 @@
 
 # ghostscript version 9.27 is available since suse 15.1 (is needed to fix a PDF indexation bug)
 
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+      "php-gmp"            # needed by bookmark app
+    ]
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
-#     "ghostscript>=9.27",
       "php7-gmp"            # needed by bookmark app
     ]
     state: present
-    force: yes
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: set nextcloud version
   set_fact:

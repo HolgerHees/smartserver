@@ -1,3 +1,13 @@
+- name: install required fedora packages
+  yum:
+    name: [
+        netdata
+      , fping
+    ]
+    state: present
+  notify: "restart netdata"
+  when: ansible_distribution == 'Fedora'
+
 - name: add zypper repository
   zypper_repository:
     name: Network (netdata)
@@ -5,11 +15,12 @@
     auto_import_keys: yes
     priority: "100"
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
     
-- name: install required packages
+- name: install required suse packages
   zypper:
     name: [
-        netdata>=1.18
+        netdata
       , fping
       # needed to rebuild rpm package
       #, rpm-build
@@ -24,6 +35,7 @@
     ]
     state: present
   notify: "restart netdata"
+  when: ansible_distribution == 'openSUSE Leap'
   
 - name: prepare needed folder
   file:
@@ -36,7 +48,8 @@
   with_items:
     - "{{ global_lib }}netdata"
     - "{{ global_lib }}netdata/cache"
-    - "/etc/netdata/custom-plugins.d"
+    #- "/etc/netdata/custom-plugins.d"
+    - "/etc/netdata/health.d"
     - "/opt/netdata_helper"
   
 - name: copy config

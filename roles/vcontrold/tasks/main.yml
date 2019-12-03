@@ -11,7 +11,16 @@
     - "/opt/heating_control"
     - "/opt/heating_sensors"
     
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        cmake
+      , libudev-devel # needed to compile sensors
+    ]
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
         cmake
@@ -19,6 +28,7 @@
       , libudev-devel # needed to compile sensors
     ]
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: copy config and service
   template:

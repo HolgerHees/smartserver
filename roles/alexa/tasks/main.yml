@@ -6,14 +6,24 @@
 #    priority: "100"
 #    state: present
     
-- name: install nodejs packages
+- name: install required fedora packages
+  yum:
+    name: [
+        nodejs10
+      , npm10
+    ]
+    state: present
+  when: ansible_distribution == 'openSUSE Leap'
+
+- name: install required suse packages
   zypper:
     name: [
         nodejs10
       , npm10
     ]
     state: present
-
+  when: ansible_distribution == 'openSUSE Leap'
+  
 - name: clone git
   git:
 #    accept_hostkey: yes
