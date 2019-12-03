@@ -62,6 +62,7 @@
     - "root.hint"
   notify: "restart named"
   
+# https://wiki.samba.org/index.php/BIND9_DLZ_AppArmor_and_SELinux_Integration
 #chcon -v --type=named_conf_t /etc/named.xxxx.zones
 #chcon -v --user=system_u /etc/named.xxxx.zones  
 - name: set docker selinux configuration on fedora
