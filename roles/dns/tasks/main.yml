@@ -42,7 +42,7 @@
     owner: root
     group: named
     mode: 0770
-  with_items
+  with_items:
     - master/
     - dyn/
   when: ansible_distribution == 'Fedora'
