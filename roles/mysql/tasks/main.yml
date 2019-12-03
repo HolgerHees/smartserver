@@ -19,11 +19,12 @@
     name: mysql
     image: mariadb:10.4.10
     state: present
-#    recreate: true
+    recreate: true
     env:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: mysql

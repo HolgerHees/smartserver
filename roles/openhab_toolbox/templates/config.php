@@ -4,7 +4,7 @@ class Setup
 {
     public static function getTimezone()
     {
-        return new DateTimezone( 'Europe/Berlin' );
+        return new DateTimezone( '{{timezone}}' );
     }
     
 	public static function getOpenHabMysql()
