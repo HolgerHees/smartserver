@@ -71,6 +71,8 @@
     - "semanage fcontext -a -t named_conf_t /var/lib/named/127.0.0.zone"
     - "semanage fcontext -a -t named_conf_t /var/lib/named/localhost.zone"
     - "semanage fcontext -a -t named_conf_t /var/lib/named/root.hint"
+    - "semanage fcontext -a -t named_conf_t /var/lib/named/master/server_forward"
+    - "semanage fcontext -a -t named_conf_t /var/lib/named/master/server_reverse.in-addr.arpa"
     - "restorecon -Rv /var/lib/named"
   register: selinux_config_exists
   changed_when: "'already defined' not in selinux_config_exists.stderr"
