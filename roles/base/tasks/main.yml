@@ -44,6 +44,7 @@
       , mailx              # used by elastalert
       
       , python3-libselinux # used by ansible on fedora
+      , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
       , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present

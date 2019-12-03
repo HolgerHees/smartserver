@@ -83,7 +83,7 @@
 - name: copy apache config
   template:
     src: "roles/netdata/templates/etc/apache2/_.ansible.d/netdata.conf"
-    dest: "/etc/apache2/_.ansible.d/netdata.conf"
+    dest: "{{www_etc}}_.ansible.d/netdata.conf"
     owner: root
     group: root
     mode: 0640

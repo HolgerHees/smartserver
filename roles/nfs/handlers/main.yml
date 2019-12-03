@@ -1,6 +1,6 @@
 - name: restart nfs-server
   systemd:
-    name: nfsserver
+    name: "{{ 'nfsserver' if ansible_distribution == 'openSUSE Leap' else 'nfs-server' }}"
     state: restarted
     daemon_reload: yes
     enabled: yes

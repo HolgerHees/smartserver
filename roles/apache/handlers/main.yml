@@ -1,6 +1,6 @@
 - name: restart apache
   systemd:
-    name: apache2
+    name: "{{ 'apache2' if ansible_distribution == 'openSUSE Leap' else 'httpd' }}"
     state: restarted
     daemon_reload: yes
     enabled: yes

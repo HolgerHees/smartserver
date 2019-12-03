@@ -15,6 +15,7 @@
         config_path: "config/{%if inventory_hostname == 'test'%}test{%else%}marvin{%endif%}/"
         www_username: "{{ 'wwwrun' if ansible_distribution == 'openSUSE Leap' else 'apache' }}"
         www_group: "{{ 'www' if ansible_distribution == 'openSUSE Leap' else 'apache' }}"
+        www_etc: "{{ '/etc/apache2/' if ansible_distribution == 'openSUSE Leap' else '/etc/httpd/' }}"
       tags: always
     - name: Load env vars
       include_vars: "{{config_path}}env.yml"
@@ -48,7 +49,9 @@
           - "os-name:    {{ansible_distribution}}"
           - "os-version: {{ansible_distribution_version}}"
           - "vault:      is {%if vault_active%}active{%else%}inactive{%endif%}"
-          - "www_run:    {{www_username}}"
+          - "www-user:   {{www_username}}"
+          - "www-group:  {{www_group}}"
+          - "www-etc:    {{www_etc}}"
       tags: always
   roles:
     - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
@@ -81,7 +84,7 @@
 
     - { role: container, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
-    - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating /etc/apache2/_.ansible.d
+    - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating {{www_etc}}_.ansible.d
 
     - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
 

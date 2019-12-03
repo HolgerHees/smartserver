@@ -1,4 +1,14 @@
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+        nfs-utils
+      #, yast2-nfs-server
+    ]
+    state: present
+  notify: "restart nfs-server"
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
         nfs-kernel-server
@@ -6,3 +16,4 @@
     ]
     state: present
   notify: "restart nfs-server"
+  when: ansible_distribution == 'openSUSE Leap'

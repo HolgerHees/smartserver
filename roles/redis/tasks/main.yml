@@ -36,7 +36,7 @@
     log_options:
       tag: redis
     volumes:
-      - '{{redis_socket_path}}:/var/run/redis/'
+      - '{{redis_socket_path}}:/var/run/redis:z'
   notify: "restart redis"
 
 #- name: clean old docker images

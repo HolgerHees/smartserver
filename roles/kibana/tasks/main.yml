@@ -45,7 +45,7 @@
 - name: copy apache config
   template:
     src: "roles/kibana/templates/etc/apache2/_.ansible.d/kibana.conf"
-    dest: "/etc/apache2/_.ansible.d/kibana.conf"
+    dest: "{{www_etc}}_.ansible.d/kibana.conf"
     owner: root
     group: root
     mode: 0640

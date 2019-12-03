@@ -36,7 +36,7 @@
     log_options:
       tag: elasticsearch
     volumes:
-      - '{{ global_lib }}elasticsearch:/usr/share/elasticsearch/data'
+      - '{{ global_lib }}elasticsearch:/usr/share/elasticsearch/data:z'
     ports:
      - "127.0.0.1:9200:9200"  
      - "127.0.0.1:9300:9300"  
@@ -66,7 +66,7 @@
 - name: copy apache config
   template:
     src: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/elasticsearch.conf"
-    dest: "/etc/apache2/_.ansible.d/elasticsearch.conf"
+    dest: "{{www_etc}}_.ansible.d/elasticsearch.conf"
     owner: root
     group: root
     mode: 0640

@@ -1,4 +1,16 @@
-- name: restart clamav
+- name: restart clamav on fedora
+  systemd:
+    name: "{{item}}"
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  with_items:
+    - clamd@scan
+  listen: "restart clamav"
+  when: ansible_distribution == 'Fedora'
+
+- name: restart clamav on suse
   systemd:
     name: "{{item}}"
     state: restarted
@@ -9,3 +21,5 @@
     - clamd
     - freshclam
   listen: "restart clamav"
+  when: ansible_distribution == 'openSUSE Leap'
+

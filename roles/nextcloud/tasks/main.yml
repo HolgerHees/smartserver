@@ -148,7 +148,7 @@
 - name: copy apache config
   template:
     src: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
-    dest: "/etc/apache2/_.ansible.d/nextcloud.conf"
+    dest: "{{www_etc}}_.ansible.d/nextcloud.conf"
     owner: root
     group: root
     mode: 0640

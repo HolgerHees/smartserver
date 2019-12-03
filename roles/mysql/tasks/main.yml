@@ -29,8 +29,8 @@
     log_options:
       tag: mysql
     volumes:
-      - '{{ global_lib }}mysql:/var/lib/mysql'
-      - '{{local_backup_path}}mysql:/var/lib/mysql_backup'
+      - '{{ global_lib }}mysql:/var/lib/mysql:z'
+      - '{{local_backup_path}}mysql:/var/lib/mysql_backup:z'
     ports:
       - "127.0.0.1:3306:3306"  
   notify: "restart mysql"

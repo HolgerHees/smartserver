@@ -3,7 +3,7 @@
     name: [
         docker
         , python3-docker  # used by ansible docker module
-        , podman
+#        , podman
     ]
     state: present
   when: ansible_distribution == 'Fedora'
@@ -31,21 +31,37 @@
     state: present
   when: ansible_distribution == 'openSUSE Leap'
 
-- name: set podman config
-  lineinfile:
-    path: /etc/containers/{{item.file}}
-    regexp: '^[#]*{{item.field}}\s*='
-    line: '{{item.field}}="{{item.value}}"'
-    create: true
-    owner: root
-    group: root
-    mode: 0640
-  with_items:
-    - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
-    - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
-    - { file: 'libpod.conf', field: 'cgroup_manager', value: "{{ 'systemd' if ansible_distribution == 'openSUSE Leap' else 'systemd' }}" }
-    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
-    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
+#- name: set podman config
+#  lineinfile:
+#    path: /etc/containers/{{item.file}}
+#    regexp: '^[#]*{{item.field}}\s*='
+#    line: '{{item.field}}="{{item.value}}"'
+#    create: true
+#    owner: root
+#    group: root
+#    mode: 0640
+#  with_items:
+#    - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
+#    - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
+#    - { file: 'libpod.conf', field: 'cgroup_manager', value: "{{ 'systemd' if ansible_distribution == 'openSUSE Leap' else 'systemd' }}" }
+#    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
+#    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
+
+#- name: set podman selinux configuration on fedora
+#  shell: "{{item}}"
+#  with_items:
+#    - "semanage fcontext -a -e /var/lib/containers/storage/libpod {{global_lib}}libpod/storage"
+#    - "semanage fcontext -a -e /var/run/libpod {{global_tmp}}libpod"
+#    - "semanage fcontext -a -e /var/lib/containers/storage {{global_lib}}containers/storage"
+#    - "semanage fcontext -a -e /var/run/containers/storage {{global_tmp}}containers/storage"
+#    - "restorecon -Rv {{global_lib}}libpod/storage"
+#    - "restorecon -Rv {{global_tmp}}libpod"
+#    - "restorecon -Rv {{global_lib}}containers/storage"
+#    - "restorecon -Rv {{global_tmp}}containers/storage"
+#  register: selinux_config_exists
+#  changed_when: "'already defined' not in selinux_config_exists.stderr"
+#  failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
+#  when: ansible_distribution == 'Fedora'
 
 - name: disable docker daemon.json
   shell: "if [ -f /etc/docker/daemon.json ]; then mv /etc/docker/daemon.json /etc/docker/daemon.json.org; echo \"1\"; else echo \"0\"; fi"
@@ -61,6 +77,22 @@
   with_items:
     - { field: "log-driver", value: "journald" }
     - { field: "graph", value: "{{global_lib}}docker" }
+  when: ansible_distribution == 'Fedora'
+  
+- name: check started docker on fedora
+  systemd:
+    name: docker
+    state: started
+  when: ansible_distribution == 'Fedora'
+  
+- name: set docker selinux configuration on fedora
+  shell: "{{item}}"
+  with_items:
+    - "semanage fcontext -a -e /var/lib/docker {{global_lib}}docker"
+    - "restorecon -Rv {{global_lib}}docker"
+  register: selinux_config_exists
+  changed_when: "'already defined' not in selinux_config_exists.stderr"
+  failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
   when: ansible_distribution == 'Fedora'
 
 - name: change docker config on suse

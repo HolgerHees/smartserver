@@ -65,8 +65,8 @@
     log_options:
       tag: grafana
     volumes:
-      - '{{global_lib}}grafana:/var/lib/grafana'
-      - '{{global_lib}}grafana/provisioning:/etc/grafana/provisioning'
+      - '{{global_lib}}grafana:/var/lib/grafana:z'
+      - '{{global_lib}}grafana/provisioning:/etc/grafana/provisioning:z'
     #ports:
     # - "9000:3000"  
   notify: "restart grafana"
@@ -95,7 +95,7 @@
 - name: copy apache config
   template:
     src: "roles/grafana/templates/etc/apache2/_.ansible.d/grafana.conf"
-    dest: "/etc/apache2/_.ansible.d/grafana.conf"
+    dest: "{{www_etc}}_.ansible.d/grafana.conf"
     owner: root
     group: root
     mode: 0640

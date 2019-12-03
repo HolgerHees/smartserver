@@ -5,6 +5,7 @@
       #, python2-setuptools      # needed by openssl ansible module
       , python3-setuptools
       , certbot-apache
+      , mod_proxy_html
     ]
     state: present
   when: ansible_distribution == 'Fedora'
@@ -73,7 +74,7 @@
   notify: "restart apache"
   when: "use_vault_files|bool"
 
-- name: create certificate symlink (production)
+- name: create certificate symlink
   file:
     src: "letsencrypt"
     dest: "/etc/certbot"
@@ -95,66 +96,123 @@
   with_items:
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
-    - { owner: root, group: root, dir: "/etc/apache2/_.ansible.d/" }
-    - { owner: root, group: root, dir: "{{global_log}}/apache2/" }
+    - { owner: root, group: root, dir: "{{www_etc}}_.ansible.d/" }
+    - { owner: "{{ 'root' if ansible_distribution == 'openSUSE Leap' else www_username }}", group: "{{ 'root' if ansible_distribution == 'openSUSE Leap' else www_group }}", dir: "{{global_log}}apache2/" }
 
-#- name: enable modules
-#  lineinfile:
-#    state: present
-#    dest: /etc/sysconfig/apache2
-#    backrefs: yes
-#    regexp: '^(APACHE_MODULES\s*=\s*\"(?!.*\s*{{item}}\s*)[^\"]+)(\".*)'
-#    line: '\1 {{item}}\2'
-#  with_items:
-#    - auth_digest
-#    - headers 
-#    - proxy 
-#    - proxy_html 
-#    - proxy_http 
-#    - proxy_balancer
-#    - lbmethod_bytraffic # used by proxy_balancer
-#    - slotmem_shm # used by proxy_balancer
-#    - xml2enc
-#    - deflate 
-#    - filter 
-#    #- apcu 
-#    - proxy_wstunnel 
-#    #- enable 
-#    - rewrite 
-#    - php7
-#    - substitute # needed for instar camera webui
-#  notify: "restart apache"
 
-#- name: check modules
-#  shell: "{{ 'apachectl -M' if ansible_distribution == 'openSUSE Leap' else 'httpd -M' }}"
-#  register: enabledmodules
-#  changed_when: no
-
-#- name: enable modules
-#  shell: "sysconf_addword /etc/sysconfig/apache2 APACHE_MODULES {{item}}"
-#  with_items:
-#    - auth_digest
-#    - headers 
-#    - proxy 
-#    - proxy_html 
-#    - proxy_http 
-#    - proxy_balancer
-#    - lbmethod_bytraffic # used by proxy_balancer
-#    - slotmem_shm # used by proxy_balancer
-#    - xml2enc
-#    - deflate 
-#    - filter 
-#    #- apcu 
-#    - proxy_wstunnel 
-#    #- enable 
-#    - rewrite 
-#    - php7
-#    - substitute # needed for instar camera webui
-#  when: enabledmodules.stdout.find(' '+item) == -1
-#  notify: "restart apache"
   
-# *** disabled because it does not work on fedora ***
-- name: enable modules
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+- name: prepare needed folderon fedora
+  file:
+    path: "{{www_etc}}vhosts.d/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: enable modules on fedora
+  lineinfile:
+    path: "{{www_etc}}conf.modules.d/{{item.file}}"
+    regexp: '^[#\s]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
+    line: 'LoadModule {{item.name}}_module modules/{{item.prefix}}{{item.name}}.so'
+  with_items:
+    - { file: "00-base.conf", name: "auth_digest", prefix: "mod_" }
+    - { file: "00-base.conf", name: "headers", prefix: "mod_" }
+    - { file: "00-proxy.conf", name: "proxy", prefix: "mod_" }
+    - { file: "00-proxyhtml.conf", name: "proxy_html", prefix: "mod_" } 
+    - { file: "00-proxy.conf", name: "proxy_http", prefix: "mod_" } 
+    - { file: "00-proxy.conf", name: "proxy_balancer", prefix: "mod_" }
+    - { file: "00-proxy.conf", name: "lbmethod_bytraffic", prefix: "mod_" } # used by proxy_balancer
+    - { file: "00-base.conf", name: "slotmem_shm", prefix: "mod_" } # used by proxy_balancer
+    - { file: "00-proxyhtml.conf", name: "xml2enc", prefix: "mod_" }
+    - { file: "00-base.conf", name: "deflate", prefix: "mod_" } 
+    - { file: "00-base.conf", name: "filter", prefix: "mod_" } 
+    - { file: "00-proxy.conf", name: "proxy_wstunnel", prefix: "mod_" } 
+    - { file: "00-base.conf", name: "rewrite", prefix: "mod_" } 
+    - { file: "15-php.conf", name: "php7", prefix: "lib" }
+    - { file: "00-base.conf", name: "substitute", prefix: "mod_" } # needed for instar camera webui
+  notify: "restart apache"
+  when: ansible_distribution == 'Fedora'
+  
+- name: disable default LISTEN on fedora
+  lineinfile:
+    path: "{{www_etc}}{{item.file}}"
+    backrefs: yes
+    regexp: '{{item.regex}}'
+    line: '{{item.line}}'
+  with_items:
+    - { file: "conf/httpd.conf", regex: "^(Listen.*)", line: "#\\1" }
+    - { file: "conf.d/ssl.conf", regex: "^(Listen.*)", line: "#\\1" }
+  notify: "restart apache"
+  when: ansible_distribution == 'Fedora'
+
+- name: set server config on fedora
+  lineinfile:
+    path: "{{www_etc}}conf/httpd.conf"
+    regexp: '^[#]*{{item.regex}}'
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "Include {{www_etc}}listen\\.conf", line: "Include {{www_etc}}listen.conf" }
+    - { regex: "Include {{www_etc}}vhosts.d/vhost-ssl\\.conf", line: "Include {{www_etc}}vhosts.d/vhost-ssl.conf" }
+    - { regex: 'ErrorLog', line: 'ErrorLog "{{global_log}}apache2/error.log"' }
+    - { regex: 'Logformat.*?my_http_log', line: 'Logformat "%t - %h - %u - \"%r\" - %s - %b (%D) - \"%{User-Agent}i\"" my_http_log' }
+    - { regex: 'CustomLog.*?my_http_log', line: 'CustomLog "{{global_log}}apache2/access.log" my_http_log' }
+    - { regex: 'DocumentRoot', line: 'DocumentRoot "{{htdocs_path}}"' }
+    - { regex: 'ServerName', line: 'ServerName "{{server_domain}}"' }
+  notify: "restart apache"
+  when: ansible_distribution == 'Fedora'
+  
+- name: set selinux configuration on fedora
+  shell: "{{item}}"
+  with_items:
+    - "semanage port -a -t http_port_t -p tcp 10114"
+    - "semanage fcontext -a -t httpd_log_t \"{{global_log}}apache2(/.*)?\""
+    - "restorecon -Rv {{global_log}}apache2/"
+  register: selinux_config_exists
+  changed_when: "'already defined' not in selinux_config_exists.stderr"
+  failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
+  when: ansible_distribution == 'Fedora'
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+- name: enable modules on suse
   apache2_module:
     name: "{{item}}"
     state: present
@@ -179,28 +237,60 @@
   notify: "restart apache"
   when: ansible_distribution == 'openSUSE Leap'
     
-- name: set php config on suse # fedora is using a shared one (cli & web)
-  lineinfile:
-    path: /etc/php7/apache2/php.ini
-    insertafter: '^\[{{item.block}}\]'
-    regexp: '^[#]*{{item.field}}\s*='
-    line: '{{item.field}}={{item.value}}'
-  with_items:
-    - { block: 'PHP', field: 'memory_limit', value: '512M' }
-    - { block: 'opcache', field: 'opcache.enable', value: '1' }
-    - { block: 'opcache', field: 'opcache.enable_cli', value: '1' }
-    - { block: 'opcache', field: 'opcache.interned_strings_buffer', value: '8' }
-    - { block: 'opcache', field: 'opcache.max_accelerated_files', value: '10000' }
-    - { block: 'opcache', field: 'opcache.memory_consumption', value: '128' }
-    - { block: 'opcache', field: 'opcache.save_comments', value: '1' }
-    - { block: 'opcache', field: 'opcache.revalidate_freq', value: '1' }
+- name: set web config on suse # fedora is using a shared one (cli & web)
+  import_tasks: roles/php/tasks/php_ini.yml
+  vars:
+    php_ini_file: "/etc/php7/apache2/php.ini"
+  notify: "restart apache"
+  when: ansible_distribution == 'openSUSE Leap'
+  
+- name: disable http vhost on suse
+  shell: "if [ -f {{www_etc}}vhosts.d/vhost.conf ]; then mv {{www_etc}}vhosts.d/vhost.conf {{www_etc}}vhosts.d/vhost.conf.org; echo \"1\"; else echo \"0\"; fi"
+  register: vhost_change
+  changed_when: "'1' in vhost_change.stdout"
   notify: "restart apache"
   when: ansible_distribution == 'openSUSE Leap'
 
+- name: set server config on suse
+  lineinfile:
+    path: "{{www_etc}}default-server.conf"
+    regexp: '^[#]*{{item.field}} '
+    line: '{{item.field}} {{item.value}}'
+  with_items:
+    - { field: 'ErrorLog', value: '{{global_log}}apache2/error.log' }
+    - { field: 'Logformat', value: '"%t - %h - %u - \"%r\" - %s - %b (%D) - \"%{User-Agent}i\"" my_http_log' }
+    - { field: 'CustomLog', value: '{{global_log}}apache2/access.log my_http_log' }
+    - { field: 'DocumentRoot', value: '"{{htdocs_path}}"' }
+    - { field: 'ServerName', value: '"{{server_domain}}"' }
+  notify: "restart apache"
+  when: ansible_distribution == 'openSUSE Leap'
+ 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 - name: copy config
   template:
     src: "roles/apache/templates/etc/apache2/{{item}}"
-    dest: "/etc/apache2/{{item}}"
+    dest: "{{www_etc}}{{item}}"
     owner: root
     group: root
     mode: 0640
@@ -224,25 +314,6 @@
     - cam.mjpg
     - snapshot.cgi
     - videostream.cgi
-
-- name: disable http vhost
-  shell: "if [ -f /etc/apache2/vhosts.d/vhost.conf ]; then mv /etc/apache2/vhosts.d/vhost.conf /etc/apache2/vhosts.d/vhost.conf.org; echo \"1\"; else echo \"0\"; fi"
-  register: vhost_change
-  changed_when: "'1' in vhost_change.stdout"
-  notify: "restart apache"
-
-- name: set config
-  lineinfile:
-    path: /etc/apache2/default-server.conf
-    regexp: '^[#]*{{item.field}} '
-    line: '{{item.field}} {{item.value}}'
-  with_items:
-    - { field: 'ErrorLog', value: '{{global_log}}apache2/error.log' }
-    - { field: 'Logformat', value: '"%t - %h - %u - \"%r\" - %s - %b (%D) - \"%{User-Agent}i\"" my_http_log' }
-    - { field: 'CustomLog', value: '{{global_log}}apache2/access.log my_http_log' }
-    - { field: 'DocumentRoot', value: '"{{htdocs_path}}"' }
-    - { field: 'ServerName', value: '"{{server_domain}}"' }
-  notify: "restart apache"
 
 - name: copy fluentd config
   template:

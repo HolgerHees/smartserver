@@ -1,17 +1,33 @@
-- name: add zypper repository
+- name: install required fedora packages
+  yum:
+    name: [
+      clamav
+      , clamav-update
+      , clamav-server 
+      , clamav-server-systemd 
+      , clamav-scanner
+    ]
+    state: present
+  register: install_status
+  notify: "restart clamav"
+  when: ansible_distribution == 'Fedora'
+
+- name: add zypper repository on suse
   zypper_repository:
     name: Security (clamav)
     repo: "http://download.opensuse.org/repositories/security/openSUSE_Leap_{{ansible_distribution_version}}/"
     auto_import_keys: yes
     priority: "100"
     state: present
+  when: ansible_distribution == 'openSUSE Leap'
 
-- name: install required packages
+- name: install required suse packages
   zypper:
     name: clamav>=0.101.3
     state: present
   register: install_status
   notify: "restart clamav"
+  when: ansible_distribution == 'openSUSE Leap'
 
 - name: load initial database
   shell: '/usr/bin/freshclam --no-warnings'
@@ -20,7 +36,7 @@
 
 - name: change clamd startup timeout
   lineinfile:
-    path: /usr/lib/systemd/system/clamd.service
+    path: "/usr/lib/systemd/system/{{ 'clamd.service' if ansible_distribution == 'openSUSE Leap' else 'clamd@.service' }}"
     insertafter: '^\[Service\]'
     regexp: '^[#]*TimeoutSec\s*='
     line: 'TimeoutSec=5min'

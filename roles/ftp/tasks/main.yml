@@ -11,23 +11,22 @@
 
 
 
-
 - name: check podman image exists
   shell: "podman images custom_vsftpd:1.0.0"
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
-  when: "vault_active|bool"
-  
+  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool"
+
 - name: compose podman image
   shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
   register: output
-  when: "vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
+  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
 
 - name: check podman container exists
   shell: "podman ps -a --filter \"name=vsftpd\""
   register: container_exists
   changed_when: "'vsftpd' not in container_exists.stdout"
-  when: "vault_active|bool"
+  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool"
 
 - name: compose podman image
   shell: >
@@ -51,7 +50,7 @@
     custom_vsftpd:1.0.0
   register: output
 #  notify: "restart vsftpd"
-  when: "vault_active|bool and 'vsftpd' not in container_exists.stdout"
+  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool and 'vsftpd' not in container_exists.stdout"
 
 #- name: create systemd service
 #  vars:
@@ -63,6 +62,7 @@
 #    group: root
 #    mode: 0644
 #  notify: "restart vsftpd"
+#  when: ansible_distribution == 'openSUSE Leap'
 
 
 
@@ -106,7 +106,7 @@
     log_options:
       tag: vsftpd
     volumes:
-      - '{{ftp_path}}:/home/uploads'
+      - '{{ftp_path}}:/home/uploads:z'
     ports:
       - "21:21"
       - "30000-30100:30000-30100"

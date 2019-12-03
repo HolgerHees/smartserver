@@ -251,7 +251,7 @@
 - name: copy apache config
   template:
     src: "roles/openhab/templates/etc/apache2/_.ansible.d/openhab.conf"
-    dest: "/etc/apache2/_.ansible.d/openhab.conf"
+    dest: "{{www_etc}}_.ansible.d/openhab.conf"
     owner: root
     group: root
     mode: 0640

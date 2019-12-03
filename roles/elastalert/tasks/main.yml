@@ -6,7 +6,18 @@
     group: root
     mode: 0750
 
-- name: install required packages
+- name: install required fedora packages
+  yum:
+    name: [
+      python3-boto3
+      , python-dateutil 
+      , python3-devel
+    ]
+    state: present
+  notify: "restart elastalert"
+  when: ansible_distribution == 'Fedora'
+
+- name: install required suse packages
   zypper:
     name: [
       python3-boto3
@@ -15,6 +26,7 @@
     ]
     state: present
   notify: "restart elastalert"
+  when: ansible_distribution == 'openSUSE Leap'
   
 #- name: install required python pip modules
 #  pip: 
@@ -67,7 +79,7 @@
   when: clone_status.changed
   
 - name: create search index
-  shell: '/usr/bin/elastalert-create-index --config /etc/elastalert/config.yaml'
+  shell: 'elastalert-create-index --config /etc/elastalert/config.yaml'
   notify: "restart elastalert"
   when: clone_status.changed
   
