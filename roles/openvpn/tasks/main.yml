@@ -48,6 +48,7 @@
     group: root
     mode: 0640
     force: no
+  when: ansible_distribution == 'Fedora'
 
 - name: modify openvpn systemd service on fedora
   lineinfile:
