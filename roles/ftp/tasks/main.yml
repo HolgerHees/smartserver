@@ -44,7 +44,7 @@
     --env "PASV_MAX=50100" \
     --env "UMASK=027" \
     --log-driver=journald \
-    --volume="{{ftp_path}}:/home/uploads:rwz" \
+    --volume="{{ftp_path}}:/home/uploads:rw" \
     -p 9021:21 \
     -p 50000-50100:30000-30100 \
     custom_vsftpd:1.0.0
