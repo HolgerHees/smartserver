@@ -39,7 +39,6 @@
     owner: root
     group: root
     mode: 0755
-    seuser: "system_u"
   with_items:
     - "letsencrypt/"
     - "letsencrypt/live"
@@ -83,7 +82,6 @@
     owner: root
     group: root
     mode: 0777
-    seuser: "system_u"
 
 # TODO add renew job
 #certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
@@ -95,7 +93,6 @@
     owner: "{{item.owner}}"
     group: "{{item.group}}"
     mode: 0755
-    seuser: "system_u"
   with_items:
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
@@ -133,7 +130,6 @@
     owner: root
     group: root
     mode: 0755
-    seuser: "system_u"
   when: ansible_distribution == 'Fedora'
 
 - name: enable modules on fedora
