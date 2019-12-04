@@ -81,7 +81,7 @@
     state: link
     owner: root
     group: root
-    mode: 0777
+    mode: 0755
 
 # TODO add renew job
 #certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
