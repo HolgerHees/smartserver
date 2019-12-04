@@ -1,4 +1,4 @@
-- name: check elasticsearch is running
+- name: check if elasticsearch is running
   systemd:
     name: elasticsearch
     state: started

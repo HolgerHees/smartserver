@@ -1,4 +1,4 @@
-- name: check influxdb is running
+- name: check if influxdb is running
   systemd:
     name: influxdb
     state: started

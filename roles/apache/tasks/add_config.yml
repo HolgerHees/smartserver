@@ -1,4 +1,4 @@
-- name: copy apache config
+- name: "copy apache config '{{config_file | basename}}'"
   template:
     src: "{{config_file}}"
     dest: "{{www_etc}}_.ansible.d/{{config_file | basename}}"
@@ -6,5 +6,4 @@
     group: root
     mode: 0644
   notify: "restart apache"
-  tags: ['apache_conf']
 
