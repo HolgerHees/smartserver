@@ -103,7 +103,7 @@
   
 - name: create cron job
   vars:
-    name: "Netdata error check"
+    title: "Netdata error check"
     cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php"
     file: "ansible_netdata"
   import_role:

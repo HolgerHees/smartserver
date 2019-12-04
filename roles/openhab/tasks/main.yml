@@ -270,7 +270,7 @@
   
 - name: create cron job
   vars:
-    name: "MySQL Openhab Backup"
+    title: "MySQL Openhab Backup"
     cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
     file: "ansible_openhab"
     hour: "1"
@@ -282,7 +282,7 @@
 
 - name: create cron job
   vars:
-    name: "Influxdb Openhab Backup"
+    title: "Influxdb Openhab Backup"
     cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
     file: "ansible_openhab"
     hour: "1"

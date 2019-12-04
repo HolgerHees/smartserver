@@ -40,7 +40,7 @@
 # Weather data fetcher
 - name: create cron job
   vars:
-    name: "Weatherdata"
+    title: "Weatherdata"
     cmd: "/usr/bin/php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php"
     file: "ansible_openhab_toolbox"
     minute: "0"

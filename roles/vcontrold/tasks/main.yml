@@ -117,7 +117,7 @@
 
 - name: create cron job
   vars:
-    name: "Heating Control"
+    title: "Heating Control"
     cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
     file: "ansible_vcontrold"
     minute: "*/1"
@@ -129,7 +129,7 @@
 
 - name: create cron job
   vars:
-    name: "Heating Sensors"
+    title: "Heating Sensors"
     cmd: "/opt/heating_sensors/sensoren.bash"
     file: "ansible_vcontrold"
     minute: "*/1"
@@ -141,7 +141,7 @@
 
 - name: create cron job
   vars:
-    name: "Heating Cleanup"
+    title: "Heating Cleanup"
     cmd: "find {{global_log}}heizung/ -mtime +14 -exec rm {} +"
     file: "ansible_vcontrold"
     hour: "0"

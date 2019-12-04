@@ -54,7 +54,7 @@
 
 - name: create cron job
   vars:
-    name: "Fluentd elasticsearch index cleanup"
+    title: "Fluentd elasticsearch index cleanup"
     cmd: "/usr/bin/curator_cli --host 127.0.0.1 delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"
     file: "ansible_fluentd"
     hour: "1"

@@ -56,7 +56,7 @@
   
 - name: create cron job
   vars:
-    name: "Influxdb OpenTSDB Backup"
+    title: "Influxdb OpenTSDB Backup"
     cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
     file: "ansible_influxdb"
     hour: "1"
@@ -68,7 +68,7 @@
   
 - name: create cron job
   vars:
-    name: "Influxdb Cleanup"
+    title: "Influxdb Cleanup"
     cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
     file: "ansible_influxdb"
     hour: "0"

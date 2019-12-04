@@ -52,7 +52,7 @@
 # Picture of the day fetcher
 - name: create cron job
   vars:
-    name: "POTD Fetcher"
+    title: "POTD Fetcher"
     cmd: "/opt/potd_fetcher/fetchPOTD.sh"
     file: "ansible_apache_webui"
     hour: "3"

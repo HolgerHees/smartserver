@@ -8,7 +8,7 @@
     
 - name: create cron job
   vars:
-    name: "DataDisk RSync Backup"
+    title: "DataDisk RSync Backup"
     cmd: "/usr/bin/rsync --quiet -av --delete {{data_path}} {{local_backup_path}}dataDisk/ --exclude=var --exclude=tmp"
     file: "ansible_cron_backup_rsync"
     hour: "5"

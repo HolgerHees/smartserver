@@ -52,7 +52,7 @@
   
 - name: create cron job
   vars:
-    name: "MySQL Core Backup"
+    title: "MySQL Core Backup"
     cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
     file: "ansible_mysql"
     hour: "1"
@@ -64,7 +64,7 @@
 
 - name: create cron job
   vars:
-    name: "MySQL Clean Backup"
+    title: "MySQL Clean Backup"
     cmd: "find {{local_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
     file: "ansible_mysql"
     hour: "0"

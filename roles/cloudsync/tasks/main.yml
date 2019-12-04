@@ -58,7 +58,7 @@
     
 - name: create cron job
   vars:
-    name: "Cloudsync"
+    title: "Cloudsync"
     cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
     file: "ansible_cloudsync"
     hour: "2"

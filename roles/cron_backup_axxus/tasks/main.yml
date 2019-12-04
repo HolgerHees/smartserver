@@ -19,7 +19,7 @@
 
 - name: create cron job
   vars:
-    name: "Axxus"
+    title: "Axxus"
     cmd: "/opt/axxus_backup/axxus_backup.sh;"
     file: "ansible_cron_backup_axxus"
     hour: "1"

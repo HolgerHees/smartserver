@@ -166,7 +166,7 @@
   
 - name: create cron job
   vars:
-    name: "Nextcloud Updates"
+    title: "Nextcloud Updates"
     cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
     file: "ansible_nextcloud"
     user: "{{www_username}}"
@@ -178,7 +178,7 @@
 
 - name: create cron job
   vars:
-    name: "Nextcloud Fileindex"
+    title: "Nextcloud Fileindex"
     cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
     file: "ansible_nextcloud"
     user: "{{www_username}}"
@@ -191,7 +191,7 @@
 
 - name: create cron job
   vars:
-    name: "Nextcloud MySQL Backup"
+    title: "Nextcloud MySQL Backup"
     cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
     file: "ansible_nextcloud"
     hour: "1"

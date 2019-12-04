@@ -44,7 +44,7 @@
 
 #- name: create cron job
 #  vars:
-#    name: "ClamAV file check"
+#    title: "ClamAV file check"
 #    cmd: "clamscan -r -i {{nextcloud_data_path}}"
 #    file: "ansible_clamav_check"
 #    hour: "3"

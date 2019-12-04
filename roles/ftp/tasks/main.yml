@@ -133,7 +133,7 @@
   
 - name: create cron job
   vars:
-    name: "Camera Cleanup"
+    title: "Camera Cleanup"
     cmd: "find {{ftp_path}} -name \"*.jpg\" -mtime +2 -exec rm {} +"
     file: "ansible_ftp_camera"
     hour: "0"
