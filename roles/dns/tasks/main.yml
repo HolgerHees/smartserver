@@ -84,7 +84,7 @@
     - { type: "named_conf_t", path: "/var/named/master/server_reverse.in-addr.arpa" }
   register: selinux_config_exists
   changed_when: "selinux_config_exists.stdout == '1'"
-  failed_when: "selinux_config_exists.rc == 1"
+  failed_when: "selinux_config_exists.stdout != '1' and selinux_config_exists.stdout != '0'"
   when: ansible_distribution == 'Fedora'
  
 - name: reload selinux configuration on fedora

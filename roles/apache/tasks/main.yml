@@ -193,13 +193,14 @@
   with_items:
     - "semanage port -a -t http_port_t -p tcp 10114"
     - "semanage fcontext -a -t httpd_log_t \"{{global_log}}apache2(/.*)?\""
-    - "restorecon -Rv {{global_log}}apache2/"
   register: selinux_config_exists
   changed_when: "'already defined' not in selinux_config_exists.stderr"
   failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
   when: ansible_distribution == 'Fedora'
   
-  
+- name: reload selinux configuration on fedora
+  shell: "restorecon -Rv {{global_log}}apache2/"
+  when: ansible_distribution == 'Fedora' and selinux_config_exists.changed
   
 
   
