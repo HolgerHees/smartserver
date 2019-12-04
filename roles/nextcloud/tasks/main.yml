@@ -95,7 +95,9 @@
   
 # ***** DATABASE ****
 - name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  include_role:
+    name: mysql
+    tasks_from: wait_until_ready
 
 - name: check mysql databases
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
@@ -136,7 +138,9 @@
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: check redis service
-  import_tasks: roles/redis/tasks/wait_until_ready.yml
+  include_role:
+    name: redis
+    tasks_from: wait_until_ready
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: add user "holger"
@@ -153,53 +157,42 @@
 
 # **** OTHER ****
 - name: copy apache config
-  template:
-    src: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
-    dest: "{{www_etc}}_.ansible.d/nextcloud.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart apache"
-  tags: ['apache_conf']
-
-- name: create updates cron job
   vars:
-    cron_name: "Nextcloud Updates"
-    cron_cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_nextcloud
+    config_file: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
+  include_role:
+    name: apache
+    tasks_from: add_config
+
+- name: create cron job
+  vars:
+    name: "Nextcloud Updates"
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
+    file: "ansible_nextcloud"
     user: "{{www_username}}"
     minute: "*/15"
-    state: present
-  tags: ['cron_job']
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
 
-- name: create fileindex cron job
+- name: create cron job
   vars:
-    cron_name: "Nextcloud Fileindex"
-    cron_cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_nextcloud
+    name: "Nextcloud Fileindex"
+    cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
+    file: "ansible_nextcloud"
     user: "{{www_username}}"
-    minute: "0"
     hour: "1"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
 
-- name: create mysql backup cron job
+- name: create cron job
   vars:
-    cron_name: "Nextcloud MySQL Backup"
-    cron_cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_nextcloud
-    user: root
-    minute: "0"
+    name: "Nextcloud MySQL Backup"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
+    file: "ansible_nextcloud"
     hour: "1"
-    state: present
-  tags: ['cron_job']
-
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

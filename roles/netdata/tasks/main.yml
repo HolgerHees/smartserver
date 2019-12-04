@@ -94,24 +94,19 @@
   notify: "restart netdata"
 
 - name: copy apache config
-  template:
-    src: "roles/netdata/templates/etc/apache2/_.ansible.d/netdata.conf"
-    dest: "{{www_etc}}_.ansible.d/netdata.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart apache"
-  tags: ['apache_conf']
+  vars:
+    config_file: "roles/netdata/templates/etc/apache2/_.ansible.d/netdata.conf"
+  include_role:
+    name: apache
+    tasks_from: add_config
   
 - name: create cron job
   vars:
-    cron_name: "Netdata error check"
-    cron_cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_netdata
-    user: root
-    state: present
-  when: "is_production|bool"
-  tags: ['cron_job']
+    name: "Netdata error check"
+    cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php"
+    file: "ansible_netdata"
+    hour: "0"
+    minute: "45"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

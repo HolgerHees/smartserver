@@ -31,6 +31,14 @@
     state: present
   when: ansible_distribution == 'openSUSE Leap'
 
+- name: copy fluentd config
+  vars:
+    config_file: "roles/container/templates/etc/fluent/_.ansible.d/podman.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config
+  when: ansible_distribution == 'openSUSE Leap'
+
 #- name: set podman config
 #  lineinfile:
 #    path: /etc/containers/{{item.file}}
@@ -107,14 +115,8 @@
   when: ansible_distribution == 'openSUSE Leap'
 
 - name: copy fluentd config
-  template:
-    src: "roles/container/templates/etc/fluent/_.ansible.d/{{item}}"
-    dest: "/etc/fluent/_.ansible.d/{{item}}"
-    owner: root
-    group: root
-    mode: 0640
-  with_items:
-    - docker.conf
-    - podman.conf
-  notify: "restart fluentd"
-  tags: ['fluentd']  
+  vars:
+    config_file: "roles/container/templates/etc/fluent/_.ansible.d/docker.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config

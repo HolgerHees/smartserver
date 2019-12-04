@@ -191,7 +191,9 @@
 
 # ***** DATABASE ****
 - name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  include_role:
+    name: mysql
+    tasks_from: wait_until_ready
   when: "vault_active|bool"
   
 - name: check mysql databases
@@ -224,7 +226,9 @@
   when: "vault_active|bool"
   
 - name: check influxdb service
-  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
+  include_role:
+    name: influxdb
+    tasks_from: wait_until_ready
   when: "vault_active and not influxdb_data_exists.stat.exists"
 
 - name: create missing influx databases
@@ -249,49 +253,37 @@
 
 # ***** OTHER *****
 - name: copy apache config
-  template:
-    src: "roles/openhab/templates/etc/apache2/_.ansible.d/openhab.conf"
-    dest: "{{www_etc}}_.ansible.d/openhab.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart apache"
-  tags: ['apache_conf']
+  vars:
+    config_file: "roles/openhab/templates/etc/apache2/_.ansible.d/openhab.conf"
+  include_role:
+    name: apache
+    tasks_from: add_config
   
 - name: copy fluentd config
-  template:
-    src: "roles/openhab/templates/etc/fluent/_.ansible.d/openhab.conf"
-    dest: "/etc/fluent/_.ansible.d/openhab.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']
-
-- name: create mysql backup cron job
   vars:
-    cron_name: "MySQL Openhab Backup"
-    cron_cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_openhab
-    user: root
-    minute: "0"
-    hour: "1"
-    state: present
-  tags: ['cron_job']
+    config_file: "roles/openhab/templates/etc/fluent/_.ansible.d/openhab.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config
 
-- name: create influxdb backup cron job
+- name: create cron job
   vars:
-    cron_name: "Influxdb Openhab Backup"
-    cron_cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_openhab
-    user: root
-    minute: "0"
+    name: "MySQL Openhab Backup"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
+    file: "ansible_openhab"
     hour: "1"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
+
+- name: create cron job
+  vars:
+    name: "Influxdb Openhab Backup"
+    cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    file: "ansible_openhab"
+    hour: "1"
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

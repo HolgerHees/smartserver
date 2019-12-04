@@ -1,0 +1,9 @@
+- name: copy fluentd config
+  template:
+    src: "{{config_file}}"
+    dest: "/etc/fluent/_.ansible.d/{{config_file | basename}}"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart fluentd"
+  tags: ['fluentd']

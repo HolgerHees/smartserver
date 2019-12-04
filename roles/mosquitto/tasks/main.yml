@@ -20,10 +20,6 @@
 - name: create systemd service
   vars:
     container_name: "mosquitto"
-  copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
-    dest: "/etc/systemd/system/mosquitto.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart mosquitto"
+  include_role:
+    name: container
+    tasks_from: add_docker_service

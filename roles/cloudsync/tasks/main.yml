@@ -56,17 +56,14 @@
     - {name: 'mysql', src: '{{local_backup_path}}mysql'}
     - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
     
-- name: create backup cron job
+- name: create cron job
   vars:
-    cron_name: "Cloudsync"
-    cron_cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_cloudsync
-    user: root
-    minute: "0"
+    name: "Cloudsync"
+    cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
+    file: "ansible_cloudsync"
     hour: "2"
-    state: present
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
   when: "is_production|bool"
-  tags: ['cron_job']

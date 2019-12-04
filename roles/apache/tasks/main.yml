@@ -316,14 +316,11 @@
     - videostream.cgi
 
 - name: copy fluentd config
-  template:
-    src: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
-    dest: "/etc/fluent/_.ansible.d/apache.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']
+  vars:
+    config_file: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config
 
 - name: prepare .htpasswd file
   copy:

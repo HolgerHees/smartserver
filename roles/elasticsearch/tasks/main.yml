@@ -45,30 +45,20 @@
 - name: create systemd service
   vars:
     container_name: "elasticsearch"
-  copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
-    dest: "/etc/systemd/system/elasticsearch.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart elasticsearch"
+  include_role:
+    name: container
+    tasks_from: add_docker_service
   
 - name: copy fluentd config
-  template:
-    src: "roles/elasticsearch/templates/etc/fluent/_.ansible.d/elasticsearch.conf"
-    dest: "/etc/fluent/_.ansible.d/elasticsearch.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']
+  vars:
+    config_file: "roles/elasticsearch/templates/etc/fluent/_.ansible.d/elasticsearch.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config
 
 - name: copy apache config
-  template:
-    src: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/elasticsearch.conf"
-    dest: "{{www_etc}}_.ansible.d/elasticsearch.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart apache"
-  tags: ['apache_conf']
+  vars:
+    config_file: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/elasticsearch.conf"
+  include_role:
+    name: apache
+    tasks_from: add_config

@@ -52,16 +52,13 @@
 # first test run
 #./bin/fluentd -c ./fluent/fluent.conf
 
-- name: create clean cron job
+- name: create cron job
   vars:
-    cron_name: "Fluentd elasticsearch index cleanup"
-    cron_cmd: "/usr/bin/curator_cli --host 127.0.0.1 delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_fluentd
-    user: root
-    minute: "0"
+    name: "Fluentd elasticsearch index cleanup"
+    cmd: "/usr/bin/curator_cli --host 127.0.0.1 delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"
+    file: "ansible_fluentd"
     hour: "1"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

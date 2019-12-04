@@ -46,10 +46,6 @@
 - name: create systemd service
   vars:
     container_name: "redis"
-  copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
-    dest: "/etc/systemd/system/redis.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart redis"
+  include_role:
+    name: container
+    tasks_from: add_docker_service

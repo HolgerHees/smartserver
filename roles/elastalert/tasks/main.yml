@@ -75,7 +75,9 @@
   when: clone_status.changed
 
 - name: check elasticsearch service
-  import_tasks: roles/elasticsearch/tasks/wait_until_ready.yml
+  include_role:
+    name: elasticsearch
+    tasks_from: wait_until_ready
   when: clone_status.changed
   
 - name: create search index
@@ -87,11 +89,8 @@
 #elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
 
 - name: copy fluentd config
-  template:
-    src: "roles/elastalert/templates/etc/fluent/_.ansible.d/elastalert.conf"
-    dest: "/etc/fluent/_.ansible.d/elastalert.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']  
+  vars:
+    config_file: "roles/elastalert/templates/etc/fluent/_.ansible.d/elastalert.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config

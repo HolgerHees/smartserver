@@ -34,14 +34,11 @@
 
 - name: create cron job
   vars:
-    cron_name: "Backup Collector"
-    cron_cmd: "/opt/backup_collector/collect_backup.sh;"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_deployment
-    user: root
-    minute: "0"
+    name: "Backup Collector"
+    cmd: "/opt/backup_collector/collect_backup.sh;"
+    file: "ansible_deployment"
     hour: "5"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

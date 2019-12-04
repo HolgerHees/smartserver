@@ -115,44 +115,35 @@
   with_items:
     - "heating_sensors/TempCmd"
 
-- name: create control cron job
+- name: create cron job
   vars:
-    cron_name: "Heating Control"
-    cron_cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_vcontrold
-    user: root
+    name: "Heating Control"
+    cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
+    file: "ansible_vcontrold"
     minute: "*/1"
-    state: present
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
   when: "is_production|bool"
-  tags: ['cron_job']
 
-- name: create sensors cron job
+- name: create cron job
   vars:
-    cron_name: "Heating Sensors"
-    cron_cmd: "/opt/heating_sensors/sensoren.bash"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_vcontrold
-    user: root
+    name: "Heating Sensors"
+    cmd: "/opt/heating_sensors/sensoren.bash"
+    file: "ansible_vcontrold"
     minute: "*/1"
-    state: present
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
   when: "is_production|bool"
-  tags: ['cron_job']
 
-- name: create log cleanup (scripts) cron job
+- name: create cron job
   vars:
-    cron_name: "Heating Cleanup"
-    cron_cmd: "find {{global_log}}heizung/ -mtime +14 -exec rm {} +"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_vcontrold
-    user: root
-    minute: "50"
+    name: "Heating Cleanup"
+    cmd: "find {{global_log}}heizung/ -mtime +14 -exec rm {} +"
+    file: "ansible_vcontrold"
     hour: "0"
-    state: present
-  tags: ['cron_job']
+    minute: "50"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

@@ -50,16 +50,13 @@
   when: not potd_exists.stat.exists
   
 # Picture of the day fetcher
-- name: set potd fetcher job
+- name: create cron job
   vars:
-    cron_name: "POTD Fetcher"
-    cron_cmd: "/opt/potd_fetcher/fetchPOTD.sh"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_apache_webui
-    user: root
-    minute: "0"
+    name: "POTD Fetcher"
+    cmd: "/opt/potd_fetcher/fetchPOTD.sh"
+    file: "ansible_apache_webui"
     hour: "3"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

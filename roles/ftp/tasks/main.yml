@@ -44,7 +44,7 @@
     --env "PASV_MAX=50100" \
     --env "UMASK=027" \
     --log-driver=journald \
-    --volume="{{ftp_path}}:/home/uploads:rw" \
+    --volume="{{ftp_path}}:/home/uploads:rwz" \
     -p 9021:21 \
     -p 50000-50100:30000-30100 \
     custom_vsftpd:1.0.0
@@ -120,13 +120,9 @@
 - name: create systemd service
   vars:
     container_name: "vsftpd"
-  copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
-    dest: "/etc/systemd/system/vsftpd.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart vsftpd"
+  include_role:
+    name: container
+    tasks_from: add_docker_service
 
 
   
@@ -135,19 +131,16 @@
   
   
   
-- name: create cleanup cron job
+- name: create cron job
   vars:
-    cron_name: "Camera Cleanup"
-    cron_cmd: "find {{ftp_path}} -name \"*.jpg\" -mtime +2 -exec rm {} +"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_ftp_camera
-    user: root
-    minute: "50"
+    name: "Camera Cleanup"
+    cmd: "find {{ftp_path}} -name \"*.jpg\" -mtime +2 -exec rm {} +"
+    file: "ansible_ftp_camera"
     hour: "0"
-    state: present
-  tags: ['cron_job']
+    minute: "50"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
 
           
           

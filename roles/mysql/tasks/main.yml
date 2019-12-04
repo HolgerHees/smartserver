@@ -38,49 +38,35 @@
 - name: create systemd service
   vars:
     container_name: "mysql"
-  copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
-    dest: "/etc/systemd/system/mysql.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart mysql"
+  include_role:
+    name: container
+    tasks_from: add_docker_service
   
 - name: copy fluentd config
-  template:
-    src: "roles/mysql/templates/etc/fluent/_.ansible.d/mysql.conf"
-    dest: "/etc/fluent/_.ansible.d/mysql.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']
-
-- name: create core backup cron job
   vars:
-    cron_name: "MySQL Core Backup"
-    cron_cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_mysql
-    user: root
-    minute: "0"
+    config_file: "roles/mysql/templates/etc/fluent/_.ansible.d/mysql.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config
+
+- name: create cron job
+  vars:
+    name: "MySQL Core Backup"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
+    file: "ansible_mysql"
     hour: "1"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
 
-- name: create clean backup cron job
+- name: create cron job
   vars:
-    cron_name: "MySQL Clean Backup"
-    cron_cmd: "find {{local_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_mysql
-    user: root
+    name: "MySQL Clean Backup"
+    cmd: "find {{local_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
+    file: "ansible_mysql"
+    hour: "0"
     minute: "45"
-    hour: "00"
-    state: present
-  tags: ['cron_job']
-
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

@@ -49,33 +49,26 @@
     user: root
   tags: cron
     
-- name: create check (start) cron job
+- name: create cron job
   vars:
-    cron_name: "RAID Check (Start)"
-    cron_cmd: "/usr/share/mdadm/mdcheck --duration 4 hours"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_mdadm
-    user: root
-    minute: "0"
-    hour: "1"
+    name: "RAID Check (Start)"
+    cmd: "/usr/share/mdadm/mdcheck --duration 4 hours"
+    file: "ansible_mdadm"
     weekday: "7"
-    state: present
-  tags: ['cron_job']
-  
-- name: create check (continue) cron job
-  vars:
-    cron_name: "RAID Check (Continue)"
-    cron_cmd: "/usr/share/mdadm/mdcheck --continue --duration 4 hours"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_mdadm
-    user: root
-    minute: "0"
     hour: "1"
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
+
+- name: create cron job
+  vars:
+    name: "RAID Check (Continue)"
+    cmd: "/usr/share/mdadm/mdcheck --continue --duration 4 hours"
+    file: "ansible_mdadm"
     weekday: "1-6"
-    state: present
-  tags: ['cron_job']
-  
+    hour: "1"
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

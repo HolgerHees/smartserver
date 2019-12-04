@@ -30,14 +30,11 @@
 
 - name: create cron job
   vars:
-    cron_name: "Electric Meter"
-    cron_cmd: "/opt/electricmeter/strom.perl"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_electricmeter
-    user: root
+    name: "Electric Meter"
+    cmd: "/opt/electricmeter/strom.perl"
+    file: "ansible_electricmeter"
     minute: "*/5"
-    state: present
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
   when: "is_production|bool"
-  tags: ['cron_job']

@@ -18,14 +18,10 @@
 
 - name: create cron job
   vars:
-    cron_name: "Systemd service check"
-    cron_cmd: "/opt/service_check/service_check.sh"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_cron_service_check
-    user: root
+    name: "Systemd service check"
+    cmd: "/opt/service_check/service_check.sh"
+    file: "ansible_cron_service_check"
     minute: "0"
-    state: present
-  when: "is_production|bool"
-  tags: ['cron_job']
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

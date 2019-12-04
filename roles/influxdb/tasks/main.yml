@@ -42,48 +42,35 @@
 - name: create systemd service
   vars:
     container_name: "influxdb"
-  copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
-    dest: "/etc/systemd/system/influxdb.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart influxdb"
+  include_role:
+    name: container
+    tasks_from: add_docker_service
   
 - name: copy fluentd config
-  template:
-    src: "roles/influxdb/templates/etc/fluent/_.ansible.d/influxdb.conf"
-    dest: "/etc/fluent/_.ansible.d/influxdb.conf"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart fluentd"
-  tags: ['fluentd']
+  vars:
+    config_file: "roles/influxdb/templates/etc/fluent/_.ansible.d/influxdb.conf"
+  include_role:
+    name: fluentd
+    tasks_from: add_config
 
-- name: create opentsdb backup cron job
+- name: create cron job
   vars:
-    cron_name: "Influxdb OpenTSDB Backup"
-    cron_cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_influxdb
-    user: root
-    minute: "0"
+    name: "Influxdb OpenTSDB Backup"
+    cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    file: "ansible_influxdb"
     hour: "1"
-    state: present
-  tags: ['cron_job']
+    minute: "0"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
   
-- name: create clean backup cron job
+- name: create cron job
   vars:
-    cron_name: "Influxdb Cleanup"
-    cron_cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_influxdb
-    user: root
+    name: "Influxdb Cleanup"
+    cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
+    file: "ansible_influxdb"
+    hour: "0"
     minute: "45"
-    hour: "00"
-    state: present
-  tags: ['cron_job']
+  include_role:
+    name: cron
+    tasks_from: add_cronjob

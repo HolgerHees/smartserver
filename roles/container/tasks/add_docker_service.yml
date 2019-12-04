@@ -1,0 +1,11 @@
+- name: create systemd service
+  vars:
+    container_name: "{{container_name}}"
+  copy:
+    content: "{{ lookup('template', 'templates/docker_service') }}"
+    dest: "/etc/systemd/system/{{container_name}}.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart {{container_name}}"
+ 

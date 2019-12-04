@@ -19,15 +19,12 @@
 
 - name: create cron job
   vars:
-    cron_name: "Axxus"
-    cron_cmd: "/opt/axxus_backup/axxus_backup.sh;"
-  cron:
-    name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
-    cron_file: ansible_cron_backup_axxus
-    user: root
-    minute: "15"
+    name: "Axxus"
+    cmd: "/opt/axxus_backup/axxus_backup.sh;"
+    file: "ansible_cron_backup_axxus"
     hour: "1"
-    state: present
+    minute: "15"
+  include_role:
+    name: cron
+    tasks_from: add_cronjob
   when: "is_production|bool"
-  tags: ['cron_job']
