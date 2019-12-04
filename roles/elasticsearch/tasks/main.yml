@@ -55,10 +55,12 @@
   include_role:
     name: fluentd
     tasks_from: add_config
-
+  tags: ['fluentd_conf']
+  
 - name: copy apache config
   vars:
     config_file: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/elasticsearch.conf"
   include_role:
     name: apache
     tasks_from: add_config
+  tags: ['apache_conf']

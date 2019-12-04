@@ -99,6 +99,7 @@
   include_role:
     name: apache
     tasks_from: add_config
+  tags: ['apache_conf']
   
 - name: create cron job
   vars:

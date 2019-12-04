@@ -4,7 +4,7 @@
     dest: "{{www_etc}}_.ansible.d/{{config_file | basename}}"
     owner: root
     group: root
-    mode: 0640
+    mode: 0644
   notify: "restart apache"
   tags: ['apache_conf']
 

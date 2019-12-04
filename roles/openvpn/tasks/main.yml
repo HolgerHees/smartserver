@@ -40,6 +40,22 @@
     - { permissions: "u=rwx,g=rx,o=rx", src: "/usr/share/easy-rsa/3/easyrsa", target: "/usr/bin/easyrsa" }
   when: ansible_distribution == 'Fedora'
   
+- name: copy config on fedora
+  copy:
+    src: "/usr/lib/systemd/system/openvpn-client@.service"
+    dest: "/usr/lib/systemd/system/openvpn@.service"
+    owner: root
+    group: root
+    mode: 0640
+    force: no
+
+- name: modify openvpn systemd service on fedora
+  lineinfile:
+    path: "/usr/lib/systemd/system/openvpn@.service"
+    regex: "^ExecStart="
+    line: "ExecStart=/usr/sbin/openvpn --daemon --suppress-timestamps --cd /etc/openvpn/ --config %i.conf"
+  when: ansible_distribution == 'Fedora'
+
 # **** MOBILE VPN CERTIFICATES ****
 - name: check easyrsa
   stat:

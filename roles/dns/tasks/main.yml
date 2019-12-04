@@ -33,6 +33,7 @@
     owner: root
     group: named
     state: link
+#    setype: "named_zone_t"
   when: ansible_distribution == 'Fedora'
   
 - name: prepare master folder on fedora
@@ -42,6 +43,7 @@
     owner: root
     group: named
     mode: 0770
+#    setype: "named_zone_t"
   with_items:
     - master/
     - dyn/
@@ -54,6 +56,7 @@
     owner: named
     group: named
     mode: 0640
+#    setype: "named_conf_t"
   with_items:
     - "master/server_reverse.in-addr.arpa"
     - "master/server_forward"
@@ -62,23 +65,34 @@
     - "root.hint"
   notify: "restart named"
   
+#- name: check named selinux configuration on fedora
+#  shell: "ls -Z"
+  
+  
 # https://wiki.samba.org/index.php/BIND9_DLZ_AppArmor_and_SELinux_Integration
 #chcon -v --type=named_conf_t /etc/named.xxxx.zones
 #chcon -v --user=system_u /etc/named.xxxx.zones  
-- name: set docker selinux configuration on fedora
-  shell: "{{item}}"
+- name: set named selinux configuration on fedora
+  #       if [[ $(sudo ls -Z /var/lib/named/127.0.0.zone | grep var_lib_t | wc -c) -gt 0 ]]; then echo "1"; else echo "0"; fi
+  shell: "if [[ $(ls -dZ {{item.path}} | grep {{item.type}} | wc -c) -eq 0 ]]; then semanage fcontext -a -t {{item.type}} {{item.path}}; echo \"1\"; else echo \"0\"; fi"
   with_items:
-    - "semanage fcontext -a -t named_zone_t /var/lib/named"
-    - "semanage fcontext -a -t named_conf_t /var/lib/named/127.0.0.zone"
-    - "semanage fcontext -a -t named_conf_t /var/lib/named/localhost.zone"
-    - "semanage fcontext -a -t named_conf_t /var/lib/named/root.hint"
-    - "semanage fcontext -a -t named_conf_t /var/lib/named/master/server_forward"
-    - "semanage fcontext -a -t named_conf_t /var/lib/named/master/server_reverse.in-addr.arpa"
-    - "restorecon -Rv /var/lib/named"
+    - { type: "named_zone_t", path: "/var/lib/named" }
+    - { type: "named_conf_t", path: "/var/named/127.0.0.zone" }
+    - { type: "named_conf_t", path: "/var/named/localhost.zone" }
+    - { type: "named_conf_t", path: "/var/named/root.hint" }
+    - { type: "named_conf_t", path: "/var/named/master/server_forward" }
+    - { type: "named_conf_t", path: "/var/named/master/server_reverse.in-addr.arpa" }
   register: selinux_config_exists
-  changed_when: "'already defined' not in selinux_config_exists.stderr"
-  failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
+  changed_when: "selinux_config_exists.stdout == '1'"
+  failed_when: "selinux_config_exists.rc == 1"
   when: ansible_distribution == 'Fedora'
+ 
+- name: reload selinux configuration on fedora
+  shell: "restorecon {{item}}"
+  with_items:
+    - "/var/lib/named"
+    - "-R -v /var/named"
+  when: ansible_distribution == 'Fedora' and selinux_config_exists.changed
 
 - name: set resolv config on fedora
   lineinfile:

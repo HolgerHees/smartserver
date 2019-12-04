@@ -38,7 +38,8 @@
     state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: 0755
+    seuser: "system_u"
   with_items:
     - "letsencrypt/"
     - "letsencrypt/live"
@@ -82,6 +83,7 @@
     owner: root
     group: root
     mode: 0777
+    seuser: "system_u"
 
 # TODO add renew job
 #certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
@@ -92,7 +94,8 @@
     state: directory
     owner: "{{item.owner}}"
     group: "{{item.group}}"
-    mode: 0750
+    mode: 0755
+    seuser: "system_u"
   with_items:
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
@@ -123,13 +126,15 @@
   
   
   
-- name: prepare needed folderon fedora
+- name: prepare needed folder on fedora
   file:
     path: "{{www_etc}}vhosts.d/"
     state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: 0755
+    seuser: "system_u"
+  when: ansible_distribution == 'Fedora'
 
 - name: enable modules on fedora
   lineinfile:
@@ -293,7 +298,7 @@
     dest: "{{www_etc}}{{item}}"
     owner: root
     group: root
-    mode: 0640
+    mode: 0644
   with_items:
     - listen.conf
     - _.ansible.d/auth.conf
@@ -321,7 +326,8 @@
   include_role:
     name: fluentd
     tasks_from: add_config
-
+  tags: ['fluentd_conf']
+  
 - name: prepare .htpasswd file
   copy:
     content: ""

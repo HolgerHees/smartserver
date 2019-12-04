@@ -84,7 +84,8 @@
   include_role:
     name: fluentd
     tasks_from: add_config
-    
+  tags: ['fluentd_conf']
+      
 - name: copy apache config
   vars:
     config_file: "roles/grafana/templates/etc/apache2/_.ansible.d/grafana.conf"
@@ -92,3 +93,4 @@
     name: apache
     tasks_from: add_config
   when: "vault_active|bool"
+  tags: ['apache_conf']

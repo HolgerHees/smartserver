@@ -38,7 +38,8 @@
     name: fluentd
     tasks_from: add_config
   when: ansible_distribution == 'openSUSE Leap'
-
+  tags: ['fluentd_conf']
+  
 #- name: set podman config
 #  lineinfile:
 #    path: /etc/containers/{{item.file}}
@@ -120,3 +121,5 @@
   include_role:
     name: fluentd
     tasks_from: add_config
+  tags: ['fluentd_conf']
+  

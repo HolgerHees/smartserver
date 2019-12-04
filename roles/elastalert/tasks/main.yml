@@ -94,3 +94,5 @@
   include_role:
     name: fluentd
     tasks_from: add_config
+  tags: ['fluentd_conf']
+  
