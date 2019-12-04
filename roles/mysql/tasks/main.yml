@@ -19,7 +19,7 @@
     name: mysql
     image: mariadb:10.4.10
     state: present
-    recreate: true
+#    recreate: true
     env:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
@@ -59,6 +59,7 @@
   include_role:
     name: cron
     tasks_from: add_cronjob
+  tags: ['cron_job']
 
 - name: create cron job
   vars:
@@ -70,3 +71,4 @@
   include_role:
     name: cron
     tasks_from: add_cronjob
+  tags: ['cron_job']

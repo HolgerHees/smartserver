@@ -276,6 +276,7 @@
   include_role:
     name: cron
     tasks_from: add_cronjob
+  tags: ['cron_job']
 
 - name: create cron job
   vars:
@@ -287,3 +288,4 @@
   include_role:
     name: cron
     tasks_from: add_cronjob
+  tags: ['cron_job']
