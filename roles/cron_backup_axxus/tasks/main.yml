@@ -24,7 +24,7 @@
     file: "ansible_cron_backup_axxus"
     hour: "1"
     minute: "15"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   when: "is_production|bool"

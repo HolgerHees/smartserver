@@ -320,7 +320,7 @@
 - name: copy fluentd config
   vars:
     config_file: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   tags: ['fluentd_conf']

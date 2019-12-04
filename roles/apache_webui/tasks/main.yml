@@ -57,7 +57,7 @@
     file: "ansible_apache_webui"
     hour: "3"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

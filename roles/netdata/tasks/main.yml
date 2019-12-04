@@ -96,7 +96,7 @@
 - name: copy apache config
   vars:
     config_file: "roles/netdata/templates/etc/apache2/_.ansible.d/netdata.conf"
-  include_role:
+  import_role:
     name: apache
     tasks_from: add_config
   tags: ['apache_conf']
@@ -106,7 +106,7 @@
     name: "Netdata error check"
     cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php"
     file: "ansible_netdata"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

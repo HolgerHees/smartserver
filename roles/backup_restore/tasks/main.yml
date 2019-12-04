@@ -6,7 +6,7 @@
   changed_when: mysql_backup_exists.stat.exists
 
 - name: check mysql service
-  include_role:
+  import_role:
     name: mysql
     tasks_from: wait_until_ready
   when: mysql_backup_exists.stat.exists
@@ -47,7 +47,7 @@
   when: influxdb_backup_exists.rc == 0
   
 - name: check influxdb service
-  include_role:
+  import_role:
     name: influxdb
     tasks_from: wait_until_ready
   when: influxdb_backup_exists.rc == 0

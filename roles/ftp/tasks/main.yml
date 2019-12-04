@@ -120,7 +120,7 @@
 - name: create systemd service
   vars:
     container_name: "vsftpd"
-  include_role:
+  import_role:
     name: container
     tasks_from: add_docker_service
 
@@ -138,7 +138,7 @@
     file: "ansible_ftp_camera"
     hour: "0"
     minute: "50"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

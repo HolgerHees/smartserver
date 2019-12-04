@@ -75,7 +75,7 @@
   when: clone_status.changed
 
 - name: check elasticsearch service
-  include_role:
+  import_role:
     name: elasticsearch
     tasks_from: wait_until_ready
   when: clone_status.changed
@@ -91,7 +91,7 @@
 - name: copy fluentd config
   vars:
     config_file: "roles/elastalert/templates/etc/fluent/_.ansible.d/elastalert.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   tags: ['fluentd_conf']

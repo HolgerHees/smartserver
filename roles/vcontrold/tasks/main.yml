@@ -121,7 +121,7 @@
     cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
     file: "ansible_vcontrold"
     minute: "*/1"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   when: "is_production|bool"
@@ -133,7 +133,7 @@
     cmd: "/opt/heating_sensors/sensoren.bash"
     file: "ansible_vcontrold"
     minute: "*/1"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   when: "is_production|bool"
@@ -146,7 +146,7 @@
     file: "ansible_vcontrold"
     hour: "0"
     minute: "50"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

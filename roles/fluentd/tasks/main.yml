@@ -59,7 +59,7 @@
     file: "ansible_fluentd"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

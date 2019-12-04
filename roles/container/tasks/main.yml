@@ -34,7 +34,7 @@
 - name: copy fluentd config
   vars:
     config_file: "roles/container/templates/etc/fluent/_.ansible.d/podman.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   when: ansible_distribution == 'openSUSE Leap'
@@ -121,7 +121,7 @@
 - name: copy fluentd config
   vars:
     config_file: "roles/container/templates/etc/fluent/_.ansible.d/docker.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   tags: ['fluentd_conf']

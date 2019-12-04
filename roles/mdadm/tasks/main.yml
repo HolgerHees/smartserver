@@ -57,7 +57,7 @@
     weekday: "7"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']
@@ -70,7 +70,7 @@
     weekday: "1-6"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

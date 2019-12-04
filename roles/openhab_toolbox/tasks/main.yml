@@ -24,7 +24,7 @@
   when: "vault_active|bool"
       
 - name: check mysql service
-  include_role:
+  import_role:
     name: mysql
     tasks_from: wait_until_ready
 
@@ -44,7 +44,7 @@
     cmd: "/usr/bin/php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php"
     file: "ansible_openhab_toolbox"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

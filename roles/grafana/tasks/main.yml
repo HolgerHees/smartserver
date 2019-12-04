@@ -74,14 +74,14 @@
 - name: create systemd service
   vars:
     container_name: "grafana"
-  include_role:
+  import_role:
     name: container
     tasks_from: add_docker_service
   
 - name: copy fluentd config
   vars:
     config_file: "roles/grafana/templates/etc/fluent/_.ansible.d/grafana.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   tags: ['fluentd_conf']
@@ -89,7 +89,7 @@
 - name: copy apache config
   vars:
     config_file: "roles/grafana/templates/etc/apache2/_.ansible.d/grafana.conf"
-  include_role:
+  import_role:
     name: apache
     tasks_from: add_config
   when: "vault_active|bool"

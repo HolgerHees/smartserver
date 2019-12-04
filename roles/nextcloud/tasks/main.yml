@@ -95,7 +95,7 @@
   
 # ***** DATABASE ****
 - name: check mysql service
-  include_role:
+  import_role:
     name: mysql
     tasks_from: wait_until_ready
 
@@ -138,7 +138,7 @@
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
   
 - name: check redis service
-  include_role:
+  import_role:
     name: redis
     tasks_from: wait_until_ready
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
@@ -159,7 +159,7 @@
 - name: copy apache config
   vars:
     config_file: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
-  include_role:
+  import_role:
     name: apache
     tasks_from: add_config
   tags: ['apache_conf']
@@ -171,7 +171,7 @@
     file: "ansible_nextcloud"
     user: "{{www_username}}"
     minute: "*/15"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']
@@ -184,7 +184,7 @@
     user: "{{www_username}}"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']
@@ -196,7 +196,7 @@
     file: "ansible_nextcloud"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

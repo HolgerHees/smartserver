@@ -38,14 +38,14 @@
 - name: create systemd service
   vars:
     container_name: "mysql"
-  include_role:
+  import_role:
     name: container
     tasks_from: add_docker_service
   
 - name: copy fluentd config
   vars:
     config_file: "roles/mysql/templates/etc/fluent/_.ansible.d/mysql.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   tags: ['fluentd_conf']
@@ -57,7 +57,7 @@
     file: "ansible_mysql"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']
@@ -69,7 +69,7 @@
     file: "ansible_mysql"
     hour: "0"
     minute: "45"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']

@@ -20,6 +20,6 @@
 - name: create systemd service
   vars:
     container_name: "mosquitto"
-  include_role:
+  import_role:
     name: container
     tasks_from: add_docker_service

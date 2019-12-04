@@ -191,7 +191,7 @@
 
 # ***** DATABASE ****
 - name: check mysql service
-  include_role:
+  import_role:
     name: mysql
     tasks_from: wait_until_ready
   when: "vault_active|bool"
@@ -226,7 +226,7 @@
   when: "vault_active|bool"
   
 - name: check influxdb service
-  include_role:
+  import_role:
     name: influxdb
     tasks_from: wait_until_ready
   when: "vault_active and not influxdb_data_exists.stat.exists"
@@ -255,7 +255,7 @@
 - name: copy apache config
   vars:
     config_file: "roles/openhab/templates/etc/apache2/_.ansible.d/openhab.conf"
-  include_role:
+  import_role:
     name: apache
     tasks_from: add_config
   tags: ['apache_conf']
@@ -263,7 +263,7 @@
 - name: copy fluentd config
   vars:
     config_file: "roles/openhab/templates/etc/fluent/_.ansible.d/openhab.conf"
-  include_role:
+  import_role:
     name: fluentd
     tasks_from: add_config
   tags: ['fluentd_conf']
@@ -275,7 +275,7 @@
     file: "ansible_openhab"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']
@@ -287,7 +287,7 @@
     file: "ansible_openhab"
     hour: "1"
     minute: "0"
-  include_role:
+  import_role:
     name: cron
     tasks_from: add_cronjob
   tags: ['cron_job']
