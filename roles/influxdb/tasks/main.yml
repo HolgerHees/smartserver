@@ -4,9 +4,9 @@
     state: directory
     owner: root
     group: root
-    #mode: 0750
-    recurse: true
+    mode: 0755
   with_items:
+    - '{{ global_lib }}influxdb'
     - '{{ global_lib }}influxdb/hh'
     - '{{ global_lib }}influxdb/meta'
     - '{{ global_lib }}influxdb/data'
@@ -42,38 +42,27 @@
 - name: create systemd service
   vars:
     container_name: "influxdb"
-  import_role:
-    name: container
-    tasks_from: add_docker_service
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: copy fluentd config
   vars:
     config_file: "roles/influxdb/templates/etc/fluent/_.ansible.d/influxdb.conf"
-  import_role:
-    name: fluentd
-    tasks_from: add_config
-  tags: ['fluentd_conf']
+  import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: create cron job
   vars:
-    title: "Influxdb OpenTSDB Backup"
+    name: "Influxdb OpenTSDB Backup"
     cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
     file: "ansible_influxdb"
     hour: "1"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml
   
 - name: create cron job
   vars:
-    title: "Influxdb Cleanup"
+    name: "Influxdb Cleanup"
     cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
     file: "ansible_influxdb"
     hour: "0"
     minute: "45"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

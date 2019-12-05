@@ -24,9 +24,7 @@
   when: "vault_active|bool"
       
 - name: check mysql service
-  import_role:
-    name: mysql
-    tasks_from: wait_until_ready
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
 - name: check mysql table
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM openhab;'\""
@@ -40,11 +38,8 @@
 # Weather data fetcher
 - name: create cron job
   vars:
-    title: "Weatherdata"
+    name: "Weatherdata"
     cmd: "/usr/bin/php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php"
     file: "ansible_openhab_toolbox"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

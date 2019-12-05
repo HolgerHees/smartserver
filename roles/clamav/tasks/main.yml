@@ -8,9 +8,9 @@
       , clamav-scanner
     ]
     state: present
-  register: install_status
+  register: fedora_install_status
   notify: "restart clamav"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: add zypper repository on suse
   zypper_repository:
@@ -19,24 +19,37 @@
     auto_import_keys: yes
     priority: "100"
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: install required suse packages
   zypper:
     name: clamav>=0.101.3
     state: present
-  register: install_status
+  register: suse_install_status
   notify: "restart clamav"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
+
+- name: set config
+  lineinfile:
+    path: "/etc/{{ 'clamd.conf' if is_suse|bool else 'clamd.d/scan.conf' }}"
+    regexp: '^{{item.regexp}}'
+    line: '{{item.line}}'
+  with_items:
+    - { regexp: "Example", line: "#Example" } # disable "example" blocker on fedora
+    - { regexp: "[#\\s]*LogFacility .*", line: "LogFacility LOG_MAIL" }
+    - { regexp: "[#\\s]*PidFile .*", line: "PidFile {{ '/var/run/clamav/clamd.pid' if is_suse else '/run/clamd.scan/clamd.pid'  }}" }
+    - { regexp: "[#\\s]*LocalSocket .*", line: "LocalSocket {{ '/var/run/clamav/clamd-socket' if is_suse else '/run/clamd.scan/clamd.sock'  }}" }
+    - { regexp: "[\\s]*TCPSocket .*", line: "#TCPSocket 3310" }
+    - { regexp: "[\\s]*TCPAddr .*", line: "#TCPAddr 127.0.0.1" }
 
 - name: load initial database
   shell: '/usr/bin/freshclam --no-warnings'
   notify: "restart clamav"
-  when: install_status.changed
+  when: suse_install_status.changed or fedora_install_status.changed
 
 - name: change clamd startup timeout
   lineinfile:
-    path: "/usr/lib/systemd/system/{{ 'clamd.service' if ansible_distribution == 'openSUSE Leap' else 'clamd@.service' }}"
+    path: "/usr/lib/systemd/system/{{ 'clamd.service' if is_suse|bool else 'clamd@.service' }}"
     insertafter: '^\[Service\]'
     regexp: '^[#]*TimeoutSec\s*='
     line: 'TimeoutSec=5min'
@@ -44,13 +57,10 @@
 
 #- name: create cron job
 #  vars:
-#    title: "ClamAV file check"
+#    name: "ClamAV file check"
 #    cmd: "clamscan -r -i {{nextcloud_data_path}}"
 #    file: "ansible_clamav_check"
 #    hour: "3"
 #    minute: "0"
-#  import_role:
-#    name: cron
-#    tasks_from: add_cronjob
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
 #  when: "is_production|bool"
-#  tags: ['cron_job']

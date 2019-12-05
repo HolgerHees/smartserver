@@ -19,13 +19,10 @@
 
 - name: create cron job
   vars:
-    title: "Axxus"
+    name: "Axxus"
     cmd: "/opt/axxus_backup/axxus_backup.sh;"
     file: "ansible_cron_backup_axxus"
     hour: "1"
     minute: "15"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
+  import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
-  tags: ['cron_job']

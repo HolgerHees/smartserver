@@ -2,13 +2,13 @@
   yum:
     name: "firewall-config"
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install required suse packages
   zypper:
     name: "firewall-config"
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: copy zone config
   template:
@@ -30,4 +30,4 @@
     regexp: '<source address="10\.0\.2\.2"/>'
     line: '<source address="10.0.2.2"/>'
   notify: "restart firewalld"
-  when: not is_production
+  when: not is_production|bool

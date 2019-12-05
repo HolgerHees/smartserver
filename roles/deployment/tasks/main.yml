@@ -39,7 +39,4 @@
     file: "ansible_deployment"
     hour: "5"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

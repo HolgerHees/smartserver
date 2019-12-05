@@ -8,13 +8,10 @@
     
 - name: create cron job
   vars:
-    title: "DataDisk RSync Backup"
+    name: "DataDisk RSync Backup"
     cmd: "/usr/bin/rsync --quiet -av --delete {{data_path}} {{local_backup_path}}dataDisk/ --exclude=var --exclude=tmp"
     file: "ansible_cron_backup_rsync"
     hour: "5"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
+  import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
-  tags: ['cron_job']

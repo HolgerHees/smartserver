@@ -15,18 +15,18 @@
   shell: "podman images custom_vsftpd:1.0.0"
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
-  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool"
+  when: "is_suse|bool and vault_active|bool"
 
 - name: compose podman image
   shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
-  register: output
-  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
+#  register: output
+  when: "is_suse|bool and vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
 
 - name: check podman container exists
   shell: "podman ps -a --filter \"name=vsftpd\""
   register: container_exists
   changed_when: "'vsftpd' not in container_exists.stdout"
-  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool"
+  when: "is_suse|bool and vault_active|bool"
 
 - name: compose podman image
   shell: >
@@ -48,9 +48,9 @@
     -p 9021:21 \
     -p 50000-50100:30000-30100 \
     custom_vsftpd:1.0.0
-  register: output
+#  register: output
 #  notify: "restart vsftpd"
-  when: "ansible_distribution == 'openSUSE Leap' and vault_active|bool and 'vsftpd' not in container_exists.stdout"
+  when: "is_suse|bool and vault_active|bool and 'vsftpd' not in container_exists.stdout"
 
 #- name: create systemd service
 #  vars:
@@ -62,7 +62,7 @@
 #    group: root
 #    mode: 0644
 #  notify: "restart vsftpd"
-#  when: ansible_distribution == 'openSUSE Leap'
+#  when: is_suse|bool
 
 
 
@@ -120,9 +120,7 @@
 - name: create systemd service
   vars:
     container_name: "vsftpd"
-  import_role:
-    name: container
-    tasks_from: add_docker_service
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
 
   
@@ -133,15 +131,12 @@
   
 - name: create cron job
   vars:
-    title: "Camera Cleanup"
+    name: "Camera Cleanup"
     cmd: "find {{ftp_path}} -name \"*.jpg\" -mtime +2 -exec rm {} +"
     file: "ansible_ftp_camera"
     hour: "0"
     minute: "50"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml
 
           
           

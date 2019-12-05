@@ -22,7 +22,4 @@
     cmd: "/opt/service_check/service_check.sh"
     file: "ansible_cron_service_check"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

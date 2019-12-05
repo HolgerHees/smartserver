@@ -2,7 +2,6 @@
   file:
     path: '{{item}}'
     state: directory
-    #recurse: true
   with_items:
     - "{{cloud_backup_source_path}}"
     - "{{cloud_backup_target_path}}"
@@ -22,7 +21,7 @@
     fstype: nfs
     opts: "rw,noauto,rsize=8192,wsize=8192"
     state: mounted
-  when: "is_production and vault_active"
+  when: "is_production|bool and vault_active|bool"
 
 - name: "clone git"
   git:
@@ -58,13 +57,10 @@
     
 - name: create cron job
   vars:
-    title: "Cloudsync"
+    name: "Cloudsync"
     cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
     file: "ansible_cloudsync"
     hour: "2"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
+  import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
-  tags: ['cron_job']

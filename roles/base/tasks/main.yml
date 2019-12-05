@@ -48,7 +48,7 @@
       , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install suse base packages
   zypper:
@@ -77,7 +77,7 @@
       , mailx              # used by elastalert
     ]
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
        
 - name: install pexpect
   pip:

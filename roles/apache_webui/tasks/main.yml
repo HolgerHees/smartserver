@@ -52,12 +52,9 @@
 # Picture of the day fetcher
 - name: create cron job
   vars:
-    title: "POTD Fetcher"
+    name: "POTD Fetcher"
     cmd: "/opt/potd_fetcher/fetchPOTD.sh"
     file: "ansible_apache_webui"
     hour: "3"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

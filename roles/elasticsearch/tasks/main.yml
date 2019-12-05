@@ -4,14 +4,11 @@
 
 - name: prepare needed folder
   file:
-    path:  "{{item}}"
+    path:  "{{ global_lib }}elasticsearch"
     state: directory
-    owner: "1000" # 1000 is mysql user inside the container
+    owner: "1000" # 1000 is elasticsearch user inside the container
     group: root
-    #mode: 0750
-    recurse: true
-  with_items:
-    - '{{ global_lib }}elasticsearch'
+    mode: 0750
   
 - name: check started docker
   systemd:
@@ -45,22 +42,14 @@
 - name: create systemd service
   vars:
     container_name: "elasticsearch"
-  import_role:
-    name: container
-    tasks_from: add_docker_service
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: copy fluentd config
   vars:
     config_file: "roles/elasticsearch/templates/etc/fluent/_.ansible.d/elasticsearch.conf"
-  import_role:
-    name: fluentd
-    tasks_from: add_config
-  tags: ['fluentd_conf']
+  import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: copy apache config
   vars:
     config_file: "roles/elasticsearch/templates/etc/apache2/_.ansible.d/elasticsearch.conf"
-  import_role:
-    name: apache
-    tasks_from: add_config
-  tags: ['apache_conf']
+  import_tasks: roles/apache/tasks/add_config.yml

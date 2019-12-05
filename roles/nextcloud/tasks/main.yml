@@ -19,7 +19,7 @@
       "php-gmp"            # needed by bookmark app
     ]
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install required suse packages
   zypper:
@@ -27,7 +27,7 @@
       "php7-gmp"            # needed by bookmark app
     ]
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: set nextcloud version
   set_fact:
@@ -95,9 +95,7 @@
   
 # ***** DATABASE ****
 - name: check mysql service
-  import_role:
-    name: mysql
-    tasks_from: wait_until_ready
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
 - name: check mysql databases
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
@@ -112,7 +110,7 @@
 
 - name: create missing mysql databases
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
   
 #- mysql_user:
 #    name: "{{nextcloud_mysql_username}}"
@@ -123,80 +121,66 @@
 
 - name: create missing mysql user
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\\\"\""
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
 - name: grant permissions to mysql user
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\\\"\""
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
 - name: refresh mysql privileges
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
 - name: initialise mysql database
   shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
   
 - name: check redis service
-  import_role:
-    name: redis
-    tasks_from: wait_until_ready
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  import_tasks: roles/redis/tasks/wait_until_ready.yml
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
   
 - name: add user "holger"
   shell: "export OC_PASS={{holger_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{holger_username}}"
   become: yes
   become_user: "{{www_username}}"
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
 - name: add user "sandra"
   shell: "export OC_PASS={{sandra_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{sandra_username}}"
   become: yes
   become_user: "{{www_username}}"
-  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active"
+  when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
 # **** OTHER ****
 - name: copy apache config
   vars:
     config_file: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
-  import_role:
-    name: apache
-    tasks_from: add_config
-  tags: ['apache_conf']
+  import_tasks: roles/apache/tasks/add_config.yml
   
 - name: create cron job
   vars:
-    title: "Nextcloud Updates"
+    name: "Nextcloud Updates"
     cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
     file: "ansible_nextcloud"
     user: "{{www_username}}"
     minute: "*/15"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create cron job
   vars:
-    title: "Nextcloud Fileindex"
+    name: "Nextcloud Fileindex"
     cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
     file: "ansible_nextcloud"
     user: "{{www_username}}"
     hour: "1"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create cron job
   vars:
-    title: "Nextcloud MySQL Backup"
+    name: "Nextcloud MySQL Backup"
     cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
     file: "ansible_nextcloud"
     hour: "1"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

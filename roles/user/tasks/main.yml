@@ -18,7 +18,6 @@
     owner: "{{holger_username}}"
     group: users
     mode: 0750
-    #recurse: true
   when: "vault_active|bool"
   
 - name: add user "{{holger_username}}" to samba
@@ -65,7 +64,6 @@
     owner: "{{sandra_username}}"
     group: users
     mode: 0750
-    #recurse: true
   when: "vault_active|bool"
 
 - name: add user "{{sandra_username}}" to samba
@@ -115,7 +113,6 @@
     owner: "{{vpn_username}}"
     group: users
     mode: 0750
-    recurse: true
   when: "vault_active|bool"
     
     

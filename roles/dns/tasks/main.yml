@@ -5,7 +5,7 @@
     ]
     state: present
   notify: "restart named"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install required suse packages
   zypper:
@@ -15,7 +15,7 @@
     ]
     state: present
   notify: "restart named"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 - name: copy config
   template:
@@ -26,28 +26,26 @@
     mode: 0640
   notify: "restart named"
   
-- name: Create a symbolic link on fedora
+- name: create a symbolic link on fedora
   file:
     src: /var/named/
     dest: /var/lib/named
-    owner: root
+    owner: named
     group: named
     state: link
-#    setype: "named_zone_t"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
   
-- name: prepare master folder on fedora
+- name: prepare needed folder
   file:
-    path: "/var/lib/named/{{item}}"
+    path: "/var/lib/{{item}}"
     state: directory
-    owner: root
+    owner: named
     group: named
-    mode: 0770
-#    setype: "named_zone_t"
+    mode: 0755
   with_items:
-    - master/
-    - dyn/
-  when: ansible_distribution == 'Fedora'
+    - named/
+    - named/master/ # is missing on fedora
+    - named/dyn/ # is missing on fedora
   
 - name: copy var folder
   template:
@@ -55,8 +53,7 @@
     dest: "/var/lib/named/{{item}}"
     owner: named
     group: named
-    mode: 0640
-#    setype: "named_conf_t"
+    mode: 0644
   with_items:
     - "master/server_reverse.in-addr.arpa"
     - "master/server_forward"
@@ -65,34 +62,26 @@
     - "root.hint"
   notify: "restart named"
   
-#- name: check named selinux configuration on fedora
-#  shell: "ls -Z"
-  
-  
-# https://wiki.samba.org/index.php/BIND9_DLZ_AppArmor_and_SELinux_Integration
-#chcon -v --type=named_conf_t /etc/named.xxxx.zones
-#chcon -v --user=system_u /etc/named.xxxx.zones  
 - name: set named selinux configuration on fedora
-  #       if [[ $(sudo ls -Z /var/lib/named/127.0.0.zone | grep var_lib_t | wc -c) -gt 0 ]]; then echo "1"; else echo "0"; fi
-  shell: "if [[ $(ls -dZ {{item.path}} | grep {{item.type}} | wc -c) -eq 0 ]]; then semanage fcontext -a -t {{item.type}} {{item.path}}; echo \"1\"; else echo \"0\"; fi"
+  sefcontext:
+    target: "{{item.target}}"
+    ftype: "{{item.ftype}}"
+    setype: "{{item.setype}}"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
   with_items:
-    - { type: "named_zone_t", path: "/var/lib/named" }
-    - { type: "named_conf_t", path: "/var/named/127.0.0.zone" }
-    - { type: "named_conf_t", path: "/var/named/localhost.zone" }
-    - { type: "named_conf_t", path: "/var/named/root.hint" }
-    - { type: "named_conf_t", path: "/var/named/master/server_forward" }
-    - { type: "named_conf_t", path: "/var/named/master/server_reverse.in-addr.arpa" }
-  register: selinux_config_exists
-  changed_when: "selinux_config_exists.stdout == '1'"
-  failed_when: "selinux_config_exists.stdout != '1' and selinux_config_exists.stdout != '0'"
-  when: ansible_distribution == 'Fedora'
- 
+    - { ftype: "l", setype: "named_zone_t", target: "/var/lib/named" }
+    - { ftype: "d", setype: "named_zone_t", target: "/var/named(/.*)?" }
+    - { ftype: "f", setype: "named_conf_t", target: "/var/named(/.*)?" }
+  when: is_fedora|bool
+
 - name: reload selinux configuration on fedora
   shell: "restorecon {{item}}"
   with_items:
     - "/var/lib/named"
-    - "-R -v /var/named"
-  when: ansible_distribution == 'Fedora' and selinux_config_exists.changed
+    - "-irv /var/named"
+  when: is_fedora|bool and sefcontext_result.changed
 
 - name: set resolv config on fedora
   lineinfile:
@@ -104,7 +93,7 @@
     - { field: "DNS1", value: "127.0.0.1" }
     - { field: "SEARCH", value: "{{server_domain}}" }
   notify: "restart networkmanager"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: set forwarder config on suse
   lineinfile:
@@ -114,4 +103,4 @@
   notify:
     - "refresh netconfig"
     - "restart named"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool

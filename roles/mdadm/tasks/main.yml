@@ -3,18 +3,18 @@
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
   
 - name: install required suse packages
   zypper:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 - name: set config
   lineinfile:
-    path: "/etc/sysconfig/{{ 'mdadm' if ansible_distribution == 'openSUSE Leap' else 'mdmonitor' }}"
+    path: "/etc/sysconfig/{{ 'mdadm' if is_suse|bool else 'mdmonitor' }}"
     regexp: '^[#]*{{item.field}}\s*='
     line: '{{item.field}}="{{item.value}}"'
     create: true
@@ -32,7 +32,7 @@
 
 - name: disable default check cron jobs
   file: 
-    path: "/etc/{{ 'cron.d/mdadm' if ansible_distribution == 'openSUSE Leap' else 'cron.weekly/raid-check' }}"
+    path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
     state: absent
 
 - name: disable default check cron jobs
@@ -51,26 +51,20 @@
     
 - name: create cron job
   vars:
-    title: "RAID Check (Start)"
+    name: "RAID Check (Start)"
     cmd: "/usr/share/mdadm/mdcheck --duration 4 hours"
     file: "ansible_mdadm"
     weekday: "7"
     hour: "1"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create cron job
   vars:
-    title: "RAID Check (Continue)"
+    name: "RAID Check (Continue)"
     cmd: "/usr/share/mdadm/mdcheck --continue --duration 4 hours"
     file: "ansible_mdadm"
     weekday: "1-6"
     hour: "1"
     minute: "0"
-  import_role:
-    name: cron
-    tasks_from: add_cronjob
-  tags: ['cron_job']
+  import_tasks: roles/cron/tasks/add_cronjob.yml

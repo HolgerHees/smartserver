@@ -1,7 +1,5 @@
 - name: check mysql service
-  import_role:
-    name: mysql
-    tasks_from: wait_until_ready
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
     
 - name: install apps
   shell: "php {{htdocs_path}}nextcloud/occ app:install {{item}}"

@@ -22,7 +22,7 @@
     ]
     state: present
   notify: "restart apache"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
   
 - name: install required suse packages
   zypper:
@@ -53,7 +53,7 @@
     ]
     state: present
   notify: "restart apache"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 #- shell: "pecl info inotify"
 #  failed_when: "'command-not-found' in inotify_installed.stderr"
@@ -91,7 +91,7 @@
 - name: copy config
   template:
     src: roles/php/templates/etc/php7/conf.d/{{item}}
-    dest: "/etc/{{ 'php7/conf.d/' if ansible_distribution == 'openSUSE Leap' else 'php.d/90-' }}{{item}}"
+    dest: "/etc/{{ 'php7/conf.d/' if is_suse|bool else 'php.d/90-' }}{{item}}"
     owner: root
     group: root
     mode: 0644
@@ -103,19 +103,19 @@
     
 - name: prepare opcache config
   lineinfile:
-    path: /etc/{{ 'php7/cli/' if ansible_distribution == 'openSUSE Leap' else '' }}php.ini
+    path: /etc/{{ 'php7/cli/' if is_suse|bool else '' }}php.ini
     regexp: '^\[opcache\]'
     line: '[opcache]'
 
 - name: set cli config
   import_tasks: roles/php/tasks/php_ini.yml
   vars:
-    php_ini_file: "/etc/{{ 'php7/cli/' if ansible_distribution == 'openSUSE Leap' else '' }}php.ini"
+    php_ini_file: "/etc/{{ 'php7/cli/' if is_suse|bool else '' }}php.ini"
 
 - name: copy imagick config
   template:
     src: roles/php/templates/etc/ImageMagick-7/policy.xml
-    dest: /etc/ImageMagick-{{ '7' if ansible_distribution == 'openSUSE Leap' else '6' }}/policy.xml
+    dest: /etc/ImageMagick-{{ '7' if is_suse|bool else '6' }}/policy.xml
     owner: root
     group: root
     mode: 0644

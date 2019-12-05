@@ -24,22 +24,14 @@
 - name: create systemd service
   vars:
     container_name: "kibana"
-  import_role:
-    name: container
-    tasks_from: add_docker_service
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: copy fluentd config
   vars:
     config_file: "roles/kibana/templates/etc/fluent/_.ansible.d/kibana.conf"
-  import_role:
-    name: fluentd
-    tasks_from: add_config
-  tags: ['fluentd_conf']
+  import_tasks: roles/fluentd/tasks/add_config.yml
     
 - name: copy apache config
   vars:
     config_file: "roles/kibana/templates/etc/apache2/_.ansible.d/kibana.conf"
-  import_role:
-    name: apache
-    tasks_from: add_config
-  tags: ['apache_conf']
+  import_tasks: roles/apache/tasks/add_config.yml

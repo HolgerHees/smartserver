@@ -6,9 +6,7 @@
   changed_when: mysql_backup_exists.stat.exists
 
 - name: check mysql service
-  import_role:
-    name: mysql
-    tasks_from: wait_until_ready
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
   when: mysql_backup_exists.stat.exists
 
 - name: import nextcloud database
@@ -47,9 +45,7 @@
   when: influxdb_backup_exists.rc == 0
   
 - name: check influxdb service
-  import_role:
-    name: influxdb
-    tasks_from: wait_until_ready
+  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
   when: influxdb_backup_exists.rc == 0
   
 # ??? check if this is enough or if we need to import metadata from opentsdb too

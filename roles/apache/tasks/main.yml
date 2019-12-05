@@ -8,7 +8,7 @@
       , mod_proxy_html
     ]
     state: present
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
   notify: "restart apache"
   
 - name: install required suse packages
@@ -22,7 +22,7 @@
       #, python3-certbot-apache
     ]
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   notify: "restart apache"
   
 - name: check certificate (develop)
@@ -94,10 +94,11 @@
     group: "{{item.group}}"
     mode: 0755
   with_items:
+    - { owner: root, group: root, dir: "{{www_etc}}vhosts.d/" } # is missing on fedora
+    - { owner: root, group: root, dir: "{{www_etc}}_.ansible.d/" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
-    - { owner: root, group: root, dir: "{{www_etc}}_.ansible.d/" }
-    - { owner: "{{ 'root' if ansible_distribution == 'openSUSE Leap' else www_username }}", group: "{{ 'root' if ansible_distribution == 'openSUSE Leap' else www_group }}", dir: "{{global_log}}apache2/" }
+    - { owner: "{{ 'root' if is_suse|bool else www_username }}", group: "{{ 'root' if is_suse|bool else www_group }}", dir: "{{global_log}}apache2/" }
 
 
   
@@ -123,15 +124,6 @@
   
   
   
-- name: prepare needed folder on fedora
-  file:
-    path: "{{www_etc}}vhosts.d/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-  when: ansible_distribution == 'Fedora'
-
 - name: enable modules on fedora
   lineinfile:
     path: "{{www_etc}}conf.modules.d/{{item.file}}"
@@ -154,7 +146,7 @@
     - { file: "15-php.conf", name: "php7", prefix: "lib" }
     - { file: "00-base.conf", name: "substitute", prefix: "mod_" } # needed for instar camera webui
   notify: "restart apache"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
   
 - name: disable default LISTEN on fedora
   lineinfile:
@@ -166,7 +158,7 @@
     - { file: "conf/httpd.conf", regex: "^(Listen.*)", line: "#\\1" }
     - { file: "conf.d/ssl.conf", regex: "^(Listen.*)", line: "#\\1" }
   notify: "restart apache"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: set server config on fedora
   lineinfile:
@@ -182,22 +174,38 @@
     - { regex: 'DocumentRoot', line: 'DocumentRoot "{{htdocs_path}}"' }
     - { regex: 'ServerName', line: 'ServerName "{{server_domain}}"' }
   notify: "restart apache"
-  when: ansible_distribution == 'Fedora'
-  
-- name: set selinux configuration on fedora
-  shell: "{{item}}"
+  when: is_fedora|bool
+
+- name: set apache selinux port configuration on fedora
+  seport:
+    ports: 10114
+    proto: tcp
+    setype: http_port_t
+    state: present
+  when: is_fedora|bool
+
+- name: set apache selinux configuration on fedora
+  sefcontext:
+    target: "{{item.target}}"
+    ftype: "{{item.ftype}}"
+    setype: "{{item.setype}}"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
   with_items:
-    - "semanage port -a -t http_port_t -p tcp 10114"
-    - "semanage fcontext -a -t httpd_log_t \"{{global_log}}apache2(/.*)?\""
-  register: selinux_config_exists
-  changed_when: "'already defined' not in selinux_config_exists.stderr"
-  failed_when: false #"http_port_exists.rc == 1 and 'already defined' not in http_port_exists.stderr"
-  when: ansible_distribution == 'Fedora'
-  
+    - { ftype: "d", setype: "httpd_log_t", target: "{{global_log}}apache2" }
+    - { ftype: "d", setype: "httpd_config_t", target: "{{www_etc | regex_replace('\\/$', '')}}(/.*)?" }
+    - { ftype: "d", setype: "httpd_sys_content_t", target: "{{htdocs_path | regex_replace('\\/$', '')}}(/.*)?" }
+  when: is_fedora|bool
+
 - name: reload selinux configuration on fedora
-  shell: "restorecon -Rv {{global_log}}apache2/"
-  when: ansible_distribution == 'Fedora' and selinux_config_exists.changed
-  
+  shell: "restorecon {{item}}"
+  with_items:
+    - "{{global_log}}apache2"
+    - "-irv {{www_etc}}"
+    - "-irv {{htdocs_path}}"
+  when: is_fedora|bool and sefcontext_result.changed
+ 
 
   
   
@@ -237,21 +245,21 @@
     - php7
     - substitute # needed for instar camera webui
   notify: "restart apache"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
     
 - name: set web config on suse # fedora is using a shared one (cli & web)
   import_tasks: roles/php/tasks/php_ini.yml
   vars:
     php_ini_file: "/etc/php7/apache2/php.ini"
   notify: "restart apache"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 - name: disable http vhost on suse
   shell: "if [ -f {{www_etc}}vhosts.d/vhost.conf ]; then mv {{www_etc}}vhosts.d/vhost.conf {{www_etc}}vhosts.d/vhost.conf.org; echo \"1\"; else echo \"0\"; fi"
   register: vhost_change
   changed_when: "'1' in vhost_change.stdout"
   notify: "restart apache"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: set server config on suse
   lineinfile:
@@ -265,7 +273,7 @@
     - { field: 'DocumentRoot', value: '"{{htdocs_path}}"' }
     - { field: 'ServerName', value: '"{{server_domain}}"' }
   notify: "restart apache"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
  
   
   
@@ -320,10 +328,7 @@
 - name: copy fluentd config
   vars:
     config_file: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
-  import_role:
-    name: fluentd
-    tasks_from: add_config
-  tags: ['fluentd_conf']
+  import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: prepare .htpasswd file
   copy:

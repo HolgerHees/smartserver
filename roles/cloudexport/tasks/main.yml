@@ -19,7 +19,6 @@
     owner: "{{philipp_username}}"
     group: users
     mode: 0777
-    #recurse: true
   when: "vault_active|bool"
 
 - name: add nfs exported folder for user "philipp"

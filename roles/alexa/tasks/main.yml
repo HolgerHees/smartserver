@@ -13,7 +13,7 @@
       , npm10
     ]
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: install required suse packages
   zypper:
@@ -22,7 +22,7 @@
       , npm10
     ]
     state: present
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 - name: clone git
   git:

@@ -7,7 +7,7 @@
     ]
     state: present
   notify: "restart postfix"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install required suse packages
   zypper:
@@ -18,7 +18,7 @@
     ]
     state: present
   notify: "restart postfix"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 #- name: set config
 #  lineinfile:
@@ -42,17 +42,17 @@
 #    - { field: 'POSTFIX_LOCALDOMAINS', value: '{{server_name}}, {{server_domain}}, localhost' }
 #  register: config_status
 #  notify: "restart postfix"
-#  when: ansible_distribution == 'openSUSE Leap'
+#  when: is_suse|bool
 
 #- name: check postfix is running
 #  systemd:
 #    name: postfix
 #    state: started
-#  when: ansible_distribution == 'openSUSE Leap' and config_status.changed
+#  when: is_suse|bool and config_status.changed
 
 #- name: refresh postfix
 #  command: "/usr/sbin/config.postfix"
-#  when: ansible_distribution == 'openSUSE Leap' and config_status.changed
+#  when: is_suse|bool and config_status.changed
 #  notify: "restart postfix"
   
 # https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
@@ -72,7 +72,7 @@
 
     - { field: 'smtp_use_tls', value: 'yes' }                                                        # POSTFIX_SMTP_TLS_CLIENT = yes
     - { field: 'smtp_enforce_tls', value: 'yes' }                                                    # POSTFIX_SMTP_TLS_CLIENT = yes
-    - { field: 'smtp_tls_CAfile', value: "/etc/ssl/{{ 'ca-bundle.pem' if ansible_distribution == 'openSUSE Leap' else 'certs/ca-bundle.crt' }}" }
+    - { field: 'smtp_tls_CAfile', value: "/etc/ssl/{{ 'ca-bundle.pem' if is_suse|bool else 'certs/ca-bundle.crt' }}" }
 
     - { field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }             # POSTFIX_LOCALDOMAINS
     - { field: 'myhostname', value: '{{server_name}}' }                                              # POSTFIX_MYHOSTNAME
@@ -83,7 +83,7 @@
   shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; echo \"1\"; else echo \"0\"; fi"
   register: sysconfig_change
   changed_when: "'1' in sysconfig_change.stdout"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: set master.cf config on suse
   lineinfile:
@@ -91,7 +91,7 @@
     regexp: '^[#]*tlsmgr '
     line: 'tlsmgr    unix  -       -       n       1000?   1       tlsmgr'
   notify: "restart postfix"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
 
 - name: set sasl_passwd
   lineinfile:

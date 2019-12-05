@@ -3,14 +3,14 @@
     name: "samba"
     state: present
   notify: "restart samba"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install required suse packages
   zypper:
     name: "samba"
     state: present
   notify: "restart samba"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
   
 - name: copy config
   template:

@@ -6,7 +6,7 @@
     ]
     state: present
   notify: "restart nfs-server"
-  when: ansible_distribution == 'Fedora'
+  when: is_fedora|bool
 
 - name: install required suse packages
   zypper:
@@ -16,4 +16,4 @@
     ]
     state: present
   notify: "restart nfs-server"
-  when: ansible_distribution == 'openSUSE Leap'
+  when: is_suse|bool
