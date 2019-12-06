@@ -1,6 +1,6 @@
 - name: "create systemd service for '{{container_name}}'"
   copy:
-    content: "{{ lookup('template', 'templates/docker_service') }}"
+    content: "{{ lookup('template', 'roles/container/templates/docker_service') }}"
     dest: "/etc/systemd/system/{{container_name}}.service"
     owner: root
     group: root

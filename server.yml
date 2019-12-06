@@ -64,17 +64,21 @@
     - { role: firewalld, tags: [ 'firewalld' ] }                                # firewalld configuration
     - { role: dns, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
     
-    - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server
-
-    - { role: ssh, tags: [ 'ssh' ] }                                            # settup allowed ssh user
-
-    - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
-
     - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
     - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
 
     - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
     - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
+
+    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
+
+    - { role: container, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
+
+    - { role: ssh, tags: [ 'ssh' ] }                                            # settup allowed ssh user
+
+    - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server
+
+    - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
     - { role: php, tags: [ 'php' ] }                                            # php cli
     
@@ -83,11 +87,9 @@
     - { role: java_ant, tags: [ 'java_ant' ] }                                  # apache ant
     - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
 
-    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector => is creating /etc/fluent/_.ansible.d
-
-    - { role: container, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
-
+    - { role: apache_ssl, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
     - { role: apache, tags: [ 'apache' ] }                                      # web server => is creating {{www_etc}}_.ansible.d
+    #- { role: apache_docker, tags: [ 'apache_docker' ] }                        # web server => is creating {{www_etc}}_.ansible.d                  [docker]
 
     - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
 

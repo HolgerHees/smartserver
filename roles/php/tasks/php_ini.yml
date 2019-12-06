@@ -2,7 +2,7 @@
   lineinfile:
     path: "{{php_ini_file}}"
     insertafter: '^\[{{item.block}}\]'
-    regexp: '^[#]*{{item.field}}\s*='
+    regexp: '^{{item.field}}\s*='
     line: '{{item.field}}={{item.value}}'
   with_items:
     - { block: 'PHP', field: 'memory_limit', value: '1024M' }

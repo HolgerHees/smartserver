@@ -23,7 +23,7 @@
 #- name: set config
 #  lineinfile:
 #    path: /etc/sysconfig/postfix
-#    regexp: '^[#]*{{item.field}}\s*='
+#    regexp: '^{{item.field}}\s*='
 #    line: '{{item.field}} "{{item.value}}"'
 #  with_items:
 #    #- { field: 'POSTFIX_LISTEN', value: '' }
@@ -60,7 +60,7 @@
 - name: set main.cf config
   lineinfile:
     path: /etc/postfix/main.cf
-    regexp: '^[#]*{{item.field}}\s*='
+    regexp: '^{{item.field}}\s*='
     line: '{{item.field}} = {{item.value}}'
   with_items:
     - { field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
@@ -88,7 +88,7 @@
 - name: set master.cf config on suse
   lineinfile:
     path: /etc/postfix/master.cf
-    regexp: '^[#]*tlsmgr '
+    regexp: '^tlsmgr '
     line: 'tlsmgr    unix  -       -       n       1000?   1       tlsmgr'
   notify: "restart postfix"
   when: is_suse|bool
@@ -96,7 +96,7 @@
 - name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
-    regexp: '^[#]*\[smtp\.gmail\.com\]:587 '
+    regexp: '^\[smtp\.gmail\.com\]:587 '
     line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
     create: true # needed for fedora
     owner: root
@@ -121,7 +121,7 @@
 - name: set aliases
   lineinfile:
     path: /etc/aliases
-    regexp: '^[#]*{{item.name}}[\s:]{1}'
+    regexp: '^{{item.name}}[\s:]{1}'
     line: '{{item.name}}: {{item.alias}}'
   with_items:
     - { name: 'root', alias: '{{ admin_mail }}' }

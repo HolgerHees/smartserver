@@ -56,7 +56,7 @@
 #  vars:
 #    container_name: "vsftpd"
 #  copy:
-#    content: "{{ lookup('template', 'templates/podman_service') }}"
+#    content: "{{ lookup('template', 'roles/container/templates/podman_service') }}"
 #    dest: "/etc/systemd/system/vsftpd.service"
 #    owner: root
 #    group: root

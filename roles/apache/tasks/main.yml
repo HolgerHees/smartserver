@@ -2,9 +2,6 @@
   yum:
     name: [
         httpd 
-      #, python2-setuptools      # needed by openssl ansible module
-      , python3-setuptools
-      , certbot-apache
       , mod_proxy_html
     ]
     state: present
@@ -15,77 +12,12 @@
   zypper:
     name: [
         apache2 
-      , python2-setuptools      # needed by openssl ansible module
-      #, python3-setuptools
       , apache2-mod_php7
-      , python2-certbot-apache
-      #, python3-certbot-apache
     ]
     state: present
   when: is_suse|bool
   notify: "restart apache"
   
-- name: check certificate (develop)
-  stat:
-    path: /etc/letsencrypt/live/{{server_domain}}/
-  register: certificate_exists
-  changed_when: not certificate_exists.stat.exists
-  when: "not use_vault_files"
-  
-- name: prepare needed folder (develop)
-  file:
-    path: "/etc/{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - "letsencrypt/"
-    - "letsencrypt/live"
-    - "letsencrypt/live/{{server_domain}}"
-  when: "not use_vault_files and not certificate_exists.stat.exists"
-
-- name: generate openssl privatekey (develop)
-  openssl_privatekey:
-    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-  when: "not use_vault_files and not certificate_exists.stat.exists"
-    
-- name: generate openssl csr (develop)
-  openssl_csr:
-    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
-    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-    common_name: "{{server_domain}}"
-  when: "not use_vault_files and not certificate_exists.stat.exists"
-    
-- name: generate openssl certificate (develop)
-  openssl_certificate:
-    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
-    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
-    provider: selfsigned
-  when: "not use_vault_files and not certificate_exists.stat.exists"
-  
-- name: install certificate (production)
-  unarchive:
-    src: "{{ vault_files }}letsencrypt/letsencrypt.tgz"
-    dest: "/etc/"
-    creates: "/etc/letsencrypt/"
-    decrypt: yes
-  notify: "restart apache"
-  when: "use_vault_files|bool"
-
-- name: create certificate symlink
-  file:
-    src: "letsencrypt"
-    dest: "/etc/certbot"
-    state: link
-    owner: root
-    group: root
-    mode: 0755
-
-# TODO add renew job
-#certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
-
 - name: prepare needed folder
   file:
     path: "{{item.dir}}"
@@ -94,21 +26,13 @@
     group: "{{item.group}}"
     mode: 0755
   with_items:
-    - { owner: root, group: root, dir: "{{www_etc}}vhosts.d/" } # is missing on fedora
     - { owner: root, group: root, dir: "{{www_etc}}_.ansible.d/" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
     - { owner: "{{ 'root' if is_suse|bool else www_username }}", group: "{{ 'root' if is_suse|bool else www_group }}", dir: "{{global_log}}apache2/" }
 
 
-  
-  
-  
-  
-  
-  
-  
-  
+
   
   
   
@@ -127,56 +51,31 @@
 - name: enable modules on fedora
   lineinfile:
     path: "{{www_etc}}conf.modules.d/{{item.file}}"
-    regexp: '^[#\s]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
-    line: 'LoadModule {{item.name}}_module modules/{{item.prefix}}{{item.name}}.so'
+    regexp: '^[#]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
+    line: '{{ "" if item.enabled else "#" }}LoadModule {{item.name}}_module modules/{{item.prefix}}{{item.name}}.so'
   with_items:
-    - { file: "00-base.conf", name: "auth_digest", prefix: "mod_" }
-    - { file: "00-base.conf", name: "headers", prefix: "mod_" }
-    - { file: "00-proxy.conf", name: "proxy", prefix: "mod_" }
-    - { file: "00-proxyhtml.conf", name: "proxy_html", prefix: "mod_" } 
-    - { file: "00-proxy.conf", name: "proxy_http", prefix: "mod_" } 
-    - { file: "00-proxy.conf", name: "proxy_balancer", prefix: "mod_" }
-    - { file: "00-proxy.conf", name: "lbmethod_bytraffic", prefix: "mod_" } # used by proxy_balancer
-    - { file: "00-base.conf", name: "slotmem_shm", prefix: "mod_" } # used by proxy_balancer
-    - { file: "00-proxyhtml.conf", name: "xml2enc", prefix: "mod_" }
-    - { file: "00-base.conf", name: "deflate", prefix: "mod_" } 
-    - { file: "00-base.conf", name: "filter", prefix: "mod_" } 
-    - { file: "00-proxy.conf", name: "proxy_wstunnel", prefix: "mod_" } 
-    - { file: "00-base.conf", name: "rewrite", prefix: "mod_" } 
-    - { file: "15-php.conf", name: "php7", prefix: "lib" }
-    - { file: "00-base.conf", name: "substitute", prefix: "mod_" } # needed for instar camera webui
+    - { enabled: true, file: "00-base.conf", name: "auth_digest", prefix: "mod_" }
+    - { enabled: true, file: "00-base.conf", name: "headers", prefix: "mod_" }
+    - { enabled: true, file: "00-mpm.conf", name: "mpm_prefork", prefix: "mod_" }
+    - { enabled: false, file: "00-mpm.conf", name: "mpm_worker", prefix: "mod_" }
+    - { enabled: false, file: "00-mpm.conf", name: "mpm_event", prefix: "mod_" }
+    - { enabled: true, file: "00-proxy.conf", name: "proxy", prefix: "mod_" }
+    - { enabled: true, file: "00-proxyhtml.conf", name: "proxy_html", prefix: "mod_" } 
+    - { enabled: true, file: "00-proxy.conf", name: "proxy_http", prefix: "mod_" } 
+    - { enabled: true, file: "00-proxy.conf", name: "proxy_balancer", prefix: "mod_" }
+    - { enabled: true, file: "00-proxy.conf", name: "lbmethod_bytraffic", prefix: "mod_" } # used by proxy_balancer
+    - { enabled: true, file: "00-base.conf", name: "slotmem_shm", prefix: "mod_" } # used by proxy_balancer
+    - { enabled: true, file: "00-proxyhtml.conf", name: "xml2enc", prefix: "mod_" }
+    - { enabled: true, file: "00-base.conf", name: "deflate", prefix: "mod_" } 
+    - { enabled: true, file: "00-base.conf", name: "filter", prefix: "mod_" } 
+    - { enabled: true, file: "00-proxy.conf", name: "proxy_wstunnel", prefix: "mod_" } 
+    - { enabled: true, file: "00-base.conf", name: "rewrite", prefix: "mod_" } 
+    - { enabled: true, file: "15-php.conf", name: "php7", prefix: "lib" }
+    - { enabled: true, file: "00-base.conf", name: "substitute", prefix: "mod_" } # needed for instar camera webui
   notify: "restart apache"
   when: is_fedora|bool
   
-- name: disable default LISTEN on fedora
-  lineinfile:
-    path: "{{www_etc}}{{item.file}}"
-    backrefs: yes
-    regexp: '{{item.regex}}'
-    line: '{{item.line}}'
-  with_items:
-    - { file: "conf/httpd.conf", regex: "^(Listen.*)", line: "#\\1" }
-    - { file: "conf.d/ssl.conf", regex: "^(Listen.*)", line: "#\\1" }
-  notify: "restart apache"
-  when: is_fedora|bool
-
-- name: set server config on fedora
-  lineinfile:
-    path: "{{www_etc}}conf/httpd.conf"
-    regexp: '^[#]*{{item.regex}}'
-    line: '{{item.line}}'
-  with_items:
-    - { regex: "Include {{www_etc}}listen\\.conf", line: "Include {{www_etc}}listen.conf" }
-    - { regex: "Include {{www_etc}}vhosts.d/vhost-ssl\\.conf", line: "Include {{www_etc}}vhosts.d/vhost-ssl.conf" }
-    - { regex: 'ErrorLog', line: 'ErrorLog "{{global_log}}apache2/error.log"' }
-    - { regex: 'Logformat.*?my_http_log', line: 'Logformat "%t - %h - %u - \"%r\" - %s - %b (%D) - \"%{User-Agent}i\"" my_http_log' }
-    - { regex: 'CustomLog.*?my_http_log', line: 'CustomLog "{{global_log}}apache2/access.log" my_http_log' }
-    - { regex: 'DocumentRoot', line: 'DocumentRoot "{{htdocs_path}}"' }
-    - { regex: 'ServerName', line: 'ServerName "{{server_domain}}"' }
-  notify: "restart apache"
-  when: is_fedora|bool
-
-- name: set apache selinux port configuration on fedora
+- name: set selinux port configuration on fedora
   seport:
     ports: 10114
     proto: tcp
@@ -184,7 +83,14 @@
     state: present
   when: is_fedora|bool
 
-- name: set apache selinux configuration on fedora
+- name: set selinux proxy configuration on fedora
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  when: is_fedora|bool
+
+- name: set selinux configuration on fedora
   sefcontext:
     target: "{{item.target}}"
     ftype: "{{item.ftype}}"
@@ -206,6 +112,28 @@
     - "-irv {{htdocs_path}}"
   when: is_fedora|bool and sefcontext_result.changed
  
+- name: disable obsolete configs on fedora
+  lineinfile:
+    path: "{{www_etc}}conf/httpd.conf"
+    backrefs: yes
+    regexp: '^{{item.regex}}'
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "(Listen.*)", line: "#\\1" }
+    - { regex: "(IncludeOptional conf.d/\\*\\.conf)", line: "#\\1" }
+  notify: "restart apache"
+  when: is_fedora|bool
+
+- name: enable php config on fedora
+  lineinfile:
+    path: "{{www_etc}}conf/httpd.conf"
+    regexp: '^{{item.regex}}'
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "Include conf\\.d/php\\.conf", line: "Include conf.d/php.conf" }
+  notify: "restart apache"
+  when: is_fedora|bool
+
 
   
   
@@ -254,49 +182,43 @@
   notify: "restart apache"
   when: is_suse|bool
   
-- name: disable http vhost on suse
-  shell: "if [ -f {{www_etc}}vhosts.d/vhost.conf ]; then mv {{www_etc}}vhosts.d/vhost.conf {{www_etc}}vhosts.d/vhost.conf.org; echo \"1\"; else echo \"0\"; fi"
-  register: vhost_change
-  changed_when: "'1' in vhost_change.stdout"
+- name: disable obsolete configs on suse
+  lineinfile:
+    path: "{{www_etc}}httpd.conf"
+    regexp: '^{{item.regex}}'
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "Include {{www_etc}}default-server\\.conf", line: "#Include {{www_etc}}default-server.conf" }
+    - { regex: "IncludeOptional {{www_etc}}vhosts.d/\\*\\.conf", line: "#IncludeOptional {{www_etc}}vhosts.d/*.conf" }
+    - { regex: "Include {{www_etc}}listen\\.conf", line: "#Include {{www_etc}}listen.conf" }
   notify: "restart apache"
   when: is_suse|bool
 
-- name: set server config on suse
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- name: set httpd config
   lineinfile:
-    path: "{{www_etc}}default-server.conf"
-    regexp: '^[#]*{{item.field}} '
-    line: '{{item.field}} {{item.value}}'
+    path: "{{www_etc}}{{ '' if is_suse else 'conf/' }}httpd.conf"
+    regexp: '^{{item.regex}}'
+    line: '{{item.line}}'
   with_items:
-    - { field: 'ErrorLog', value: '{{global_log}}apache2/error.log' }
-    - { field: 'Logformat', value: '"%t - %h - %u - \"%r\" - %s - %b (%D) - \"%{User-Agent}i\"" my_http_log' }
-    - { field: 'CustomLog', value: '{{global_log}}apache2/access.log my_http_log' }
-    - { field: 'DocumentRoot', value: '"{{htdocs_path}}"' }
-    - { field: 'ServerName', value: '"{{server_domain}}"' }
+    - { regex: "Include {{www_etc}}_.ansible_vhost-ssl.conf", line: "Include {{www_etc}}_.ansible_vhost-ssl.conf" }
+    - { regex: 'ErrorLog', line: 'ErrorLog "{{global_log}}apache2/error.log"' }
   notify: "restart apache"
-  when: is_suse|bool
- 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
 - name: copy config
   template:
     src: "roles/apache/templates/etc/apache2/{{item}}"
@@ -305,11 +227,10 @@
     group: root
     mode: 0644
   with_items:
-    - listen.conf
     - _.ansible.d/auth.conf
     - _.ansible.d/services.conf
     - _.ansible.d/options.conf
-    - vhosts.d/vhost-ssl.conf
+    - _.ansible_vhost-ssl.conf
   notify: "restart apache"
   when: "vault_active|bool"
 
@@ -361,7 +282,7 @@
   vars:
     logrotate_path: "{{global_log}}apache2/*.log"
   copy:
-    content: "{{ lookup('template', 'templates/logrotate_apache') }}"
+    content: "{{ lookup('template', 'roles/apache/templates/logrotate') }}"
     dest: "/etc/logrotate.d/ansible_apache"
     owner: root
     group: root

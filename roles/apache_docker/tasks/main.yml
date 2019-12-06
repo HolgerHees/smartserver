@@ -1,0 +1,44 @@
+#https://stackify.com/docker-for-php-a-start-to-finish-guide/
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+    
+- name: check docker image exists
+  shell: "docker images custom_apache:1.0.0"
+  register: image_exists
+  changed_when: "'custom_apache' not in image_exists.stdout"
+ 
+- name: compose docker image
+  shell: "docker build -t custom_apache:1.0.0 roles/apache_docker/templates/container/"
+  register: output
+  when: "'custom_apache' not in image_exists.stdout"
+  
+- name: create docker container
+  docker_container:
+    name: httpd
+    image: custom_apache:1.0.0
+    state: present
+#    recreate: true
+#    env:
+#      APACHE_DOCUMENT_ROOT: "{{htdocs_path}}"
+    log_driver: journald
+    log_options:
+      tag: httpd
+    volumes:
+      - '{{htdocs_path}}:/var/www/html:z'
+    ports:
+      - "9443:443"
+      - "90114:10114"
+  notify: "restart vsftpd"
+  when: "vault_active|bool"
+
+#- name: clean old docker images
+#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
+#  when: "'custom_vsftpd' not in image_exists.stdout"
+  
+#- name: create systemd service
+#  vars:
+#    container_name: "httpd"
+#  import_tasks: roles/container/tasks/add_docker_service.yml

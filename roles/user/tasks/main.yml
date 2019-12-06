@@ -42,8 +42,8 @@
     realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
-    regexp: '^[#]*{{holger_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'templates/htdigest') }}"
+    regexp: '^{{holger_username}}:{{server_name}}'
+    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
   when: "vault_active|bool"
   
 # **** HHEES (SSH, SMB, WEB) ****
@@ -88,8 +88,8 @@
     realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
-    regexp: '^[#]*{{sandra_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'templates/htdigest') }}"
+    regexp: '^{{sandra_username}}:{{server_name}}'
+    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
   when: "vault_active|bool"
   
   
@@ -134,8 +134,8 @@
     realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
-    regexp: '^[#]*{{admin_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'templates/htdigest') }}"
+    regexp: '^{{admin_username}}:{{server_name}}'
+    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
   when: "vault_active|bool"
 
 - name: add user "{{alexa_username}}" to apache (htpasswd)
@@ -152,14 +152,14 @@
     realm: "{{server_name|capitalize}}"
   lineinfile:
     path: "{{htdocs_path}}.htdigest"
-    regexp: '^[#]*{{alexa_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'templates/htdigest') }}"
+    regexp: '^{{alexa_username}}:{{server_name}}'
+    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
   when: "vault_active|bool"
   
 - name: add apache user to groups
   lineinfile:
     path: "{{htdocs_path}}.htgroups"
-    regexp: '^[#]*{{item.group}}[\s:]{1}'
+    regexp: '^{{item.group}}[\s:]{1}'
     line: '{{item.group}}: {{item.user}}'
   with_items:
     - { group: 'USER', user: '{{holger_username}} {{sandra_username}} {{admin_username}}' }

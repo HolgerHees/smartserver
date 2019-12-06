@@ -4,7 +4,7 @@
     cron_cmd: "{{cmd}}"
   cron:
     name: "{{cron_name}}"
-    job: "{{ lookup('template', 'templates/cron_job') }}"
+    job: "{{ lookup('template', 'roles/cron/templates/cron_job') }}"
     cron_file: "{{file}}"
     user: "{{user | default ('root')}}"
     weekday: "{{weekday | default ('*')}}" 

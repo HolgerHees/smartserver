@@ -15,7 +15,7 @@
 - name: set config
   lineinfile:
     path: "/etc/sysconfig/{{ 'mdadm' if is_suse|bool else 'mdmonitor' }}"
-    regexp: '^[#]*{{item.field}}\s*='
+    regexp: '^{{item.field}}\s*='
     line: '{{item.field}}="{{item.value}}"'
     create: true
     owner: root

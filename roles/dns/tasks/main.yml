@@ -62,7 +62,7 @@
     - "root.hint"
   notify: "restart named"
   
-- name: set named selinux configuration on fedora
+- name: set selinux configuration on fedora
   sefcontext:
     target: "{{item.target}}"
     ftype: "{{item.ftype}}"
@@ -86,7 +86,7 @@
 - name: set resolv config on fedora
   lineinfile:
     path: /etc/sysconfig/network-scripts/ifcfg-eth0
-    regexp: '^[#]*{{item.field}}\s*='
+    regexp: '^{{item.field}}\s*='
     line: '{{item.field}}="{{item.value}}"'
   with_items:
     - { field: "PEERDNS", value: "no" }
@@ -98,7 +98,7 @@
 - name: set forwarder config on suse
   lineinfile:
     path: /etc/sysconfig/network/config
-    regexp: '^[#]*NETCONFIG_DNS_FORWARDER\s*='
+    regexp: '^NETCONFIG_DNS_FORWARDER\s*='
     line: 'NETCONFIG_DNS_FORWARDER="bind"'
   notify:
     - "refresh netconfig"

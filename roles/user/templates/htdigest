@@ -1,0 +1,1 @@
+{{username}}:{{realm}}:{{(username+":"+realm+":"+password)|hash('md5')}}

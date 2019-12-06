@@ -51,7 +51,7 @@
   lineinfile:
     path: "/usr/lib/systemd/system/{{ 'clamd.service' if is_suse|bool else 'clamd@.service' }}"
     insertafter: '^\[Service\]'
-    regexp: '^[#]*TimeoutSec\s*='
+    regexp: '^TimeoutSec\s*='
     line: 'TimeoutSec=5min'
   notify: "restart clamav"
 

@@ -4,7 +4,7 @@
     state: directory
     owner: root
     group: root
-    mode: 0755
+    mode: 0750
   with_items:
     - '{{ global_lib }}influxdb'
     - '{{ global_lib }}influxdb/hh'

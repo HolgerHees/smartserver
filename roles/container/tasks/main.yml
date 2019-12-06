@@ -41,7 +41,7 @@
 #- name: set podman config
 #  lineinfile:
 #    path: /etc/containers/{{item.file}}
-#    regexp: '^[#]*{{item.field}}\s*='
+#    regexp: '^{{item.field}}\s*='
 #    line: '{{item.field}}="{{item.value}}"'
 #    create: true
 #    owner: root
@@ -76,6 +76,7 @@
   with_items:
     - { field: "log-driver", value: "journald" }
     - { field: "graph", value: "{{global_lib}}docker" }
+  notify: "restart docker"
   when: is_fedora|bool
   
 - name: set docker selinux configuration on fedora
@@ -107,9 +108,27 @@
   with_items:
     - { field: "log-driver", value: "journald" }
     - { field: "graph", value: "{{global_lib}}docker" }
+  notify: "restart docker"
   when: is_suse|bool
 
 - name: copy fluentd config
   vars:
     config_file: "roles/container/templates/etc/fluent/_.ansible.d/docker.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
+
+# https://success.docker.com/article/node-using-swap-memory-instead-of-host-memory
+# vm.swappiness = 0   # Swap is disabled. In earlier versions, this meant that the kernel would swap only to avoid an out of memory condition, but in later versions this is achieved by setting to 1.
+# vm.swappiness = 1   # Kernel version 3.5 and over, as well as kernel version 2.6.32-303 and over: Minimum amount of swapping without disabling it entirely.
+- name: set sysctl values for container environments
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^{{item.regex}}\s*='
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "vm\\.swappiness", line: "vm.swappiness = 1" }
+    - { regex: "vm\\.overcommit_memory", line: "vm.overcommit_memory = 1" }
+  register: sysctlchanged
+    
+- name: refresh sysctl to activate sysctl changes
+  shell: sysctl -p
+  when: sysctlchanged.changed

@@ -1,0 +1,81 @@
+- name: install required fedora packages
+  yum:
+    name: [
+      #python2-setuptools      # needed by openssl ansible module
+      python3-setuptools
+      , certbot-apache
+    ]
+    state: present
+  when: is_fedora|bool
+  
+- name: install required suse packages
+  zypper:
+    name: [
+      python2-setuptools      # needed by openssl ansible module
+      #python3-setuptools
+      , python2-certbot-apache
+      #, python3-certbot-apache
+    ]
+    state: present
+  when: is_suse|bool
+  
+- name: check certificate (develop)
+  stat:
+    path: /etc/letsencrypt/live/{{server_domain}}/
+  register: certificate_exists
+  changed_when: not certificate_exists.stat.exists
+  when: "not use_vault_files"
+  
+- name: prepare needed folder (develop)
+  file:
+    path: "/etc/{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "letsencrypt/"
+    - "letsencrypt/live"
+    - "letsencrypt/live/{{server_domain}}"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
+
+- name: generate openssl privatekey (develop)
+  openssl_privatekey:
+    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
+    
+- name: generate openssl csr (develop)
+  openssl_csr:
+    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    common_name: "{{server_domain}}"
+  when: "not use_vault_files and not certificate_exists.stat.exists"
+    
+- name: generate openssl certificate (develop)
+  openssl_certificate:
+    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    provider: selfsigned
+  when: "not use_vault_files and not certificate_exists.stat.exists"
+  
+- name: install certificate (production)
+  unarchive:
+    src: "{{ vault_files }}letsencrypt/letsencrypt.tgz"
+    dest: "/etc/"
+    creates: "/etc/letsencrypt/"
+    decrypt: yes
+  notify: "restart apache"
+  when: "use_vault_files|bool"
+
+- name: create certificate symlink
+  file:
+    src: "letsencrypt"
+    dest: "/etc/certbot"
+    state: link
+    owner: root
+    group: root
+    mode: 0755
+
+# TODO add renew job
+#certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}

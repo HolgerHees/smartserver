@@ -76,7 +76,7 @@
   vars:
     logrotate_path: "{{global_log}}vcontrold/*.log"
   copy:
-    content: "{{ lookup('template', 'templates/logrotate') }}"
+    content: "{{ lookup('template', 'roles/vcontrold/templates/logrotate') }}"
     dest: "/etc/logrotate.d/ansible_vcontrol"
     owner: root
     group: root
