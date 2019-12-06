@@ -115,9 +115,9 @@
 - name: disable obsolete configs on fedora
   lineinfile:
     path: "{{www_etc}}conf/httpd.conf"
-    backrefs: yes
     regexp: '^{{item.regex}}'
     line: '{{item.line}}'
+    backrefs: yes
   with_items:
     - { regex: "(Listen.*)", line: "#\\1" }
     - { regex: "(IncludeOptional conf.d/\\*\\.conf)", line: "#\\1" }
@@ -185,12 +185,13 @@
 - name: disable obsolete configs on suse
   lineinfile:
     path: "{{www_etc}}httpd.conf"
-    regexp: '^{{item.regex}}'
+    regexp: '^[#]*{{item.regex}}'
     line: '{{item.line}}'
+    backrefs: yes
   with_items:
-    - { regex: "Include {{www_etc}}default-server\\.conf", line: "#Include {{www_etc}}default-server.conf" }
-    - { regex: "IncludeOptional {{www_etc}}vhosts.d/\\*\\.conf", line: "#IncludeOptional {{www_etc}}vhosts.d/*.conf" }
-    - { regex: "Include {{www_etc}}listen\\.conf", line: "#Include {{www_etc}}listen.conf" }
+    - { regex: "(IncludeOptional {{www_etc}}vhosts\\.d/\\*\\.conf)", line: "#\\1" }
+    - { regex: "(Include {{www_etc}}default-server\\.conf)", line: "#\\1" }
+    - { regex: "(Include {{www_etc}}listen\\.conf)", line: "#\\1" }
   notify: "restart apache"
   when: is_suse|bool
 
