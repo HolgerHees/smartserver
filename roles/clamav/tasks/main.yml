@@ -35,12 +35,12 @@
     regexp: '^{{item.regexp}}'
     line: '{{item.line}}'
   with_items:
-    - { regexp: "Example", line: "#Example" } # disable "example" blocker on fedora
-    - { regexp: "[#\\s]*LogFacility .*", line: "LogFacility LOG_MAIL" }
-    - { regexp: "[#\\s]*PidFile .*", line: "PidFile {{ '/var/run/clamav/clamd.pid' if is_suse else '/run/clamd.scan/clamd.pid'  }}" }
-    - { regexp: "[#\\s]*LocalSocket .*", line: "LocalSocket {{ '/var/run/clamav/clamd-socket' if is_suse else '/run/clamd.scan/clamd.sock'  }}" }
-    - { regexp: "[\\s]*TCPSocket .*", line: "#TCPSocket 3310" }
-    - { regexp: "[\\s]*TCPAddr .*", line: "#TCPAddr 127.0.0.1" }
+    - { regexp: "[#]*Example", line: "#Example" } # disable "example" blocker on fedora
+    - { regexp: "LogFacility .*", line: "LogFacility LOG_MAIL" }
+    - { regexp: "PidFile .*", line: "PidFile {{ '/var/run/clamav/clamd.pid' if is_suse else '/run/clamd.scan/clamd.pid'  }}" }
+    - { regexp: "LocalSocket .*", line: "LocalSocket {{ '/var/run/clamav/clamd-socket' if is_suse else '/run/clamd.scan/clamd.sock'  }}" }
+    - { regexp: "[#]*TCPSocket .*", line: "#TCPSocket 3310" }
+    - { regexp: "[#]*TCPAddr .*", line: "#TCPAddr 127.0.0.1" }
 
 - name: load initial database
   shell: '/usr/bin/freshclam --no-warnings'
