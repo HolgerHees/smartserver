@@ -194,6 +194,15 @@
   notify: "restart apache"
   when: is_suse|bool
 
+- name: enable php config on fedora
+  lineinfile:
+    path: "{{www_etc}}httpd.conf"
+    regexp: '^{{item.regex}}'
+    line: '{{item.line}}'
+  with_items:
+    - { regex: "Include conf\\.d/php7\\.conf", line: "Include conf.d/php7.conf" }
+  notify: "restart apache"
+  when: is_fedora|bool
 
 
 
