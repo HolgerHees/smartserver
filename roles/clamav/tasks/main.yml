@@ -40,8 +40,6 @@
     - { regexp: "(TCPSocket.*)", line: "#\\1" }
     - { regexp: "(TCPAddr.*)", line: "#\\1" }
   notify: "restart apache"
-  when: is_fedora|bool
-
 
 - name: set config
   lineinfile:
