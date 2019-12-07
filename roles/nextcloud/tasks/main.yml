@@ -53,7 +53,7 @@
     remote_src: yes
     owner: "{{www_username}}"
     group: "{{www_group}}"
-    #mode: 0750
+    mode: 0750
   when: not nextcloud_exists.stat.exists
 
 - name: rename folder
@@ -65,6 +65,7 @@
     src: "nextcloud-{{nextcloud_version}}"
     dest: "{{htdocs_path}}nextcloud"
     state: link
+    follow: no
     owner: "{{www_username}}"
     group: "{{www_group}}"
   

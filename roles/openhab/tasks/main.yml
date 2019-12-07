@@ -32,6 +32,7 @@
     src: "openhab-runtime-{{openhab_version}}"
     dest: "{{data_path}}openhab-runtime"
     state: link
+    follow: no
     owner: root
     group: root
 
@@ -84,6 +85,7 @@
     src: "{{item.src}}"
     dest: "{{item.dest}}"
     state: link
+    follow: no
     owner: root
     group: root
   with_items:
@@ -196,6 +198,7 @@
     src: "{{projects_path}}openhab2/{{item}}"
     dest: "{{data_path}}openhab-runtime/{{item}}"
     state: link
+    follow: no
     owner: root
     group: root
   with_items:

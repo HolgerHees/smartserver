@@ -30,9 +30,10 @@
   file:
     src: /var/named/
     dest: /var/lib/named
+    state: link
+    follow: no
     owner: named
     group: named
-    state: link
   when: is_fedora|bool
   
 - name: prepare needed folder

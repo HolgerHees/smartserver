@@ -48,6 +48,9 @@
     src: "{{item.src}}"
     dest: "{{cloud_backup_source_path}}{{item.name}}"
     state: link
+    follow: no
+    owner: root
+    group: root
   with_items:
     - {name: 'archive', src: '{{local_backup_path}}archive'}
     - {name: 'clouddata', src: '{{nextcloud_data_path}}'}

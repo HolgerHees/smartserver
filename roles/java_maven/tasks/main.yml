@@ -10,3 +10,6 @@
     src: "/opt/apache-maven-3.5.4/bin/mvn"
     dest: /usr/bin/mvn
     state: link    
+    follow: no
+    owner: root
+    group: root

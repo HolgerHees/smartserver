@@ -10,3 +10,6 @@
     src: "/opt/apache-ant-1.10.7/bin/ant"
     dest: /usr/bin/ant
     state: link  
+    follow: no
+    owner: root
+    group: root

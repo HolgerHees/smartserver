@@ -59,8 +59,19 @@
     group: root
     mode: 0750
   with_items:
-    - "/usr/lib64/netdata/"
     - "/var/run/netdata"
+    - "/usr/lib64/netdata/"
+    - "/usr/lib64/netdata/conf.d/"
+  when: is_fedora|bool
+  
+- name: fix wrong web files group on fedora
+  file:
+    path: '{{item}}'
+    state: directory
+    group: netdata
+    recurse: yes
+  with_items:
+    - "/usr/share/netdata/web"
   when: is_fedora|bool
   
 - name: copy config

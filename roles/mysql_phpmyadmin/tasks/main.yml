@@ -15,7 +15,7 @@
     remote_src: yes
     owner: "{{www_username}}"
     group: "{{www_group}}"
-    #mode: 0750
+    mode: 0750
   when: not phpmyadmin_exists.stat.exists
 
 - name: rename folder
@@ -27,6 +27,7 @@
     src: "mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
     dest: "{{htdocs_path}}mysql"
     state: link
+    follow: no
     owner: "{{www_username}}"
     group: "{{www_group}}"
   when: not phpmyadmin_exists.stat.exists

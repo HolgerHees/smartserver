@@ -86,9 +86,10 @@
   file:
     src: "/etc/easy-rsa/{{item}}"
     dest: "/etc/easy-rsa/pki/{{item}}"
+    state: link
+    follow: no
     owner: root
     group: root
-    state: link
   with_items:
     - openssl-easyrsa.cnf
     - x509-types
