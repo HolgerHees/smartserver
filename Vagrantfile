@@ -20,9 +20,6 @@ begin
   rescue
 end
 
-print limit
-print "\n\n"
-
 Vagrant.configure(2) do |config|
   config.vm.define "suse", autostart: false do |develop_suse|
     develop_suse.vm.box = "generic/opensuse15"
