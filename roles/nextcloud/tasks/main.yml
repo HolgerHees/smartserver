@@ -69,6 +69,31 @@
     owner: "{{www_username}}"
     group: "{{www_group}}"
   
+#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/data(/.*)?'
+#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/config(/.*)?'
+#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/apps(/.*)?'
+#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.htaccess'
+#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.user.ini'
+#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
+
+- name: set selinux configuration on fedora
+  sefcontext:
+    target: "{{item.target}}"
+    ftype: "{{item.ftype}}"
+    setype: "{{item.setype}}"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
+  with_items:
+    - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{htdocs_path}}nextcloud-{{nextcloud_version}}(/.*)?" }
+  when: is_fedora|bool
+
+- name: reload selinux configuration on fedora
+  shell: "restorecon {{item}}"
+  with_items:
+    - "-irv {{htdocs_path}}nextcloud-{{nextcloud_version}}"
+  when: is_fedora|bool and sefcontext_result.changed
+
 - name: copy config
   template:
     src: "roles/nextcloud/templates/config.php"

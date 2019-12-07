@@ -1,0 +1,14 @@
+
+module httpd_can_socket_connect 1.0;
+
+require {
+        type httpd_t;
+        type container_file_t;
+        type container_t;
+        class sock_file write;
+        class unix_stream_socket connectto;
+}
+
+#============= httpd_t ==============
+allow httpd_t container_file_t:sock_file write;
+allow httpd_t container_t:unix_stream_socket connectto; 
