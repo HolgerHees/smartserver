@@ -6,21 +6,29 @@ This project contains my complete automated IoT Server deployment setup.
 
 ## Requirements
 
-just install [vagrant](https://www.vagrantup.com/) and run:
+Just install [vagrant](https://www.vagrantup.com/) and run:
 
 ```bash
-vagrant up
+vagrant up test
 ```
+It will deploys a test machine running inside virtual box.
 
-this deploys a test machine running inside virtual box.
 
-to deploy a environment similar to my production system run:
+To deploy an environment similar to my production system, run:
 
 ```bash
-vagrant up develop
+vagrant up develop_suse
+
 ```
 
-But this depends on some encrypted vagrant vault files. :-)
+or if you want to try a beta version of my new fedora based deployment, run:
+
+```bash
+vagrant up develop_fedora
+```
+
+Both (Suse and Fedora) are depending on some encrypted vagrant vault files. :-)
+
 
 You can also use the contained ansible files directly.
 
