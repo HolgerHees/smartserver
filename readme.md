@@ -9,13 +9,13 @@ This project contains my complete automated IoT Server deployment setup.
 Just install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). For an **opensuse** based virtual box container setup, run:
 
 ```bash
-vagrant --env=demo up suse
+vagrant --env=demo --os=suse up
 ```
 
 Or if you want to try a beta version of an **fedora** based demo setup, run:
 
 ```bash
-vagrant --env=demo up fedora
+vagrant --env=demo --os=fedora up
 ```
 
 My own deployment setup is reachable via "--env=develop" or "--env=production", but both setups depends on some encrypted vagrant vault files. :-)

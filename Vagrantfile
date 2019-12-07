@@ -1,10 +1,11 @@
 require 'getoptlong'
 
 opts = GetoptLong.new(
-    [ '--env', GetoptLong::OPTIONAL_ARGUMENT ]
+    ['--env', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
 limit='demo'
+os="generic/opensuse15"
 
 begin
   opts.each do |opt, arg|
@@ -15,107 +16,81 @@ begin
         else
             limit = "develop"
         end
+      when '--os'
+        if arg == "suse" then
+            os = "generic/opensuse15"
+        else
+            os = "fedora/31-cloud-base"
+        end
     end
   end
   rescue
 end
 
 Vagrant.configure(2) do |config|
-  config.vm.define "suse", autostart: false do |develop_suse|
-    develop_suse.vm.box = "generic/opensuse15"
-    #develop_suse.vm.box = "opensuse/openSUSE-15.0-x86_64"
-    develop_suse.ssh.username = 'vagrant'
-    develop_suse.ssh.password = 'vagrant'
-    develop_suse.ssh.insert_key = 'true'
-    develop_suse.vm.network "private_network", ip: "192.168.1.50"
-    #develop_suse.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
-    #develop_suse.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
-    develop_suse.vm.synced_folder ".", "/vagrant"
-    develop_suse.vm.provider :virtualbox do |vb|
+  config.vm.define "suse", autostart: true do |setup|
+    setup.vm.box = os
+    setup.ssh.username = 'vagrant'
+    setup.ssh.password = 'vagrant'
+    setup.ssh.insert_key = 'true'
+    setup.vm.network "private_network", ip: "192.168.1.50"
+    #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
+    #setup.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
+    setup.vm.synced_folder ".", "/vagrant"
+    setup.vm.provider :virtualbox do |vb|
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
     
+    if os == 'fedora' then
+        setup.vm.provision "ansible_local" do |ansible|
+            ansible.limit = limit
+            ansible.playbook = "roles/container/tasks/fedora.yml"
+            ansible.inventory_path = "server.ini"
+            ansible.compatibility_mode = "2.0"
+            ansible.provisioning_path = "/vagrant/"
+            ansible.become = true
+            ansible.become_user = "root"
+            #ansible.raw_arguments = "--ask-vault-pass"
+            #ansible.ask_vault_pass = true
+        end  
+    end  
+
+    
     # Ask for vault password
-    develop_suse.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
+    setup.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
 
-    develop_suse.vm.provision "shell", inline: <<-SHELL
-      sudo zypper --non-interactive install ansible python-xml
-    SHELL
-    
-    develop_suse.vm.provision "ansible_local" do |ansible|
-      ansible.limit = limit
-      ansible.playbook = "server.yml"
-      ansible.inventory_path = "server.ini"
-      if limit != 'demo' then
-        ansible.vault_password_file = "/tmp/vault_pass"
-      end
-      ansible.compatibility_mode = "2.0"
-      ansible.provisioning_path = "/vagrant/"
-      #ansible.raw_arguments = "--ask-vault-pass"
-      #ansible.ask_vault_pass = true
-    end  
-    
-    # Delete temp vault password file
-    develop_suse.vm.provision "shell", inline: <<-SHELL
-        rm /tmp/vault_pass
-    SHELL
-  end
-
-  config.vm.define "fedora", autostart: false do |develop_fedora|
-    develop_fedora.vm.box = "fedora/31-cloud-base"
-    develop_fedora.ssh.username = 'vagrant'
-    develop_fedora.ssh.password = 'vagrant'
-    develop_fedora.ssh.insert_key = 'true'
-    develop_fedora.vm.network "private_network", ip: "192.168.1.50"
-    #develop_fedora.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
-    #develop_fedora.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
-    develop_fedora.vm.synced_folder ".", "/vagrant"
-    develop_fedora.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "6144"]
-        vb.customize ["modifyvm", :id, "--cpus", "2"]
+    if os == 'suse' then
+        setup.vm.provision "shell", inline: <<-SHELL
+        sudo zypper --non-interactive install ansible python-xml
+        SHELL
+    else
+        setup.vm.provision "shell", inline: <<-SHELL
+        sudo yum --assumeyes install ansible python
+        SHELL
     end
-
-    develop_fedora.vm.provision "shell", inline: <<-SHELL
-      sudo yum --assumeyes install ansible python
-    SHELL
-
-    develop_fedora.vm.provision "ansible_local" do |ansible|
+    
+    setup.vm.provision "ansible_local" do |ansible|
       ansible.limit = limit
-      ansible.playbook = "roles/container/tasks/fedora.yml"
+      ansible.playbook = "server.yml"
       ansible.inventory_path = "server.ini"
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
-      ansible.become = true
-      ansible.become_user = "root"
-      #ansible.raw_arguments = "--ask-vault-pass"
-      #ansible.ask_vault_pass = true
-    end  
-
-    # Ask for vault password
-    develop_fedora.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
-        echo "$VAULT_PASS" > /tmp/vault_pass
-    SHELL
-
-    develop_fedora.vm.provision "ansible_local" do |ansible|
-      ansible.limit = "develop"
-      ansible.playbook = "server.yml"
-      ansible.inventory_path = "server.ini"
+      
       if limit != 'demo' then
         ansible.vault_password_file = "/tmp/vault_pass"
       end
-      ansible.compatibility_mode = "2.0"
-      ansible.provisioning_path = "/vagrant/"
-      ansible.become = true
-      ansible.become_user = "root"
-      #ansible.raw_arguments = "--ask-vault-pass"
-      #ansible.ask_vault_pass = true
+
+      if os == 'fedora' then
+        ansible.become = true
+        ansible.become_user = "root"
+      end
     end  
     
     # Delete temp vault password file
-    develop_fedora.vm.provision "shell", inline: <<-SHELL
+    setup.vm.provision "shell", inline: <<-SHELL
         rm /tmp/vault_pass
     SHELL
   end
