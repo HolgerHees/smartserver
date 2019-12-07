@@ -4,7 +4,8 @@ opts = GetoptLong.new(
     ['--env', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
-os="generic/opensuse15"
+os="suse"
+image="generic/opensuse15"
 limit='demo'
 
 begin
@@ -18,9 +19,11 @@ begin
         end
       when '--os'
         if arg == "suse" then
-            os = "generic/opensuse15"
+            os = "suse"
+            image = "generic/opensuse15"
         else
-            os = "fedora/31-cloud-base"
+            os = "fedora"
+            image = "fedora/31-cloud-base"
         end
     end
   end
@@ -29,7 +32,7 @@ end
 
 Vagrant.configure(2) do |config|
   config.vm.define "suse", autostart: true do |setup|
-    setup.vm.box = os
+    setup.vm.box = image
     setup.ssh.username = 'vagrant'
     setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
