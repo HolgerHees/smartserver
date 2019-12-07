@@ -4,6 +4,7 @@ opts = GetoptLong.new(
     ['--env', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
+ip="192.168.1.50"
 limit='demo'
 os="generic/opensuse15"
 
@@ -33,7 +34,7 @@ Vagrant.configure(2) do |config|
     setup.ssh.username = 'vagrant'
     setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
-    setup.vm.network "private_network", ip: "192.168.1.50"
+    setup.vm.network "private_network", ip: ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     #setup.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
     setup.vm.synced_folder ".", "/vagrant"
@@ -106,7 +107,7 @@ class Password
         begin
             #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
             #session.close
-            Socket.tcp("192.168.1.50", 22, connect_timeout: 1) {}
+            Socket.tcp(ip, 22, connect_timeout: 1) {}
             print " ok\n"
         rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
             print "." # + e.message
