@@ -51,7 +51,7 @@
 - name: enable modules on fedora
   lineinfile:
     path: "{{www_etc}}conf.modules.d/{{item.file}}"
-    regexp: '^[#]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
+    regexp: '^[#\s]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
     line: '{{ "" if item.enabled else "#" }}LoadModule {{item.name}}_module modules/{{item.prefix}}{{item.name}}.so'
   with_items:
     - { enabled: true, file: "00-base.conf", name: "auth_digest", prefix: "mod_" }
@@ -124,16 +124,6 @@
   notify: "restart apache"
   when: is_fedora|bool
 
-- name: enable php config on fedora
-  lineinfile:
-    path: "{{www_etc}}conf/httpd.conf"
-    regexp: '^{{item.regex}}'
-    line: '{{item.line}}'
-  with_items:
-    - { regex: "Include conf\\.d/php\\.conf", line: "Include conf.d/php.conf" }
-  notify: "restart apache"
-  when: is_fedora|bool
-
 
   
   
@@ -194,16 +184,6 @@
     - { regex: "(Include {{www_etc}}listen\\.conf)", line: "#\\1" }
   notify: "restart apache"
   when: is_suse|bool
-
-- name: enable php config on fedora
-  lineinfile:
-    path: "{{www_etc}}httpd.conf"
-    regexp: '^{{item.regex}}'
-    line: '{{item.line}}'
-  with_items:
-    - { regex: "Include conf\\.d/php7\\.conf", line: "Include conf.d/php7.conf" }
-  notify: "restart apache"
-  when: is_fedora|bool
 
 
 

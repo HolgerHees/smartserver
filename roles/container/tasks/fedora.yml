@@ -4,7 +4,7 @@
   become: yes
   become_user: root
   tasks:
-    - name: modify fedora cgroup parameter on fedora
+    - name: modify cgroup parameter on fedora
       lineinfile:
         state: present
         dest: /etc/default/grub
