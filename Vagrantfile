@@ -56,7 +56,6 @@ Vagrant.configure(2) do |config|
         end  
     end  
 
-    
     # Ask for vault password
     setup.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
