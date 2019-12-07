@@ -22,7 +22,7 @@
     - public.xml
     - trusted.xml
   notify: "restart firewalld"
-  when: "use_vault_files|bool"
+  when: "vault_active|bool"
 
 - name: allow vagrant ip 10.0.2.2
   lineinfile:

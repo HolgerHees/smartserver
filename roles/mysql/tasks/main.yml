@@ -34,7 +34,7 @@
     ports:
       - "127.0.0.1:3306:3306"  
   notify: "restart mysql"
-  when: "use_vault_files|bool"
+  when: "vault_active|bool"
 
 - name: create systemd service
   vars:
