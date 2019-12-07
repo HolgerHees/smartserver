@@ -1,46 +1,30 @@
-Vagrant.configure(2) do |config|
-  config.vm.define "test", autostart: false do |test|
-    test.vm.box = "generic/opensuse15"
-    #test.vm.box = "opensuse/openSUSE-15.0-x86_64"
-    test.ssh.username = 'vagrant'
-    test.ssh.password = 'vagrant'
-    test.ssh.insert_key = 'true'
-    test.vm.network "private_network", ip: "192.168.1.50"
-    #test.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
-    #test.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
-    test.vm.synced_folder ".", "/vagrant"
-    test.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "6144"]
-        vb.customize ["modifyvm", :id, "--cpus", "2"]
+require 'getoptlong'
+
+opts = GetoptLong.new(
+    [ '--env', GetoptLong::OPTIONAL_ARGUMENT ]
+)
+
+limit='demo'
+
+begin
+  opts.each do |opt, arg|
+    case opt
+      when '--env'
+        if arg == "demo" then
+            limit = "demo"
+        else
+            limit = "develop"
+        end
     end
-    
-    # Ask for vault password
-    test.vm.provision "shell", env: {"VAULT_PASS" => Password.new}, inline: <<-SHELL
-        echo "$VAULT_PASS" > /tmp/vault_pass
-    SHELL
-
-    test.vm.provision "shell", inline: <<-SHELL
-      sudo zypper --non-interactive install ansible python-xml
-    SHELL
-
-    test.vm.provision "ansible_local" do |ansible|
-      ansible.limit = "test"
-      ansible.playbook = "server.yml"
-      ansible.inventory_path = "server.ini"
-      ansible.vault_password_file = "/tmp/vault_pass"
-      ansible.compatibility_mode = "2.0"
-      ansible.provisioning_path = "/vagrant/"
-      #ansible.raw_arguments = "--ask-vault-pass"
-      #ansible.ask_vault_pass = true
-    end  
-    
-    # Delete temp vault password file
-    test.vm.provision "shell", inline: <<-SHELL
-        rm /tmp/vault_pass
-    SHELL
   end
+  rescue
+end
 
-  config.vm.define "develop_suse", autostart: false do |develop_suse|
+print limit
+print "\n\n"
+
+Vagrant.configure(2) do |config|
+  config.vm.define "suse", autostart: false do |develop_suse|
     develop_suse.vm.box = "generic/opensuse15"
     #develop_suse.vm.box = "opensuse/openSUSE-15.0-x86_64"
     develop_suse.ssh.username = 'vagrant'
@@ -56,19 +40,21 @@ Vagrant.configure(2) do |config|
     end
     
     # Ask for vault password
-    develop_suse.vm.provision "shell", env: {"VAULT_PASS" => Password.new}, inline: <<-SHELL
+    develop_suse.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
 
     develop_suse.vm.provision "shell", inline: <<-SHELL
       sudo zypper --non-interactive install ansible python-xml
     SHELL
-
+    
     develop_suse.vm.provision "ansible_local" do |ansible|
-      ansible.limit = "develop"
+      ansible.limit = limit
       ansible.playbook = "server.yml"
       ansible.inventory_path = "server.ini"
-      ansible.vault_password_file = "/tmp/vault_pass"
+      if limit != 'demo' then
+        ansible.vault_password_file = "/tmp/vault_pass"
+      end
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
       #ansible.raw_arguments = "--ask-vault-pass"
@@ -81,7 +67,7 @@ Vagrant.configure(2) do |config|
     SHELL
   end
 
-  config.vm.define "develop_fedora", autostart: false do |develop_fedora|
+  config.vm.define "fedora", autostart: false do |develop_fedora|
     develop_fedora.vm.box = "fedora/31-cloud-base"
     develop_fedora.ssh.username = 'vagrant'
     develop_fedora.ssh.password = 'vagrant'
@@ -100,7 +86,7 @@ Vagrant.configure(2) do |config|
     SHELL
 
     develop_fedora.vm.provision "ansible_local" do |ansible|
-      ansible.limit = "develop"
+      ansible.limit = limit
       ansible.playbook = "roles/container/tasks/fedora.yml"
       ansible.inventory_path = "server.ini"
       ansible.compatibility_mode = "2.0"
@@ -112,7 +98,7 @@ Vagrant.configure(2) do |config|
     end  
 
     # Ask for vault password
-    develop_fedora.vm.provision "shell", env: {"VAULT_PASS" => Password.new}, inline: <<-SHELL
+    develop_fedora.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
 
@@ -120,7 +106,9 @@ Vagrant.configure(2) do |config|
       ansible.limit = "develop"
       ansible.playbook = "server.yml"
       ansible.inventory_path = "server.ini"
-      ansible.vault_password_file = "/tmp/vault_pass"
+      if limit != 'demo' then
+        ansible.vault_password_file = "/tmp/vault_pass"
+      end
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
       ansible.become = true

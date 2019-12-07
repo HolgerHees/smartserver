@@ -2,7 +2,7 @@
 - hosts:
     - production  # production machine (with vault usage)
     - develop     # staging vm configured like production (with vault usage)
-    - test        # test vm configured with test data (without vault usage)
+    - demo        # demo vm configured with demo data (without vault usage)
   become: yes
   become_user: root
   pre_tasks:
@@ -12,7 +12,7 @@
     - name: Set server facts
       set_fact:
         is_production: "{{inventory_hostname == 'production'}}"
-        config_path: "config/{%if inventory_hostname == 'test'%}test{%else%}marvin{%endif%}/"
+        config_path: "config/{%if inventory_hostname == 'demo'%}demo{%else%}marvin{%endif%}/"
         is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
         is_fedora: "{{ansible_distribution == 'Fedora'}}"
       tags: always

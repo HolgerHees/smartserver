@@ -6,59 +6,34 @@ This project contains my complete automated IoT Server deployment setup.
 
 ## Requirements
 
-Just install [vagrant](https://www.vagrantup.com/) and run:
+Just install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). For an **opensuse** based virtual box container setup, run:
 
 ```bash
-vagrant up test
+vagrant --env=demo up suse
 ```
-It will deploys a test machine running inside virtual box.
 
-
-To deploy an environment similar to my production system, run:
+Or if you want to try a beta version of an **fedora** based demo setup, run:
 
 ```bash
-vagrant up develop_suse
-
+vagrant --env=demo up fedora
 ```
 
-or if you want to try a beta version of my new fedora based deployment, run:
-
-```bash
-vagrant up develop_fedora
-```
-
-Both (Suse and Fedora) are depending on some encrypted vagrant vault files. :-)
+My own deployment setup is reachable via "--env=develop" or "--env=production", but both setups depends on some encrypted vagrant vault files. :-)
 
 
 You can also use the contained ansible files directly.
 
 ```bash
-# run everything in production
-ansible-playbook -i server.ini -l production --ask-vault-pass server.yml
+# run everything
+ansible-playbook -i server.ini -l demo --ask-vault-pass server.yml
 
-# run everything in production except vault depending tasks
-ansible-playbook -i server.ini -l production server.yml
+# run everything except vault depending tasks
+ansible-playbook -i server.ini -l demo server.yml
 
-# run nextcloud in production
-ansible-playbook -i server.ini -l production --tags "nextcloud" --ask-vault-pass  server.yml
+# run nextcloud
+ansible-playbook -i server.ini -l demo --tags "nextcloud" --ask-vault-pass  server.yml
 
-# run nextcloud in production without vault depending tasks
-ansible-playbook -i server.ini -l production --tags "nextcloud"  server.yml
+# run nextcloud without vault depending tasks
+ansible-playbook -i server.ini -l demo --tags "nextcloud"  server.yml
 
-
-# run everything in staging
-ansible-playbook -i server.ini -l develop --ask-vault-pass server.yml
-
-# run everything in staging except vault depending tasks
-ansible-playbook -i server.ini -l develop server.yml
-
-# run nextcloud in staging
-ansible-playbook -i server.ini -l develop --tags "nextcloud" --ask-vault-pass  server.yml
-
-# run nextcloud in staging without vault depending tasks
-ansible-playbook -i server.ini -l develop --tags "nextcloud"  server.yml
-
-
-# run everything in test environment
-ansible-playbook -i server.ini -l test server.yml
 ```
