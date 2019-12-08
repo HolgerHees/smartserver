@@ -6,7 +6,7 @@
     group: root
     mode: 0750
 
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
       python3-boto3
@@ -17,7 +17,7 @@
   notify: "restart elastalert"
   when: is_fedora|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
       python3-boto3
@@ -63,7 +63,7 @@
   #changed_when: yes
 #- debug: msg={{clone_status}}
 
-- name: "install (clone status changed)"
+- name: "install => clone status changed"
   shell: '{{ item }}'
   args:
     chdir: '{{global_build}}elastalert'
@@ -74,11 +74,11 @@
     - 'python3 setup.py install --prefix=/usr'
   when: clone_status.changed
 
-- name: check elasticsearch service (clone status changed)
+- name: check elasticsearch service => clone status changed
   import_tasks: roles/elasticsearch/tasks/wait_until_ready.yml
   when: clone_status.changed
   
-- name: create search index (clone status changed)
+- name: create search index => clone status changed
   shell: 'elastalert-create-index --config /etc/elastalert/config.yaml'
   notify: "restart elastalert"
   when: clone_status.changed

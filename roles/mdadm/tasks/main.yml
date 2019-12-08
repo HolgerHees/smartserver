@@ -1,11 +1,11 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
   when: is_fedora|bool
   
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: "mdadm"
     state: present

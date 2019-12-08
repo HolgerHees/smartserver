@@ -1,16 +1,16 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: "firewall-config"
     state: present
   when: is_fedora|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: "firewall-config"
     state: present
   when: is_suse|bool
 
-- name: copy zone config (vault_active)
+- name: copy zone config => vault_active
   template:
     src: "roles/firewalld/templates/etc/firewalld/zones/{{item}}"
     dest: "/etc/firewalld/zones/{{item}}"
@@ -24,7 +24,7 @@
   notify: "restart firewalld"
   when: "vault_active|bool"
 
-- name: allow vagrant ip 10.0.2.2 (not is_production)
+- name: allow vagrant ip 10.0.2.2 => not is_production
   lineinfile:
     path: /etc/firewalld/zones/trusted.xml
     insertbefore: "<masquerade/>"

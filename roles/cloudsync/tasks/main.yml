@@ -14,7 +14,7 @@
     group: root
     mode: 0750
 
-- name: mount cloud data folder (is_production and vault_active)
+- name: mount cloud data folder => is_production and vault_active
   mount:
     name: "{{cloud_backup_target_path}}"
     src: "{{cloud_net2_server_ip}}:/data/backup/{{holger_username}}"
@@ -31,13 +31,13 @@
     version: 'master'
   register: clone_status
  
-- name: copy config (vault_active)
+- name: copy config => vault_active
   template:
     src: "roles/cloudsync/templates/cloudsync.config"
     dest: "{{projects_path}}cloudsync/config/cloudsync.config"
   when: "vault_active|bool"
   
-- name: install (clone_status)
+- name: install => clone_status
   shell: '/usr/bin/mvn clean install'
   args:
     chdir: '{{projects_path}}cloudsync'
@@ -58,7 +58,7 @@
     - {name: 'mysql', src: '{{local_backup_path}}mysql'}
     - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
     
-- name: create cron job (is_production)
+- name: create cron job => is_production
   vars:
     name: "Cloudsync"
     cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"

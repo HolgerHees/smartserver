@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         netdata
@@ -8,7 +8,7 @@
   notify: "restart netdata"
   when: is_fedora|bool
 
-- name: add zypper repository (is_suse)
+- name: add zypper repository => is_suse
   zypper_repository:
     name: Network (netdata)
     repo: "http://download.opensuse.org/repositories/network/openSUSE_Leap_{{ansible_distribution_version}}/"
@@ -17,7 +17,7 @@
     state: present
   when: is_suse|bool
     
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         netdata
@@ -51,7 +51,7 @@
     - "/etc/netdata/health.d"
     - "/opt/netdata_helper"
   
-- name: prepare missing folder (is_fedora)
+- name: prepare missing folder => is_fedora
   file:
     path: '{{item}}'
     state: directory

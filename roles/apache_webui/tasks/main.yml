@@ -45,7 +45,7 @@
   register: potd_exists
   changed_when: not potd_exists.stat.exists
   
-- name: fetch initial potd (initial image does not exist)
+- name: fetch initial potd => initial image does not exist
   shell: '/opt/potd_fetcher/fetchPOTD.sh'
   when: not potd_exists.stat.exists
   

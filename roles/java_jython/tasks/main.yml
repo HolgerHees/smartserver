@@ -7,7 +7,7 @@
     version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
   register: clone_status
 
-- name: run install (clone status changed)
+- name: run install => clone status changed
   shell: '{{ item }}'
   args:
     chdir: '/opt/jython'

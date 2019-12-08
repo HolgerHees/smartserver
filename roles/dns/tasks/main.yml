@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         bind
@@ -7,7 +7,7 @@
   notify: "restart named"
   when: is_fedora|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         bind
@@ -26,7 +26,7 @@
     mode: 0640
   notify: "restart named"
   
-- name: create a symbolic link (is_fedora)
+- name: create a symbolic link => is_fedora
   file:
     src: /var/named/
     dest: /var/lib/named
@@ -63,7 +63,7 @@
     - "root.hint"
   notify: "restart named"
   
-- name: set selinux configuration (is_fedora)
+- name: set selinux configuration => is_fedora
   sefcontext:
     target: "{{item.target}}"
     ftype: "{{item.ftype}}"
@@ -77,14 +77,14 @@
     - { ftype: "f", setype: "named_conf_t", target: "/var/named(/.*)?" }
   when: is_fedora|bool
 
-- name: reload selinux configuration (is_fedora)
+- name: reload selinux configuration => is_fedora
   shell: "restorecon {{item}}"
   with_items:
     - "/var/lib/named"
     - "-irv /var/named"
   when: is_fedora|bool and sefcontext_result.changed
 
-- name: set resolv config (is_fedora)
+- name: set resolv config => is_fedora
   lineinfile:
     path: /etc/sysconfig/network-scripts/ifcfg-eth0
     regexp: '^{{item.field}}\s*='
@@ -96,7 +96,7 @@
   notify: "restart networkmanager"
   when: is_fedora|bool
 
-- name: set forwarder config (is_suse)
+- name: set forwarder config => is_suse
   lineinfile:
     path: /etc/sysconfig/network/config
     regexp: '^NETCONFIG_DNS_FORWARDER\s*='

@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         postfix
@@ -9,7 +9,7 @@
   notify: "restart postfix"
   when: is_fedora|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         postfix
@@ -20,7 +20,7 @@
   notify: "restart postfix"
   when: is_suse|bool
   
-#- name: set config (is_suse)
+#- name: set config => is_suse
 #  lineinfile:
 #    path: /etc/sysconfig/postfix
 #    regexp: '^{{item.field}}\s*='
@@ -44,13 +44,13 @@
 #  notify: "restart postfix"
 #  when: is_suse|bool
 
-#- name: check postfix is running (is_suse and config status changed)
+#- name: check postfix is running => is_suse and config status changed
 #  systemd:
 #    name: postfix
 #    state: started
 #  when: is_suse|bool and config_status.changed
 
-#- name: refresh postfix (is_suse and config status changed)
+#- name: refresh postfix => is_suse and config status changed
 #  command: "/usr/sbin/config.postfix"
 #  when: is_suse|bool and config_status.changed
 #  notify: "restart postfix"
@@ -79,13 +79,13 @@
   register: config_changed
   notify: "restart postfix"
 
-- name: disable sysconfig based configuration (is_suse)
+- name: disable sysconfig based configuration => is_suse
   shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; echo \"1\"; else echo \"0\"; fi"
   register: sysconfig_change
   changed_when: "'1' in sysconfig_change.stdout"
   when: is_suse|bool
 
-- name: set master.cf config (is_suse)
+- name: set master.cf config => is_suse
   lineinfile:
     path: /etc/postfix/master.cf
     regexp: '^tlsmgr '
@@ -93,7 +93,7 @@
   notify: "restart postfix"
   when: is_suse|bool
 
-- name: set sasl_passwd (vault_active)
+- name: set sasl_passwd => vault_active
   lineinfile:
     path: /etc/postfix/sasl_passwd
     regexp: '^\[smtp\.gmail\.com\]:587 '
@@ -106,7 +106,7 @@
   notify: "restart postfix"
   when: "vault_active|bool"
   
-- name: rebuild sasl_passwd.db (config or password changed)
+- name: rebuild sasl_passwd.db => config or password changed
   shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; echo \"1\"; else echo \"0\"; fi"
   with_items:
     - generic
@@ -118,7 +118,7 @@
   
 #mkfifo /var/spool/postfix/public/pickup
   
-- name: set aliases (vault_active)
+- name: set aliases => vault_active
   lineinfile:
     path: /etc/aliases
     regexp: '^{{item.name}}[\s:]{1}'
@@ -131,7 +131,7 @@
   notify: "restart postfix"
   when: "vault_active|bool"
 
-- name: refresh aliases (aliases changed)
+- name: refresh aliases => aliases changed
   command: "/usr/bin/newaliases"
   when: aliases_status.changed
   notify: "restart postfix"

@@ -10,12 +10,12 @@
   register: image_exists
   changed_when: "'custom_apache' not in image_exists.stdout"
  
-- name: compose docker image (image does not exists)
+- name: compose docker image => image does not exists
   shell: "docker build -t custom_apache:1.0.0 roles/apache_docker/templates/container/"
   register: output
   when: "'custom_apache' not in image_exists.stdout"
   
-- name: create docker container (vault_active)
+- name: create docker container => vault_active
   docker_container:
     name: httpd
     image: custom_apache:1.0.0

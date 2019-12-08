@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         httpd 
@@ -8,7 +8,7 @@
   when: is_fedora|bool
   notify: "restart apache"
   
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         apache2 
@@ -48,7 +48,7 @@
   
   
   
-- name: enable modules on fedora
+- name: enable modules => is_fedora
   lineinfile:
     path: "{{www_etc}}conf.modules.d/{{item.file}}"
     regexp: '^[#\s]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
@@ -78,7 +78,7 @@
 # sudo grep 'redis.sock' /var/log/audit/audit.log | audit2allow -m httpd_to_redis > httpd_to_redis.te
 
 # needed e.g. for redis sockets
-- name: check for selinux socket module (is_fedora)
+- name: check for selinux socket module => is_fedora
   shell: "semodule -l | grep \"httpd_can_socket_connect\""
   register: semodule_result 
   changed_when: semodule_result.rc == 1
@@ -87,7 +87,7 @@
 
 # needed e.g. for redis sockets 
 # to allow httpd connecting sockets
-- name: compile selinux socket module (is_fedora and semodule does not exists)
+- name: compile selinux socket module => is_fedora and semodule does not exists
   shell: "{{item}}" 
   with_items:
     - "checkmodule -M -m -o {{global_tmp}}httpd_can_socket_connect.mod roles/apache/templates/selinux/httpd_can_socket_connect.te"
@@ -96,7 +96,7 @@
   when: "is_fedora|bool and semodule_result.rc == 1"
 
 # needed e.g. for redis sockets
-- name: cleanup selinux module build (is_fedora and semodule does not exists)
+- name: cleanup selinux module build => is_fedora and semodule does not exists
   file: 
     path: "{{item}}"
     state: absent
@@ -105,7 +105,7 @@
     - "{{global_tmp}}httpd_can_socket_connect.pp"
   when: "is_fedora|bool and semodule_result.rc == 1"
 
-- name: set selinux port configuration (is_fedora)
+- name: set selinux port configuration => is_fedora
   seport:
     ports: 10114
     proto: tcp
@@ -113,14 +113,14 @@
     state: present
   when: is_fedora|bool
 
-- name: set selinux proxy configuration (is_fedora)
+- name: set selinux proxy configuration => is_fedora
   seboolean:
     name: httpd_can_network_connect
     state: yes
     persistent: yes
   when: is_fedora|bool
 
-- name: set selinux configuration (is_fedora)
+- name: set selinux configuration => is_fedora
   sefcontext:
     target: "{{item.target}}"
     ftype: "{{item.ftype}}"
@@ -134,7 +134,7 @@
     - { ftype: "d", setype: "httpd_sys_content_t", target: "{{htdocs_path | regex_replace('\\/$', '')}}(/.*)?" }
   when: is_fedora|bool
 
-- name: reload selinux configuration (is_fedora and selinux configuration changed)
+- name: reload selinux configuration => is_fedora and selinux configuration changed
   shell: "restorecon {{item}}"
   with_items:
     - "{{global_log}}apache2"
@@ -142,7 +142,7 @@
     - "-irv {{htdocs_path}}"
   when: is_fedora|bool and sefcontext_result.changed
  
-- name: disable obsolete configs (is_fedora)
+- name: disable obsolete configs => is_fedora
   lineinfile:
     path: "{{www_etc}}conf/httpd.conf"
     regexp: '^{{item.regexp}}'
@@ -170,7 +170,7 @@
   
   
   
-- name: enable modules (is_suse)
+- name: enable modules => is_suse
   apache2_module:
     name: "{{item}}"
     state: present
@@ -196,14 +196,14 @@
   when: is_suse|bool
     
 # fedora is using a shared one (cli & web)
-- name: set web config (is_suse)
+- name: set web config => is_suse
   import_tasks: roles/php/tasks/php_ini.yml
   vars:
     php_ini_file: "/etc/php7/apache2/php.ini"
   notify: "restart apache"
   when: is_suse|bool
   
-- name: disable obsolete configs (is_suse)
+- name: disable obsolete configs => is_suse
   lineinfile:
     path: "{{www_etc}}httpd.conf"
     regexp: '^{{item.regex}}'
@@ -240,7 +240,7 @@
     - { regex: 'ErrorLog', line: 'ErrorLog "{{global_log}}apache2/error.log"' }
   notify: "restart apache"
 
-- name: copy config (vault_active)
+- name: copy config => vault_active
   template:
     src: "roles/apache/templates/etc/apache2/{{item}}"
     dest: "{{www_etc}}{{item}}"

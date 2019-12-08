@@ -170,6 +170,6 @@
     
   post_tasks:
     # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 
-    - name: enable nextcloud apps                                               # enable nextcloud apps (news, keeweb ...).
+    - name: enable nextcloud apps                                               # enable nextcloud apps => news, keeweb ....
       import_tasks: roles/nextcloud/tasks/enable_apps.yml
       tags: [ 'nextcloud' ]

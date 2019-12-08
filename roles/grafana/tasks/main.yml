@@ -25,7 +25,7 @@
   with_fileglob:
     - "roles/grafana/templates/dashboards/*"
 
-- name: copy grafana provisioning (vault_active)
+- name: copy grafana provisioning => vault_active
   template:
     src: "roles/grafana/templates/{{item}}"
     dest: "{{ global_lib }}grafana/{{item}}"
@@ -80,7 +80,7 @@
     config_file: "roles/grafana/templates/etc/fluent/_.ansible.d/grafana.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
       
-- name: copy apache config (vault_active)
+- name: copy apache config => vault_active
   vars:
     config_file: "roles/grafana/templates/etc/apache2/_.ansible.d/grafana.conf"
   import_tasks: roles/apache/tasks/add_config.yml

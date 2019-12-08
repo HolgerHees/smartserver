@@ -1,4 +1,4 @@
-- name: restart openvpn (mobile)
+- name: restart openvpn => mobile
   systemd:
     name: "openvpn@mobile"
     state: restarted
@@ -7,7 +7,7 @@
     masked: no
   listen: "restart openvpn@mobile"
 
-- name: restart openvpn (cloud)
+- name: restart openvpn => cloud
   systemd:
     name: "openvpn@cloud"
     state: restarted

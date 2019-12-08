@@ -11,7 +11,7 @@
     - "/opt/heating_control"
     - "/opt/heating_sensors"
     
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         cmake
@@ -20,7 +20,7 @@
     state: present
   when: is_fedora|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         cmake
@@ -54,14 +54,14 @@
   register: clone_status
 #- debug: msg={{clone_status}}
 
-- name: "create build dir (clone status changed)"
+- name: "create build dir => clone status changed"
   file: 
     path: '{{global_build}}vcontrold/build'
     state: directory
   register: build_status
   when: clone_status.changed
 
-- name: "install (clone status changed)"
+- name: "install => clone status changed"
   shell: '{{ item }}'
   args:
     chdir: '{{global_build}}vcontrold/build'
@@ -115,7 +115,7 @@
   with_items:
     - "heating_sensors/TempCmd"
 
-- name: create cron job (is_production)
+- name: create cron job => is_production
   vars:
     name: "Heating Control"
     cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
@@ -124,7 +124,7 @@
   import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
 
-- name: create cron job (is_production)
+- name: create cron job => is_production
   vars:
     name: "Heating Sensors"
     cmd: "/opt/heating_sensors/sensoren.bash"

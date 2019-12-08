@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
       clamav
@@ -12,7 +12,7 @@
   notify: "restart clamav"
   when: is_fedora|bool
 
-- name: add zypper repository (is_suse)
+- name: add zypper repository => is_suse
   zypper_repository:
     name: Security (clamav)
     repo: "http://download.opensuse.org/repositories/security/openSUSE_Leap_{{ansible_distribution_version}}/"
@@ -21,7 +21,7 @@
     state: present
   when: is_suse|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: clamav>=0.101.3
     state: present
@@ -51,7 +51,7 @@
     - { regexp: "PidFile .*", line: "PidFile {{ '/var/run/clamav/clamd.pid' if is_suse else '/run/clamd.scan/clamd.pid'  }}" }
     - { regexp: "LocalSocket .*", line: "LocalSocket {{ '/var/run/clamav/clamd-socket' if is_suse else '/run/clamd.scan/clamd.sock'  }}" }
 
-- name: load initial database (package installation changed)
+- name: load initial database => package installation changed
   shell: '/usr/bin/freshclam --no-warnings'
   notify: "restart clamav"
   register: update_result
@@ -66,7 +66,7 @@
     line: 'TimeoutSec=5min'
   notify: "restart clamav"
 
-#- name: create cron job (is_production)
+#- name: create cron job => is_production
 #  vars:
 #    name: "ClamAV file check"
 #    cmd: "clamscan -r -i {{nextcloud_data_path}}"

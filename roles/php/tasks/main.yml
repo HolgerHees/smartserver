@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         php 
@@ -24,7 +24,7 @@
   notify: "restart apache"
   when: is_fedora|bool
   
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         php7 
@@ -78,7 +78,7 @@
   register: clone_status
   
 # nextcloud
-- name: "install php-systemd (clone status changed)" 
+- name: "install php-systemd => clone status changed" 
   shell: '{{ item }}'
   args:
     chdir: '{{global_build}}php-systemd'

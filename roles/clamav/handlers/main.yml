@@ -1,4 +1,4 @@
-- name: restart clamav (is_fedora)
+- name: restart clamav => is_fedora
   systemd:
     name: "{{item}}"
     state: restarted
@@ -10,7 +10,7 @@
   listen: "restart clamav"
   when: is_fedora|bool
 
-- name: restart clamav (is_suse)
+- name: restart clamav => is_suse
   systemd:
     name: "{{item}}"
     state: restarted

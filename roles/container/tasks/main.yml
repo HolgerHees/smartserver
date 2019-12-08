@@ -1,4 +1,4 @@
-- name: install required packages (is_fedora)
+- name: install required packages => is_fedora
   yum:
     name: [
         docker
@@ -18,7 +18,7 @@
 #    state: present
 #  when: is_suse|bool
 
-- name: install required packages (is_suse)
+- name: install required packages => is_suse
   zypper:
     name: [
         docker
@@ -32,7 +32,7 @@
     state: present
   when: is_suse|bool
 
-- name: copy fluentd config (is_suse)
+- name: copy fluentd config => is_suse
   vars:
     config_file: "roles/container/templates/etc/fluent/_.ansible.d/podman.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
@@ -67,7 +67,7 @@
   register: dockerjson_change
   changed_when: "'1' in dockerjson_change.stdout"
     
-- name: change docker config (is_fedora)
+- name: change docker config => is_fedora
   lineinfile:
     path: /etc/sysconfig/docker
     insertafter: '^OPTIONS='
@@ -79,7 +79,7 @@
   notify: "restart docker"
   when: is_fedora|bool
   
-- name: set docker selinux configuration (is_fedora)
+- name: set docker selinux configuration => is_fedora
   sefcontext:
     target: "{{global_lib}}docker"
     ftype: "d"
@@ -89,17 +89,17 @@
   register: sefcontext_result
   when: is_fedora|bool
 
-- name: reload selinux configuration (is_fedora)
+- name: reload selinux configuration => is_fedora
   shell: "restorecon {{global_lib}}docker"
   when: is_fedora|bool and sefcontext_result.changed
 
-#- name: check started docker (is_fedora)
+#- name: check started docker => is_fedora
 #  systemd:
 #    name: docker
 #    state: started
 #  when: is_fedora|bool
 
-- name: change docker config (is_suse)
+- name: change docker config => is_suse
   lineinfile:
     path: /etc/sysconfig/docker
     backrefs: yes
@@ -130,6 +130,6 @@
     - { regex: "vm\\.overcommit_memory", line: "vm.overcommit_memory = 1" }
   register: sysctlchanged
     
-- name: refresh sysctl to activate sysctl changes (sysctl changed)
+- name: refresh sysctl to activate sysctl changes => sysctl changed
   shell: sysctl -p
   when: sysctlchanged.changed

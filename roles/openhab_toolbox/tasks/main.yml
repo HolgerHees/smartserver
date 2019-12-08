@@ -5,7 +5,7 @@
     dest: '{{projects_path}}toolbox'
     version: 'master'
 
-- name: copy config (vault_active)
+- name: copy config => vault_active
   template:
     src: "roles/openhab_toolbox/templates/config.php"
     dest: "{{projects_path}}toolbox/_lib/config.php"
@@ -14,7 +14,7 @@
     mode: 0644
   when: "vault_active|bool"
   
-- name: set selinux configuration (is_fedora)
+- name: set selinux configuration => is_fedora
   sefcontext:
     target: "{{projects_path}}toolbox(/.*)?"
     ftype: "a"
@@ -24,11 +24,11 @@
   register: sefcontext_result
   when: is_fedora|bool
 
-- name: reload selinux configuratio (is_fedora and sefcontext changed)
+- name: reload selinux configuratio => is_fedora and sefcontext changed
   shell: "restorecon -irv {{projects_path}}toolbox"
   when: is_fedora|bool and sefcontext_result.changed
 
-- name: set symbolic link to htdocs (vault_active)
+- name: set symbolic link to htdocs => vault_active
   file:
     src: "{{projects_path}}toolbox/web/"
     dest: "{{htdocs_path}}tools"
@@ -46,7 +46,7 @@
   register: mysql_data_exists
   changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
   
-- name: create missing table (weather_forecast table does not exists in database)
+- name: create missing table => weather_forecast table does not exists in database
   shell: "cat roles/openhab_toolbox/templates/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
