@@ -24,7 +24,7 @@
       tags: always
         
     - fail:
-        msg: "No valid host ip found. Allowed are: production: {{ production_ip if production_ip else 'disabled' }}, develop: {{ develop_ip if develop_ip else 'disabled' }}"
+        msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), develop ({{ develop_ip if develop_ip else 'disabled' }})"
       when: host_ip is not defined
   
     - name: load vault vars
