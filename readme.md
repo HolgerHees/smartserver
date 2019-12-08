@@ -9,31 +9,28 @@ This project contains my complete automated IoT Server deployment setup.
 Just install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). For an **opensuse** based virtual box container setup, run:
 
 ```bash
-vagrant --env=demo --os=suse up
+vagrant --config=demo --os=suse up
 ```
 
 Or if you want to try a beta version of an **fedora** based demo setup, run:
 
 ```bash
-vagrant --env=demo --os=fedora up
+vagrant --config=demo --os=fedora up
 ```
-
-My own deployment setup is reachable via "--env=develop" or "--env=production", but both setups depends on some encrypted vagrant vault files. :-)
-
 
 You can also use the contained ansible files directly.
 
 ```bash
 # run everything
-ansible-playbook -i server.ini -l demo --ask-vault-pass server.yml
+ansible-playbook -i config/demo/server.ini --ask-vault-pass server.yml
 
 # run everything except vault depending tasks
-ansible-playbook -i server.ini -l demo server.yml
+ansible-playbook -i config/demo/server.ini server.yml
 
 # run nextcloud
-ansible-playbook -i server.ini -l demo --tags "nextcloud" --ask-vault-pass  server.yml
+ansible-playbook -i config/demo/server.ini --tags "nextcloud" --ask-vault-pass  server.yml
 
 # run nextcloud without vault depending tasks
-ansible-playbook -i server.ini -l demo --tags "nextcloud"  server.yml
+ansible-playbook -i config/demo/server.ini --tags "nextcloud"  server.yml
 
 ```

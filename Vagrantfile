@@ -1,29 +1,25 @@
 require 'getoptlong'
 
 opts = GetoptLong.new(
-    ['--env', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
+    ['--config', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
-os="suse"
-image="generic/opensuse15"
-limit='demo'
+setup_os="suse"
+setup_image="generic/opensuse15"
+setup_config="demo"
 
 begin
   opts.each do |opt, arg|
     case opt
-      when '--env'
-        if arg == "demo" then
-            limit = "demo"
-        else
-            limit = "develop"
-        end
+      when '--config'
+        setup_config=arg
       when '--os'
         if arg == "suse" then
-            os = "suse"
-            image = "generic/opensuse15"
+            setup_os = "suse"
+            setup_image = "generic/opensuse15"
         else
-            os = "fedora"
-            image = "fedora/31-cloud-base"
+            setup_os = "fedora"
+            setup_image = "fedora/31-cloud-base"
         end
     end
   end
@@ -32,24 +28,23 @@ end
 
 Vagrant.configure(2) do |config|
   config.vm.define "suse", autostart: true do |setup|
-    setup.vm.box = image
+    setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'
     setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
     setup.vm.network "private_network", ip: "192.168.1.50"
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
-    #setup.vm.synced_folder "./", "/ansible/smartmarvin/", id: "ansible", :mount_options => ["rw"]
     setup.vm.synced_folder ".", "/vagrant"
     setup.vm.provider :virtualbox do |vb|
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
     
-    if os == 'fedora' then
+    if setup_os == 'fedora' then
         setup.vm.provision "ansible_local" do |ansible|
-            ansible.limit = limit
+            ansible.limit = "all"
             ansible.playbook = "roles/container/tasks/fedora.yml"
-            ansible.inventory_path = "server.ini"
+            ansible.inventory_path = "config/#{setup_config}/server.ini"
             ansible.compatibility_mode = "2.0"
             ansible.provisioning_path = "/vagrant/"
             ansible.become = true
@@ -60,11 +55,11 @@ Vagrant.configure(2) do |config|
     end  
 
     # Ask for vault password
-    setup.vm.provision "shell", env: {"VAULT_PASS" => limit == 'demo' ? "" : Password.new}, inline: <<-SHELL
+    setup.vm.provision "shell", env: {"VAULT_PASS" => setup_config == 'demo' ? "" : Password.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
 
-    if os == 'suse' then
+    if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo zypper --non-interactive install ansible python-xml
         SHELL
@@ -75,17 +70,17 @@ Vagrant.configure(2) do |config|
     end
     
     setup.vm.provision "ansible_local" do |ansible|
-      ansible.limit = limit
+      ansible.limit = "all"
       ansible.playbook = "server.yml"
-      ansible.inventory_path = "server.ini"
+      ansible.inventory_path = "config/#{setup_config}/server.ini"
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
       
-      if limit != 'demo' then
+      if setup_config != 'demo' then
         ansible.vault_password_file = "/tmp/vault_pass"
       end
 
-      if os == 'fedora' then
+      if setup_os == 'fedora' then
         ansible.become = true
         ansible.become_user = "root"
       end
