@@ -106,7 +106,7 @@
   notify: "restart postfix"
   when: "vault_active|bool"
   
-- name: rebuild sasl_passwd.db (config changed or password changed)
+- name: rebuild sasl_passwd.db (config or password changed)
   shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; echo \"1\"; else echo \"0\"; fi"
   with_items:
     - generic
