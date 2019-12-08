@@ -7,15 +7,18 @@
     #  debug: msg="{{ hostvars }}"
     #  tags: always
       
+    # set config path based on hostname
     - name: set config path
       set_fact:
         config_path: "config/{{inventory_hostname}}/"
       tags: always
 
+    # load initial environment variables
     - name: load env vars
       include_vars: "{{config_path}}env.yml"
       tags: always
       
+    # detect main ip. must be specified in env.yml
     - name: detect ip address
       set_fact:
         host_ip: "{{ item }}"
@@ -23,27 +26,32 @@
       when: "item == production_ip or item == develop_ip"
       tags: always
         
+    # check for a valid main ip
     - fail:
         msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), develop ({{ develop_ip if develop_ip else 'disabled' }})"
       when: host_ip is not defined
   
+    # load vault file and try (fault tollerant) to decrypt it
     - name: load vault vars
       include_vars: "{{config_path}}vault/vault.yml"
       ignore_errors: true
       tags: always
       
+    # set environment specific variables [post]
     - name: set pre state vars
       set_fact:
         is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
         is_fedora: "{{ansible_distribution == 'Fedora'}}"
         is_production: "{{host_ip == production_ip}}"
-        vault_active: "{{admin_mail is defined}}"
+        vault_active: "{{admin_mail is defined}}"                   # is based on a variable defined in vault.yml
       tags: always
       
+    # load shared variables
     - name: load shared vars
       include_vars: "config/shared.yml"
       tags: always
       
+    # set apache environment variables
     - name: set apache vars
       set_fact:
         www_username: "{{ 'wwwrun' if is_suse else 'apache' }}"
@@ -51,6 +59,7 @@
         www_etc: "{{ '/etc/apache2/' if is_suse else '/etc/httpd/' }}"
       tags: always
       
+    # set environment specific variables [pre]
     - name: set post state vars
       set_fact:
         use_vault_files: "{{is_production and vault_active}}"
@@ -59,6 +68,7 @@
         local_import_path: "{{playbook_dir}}/{{config_path}}backup/"
       tags: always
       
+    # print summary
     - name: debug
       debug:
         msg: 
