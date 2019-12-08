@@ -79,13 +79,13 @@
   register: config_changed
   notify: "restart postfix"
 
-- name: disable sysconfig based configuration (is_suse))
+- name: disable sysconfig based configuration (is_suse)
   shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; echo \"1\"; else echo \"0\"; fi"
   register: sysconfig_change
   changed_when: "'1' in sysconfig_change.stdout"
   when: is_suse|bool
 
-- name: set master.cf config (is_suse))
+- name: set master.cf config (is_suse)
   lineinfile:
     path: /etc/postfix/master.cf
     regexp: '^tlsmgr '
