@@ -13,7 +13,7 @@
 
 # ghostscript version 9.27 is available since suse 15.1 (is needed to fix a PDF indexation bug)
 
-- name: install required fedora packages
+- name: install required packages (is_fedora)
   yum:
     name: [
       "php-gmp"            # needed by bookmark app
@@ -21,7 +21,7 @@
     state: present
   when: is_fedora|bool
 
-- name: install required suse packages
+- name: install required packages (is_suse)
   zypper:
     name: [
       "php7-gmp"            # needed by bookmark app
@@ -40,13 +40,13 @@
   register: nextcloud_exists
   changed_when: not nextcloud_exists.stat.exists
   
-- name: clean old symlink
+- name: clean old symlink (nextcloud does not exists)
   file:
     dest: "{{htdocs_path}}nextcloud"
     state: absent
   when: not nextcloud_exists.stat.exists
 
-- name: install archive
+- name: install archive (nextcloud does not exists)
   unarchive:
     src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
     dest: "{{htdocs_path}}"
@@ -56,7 +56,7 @@
     mode: 0750
   when: not nextcloud_exists.stat.exists
 
-- name: rename folder
+- name: rename folder (nextcloud does not exists)
   command: "mv {{htdocs_path}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: not nextcloud_exists.stat.exists
 
@@ -76,7 +76,7 @@
 #semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.user.ini'
 #semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
 
-- name: set selinux configuration on fedora
+- name: set selinux configuration (is_fedora)
   sefcontext:
     target: "{{item.target}}"
     ftype: "{{item.ftype}}"
@@ -88,13 +88,13 @@
     - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{htdocs_path}}nextcloud-{{nextcloud_version}}(/.*)?" }
   when: is_fedora|bool
 
-- name: reload selinux configuration on fedora
+- name: reload selinux configuration (is_fedora)
   shell: "restorecon {{item}}"
   with_items:
     - "-irv {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: is_fedora|bool and sefcontext_result.changed
 
-- name: copy config
+- name: copy config (vault_active)
   template:
     src: "roles/nextcloud/templates/config.php"
     dest: "{{htdocs_path}}nextcloud/config/config.php"
@@ -128,13 +128,13 @@
   register: mysql_data_exists
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: upgrade existing database
+- name: upgrade existing database (nextcloud database exists and nextcloud installation changed)
   shell: "php {{htdocs_path}}nextcloud/occ upgrade"
   become: yes
   become_user: "{{www_username}}"
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
 
-- name: create missing mysql databases
+- name: create missing mysql databases (nextcloud database does not exists and vault_active)
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
   
@@ -145,33 +145,33 @@
 #    priv: 'nextcloud.*:ALL,GRANT'
 #    state: present
 
-- name: create missing mysql user
+- name: create missing mysql user (nextcloud database does not exists and vault_active)
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\\\"\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
-- name: grant permissions to mysql user
+- name: grant permissions to mysql user (nextcloud database does not exists and vault_active)
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\\\"\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
-- name: refresh mysql privileges
+- name: refresh mysql privileges (nextcloud database does not exists and vault_active)
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
-- name: initialise mysql database
+- name: initialise mysql database (nextcloud database does not exists and vault_active)
   shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
   
-- name: check redis service
+- name: check redis service (nextcloud database does not exists and vault_active)
   import_tasks: roles/redis/tasks/wait_until_ready.yml
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
   
-- name: add user "holger"
+- name: add user "holger" (nextcloud database does not exists and vault_active)
   shell: "export OC_PASS={{holger_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{holger_username}}"
   become: yes
   become_user: "{{www_username}}"
   when: "'nextcloud' not in mysql_data_exists.stdout and vault_active|bool"
 
-- name: add user "sandra"
+- name: add user "sandra" (nextcloud database does not exists and vault_active)
   shell: "export OC_PASS={{sandra_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{sandra_username}}"
   become: yes
   become_user: "{{www_username}}"

@@ -8,7 +8,7 @@
   register: phpmyadmin_exists
   changed_when: not phpmyadmin_exists.stat.exists
   
-- name: install archive
+- name: install archive (phpmyadmin does not exists)
   unarchive:
     src: "https://files.phpmyadmin.net/phpMyAdmin/{{phpmyadmin_version}}/phpMyAdmin-{{phpmyadmin_version}}-all-languages.zip"
     dest: "{{htdocs_path}}"
@@ -18,11 +18,11 @@
     mode: 0750
   when: not phpmyadmin_exists.stat.exists
 
-- name: rename folder
+- name: rename folder (phpmyadmin does not exists)
   command: "mv {{htdocs_path}}phpMyAdmin-{{phpmyadmin_version}}-all-languages/ {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
   when: not phpmyadmin_exists.stat.exists
   
-- name: set symbolic link
+- name: set symbolic link (phpmyadmin does not exists)
   file:
     src: "mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
     dest: "{{htdocs_path}}mysql"

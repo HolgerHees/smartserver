@@ -14,7 +14,7 @@
     name: docker
     state: started
 
-- name: create docker container
+- name: create docker container (vault_active)
   docker_container:
     name: mysql
     image: mariadb:10.4.10

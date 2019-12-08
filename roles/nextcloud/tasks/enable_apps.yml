@@ -21,7 +21,7 @@
   register: keeweb_exists
   changed_when: not keeweb_exists.stat.exists
   
-- name: install keeweb app
+- name: install keeweb app (app does not exists)
   unarchive:
     src: "roles/nextcloud/templates/apps/keeweb.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
@@ -29,7 +29,7 @@
     group: "{{www_group}}"
   when: not keeweb_exists.stat.exists
   
-- name: enable keeweb app
+- name: enable keeweb app (app does not exists)
   shell: "php {{htdocs_path}}nextcloud/occ app:enable keeweb"
   become: yes
   become_user: "{{www_username}}"
@@ -45,7 +45,7 @@
     group: "{{www_group}}"
   register: news_installed
   
-#- name: patch news app min required version
+#- name: patch news app min required version (app installation changed)
 #  lineinfile:
 #    path: "{{htdocs_path}}nextcloud/apps/news/appinfo/info.xml"
 #    regexp: '<nextcloud min-version='
@@ -71,7 +71,7 @@
     group: "{{www_group}}"
     mode: 0640
   
-- name: enable news app
+- name: enable news app (app installation changed)
   shell: "php {{htdocs_path}}nextcloud/occ app:enable news"
   become: yes
   become_user: "{{www_username}}"

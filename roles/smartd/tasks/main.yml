@@ -1,11 +1,11 @@
-- name: install required fedora packages
+- name: install required packages (is_fedora)
   yum:
     name: "smartmontools"
     state: present
   notify: "restart smartd"
   when: is_fedora|bool
   
-- name: install required suse packages
+- name: install required packages (is_suse)
   zypper:
     name: "smartmontools"
     state: present

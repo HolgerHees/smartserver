@@ -16,7 +16,7 @@
   register: image_exists
   changed_when: "'custom_redis' not in image_exists.stdout"
   
-- name: compose docker image
+- name: compose docker image (image does not exists)
   shell: "docker build -t custom_redis:1.0.0 roles/redis/templates/container/"
   register: output
   when: "'custom_redis' not in image_exists.stdout"
@@ -39,7 +39,7 @@
       - '{{redis_socket_path}}:/var/run/redis:z'
   notify: "restart redis"
 
-#- name: clean old docker images
+#- name: clean old docker images (image does not exists)
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "'custom_redis' not in image_exists.stdout"
   

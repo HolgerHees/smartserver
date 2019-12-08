@@ -9,16 +9,16 @@
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
   when: mysql_backup_exists.stat.exists
 
-- name: import nextcloud database
+- name: import nextcloud database (mysql_backup_exists)
   shell: "bzcat {{local_import_path}}mysql/nextcloud* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
   when: mysql_backup_exists.stat.exists
 
 # force a rebuild of cached files like merged js and css files
-- name: clean nextcloud database
+- name: clean nextcloud database (mysql_backup_exists)
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
   when: mysql_backup_exists.stat.exists
 
-- name: import openhab database
+- name: import openhab database (mysql_backup_exists)
   shell: "bzcat {{local_import_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\" -t"
   when: mysql_backup_exists.stat.exists
   
@@ -29,7 +29,7 @@
   failed_when: no
   changed_when: influxdb_backup_exists.rc == 0
 
-- name: mount influxdb backup import folder
+- name: mount influxdb backup import folder (influxdb_backup_exists)
   mount:
     path: "{{local_backup_path}}influxdb/import"
     src: "{{local_import_path}}influxdb/"
@@ -38,36 +38,36 @@
     fstype: none
   when: influxdb_backup_exists.rc == 0
   
-- name: restart influxdb container to get aware of mounted import folder
+- name: restart influxdb container to get aware of mounted import folder (influxdb_backup_exists)
   systemd:
     state: restarted
     name: influxdb
   when: influxdb_backup_exists.rc == 0
   
-- name: check influxdb service
+- name: check influxdb service (influxdb_backup_exists)
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
   when: influxdb_backup_exists.rc == 0
   
 # ??? check if this is enough or if we need to import metadata from opentsdb too
-- name: import influxdb metadata backup
+- name: import influxdb metadata backup (influxdb_backup_exists)
   shell: "docker exec influxdb sh -c \"influxd restore -metadir /var/lib/influxdb/meta /var/lib/influxdb_backup/import/openhab*\""
   when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
   
-- name: import influxdb openhab backup
+- name: import influxdb openhab backup (influxdb_backup_exists)
   shell: "docker exec influxdb sh -c \"influxd restore -db openhab_db -newdb openhab_db -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/openhab*\""
   when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
 
-- name: import influxdb opentsdb backup
+- name: import influxdb opentsdb backup (influxdb_backup_exists)
   shell: "docker exec influxdb sh -c \"influxd restore -db opentsdb -newdb opentsdb -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/opentsdb*\""
   when: influxdb_backup_exists.rc == 0 and 'opentsdb' in influxdb_backup_exists.stdout
   
-- name: unmount influxdb backup import folder
+- name: unmount influxdb backup import folder (influxdb_backup_exists)
   mount:
     path: "{{local_backup_path}}influxdb/import"
     state: unmounted
   when: influxdb_backup_exists.rc == 0
   
-- name: restart influxdb container to get aware of unmounted import folder
+- name: restart influxdb container to get aware of unmounted import folder (influxdb_backup_exists)
   systemd:
     state: restarted
     name: influxdb
@@ -80,13 +80,13 @@
   register: mapdb_backup_exists
   changed_when: mapdb_backup_exists.stat.exists
 
-- name: check openhab is stopped
+- name: check openhab is stopped (mapdb_backup_exists)
   systemd:
     name: openhab
     state: stopped
   when: mapdb_backup_exists.stat.exists
   
-- name: import openhab mapdb backup
+- name: import openhab mapdb backup (mapdb_backup_exists)
   copy:
     src: "{{local_import_path}}openhab/mapdb"
     dest: "{{global_lib}}openhab/"

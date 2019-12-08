@@ -28,14 +28,14 @@
   notify: "restart samba"
   when: "vault_active|bool"
 
-- name: add user "{{holger_username}}" to apache (htpasswd)
+- name: add htpasswd user "{{holger_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{holger_username}}"
     password: "{{holger_web_password}}"
   when: "vault_active|bool"
 
-- name: add user "{{holger_username}}" to apache (htdigest)
+- name: add htdigest user "{{holger_username}}" to apache
   vars:
     username: "{{holger_username}}"
     password: "{{holger_web_password}}"
@@ -74,14 +74,14 @@
   notify: "restart samba"
   when: "vault_active|bool"
 
-- name: add user "{{sandra_username}}" to apache (htpasswd)
+- name: add htpasswd user "{{sandra_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{sandra_username}}"
     password: "{{sandra_web_password}}"
   when: "vault_active|bool"
 
-- name: add user "{{sandra_username}}" to apache (htdigest)
+- name: add htdigest user "{{sandra_username}}" to apache
   vars:
     username: "{{sandra_username}}"
     password: "{{sandra_web_password}}"
@@ -120,14 +120,14 @@
     
     
 # **** APACHE USERS (WEB) ****
-- name: add user "{{admin_username}}" to apache (htpasswd)
+- name: add htpasswd user "{{admin_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{admin_username}}"
     password: "{{admin_web_password}}"
   when: "vault_active|bool"
   
-- name: add user "{{admin_username}}" to apache (htdigest)
+- name: add htdigest user "{{admin_username}}" to apache
   vars:
     username: "{{admin_username}}"
     password: "{{admin_web_password}}"
@@ -138,14 +138,14 @@
     line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
   when: "vault_active|bool"
 
-- name: add user "{{alexa_username}}" to apache (htpasswd)
+- name: add htpasswd user "{{alexa_username}}" to apache
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{alexa_username}}"
     password: "{{alexa_web_password}}"
   when: "vault_active|bool"
 
-- name: add user "{{alexa_username}}" to apache (htdigest)
+- name: add htdigest user "{{alexa_username}}" to apache
   vars:
     username: "{{alexa_username}}"
     password: "{{alexa_web_password}}"

@@ -4,53 +4,53 @@
   become: yes
   become_user: root
   tasks:
-    - name: modify cgroup parameter on fedora
+    - name: modify cgroup parameter
       lineinfile:
         state: present
         dest: /etc/default/grub
         backrefs: yes
         regexp: '^(GRUB_CMDLINE_LINUX\s*=\s*\"(?!.*systemd\.unified_cgroup_hierarchy)[^\"]+)(\".*)'
         line: '\1 systemd.unified_cgroup_hierarchy=0\2'
-      register: group_result
+      register: cgroup_result
       
-    - name: update grub boot parameter on fedora
+    - name: update grub boot parameter (cgroup changed)
       shell: "grub2-mkconfig -o /boot/grub2/grub.cfg"
-      when: group_result is changed
+      when: cgroup_result is changed
 
-    - name: reboot to activate cgroupsv1
+    - name: reboot to activate cgroupsv1 (cgroup changed)
       shell: "shutdown -r now && sleep 10"
       async: 0
       poll: 0
       ignore_errors: true
-      when: group_result is changed
+      when: cgroup_result is changed
 
-#    - name: reboot to activate cgroupsv1
+#    - name: reboot to activate cgroupsv1 (cgroup changed)
 #      shell: nohup bash -c "sleep 2s && shutdown -r now" &
-#      when: group_result is changed
+#      when: cgroup_result is changed
 
-#    - name: wait for the reboot to complete
+#    - name: wait for the reboot to complete (cgroup changed)
 #      wait_for_connection:
 #        timeout: 240
 #        sleep: 5
 #        delay: 20
-#      when: group_result is changed
+#      when: cgroup_result is changed
       
 #    - name: debug
 #      debug:
-#        var: group_result
+#        var: cgroup_result
 #        verbosity: 4
 
-#    - name: reboot to activate cgroupsv1
+#    - name: reboot to activate cgroupsv1 (cgroup changed)
 #      shell: "sleep 2 && shutdown -r now && sleep 2"
 #      async: 1
 #      poll: 0
 #      ignore_errors: true
-#      when: group_result is changed
+#      when: cgroup_result is changed
 
-#    - name: wait for the reboot to complete
+#    - name: wait for the reboot to complete (cgroup changed)
 #      wait_for_connection:
 #        connect_timeout: 20
 #        sleep: 5
 #        delay: 10
 #        timeout: 300
-#      when: group_result is changed
+#      when: cgroup_result is changed

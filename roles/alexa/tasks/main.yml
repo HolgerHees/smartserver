@@ -6,7 +6,7 @@
 #    priority: "100"
 #    state: present
     
-- name: install required fedora packages
+- name: install required packages (is_fedora)
   yum:
     name: [
         nodejs10
@@ -15,7 +15,7 @@
     state: present
   when: is_suse|bool
 
-- name: install required suse packages
+- name: install required packages (is_suse)
   zypper:
     name: [
         nodejs10
@@ -31,7 +31,7 @@
     dest: '{{projects_path}}alexa_smarthome'
     version: 'master'
 
-- name: copy configs
+- name: copy configs (vault_active)
   template:
     src: "roles/alexa/templates{{item}}"
     dest: "{{projects_path}}alexa_smarthome{{item}}"

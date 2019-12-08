@@ -1,4 +1,4 @@
-- name: restart roomba
+- name: restart roomba (is_production)
   systemd:
     name: roomba
     state: restarted

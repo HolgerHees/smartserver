@@ -1,4 +1,4 @@
-- name: install required fedora packages
+- name: install required packages (is_fedora)
   yum:
     name: [
       #python2-setuptools      # needed by openssl ansible module
@@ -8,7 +8,7 @@
     state: present
   when: is_fedora|bool
   
-- name: install required suse packages
+- name: install required packages (is_suse)
   zypper:
     name: [
       python2-setuptools      # needed by openssl ansible module
@@ -19,14 +19,14 @@
     state: present
   when: is_suse|bool
   
-- name: check certificate (develop)
+- name: check certificate (not use_vault_files)
   stat:
     path: /etc/letsencrypt/live/{{server_domain}}/
   register: certificate_exists
   changed_when: not certificate_exists.stat.exists
   when: "not use_vault_files"
   
-- name: prepare needed folder (develop)
+- name: prepare needed folder (not use_vault_files and certificate does not exists)
   file:
     path: "/etc/{{item}}"
     state: directory
@@ -39,19 +39,19 @@
     - "letsencrypt/live/{{server_domain}}"
   when: "not use_vault_files and not certificate_exists.stat.exists"
 
-- name: generate openssl privatekey (develop)
+- name: generate openssl privatekey (not use_vault_files and certificate does not exists)
   openssl_privatekey:
     path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
   when: "not use_vault_files and not certificate_exists.stat.exists"
     
-- name: generate openssl csr (develop)
+- name: generate openssl csr (not use_vault_files and certificate does not exists)
   openssl_csr:
     path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "{{server_domain}}"
   when: "not use_vault_files and not certificate_exists.stat.exists"
     
-- name: generate openssl certificate (develop)
+- name: generate openssl certificate (not use_vault_files and certificate does not exists)
   openssl_certificate:
     path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
@@ -59,7 +59,7 @@
     provider: selfsigned
   when: "not use_vault_files and not certificate_exists.stat.exists"
   
-- name: install certificate (production)
+- name: install certificate (use_vault_files)
   unarchive:
     src: "{{ vault_files }}letsencrypt/letsencrypt.tgz"
     dest: "/etc/"

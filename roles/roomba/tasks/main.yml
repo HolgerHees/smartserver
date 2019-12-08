@@ -35,7 +35,7 @@
     - "roomba.py"
   notify: "restart roomba"
   
-- name: copy config and service
+- name: copy config and service (vault_active)
   template:
     src: "roles/roomba/templates{{item.path}}"
     dest: "{{item.path}}"

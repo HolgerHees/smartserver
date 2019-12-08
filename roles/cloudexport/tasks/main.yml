@@ -1,4 +1,4 @@
-- name: add user "philipp" with no login
+- name: add user "philipp" with no login (vault_active)
   user:
     name: "{{philipp_username}}"
     comment: Philipp Bolle
@@ -12,7 +12,7 @@
     append: no
   when: "vault_active|bool"
     
-- name: prepare user "philipp" folder
+- name: prepare user "philipp" folder (vault_active)
   file:
     path: "{{raid_path}}{{philipp_username}}/"
     state: directory

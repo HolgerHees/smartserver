@@ -11,24 +11,24 @@
 
 
 
-- name: check podman image exists
+- name: check podman image exists (is_suse and vault_active)
   shell: "podman images custom_vsftpd:1.0.0"
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
   when: "is_suse|bool and vault_active|bool"
 
-- name: compose podman image
+- name: compose podman image (is_suse and vault_active and image does not exists)
   shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
 #  register: output
   when: "is_suse|bool and vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
 
-- name: check podman container exists
+- name: check podman container exists (is_suse and vault_active)
   shell: "podman ps -a --filter \"name=vsftpd\""
   register: container_exists
   changed_when: "'vsftpd' not in container_exists.stdout"
   when: "is_suse|bool and vault_active|bool"
 
-- name: compose podman image
+- name: compose podman image (is_suse and vault_active and container does not exists)
   shell: >
     podman create \
     --name=vsftpd \
@@ -79,12 +79,12 @@
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
  
-- name: compose docker image
+- name: compose docker image (image does not exists)
   shell: "docker build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
   register: output
   when: "'custom_vsftpd' not in image_exists.stdout"
   
-- name: create docker container
+- name: create docker container (vault_active)
   docker_container:
     name: vsftpd
     image: custom_vsftpd:1.0.0
@@ -113,7 +113,7 @@
   notify: "restart vsftpd"
   when: "vault_active|bool"
 
-#- name: clean old docker images
+#- name: clean old docker images (image does not exists)
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "'custom_vsftpd' not in image_exists.stdout"
   

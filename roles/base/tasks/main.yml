@@ -18,7 +18,7 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
     - { mode: "u=rwx,g=rx,o=", path: "{{local_backup_path}}" }
 
-- name: install fedora base packages
+- name: install required packages (is_fedora)
   yum:
     name: [
         mc
@@ -50,7 +50,7 @@
     state: present
   when: is_fedora|bool
 
-- name: install suse base packages
+- name: install required packages (is_suse)
   zypper:
     name: [  
         mc
@@ -90,7 +90,7 @@
 #    uid: 2000
 #  when: not is_production
   
-- name: prepare vagrant backup folder
+- name: prepare vagrant backup folder (not is_production)
   file:
     path: "{{item}}"
     state: directory

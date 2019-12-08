@@ -34,7 +34,7 @@
   register: jdk_exists
 
 # *** ACTIVATE NEW JDK ***
-- name: set alternatives
+- name: set alternatives (jdk changed)
   alternatives:
     name: java
     path: "/opt/amazon-corretto-8.222.10.1-linux-x64//bin/java"

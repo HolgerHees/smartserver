@@ -1,18 +1,18 @@
-- name: install required fedora packages
+- name: install required packages (is_fedora)
   yum:
     name: "samba"
     state: present
   notify: "restart samba"
   when: is_fedora|bool
 
-- name: install required suse packages
+- name: install required packages (is_suse)
   zypper:
     name: "samba"
     state: present
   notify: "restart samba"
   when: is_suse|bool
   
-- name: copy config
+- name: copy config (vault_active)
   template:
     src: roles/samba/templates/smb.conf
     dest: /etc/samba/smb.conf
