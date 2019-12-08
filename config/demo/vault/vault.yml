@@ -76,6 +76,8 @@ alexa_device_id2: "<alexa_device_id2>"
 alexa_device_id3: "<alexa_device_id3>"
 alexa_device_id4: "<alexa_device_id4>"
 alexa_device_id5: "<alexa_device_id5>"
+alexa_device_id6: "<alexa_device_id6>"
+alexa_device_id7: "<alexa_device_id7>"
 server_alexa_domain: "public.{{server_domain}}"
 server_alexa_port: "22432"
 
