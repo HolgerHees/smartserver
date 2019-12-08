@@ -37,6 +37,8 @@ Vagrant.configure(2) do |config|
     raise "no 'develop_ip' found in file 'config/#{setup_config}/env.yml'"
   end
   
+  print "Used ip address: #{$env_ip}\n"
+  
   config.vm.define "suse", autostart: true do |setup|
     setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'

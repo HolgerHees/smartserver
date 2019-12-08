@@ -54,6 +54,8 @@
 - name: load initial database
   shell: '/usr/bin/freshclam --no-warnings'
   notify: "restart clamav"
+  register: update_result
+  failed_when: "'failed' in update_result.stderr"
   when: suse_install_status.changed or fedora_install_status.changed
 
 - name: change clamd startup timeout

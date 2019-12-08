@@ -124,7 +124,7 @@
 
     - { role: ftp, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker]
 
-    - { role: clamav, tags: [ 'clamav' ] }                                      # antivirus
+    #- { role: clamav, tags: [ 'clamav' ] }                                      # antivirus
 
     - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker]
 
