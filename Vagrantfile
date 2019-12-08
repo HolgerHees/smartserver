@@ -41,7 +41,7 @@ Vagrant.configure(2) do |config|
   
   print "Used ip address: #{$env_ip}\n"
   
-  config.vm.define "#{setup_config}", autostart: true do |setup|
+  config.vm.define "smartserver", autostart: true do |setup|
     setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'
     setup.ssh.password = 'vagrant'
