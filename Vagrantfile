@@ -7,6 +7,7 @@ opts = GetoptLong.new(
 setup_os="suse"
 setup_image="generic/opensuse15"
 setup_config="demo"
+$setup_ip="192.168.1.50"
 
 begin
   opts.each do |opt, arg|
@@ -32,7 +33,7 @@ Vagrant.configure(2) do |config|
     setup.ssh.username = 'vagrant'
     setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
-    setup.vm.network "private_network", ip: "192.168.1.50"
+    setup.vm.network "private_network", ip: $setup_ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
     setup.vm.provider :virtualbox do |vb|
@@ -105,7 +106,7 @@ class Password
         begin
             #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
             #session.close
-            Socket.tcp("192.168.1.50", 22, connect_timeout: 1) {}
+            Socket.tcp($setup_ip, 22, connect_timeout: 1) {}
             print " ok\n"
         rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
             print "." # + e.message
