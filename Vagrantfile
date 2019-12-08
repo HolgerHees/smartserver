@@ -4,9 +4,9 @@ opts = GetoptLong.new(
     ['--config', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
-setup_os="suse"
-setup_image="generic/opensuse15"
-setup_config="demo"
+setup_os = "suse"
+setup_image = "generic/opensuse15"
+setup_config = "demo"
 
 begin
   opts.each do |opt, arg|
@@ -26,7 +26,9 @@ begin
   rescue
 end
 
-$env_ip=""
+$env_ip = ""
+$with_password = setup_config != 'demo'
+
 Vagrant.configure(2) do |config|
     
   env_config = File.read("config/#{setup_config}/env.yml")
@@ -67,7 +69,7 @@ Vagrant.configure(2) do |config|
     end  
 
     # Ask for vault password
-    setup.vm.provision "shell", env: {"VAULT_PASS" => setup_config == 'demo' ? "" : Password.new}, inline: <<-SHELL
+    setup.vm.provision "shell", env: {"VAULT_PASS" => Environment.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
 
@@ -106,12 +108,12 @@ Vagrant.configure(2) do |config|
 end
 
 # Password Input Function
-class Password
+class Environment
     require 'socket'
     require 'timeout'
     require 'net/ssh'
     
-    def to_s
+    def to_s        
         print "check server reachability "
         
         begin
@@ -123,23 +125,24 @@ class Password
             print "." # + e.message
             retry
         end
-        
-        pass = nil
-        loop do
-          begin
-              system 'stty -echo'
-              print "Ansible Vault Password: "
-              pass = URI.escape(STDIN.gets.chomp)
-          ensure
-              system 'stty echo'
-          end
-          print "\n"
-          
-          if not pass.empty?
-            break
-          end
-        end
 
+        pass = ""
+        if $with_password then
+            loop do
+            begin
+                system 'stty -echo'
+                print "Ansible Vault Password: "
+                pass = URI.escape(STDIN.gets.chomp)
+            ensure
+                system 'stty echo'
+            end
+            print "\n"
+            
+            if not pass.empty?
+                break
+            end
+            end
+        end
         pass
     end
 end

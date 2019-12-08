@@ -4,7 +4,7 @@
   become: yes
   become_user: root
   tasks:
-    - name: modify cgroup parameter
+    - name: modify grub 'cgroup' boot parameter
       lineinfile:
         state: present
         dest: /etc/default/grub
@@ -13,11 +13,11 @@
         line: '\1 systemd.unified_cgroup_hierarchy=0\2'
       register: cgroup_result
       
-    - name: update grub boot parameter => cgroup changed
+    - name: refresh grub config => cgroup changed
       shell: "grub2-mkconfig -o /boot/grub2/grub.cfg"
       when: cgroup_result is changed
 
-    - name: reboot to activate cgroupsv1 => cgroup changed
+    - name: reboot to activate changed config => cgroup changed
       shell: "shutdown -r now && sleep 10"
       async: 0
       poll: 0
