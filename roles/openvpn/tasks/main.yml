@@ -82,7 +82,7 @@
     - "echo 'yes' | easyrsa init-pki"
   when: "not use_vault_files and not pki_exists.stat.exists"
 
-- name: Create a symbolic config link on fedora (is_fedora and not use_vault_files and pki does not exists)
+- name: Create a symbolic config link on fedora (is_fedora, not use_vault_files and pki does not exists)
   file:
     src: "/etc/easy-rsa/{{item}}"
     dest: "/etc/easy-rsa/pki/{{item}}"

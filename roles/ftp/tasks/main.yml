@@ -17,7 +17,7 @@
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
   when: "is_suse|bool and vault_active|bool"
 
-- name: compose podman image (is_suse and vault_active and image does not exists)
+- name: compose podman image (is_suse, vault_active and image does not exists)
   shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
 #  register: output
   when: "is_suse|bool and vault_active|bool and 'custom_vsftpd' not in image_exists.stdout"
@@ -28,7 +28,7 @@
   changed_when: "'vsftpd' not in container_exists.stdout"
   when: "is_suse|bool and vault_active|bool"
 
-- name: compose podman image (is_suse and vault_active and container does not exists)
+- name: compose podman image (is_suse, vault_active and container does not exists)
   shell: >
     podman create \
     --name=vsftpd \
