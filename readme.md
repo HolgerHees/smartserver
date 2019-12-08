@@ -28,9 +28,9 @@ ansible-playbook -i config/demo/server.ini --ask-vault-pass server.yml
 ansible-playbook -i config/demo/server.ini server.yml
 
 # run nextcloud
-ansible-playbook -i config/demo/server.ini --tags "nextcloud" --ask-vault-pass  server.yml
+ansible-playbook -i config/demo/server.ini --tags "nextcloud" --ask-vault-pass server.yml
 
 # run nextcloud without vault depending tasks
-ansible-playbook -i config/demo/server.ini --tags "nextcloud"  server.yml
+ansible-playbook -i config/demo/server.ini --tags "nextcloud" server.yml
 
 ```
