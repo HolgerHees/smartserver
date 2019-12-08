@@ -1,16 +1,37 @@
 require 'getoptlong'
 
 opts = GetoptLong.new(
-    ['--config', GetoptLong::OPTIONAL_ARGUMENT], ['--os', GetoptLong::OPTIONAL_ARGUMENT ]
+    [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+    ['--config', GetoptLong::REQUIRED_ARGUMENT], 
+    ['--os', GetoptLong::REQUIRED_ARGUMENT ]
 )
 
-setup_os = "suse"
-setup_image = "generic/opensuse15"
-setup_config = "demo"
+setup_os = ""
+setup_image = ""
+setup_config = ""
 
 begin
   opts.each do |opt, arg|
     case opt
+      when '--help'
+        puts <<-EOF
+vagrant [OPTION] ... CMD
+
+-h, --help:
+  show help
+
+--config <demo|your_custom_config>:
+  Used configuration. All configurations are located inside ./config/ folder
+
+--os <suse|fedora>:
+  Used linux distribution. 
+
+CMD: 'up', 'destroy' or any other vagrant command
+
+Example: vagrant --config=demo --os=suse up 
+
+        EOF
+        exit(0)
       when '--config'
         setup_config=arg
       when '--os'
@@ -24,6 +45,16 @@ begin
     end
   end
   rescue
+end
+
+if setup_config == "" then
+  puts "Missing 'config' argument (try --help)"
+  exit(0)
+end
+
+if setup_os == "" then
+  puts "Missing 'os' argument (try --help)"
+  exit(0)
 end
 
 $env_ip = ""
