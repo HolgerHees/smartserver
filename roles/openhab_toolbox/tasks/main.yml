@@ -46,7 +46,7 @@
   register: mysql_data_exists
   changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
   
-- name: create missing table => weather_forecast table does not exists in database
+- name: create missing table 'weather_forecast' => does not exists in database
   shell: "cat roles/openhab_toolbox/templates/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
