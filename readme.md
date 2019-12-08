@@ -21,16 +21,16 @@ vagrant --config=demo --os=fedora up
 You can also use the contained ansible files directly.
 
 ```bash
-# run everything
+# deploys everything
 ansible-playbook -i config/demo/server.ini --ask-vault-pass server.yml
 
-# run everything except vault depending tasks
+# deploys everything except vault depending tasks
 ansible-playbook -i config/demo/server.ini server.yml
 
-# run nextcloud
+# deploy only nextcloud
 ansible-playbook -i config/demo/server.ini --tags "nextcloud" --ask-vault-pass server.yml
 
-# run nextcloud without vault depending tasks
+# deploy only nextcloud without vault depending tasks
 ansible-playbook -i config/demo/server.ini --tags "nextcloud" server.yml
 
 ```
