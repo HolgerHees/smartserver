@@ -32,14 +32,6 @@
     group: "{{www_group}}"
   when: not phpmyadmin_exists.stat.exists
   
-#- name: prepare config folder
-#  file:
-#    path: "{{htdocs_path}}mysql/config"
-#    state: directory
-#    owner: "{{www_username}}"
-#    group: "{{www_group}}"
-#    mode: 0770
-
 - name: copy config
   template:
     src: "roles/mysql_phpmyadmin/templates/config.inc.php"
@@ -47,4 +39,26 @@
     owner: "{{www_username}}"
     group: "{{www_group}}"
     mode: 0640
+
+- name: prepare config folder
+  file:
+    path: "{{htdocs_path}}mysql/tmp"
+    state: directory
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0750
+  
+- name: set selinux configuration => is_fedora
+  sefcontext:
+    target: "{{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages/tmp"
+    setype: "httpd_sys_rw_content_t"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
+  when: is_fedora|bool
+
+- name: reload selinux configuration => is_fedora
+  shell: "restorecon {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages/tmp"
+  when: is_fedora|bool and sefcontext_result.changed
+  
     

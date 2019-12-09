@@ -88,7 +88,7 @@ Vagrant.configure(2) do |config|
     if setup_os == 'fedora' then
         setup.vm.provision "ansible_local" do |ansible|
             ansible.limit = "all"
-            ansible.playbook = "roles/container/tasks/fedora.yml"
+            ansible.playbook = "utils/fedora.yml"
             ansible.inventory_path = "config/#{setup_config}/server.ini"
             ansible.compatibility_mode = "2.0"
             ansible.provisioning_path = "/vagrant/"

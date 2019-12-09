@@ -19,14 +19,27 @@
     state: present
   when: is_suse|bool
   
-- name: check certificate => not use_vault_files
+# **** CERTIFICATE - check ****
+- name: check certificate
   stat:
     path: /etc/letsencrypt/live/{{server_domain}}/
-  register: certificate_exists
-  changed_when: not certificate_exists.stat.exists
-  when: "not use_vault_files"
-  
-- name: prepare needed folder => not use_vault_files and certificate does not exists
+  register: certificate_files
+  changed_when: not certificate_files.stat.exists
+
+- name: check for vault certificate files => is_production and certificate_files does not exists
+  stat:
+    path: "{{config_path}}vault/letsencrypt"
+  register: vault_certificate_files
+  changed_when: vault_certificate_files.stat.exists
+  when: is_production and not certificate_files.stat.exists
+
+- name: decide to create or restore easy_rsa certificates
+  set_fact:
+    certificate_file_mode: "{% if vault_certificate_files.stat is defined and vault_certificate_files.stat.exists %}vault{% elif not certificate_files.stat.exists %}create{% endif %}"
+  changed_when: not certificate_files.stat.exists
+
+# **** CERTIFICATE - process ****
+- name: prepare needed folder => certificate_file_mode == 'create'
   file:
     path: "/etc/{{item}}"
     state: directory
@@ -37,36 +50,36 @@
     - "letsencrypt/"
     - "letsencrypt/live"
     - "letsencrypt/live/{{server_domain}}"
-  when: "not use_vault_files and not certificate_exists.stat.exists"
+  when: "certificate_file_mode == 'create'"
 
-- name: generate openssl privatekey => not use_vault_files and certificate does not exists
+- name: generate openssl privatekey => certificate_file_mode == 'create'
   openssl_privatekey:
     path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-  when: "not use_vault_files and not certificate_exists.stat.exists"
+  when: "certificate_file_mode == 'create'"
     
-- name: generate openssl csr => not use_vault_files and certificate does not exists
+- name: generate openssl csr => certificate_file_mode == 'create'
   openssl_csr:
     path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "{{server_domain}}"
-  when: "not use_vault_files and not certificate_exists.stat.exists"
+  when: "certificate_file_mode == 'create'"
     
-- name: generate openssl certificate => not use_vault_files and certificate does not exists
+- name: generate openssl certificate => certificate_file_mode == 'create'
   openssl_certificate:
     path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
-  when: "not use_vault_files and not certificate_exists.stat.exists"
+  when: "certificate_file_mode == 'create'"
   
-- name: install certificate => use_vault_files
+- name: install certificate => certificate_file_mode == 'vault'
   unarchive:
-    src: "{{ vault_files }}letsencrypt/letsencrypt.tgz"
+    src: "{{config_path}}vault/letsencrypt/letsencrypt.tgz"
     dest: "/etc/"
     creates: "/etc/letsencrypt/"
     decrypt: yes
   notify: "restart apache"
-  when: "use_vault_files|bool"
+  when: "certificate_file_mode == 'vault'"
 
 - name: create certificate symlink
   file:

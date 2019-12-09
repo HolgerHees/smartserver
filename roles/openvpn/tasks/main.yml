@@ -18,14 +18,19 @@
     state: present
   when: is_suse|bool
   
-- name: prepare needed easyrsa folder => is_fedora
+- name: prepare needed easyrsa folder
   file:
-    path: '/etc/easy-rsa'
+    path: '/etc/{{item}}'
     state: directory
     owner: root
     group: root
     mode: 0755
-  when: is_fedora|bool
+  with_items:
+    - easy-rsa
+    - easy-rsa/pki
+    - easy-rsa/issued
+    - easy-rsa/private
+    - easy-rsa/reqs
 
 - name: copy files => is_fedora
   copy:
@@ -57,14 +62,27 @@
     line: "ExecStart=/usr/sbin/openvpn --daemon --suppress-timestamps --cd /etc/openvpn/ --config %i.conf"
   when: is_fedora|bool
 
-# **** MOBILE VPN CERTIFICATES ****
-- name: check easyrsa => not use_vault_files
+# **** VPN CERTIFICATES - check ****
+- name: check easyrsa certificate
   stat:
-    path: /etc/easy-rsa/pki
-  register: pki_exists
-  changed_when: not pki_exists.stat.exists
-  when: "not use_vault_files"
+    path: /etc/easy-rsa/pki/ca.crt
+  register: certificate_file
+  changed_when: not certificate_file.stat.exists
+
+- name: check for vault easy-rsa files => is_production and certificate_file does not exists
+  stat:
+    path: "{{config_path}}vault/easy-rsa/"
+  register: vault_easy_rsa_files
+  changed_when: vault_easy_rsa_files.stat.exists
+  when: is_production and not certificate_file.stat.exists
+
+- name: decide to create or restore easy_rsa certificates
+  set_fact: 
+    easy_rsa_file_mode: "{% if vault_easy_rsa_files.stat is defined and vault_easy_rsa_files.stat.exists %}vault{% elif not certificate_file.stat.exists %}create{% endif %}"
+  changed_when: not certificate_file.stat.exists
   
+# **** VPN CERTIFICATES - process ****
+
 # https://en.opensuse.org/SDB:OpenVPN_Installation_and_Setup
 # cp /etc/easy-rsa
 # cd /etc/easy-rsa
@@ -73,16 +91,16 @@
 # easyrsa build-server-full server
 # easyrsa build-client-full mobile
 # easyrsa gen-dh
-- name: init easyrsa certificates => not use_vault_files and pki does not exists
+- name: init easyrsa certificates => easy_rsa_file_mode =='create'
   shell: "{{item}}"
   args:
     chdir: '/etc/easy-rsa'
   with_items:
     - "echo 'yes' | easyrsa clean-all"
     - "echo 'yes' | easyrsa init-pki"
-  when: "not use_vault_files and not pki_exists.stat.exists"
+  when: "easy_rsa_file_mode =='create'"
 
-- name: Create a symbolic config link => is_fedora, not use_vault_files and pki does not exists
+- name: Create a symbolic config link => is_fedora and easy_rsa_file_mode =='create'
   file:
     src: "/etc/easy-rsa/{{item}}"
     dest: "/etc/easy-rsa/pki/{{item}}"
@@ -93,16 +111,16 @@
   with_items:
     - openssl-easyrsa.cnf
     - x509-types
-  when: "is_fedora|bool and not use_vault_files and not pki_exists.stat.exists"
+  when: "is_fedora|bool and easy_rsa_file_mode =='create'"
   
-#- name: init easyrsa => not use_vault_files and pki does not exists
+#- name: init easyrsa => easy_rsa_file_mode =='create'
 #  command: "echo 'yes' | easyrsa init-pki"
 #  args:
 #    chdir: '/etc/easy-rsa'
 #  notify: "restart openvpn@mobile"
-#  when: "not use_vault_files and not pki_exists.stat.exists"
+#  when: "easy_rsa_file_mode =='create'"
   
-- name: generate easyrsa ca => not use_vault_files and pki does not exists
+- name: generate easyrsa ca => easy_rsa_file_mode =='create'
   expect:
     command: "easyrsa build-ca"
     chdir: '/etc/easy-rsa'
@@ -111,9 +129,9 @@
       Verifying - Enter New CA Key Passphrase: "{{server_vpn_pass_mobile}}"
       Common Name: "{{server_name}}"
   notify: "restart openvpn@mobile"
-  when: "not use_vault_files and not pki_exists.stat.exists"
+  when: "easy_rsa_file_mode =='create'"
     
-- name: generate easyrsa certificate => not use_vault_files and pki does not exists
+- name: generate easyrsa certificate => easy_rsa_file_mode =='create'
   expect:
     command: "{{item}}"
     chdir: '/etc/easy-rsa'
@@ -125,41 +143,41 @@
   with_items:
     - "easyrsa build-server-full server"
     - "easyrsa build-client-full mobile"
-  when: "not use_vault_files and not pki_exists.stat.exists"
+  when: "easy_rsa_file_mode =='create'"
 
-- name: init easyrsa gen-dh => not use_vault_files and pki does not exists
+- name: init easyrsa gen-dh => easy_rsa_file_mode =='create'
   shell: "easyrsa gen-dh"
   args:
     chdir: '/etc/easy-rsa'
   notify: "restart openvpn@mobile"
-  when: "not use_vault_files and not pki_exists.stat.exists"
+  when: "easy_rsa_file_mode =='create'"
 
-- name: copy easy-rsa certificates => use_vault_files
+- name: copy easy-rsa certificates => easy_rsa_file_mode =='vault'
   copy:
-    src: "{{ vault_files }}easy-rsa/{{item.path}}"
+    src: "{{config_path}}vault/easy-rsa/{{item.path}}"
     dest: "/etc/easy-rsa/pki/{{item.path}}"
     decrypt: yes
     owner: root
     group: root
     mode: "{{item.mode}}"
   with_items:
-#    - "certs_by_serial/76C34AF12707764CFBBE86AA4BB64751.pem"  // server.crt
-#    - "certs_by_serial/B0C6214224191008AE8BF1D26F09D2B1.pem"  // mobile.crt
     - { mode: "u=rw,g=r,o=", path: "issued/server.crt" }
     - { mode: "u=rw,g=r,o=", path: "issued/mobile.crt" }
     - { mode: "u=rw,g=,o=", path: "private/ca.key" }
     - { mode: "u=rw,g=,o=", path: "private/server.key" }
     - { mode: "u=rw,g=,o=", path: "private/mobile.key" }
-#    - "private/server.pass"
     - { mode: "u=rw,g=,o=", path: "reqs/server.req" }
     - { mode: "u=rw,g=,o=", path: "reqs/mobile.req" }
-#    - "serial"
     - { mode: "u=rw,g=r,o=", path: "ca.crt" }
+    - { mode: "u=rw,g=r,o=", path: "dh.pem" }
+#    - "certs_by_serial/76C34AF12707764CFBBE86AA4BB64751.pem"  // server.crt
+#    - "certs_by_serial/B0C6214224191008AE8BF1D26F09D2B1.pem"  // mobile.crt
+#    - "private/server.pass"
+#    - "serial"
 #    - "index.txt.attr"
 #    - "index.txt"
-    - { mode: "u=rw,g=r,o=", path: "dh.pem" }
   notify: "restart openvpn@mobile"
-  when: "use_vault_files|bool"
+  when: "easy_rsa_file_mode =='vault'"
   
 - name: copy server pass => vault_active
   copy:
@@ -172,29 +190,41 @@
   notify: "restart openvpn@mobile"
   when: "vault_active|bool"
   
-# **** CLOUD VPN SHARED KEY ****
-- name: check shared key => not use_vault_files
+# **** CLOUD VPN SHARED KEY - check ****
+- name: check shared key
   stat:
     path: /etc/openvpn/cloud_shared.key
-  register: key_exists
-  changed_when: not key_exists.stat.exists
-  when: "not use_vault_files"
-  
-- name: generate shared key => not use_vault_files and key does not exists
+  register: shared_key_file
+  changed_when: not shared_key_file.stat.exists
+
+- name: check for vault shared key file => is_production and shared_key_file does not exists
+  stat:
+    path: "{{config_path}}vault/openvpn/cloud_shared.key"
+  register: vault_shared_key_file
+  changed_when: vault_shared_key_file.stat.exists
+  when: is_production and not shared_key_file.stat.exists
+
+- name: decide to create or restore openvpn shared key
+  set_fact: 
+    openvpn_shared_key_mode: "{% if vault_shared_key_file.stat is defined and vault_shared_key_file.stat.exists %}vault{% elif not shared_key_file.stat.exists %}create{% endif %}"
+  changed_when: not shared_key_file.stat.exists
+
+# **** CLOUD VPN SHARED KEY - process ****
+- name: generate shared key => openvpn_shared_key_mode == 'create'
   shell: "openvpn --genkey --secret /etc/openvpn/cloud_shared.key"
   notify: "restart openvpn@cloud"
-  when: "not use_vault_files and not key_exists.stat.exists"
+  when: "openvpn_shared_key_mode == 'create'"
     
-- name: copy shared keys => use_vault_files
-  template:
-    src: "{{ vault_files }}openvpn/cloud_shared.key"
+- name: copy shared keys => openvpn_shared_key_mode == 'vault'
+  copy:
+    src: "{{config_path}}vault/openvpn/cloud_shared.key"
     dest: "/etc/openvpn/cloud_shared.key"
     decrypt: yes
     owner: root
     group: root
     mode: 0600
   notify: "restart openvpn@cloud"
-  when: "use_vault_files|bool"
+  when: "openvpn_shared_key_mode == 'vault'"
 
 # **** CONFIGS ****
 - name: get ca content => vault_active

@@ -3,6 +3,11 @@
 # Search recursively through the current directory for encrypted values
 #   - assumes your vault password is in a file vpass
 
+if ! [ -x "$(command -v ansible-vault)" ]; then
+  echo 'Error: ansible-vault is not installed.' >&2
+  exit 1
+fi
+
 ACTION=""
 if [ "$1" != "" ]; then
     ACTION="$1"
@@ -33,15 +38,15 @@ if [ "${ACTION}" = "encrypt" ]; then
       exit;
   fi
 
-  grep -rilL ANSIBLE_VAULT ./config/marvin/vault/ | while read N 
+  grep -rilL ANSIBLE_VAULT ./config/*/vault/ | grep -v demo | while read N 
   do 
-    echo encrypt $N
+    echo -n "$N • "
     ansible-vault --vault-password-file $vaultpipe encrypt $N
   done
 elif [ "${ACTION}" = "decrypt" ]; then
-  grep -ril ANSIBLE_VAULT ./config/marvin/vault/ | while read N 
+  grep -ril ANSIBLE_VAULT ./config/*/vault/ | grep -v demo | while read N 
   do 
-    echo decrypt $N
+    echo -n "$N • "
     ansible-vault --vault-password-file $vaultpipe decrypt $N
   done
 fi

@@ -37,7 +37,7 @@
       ignore_errors: true
       tags: always
       
-    # set environment specific variables [post]
+    # set environment specific variables [pre]
     - name: set pre state vars
       set_fact:
         is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
@@ -59,12 +59,9 @@
         www_etc: "{{ '/etc/apache2/' if is_suse else '/etc/httpd/' }}"
       tags: always
       
-    # set environment specific variables [pre]
+    # set environment specific variables [post]
     - name: set post state vars
       set_fact:
-        use_vault_files: "{{is_production and vault_active}}"
-        vault_files: "{{config_path}}vault/"
-        use_import_files: "{{not is_production}}"
         local_import_path: "{{playbook_dir}}/{{config_path}}backup/"
       tags: always
       
@@ -166,7 +163,7 @@
     
     - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
-    - { role: backup_restore, tags: [ 'backup_restore' ], when: "use_import_files|bool" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
+    - { role: backup_restore, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
     
   post_tasks:
     # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 

@@ -76,24 +76,6 @@
 #semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.user.ini'
 #semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
 
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{item.target}}"
-    ftype: "{{item.ftype}}"
-    setype: "{{item.setype}}"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  with_items:
-    - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{htdocs_path}}nextcloud-{{nextcloud_version}}(/.*)?" }
-  when: is_fedora|bool
-
-- name: reload selinux configuration => is_fedora
-  shell: "restorecon {{item}}"
-  with_items:
-    - "-irv {{htdocs_path}}nextcloud-{{nextcloud_version}}"
-  when: is_fedora|bool and sefcontext_result.changed
-
 - name: copy config => vault_active
   template:
     src: "roles/nextcloud/templates/config.php"
@@ -118,6 +100,26 @@
     owner: "{{www_username}}"
     group: "{{www_group}}"
     mode: 0640
+  
+- name: set selinux configuration => is_fedora
+  sefcontext:
+    target: "{{item.target}}"
+    ftype: "{{item.ftype}}"
+    setype: "{{item.setype}}"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
+  with_items:
+    - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{htdocs_path}}nextcloud-{{nextcloud_version}}(/.*)?" }
+    - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{nextcloud_data_path | regex_replace('\\/$', '')}}(/.*)?" }
+  when: is_fedora|bool
+  
+- name: reload selinux configuration => is_fedora
+  shell: "restorecon {{item}}"
+  with_items:
+    - "-irv {{htdocs_path}}nextcloud-{{nextcloud_version}}"
+    - "-irv {{nextcloud_data_path | regex_replace('\\/$', '')}}"
+  when: is_fedora|bool and sefcontext_result.changed
   
 # ***** DATABASE ****
 - name: check mysql service
