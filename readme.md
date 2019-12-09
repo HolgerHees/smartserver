@@ -95,3 +95,8 @@ and to decrypt everything just run:
 
 The command checks if a file is already encrypted/decrypted and is encrypting/decrypting it only if needed.
 
+## Continuous integration testing
+
+https://ci.appveyor.com/project/HolgerHees/smartserver-suse
+
+https://ci.appveyor.com/project/HolgerHees/smartserver-fedora
