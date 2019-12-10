@@ -35,13 +35,14 @@
       , sysstat
       , iotop
       , zip
+      , curl
       , smem 
-      #, python2-pip        # ansible pip module
+      #, python2-pip
       , python3-pip
-      , bzip2              # used to import databases with bzcat
-      #, python2-passlib    # used by ansible htpasswd module (user role)
-      , python3-passlib    # used by ansible htpasswd module (user role)
-      , mailx              # used by elastalert
+      , bzip2
+      #, python2-passlib
+      , python3-passlib
+      , mailx
       
       , python3-libselinux # used by ansible on fedora
       , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
@@ -67,6 +68,7 @@
       , sysstat
       , iotop
       , zip
+      , curl               # used to send multi part/formdata => kibana
       , smem               # useful tool to debug memory usage (including swap usage)
       , python2-pip        # used for ansible pip module
       #, python3-pip

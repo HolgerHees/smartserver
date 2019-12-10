@@ -23,7 +23,8 @@
     state: present
 #    recreate: true
     env:
-       discovery.type: "single-node"
+      discovery.type: "single-node"
+#      opendistro_security.disabled: "true"
 #       DISCOVERY_TYPE: "single-node"
 #       DISCOVERY_SEED_HOSTS: ""
 #       DISCOVERY_SEED_PROVIDERS: ""

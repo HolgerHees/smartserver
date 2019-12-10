@@ -1,0 +1,20 @@
+- name: check if kibana is running
+  systemd:
+    name: kibana
+    state: started
+    daemon_reload: yes
+  changed_when: yes
+  
+- name: wait for kibana to become ready
+  uri:
+    url: "http://localhost:5601/kibana/app/kibana"
+    return_content: yes
+  register: result
+  until: "result.status == 200"
+  retries: 120
+  delay: 1
+  changed_when: yes
+
+  
+  
+  

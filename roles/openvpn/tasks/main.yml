@@ -274,3 +274,33 @@
     - "mobile.ovpn"
   notify: "restart openvpn"
   when: "vault_active|bool"
+  
+#semanage port -a -t openvpn_port_t -p tcp  5517
+
+# **** SELINUX MODULE COMPILATION ****
+# sudo grep 'openvpn' /var/log/audit/audit.log | audit2allow -m openvpn_smtp_port > openvpn_smtp_port.te
+# needed for openvpn on smtp port (smtp is used to avoid blocking firewalls)
+#- name: check for selinux (openvpn/smtp) port module => is_fedora
+#  shell: "semodule -l | grep \"openvpn_smtp_port.te\""
+#  register: semodule_result 
+#  changed_when: semodule_result.rc == 1
+#  failed_when: no
+#  when: is_fedora|bool
+
+#- name: compile selinux (openvpn/smtp) port module => is_fedora and semodule does not exists
+#  shell: "{{item}}" 
+#  with_items:
+#    - "checkmodule -M -m -o {{global_tmp}}openvpn_smtp_port.te.mod roles/openvpn/templates/selinux/openvpn_smtp_port.te.te"
+#    - "semodule_package -o {{global_tmp}}openvpn_smtp_port.te.pp -m {{global_tmp}}openvpn_smtp_port.te.mod"
+#    - "semodule -i {{global_tmp}}openvpn_smtp_port.te.pp"
+#  when: "is_fedora|bool and semodule_result.rc == 1"
+
+#- name: cleanup selinux module build => is_fedora and semodule does not exists
+#  file: 
+#    path: "{{item}}"
+#    state: absent
+#  with_items:
+#    - "{{global_tmp}}openvpn_smtp_port.te.mod"
+#    - "{{global_tmp}}openvpn_smtp_port.te.pp"
+#  when: "is_fedora|bool and semodule_result.rc == 1"
+# **********************************************
