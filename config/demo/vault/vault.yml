@@ -82,8 +82,10 @@ server_alexa_domain: "public.{{server_domain}}"
 server_alexa_port: "22432"
 
 server_vpn_domain: "public.{{server_domain}}"
+server_vpn_port_cloud: "1194"
+server_vpn_port_cloud_forwarded: "3421"
+server_vpn_port_mobile: "1195"
+server_vpn_port_mobile_forwarded: "277"
 server_vpn_pass_mobile: "default123"
-server_vpn_port_mobile: "277"
-server_vpn_port_cloud: "3421"
 
 cloudsync_password: "default123"
