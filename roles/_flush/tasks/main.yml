@@ -1,0 +1,2 @@
+- name: Flush all handler
+  meta: flush_handlers

@@ -1,9 +1,12 @@
+- name: read service facts
+  service_facts:
+
 - name: check if influxdb is running
   systemd:
     name: influxdb
     state: started
     daemon_reload: yes
-  changed_when: yes
+  changed_when: ansible_facts.services["influxdb.service"].state != 'running'
   
 - name: wait for influxdb to become ready
   uri:
@@ -13,5 +16,5 @@
   until: result.status == 204
   retries: 60
   delay: 1
-  changed_when: yes
+  changed_when: ansible_facts.services["influxdb.service"].state != 'running'
  

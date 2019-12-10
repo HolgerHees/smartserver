@@ -1,0 +1,10 @@
+- name: prepare shared fluentd folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/etc/fluent/"
+    - "/etc/fluent/_.ansible.d"

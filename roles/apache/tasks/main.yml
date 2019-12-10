@@ -26,7 +26,6 @@
     group: "{{item.group}}"
     mode: 0755
   with_items:
-    - { owner: root, group: root, dir: "{{www_etc}}_.ansible.d/" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
     - { owner: "{{ 'root' if is_suse|bool else www_username }}", group: "{{ 'root' if is_suse|bool else www_group }}", dir: "{{global_log}}apache2/" }

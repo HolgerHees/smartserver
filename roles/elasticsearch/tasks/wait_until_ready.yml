@@ -1,9 +1,12 @@
+- name: read service facts
+  service_facts:
+
 - name: check if elasticsearch is running
   systemd:
     name: elasticsearch
     state: started
     daemon_reload: yes
-  changed_when: yes
+  changed_when: ansible_facts.services["elasticsearch.service"].state != 'running'
   
 - name: wait for elasticsearch to become ready
   uri:
@@ -13,7 +16,7 @@
   until: "result.status == 200 and ('\"status\":\"yellow\"' in result.content or '\"status\":\"green\"' in result.content)"
   retries: 60
   delay: 1
-  changed_when: yes
+  changed_when: ansible_facts.services["elasticsearch.service"].state != 'running'
 
   
   

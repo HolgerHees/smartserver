@@ -12,15 +12,11 @@
   
 - name: prepare needed folder
   file:
-    path: '{{item}}'
+    path: '{{global_log}}fluentd/'
     state: directory
     owner: root
     group: root
     mode: 0750
-  with_items:
-    - "/etc/fluent/"
-    - "/etc/fluent/_.ansible.d"
-    - "{{global_log}}fluentd/"
 
 - name: install
   gem:

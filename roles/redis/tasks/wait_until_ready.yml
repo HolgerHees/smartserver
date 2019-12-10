@@ -1,10 +1,14 @@
+- name: read service facts
+  service_facts:
+
 - name: check redis is running
   systemd:
     name: redis
     state: started
     daemon_reload: yes
-  changed_when: no
+  changed_when: ansible_facts.services["redis.service"].state != 'running'
 
 - name: wait for redis to become ready
   wait_for:
     path: "{{redis_socket_path}}redis.sock"
+  changed_when: ansible_facts.services["redis.service"].state != 'running'
