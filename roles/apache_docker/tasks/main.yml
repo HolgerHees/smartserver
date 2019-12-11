@@ -15,7 +15,7 @@
   register: output
   when: "'custom_apache' not in image_exists.stdout"
   
-- name: create docker container => vault_active
+- name: create docker container
   docker_container:
     name: httpd
     image: custom_apache:1.0.0
@@ -32,7 +32,6 @@
       - "9443:443"
       - "90114:10114"
   notify: "restart vsftpd"
-  when: "vault_active|bool"
 
 #- name: clean old docker images
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"

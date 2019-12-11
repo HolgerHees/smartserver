@@ -1,6 +1,6 @@
 module.exports = {
     "enabled_bak": [
-        { "phrase": "alle rollläden hoch und fernseher an", "client_id": "amzn1.ask.device.{{alexa_device_id1}}", "items": [[ "Scene6", "ACTION_ON" ]] },
+        { "phrase": "alle rollläden hoch und fernseher an", "client_id": "amzn1.ask.device.{{vault_alexa_device_id1}}", "items": [[ "Scene6", "ACTION_ON" ]] },
         { "phrase": "licht im wohnzimmer und aussen licht und steckdosen aus", "items": [[ "Light_FF_Livingroom_Couch", "ACTION_OFF" ],[ "Light_FF_Livingroom_Diningtable", "ACTION_OFF" ], [ "Light_FF_Livingroom_Hue_Brightness", "ACTION_OFF" ],[ "Lights_Outdoor", "ACTION_OFF" ],[ "Sockets_Outdoor", "ACTION_OFF" ]] },
         { "phrase": "Hallo", "items": [[ "Scene6", "ACTION_ON" ]] },
         { "phrase": "wohnzimmer fernseher an", "items": [[ "Scene6", "ACTION_ON" ]] },
@@ -74,11 +74,11 @@ module.exports = {
         { "phrase": "Schlafen gehen", "items": [[ "Scene3", "DEFAULT_ON" ]] },
         { "phrase": "Gute Nacht", "items": [[ "Scene4", "DEFAULT_ON" ]] },
 
-        { "phrase": "licht decken lampe aus", "client_id": "amzn1.ask.device.{{alexa_device_id1}}", "items": [[ "Light_FF_Livingroom_Couch", "ACTION_OFF" ], [ "Light_FF_Livingroom_Diningtable", "ACTION_OFF" ]] },
-        { "phrase": "bassbox aus", "client_id": "amzn1.ask.device.{{alexa_device_id1}}", "items": [[ "Socket_Bassbox", "ACTION_OFF" ]] },
-        { "phrase": "bassbox an", "client_id": "amzn1.ask.device.{{alexa_device_id1}}", "items": [[ "Socket_Bassbox", "ACTION_ON" ]] },
-        { "phrase": "fernseher an", "client_id": "amzn1.ask.device.{{alexa_device_id1}}", "items": [[ "Scene6", "ACTION_ON" ]] },
-        { "phrase": "alle rollläden hoch und fernseher an", "client_id": "amzn1.ask.device.{{alexa_device_id1}}", "items": [[ "Shutters", "ACTION_UP" ],[ "Scene6", "ACTION_ON" ]] },
+        { "phrase": "licht decken lampe aus", "client_id": "amzn1.ask.device.{{vault_alexa_device_id1}}", "items": [[ "Light_FF_Livingroom_Couch", "ACTION_OFF" ], [ "Light_FF_Livingroom_Diningtable", "ACTION_OFF" ]] },
+        { "phrase": "bassbox aus", "client_id": "amzn1.ask.device.{{vault_alexa_device_id1}}", "items": [[ "Socket_Bassbox", "ACTION_OFF" ]] },
+        { "phrase": "bassbox an", "client_id": "amzn1.ask.device.{{vault_alexa_device_id1}}", "items": [[ "Socket_Bassbox", "ACTION_ON" ]] },
+        { "phrase": "fernseher an", "client_id": "amzn1.ask.device.{{vault_alexa_device_id1}}", "items": [[ "Scene6", "ACTION_ON" ]] },
+        { "phrase": "alle rollläden hoch und fernseher an", "client_id": "amzn1.ask.device.{{vault_alexa_device_id1}}", "items": [[ "Shutters", "ACTION_UP" ],[ "Scene6", "ACTION_ON" ]] },
 
         { "phrase": "wie warm ist es im schlafzimmer und in der küche", "items": [[ "Temperature_SF_Bedroom", "READ_VALUE" ], [ null ] ] },
 

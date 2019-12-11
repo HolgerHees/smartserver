@@ -10,7 +10,7 @@
     state: present
   when: is_suse|bool
 
-- name: copy zone config => vault_active
+- name: copy zone config
   template:
     src: "roles/firewalld/templates/etc/firewalld/zones/{{item}}"
     dest: "/etc/firewalld/zones/{{item}}"
@@ -22,7 +22,6 @@
     - public.xml
     - trusted.xml
   notify: "restart firewalld"
-  when: "vault_active|bool"
 
 - name: allow vagrant ip 10.0.2.2 => not is_production
   lineinfile:

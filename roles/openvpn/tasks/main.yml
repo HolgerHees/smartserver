@@ -72,13 +72,13 @@
 - name: check for vault easy-rsa files => is_production and certificate_file does not exists
   stat:
     path: "{{config_path}}vault/easy-rsa/"
-  register: vault_easy_rsa_files
-  changed_when: vault_easy_rsa_files.stat.exists
+  register: easy_rsa_files_from_vault
+  changed_when: easy_rsa_files_from_vault.stat.exists
   when: is_production and not certificate_file.stat.exists
 
 - name: decide to create or restore easy_rsa certificates
   set_fact: 
-    easy_rsa_file_mode: "{% if vault_easy_rsa_files.stat is defined and vault_easy_rsa_files.stat.exists %}vault{% elif not certificate_file.stat.exists %}create{% endif %}"
+    easy_rsa_file_mode: "{% if easy_rsa_files_from_vault.stat is defined and easy_rsa_files_from_vault.stat.exists %}vault{% elif not certificate_file.stat.exists %}create{% endif %}"
   changed_when: not certificate_file.stat.exists
   
 # **** VPN CERTIFICATES - process ****
@@ -125,8 +125,8 @@
     command: "easyrsa build-ca"
     chdir: '/etc/easy-rsa'
     responses:
-      Enter New CA Key Passphrase: "{{server_vpn_pass_mobile}}"
-      Verifying - Enter New CA Key Passphrase: "{{server_vpn_pass_mobile}}"
+      Enter New CA Key Passphrase: "{{vault_server_vpn_pass_mobile}}"
+      Verifying - Enter New CA Key Passphrase: "{{vault_server_vpn_pass_mobile}}"
       Common Name: "{{server_name}}"
   notify: "restart openvpn@mobile"
   when: "easy_rsa_file_mode =='create'"
@@ -136,9 +136,9 @@
     command: "{{item}}"
     chdir: '/etc/easy-rsa'
     responses:
-      Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
-      Verifying - Enter PEM pass phrase: "{{server_vpn_pass_mobile}}"
-      Enter pass phrase for: "{{server_vpn_pass_mobile}}"
+      Enter PEM pass phrase: "{{vault_server_vpn_pass_mobile}}"
+      Verifying - Enter PEM pass phrase: "{{vault_server_vpn_pass_mobile}}"
+      Enter pass phrase for: "{{vault_server_vpn_pass_mobile}}"
   notify: "restart openvpn@mobile"
   with_items:
     - "easyrsa build-server-full server"
@@ -179,16 +179,15 @@
   notify: "restart openvpn@mobile"
   when: "easy_rsa_file_mode =='vault'"
   
-- name: copy server pass => vault_active
+- name: copy server pass
   copy:
-    content: "{{server_vpn_pass_mobile}}"
+    content: "{{vault_server_vpn_pass_mobile}}"
     dest: "/etc/openvpn/mobile_certificate.pass"
     decrypt: yes
     owner: root
     group: root
     mode: 0600
   notify: "restart openvpn@mobile"
-  when: "vault_active|bool"
   
 # **** CLOUD VPN SHARED KEY - check ****
 - name: check shared key
@@ -200,13 +199,13 @@
 - name: check for vault shared key file => is_production and shared_key_file does not exists
   stat:
     path: "{{config_path}}vault/openvpn/cloud_shared.key"
-  register: vault_shared_key_file
-  changed_when: vault_shared_key_file.stat.exists
+  register: shared_key_file_from_vault
+  changed_when: shared_key_file_from_vault.stat.exists
   when: is_production and not shared_key_file.stat.exists
 
 - name: decide to create or restore openvpn shared key
   set_fact: 
-    openvpn_shared_key_mode: "{% if vault_shared_key_file.stat is defined and vault_shared_key_file.stat.exists %}vault{% elif not shared_key_file.stat.exists %}create{% endif %}"
+    openvpn_shared_key_mode: "{% if shared_key_file_from_vault.stat is defined and shared_key_file_from_vault.stat.exists %}vault{% elif not shared_key_file.stat.exists %}create{% endif %}"
   changed_when: not shared_key_file.stat.exists
 
 # **** CLOUD VPN SHARED KEY - process ****
@@ -227,41 +226,36 @@
   when: "openvpn_shared_key_mode == 'vault'"
 
 # **** CONFIGS ****
-- name: get ca content => vault_active
+- name: get ca content
   shell: cat /etc/easy-rsa/pki/ca.crt
   register: file_ca_crt
   changed_when: no
-  when: "vault_active|bool"
   
-- name: get crt content => vault_active
+- name: get crt content
   shell: cat /etc/easy-rsa/pki/issued/mobile.crt
   register: file_mobile_crt
   changed_when: no
-  when: "vault_active|bool"
   
-- name: get key content => vault_active
+- name: get key content
   shell: cat /etc/easy-rsa/pki/private/mobile.key
   register: file_mobile_key
   changed_when: no
-  when: "vault_active|bool"
   
-- name: prepare ovpn certificate vars => vault_active
+- name: prepare ovpn certificate vars
   set_fact:
     ca_crt: "{{file_ca_crt.stdout}}"
     mobile_crt: "-----BEGIN CERTIFICATE-----{{file_mobile_crt.stdout.split('-----BEGIN CERTIFICATE-----')[1]}}"
     mobile_key: "{{file_mobile_key.stdout}}"
   changed_when: no
-  when: "vault_active|bool"
   
-#- name: prepare ovpn certificate vars => vault_active
+#- name: prepare ovpn certificate vars
 #  set_fact:
 #    ca_crt: "{{ lookup('file', '/etc/easy-rsa/pki/ca.crt')}}"
 #    mobile_crt: "-----BEGIN CERTIFICATE-----{{ lookup('file','/etc/easy-rsa/pki/issued/mobile.crt').split('-----BEGIN CERTIFICATE-----')[1]}}"
 #    mobile_key: "{{ lookup('file','/etc/easy-rsa/pki/private/mobile.key')}}"
 #  changed_when: no
-#  when: "vault_active|bool"
-  
-- name: copy config => vault_active
+
+- name: copy config
   template:
     src: "roles/openvpn/templates/{{item}}"
     dest: "/etc/openvpn/{{item}}"
@@ -273,11 +267,10 @@
     - "mobile.conf"
     - "mobile.ovpn"
   notify: "restart openvpn"
-  when: "vault_active|bool"
   
 - name: set selinux cloud port configuration => is_fedora
   seport:
-    ports: "{{server_vpn_port_cloud}}"
+    ports: "{{vault_server_vpn_port_cloud}}"
     proto: tcp
     setype: openvpn_port_t
     state: present
@@ -286,7 +279,7 @@
 
 - name: set selinux mobile port configuration => is_fedora
   seport:
-    ports: "{{server_vpn_port_mobile}}"
+    ports: "{{vault_server_vpn_port_mobile}}"
     proto: tcp
     setype: openvpn_port_t
     state: present

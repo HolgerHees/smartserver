@@ -5,14 +5,13 @@
     dest: '{{projects_path}}toolbox'
     version: 'master'
 
-- name: copy config => vault_active
+- name: copy config
   template:
     src: "roles/openhab_toolbox/templates/config.php"
     dest: "{{projects_path}}toolbox/_lib/config.php"
     owner: root
     group: root
     mode: 0644
-  when: "vault_active|bool"
   
 - name: set selinux configuration => is_fedora
   sefcontext:
@@ -28,7 +27,7 @@
   shell: "restorecon -irv {{projects_path}}toolbox"
   when: is_fedora|bool and sefcontext_result.changed
 
-- name: set symbolic link to htdocs => vault_active
+- name: set symbolic link to htdocs
   file:
     src: "{{projects_path}}toolbox/web/"
     dest: "{{htdocs_path}}tools"
@@ -36,7 +35,6 @@
     follow: no
     owner: "{{www_username}}"
     group: "{{www_group}}"  
-  when: "vault_active|bool"
       
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml

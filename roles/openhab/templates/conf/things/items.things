@@ -7,15 +7,15 @@ network:pingdevice:phone2 [ hostname="{{phone2_ip}}", retry=12, timeout=10000, r
 
 network:pingdevice:roomba [ hostname="{{roomba_ip}}", retry=1, refreshInterval=60000 ]
 
-robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInterval="15", offlineTimeout="300", user="{{automower_device_username}}", password = "{{automower_device_password}}"]
+robonect:mower:automower "Mower" @ "Garden" [ host="{{automower_ip}}", pollInterval="15", offlineTimeout="300", user="{{vault_automower_device_username}}", password = "{{vault_automower_device_password}}"]
 
 //exec:command:heatingMode [command="/opt/heating_control/heizungBetriebsart.bash -t %2$s", interval=0, timeout=10, autorun=true]
  
-astro:moon:local [ geolocation="{{location}}", interval=300 ]
-astro:sun:local [ geolocation="{{location}}", interval=300 ]
+astro:moon:local [ geolocation="{{vault_location}}", interval=300 ]
+astro:sun:local [ geolocation="{{vault_location}}", interval=300 ]
 ntp:ntp:local [ hostname="de.pool.ntp.org", refreshInterval=60, refreshNtp=30 ]
 
-Bridge hue:bridge:default [ ipAddress="{{hue_ip}}", userName="{{hue_user_id}}" ] {
+Bridge hue:bridge:default [ ipAddress="{{hue_ip}}", userName="{{vault_hue_user_id}}" ] {
 	0210 lamp1 [ lightId="1" ]
 	0210 lamp2 [ lightId="2" ]
 	0210 lamp3 [ lightId="3" ]

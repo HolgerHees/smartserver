@@ -19,9 +19,9 @@ datasources:
     # <string> url
     url: http://127.0.0.1:8086
     # <string> database password, if used
-    password: {{grafana_influxdb_password}}
+    password: {{vault_grafana_influxdb_password}}
     # <string> database user, if used
-    user: {{grafana_influxdb_username}}
+    user: {{vault_grafana_influxdb_username}}
     # <string> database name, if used
     database: openhab_db
     # <bool> enable/disable basic auth

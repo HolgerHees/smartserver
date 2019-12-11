@@ -35,7 +35,7 @@
     - "roomba.py"
   notify: "restart roomba"
   
-- name: copy config and service => vault_active
+- name: copy config and service
   template:
     src: "roles/roomba/templates{{item.path}}"
     dest: "{{item.path}}"
@@ -47,4 +47,3 @@
     - { mode: "u=rw,g=r,o=", path: "/opt/roomba/start_service.py" }
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/roomba.service" }
   notify: "restart roomba"
-  when: "vault_active|bool"

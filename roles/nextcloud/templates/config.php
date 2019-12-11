@@ -1,7 +1,7 @@
 <?php
 $CONFIG = array (
-  'instanceid' => '{{nextcloud_instance_id}}',
-  'passwordsalt' => '{{nextcloud_password_salt}}',
+  'instanceid' => '{{vault_nextcloud_instance_id}}',
+  'passwordsalt' => '{{vault_nextcloud_password_salt}}',
   'trusted_domains' => 
   array (
     0 => '{{server_ip}}',
@@ -15,8 +15,8 @@ $CONFIG = array (
   'dbname' => 'nextcloud',
   'dbhost' => '127.0.0.1',
   'dbtableprefix' => 'oc_',
-  'dbuser' => '{{nextcloud_mysql_username}}',
-  'dbpassword' => '{{nextcloud_mysql_password}}',
+  'dbuser' => '{{vault_nextcloud_mysql_username}}',
+  'dbpassword' => '{{vault_nextcloud_mysql_password}}',
   'installed' => true,
   'forcessl' => true,
   'syslog_tag' => 'nextcloud',
@@ -28,7 +28,7 @@ $CONFIG = array (
   'mail_domain' => '{{server_domain}}',
   'mail_from_address' => 'root',
   'appcodechecker' => false,
-  'secret' => '{{nextcloud_secret}}',
+  'secret' => '{{vault_nextcloud_secret}}',
   'trashbin_retention_obligation' => 'auto',
   'updatechecker' => false,
   'appstore.experimental.enabled' => true,

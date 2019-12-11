@@ -14,14 +14,14 @@
     group: root
     mode: 0750
 
-- name: mount cloud data folder => is_production and vault_active
+- name: mount cloud data folder => is_production
   mount:
     name: "{{cloud_backup_target_path}}"
-    src: "{{cloud_net2_server_ip}}:/data/backup/{{holger_username}}"
+    src: "{{cloud_net2_server_ip}}:/data/backup/{{vault_user1_username}}"
     fstype: nfs
     opts: "rw,noauto,rsize=8192,wsize=8192"
     state: mounted
-  when: "is_production|bool and vault_active|bool"
+  when: "is_production|bool"
 
 - name: "clone git"
   git:
@@ -31,11 +31,10 @@
     version: 'master'
   register: clone_status
  
-- name: copy config => vault_active
+- name: copy config
   template:
     src: "roles/cloudsync/templates/cloudsync.config"
     dest: "{{projects_path}}cloudsync/config/cloudsync.config"
-  when: "vault_active|bool"
   
 - name: install => clone_status
   shell: '/usr/bin/mvn clean install'

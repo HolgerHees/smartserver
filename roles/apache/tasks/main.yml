@@ -237,7 +237,7 @@
     - { regex: 'ErrorLog', line: 'ErrorLog "{{global_log}}apache2/error.log"' }
   notify: "restart apache"
 
-- name: copy config => vault_active
+- name: copy config
   template:
     src: "roles/apache/templates/etc/apache2/{{item}}"
     dest: "{{www_etc}}{{item}}"
@@ -250,7 +250,6 @@
     - _.ansible.d/options.conf
     - _.ansible_vhost-ssl.conf
   notify: "restart apache"
-  when: "vault_active|bool"
 
 - name: copy balancer fallback files
   copy:

@@ -25,7 +25,7 @@
   with_fileglob:
     - "roles/grafana/templates/dashboards/*"
 
-- name: copy grafana provisioning => vault_active
+- name: copy grafana provisioning
   template:
     src: "roles/grafana/templates/{{item}}"
     dest: "{{ global_lib }}grafana/{{item}}"
@@ -38,7 +38,6 @@
     - "provisioning/dashboards/provider.yaml"
     - "provisioning/datasources/openhab.yaml"
     - "provisioning/datasources/opentsdb.yaml"
-  when: "vault_active|bool"
   
 - name: check started docker
   systemd:
@@ -80,8 +79,7 @@
     config_file: "roles/grafana/templates/etc/fluent/_.ansible.d/grafana.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
       
-- name: copy apache config => vault_active
+- name: copy apache config
   vars:
     config_file: "roles/grafana/templates/etc/apache2/_.ansible.d/grafana.conf"
   import_tasks: roles/apache/tasks/add_config.yml
-  when: "vault_active|bool"

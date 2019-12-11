@@ -29,13 +29,13 @@
 - name: check for vault certificate files => is_production and certificate_files does not exists
   stat:
     path: "{{config_path}}vault/letsencrypt"
-  register: vault_certificate_files
-  changed_when: vault_certificate_files.stat.exists
+  register: certificate_files_from_vault
+  changed_when: certificate_files_from_vault.stat.exists
   when: is_production and not certificate_files.stat.exists
 
 - name: decide to create or restore easy_rsa certificates
   set_fact:
-    certificate_file_mode: "{% if vault_certificate_files.stat is defined and vault_certificate_files.stat.exists %}vault{% elif not certificate_files.stat.exists %}create{% endif %}"
+    certificate_file_mode: "{% if certificate_files_from_vault.stat is defined and certificate_files_from_vault.stat.exists %}vault{% elif not certificate_files.stat.exists %}create{% endif %}"
   changed_when: not certificate_files.stat.exists
 
 # **** CERTIFICATE - process ****
@@ -91,4 +91,4 @@
     group: root
     
 # TODO add renew job
-#certbot certonly --manual --preferred-challenges=dns --email {{admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
+#certbot certonly --manual --preferred-challenges=dns --email {{vault_admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}

@@ -14,7 +14,7 @@
     name: docker
     state: started
 
-- name: create docker container => vault_active
+- name: create docker container
   docker_container:
     name: mysql
     image: mariadb:10.4.10
@@ -24,7 +24,7 @@
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
-      TZ: "{{timezone}}"
+      TZ: "{{vault_timezone}}"
     log_driver: journald
     log_options:
       tag: mysql
@@ -34,7 +34,6 @@
     ports:
       - "127.0.0.1:3306:3306"  
   notify: "restart mysql"
-  when: "vault_active|bool"
 
 - name: create systemd service
   vars:

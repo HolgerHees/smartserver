@@ -76,14 +76,13 @@
 #semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.user.ini'
 #semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
 
-- name: copy config => vault_active
+- name: copy config
   template:
     src: "roles/nextcloud/templates/config.php"
     dest: "{{htdocs_path}}nextcloud/config/config.php"
     owner: "{{www_username}}"
     group: "{{www_group}}"
     mode: 0640
-  when: "vault_active|bool"
 
 - name: prepare data folder
   file:
@@ -136,48 +135,48 @@
   become_user: "{{www_username}}"
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
 
-- name: create missing mysql databases => vault_active and database does not exists
+- name: create missing mysql databases => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
   
 #- mysql_user:
-#    name: "{{nextcloud_mysql_username}}"
+#    name: "{{vault_nextcloud_mysql_username}}"
 #    host: "127.0.0.1"
-#    password: "{{nextcloud_mysql_password}}"
+#    password: "{{vault_nextcloud_mysql_password}}"
 #    priv: 'nextcloud.*:ALL,GRANT'
 #    state: present
 
-- name: create missing mysql user => vault_active and database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{nextcloud_mysql_password}}';\\\"\""
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+- name: create missing mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{vault_nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{vault_nextcloud_mysql_password}}';\\\"\""
+  when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: grant permissions to mysql user => vault_active and database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{nextcloud_mysql_username}}'@'%';\\\"\""
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+- name: grant permissions to mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{vault_nextcloud_mysql_username}}'@'%';\\\"\""
+  when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: refresh mysql privileges => vault_active and database does not exists
+- name: refresh mysql privileges => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: initialise mysql database => vault_active and database does not exists
+- name: initialise mysql database => database does not exists
   shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
   
-- name: check redis service => vault_active and database does not exists
+- name: check redis service => database does not exists
   import_tasks: roles/redis/tasks/wait_until_ready.yml
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
   
-- name: add user "holger" => vault_active and database does not exists
-  shell: "export OC_PASS={{holger_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{holger_username}}"
+- name: add user "holger" => database does not exists
+  shell: "export OC_PASS={{vault_user1_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{vault_user1_username}}"
   become: yes
   become_user: "{{www_username}}"
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: add user "sandra" => vault_active and database does not exists
-  shell: "export OC_PASS={{sandra_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{sandra_username}}"
+- name: add user "sandra" => database does not exists
+  shell: "export OC_PASS={{vault_user2_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{vault_user2_username}}"
   become: yes
   become_user: "{{www_username}}"
-  when: "vault_active|bool and 'nextcloud' not in mysql_data_exists.stdout"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****
 - name: copy apache config

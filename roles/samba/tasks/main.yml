@@ -12,7 +12,7 @@
   notify: "restart samba"
   when: is_suse|bool
   
-- name: copy config => vault_active
+- name: copy config
   template:
     src: roles/samba/templates/smb.conf
     dest: /etc/samba/smb.conf
@@ -20,4 +20,3 @@
     group: root
     mode: 0640
   notify: "restart samba"
-  when: "vault_active|bool"

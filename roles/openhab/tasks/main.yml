@@ -165,7 +165,7 @@
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/openhab.service" }
   notify: "restart openhab"
 
-- name: copy configs => vault_active
+- name: copy configs
   template:
     src: "roles/openhab/templates/conf/{{item}}"
     dest: "{{data_path}}openhab-runtime/conf/{{item}}"
@@ -191,7 +191,6 @@
     - services/runtime.cfg
     - services/s300th.cfg
   notify: "restart openhab"
-  when: "vault_active|bool"
 
 - name: link configs
   file:
@@ -222,62 +221,59 @@
 # *******************
 
 # ***** DATABASE ****
-- name: check mysql service => vault_active
+- name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
-  when: "vault_active|bool"
   
-- name: check mysql databases => vault_active
+- name: check mysql databases
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
   register: mysql_data_exists
   changed_when: "'openhab' not in mysql_data_exists.stdout"
-  when: "vault_active|bool"
 
-- name: create missing mysql databases => vault_active and database does not exists
+- name: create missing mysql databases => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create openhab\""
-  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+  when: "'openhab' not in mysql_data_exists.stdout"
 
-- name: create missing mysql user => vault_active and database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{openhab_mysql_username}}'@'%' IDENTIFIED BY '{{openhab_mysql_password}}';\\\"\""
-  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+- name: create missing mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{vault_openhab_mysql_username}}'@'%' IDENTIFIED BY '{{vault_openhab_mysql_password}}';\\\"\""
+  when: "'openhab' not in mysql_data_exists.stdout"
 
-- name: grant permissions to mysql user => vault_active and database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON openhab.* TO '{{openhab_mysql_username}}'@'%';\\\"\""
-  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+- name: grant permissions to mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON openhab.* TO '{{vault_openhab_mysql_username}}'@'%';\\\"\""
+  when: "'openhab' not in mysql_data_exists.stdout"
 
-- name: refresh mysql privileges => vault_active and database does not exists
+- name: refresh mysql privileges => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
-  when: "vault_active and 'openhab' not in mysql_data_exists.stdout"
+  when: "'openhab' not in mysql_data_exists.stdout"
   
-- name: check influxdb data => vault_active
+- name: check influxdb data
   stat:
     path: "{{ global_lib }}influxdb/data/openhab_db"
   register: influxdb_data_exists
   changed_when: not influxdb_data_exists.stat.exists
-  when: "vault_active|bool"
   
-- name: check influxdb service => vault_active and database does not exists
+- name: check influxdb service => database does not exists
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
-  when: "vault_active and not influxdb_data_exists.stat.exists"
+  when: "not influxdb_data_exists.stat.exists"
 
-- name: create missing influx databases => vault_active and database does not exists
+- name: create missing influx databases => database does not exists
   shell: "docker exec influxdb sh -c \"influx -execute 'CREATE DATABASE openhab_db'\""
-  when: "vault_active and not influxdb_data_exists.stat.exists"
+  when: "not influxdb_data_exists.stat.exists"
   
-- name: create missing influx openhab user => vault_active and database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{openhab_influxdb_username}} WITH PASSWORD '{{openhab_influxdb_password}}'\\\"\""
-  when: "vault_active and not influxdb_data_exists.stat.exists"
+- name: create missing influx openhab user => database does not exists
+  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{vault_openhab_influxdb_username}} WITH PASSWORD '{{vault_openhab_influxdb_password}}'\\\"\""
+  when: "not influxdb_data_exists.stat.exists"
   
-- name: grant permissions to influx openhab user => vault_active and database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT ALL ON openhab_db TO {{openhab_influxdb_username}}'\""
-  when: "vault_active and not influxdb_data_exists.stat.exists"
+- name: grant permissions to influx openhab user => database does not exists
+  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT ALL ON openhab_db TO {{vault_openhab_influxdb_username}}'\""
+  when: "not influxdb_data_exists.stat.exists"
 
-- name: create missing influx grafana user => vault_active and database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{grafana_influxdb_username}} WITH PASSWORD '{{grafana_influxdb_password}}'\\\"\""
-  when: "vault_active and not influxdb_data_exists.stat.exists"
+- name: create missing influx grafana user => database does not exists
+  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{vault_grafana_influxdb_username}} WITH PASSWORD '{{vault_grafana_influxdb_password}}'\\\"\""
+  when: "not influxdb_data_exists.stat.exists"
 
-- name: grant permissions to influx openhab user => vault_active and database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT READ ON openhab_db TO {{grafana_influxdb_username}}'\""
-  when: "vault_active and not influxdb_data_exists.stat.exists"
+- name: grant permissions to influx openhab user => database does not exists
+  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT READ ON openhab_db TO {{vault_grafana_influxdb_username}}'\""
+  when: "not influxdb_data_exists.stat.exists"
 
 # ***** OTHER *****
 - name: copy apache config

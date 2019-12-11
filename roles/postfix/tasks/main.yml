@@ -93,18 +93,17 @@
   notify: "restart postfix"
   when: is_suse|bool
 
-- name: set sasl_passwd => vault_active
+- name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
     regexp: '^\[smtp\.gmail\.com\]:587 '
-    line: '[smtp.gmail.com]:587 {{ root_mail_account }}:{{ root_mail_password }}'
+    line: '[smtp.gmail.com]:587 {{ vault_root_mail_account }}:{{ vault_root_mail_password }}'
     create: true # needed for fedora
     owner: root
     group: root
     mode: 0600
   register: password_changed
   notify: "restart postfix"
-  when: "vault_active|bool"
   
 - name: rebuild sasl_passwd.db => config or password changed
   shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; echo \"1\"; else echo \"0\"; fi"
@@ -118,18 +117,17 @@
   
 #mkfifo /var/spool/postfix/public/pickup
   
-- name: set aliases => vault_active
+- name: set aliases
   lineinfile:
     path: /etc/aliases
     regexp: '^{{item.name}}[\s:]{1}'
     line: '{{item.name}}: {{item.alias}}'
   with_items:
-    - { name: 'root', alias: '{{ admin_mail }}' }
-    - { name: 'postmaster', alias: '{{ admin_mail }}' }
-    - { name: 'default', alias: '{{ admin_mail }}' }
+    - { name: 'root', alias: '{{ vault_admin_mail }}' }
+    - { name: 'postmaster', alias: '{{ vault_admin_mail }}' }
+    - { name: 'default', alias: '{{ vault_admin_mail }}' }
   register: aliases_status
   notify: "restart postfix"
-  when: "vault_active|bool"
 
 - name: refresh aliases => aliases changed
   command: "/usr/bin/newaliases"
