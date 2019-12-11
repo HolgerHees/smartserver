@@ -2,7 +2,7 @@
 
 This project contains my complete automated IoT Server deployment setup.
 
-For a detailed overview check [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) or directly [the main deployment server.yml file](https://github.com/HolgerHees/smartserver/blob/master/server.yml)
+For a detailed overview check [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) or directly the main deployment [server.yml](https://github.com/HolgerHees/smartserver/blob/master/server.yml) file
 
 ## Requirements
 
