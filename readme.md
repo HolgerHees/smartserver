@@ -2,7 +2,7 @@
 
 This project contains my complete automated IoT Server deployment setup.
 
-It is installing and configuring the following services: a firewall, dns server, raid monitoring, docker infrastructure, ssh, openvpn, a mail server, nfs, samba, ftp, mysql, influxdb, elasticsearch, kibana, redis, mosquitto, unified logging infrastructure with fluentd, log notifier with elastalert, apache web server, phpmyadmin, nextcloud, openhab and a lot more. For a detailed overview check [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) or directly [the main deployment server.yml file](https://github.com/HolgerHees/smartserver/blob/master/server.yml)
+For a detailed overview check [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) or directly [the main deployment server.yml file](https://github.com/HolgerHees/smartserver/blob/master/server.yml)
 
 ## Requirements
 
