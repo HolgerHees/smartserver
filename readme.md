@@ -6,7 +6,9 @@ For a detailed overview check [http://www.intranet-of-things.com/smarthome/infra
 
 ## Requirements
 
-Install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). For an [opensuse](https://www.opensuse.org/) based virtual box container setup, run:
+Install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). The virtual machine needs at least 6GB of memory. On production I run it on a 4 core atom processor with 32GB memory, but 16GB should be fine too.
+
+For an [opensuse](https://www.opensuse.org/) based demo setup, run:
 
 ```bash
 vagrant --config=demo --os=suse up
