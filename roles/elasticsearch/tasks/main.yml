@@ -18,18 +18,13 @@
 - name: create docker container
   docker_container:
     name: elasticsearch
-#    image: amazon/opendistro-for-elasticsearch:1.2.1
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    image: amazon/opendistro-for-elasticsearch:1.2.1
+#    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
     state: present
 #    recreate: true
     env:
       discovery.type: "single-node"
-#      opendistro_security.disabled: "true"
-#       DISCOVERY_TYPE: "single-node"
-#       DISCOVERY_SEED_HOSTS: ""
-#       DISCOVERY_SEED_PROVIDERS: ""
-#       CLUSTER_INITIAL_MASTER_NODES[0]: "localhost"
-#      APPENDER_ROLLING_LAYOUT_TYPE: "ESJsonLayout"
+      opendistro_security.disabled: "true"
     log_driver: journald
     log_options:
       tag: elasticsearch

@@ -15,9 +15,62 @@
 	<script src="main/js/vm.widget.panel.js"></script>
 
 	<script type="text/javascript">
+        var subMenus = [];
+        var $menuPanel = false;
+        var isPhone = false;
+        var imageTitle = "";
+        var activeMenu = "";
+        
+        var refreshTimer = [];
+        
         var netdataTheme = 'default'; // this is white
         var netdataShowAlarms = true;
         var netdataNoBootstrap = true;
+
+        var lang = navigator.language || navigator.userLanguage;
+
+        var translations = null;
+
+        var ressourceCount = 2; //(i18n & background image)
+
+        function loadI18N()
+        {
+            var url = "";
+            if( lang.indexOf("de") === 0 ) url = "index.de.json";
+            if( url !== "" )
+            {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.onreadystatechange = function() {
+                    if (this.readyState != 4) return;
+
+                    if( this.status == 200 ) translations = JSON.parse(this.responseText);
+                    else alert("was not able to download '" + url + "'");
+                    initContent();
+                };
+                xhr.send();
+            }
+            else
+            {
+                initContent();
+            }
+        }
+
+        function getI18N(string)
+        {
+            if( translations )
+            {
+                if( typeof translations[string] !== "undefined" )
+                {
+                    return translations[string];
+                }
+                else
+                {
+                    console.error("translation key '" + string + "' not found" );
+                }
+            }
+            return string;
+        }
 
         function handleAlarms(data) 
         { 
@@ -60,7 +113,7 @@
             }
         }            
 
-        function initDashboards()
+        function initAlerting()
         {
             var script = document.createElement("script");
             var timer;
@@ -83,15 +136,8 @@
                 });
             }
             document.body.appendChild(script);
-            timer = window.setTimeout(function() { alert("netdata alert api not avaiable"); },5000)
+            timer = window.setTimeout(function() { alert( getI18N("Netdata alert api not avaiable") ); },5000)
         }    
-        
-        var $menuPanel = false;
-        var isPhone = false;
-        var imageTitle = "";
-        var activeMenu = "";
-        
-        var refreshTimer = [];
         
         function refreshCamera(container)
         {
@@ -128,7 +174,6 @@
         {
             var $images = $('.service.camera > div');
             $images.each(function(index,container){
-            console.log(container);
                 var infoTags = $('<span class="time"></span><span class="name"></span>');
                 $(container).append(infoTags);
                 refreshCamera(container);
@@ -202,12 +247,27 @@
             var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2);
             
             var prefix = '';
-            if(h >= 18) prefix = 'Good Evening';
-            else if(h >  12) prefix = 'Good Afternoon';
-            else prefix = 'Good Morning';
-            
-            name = 'Holger';
-            
+            if(h >= 18) prefix = getI18N('Good Evening');
+            else if(h >  12) prefix = getI18N('Good Afternoon');
+            else prefix = getI18N('Good Morning');
+
+<?php
+    $name = $_SERVER['PHP_AUTH_USER'];
+    $handle = fopen(".htdata", "r");
+    if ($handle) {
+        while (($line = fgets($handle)) !== false) {
+            list($_username,$_name) = explode(":", $line);
+            if( trim($_username) == $_SERVER['PHP_AUTH_USER'] )
+            {
+                $name = trim($_name);
+                break;
+            }
+        }
+    
+        fclose($handle);
+    }
+    echo "            var name = " . json_encode($name) . ";\n";
+?>            
             message = '<div class="service home">';
             message += '<div class="time">' + time + '</div>';
             message += '<div class="slogan">' + prefix + ', ' + name + '.</div>';
@@ -257,124 +317,148 @@
                 $("#content iframe").attr('src',url);
             }
         }
-        function init()
-        {
-            if( self==top )
-            {
-                function isPhoneListener(mql){
-                    isPhone=mql.matches;
-                    if( isPhone )
-                    {
-                        $('body').addClass('phone');
-                        $('body').removeClass('desktop');
-                    }
-                    else
-                    {
-                        $('body').removeClass('phone');
-                        $('body').addClass('desktop');
-                    }
-                }
-                var mql = window.matchMedia('(max-width: 600px)');
-                mql.addListener(isPhoneListener);
-                isPhoneListener(mql);
-                
-                $menuPanel = $('#menu');
-                $menuPanel.panel({
-                    defaults: true,
-                    display: isPhone ? "overlay" : "inline",
-                    dismissible: isPhone ? true : false,
-                    positionFixed: true,
-                    beforeopen: function() {
-                        $('.burger.button').addClass("open");
-                        $("#side").removeClass("fullsize");
-                    },
-                    beforeclose: function() {
-                        $('.burger.button').removeClass("open");
-                        $("#side").addClass("fullsize");
-                    }
-                });
-                $('.burger.button').click(function() {
-                    $menuPanel.panel("toggle");
-                });
-                $('#logo').click(function() {
-                    openHome();
-                });
-                
-                if( !isPhone )
-                {
-                    var menuMql = window.matchMedia('(min-width: 800px)');
-                    function checkMenu()
-                    {
-                        $menuPanel.panel( menuMql.matches ? "open" : "close" );
-                    }
-                    menuMql.addListener(checkMenu);
-                    checkMenu();
-                }
-                
-                var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
-                var src = "/img/potd/today" + ( isPhone ? "Portrait" : "Landscape") + ".jpg?" + id;
-                var img = new Image();
-                img.onload = function()
-                {
-                    $("body").removeClass("nobackground" );
-                    $("#background").css("background-image", "url(" + src + ")" );
-                    $("#background").css("opacity", "1.0" );
-                    
-                    //openMenu($('#defaultEntry'),"nextcloud");
-                    var xhr = new XMLHttpRequest();
-					xhr.open("GET", "/img/potd/todayTitle.txt?" + id);
-					xhr.onload = function() 
-					{  
-                        imageTitle = this.response;
-                        if( !activeMenu ) openHome();
-					}
-					xhr.send();
-                };
-                img.onerror = function()
-                {
-                    $("#background").css("opacity", "1.0" );
-                    $("body").addClass("nobackground" );
-                    openHome();
-                };
-                img.src = src;
-            }
 
-            initDashboards();
+        function initMenus()
+        {
+            subMenus['nextcloud'] = [
+                ['url','/nextcloud/',getI18N('Documents'),'',false],
+                ['url','/nextcloud/index.php/apps/news/',getI18N('News'),'',false],
+                ['url','/nextcloud/index.php/apps/keeweb/',getI18N('Keys'),getI18N('Keeweb'),true]
+            ];
+            subMenus['openhab'] = [
+                ['url','/basicui/app',getI18N('Control'),getI18N('Basic UI'),false],
+                ['url','/paperui/index.html',getI18N('Administration'),getI18N('Paper UI'),false],
+                ['url','/habpanel/index.html',getI18N('Tablet UI'),getI18N('HabPanel'),false],
+                ['url','/habot',getI18N('Chatbot'),getI18N('Habot'),false]
+            ];
+            subMenus['roboter'] = [
+                ['url','/automowerDevice/',getI18N('Automower'),getI18N('Robonect'),false]
+            ];
+            subMenus['camera'] = [
+                ['html','initCamera','<div class="strasse"><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="'+getI18N('Street')+'" data-src="/cameraStrasseImage" data-interval="3000"></a></div><div class="automower"><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png"  data-name="'+getI18N('Automower')+'" data-src="/cameraAutomowerImage" data-interval="10000"></a></div>']
+            ];
+            subMenus['tools'] = [
+                ['url','/grafana/d/server-health/server-health',getI18N('Charts'),getI18N('Grafana'),false],
+                ['url','/kibana/app/kibana#/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175',getI18N('Analytics'),getI18N('Kibana'),false],
+//                ['url','/kibana/app/kibana#/dashboard/02e01270-1b34-11ea-9292-eb71d66d1d45',getI18N('Analytics'),getI18N('Kibana'),false],
+                ['url','/netdata/',getI18N('State'),getI18N('Netdata'),false]
+            ];
+            subMenus['admin'] = [
+                ['url','/mysql/',getI18N('MySQL'),getI18N('phpMyAdmin'),false],
+                ['url','/tools/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
+            ];
+            subMenus['devices'] = [
+                ['url','/redirectToPvInverterGarage', getI18N('Inverter'),getI18N('Solar (Extern)'),true],
+                ['url','/redirectToPrinterLaserJet', getI18N('Laserprinter'),getI18N('HPLaserJet'),true],
+                ['url','/redirectToFritzBox', getI18N('Router'),getI18N('FritzBox'),true]
+            ];
         }
-        $(document).ready( init );
-        
-        var subMenus = [];
-        subMenus['nextcloud'] = [
-          ['url','/nextcloud/','Dokumente','',false],
-          ['url','/nextcloud/index.php/apps/news/','News','',false],
-          ['url','/nextcloud/index.php/apps/keeweb/','Keys','Keeweb',true]
-        ];
-        subMenus['openhab'] = [
-          ['url','/basicui/app','Control','Basic UI',false],
-          ['url','/paperui/index.html','Administration','Paper UI',false],
-          ['url','/habpanel/index.html','Tablet UI','HabPanel',false],
-          ['url','/habot','Chatbot','Habot',false]
-        ];
-        subMenus['roboter'] = [
-          ['url','/automowerDevice/','Automower','Robonect',false]
-        ];
-        subMenus['camera'] = [
-          ['html','initCamera','<div class="strasse"><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="Strasse" data-src="/cameraStrasseImage" data-interval="3000"></a></div><div class="automower"><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png"  data-name="Automower" data-src="/cameraAutomowerImage" data-interval="10000"></a></div>']
-        ];
-        subMenus['tools'] = [
-          ['url','/grafana/d/server-health/server-health','Charts','Grafana',false],
-          ['url','/kibana/app/kibana#/dashboard/02e01270-1b34-11ea-9292-eb71d66d1d45','Analytics','Kibana',false],
-          ['url','/netdata/','Status','Netdata',false]
-        ];
-        subMenus['admin'] = [
-          ['url','/mysql/','MySQL','phpMyAdmin',false],
-          ['url','/tools/weatherDetailOverview/', 'Wetterbericht','Meteo Group',false]
-        ];
-        subMenus['devices'] = [
-          ['url','/redirectToPvInverterGarage', 'Wechselrichter','Solar (Extern)',true],
-          ['url','/redirectToPrinterLaserJet', 'Lasterdrucker','HPLaserJet',true],
-          ['url','/redirectToFritzBox', 'Router','FritzBox',true]
-        ];
+
+        function initContent()
+        {
+            ressourceCount--;
+            if( ressourceCount > 0 ) return;
+
+            var elements = document.querySelectorAll("*[data-i18n]");
+            elements.forEach(function(element)
+            {
+                var key = element.getAttribute("data-i18n");
+                element.innerHTML = getI18N(key);
+            });
+
+            initMenus();
+
+            $('#logo').click(function() {
+                openHome();
+            });
+
+            if( !activeMenu ) openHome();
+        }
+
+        function initPage()
+        {
+            function isPhoneListener(mql){
+                isPhone=mql.matches;
+                if( isPhone )
+                {
+                    $('body').addClass('phone');
+                    $('body').removeClass('desktop');
+                }
+                else
+                {
+                    $('body').removeClass('phone');
+                    $('body').addClass('desktop');
+                }
+            }
+            var mql = window.matchMedia('(max-width: 600px)');
+            mql.addListener(isPhoneListener);
+            isPhoneListener(mql);
+            
+            $menuPanel = $('#menu');
+            $menuPanel.panel({
+                defaults: true,
+                display: isPhone ? "overlay" : "inline",
+                dismissible: isPhone ? true : false,
+                positionFixed: true,
+                beforeopen: function() {
+                    $('.burger.button').addClass("open");
+                    $("#side").removeClass("fullsize");
+                },
+                beforeclose: function() {
+                    $('.burger.button').removeClass("open");
+                    $("#side").addClass("fullsize");
+                }
+            });
+            $('.burger.button').click(function() {
+                $menuPanel.panel("toggle");
+            });
+            
+            if( !isPhone )
+            {
+                var menuMql = window.matchMedia('(min-width: 800px)');
+                function checkMenu()
+                {
+                    $menuPanel.panel( menuMql.matches ? "open" : "close" );
+                }
+                menuMql.addListener(checkMenu);
+                checkMenu();
+            }
+            
+            var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
+            var src = "/img/potd/today" + ( isPhone ? "Portrait" : "Landscape") + ".jpg?" + id;
+            var img = new Image();
+            img.onload = function()
+            {
+                $("body").removeClass("nobackground" );
+                $("#background").css("background-image", "url(" + src + ")" );
+                $("#background").css("opacity", "1.0" );
+                
+                //openMenu($('#defaultEntry'),"nextcloud");
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/img/potd/todayTitle.txt?" + id);
+                xhr.onreadystatechange = function() {
+                    if (this.readyState != 4) return;
+                    
+                    if( this.status == 200 ) imageTitle = this.response;
+                    else alert("was not able to download '/img/potd/todayTitle.txt?'");
+                    initContent();
+                };
+                xhr.send();
+            };
+            img.onerror = function()
+            {
+                $("#background").css("opacity", "1.0" );
+                $("body").addClass("nobackground" );
+                initContent();
+            };
+            img.src = src;
+
+            initAlerting();
+        }
+
+        loadI18N();
+        $(document).ready(initPage);
+
 	</script>
 </head>
 <body>
@@ -391,20 +475,20 @@
             </div>
         </div>
         <div class="group flexInfo autoWidth">
-            <div class="header">NextCloud</div>
-            <div class="service button" id="defaultEntry" onClick="openMenu(this,'nextcloud')"><div>Nextcloud</div><div></div></div>
+            <div class="header" data-i18n="NextCloud"></div>
+            <div class="service button" id="defaultEntry" onClick="openMenu(this,'nextcloud')"><div data-i18n="NextCloud"></div><div></div></div>
         </div>
         <div class="group">
-            <div class="header">Automation</div>
-            <div class="service button" onClick="openMenu(this,'openhab')"><div>Openhab</div><div></div></div>
-            <div class="service button" onClick="openMenu(this,'roboter')"><div>Roboter</div><div></div></div>
-            <div class="service button" onClick="openMenu(this,'camera')"><div>Kameras</div><div></div></div>
+            <div class="header" data-i18n="Automation"></div>
+            <div class="service button" onClick="openMenu(this,'openhab')"><div data-i18n="Openhab"></div><div></div></div>
+            <div class="service button" onClick="openMenu(this,'roboter')"><div data-i18n="Roboter"></div><div></div></div>
+            <div class="service button" onClick="openMenu(this,'camera')"><div data-i18n="Cameras"></div><div></div></div>
         </div>
         <div class="group flexInfo">
-            <div class="header">Administration</div>
-            <div class="service button" onClick="openMenu(this,'tools')"><div>Logs &amp; Status</div><div></div></div>
-            <div class="service button" onClick="openMenu(this,'admin')"><div>Tools</div><div></div></div>
-            <div class="service button" onClick="openMenu(this,'devices')"><div>Geräte</div><div></div></div>
+            <div class="header" data-i18n="Administration"></div>
+            <div class="service button" onClick="openMenu(this,'tools')"><div data-i18n="Logs &amp; States"></div><div></div></div>
+            <div class="service button" onClick="openMenu(this,'admin')"><div data-i18n="Tools"></div><div></div></div>
+            <div class="service button" onClick="openMenu(this,'devices')"><div data-i18n="Devices"></div><div></div></div>
         </div>
     </div>
     <div id="side" data-role="page" class="fullsize">

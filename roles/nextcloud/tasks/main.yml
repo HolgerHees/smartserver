@@ -166,16 +166,11 @@
   import_tasks: roles/redis/tasks/wait_until_ready.yml
   when: "'nextcloud' not in mysql_data_exists.stdout"
   
-- name: add user "holger" => database does not exists
-  shell: "export OC_PASS={{vault_user1_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{vault_user1_username}}"
+- name: add user => database does not exists
+  shell: "export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{item}}"
   become: yes
   become_user: "{{www_username}}"
-  when: "'nextcloud' not in mysql_data_exists.stdout"
-
-- name: add user "sandra" => database does not exists
-  shell: "export OC_PASS={{vault_user2_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{vault_user2_username}}"
-  become: yes
-  become_user: "{{www_username}}"
+  with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****

@@ -17,7 +17,7 @@
 - name: mount cloud data folder => is_production
   mount:
     name: "{{cloud_backup_target_path}}"
-    src: "{{cloud_net2_server_ip}}:/data/backup/{{vault_user1_username}}"
+    src: "{{cloud_net2_server_ip}}:{{cloud_backup_remote_path}}"
     fstype: nfs
     opts: "rw,noauto,rsize=8192,wsize=8192"
     state: mounted

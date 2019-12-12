@@ -295,6 +295,15 @@
     group: "{{www_group}}"
     mode: 0640
 
+- name: prepare .htdata file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htdata"
+    force: no
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0640
+
 - name: set logrotate job
   vars:
     logrotate_path: "{{global_log}}apache2/*.log"

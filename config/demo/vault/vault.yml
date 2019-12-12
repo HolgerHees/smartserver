@@ -5,28 +5,25 @@ vault_admin_mail: "test@test.com"
 vault_root_mail_account: "test@test.com"
 vault_root_mail_password: "default123"
 
-vault_user1_username: "holger"
-vault_user1_samba_password: "default123"
-vault_user1_web_password: "default123"
-
-vault_user2_username: "sandra"
-vault_user2_samba_password: "default123"
-vault_user2_web_password: "default123"
-
-vault_user3_username: "philipp"
+vault_usernames: [ 
+    "testuser",
+    "testuser2"
+]
+vault_userdata: {
+    testuser: { name: "Test User 1", samba_password: "test", web_password: "test" },
+    testuser2: { name: "Test User 2", samba_password: "test", web_password: "test" }
+}
 
 vault_camera_username: "camera"
 vault_camera_linux_password: "default123"
-_camera_device_username: "admin"
-_camera_device_password: "default123"
-vault_camera_basic_auth: "{{ (_camera_device_username + ':' + _camera_device_password) | b64encode }}"
+vault_camera_device_username: "admin"
+vault_camera_device_password: "default123"
 
 vault_admin_username: "admin"
 vault_admin_web_password: "default123"
 
 vault_automower_device_username: "automower"
 vault_automower_device_password: "default123"
-vault_automower_basic_auth: "{{ (vault_automower_device_username + ':' + vault_automower_device_password) | b64encode }}"
 
 vault_roomba_password: "default123"
 vault_roomba_blid: "<blid>"
@@ -54,9 +51,8 @@ vault_openhab_fritzbox_password: "default123"
 
 vault_grafana_influxdb_username: "grafana"
 vault_grafana_influxdb_password: "default123"
-_grafana_app_username: "admin"
-_grafana_app_password: "admin"
-vault_grafana_basic_auth: "{{ (_grafana_app_username + ':' + _grafana_app_password) | b64encode }}"
+vault_grafana_app_username: "admin"
+vault_grafana_app_password: "admin"
 
 vault_server_alexa_domain: "public.{{server_domain}}"
 vault_server_alexa_port: "22432"
@@ -75,6 +71,8 @@ vault_alexa_device_id6: "<alexa_device_id6>"
 vault_alexa_device_id7: "<alexa_device_id7>"
 
 vault_server_vpn_domain: "public.{{server_domain}}"
+vault_server_cloud_username: "clouduser"
+vault_server_cloud_backup_remote_path: "/data/backup/{{server_domain}}"
 vault_server_vpn_port_cloud: "1194"
 vault_server_vpn_port_cloud_forwarded: "3421"
 vault_server_vpn_port_mobile: "1195"

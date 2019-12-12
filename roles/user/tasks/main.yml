@@ -1,95 +1,66 @@
-# **** HHEES (SSH, SMB, WEB) ****
-- name: add user "{{vault_user1_username}}" with no login
+# **** (SSH, SMB, WEB) ****
+- name: add user with no login
   user:
-    name: "{{vault_user1_username}}"
+    name: "{{item}}"
 #    uid: 1001
     shell: /bin/false
-    home: "/home/{{vault_user1_username}}/"
-    #password: "{{ holger_linux_password | password_hash('sha512') }}"
+    home: "/home/{{item}}/"
+    #password: "{{ item.password | password_hash('sha512') }}"
     #update_password: on_create
     groups: users
     append: no
-
-- name: prepare user "{{vault_user1_username}}" folder
+  with_items: "{{vault_usernames}}"
+  
+- name: prepare user folder
   file:
-    path: "/home/{{vault_user1_username}}/"
+    path: "/home/{{item}}/"
     state: directory
-    owner: "{{vault_user1_username}}"
+    owner: "{{item}}"
     group: users
     mode: 0750
-  
-- name: add user "{{vault_user1_username}}" to samba
-  shell: "( (pdbedit -L | grep {{vault_user1_username}}) && echo 'skipped' ) || ( ( printf '{{ vault_user1_samba_password }}\n{{ vault_user1_samba_password }}\n' | smbpasswd -a {{vault_user1_username}} ) && echo 'created' )"
-  register: command_result
-  #failed_when: "'command-not-found' in command_result.stderr"
-  changed_when: "'created' in command_result.stdout"
-  notify: "restart samba"
-
-- name: add htpasswd user "{{vault_user1_username}}" to apache
-  htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
-    name: "{{vault_user1_username}}"
-    password: "{{vault_user1_web_password}}"
-
-- name: add htdigest user "{{vault_user1_username}}" to apache
-  vars:
-    username: "{{vault_user1_username}}"
-    password: "{{vault_user1_web_password}}"
-    realm: "{{server_name|capitalize}}"
-  lineinfile:
-    path: "{{htdocs_path}}.htdigest"
-    regexp: '^{{vault_user1_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
-  
-# **** SANDRA (SSH, SMB, WEB) ****
-- name: add user "{{vault_user2_username}}" with no login
-  user:
-    name: "{{vault_user2_username}}"
-#    uid: 1006
-    shell: /bin/false
-    home: "/home/{{vault_user2_username}}/"
-    groups: users
-    append: no
-
-- name: prepare user "{{vault_user2_username}}" folder
-  file:
-    path: "/home/{{vault_user2_username}}/"
-    state: directory
-    owner: "{{vault_user2_username}}"
-    group: users
-    mode: 0750
-
-- name: add user "{{vault_user2_username}}" to samba
-  shell: "( (pdbedit -L | grep {{vault_user2_username}}) && echo 'skipped' ) || ( ( printf '{{ vault_user2_samba_password }}\n{{ vault_user2_samba_password }}\n' | smbpasswd -a {{vault_user2_username}} ) && echo 'created' )"
-  register: command_result
-  #failed_when: "'command-not-found' in command_result.stderr"
-  changed_when: "'created' in command_result.stdout"
-  notify: "restart samba"
-
-- name: add htpasswd user "{{vault_user2_username}}" to apache
-  htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
-    name: "{{vault_user2_username}}"
-    password: "{{vault_user2_web_password}}"
-
-- name: add htdigest user "{{vault_user2_username}}" to apache
-  vars:
-    username: "{{vault_user2_username}}"
-    password: "{{vault_user2_web_password}}"
-    realm: "{{server_name|capitalize}}"
-  lineinfile:
-    path: "{{htdocs_path}}.htdigest"
-    regexp: '^{{vault_user2_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
+  with_items: "{{vault_usernames}}"
     
+- name: add user to samba
+  shell: "( (pdbedit -L | grep {{item}}) && echo 'skipped' ) || ( ( printf '{{ vault_userdata[item].samba_password }}\n{{ vault_userdata[item].samba_password }}\n' | smbpasswd -a {{item}} ) && echo 'created' )"
+  register: command_result
+  #failed_when: "'command-not-found' in command_result.stderr"
+  changed_when: "'created' in command_result.stdout"
+  with_items: "{{vault_usernames}}"
+  notify: "restart samba"
+
+- name: add user to apache .htpasswd
+  htpasswd:
+    path: "{{htdocs_path}}.htpasswd"
+    name: "{{item}}"
+    password: "{{vault_userdata[item].web_password}}"
+  with_items: "{{vault_usernames}}"
+
+- name: add user to apache .htdigest
+  vars:
+    username: "{{item}}"
+    password: "{{vault_userdata[item].web_password}}"
+    realm: "{{server_name|capitalize}}"
+  lineinfile:
+    path: "{{htdocs_path}}.htdigest"
+    regexp: '^{{item}}:{{server_name}}'
+    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
+  with_items: "{{vault_usernames}}"
+
+- name: add user name to .htdata
+  lineinfile:
+    path: "{{htdocs_path}}.htdata"
+    regexp: '^{{item}}: {{vault_userdata[item].name}}'
+    line: '{{item}}: {{vault_userdata[item].name}}'
+  with_items: "{{vault_usernames}}"
+   
 # **** APACHE USERS (WEB) ****
-- name: add htpasswd user "{{vault_admin_username}}" to apache
+- name: add user "{{vault_admin_username}}" to apache .htpasswd
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{vault_admin_username}}"
     password: "{{vault_admin_web_password}}"
   
-- name: add htdigest user "{{vault_admin_username}}" to apache
+- name: add user "{{vault_admin_username}}" to apache .htdigest
   vars:
     username: "{{vault_admin_username}}"
     password: "{{vault_admin_web_password}}"
@@ -99,13 +70,13 @@
     regexp: '^{{vault_admin_username}}:{{server_name}}'
     line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
 
-- name: add htpasswd user "{{vault_alexa_username}}" to apache
+- name: add user "{{vault_alexa_username}}" to apache .htpasswd
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{vault_alexa_username}}"
     password: "{{vault_alexa_web_password}}"
 
-- name: add htdigest user "{{vault_alexa_username}}" to apache
+- name: add user "{{vault_alexa_username}}" to apache .htdigest
   vars:
     username: "{{vault_alexa_username}}"
     password: "{{vault_alexa_web_password}}"
@@ -114,11 +85,31 @@
     path: "{{htdocs_path}}.htdigest"
     regexp: '^{{vault_alexa_username}}:{{server_name}}'
     line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
-  
-- name: add apache user to groups
+ 
+- name: check if 'USER' group exists in apache
+  shell: "grep \"^USER\" {{htdocs_path}}.htgroups"
+  register: user_check
+  changed_when: user_check.stdout == ""
+  failed_when: no
+    
+- name: add 'USER' group to apache
   lineinfile:
     path: "{{htdocs_path}}.htgroups"
-    regexp: '^{{item.group}}[\s:]{1}'
-    line: '{{item.group}}: {{item.user}}'
-  with_items:
-    - { group: 'USER', user: '{{vault_user1_username}} {{vault_user2_username}} {{vault_admin_username}}' }
+    regexp: '^USER[\s:]{1}.*'
+    line: 'USER:'
+  when: user_check.stdout == ""
+
+- name: add admin to apache groups
+  lineinfile:
+    path: "{{htdocs_path}}.htgroups"
+    backrefs: yes
+    regexp: '^(USER:(?!.*{{vault_admin_username}}).*)'
+    line: '\1 {{vault_admin_username}}'
+
+- name: add user to apache groups
+  lineinfile:
+    path: "{{htdocs_path}}.htgroups"
+    backrefs: yes
+    regexp: '^(USER:(?!.*{{item}}).*)'
+    line: '\1 {{item}}'
+  with_items: "{{vault_usernames}}"

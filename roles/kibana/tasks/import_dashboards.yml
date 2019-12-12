@@ -6,7 +6,8 @@
 
 - name: check if kibana indices exists
   uri:
-    url: "http://localhost:5601/kibana/api/saved_objects/dashboard/02e01270-1b34-11ea-9292-eb71d66d1d45"
+    url: "http://localhost:5601/kibana/api/saved_objects/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175"
+#    url: "http://localhost:5601/kibana/api/saved_objects/dashboard/02e01270-1b34-11ea-9292-eb71d66d1d45"
   register: result
   changed_when: "result.status != 200"
   failed_when: "result.status != 200 and result.status != 404"

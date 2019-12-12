@@ -22,7 +22,8 @@
     - main/img
     - main/js
     - favicon.ico
-    - index.html
+    - index.de.json
+    - index.php
     - info.php
     - resize.php
 

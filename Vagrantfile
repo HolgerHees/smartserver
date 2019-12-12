@@ -59,6 +59,7 @@ end
 
 $env_ip = ""
 $with_password = setup_config != 'demo'
+$is_reboot_possible = false
 
 Vagrant.configure(2) do |config|
     
@@ -86,6 +87,7 @@ Vagrant.configure(2) do |config|
     end
     
     if setup_os == 'fedora' then
+        $is_reboot_possible = true
         setup.vm.provision "ansible_local" do |ansible|
             ansible.limit = "all"
             ansible.playbook = "utils/fedora.yml"
@@ -96,7 +98,7 @@ Vagrant.configure(2) do |config|
             ansible.become_user = "root"
             #ansible.raw_arguments = "--ask-vault-pass"
             #ansible.ask_vault_pass = true
-        end  
+        end
     end  
 
     # Ask for vault password
@@ -145,16 +147,21 @@ class Environment
     require 'net/ssh'
     
     def to_s        
-        print "check server reachability "
-        
-        begin
-            #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
-            #session.close
-            Socket.tcp($env_ip, 22, connect_timeout: 1) {}
-            print " ok\n"
-        rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-            print "." # + e.message
-            retry
+
+        if $is_reboot_possible then
+            sleep(0.5) # give server time to initiate reboot
+
+            print "check server reachability "
+            
+            begin
+                #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
+                #session.close
+                Socket.tcp($env_ip, 22, connect_timeout: 1) {}
+                print " ok\n"
+            rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+                print "." # + e.message
+                retry
+            end
         end
 
         pass = ""
