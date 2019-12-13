@@ -9,32 +9,64 @@
     <link href="main/manifest.json" rel="manifest">
     <link href="main/css/main.css" rel="stylesheet"> 
     <link href="main/css/panel.css" rel="stylesheet"> 
-	<script src="main/js/jquery-3.3.1.js"></script>
-	<script src="main/js/vm.touch.js"></script>
-	<script src="main/js/vm.widget.js"></script>
-	<script src="main/js/vm.widget.panel.js"></script>
 
-	<script type="text/javascript">
+    <script type="text/javascript">var mx = {};</script>
+	<script src="main/js/core.js"></script>
+	<script src="main/js/swipe.js"></script>
+	<script src="main/js/panel.js"></script>
+
+    <script type="text/javascript">
+        var alarmIsWorking = true;
         var subMenus = [];
-        var $menuPanel = false;
+        var menuPanel = false;
         var isPhone = false;
         var imageTitle = "";
+        var imageUrl = "";
         var activeMenu = "";
         
         var refreshTimer = [];
         
-        var netdataTheme = 'default'; // this is white
-        var netdataShowAlarms = true;
-        var netdataNoBootstrap = true;
-
-        var lang = navigator.language || navigator.userLanguage;
-
         var translations = null;
 
-        var ressourceCount = 2; //(i18n & background image)
+        var readynessCount = 4; //(i18n, background image, background image title & initPage (documentready) )
+
+        function loadBackgroundImage()
+        {
+            var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
+            var src = "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg?" + id;
+            var img = new Image();
+            img.onload = function()
+            {
+                imageUrl = src;
+                initContent();
+            };
+            img.onerror = function()
+            {
+                initContent();
+            };
+            img.src = src;
+        }
+
+        function loadImageTitle()
+        {
+            var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
+            //openMenu(mx.$('#defaultEntry'),"nextcloud");
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/img/potd/todayTitle.txt?" + id);
+            xhr.onreadystatechange = function() {
+                if (this.readyState != 4) return;
+                
+                if( this.status == 200 ) imageTitle = this.response;
+                else alert("was not able to download '/img/potd/todayTitle.txt?'");
+                initContent();
+            };
+            xhr.send();
+        }
 
         function loadI18N()
         {
+            var lang = navigator.language || navigator.userLanguage;
+
             var url = "";
             if( lang.indexOf("de") === 0 ) url = "index.de.json";
             if( url !== "" )
@@ -92,58 +124,65 @@
                 }
             }
         
-            $('.alarm.button .badge').text( warnCount + errorCount );
+            mx.$$('.alarm.button .badge').forEach(function(element){ element.innerText = warnCount + errorCount });
 
-            var $badgeButton = $('.alarm.button');
+            var badgeButtons = mx.$$('.alarm.button');
             if( warnCount > 0 )
             {
-                $badgeButton.addClass("warn");
+                badgeButtons.forEach(function(element){ element.classList.add("warn") });
             }
             else
             {
-                $badgeButton.removeClass("warn");
+                badgeButtons.forEach(function(element){ element.classList.remove("warn") });
             }
             if( errorCount > 0 )
             {
-                $badgeButton.addClass("error");
+                badgeButtons.forEach(function(element){ element.classList.add("error") });
             }
             else
             {
-                $badgeButton.removeClass("error");
+                badgeButtons.forEach(function(element){ element.classList.remove("error") });
             }
         }            
-
-        function initAlerting()
+       
+        function loadAlerts()
         {
-            var script = document.createElement("script");
-            var timer;
-            script.setAttribute("type","text/javascript");
-            script.setAttribute("src","/netdata/dashboard.js?v20170724-7");
-            script.onload = function()
-            {
-                window.clearTimeout(timer);
-                NETDATA.options.current.destroy_on_hide = false;
-                NETDATA.options.current.eliminate_zero_dimensions = true;
-                NETDATA.options.current.concurrent_refreshes = false;
-                NETDATA.options.current.parallel_refresher = true;
-                NETDATA.options.current.stop_updates_when_focus_is_lost = true;
-                NETDATA.alarms.server = "/netdata/";
-                NETDATA.alarms.callback = handleAlarms;
+            var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/netdata/api/v1/alarms?active&_=" + id);
+            xhr.onreadystatechange = function() {
+                if (this.readyState != 4) return;
                 
-                $('.alarm.button').click(function()
+                if( this.status == 200 )
                 {
-                    openUrl(null,null,"/netdata/",false);
-                });
-            }
-            document.body.appendChild(script);
-            timer = window.setTimeout(function() { alert( getI18N("Netdata alert api not avaiable") ); },5000)
-        }    
-        
+                    alarmIsWorking = true;
+                    handleAlarms( JSON.parse(this.response) );
+                    window.setTimeout(loadAlerts,5000);
+                }
+                else if( alarmIsWorking )
+                {
+                    alarmIsWorking = false;
+                    alert( getI18N("Netdata alert api not avaiable") );
+                }
+            };
+            xhr.send();
+        }
+
+        function initAlerts()
+        {
+            mx.$('.alarm.button').addEventListener("click",function()
+            {
+                openUrl(null,null,"/netdata/",false);
+            });
+            loadAlerts();
+        }
+
         function refreshCamera(container)
         {
-            var $image = $(container).find('img');
-            var $timeSpan = $(container).find('span.time');
-            var $nameSpan = $(container).find('span.name');
+            var image = container.querySelector('img');
+            var timeSpan = container.querySelector('span.time');
+            var nameSpan = container.querySelector('span.name');
             
             var datetime = new Date();
             var h = datetime.getHours();
@@ -151,35 +190,76 @@
             var s = datetime.getSeconds();
 
             var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2) + ':' + ("0" + s).slice(-2);
-            $timeSpan.text(time);
-            $nameSpan.text($image.attr('data-name'));
+            timeSpan.innerText = time;
+            nameSpan.innerText = image.getAttribute('data-name');
             
             var img = new Image();
             var id = Date.now();
-            let src = $image.attr('data-src') + '?' + id;
+            let src = image.getAttribute('data-src') + '?' + id;
             img.onload = function()
             {
-                $image.attr('src',src);
+                image.setAttribute('src',src);
             };
             img.onerror = function()
             {
-                $image.attr('src',src);
+                image.setAttribute('src',src);
             };
             img.src = src;
             
-            refreshTimer.push( window.setTimeout(function(){refreshCamera(container)},$image.attr('data-interval')) );
+            refreshTimer.push( window.setTimeout(function(){refreshCamera(container)},image.getAttribute('data-interval')) );
         }
         
         function initCamera()
         {
-            var $images = $('.service.camera > div');
-            $images.each(function(index,container){
-                var infoTags = $('<span class="time"></span><span class="name"></span>');
-                $(container).append(infoTags);
+            var containers = mx.$$('.service.camera > div');
+            containers.forEach(function(container){
+
+                var timeSpan = document.createElement("span");
+                timeSpan.classList.add("time");
+
+                var nameSpan = document.createElement("span");
+                nameSpan.classList.add("name");
+
+                container.appendChild(timeSpan);
+                container.appendChild(nameSpan);
+
                 refreshCamera(container);
             });
         }
         
+        function cleanMenu()
+        {
+            mx.$$(".service.active").forEach(function(element){ element.classList.remove("active") });
+            mx.$("#content iframe").style.display = "none";
+            mx.$("#content iframe").setAttribute('src',"about:blank");
+            mx.$("#content #inline").style.display = "";
+        }
+
+        function setMenu(data,postInit)
+        {
+            var submenu = mx.$('#content #submenu');
+            submenu.style.transition = "opacity 50ms linear";
+            window.setTimeout( function()
+            {
+                mx.Core.waitForTransitionEnd(submenu,function()
+                {
+                    submenu.innerHTML = data;
+                    submenu.style.transition = "opacity 200ms linear";
+                    window.setTimeout( function()
+                    {
+                        mx.Core.waitForTransitionEnd(submenu,function()
+                        {
+                            if( postInit ) postInit();
+                        },"setSubMenu2");
+                        submenu.style.opacity = "";
+                    },0);
+                },"setSubMenu1");
+                submenu.style.opacity = "0";
+            },100);
+
+            if( isPhone ) menuPanel.close();
+        }        
+
         function openMenu(element,key)
         {
             if( activeMenu == key )
@@ -225,7 +305,7 @@
             
             setMenu(entries.join(""),postInit);
             
-            if( element != null ) $(element).addClass("active");
+            if( element != null ) element.classList.add("active");
         }
              
         function openHome()
@@ -275,31 +355,11 @@
             message += '</div>';
             
             if( !isAlreadyActive ) setMenu(message,null);
-            else $('#content #submenu').html( message );
+            else mx.$('#content #submenu').innerHTML = message;
             
-            refreshTimer.push( window.setTimeout(function(){openHome()},60000 - (s * 1000)) );
+            refreshTimer.push( window.setTimeout(openHome,60000 - (s * 1000)) );
         }
-        
-        function setMenu(data,postInit)
-        {
-            $('#content #submenu').fadeOut(50, "linear", function() { 
-                $('#content #submenu').html( data );
-                $('#content #submenu').fadeIn(200);
-                if( postInit ) postInit();
-            } );
-
-            if( isPhone ) $menuPanel.panel("close");
-        }
-        
-        function cleanMenu()
-        {
-            $(".service.active").removeClass("active");
-        
-            $("#content iframe").hide();
-            $("#content iframe").attr('src',"about:blank");
-            $("#content #inline").show();
-        }
-       
+              
         function openUrl(event,element,url,newWindow)
         {
             activeMenu = "";
@@ -311,10 +371,10 @@
             }
             else
             {
-                $(".service.active").removeClass("active");
-                $("#content #inline").hide();
-                $("#content iframe").show();
-                $("#content iframe").attr('src',url);
+                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active") });
+                mx.$("#content #inline").style.display = "none";
+                mx.$("#content iframe").style.display = "";
+                mx.$("#content iframe").setAttribute('src',url);
             }
         }
 
@@ -356,8 +416,19 @@
 
         function initContent()
         {
-            ressourceCount--;
-            if( ressourceCount > 0 ) return;
+            readynessCount--;
+            if( readynessCount > 0 ) return;
+
+            if( imageUrl !== "" )
+            {
+                mx.$("body").classList.remove("nobackground" );
+                mx.$("#background").style.backgroundImage = "url(" + imageUrl + ")";
+            }
+            else
+            {
+                mx.$("body").classList.remove("nobackground" );
+            }
+            mx.$("#background").style.opacity = "1";
 
             var elements = document.querySelectorAll("*[data-i18n]");
             elements.forEach(function(element)
@@ -368,102 +439,85 @@
 
             initMenus();
 
-            $('#logo').click(function() {
-                openHome();
-            });
+            mx.$('#logo').addEventListener("click",openHome);
 
             if( !activeMenu ) openHome();
+
+            mx.$('#page').style.opacity = "1";
         }
 
         function initPage()
         {
+            mx.Swipe.init();
+
             function isPhoneListener(mql){
                 isPhone=mql.matches;
                 if( isPhone )
                 {
-                    $('body').addClass('phone');
-                    $('body').removeClass('desktop');
+                    mx.$('body').classList.add('phone');
+                    mx.$('body').classList.remove('desktop');
                 }
                 else
                 {
-                    $('body').removeClass('phone');
-                    $('body').addClass('desktop');
+                    mx.$('body').classList.remove('phone');
+                    mx.$('body').classList.add('desktop');
                 }
             }
             var mql = window.matchMedia('(max-width: 600px)');
             mql.addListener(isPhoneListener);
             isPhoneListener(mql);
             
-            $menuPanel = $('#menu');
-            $menuPanel.panel({
-                defaults: true,
-                display: isPhone ? "overlay" : "inline",
-                dismissible: isPhone ? true : false,
-                positionFixed: true,
-                beforeopen: function() {
-                    $('.burger.button').addClass("open");
-                    $("#side").removeClass("fullsize");
-                },
-                beforeclose: function() {
-                    $('.burger.button').removeClass("open");
-                    $("#side").addClass("fullsize");
+            menuPanel = mx.Panel.init(
+                {
+                    isSwipeable: true,
+                    selectors: {
+                        menuButtons: ".burger.button",
+                        panelContainer: '#menu'
+                    },
                 }
+            );
+
+            mx.$('#menu').addEventListener("beforeOpen",function(){
+                mx.$("#side").classList.remove("fullsize");
             });
-            $('.burger.button').click(function() {
-                $menuPanel.panel("toggle");
+            mx.$('#menu').addEventListener("beforeClose",function(){
+                mx.$("#side").classList.add("fullsize");
             });
-            
+
             if( !isPhone )
             {
                 var menuMql = window.matchMedia('(min-width: 800px)');
                 function checkMenu()
                 {
-                    $menuPanel.panel( menuMql.matches ? "open" : "close" );
+                    if( menuMql.matches ) menuPanel.open();
+                    else menuPanel.close();
                 }
                 menuMql.addListener(checkMenu);
                 checkMenu();
             }
             
-            var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
-            var src = "/img/potd/today" + ( isPhone ? "Portrait" : "Landscape") + ".jpg?" + id;
-            var img = new Image();
-            img.onload = function()
-            {
-                $("body").removeClass("nobackground" );
-                $("#background").css("background-image", "url(" + src + ")" );
-                $("#background").css("opacity", "1.0" );
-                
-                //openMenu($('#defaultEntry'),"nextcloud");
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/img/potd/todayTitle.txt?" + id);
-                xhr.onreadystatechange = function() {
-                    if (this.readyState != 4) return;
-                    
-                    if( this.status == 200 ) imageTitle = this.response;
-                    else alert("was not able to download '/img/potd/todayTitle.txt?'");
-                    initContent();
-                };
-                xhr.send();
-            };
-            img.onerror = function()
-            {
-                $("#background").css("opacity", "1.0" );
-                $("body").addClass("nobackground" );
-                initContent();
-            };
-            img.src = src;
+            initContent();
 
-            initAlerting();
+            initAlerts();
         }
 
         loadI18N();
-        $(document).ready(initPage);
+        loadBackgroundImage();
+        loadImageTitle();
 
+        if (document.readyState === "complete" || document.readyState === "interactive") 
+        {
+            initPage();
+        }
+        else 
+        {
+            document.addEventListener("DOMContentLoaded", initPage);
+        }
 	</script>
 </head>
 <body>
-<div id="page">
-    <div id="menu" data-role="panel">
+<div id="page" style="opacity:0;transition:opacity 300ms linear;">
+    <div id="menu" class="c-panel">
         <div class="group">
             <div id="logo" class="button"></div>
             <div class="spacer"></div>
@@ -491,7 +545,7 @@
             <div class="service button" onClick="openMenu(this,'devices')"><div data-i18n="Devices"></div><div></div></div>
         </div>
     </div>
-    <div id="side" data-role="page" class="fullsize">
+    <div id="side" class="fullsize">
         <div id="header" data-role="header">
             <div class="burger button">
                 <svg style="fill:white;stroke:white;" transform="scale(1.0)" enable-background="new 0 0 91 91" id="Layer_1" version="1.1" viewBox="0 0 91 91" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><rect height="3.4" width="39.802" x="27.594" y="31.362"/><rect height="3.4" width="39.802" x="27.594" y="44.962"/><rect height="3.4" width="39.802" x="27.594" y="58.562"/></g></svg>
@@ -505,7 +559,7 @@
                 <div id="background"></div>
                 <div id="submenu"></div>
             </div>
-            <iframe frameborder="0">
+            <iframe frameborder="0"></iframe>
         </div>
     </div>
 </div>

@@ -28,6 +28,7 @@
   with_items:
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
+    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/tmpfs/" }
     - { owner: "{{ 'root' if is_suse|bool else www_username }}", group: "{{ 'root' if is_suse|bool else www_group }}", dir: "{{global_log}}apache2/" }
 
 
@@ -258,10 +259,12 @@
     owner: "{{www_username}}"
     group: "{{www_group}}"
   with_items:
-    - cam.jpg
-    - cam.mjpg
-    - snapshot.cgi
-    - videostream.cgi
+    - cam.jpg # automower
+    - cam.mjpg # automower
+    - snapshot.cgi # automower
+    - videostream.cgi # automower
+    - tmpfs/snap.jpg # camera strasse
+    - mjpegstream.cgi # camera strasse
 
 - name: copy fluentd config
   vars:

@@ -104,7 +104,7 @@ body {
 }
 #menu #logo {
     margin: 6px 6px 6px 0;
-    background-image:url(/main/img/marvinRight.png);
+    background-image:url(/main/img/marvinRightSmall.png);
     background-size: 44px 44px;
     height: 44px;
     width: 44px;
@@ -186,6 +186,9 @@ body {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+}
+#submenu .service.home:active {
+    background-color: transparent;
 }
 #submenu .service.home .time, #submenu .slogan, #submenu .service.home .imageTitle {
     margin-left: auto;
@@ -315,6 +318,12 @@ body.desktop #menu .service.button:hover {
 }
 body.desktop #submenu .service.button:hover {
     background-color: rgba(255,255,255,0.2);
+}
+body.desktop #side {
+    margin-left: 300px;
+}
+body.desktop #side.fullsize {
+    margin-left: 0;
 }
 body.desktop #side #header {
     display:none;

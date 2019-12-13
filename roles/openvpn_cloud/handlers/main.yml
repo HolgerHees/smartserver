@@ -1,0 +1,8 @@
+- name: restart openvpn => cloud
+  systemd:
+    name: "openvpn@cloud"
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart openvpn@cloud"
