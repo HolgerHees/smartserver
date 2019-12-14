@@ -54,8 +54,7 @@
 
     - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server installation
     - { role: openvpn_mobile, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
-    - { role: openvpn_cloud, tags: [ 'openvpn' ], vars: { vpn_type: master } }  # vpn configuration (cloud master)
-    #- { role: openvpn_cloud, tags: [ 'openvpn' ], vars: { vpn_type: slave } }  # vpn configuration (cloud cslave)
+    - { role: openvpn_cloud, tags: [ 'openvpn' ] }                              # vpn configuration (cloud)
 
     - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 

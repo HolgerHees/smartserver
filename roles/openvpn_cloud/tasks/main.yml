@@ -37,16 +37,25 @@
 # **** CONFIGS ****
 - name: copy config
   template:
-    src: "roles/openvpn_cloud/templates/{{ 'cloud.conf' if vpn_type == 'master' else 'cloud.remove.conf' }}"
+    src: "roles/openvpn_cloud/templates/{{ 'cloud.conf' if vault_server_vpn_cloud_type == 'master' else 'cloud.remove.conf' }}"
     dest: "/etc/openvpn/cloud.conf"
     owner: root
     group: root
     mode: 0640
   notify: "restart openvpn@cloud"
   
+- name: copy config => vault_server_vpn_cloud_type == 'master'
+  template:
+    src: "roles/openvpn_cloud/templates/cloud.remove.conf }}"
+    dest: "/etc/openvpn/cloud.remove.conf"
+    owner: root
+    group: root
+    mode: 0640
+  when: "vault_server_vpn_cloud_type == 'master'"
+
 - name: set selinux cloud port configuration => is_fedora
   seport:
-    ports: "{{vault_server_vpn_port_cloud}}"
+    ports: "{{vault_server_vpn_cloud_port}}"
     proto: tcp
     setype: openvpn_port_t
     state: present

@@ -61,8 +61,8 @@
     command: "easyrsa build-ca"
     chdir: '/etc/easy-rsa'
     responses:
-      Enter New CA Key Passphrase: "{{vault_server_vpn_pass_mobile}}"
-      Verifying - Enter New CA Key Passphrase: "{{vault_server_vpn_pass_mobile}}"
+      Enter New CA Key Passphrase: "{{vault_server_vpn_mobile_pass}}"
+      Verifying - Enter New CA Key Passphrase: "{{vault_server_vpn_mobile_pass}}"
       Common Name: "{{server_name}}"
   notify: "restart openvpn@mobile"
   when: "easy_rsa_file_mode =='create'"
@@ -72,9 +72,9 @@
     command: "{{item}}"
     chdir: '/etc/easy-rsa'
     responses:
-      Enter PEM pass phrase: "{{vault_server_vpn_pass_mobile}}"
-      Verifying - Enter PEM pass phrase: "{{vault_server_vpn_pass_mobile}}"
-      Enter pass phrase for: "{{vault_server_vpn_pass_mobile}}"
+      Enter PEM pass phrase: "{{vault_server_vpn_mobile_pass}}"
+      Verifying - Enter PEM pass phrase: "{{vault_server_vpn_mobile_pass}}"
+      Enter pass phrase for: "{{vault_server_vpn_mobile_pass}}"
   notify: "restart openvpn@mobile"
   with_items:
     - "easyrsa build-server-full server"
@@ -117,7 +117,7 @@
   
 - name: copy server pass
   copy:
-    content: "{{vault_server_vpn_pass_mobile}}"
+    content: "{{vault_server_vpn_mobile_pass}}"
     dest: "/etc/openvpn/mobile_certificate.pass"
     decrypt: yes
     owner: root
@@ -169,7 +169,7 @@
   
 - name: set selinux mobile port configuration => is_fedora
   seport:
-    ports: "{{vault_server_vpn_port_mobile}}"
+    ports: "{{vault_server_vpn_mobile_port}}"
     proto: tcp
     setype: openvpn_port_t
     state: present
