@@ -171,9 +171,11 @@
 
         function initAlerts()
         {
-            mx.$('.alarm.button').addEventListener("click",function()
-            {
-                openUrl(null,null,"/netdata/",false);
+            mx.$$('.alarm.button').forEach(function(element){ 
+                element.addEventListener("click",function()
+                {
+                    openUrl(null,null,"/netdata/",false);
+                });
             });
             loadAlerts();
         }
