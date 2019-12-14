@@ -70,16 +70,16 @@ vault_alexa_device_id5: "<alexa_device_id5>"
 vault_alexa_device_id6: "<alexa_device_id6>"
 vault_alexa_device_id7: "<alexa_device_id7>"
 
-vault_server_vpn_cloud_master_domain: "public.{{server_domain}}"
-vault_server_vpn_cloud_master_port: "3421"
 vault_server_vpn_cloud_type: "master" # master|slave
 vault_server_vpn_cloud_port: "1194"
 vault_server_vpn_cloud_remote_username: "clouduser"
 vault_server_vpn_cloud_remote_backup_path: "/data/backup/{{server_domain}}"
+vault_server_vpn_cloud_master_port: "3421"
+vault_server_vpn_cloud_master_domain: "public.{{server_domain}}"
 
-vault_server_vpn_mobile_public_domain: "public.{{server_domain}}"
-vault_server_vpn_mobile_public_port: "277"
-vault_server_vpn_mobile_port: "1195"
 vault_server_vpn_mobile_pass: "default123"
+vault_server_vpn_mobile_port: "1195"
+vault_server_vpn_mobile_public_port: "277"
+vault_server_vpn_mobile_public_domain: "public.{{server_domain}}"
 
 vault_cloudsync_password: "default123"
