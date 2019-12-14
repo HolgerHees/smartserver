@@ -44,7 +44,7 @@
     mode: 0640
   notify: "restart openvpn@cloud"
   
-- name: copy config => vault_server_vpn_cloud_type == 'master'
+- name: copy slave config => vault_server_vpn_cloud_type == 'master'
   template:
     src: "roles/openvpn_cloud/templates/cloud.remote.conf"
     dest: "/etc/openvpn/cloud.remove.conf"
