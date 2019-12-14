@@ -46,7 +46,7 @@
   
 - name: copy config => vault_server_vpn_cloud_type == 'master'
   template:
-    src: "roles/openvpn_cloud/templates/cloud.remote.conf }}"
+    src: "roles/openvpn_cloud/templates/cloud.remote.conf"
     dest: "/etc/openvpn/cloud.remove.conf"
     owner: root
     group: root
