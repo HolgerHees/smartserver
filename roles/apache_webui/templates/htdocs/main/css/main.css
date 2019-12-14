@@ -67,6 +67,9 @@ body {
     width: 21px;
     color: white;
 }
+.alarm.button svg.error {
+    color: red;
+}
 .alarm.button .badge {
     margin-left: 4px;
     height: 20px;

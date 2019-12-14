@@ -156,15 +156,19 @@
                 
                 if( this.status == 200 )
                 {
-                    alarmIsWorking = true;
+                    if( !alarmIsWorking )
+                    {
+                        $(".alarm.button svg").classList.remove("error");
+                        alarmIsWorking = true;
+                    }
                     handleAlarms( JSON.parse(this.response) );
-                    window.setTimeout(loadAlerts,5000);
                 }
                 else if( alarmIsWorking )
                 {
+                    $(".alarm.button svg").classList.add("error");
                     alarmIsWorking = false;
-                    alert( getI18N("Netdata alert api not avaiable") );
                 }
+                window.setTimeout(loadAlerts,5000);
             };
             xhr.send();
         }
