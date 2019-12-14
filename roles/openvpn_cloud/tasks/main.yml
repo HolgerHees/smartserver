@@ -37,7 +37,7 @@
 # **** CONFIGS ****
 - name: copy config
   template:
-    src: "roles/openvpn_cloud/templates/{{ 'cloud.conf' if vault_server_vpn_cloud_type == 'master' else 'cloud.remove.conf' }}"
+    src: "roles/openvpn_cloud/templates/{{ 'cloud.conf' if vault_server_vpn_cloud_type == 'master' else 'cloud.remote.conf' }}"
     dest: "/etc/openvpn/cloud.conf"
     owner: root
     group: root
@@ -46,7 +46,7 @@
   
 - name: copy config => vault_server_vpn_cloud_type == 'master'
   template:
-    src: "roles/openvpn_cloud/templates/cloud.remove.conf }}"
+    src: "roles/openvpn_cloud/templates/cloud.remote.conf }}"
     dest: "/etc/openvpn/cloud.remove.conf"
     owner: root
     group: root
