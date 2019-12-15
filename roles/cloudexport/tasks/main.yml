@@ -1,26 +1,26 @@
-- name: add user "{{vault_server_vpn_cloud_local_username}}" with no login
+- name: add user "{{vault_vpn_cloud_local_username}}" with no login
   user:
-    name: "{{vault_server_vpn_cloud_local_username}}"
+    name: "{{vault_vpn_cloud_local_username}}"
     uid: 1005
     shell: /sbin/nologin
-    home: "{{raid_path}}{{vault_server_vpn_cloud_local_username}}/"
+    home: "{{raid_path}}{{vault_vpn_cloud_local_username}}/"
     create_home: no
     groups: users
     append: no
     
-- name: prepare user folder for "{{vault_server_vpn_cloud_local_username}}"
+- name: prepare user folder for "{{vault_vpn_cloud_local_username}}"
   file:
-    path: "{{vault_server_vpn_cloud_local_export_path}}/"
+    path: "{{vault_vpn_cloud_local_export_path}}/"
     state: directory
-    owner: "{{vault_server_vpn_cloud_local_username}}"
+    owner: "{{vault_vpn_cloud_local_username}}"
     group: users
     mode: 0777
 
-- name: add nfs exported folder for user "{{vault_server_vpn_cloud_local_username}}"
+- name: add nfs exported folder for user "{{vault_vpn_cloud_local_username}}"
   lineinfile:
     path: /etc/exports
     regexp: '^{{item.name}} '
     line: '{{item.name}} {{item.options}}'
   with_items:
-    - { name: "{{vault_server_vpn_cloud_local_export_path}}/", options: "{{ cloud_vpn_endpoint_slave if vault_server_vpn_cloud_type == 'master' else cloud_vpn_endpoint_master }}(rw,root_squash,sync,no_subtree_check)" }
+    - { name: "{{vault_vpn_cloud_local_export_path}}/", options: "{{ cloud_vpn_endpoint_slave if vault_vpn_cloud_type == 'master' else cloud_vpn_endpoint_master }}(rw,root_squash,sync,no_subtree_check)" }
   notify: "restart nfs-server"

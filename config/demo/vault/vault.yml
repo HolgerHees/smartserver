@@ -14,21 +14,13 @@ vault_userdata: {
     testuser2: { name: "Test User 2", samba_password: "test", web_password: "test" }
 }
 
+vault_admin_username: "admin"
+vault_admin_web_password: "default123"
+
 vault_camera_username: "camera"
 vault_camera_linux_password: "default123"
 vault_camera_device_username: "admin"
 vault_camera_device_password: "default123"
-
-vault_admin_username: "admin"
-vault_admin_web_password: "default123"
-
-vault_automower_device_username: "automower"
-vault_automower_device_password: "default123"
-
-vault_roomba_password: "default123"
-vault_roomba_blid: "<blid>"
-
-vault_hue_user_id: "<userid>"
 
 vault_pushover_user: "<userid>"
 vault_pushover_password: "default123"
@@ -54,6 +46,21 @@ vault_grafana_influxdb_password: "default123"
 vault_grafana_app_username: "admin"
 vault_grafana_app_password: "admin"
 
+vault_vpn_mobile_pass: "default123"
+vault_vpn_mobile_port: "1195"
+vault_vpn_mobile_public_port: "277"
+vault_vpn_mobile_public_domain: "public.{{server_domain}}"
+
+vault_vpn_cloud_type: "master" # master|slave
+vault_vpn_cloud_port: "1194"
+vault_vpn_cloud_local_username: "clouduser"
+vault_vpn_cloud_local_export_path: "{{raid_path}}{{vault_vpn_cloud_local_username}}"
+vault_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
+vault_vpn_cloud_master_port: "3421"
+vault_vpn_cloud_master_domain: "public.{{server_domain}}"
+
+vault_cloudsync_password: "default123"
+
 vault_server_alexa_domain: "public.{{server_domain}}"
 vault_server_alexa_port: "22432"
 vault_alexa_username: "alexa"
@@ -70,17 +77,10 @@ vault_alexa_device_id5: "<alexa_device_id5>"
 vault_alexa_device_id6: "<alexa_device_id6>"
 vault_alexa_device_id7: "<alexa_device_id7>"
 
-vault_server_vpn_cloud_type: "master" # master|slave
-vault_server_vpn_cloud_port: "1194"
-vault_server_vpn_cloud_local_username: "clouduser"
-vault_server_vpn_cloud_local_export_path: "{{raid_path}}{{vault_server_vpn_cloud_local_username}}"
-vault_server_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
-vault_server_vpn_cloud_master_port: "3421"
-vault_server_vpn_cloud_master_domain: "public.{{server_domain}}"
+vault_automower_device_username: "automower"
+vault_automower_device_password: "default123"
 
-vault_server_vpn_mobile_pass: "default123"
-vault_server_vpn_mobile_port: "1195"
-vault_server_vpn_mobile_public_port: "277"
-vault_server_vpn_mobile_public_domain: "public.{{server_domain}}"
+vault_roomba_password: "default123"
+vault_roomba_blid: "<blid>"
 
-vault_cloudsync_password: "default123"
+vault_hue_user_id: "<userid>"
