@@ -113,16 +113,17 @@
 
     - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
 
-    - { role: alexa, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
-
     - { role: deployment, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
-    # *** OPTIONAL CLOUD CONFIGURATION ***
+    # *** OPTIONAL ALEXA ***
+    - { role: alexa, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
+
+    # *** OPTIONAL CLOUD ***
     - { role: openvpn_cloud, tags: [ 'openvpn' ] }                              # vpn configuration (cloud)
     - { role: cloudsync, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
     - { role: cloudexport, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (clouduser and nfs export)
 
-    # *** OPTIONAL INDIVIDUAL DEVICES && SERVICES ***
+    # *** OPTIONAL DEVICES && SERVICES ***
     - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
 
     - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
