@@ -128,7 +128,7 @@
     - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
     #- { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
-    - { role: apache_device_proxy, tags: [ 'apache_device_proxy' ] }            # proxy and redirect configs for custom devices
+    - { role: apache_proxy, tags: [ 'apache_proxy' ] }                          # proxy and redirect configs for custom devices
 
     # *** BACKUP RESTORE ON STAGING ****     
     - { role: backup_restore, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
