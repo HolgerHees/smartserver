@@ -1,6 +1,3 @@
-- move openhab udev rule to custom config
-- make openhab config git repository configurable
-
 - move individual alexa config files from template folder to config folder
 
 - make apache_webui more dynamic, depending on available devices

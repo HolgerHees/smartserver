@@ -120,7 +120,7 @@
 - name: clone config git
   git:
     accept_hostkey: yes
-    repo: 'https://github.com/HolgerHees/openhab-config.git'
+    repo: '{{vault_openhab_config_git}}'
     dest: '{{projects_path}}openhab2'
     version: 'master'
 
