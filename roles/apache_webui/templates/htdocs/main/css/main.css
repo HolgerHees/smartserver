@@ -26,9 +26,24 @@ body {
     margin-left: auto ;
     margin-right: auto ;
     padding: 0;
-    max-width: 100%;
+    max-width: 80%;
     box-sizing: border-box;
     background-color: white;
+}
+#layer {
+    background-color: #000;
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    transition: opacity 300ms linear;
+}
+#layer.visible {
+    display: block;
+    opacity: 0.4;
 }
 #side, .vm-page {
     flex-grow: 1;
@@ -67,8 +82,8 @@ body {
     width: 21px;
     color: white;
 }
-.alarm.button svg.error {
-    color: red;
+.alarm.button.disabled svg {
+    color: #db4437;
 }
 .alarm.button .badge {
     margin-left: 4px;

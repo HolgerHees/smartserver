@@ -158,14 +158,14 @@
                 {
                     if( !alarmIsWorking )
                     {
-                        $(".alarm.button svg").classList.remove("error");
+                        mx.$(".alarm.button").classList.remove("disabled");
                         alarmIsWorking = true;
                     }
                     handleAlarms( JSON.parse(this.response) );
                 }
                 else if( alarmIsWorking )
                 {
-                    $(".alarm.button svg").classList.add("error");
+                    mx.$(".alarm.button").classList.add("disabled");
                     alarmIsWorking = false;
                 }
                 window.setTimeout(loadAlerts,5000);
@@ -485,9 +485,16 @@
 
             mx.$('#menu').addEventListener("beforeOpen",function(){
                 mx.$("#side").classList.remove("fullsize");
+                if( isPhone ) mx.$("#layer").classList.add("visible");
             });
             mx.$('#menu').addEventListener("beforeClose",function(){
                 mx.$("#side").classList.add("fullsize");
+                mx.$("#layer").classList.remove("visible");
+            });
+
+            mx.$("#layer").addEventListener("click",function()
+            {
+                menuPanel.close();
             });
 
             if( !isPhone )
@@ -568,6 +575,7 @@
             <iframe frameborder="0"></iframe>
         </div>
     </div>
+    <div id="layer"></div>
 </div>
 </body>
 </html>
