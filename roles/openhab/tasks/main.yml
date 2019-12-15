@@ -64,7 +64,6 @@
   with_items:
     - "{{data_path}}openhab-runtime/conf"
     - "{{data_path}}openhab-runtime/conf/things"
-    - "{{data_path}}openhab-runtime/conf/rules"
     - "{{data_path}}openhab-runtime/conf/scripts"
     - "{{data_path}}openhab-runtime/conf/services"
     - "{{data_path}}openhab-runtime/conf/sounds"
@@ -141,6 +140,7 @@
     - conf/icons
     - conf/items
     - conf/persistence
+    - conf/rules
     - conf/sitemaps
     - conf/transform
   notify: "restart openhab"
