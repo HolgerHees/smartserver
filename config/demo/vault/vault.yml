@@ -72,8 +72,9 @@ vault_alexa_device_id7: "<alexa_device_id7>"
 
 vault_server_vpn_cloud_type: "master" # master|slave
 vault_server_vpn_cloud_port: "1194"
-vault_server_vpn_cloud_remote_username: "clouduser"
-vault_server_vpn_cloud_remote_backup_path: "/data/backup/{{server_domain}}"
+vault_server_vpn_cloud_local_username: "clouduser"
+vault_server_vpn_cloud_local_export_path: "{{raid_path}}{{vault_server_vpn_cloud_local_username}}"
+vault_server_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
 vault_server_vpn_cloud_master_port: "3421"
 vault_server_vpn_cloud_master_domain: "public.{{server_domain}}"
 

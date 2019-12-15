@@ -54,7 +54,6 @@
 
     - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server installation
     - { role: openvpn_mobile, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
-    - { role: openvpn_cloud, tags: [ 'openvpn' ] }                              # vpn configuration (cloud)
 
     - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
@@ -93,36 +92,43 @@
     - { role: _flush, tags: [ 'all' ], tasks_from: main.yml }
     # **************************************
 
+    - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
+    
     - { role: elastalert, tags: [ 'elastalert' ] }                              # log alerting
 
     #- { role: clamav, tags: [ 'clamav' ] }                                      # antivirus
 
-    - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
-    - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+    - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
+
+    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker]
 
     - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
      
-    - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
-    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker]
-
-    - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
-
-    - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating
-    #- { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
     - { role: openhab, tags: [ 'openhab' ] }                                    # openhab iot server
     - { role: openhab_toolbox, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
+
+    - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+
+    - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
+
+    - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
 
     - { role: alexa, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
 
     - { role: deployment, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
+    # *** OPTIONAL CLOUD CONFIGURATION ***
+    - { role: openvpn_cloud, tags: [ 'openvpn' ] }                              # vpn configuration (cloud)
     - { role: cloudsync, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
     - { role: cloudexport, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (clouduser and nfs export)
 
-    - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
+    # *** OPTIONAL INDIVIDUAL DEVICES && SERVICES ***
+    - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
+
+    - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
+    #- { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
+
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
-    
-    - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
     - { role: backup_restore, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
     
