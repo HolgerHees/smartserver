@@ -411,7 +411,7 @@
                 ['url','/tools/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
             ];
             subMenus['devices'] = [
-                ['url','/automowerDevice/',getI18N('Automower'),getI18N('Robonect'),false]
+                ['url','/automowerDevice/',getI18N('Automower'),getI18N('Robonect'),false],
                 ['url','/redirectToPvInverterGarage', getI18N('Inverter'),getI18N('Solar (Extern)'),true],
                 ['url','/redirectToPrinterLaserJet', getI18N('Laserprinter'),getI18N('HPLaserJet'),true],
                 ['url','/redirectToFritzBox', getI18N('Router'),getI18N('FritzBox'),true]
