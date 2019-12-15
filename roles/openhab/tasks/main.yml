@@ -56,6 +56,7 @@
   command: "mv {{data_path}}openhab-runtime/{{item}} {{data_path}}openhab-runtime/{{item}}.bak"
   with_items:
     - "conf"
+    - "addons"
     - "start.sh"
   when: not openhab_exists.stat.exists
 
@@ -125,15 +126,6 @@
   when: is_fedora|bool and sefcontext_result.changed
 
 # ***** CONFIGS *****
-- name: copy habpanel config => openhab not exists
-  copy:
-    src: "roles/openhab/templates/habpanel.config"
-    dest: "{{data_path}}openhab-runtime/userdata/config/org/openhab/habpanel.config"
-    owner: root
-    group: root
-    mode: 0640
-  when: not openhab_exists.stat.exists
-  
 - name: set log config
   lineinfile:
     path: "{{data_path}}openhab-runtime/userdata/etc/org.ops4j.pax.logging.cfg"
@@ -165,33 +157,6 @@
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/openhab.service" }
   notify: "restart openhab"
 
-- name: copy configs
-  template:
-    src: "roles/openhab/templates/conf/{{item}}"
-    dest: "{{data_path}}openhab-runtime/conf/{{item}}"
-    owner: root
-    group: root
-    mode: 0640
-  with_items:
-    - things/items.things
-    - things/knx.things
-    - things/solar.things
-    - services/addons.cfg
-    - services/basicui.cfg
-    - services/comfoair.cfg
-    - services/fritzboxtr064.cfg
-    - services/influxdb.cfg
-    - services/jdbc.cfg
-    - services/logging.cfg
-    - services/mail.cfg
-    - services/mqtt.cfg
-    - services/network.cfg
-    - services/ntp.cfg
-    - services/pushover.cfg
-    - services/runtime.cfg
-    - services/s300th.cfg
-  notify: "restart openhab"
-
 - name: link configs
   file:
     src: "{{projects_path}}openhab2/{{item}}"
@@ -201,6 +166,7 @@
     owner: root
     group: root
   with_items:
+    - addons
     - conf/automation
     - conf/html
     - conf/icons
@@ -210,13 +176,32 @@
     - conf/transform
   notify: "restart openhab"
 
-- name: copy addons
+- name: copy habpanel config
   copy:
-    src: "roles/openhab/templates/conf/addons/org.openhab.binding.s300th-1.11.0.jar"
-    dest: "{{data_path}}openhab-runtime/addons"
+    src: "{{projects_path}}openhab2/templates/habpanel.config"
+    dest: "{{data_path}}openhab-runtime/userdata/config/org/openhab/habpanel.config"
     owner: root
     group: root
     mode: 0640
+
+- name: copy service configs
+  template:
+    src: "{{ item.src }}"
+    dest: "{{data_path}}openhab-runtime/conf/services/{{ item.path }}"
+    owner: root
+    group: root
+    mode: 0640
+  with_filetree: "{{projects_path}}openhab2/templates/services/"
+  notify: "restart openhab"
+
+- name: copy things configs
+  template:
+    src: "{{ item.src }}"
+    dest: "{{data_path}}openhab-runtime/conf/things/{{ item.path }}"
+    owner: root
+    group: root
+    mode: 0640
+  with_filetree: "{{projects_path}}openhab2/templates/things/"
   notify: "restart openhab"
 # *******************
 

@@ -397,9 +397,6 @@
                 ['url','/habpanel/index.html',getI18N('Tablet UI'),getI18N('HabPanel'),false],
                 ['url','/habot',getI18N('Chatbot'),getI18N('Habot'),false]
             ];
-            subMenus['roboter'] = [
-                ['url','/automowerDevice/',getI18N('Automower'),getI18N('Robonect'),false]
-            ];
             subMenus['camera'] = [
                 ['html','initCamera','<div class="strasse"><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="'+getI18N('Street')+'" data-src="/cameraStrasseImage" data-interval="3000"></a></div><div class="automower"><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png"  data-name="'+getI18N('Automower')+'" data-src="/cameraAutomowerImage" data-interval="10000"></a></div>']
             ];
@@ -414,6 +411,7 @@
                 ['url','/tools/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
             ];
             subMenus['devices'] = [
+                ['url','/automowerDevice/',getI18N('Automower'),getI18N('Robonect'),false]
                 ['url','/redirectToPvInverterGarage', getI18N('Inverter'),getI18N('Solar (Extern)'),true],
                 ['url','/redirectToPrinterLaserJet', getI18N('Laserprinter'),getI18N('HPLaserJet'),true],
                 ['url','/redirectToFritzBox', getI18N('Router'),getI18N('FritzBox'),true]
@@ -548,7 +546,6 @@
         <div class="group">
             <div class="header" data-i18n="Automation"></div>
             <div class="service button" onClick="openMenu(this,'openhab')"><div data-i18n="Openhab"></div><div></div></div>
-            <div class="service button" onClick="openMenu(this,'roboter')"><div data-i18n="Roboter"></div><div></div></div>
             <div class="service button" onClick="openMenu(this,'camera')"><div data-i18n="Cameras"></div><div></div></div>
         </div>
         <div class="group flexInfo">

@@ -27,8 +27,6 @@
     mode: 0755
   with_items:
     - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
-    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
-    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/tmpfs/" }
     - { owner: "{{ 'root' if is_suse|bool else www_username }}", group: "{{ 'root' if is_suse|bool else www_group }}", dir: "{{global_log}}apache2/" }
 
 
@@ -247,24 +245,9 @@
     mode: 0644
   with_items:
     - _.ansible.d/auth.conf
-    - _.ansible.d/services.conf
     - _.ansible.d/options.conf
     - _.ansible_vhost-ssl.conf
   notify: "restart apache"
-
-- name: copy balancer fallback files
-  copy:
-    src: "roles/apache/templates/device404.jpg"
-    dest: "{{htdocs_path}}fallback/{{item}}"
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
-  with_items:
-    - cam.jpg # automower
-    - cam.mjpg # automower
-    - snapshot.cgi # automower
-    - videostream.cgi # automower
-    - tmpfs/snap.jpg # camera strasse
-    - mjpegstream.cgi # camera strasse
 
 - name: copy fluentd config
   vars:

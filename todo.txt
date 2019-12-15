@@ -1,13 +1,17 @@
-- move individual openhab config files from template folder to config folder
+- move openhab udev rule to custom config
 - make openhab config git repository configurable
 
 - move individual alexa config files from template folder to config folder
 
 - make apache_webui more dynamic, depending on available devices
+    - habpanel
+    - cameras
+    - devices
 
 - introduce switchable optional roles
     - cloud
     - alexa
+    - apache_device_proxy
     - roomba
     - vcontrold
     - axxus
