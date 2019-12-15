@@ -180,7 +180,7 @@
     owner: root
     group: root
     mode: 644
-  with_filetree: "{{projects_path}}openhab2/templates//etc/udev/rules.d/"
+  with_filetree: "{{projects_path}}openhab2/templates/udev/rules.d/"
   notify: "restart openhab"
 # *******************
 
