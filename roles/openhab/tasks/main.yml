@@ -44,13 +44,6 @@
     remote_src: yes
   when: not openhab_exists.stat.exists
 
-- name: clone config git
-  git:
-    accept_hostkey: yes
-    repo: 'https://github.com/HolgerHees/openhab-config.git'
-    dest: '{{projects_path}}openhab2'
-    version: 'master'
-
 # **** BACKUP ****
 - name: backup original conf and start.sh => openhab not exists
   command: "mv {{data_path}}openhab-runtime/{{item}} {{data_path}}openhab-runtime/{{item}}.bak"
@@ -81,7 +74,7 @@
   notify: "restart openhab"
 
 # **** SET BASE LINKS ****
-- name: link base folder and start.sh
+- name: link base folder
   file:
     src: "{{item.src}}"
     dest: "{{item.dest}}"
@@ -90,41 +83,10 @@
     owner: root
     group: root
   with_items:
-    - { src: "{{projects_path}}openhab2/python", dest: "{{data_path}}openhab-runtime/python" }
-    - { src: "{{projects_path}}openhab2/start.sh", dest: "{{data_path}}openhab-runtime/start.sh" }
     - { src: "{{global_log}}openhab", dest: "{{data_path}}openhab-runtime/userdata/logs" }
     - { src: "{{global_lib}}openhab", dest: "{{data_path}}openhab-runtime/userdata/persistence" }
   notify: "restart openhab"
     
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{item.target}}"
-    ftype: "{{item.ftype}}"
-    setype: "{{item.setype}}"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  with_items:
-    - { ftype: "l", setype: "lib_t", target: "{{data_path}}openhab-runtime" }
-    - { ftype: "a", setype: "lib_t", target: "{{data_path}}openhab-runtime-{{openhab_version}}(/.*)?" }
-    - { ftype: "a", setype: "lib_t", target: "{{projects_path}}openhab2(/.*)?" }
-    - { ftype: "d", setype: "var_log_t", target: "{{global_log}}openhab(/.*)?" }
-    - { ftype: "d", setype: "usr_t", target: "{{global_lib}}openhab(/.*)?" }
-    - { ftype: "f", setype: "shell_exec_t", target: "{{projects_path}}openhab2/start.sh" }
-    - { ftype: "l", setype: "shell_exec_t", target: "{{data_path}}openhab-runtime/start.sh" }
-  when: is_fedora|bool
-    
-- name: reload selinux configuration => is_fedora and sefcontext changed
-  shell: "restorecon {{item}}"
-  with_items:
-    - "{{data_path}}openhab-runtime"
-    - "-irv {{data_path}}openhab-runtime-{{openhab_version}}"
-    - "-irv {{projects_path}}openhab2"
-    - "-irv {{global_log}}openhab"
-    - "-irv {{global_lib}}openhab"
-#    - "{{projects_path}}openhab2/start.sh"
-  when: is_fedora|bool and sefcontext_result.changed
-
 # ***** CONFIGS *****
 - name: set log config
   lineinfile:
@@ -145,17 +107,22 @@
     #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
   notify: "restart openhab"
 
-- name: copy udev rule and service
+- name: copy service
   template:
-    src: "roles/openhab/templates{{item.path}}"
-    dest: "{{item.path}}"
+    src: "roles/openhab/templates/etc/systemd/system/openhab.service"
+    dest: "/etc/systemd/system/openhab.service"
     owner: root
     group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rw,g=r,o=", path: "/etc/udev/rules.d/10-openhab.rules" }
-    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/openhab.service" }
+    mode: 644
   notify: "restart openhab"
+
+# ****** GITHUB CONFIG PROJECT ******
+- name: clone config git
+  git:
+    accept_hostkey: yes
+    repo: 'https://github.com/HolgerHees/openhab-config.git'
+    dest: '{{projects_path}}openhab2'
+    version: 'master'
 
 - name: link configs
   file:
@@ -166,6 +133,8 @@
     owner: root
     group: root
   with_items:
+    - start.sh
+    - python
     - addons
     - conf/automation
     - conf/html
@@ -203,7 +172,47 @@
     mode: 0640
   with_filetree: "{{projects_path}}openhab2/templates/things/"
   notify: "restart openhab"
+
+- name: copy udev rules
+  template:
+    src: "{{ item.src }}"
+    dest: "/etc/udev/rules.d/{{ item.path }}"
+    owner: root
+    group: root
+    mode: 644
+  with_filetree: "{{projects_path}}openhab2/templates//etc/udev/rules.d/"
+  notify: "restart openhab"
 # *******************
+
+# ***** SELINUX ****
+- name: set selinux configuration => is_fedora
+  sefcontext:
+    target: "{{item.target}}"
+    ftype: "{{item.ftype}}"
+    setype: "{{item.setype}}"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
+  with_items:
+    - { ftype: "l", setype: "lib_t", target: "{{data_path}}openhab-runtime" }
+    - { ftype: "a", setype: "lib_t", target: "{{data_path}}openhab-runtime-{{openhab_version}}(/.*)?" }
+    - { ftype: "d", setype: "var_log_t", target: "{{global_log}}openhab(/.*)?" }
+    - { ftype: "d", setype: "usr_t", target: "{{global_lib}}openhab(/.*)?" }
+    - { ftype: "a", setype: "lib_t", target: "{{projects_path}}openhab2(/.*)?" }
+    - { ftype: "f", setype: "shell_exec_t", target: "{{projects_path}}openhab2/start.sh" }
+#    - { ftype: "l", setype: "shell_exec_t", target: "{{data_path}}openhab-runtime/start.sh" }
+  when: is_fedora|bool
+    
+- name: reload selinux configuration => is_fedora and sefcontext changed
+  shell: "restorecon {{item}}"
+  with_items:
+    - "{{data_path}}openhab-runtime"
+    - "-irv {{data_path}}openhab-runtime-{{openhab_version}}"
+    - "-irv {{projects_path}}openhab2"
+    - "-irv {{global_log}}openhab"
+    - "-irv {{global_lib}}openhab"
+#    - "{{projects_path}}openhab2/start.sh"
+  when: is_fedora|bool and sefcontext_result.changed
 
 # ***** DATABASE ****
 - name: check mysql service
