@@ -123,13 +123,12 @@
     # *** OPTIONAL ALEXA ***
     - { role: alexa, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
 
-    # *** OPTIONAL DEVICES ***
+    # *** OPTIONAL DEVICES & SERVICES ***
     - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
     - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
     #- { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
-
-    # *** OPTIONAL SERVICES ***
     - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
+    - { role: apache_device_proxy, tags: [ 'apache_device_proxy' ] }            # proxy and redirect configs for custom devices
 
     # *** BACKUP RESTORE ON STAGING ****     
     - { role: backup_restore, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
