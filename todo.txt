@@ -1,0 +1,13 @@
+- move individual openhab config files from template folder to config folder
+- make openhab config git repository configurable
+
+- move individual alexa config files from template folder to config folder
+
+- make apache_webui more dynamic, depending on available devices
+
+- introduce switchable optional roles
+    - cloud
+    - alexa
+    - roomba
+    - vcontrold
+    - axxus

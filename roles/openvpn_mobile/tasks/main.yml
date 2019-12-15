@@ -165,7 +165,7 @@
   with_items:
     - "mobile.conf"
     - "mobile.ovpn"
-  notify: "restart openvpn"
+  notify: "restart openvpn@mobile"
   
 - name: set selinux mobile port configuration => is_fedora
   seport:
