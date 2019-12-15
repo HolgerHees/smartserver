@@ -1,3 +1,0 @@
-KERNEL=="ttyACM*", SUBSYSTEMS=="usb", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="204b", SYMLINK+="ttyOpenHabFunk", GROUP="dialout", MODE="0660"
-KERNEL=="ttyUSB*", SUBSYSTEMS=="usb", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="ttyOpenHabLueftung", GROUP="dialout", MODE="0660"
-#KERNEL=="ttyS0", SYMLINK+="ttyOpenHabLueftung", GROUP="dialout", MODE="0660"
