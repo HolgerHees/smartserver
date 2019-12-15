@@ -30,18 +30,6 @@ server_subnet:                    "{{server_ip_r[0]}}.{{server_ip_r[1]}}.{{serve
 server_gateway:                   "{{server_subnet}}.1"
 server_network:                   "{{server_subnet}}.0"
 
-tv_livingroom_ip:                 "{{server_subnet}}.73"
-roomba_ip:                        "{{server_subnet}}.39"
-wall_mounted_tablet_ip:           "{{server_subnet}}.40"
-knx_gateway_ip:                   "{{server_subnet}}.51"
-hue_ip:                           "{{server_subnet}}.64"
-pv_inverter_garage_ip:            "{{server_subnet}}.68"
-camera_streedside_ip:             "{{server_subnet}}.111"
-automower_ip:                     "{{server_subnet}}.133"
-printer_ip:                       "{{server_subnet}}.74"
-phone1_ip:                        "{{server_subnet}}.69"
-phone2_ip:                        "{{server_subnet}}.26"
-
 # 0 => production, 1 => production
 netgroup:                         "{{server_ip_r[2]}}"
 

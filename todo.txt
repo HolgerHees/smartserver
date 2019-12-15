@@ -1,7 +1,6 @@
 - move individual alexa config files from template folder to config folder
 
 - make apache_webui more dynamic, depending on available devices
-    - habpanel
     - cameras
     - devices
 
