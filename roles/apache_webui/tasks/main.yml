@@ -34,7 +34,7 @@
 
 - name: copy mainfest config
   template:
-    src: "roles/apache/templates/etc/apache2/_.ansible.d/manifest.conf"
+    src: "roles/apache_webui/templates/etc/apache2/_.ansible.d/manifest.conf"
     dest: "{{www_etc}}_.ansible.d/manifest.conf"
     owner: root
     group: root
