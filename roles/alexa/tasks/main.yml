@@ -46,7 +46,7 @@
   stat:
     path: "{{config_path}}templates/alexa"
   register: alexa_config
-  changed_when: alexa_config.stat.exists
+  changed_when: no
   
 - name: copy custom configs
   template:
