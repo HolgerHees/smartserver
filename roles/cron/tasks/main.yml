@@ -18,7 +18,7 @@
 
 - name: copy crony cmd
   template:
-    src: "roles/cron/templates/crony.sh"
+    src: "templates/crony.sh"
     dest: "/usr/bin/crony.sh"
     owner: root
     group: root

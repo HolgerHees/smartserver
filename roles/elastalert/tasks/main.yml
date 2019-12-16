@@ -41,7 +41,7 @@
   
 - name: copy config and service
   template:
-    src: "roles/elastalert/templates{{item.path}}"
+    src: "templates{{item.path}}"
     dest: "{{item.path}}"
     owner: root
     group: root
@@ -88,6 +88,6 @@
 
 - name: copy fluentd config
   vars:
-    config_file: "roles/elastalert/templates/etc/fluent/_.ansible.d/elastalert.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/elastalert.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   

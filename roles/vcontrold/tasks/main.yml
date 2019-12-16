@@ -32,7 +32,7 @@
 
 - name: copy config and service
   template:
-    src: "roles/vcontrold/templates{{item.path}}"
+    src: "templates{{item.path}}"
     dest: "{{item.path}}"
     owner: root
     group: root
@@ -76,7 +76,7 @@
   vars:
     logrotate_path: "{{global_log}}vcontrold/*.log"
   copy:
-    content: "{{ lookup('template', 'roles/vcontrold/templates/logrotate') }}"
+    content: "{{ lookup('template', 'templates/logrotate') }}"
     dest: "/etc/logrotate.d/ansible_vcontrol"
     owner: root
     group: root
@@ -84,7 +84,7 @@
 
 - name: copy cmd templates
   template:
-    src: "roles/vcontrold/templates/opt/{{item}}"
+    src: "templates/opt/{{item}}"
     dest: "/opt/{{item}}"
     owner: root
     group: root
@@ -95,7 +95,7 @@
 
 - name: copy cmd's
   template:
-    src: "roles/vcontrold/templates/opt/{{item}}"
+    src: "templates/opt/{{item}}"
     dest: "/opt/{{item}}"
     owner: root
     group: root
@@ -107,7 +107,7 @@
   
 - name: copy cmd binaries
   copy:
-    src: "roles/vcontrold/templates/opt/{{item}}"
+    src: "templates/opt/{{item}}"
     dest: "/opt/{{item}}"
     owner: root
     group: root

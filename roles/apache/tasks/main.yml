@@ -238,7 +238,7 @@
 
 - name: copy config
   template:
-    src: "roles/apache/templates/etc/apache2/{{item}}"
+    src: "templates/etc/apache2/{{item}}"
     dest: "{{www_etc}}{{item}}"
     owner: root
     group: root
@@ -251,7 +251,7 @@
 
 - name: copy fluentd config
   vars:
-    config_file: "roles/apache/templates/etc/fluent/_.ansible.d/apache.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: prepare .htpasswd file

@@ -66,7 +66,7 @@
     
 - name: copy config
   template:
-    src: "roles/netdata/templates{{item}}"
+    src: "templates{{item}}"
     dest: "{{item}}"
     owner: root
     group: root
@@ -85,7 +85,7 @@
   
 - name: copy helper
   template:
-    src: "roles/netdata/templates{{item}}"
+    src: "templates{{item}}"
     dest: "{{item}}"
     owner: root
     group: root
@@ -108,7 +108,7 @@
 
 - name: copy apache config
   vars:
-    config_file: "roles/netdata/templates/etc/apache2/_.ansible.d/netdata.conf"
+    config_file: "templates/etc/apache2/_.ansible.d/netdata.conf"
   import_tasks: roles/apache/tasks/add_config.yml
   
 - name: create cron job

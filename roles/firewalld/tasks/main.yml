@@ -12,7 +12,7 @@
 
 - name: copy zone config
   template:
-    src: "roles/firewalld/templates/etc/firewalld/zones/{{item}}"
+    src: "templates/etc/firewalld/zones/{{item}}"
     dest: "/etc/firewalld/zones/{{item}}"
     owner: root
     group: root
@@ -22,12 +22,3 @@
     - public.xml
     - trusted.xml
   notify: "restart firewalld"
-
-- name: allow vagrant ip 10.0.2.2 => not is_production
-  lineinfile:
-    path: /etc/firewalld/zones/trusted.xml
-    insertbefore: "<masquerade/>"
-    regexp: '<source address="10\.0\.2\.2"/>'
-    line: '<source address="10.0.2.2"/>'
-  notify: "restart firewalld"
-  when: not is_production|bool

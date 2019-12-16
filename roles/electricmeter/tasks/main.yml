@@ -6,7 +6,7 @@
 
 - name: copy config
   template:
-    src: "roles/electricmeter/templates/etc/udev/rules.d/10-electricmeter.rules"
+    src: "templates/etc/udev/rules.d/10-electricmeter.rules"
     dest: "/etc/udev/rules.d/10-electricmeter.rules"
     owner: root
     group: root
@@ -22,7 +22,7 @@
 
 - name: copy cmd
   template:
-    src: "roles/electricmeter/templates/opt/electricmeter/strom.perl"
+    src: "templates/opt/electricmeter/strom.perl"
     dest: "/opt/electricmeter/strom.perl"
     owner: root
     group: root

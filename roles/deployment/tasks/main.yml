@@ -26,7 +26,7 @@
     
 - name: copy cmd
   template:
-    src: "roles/deployment/templates/collect_backup.sh"
+    src: "templates/collect_backup.sh"
     dest: "/opt/backup_collector/collect_backup.sh"
     owner: root
     group: root

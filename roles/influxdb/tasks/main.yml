@@ -46,7 +46,7 @@
   
 - name: copy fluentd config
   vars:
-    config_file: "roles/influxdb/templates/etc/fluent/_.ansible.d/influxdb.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/influxdb.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: create cron job

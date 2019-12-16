@@ -34,7 +34,7 @@
 
 - name: copy config and service
   template:
-    src: "roles/fluentd/templates{{item.path}}"
+    src: "templates{{item.path}}"
     dest: "{{item.path}}"
     owner: root
     group: root

@@ -4,7 +4,7 @@
   become_user: root
   pre_tasks:
     - name: init
-      import_tasks: roles/_init/tasks/main.yml                                  # detect environment and load configs
+      import_tasks: roles/_helper/tasks/init.yml                                  # detect environment and load configs
       tags: always
 
     - name: loaded values from config files
@@ -26,120 +26,101 @@
           - "www:        user: {{www_username}}, group: {{www_group}}, etc: {{www_etc}}"
       tags: always
 
-    - name: create shared fluentd ._ansible folder
-      import_tasks: roles/fluentd/tasks/create_shared_folder.yml                # is creating /etc/fluent/_.ansible.d
-      tags: fluentd
+    - { import_role: { name: fluentd, tasks_from: create_shared_folder }, tags: [ 'fluentd' ] }  # is creating /etc/fluent/_.ansible.d
 
-    - name: create shared apache ._ansible folder
-      import_tasks: roles/apache/tasks/create_shared_folder.yml                 # is creating /etc/{{www_etc}}/_.ansible.d
-      tags: apache
+    - { import_role: { name: apache, tasks_from: create_shared_folder }, tags: [ 'apache' ] }    # is creating /etc/{{www_etc}}/_.ansible.d
 
-  roles:
-    - { role: base, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
+  tasks:
+    - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
-    - { role: network, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
+    - { import_role: { name: network }, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
       
-    - { role: firewalld, tags: [ 'firewalld' ] }                                # firewalld configuration
-    - { role: dns, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
+    - { import_role: { name: firewalld }, tags: [ 'firewalld' ] }                                # firewalld configuration
+    - { import_role: { name: dns }, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
     
-    - { role: cron, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
-    - { role: cron_service_check, tags: [ 'cron_service_check' ] }              # checking for failed service starts
+    - { import_role: { name: cron }, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
+    - { import_role: { name: cron_service_check }, tags: [ 'cron_service_check' ] }              # checking for failed service starts
 
-    - { role: mdadm, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
-    - { role: smartd, tags: [ 'smartd' ] }                                      # disk monitoring
+    - { import_role: { name: mdadm }, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
+    - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring
 
-    - { role: container, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
+    - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
-    - { role: ssh, tags: [ 'ssh' ] }                                            # settup allowed ssh user
+    - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # settup allowed ssh user
 
-    - { role: openvpn, tags: [ 'openvpn' ] }                                    # vpn server installation
-    - { role: openvpn_mobile, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
+    - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation
+    - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
 
-    - { role: postfix, tags: [ 'postfix' ] }                                    # mail server to forward root mails
+    - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
-    - { role: php, tags: [ 'php' ] }                                            # php cli
+    - { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli
     
-    - { role: java, tags: [ 'java' ] }                                          # jdk 1.8
-    - { role: java_maven, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
-    - { role: java_ant, tags: [ 'java_ant' ] }                                  # apache ant
-    - { role: java_jython, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
+    - { import_role: { name: java }, tags: [ 'java' ] }                                          # jdk 1.8
+    - { import_role: { name: java_maven }, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
+    - { import_role: { name: java_ant }, tags: [ 'java_ant' ] }                                  # apache ant
+    - { import_role: { name: java_jython }, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
 
-    - { role: nfs, tags: [ 'nfs' ] }                                            # nfs file server
+    - { import_role: { name: nfs }, tags: [ 'nfs' ] }                                            # nfs file server
 
-    - { role: samba, tags: [ 'samba' ] }                                        # smb file server
+    - { import_role: { name: samba }, tags: [ 'samba' ] }                                        # smb file server
 
-    - { role: ftp, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker]
+    - { import_role: { name: ftp }, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker]
 
-    - { role: mysql, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker]
+    - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker]
 
-    - { role: influxdb, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata                         [docker]
+    - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata                         [docker]
     
-    - { role: elasticsearch, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker]
-    - { role: kibana, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker]
+    - { import_role: { name: elasticsearch }, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker]
+    - { import_role: { name: kibana }, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker]
     
-    - { role: redis, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud                                   [docker]
+    - { import_role: { name: redis }, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud                                   [docker]
     
-    - { role: mosquitto, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker]
+    - { import_role: { name: mosquitto }, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker]
 
-    - { role: apache_ssl, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
-    - { role: apache, tags: [ 'apache' ] }                                      # web server
-    #- { role: apache_docker, tags: [ 'apache_docker' ] }                        # web server                                                       [docker]
+    - { import_role: { name: apache_ssl }, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
+    - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # web server
+    #- { import_role: { name: apache_docker }, tags: [ 'apache_docker' ] }                        # web server                                                       [docker]
 
-    - { role: fluentd, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
+    - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
 
     # ******* SPECIAL FLUSH HANDLER ********
     # Previous roles are independent from upcomming roles, But lot of upcomming roles are depending from previous roles
-    - { role: _flush, tags: [ 'all' ], tasks_from: main.yml }
+    - { import_tasks: roles/_helper/tasks/flush.yml, tags: [ 'all' ] }
     # **************************************
 
-    - { role: user, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
+    - { import_role: { name: user }, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
-    - { role: elastalert, tags: [ 'elastalert' ] }                              # log alerting
+    - { import_role: { name: elastalert }, tags: [ 'elastalert' ] }                              # log alerting
 
-    #- { role: clamav, tags: [ 'clamav' ] }                                      # antivirus
+    #- { import_role: { name: clamav, tags: [ 'clamav' ] }                                      # antivirus
 
-    - { role: netdata, tags: [ 'netdata' ] }                                    # server monitoring
+    - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring
 
-    - { role: grafana, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker]
+    - { import_role: { name: grafana }, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker]
 
-    - { role: nextcloud, tags: [ 'nextcloud' ] }                                # private cloud
+    - { import_role: { name: mysql_phpmyadmin }, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+
+    - { import_role: { name: apache_webui }, tags: [ 'apache_webui' ] }                          # responsive web ui
+
+    - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
      
-    - { role: openhab, tags: [ 'openhab' ] }                                    # openhab iot server
-    - { role: openhab_toolbox, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
+    - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server
+    - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
 
-    - { role: mysql_phpmyadmin, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+    - { import_role: { name: cron_backup_rsync }, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
 
-    - { role: apache_webui, tags: [ 'apache_webui' ] }                          # responsive web ui
+    - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
-    - { role: cron_backup_rsync, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
-
-    - { role: deployment, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
-
-    # *** OPTIONAL CLOUD ***
-    - { role: openvpn_cloud, tags: [ 'openvpn' ] }                              # vpn configuration (cloud)
-    - { role: cloudsync, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
-    - { role: cloudexport, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (clouduser and nfs export)
-
-    # *** OPTIONAL ALEXA ***
-    - { role: alexa, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
-
-    # *** OPTIONAL DEVICES & SERVICES ***
-    - { role: roomba, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
-    - { role: vcontrold, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
-    #- { role: electricmeter, tags: [ 'electricmeter' ] }                        # electricity
-    - { role: cron_backup_axxus, tags: [ 'cron_backup_axxus' ] }                # backup axxus
-    - { role: apache_proxy, tags: [ 'apache_proxy' ] }                          # proxy and redirect configs for custom devices
+    # ******* CUSTOM ROLES ********
+    # Details can be found inside the demo configuration 'config/demo/roles.yml'
+    - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }
 
     # *** BACKUP RESTORE ON STAGING ****     
-    - { role: backup_restore, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
+    - { import_role: { name: backup_restore }, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
     
   post_tasks:
     # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 
-    - name: enable nextcloud apps                                               # enable nextcloud apps => news, keeweb ....
-      import_tasks: roles/nextcloud/tasks/enable_apps.yml
-      tags: [ 'nextcloud' ]
+    - { import_role: { name: nextcloud, tasks_from: enable_apps }, tags: [ 'nextcloud' ] }
 
     # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana) 
-    - name: import kibana dashboards                                            # import kibana dashboards
-      import_tasks: roles/kibana/tasks/import_dashboards.yml
-      tags: [ 'kibana' ]
+    - { import_role: { name: kibana, tasks_from: import_dashboards }, tags: [ 'kibana' ] }

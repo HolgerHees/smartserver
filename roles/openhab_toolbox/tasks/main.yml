@@ -7,7 +7,7 @@
 
 - name: copy config
   template:
-    src: "roles/openhab_toolbox/templates/config.php"
+    src: "templates/config.php"
     dest: "{{projects_path}}toolbox/_lib/config.php"
     owner: root
     group: root

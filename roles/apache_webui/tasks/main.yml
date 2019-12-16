@@ -13,7 +13,7 @@
 
 - name: copy htdocs
   copy:
-    src: "roles/apache_webui/templates/htdocs/{{item}}"
+    src: "templates/htdocs/{{item}}"
     dest: "{{htdocs_path}}{{item|dirname}}"
     owner: "{{www_username}}"
     group: "{{www_group}}"
@@ -23,18 +23,20 @@
     - main/js
     - favicon.ico
     - index.de.json
-    - index.php
     - info.php
     - resize.php
-
-- name: copy htdocs manifest
+  
+- name: copy htdocs (template)
   template:
-    src: "roles/apache_webui/templates/htdocs/main/manifest.json"
-    dest: "{{htdocs_path}}/main/manifest.json"
+    src: "templates/htdocs/{{item}}"
+    dest: "{{htdocs_path}}/{{item}}"
+  with_items:
+    - index.php
+    - main/manifest.json
 
 - name: copy mainfest config
   template:
-    src: "roles/apache_webui/templates/etc/apache2/_.ansible.d/manifest.conf"
+    src: "templates/etc/apache2/_.ansible.d/manifest.conf"
     dest: "{{www_etc}}_.ansible.d/manifest.conf"
     owner: root
     group: root
@@ -43,7 +45,7 @@
 
 - name: copy fetchPOTD cmd
   template:
-    src: "roles/apache_webui/templates/fetchPOTD.sh"
+    src: "templates/fetchPOTD.sh"
     dest: "/opt/potd_fetcher/fetchPOTD.sh"
     owner: root
     group: root

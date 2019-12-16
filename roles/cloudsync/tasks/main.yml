@@ -33,7 +33,7 @@
  
 - name: copy config
   template:
-    src: "roles/cloudsync/templates/cloudsync.config"
+    src: "templates/cloudsync.config"
     dest: "{{projects_path}}cloudsync/config/cloudsync.config"
   
 - name: install => clone_status

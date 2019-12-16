@@ -78,7 +78,7 @@
 
 - name: copy config
   template:
-    src: "roles/nextcloud/templates/config.php"
+    src: "templates/config.php"
     dest: "{{htdocs_path}}nextcloud/config/config.php"
     owner: "{{www_username}}"
     group: "{{www_group}}"
@@ -176,7 +176,7 @@
 # **** OTHER ****
 - name: copy apache config
   vars:
-    config_file: "roles/nextcloud/templates/etc/apache2/_.ansible.d/nextcloud.conf"
+    config_file: "templates/etc/apache2/_.ansible.d/nextcloud.conf"
   import_tasks: roles/apache/tasks/add_config.yml
   
 - name: create cron job

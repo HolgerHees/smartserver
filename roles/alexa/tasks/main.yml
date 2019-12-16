@@ -30,16 +30,44 @@
     repo: 'https://github.com/HolgerHees/semanticdetection.git'
     dest: '{{projects_path}}alexa_smarthome'
     version: 'master'
-
+ 
 - name: copy configs
   template:
-    src: "roles/alexa/templates{{item}}"
-    dest: "{{projects_path}}alexa_smarthome{{item}}"
+    src: "templates/{{item}}"
+    dest: "{{projects_path}}alexa_smarthome/{{item}}"
     owner: root
     group: root
     mode: 0644
   with_items:
-    - /config/environment.js
-    - /config/openhab.js
-    - /config/test.js
-    - /.env
+    - config/openhab.js
+    - .env
+
+- name: check custom alexa environment
+  stat:
+    path: "{{config_path}}templates/alexa"
+  register: alexa_config
+  changed_when: alexa_config.stat.exists
+  
+- name: copy custom configs
+  template:
+    src: "{{config_path}}templates/alexa/{{item}}"
+    dest: "{{projects_path}}alexa_smarthome/config/{{item}}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - environment.js
+    - test.js
+  when: alexa_config.stat.exists|bool
+
+- name: copy default configs
+  template:
+    src: "{{projects_path}}alexa_smarthome/config/{{item}}.default"
+    dest: "{{projects_path}}alexa_smarthome/config/{{item}}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - environment.js
+    - test.js
+  when: not alexa_config.stat.exists

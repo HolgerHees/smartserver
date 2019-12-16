@@ -241,7 +241,7 @@
             mx.$("#content #inline").style.display = "";
         }
 
-        function setMenu(data,postInit)
+        function setMenu(data,callbacks)
         {
             var submenu = mx.$('#content #submenu');
             submenu.style.transition = "opacity 50ms linear";
@@ -255,7 +255,13 @@
                     {
                         mx.Core.waitForTransitionEnd(submenu,function()
                         {
-                            if( postInit ) postInit();
+                            if( callbacks.length > 0 ) 
+                            {
+                                callbacks.forEach(function(callback)
+                                {
+                                    callback();
+                                });
+                            }
                         },"setSubMenu2");
                         submenu.style.opacity = "";
                     },0);
@@ -287,7 +293,7 @@
             cleanMenu();
             
             var entries = [];
-            var postInit = null;
+            var callbacks = [];
             
             //console.log(key);
             //console.log(typeof subMenus[key]);
@@ -299,9 +305,13 @@
 
                 if( entry[0] == 'html' )
                 {
-                    entries.push('<div class="service ' + key + '">' + entry[2] + '</div>');
-                    postInit = this[entry[1]];
-                    break;
+                    entries.push(entry[1]);
+                    //entries.push('<div class="service ' + key + '">' + entry[2] + '</div>');
+                    //postInit = this[entry[1]];
+                }
+                else if( entry[0] == 'js' )
+                {
+                    callbacks.push(this[entry[1]]);
                 }
                 else
                 {
@@ -309,7 +319,7 @@
                 }
             }
             
-            setMenu(entries.join(""),postInit);
+            setMenu(entries.join(""),callbacks);
             
             if( element != null ) element.classList.add("active");
         }
@@ -360,7 +370,7 @@
             message += '<div class="imageTitle">' + imageTitle + '</div>';
             message += '</div>';
             
-            if( !isAlreadyActive ) setMenu(message,null);
+            if( !isAlreadyActive ) setMenu(message,[]);
             else mx.$('#content #submenu').innerHTML = message;
             
             refreshTimer.push( window.setTimeout(openHome,60000 - (s * 1000)) );
@@ -398,7 +408,12 @@
                 ['url','/habot',getI18N('Chatbot'),getI18N('Habot'),false]
             ];
             subMenus['camera'] = [
-                ['html','initCamera','<div class="strasse"><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="'+getI18N('Street')+'" data-src="/cameraStrasseImage" data-interval="3000"></a></div><div class="automower"><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png"  data-name="'+getI18N('Automower')+'" data-src="/cameraAutomowerImage" data-interval="10000"></a></div>']
+                ['html','<div class="service camera">'],
+                {% for camera in webui_urls.cameras %}
+                    ['html','<div><a href="{{camera.clickUrl}}" target="_blank"><img src="/main/img/loading.png" data-name="{{camera.title}}" data-src="{{camera.imageUrl}}" data-interval="{{camera.interval}}"></a></div>'],
+                {% endfor %}
+                ['html','</div>'],
+                ['js','initCamera']
             ];
             subMenus['tools'] = [
                 ['url','/grafana/d/server-health/server-health',getI18N('Charts'),getI18N('Grafana'),false],
@@ -411,10 +426,9 @@
                 ['url','/tools/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
             ];
             subMenus['devices'] = [
-                ['url','/automowerDevice/',getI18N('Automower'),getI18N('Robonect'),false],
-                ['url','/redirectToPvInverterGarage', getI18N('Inverter'),getI18N('Solar (Extern)'),true],
-                ['url','/redirectToPrinterLaserJet', getI18N('Laserprinter'),getI18N('HPLaserJet'),true],
-                ['url','/redirectToFritzBox', getI18N('Router'),getI18N('FritzBox'),true]
+                {% for device in webui_urls.devices %}
+                    ['url','{{device.url}}','{{device.title}}','{{device.name}}','{{device.openInNewWindow}}']{{'' if loop.last else ','}}
+                {% endfor %}
             ];
         }
 

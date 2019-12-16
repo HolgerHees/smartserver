@@ -108,7 +108,7 @@
 
 - name: copy service
   template:
-    src: "roles/openhab/templates/etc/systemd/system/openhab.service"
+    src: "templates/etc/systemd/system/openhab.service"
     dest: "/etc/systemd/system/openhab.service"
     owner: root
     group: root
@@ -155,32 +155,32 @@
 
 - name: copy service configs
   template:
-    src: "{{ item.src }}"
-    dest: "{{data_path}}openhab-runtime/conf/services/{{ item.path }}"
+    src: "{{item}}"
+    dest: "{{data_path}}openhab-runtime/conf/services/{{item|basename}}"
     owner: root
     group: root
     mode: 0640
-  with_filetree: "{{projects_path}}openhab2/templates/services/"
+  with_fileglob: "{{projects_path}}openhab2/templates/services/*"
   notify: "restart openhab"
 
 - name: copy things configs
   template:
-    src: "{{ item.src }}"
-    dest: "{{data_path}}openhab-runtime/conf/things/{{ item.path }}"
+    src: "{{item}}"
+    dest: "{{data_path}}openhab-runtime/conf/things/{{item|basename}}"
     owner: root
     group: root
     mode: 0640
-  with_filetree: "{{projects_path}}openhab2/templates/things/"
+  with_fileglob: "{{projects_path}}openhab2/templates/things/*"
   notify: "restart openhab"
 
 - name: copy udev rules
   template:
-    src: "{{ item.src }}"
-    dest: "/etc/udev/rules.d/{{ item.path }}"
+    src: "{{item}}"
+    dest: "/etc/udev/rules.d/{{item|basename}}"
     owner: root
     group: root
     mode: 644
-  with_filetree: "{{projects_path}}openhab2/templates/udev/rules.d/"
+  with_fileglob: "{{projects_path}}openhab2/templates/udev/rules.d/*"
   notify: "restart openhab"
 # *******************
 
@@ -272,12 +272,12 @@
 # ***** OTHER *****
 - name: copy apache config
   vars:
-    config_file: "roles/openhab/templates/etc/apache2/_.ansible.d/openhab.conf"
+    config_file: "templates/etc/apache2/_.ansible.d/openhab.conf"
   import_tasks: roles/apache/tasks/add_config.yml
 
 - name: copy fluentd config
   vars:
-    config_file: "roles/openhab/templates/etc/fluent/_.ansible.d/openhab.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: create cron job

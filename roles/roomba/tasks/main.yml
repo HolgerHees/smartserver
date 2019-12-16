@@ -24,7 +24,7 @@
 
 - name: copy roomba ressources
   copy:
-    src: "roles/roomba/templates/opt/roomba/{{item}}"
+    src: "templates/opt/roomba/{{item}}"
     dest: "/opt/roomba/"
     owner: root
     group: root
@@ -37,7 +37,7 @@
   
 - name: copy config and service
   template:
-    src: "roles/roomba/templates{{item.path}}"
+    src: "templates{{item.path}}"
     dest: "{{item.path}}"
     owner: root
     group: root

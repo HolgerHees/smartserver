@@ -19,7 +19,7 @@
   
 - name: copy config
   template:
-    src: "roles/dns/templates/etc/named.conf"
+    src: "templates/etc/named.conf"
     dest: "/etc/named.conf"
     owner: root
     group: named
@@ -50,7 +50,7 @@
   
 - name: copy var folder
   template:
-    src: "roles/dns/templates/var/lib/named/{{item}}"
+    src: "templates/var/lib/named/{{item}}"
     dest: "/var/lib/named/{{item}}"
     owner: named
     group: named

@@ -42,7 +42,7 @@
   
 - name: copy fluentd config
   vars:
-    config_file: "roles/mysql/templates/etc/fluent/_.ansible.d/mysql.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/mysql.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
 - name: create cron job

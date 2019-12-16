@@ -157,7 +157,7 @@
 
 - name: copy config
   template:
-    src: "roles/openvpn_mobile/templates/{{item}}"
+    src: "templates/{{item}}"
     dest: "/etc/openvpn/{{item}}"
     owner: root
     group: root

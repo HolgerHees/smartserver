@@ -34,7 +34,7 @@
 
 - name: copy fluentd config => is_suse
   vars:
-    config_file: "roles/container/templates/etc/fluent/_.ansible.d/podman.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   when: is_suse|bool
   
@@ -113,7 +113,7 @@
 
 - name: copy fluentd config
   vars:
-    config_file: "roles/container/templates/etc/fluent/_.ansible.d/docker.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
 # https://success.docker.com/article/node-using-swap-memory-instead-of-host-memory

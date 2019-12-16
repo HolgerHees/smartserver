@@ -10,7 +10,7 @@
 
 - name: copy cmd
   template:
-    src: "roles/cron_service_check/templates/service_check.sh"
+    src: "templates/service_check.sh"
     dest: "/opt/service_check/service_check.sh"
     owner: root
     group: root
