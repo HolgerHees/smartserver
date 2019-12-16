@@ -1,5 +1,5 @@
 .vagrant/
 .vscode/
-config/
+config/*
 !config/demo/
 *.retry
