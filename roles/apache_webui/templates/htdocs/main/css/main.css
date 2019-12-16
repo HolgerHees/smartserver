@@ -300,16 +300,8 @@ body.nobackground #submenu .service.button div:last-child {
         flex-direction: row;
         flex-grow: 0;
         margin-top: 0;
-    }
-    #submenu .service.camera div.strasse {
         min-width:48.5%;
         max-width:640px;
-        margin: 0 0.5% 0 1%;
-    }
-    #submenu .service.camera div.automower {
-        min-width:48.5%;
-        max-width:640px;
-        margin: 0 1% 0 0.5%;
     }
 }
 #submenu .service.camera > div {
