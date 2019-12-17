@@ -299,15 +299,18 @@ body.nobackground #submenu .service.button div:last-child {
     position: relative;
     max-width:640px;
 }
-#submenu .service.camera > div span {
+#submenu .service.camera > div > a {
+    display: block;
+}
+#submenu .service.camera > div > span {
     position: absolute;
     top: 3px;
     color: yellow;
 }
-#submenu .service.camera > div span.name {
+#submenu .service.camera > div > span.name {
     left: 1%;    
 }
-#submenu .service.camera > div span.time {
+#submenu .service.camera > div > span.time {
     right: 1%;
 }
 @media screen and (min-width: 1000px) {
@@ -315,11 +318,17 @@ body.nobackground #submenu .service.button div:last-child {
         flex-direction: row;
         flex-grow: 0;
         margin-top: 0;
-        padding:5px;
     }
     #submenu .service.camera > div {
         width:calc(50% - 10px);
-        margin:5px;
+        height: 100%;
+        background-color: black;
+    }
+    #submenu .service.camera > div > a {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
     }
 }
 body.desktop #menu {
