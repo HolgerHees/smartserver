@@ -318,10 +318,10 @@ body.nobackground #submenu .service.button div:last-child {
         flex-direction: row;
         flex-grow: 0;
         margin-top: 0;
+        align-items: stretch;
     }
     #submenu .service.camera > div {
         width:calc(50% - 10px);
-        height: 100%;
         background-color: black;
     }
     #submenu .service.camera > div > a {
