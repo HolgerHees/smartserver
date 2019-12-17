@@ -295,21 +295,9 @@ body.nobackground #submenu .service.button div:last-child {
 #submenu .service.camera img {
     width: 100%;
 }
-@media screen and (min-width: 1000px) {
-    #submenu .service.camera {
-        flex-direction: row;
-        flex-grow: 0;
-        margin-top: 0;
-        padding:5px;
-    }
-    #submenu .service.camera > div {
-        min-width:48.5%;
-        max-width:640px;
-        margin:5px;
-    }
-}
 #submenu .service.camera > div {
     position: relative;
+    max-width:640px;
 }
 #submenu .service.camera > div span {
     position: absolute;
@@ -322,7 +310,18 @@ body.nobackground #submenu .service.button div:last-child {
 #submenu .service.camera > div span.time {
     right: 1%;
 }
-
+@media screen and (min-width: 1000px) {
+    #submenu .service.camera {
+        flex-direction: row;
+        flex-grow: 0;
+        margin-top: 0;
+        padding:5px;
+    }
+    #submenu .service.camera > div {
+        width:calc(50% - 10px);
+        margin:5px;
+    }
+}
 body.desktop #menu {
     width: 300px;
 }
