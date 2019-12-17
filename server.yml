@@ -3,9 +3,9 @@
   become: yes
   become_user: root
   pre_tasks:
-    - name: init
-      import_tasks: roles/_helper/tasks/init.yml                                  # detect environment and load configs
-      tags: always
+    # ************ INIT CONFIG ***********   
+    - { import_role: { name: _init }, tags: [ 'always' ] }                                       # detect environment and load configs
+    # ************************************   
 
     - name: loaded values from config files
       debug:
@@ -83,9 +83,8 @@
 
     - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
 
-    # ******* FLUSH HANDLER ********
-    # Previous roles are independent from upcomming roles, But lot of upcomming roles are depending from previous roles
-    - { meta: flush_handlers }
+    # ************ FLUSH HANDLER ***********    
+    - { meta: flush_handlers }                                                                   # Previous roles are independent from upcomming roles, But lot of upcomming roles are depending from previous roles
     # **************************************
 
     - { import_role: { name: user }, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
@@ -111,16 +110,15 @@
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
-    # ******* CUSTOM ROLES ********
-    # Details can be found inside the demo configuration 'config/demo/roles.yml'
-    - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }
+    # ************ CUSTOM ROLES ************
+    - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }                          # Details can be found inside the demo configuration 'config/demo/roles.yml'
+    # **************************************
 
-    # *** BACKUP RESTORE ON STAGING ****     
+    # ****** BACKUP RESTORE ON STAGING *****     
     - { import_role: { name: backup_restore }, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
+    # **************************************
     
   post_tasks:
-    # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...) 
-    - { import_role: { name: nextcloud, tasks_from: enable_apps }, tags: [ 'nextcloud' ] }
+    - { import_role: { name: nextcloud, tasks_from: enable_apps }, tags: [ 'nextcloud' ] }       # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 
-    # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana) 
-    - { import_role: { name: kibana, tasks_from: import_dashboards }, tags: [ 'kibana' ] }
+    - { import_role: { name: kibana, tasks_from: import_dashboards }, tags: [ 'kibana' ] }       # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
