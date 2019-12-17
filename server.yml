@@ -79,13 +79,13 @@
 
     - { import_role: { name: apache_ssl }, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
     - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # web server
-    #- { import_role: { name: apache_docker }, tags: [ 'apache_docker' ] }                        # web server                                                       [docker]
+    - { import_role: { name: apache_docker }, tags: [ 'never', 'apache_docker' ] }                        # web server                                                       [docker]
 
     - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
 
-    # ******* SPECIAL FLUSH HANDLER ********
+    # ******* FLUSH HANDLER ********
     # Previous roles are independent from upcomming roles, But lot of upcomming roles are depending from previous roles
-    - { import_tasks: roles/_helper/tasks/flush.yml, tags: [ 'all' ] }
+    - { meta: flush_handlers }
     # **************************************
 
     - { import_role: { name: user }, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)

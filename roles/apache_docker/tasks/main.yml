@@ -1,5 +1,15 @@
 #https://stackify.com/docker-for-php-a-start-to-finish-guide/
 
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "{{global_log}}apache2_docker/"
+    
 - name: check started docker
   systemd:
     name: docker
@@ -11,27 +21,34 @@
   changed_when: "'custom_apache' not in image_exists.stdout"
  
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_apache:1.0.0 roles/apache_docker/templates/container/"
+  shell: "docker build -t custom_apache:1.0.0 roles/apache_docker/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2"
   register: output
-  when: "'custom_apache' not in image_exists.stdout"
+#  when: "'custom_apache' not in image_exists.stdout"
   
 - name: create docker container
   docker_container:
-    name: httpd
+    name: apache
     image: custom_apache:1.0.0
     state: present
-#    recreate: true
-#    env:
-#      APACHE_DOCUMENT_ROOT: "{{htdocs_path}}"
+    recreate: true
+    env:
+      APACHE_RUN_USER: "#469"
+      APACHE_RUN_GROUP: "#469"
     log_driver: journald
     log_options:
-      tag: httpd
+      tag: apache
     volumes:
-      - '{{htdocs_path}}:/var/www/html:z'
+      #- '{{htdocs_path}}:/var/www/html:z'
+      - '{{htdocs_path}}:{{htdocs_path}}:z'
+      - '{{global_log}}apache2_docker:{{global_log}}apache2:z'
+      - '/etc/certbot:/etc/certbot:z'
+      - '/etc/apache2/_.ansible.d:/etc/apache2/_.ansible.d:z'
+      - '/etc/apache2/_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
     ports:
-      - "9443:443"
-      - "90114:10114"
-  notify: "restart vsftpd"
+      - "81:80"
+      - "444:443"
+      - "10115:10114"
+#  notify: "restart apache"
 
 #- name: clean old docker images
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
@@ -39,5 +56,5 @@
   
 #- name: create systemd service
 #  vars:
-#    container_name: "httpd"
+#    container_name: "apache"
 #  import_tasks: roles/container/tasks/add_docker_service.yml
