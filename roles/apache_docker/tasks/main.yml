@@ -40,6 +40,7 @@
     volumes:
       #- '{{htdocs_path}}:/var/www/html:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
+      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'
       - '{{global_log}}apache2_docker:{{global_log}}apache2:z'
       - '/etc/certbot:/etc/certbot:z'
       - '/etc/apache2/_.ansible.d:/etc/apache2/_.ansible.d:z'

@@ -1,4 +1,4 @@
-FROM php:7.4-apache
+FROM php:7.3-apache
 
 ARG GLOBAL_LOG
 
@@ -51,5 +51,6 @@ RUN echo 'Include /etc/apache2/_.ansible_vhost-ssl.conf' >> /etc/apache2/apache2
 
 #RUN apt-get install -y libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev
 
+RUN docker-php-ext-install mysqli
 #RUN docker-php-ext-install exif mbstring zip mysqli pcntl
 
