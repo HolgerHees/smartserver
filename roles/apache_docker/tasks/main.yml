@@ -30,6 +30,7 @@
     name: apache
     image: custom_apache:1.0.0
     state: present
+    network_mode: "host"
     recreate: true
     env:
       APACHE_RUN_USER: "#469"
@@ -42,13 +43,14 @@
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'
       - '{{global_log}}apache2_docker:{{global_log}}apache2:z'
+      - '{{redis_socket_path}}redis.sock:{{redis_socket_path}}redis.sock:z'
       - '/etc/certbot:/etc/certbot:z'
       - '/etc/apache2/_.ansible.d:/etc/apache2/_.ansible.d:z'
       - '/etc/apache2/_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
-    ports:
-      - "81:80"
-      - "444:443"
-      - "10115:10114"
+#    ports:
+#      - "81:80"
+#      - "444:443"
+#      - "10115:10114"
 #  notify: "restart apache"
 
 #- name: clean old docker images
