@@ -55,10 +55,10 @@
     seuser: "system_u"
     state: present
   register: sefcontext_result
-  when: is_fedora|bool
+  when: is_fedora|bool and not dockerized_apache
 
 - name: reload selinux configuration => is_fedora
   shell: "restorecon {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages/tmp"
-  when: is_fedora|bool and sefcontext_result.changed
+  when: is_fedora|bool and sefcontext_result.changed and not dockerized_apache
   
     

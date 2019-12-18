@@ -21,11 +21,11 @@
     seuser: "system_u"
     state: present
   register: sefcontext_result
-  when: is_fedora|bool
+  when: is_fedora|bool and not dockerized_apache
 
 - name: reload selinux configuratio => is_fedora and sefcontext changed
   shell: "restorecon -irv {{projects_path}}toolbox"
-  when: is_fedora|bool and sefcontext_result.changed
+  when: is_fedora|bool and sefcontext_result.changed and not dockerized_apache
 
 - name: set symbolic link to htdocs
   file:

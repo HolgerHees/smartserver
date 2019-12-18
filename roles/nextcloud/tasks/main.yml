@@ -111,14 +111,14 @@
   with_items:
     - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{htdocs_path}}nextcloud-{{nextcloud_version}}(/.*)?" }
     - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{nextcloud_data_path | regex_replace('\\/$', '')}}(/.*)?" }
-  when: is_fedora|bool
+  when: is_fedora|bool and not dockerized_apache
   
 - name: reload selinux configuration => is_fedora
   shell: "restorecon {{item}}"
   with_items:
     - "-irv {{htdocs_path}}nextcloud-{{nextcloud_version}}"
     - "-irv {{nextcloud_data_path | regex_replace('\\/$', '')}}"
-  when: is_fedora|bool and sefcontext_result.changed
+  when: is_fedora|bool and sefcontext_result.changed and not dockerized_apache
   
 # ***** DATABASE ****
 - name: check mysql service
@@ -171,6 +171,18 @@
   become: yes
   become_user: "{{www_username}}"
   with_items: "{{vault_usernames}}"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
+
+- name: add user "{{vault_admin_username}}" => database does not exists
+  shell: "export OC_PASS={{vault_admin_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"admin\" {{vault_admin_username}}"
+  become: yes
+  become_user: "{{www_username}}"
+  when: "'nextcloud' not in mysql_data_exists.stdout"
+
+- name: enable cron as background job handler => database does not exists
+  shell: "php -f /dataDisk/htdocs/nextcloud/occ background:cron"
+  become: yes
+  become_user: "{{www_username}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****

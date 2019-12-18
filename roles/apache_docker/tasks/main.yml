@@ -2,14 +2,15 @@
 
 - name: prepare needed folder
   file:
-    path: "{{item}}"
+    path: "{{item.dir}}"
     state: directory
     owner: root
     group: root
     mode: 0755
   with_items:
-    - "{{global_log}}apache2_docker/"
-    
+    - "{{htdocs_path}}"
+    - "{{global_log}}apache2/"
+
 - name: check started docker
   systemd:
     name: docker
@@ -42,11 +43,11 @@
       #- '{{htdocs_path}}:/var/www/html:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'
-      - '{{global_log}}apache2_docker:{{global_log}}apache2:z'
+      - '{{global_log}}apache2:{{global_log}}apache2:z'
       - '{{redis_socket_path}}redis.sock:{{redis_socket_path}}redis.sock:z'
+      - '{{www_etc}}_.ansible.d:/etc/apache2/_.ansible.d:z'
+      - '{{www_etc}}_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
       - '/etc/certbot:/etc/certbot:z'
-      - '/etc/apache2/_.ansible.d:/etc/apache2/_.ansible.d:z'
-      - '/etc/apache2/_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
 #    ports:
 #      - "81:80"
 #      - "444:443"
@@ -61,3 +62,67 @@
 #  vars:
 #    container_name: "apache"
 #  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: copy config
+  template:
+    src: "templates/etc/apache2/{{item}}"
+    dest: "{{www_etc}}{{item}}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - _.ansible.d/auth.conf
+    - _.ansible.d/options.conf
+    - _.ansible_vhost-ssl.conf
+  notify: "restart apache"
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+  
+- name: prepare .htpasswd file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htpasswd"
+    force: no
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0640
+
+- name: prepare .htdigest file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htdigest"
+    force: no
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0640
+
+- name: prepare .htgroups file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htgroups"
+    force: no
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0640
+
+- name: prepare .htdata file
+  copy:
+    content: ""
+    dest: "{{htdocs_path}}.htdata"
+    force: no
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0640
+
+- name: set logrotate job
+  vars:
+    logrotate_path: "{{global_log}}apache2/*.log"
+  copy:
+    content: "{{ lookup('template', 'roles/apache/templates/logrotate') }}"
+    dest: "/etc/logrotate.d/ansible_apache"
+    owner: root
+    group: root
+    mode: 0640

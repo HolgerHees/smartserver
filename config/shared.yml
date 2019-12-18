@@ -2,6 +2,7 @@ global_log:                       "/dataDisk/var/log/"
 global_lib:                       "/dataDisk/var/lib/"
 global_tmp:                       "/dataDisk/tmp/"
 global_build:                     "/dataDisk/build/"
+global_etc:                       "/dataDisk/etc/"
 
 data_path:                        "/dataDisk/"
 ftp_path:                         "/dataDisk/ftp/"
