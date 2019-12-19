@@ -48,13 +48,29 @@
     follow: no
     owner: "{{www_username}}"
     group: "{{www_group}}"
+  notify: "restart apache2"
+
+- name: bind data directory
+  vars:
+    source_path: "{{nextcloud_data_path}}"
+    target_path: "{{htdocs_path}}nextcloud-data"
+  import_tasks: roles/apache/tasks/bind_directory.yml
   
-#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/data(/.*)?'
-#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/config(/.*)?'
-#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/apps(/.*)?'
-#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.htaccess'
-#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/.user.ini'
-#semanage fcontext -a -t httpd_sys_rw_content_t '/var/www/html/nextcloud/3rdparty/aws/aws-sdk-php/src/data/logs(/.*)?'
+- name: bind data directory
+  vars:
+    source_path: "{{global_log}}nextcloud"
+    target_path: "{{htdocs_path}}nextcloud-logs"
+  import_tasks: roles/apache/tasks/bind_directory.yml
+
+#- name: set symbolic link to data
+#  file:
+#    src: "{{nextcloud_data_path}}"
+#    dest: "{{htdocs_path}}nextcloud/data"
+#    state: link
+#    follow: no
+#    owner: "{{www_username}}"
+#    group: "{{www_group}}"  
+#  notify: "restart apache2"
 
 - name: copy config
   template:
@@ -72,7 +88,7 @@
     group: "{{www_group}}"
     mode: 0640 
   
-# ***** DATABASE ****
+# ***** DATABASE *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
 
@@ -81,23 +97,10 @@
   register: mysql_data_exists
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: upgrade existing database => database exists and nextcloud installation changed
-  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
-  become: yes
-  become_user: "{{www_username}}"
-  when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
-
 - name: create missing mysql databases => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
   
-#- mysql_user:
-#    name: "{{vault_nextcloud_mysql_username}}"
-#    host: "127.0.0.1"
-#    password: "{{vault_nextcloud_mysql_password}}"
-#    priv: 'nextcloud.*:ALL,GRANT'
-#    state: present
-
 - name: create missing mysql user => database does not exists
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{vault_nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{vault_nextcloud_mysql_password}}';\\\"\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
@@ -114,27 +117,32 @@
   shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
   when: "'nextcloud' not in mysql_data_exists.stdout"
   
+# ***** REDIS ****
 - name: check redis service => database does not exists
   import_tasks: roles/redis/tasks/wait_until_ready.yml
   when: "'nextcloud' not in mysql_data_exists.stdout"
-  
+
+# ***** APACHE *****  
+- name: check apache service
+  import_tasks: roles/apache/tasks/wait_until_ready.yml
+  when: "'nextcloud' not in mysql_data_exists.stdout or not nextcloud_exists.stat.exists"
+
+# ***** OCC *****
+- name: upgrade existing database => database exists and nextcloud installation changed
+  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php {{htdocs_path}}nextcloud/occ upgrade\""
+  when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
+
 - name: add user => database does not exists
-  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
-  become: yes
-  become_user: "{{www_username}}"
+  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; sudo -E -u {{www_username}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: add user "{{vault_admin_username}}" => database does not exists
-  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
-  become: yes
-  become_user: "{{www_username}}"
+  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; sudo -E -u {{www_username}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
-  shell: "docker exec apache2 sh -c \"php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
-  become: yes
-  become_user: "{{www_username}}"
+  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****
@@ -146,18 +154,16 @@
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec apache2 sh -c \"php -f {{htdocs_path}}nextcloud/cron.php\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec apache2 sh -c \"sudo -u {{www_username}} php -f {{htdocs_path}}nextcloud/cron.php\""
     file: "ansible_nextcloud"
-    user: "{{www_username}}"
     minute: "*/15"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create cron job
   vars:
     name: "Nextcloud Fileindex"
-    cmd: "docker exec apache2 sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
+    cmd: "docker exec apache2 sh -c \"sudo -u {{www_username}} php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
     file: "ansible_nextcloud"
-    user: "{{www_username}}"
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml

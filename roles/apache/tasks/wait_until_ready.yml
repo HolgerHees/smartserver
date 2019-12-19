@@ -1,0 +1,9 @@
+- name: read service facts
+  service_facts:
+
+- name: check if apache2 is running
+  systemd:
+    name: apache2
+    state: started
+    daemon_reload: yes
+  changed_when: ansible_facts.services["apache2.service"].state != 'running'

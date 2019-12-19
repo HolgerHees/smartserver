@@ -13,6 +13,12 @@
     group: root
     mode: 0644
   
+- name: bind directory
+  vars:
+    source_path: "{{projects_path}}toolbox/"
+    target_path: "{{htdocs_path}}toolbox"
+  import_tasks: roles/apache/tasks/bind_directory.yml
+
 - name: set symbolic link to htdocs
   file:
     src: "{{projects_path}}toolbox/web/"
@@ -21,6 +27,7 @@
     follow: no
     owner: "{{www_username}}"
     group: "{{www_group}}"  
+  notify: "restart apache2"
       
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml

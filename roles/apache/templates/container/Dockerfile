@@ -9,6 +9,8 @@ RUN useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false c_wwwrun
 
 RUN apt-get update
 
+RUN apt-get install -y sudo
+
 RUN ln -s /etc/apache2/mods-available/auth_digest.load /etc/apache2/mods-enabled/
 RUN ln -s /etc/apache2/mods-available/authz_groupfile.load /etc/apache2/mods-enabled/
 
@@ -50,11 +52,15 @@ RUN sed -i "s/Include ports\.conf/#Include ports\.conf/g" /etc/apache2/apache2.c
 
 RUN echo 'Include /etc/apache2/_.ansible_vhost-ssl.conf' >> /etc/apache2/apache2.conf
 
-#RUN sed -i 's/maxmemory.*/maxmemory 26gb/' /some/file/some/where.txt
+RUN mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini"
+
+RUN sed -i 's/memory_limit.*/memory_limit = 1024M/' /usr/local/etc/php/php.ini
 
 #RUN apt-get install -y libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev
 
 RUN docker-php-ext-enable opcache
+
+RUN docker-php-ext-install pcntl
 
 # MYSQL
 RUN docker-php-ext-install mysqli pdo_mysql

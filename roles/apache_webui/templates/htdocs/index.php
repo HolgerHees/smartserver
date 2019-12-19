@@ -423,7 +423,7 @@
             ];
             subMenus['admin'] = [
                 ['url','/mysql/',getI18N('MySQL'),getI18N('phpMyAdmin'),false],
-                ['url','/tools/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
+                ['url','/toolbox/web/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
             ];
             subMenus['devices'] = [
                 {% for device in webui_urls.devices %}

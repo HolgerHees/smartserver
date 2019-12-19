@@ -1,10 +1,17 @@
+# ***** CHECK *****
+
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
     
+- name: check redis service
+  import_tasks: roles/redis/tasks/wait_until_ready.yml
+
+- name: check apache service
+  import_tasks: roles/apache/tasks/wait_until_ready.yml
+
+# ***** OCC *****
 - name: install apps
-  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
-  become: yes
-  become_user: "{{www_username}}"
+  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
   register: command_result
   failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
   changed_when: "'enabled' in command_result.stdout"
@@ -30,9 +37,7 @@
   when: not keeweb_exists.stat.exists
   
 - name: enable keeweb app => app does not exists
-  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
-  become: yes
-  become_user: "{{www_username}}"
+  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
   when: not keeweb_exists.stat.exists
 
 - name: install news app
@@ -72,9 +77,7 @@
     mode: 0640
   
 - name: enable news app => app installation changed
-  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ app:enable news\""
-  become: yes
-  become_user: "{{www_username}}"
+  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php {{htdocs_path}}nextcloud/occ app:enable news\""
   when: news_installed.changed
 
  
