@@ -89,7 +89,7 @@
   register: sefcontext_result
   when: is_fedora|bool
 
-- name: reload selinux configuration => is_fedora
+- name: reload selinux configuration => is_fedora and sefcontext changed
   shell: "restorecon {{global_lib}}docker"
   when: is_fedora|bool and sefcontext_result.changed
 

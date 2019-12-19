@@ -77,7 +77,7 @@
     - { ftype: "f", setype: "named_conf_t", target: "/var/named(/.*)?" }
   when: is_fedora|bool
 
-- name: reload selinux configuration => is_fedora
+- name: reload selinux configuration => is_fedora and sefcontext changed
   shell: "restorecon {{item}}"
   with_items:
     - "/var/lib/named"

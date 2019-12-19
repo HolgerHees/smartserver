@@ -5,7 +5,6 @@
   pre_tasks:
     - name: enable tests
       set_fact:
-        dockerized_apache: no
         openhab_2_5_0: no
       tags: always
     
@@ -59,8 +58,7 @@
 
     - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
-    - { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli
-    #- { import_role: { name: php }, tags: [ 'php' ], when: "not dockerized_apache" }             # php cli
+    #- { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli
     
     - { import_role: { name: java }, tags: [ 'java' ] }                                          # jdk 1.8
     - { import_role: { name: java_maven }, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
@@ -85,8 +83,7 @@
     - { import_role: { name: mosquitto }, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker]
 
     - { import_role: { name: apache_ssl }, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
-    - { import_role: { name: apache }, tags: [ 'apache' ], when: "not dockerized_apache" }       # web server
-    - { import_role: { name: apache_docker }, tags: [ 'apache' ], when: "dockerized_apache|bool" }    # web server                                                        [docker]
+    - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker]
 
     - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
 

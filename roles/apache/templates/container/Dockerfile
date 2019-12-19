@@ -1,6 +1,11 @@
 FROM php:7.3-apache
 
 ARG GLOBAL_LOG
+ARG WWW_UID
+ARG WWW_GID
+
+RUN groupadd -g $WWW_GID c_www
+RUN useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false c_wwwrun
 
 RUN apt-get update
 
@@ -49,20 +54,37 @@ RUN echo 'Include /etc/apache2/_.ansible_vhost-ssl.conf' >> /etc/apache2/apache2
 
 #RUN apt-get install -y libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev
 
-RUN apt-get install -y libicu-dev zlib1g-dev libzip-dev libjpeg-dev libpng-dev libmagickwand-dev
+RUN docker-php-ext-enable opcache
 
-RUN docker-php-ext-install mysqli pdo_mysql intl zip gd
-#RUN docker-php-ext-install exif mbstring zip mysqli pcntl
+# MYSQL
+RUN docker-php-ext-install mysqli pdo_mysql
 
+# INTL
+RUN apt-get install -y libicu-dev
+RUN docker-php-ext-install intl
+
+# ZIP
+RUN apt-get install -y zlib1g-dev libzip-dev
+RUN docker-php-ext-install zip
+
+# APC Cache
 RUN pecl install apcu-5.1.11
 RUN docker-php-ext-enable apcu
 
+# ImageMagick
+#RUN apt-get install -y libjpeg-dev libpng-dev libmagickwand-dev
+RUN apt-get install -y libmagickwand-dev
 RUN pecl install imagick
 RUN docker-php-ext-enable imagick
 
+# GD Image library with freetype support
+RUN apt-get install -y libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev
+RUN docker-php-ext-configure gd --with-gd --with-webp-dir --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir
+RUN docker-php-ext-install gd
+
+# Redis
 RUN pecl install redis
 RUN docker-php-ext-enable redis
-
 
 #TODO
 #      , systemd-devel         # php-systemd => nextcloud

@@ -1,8 +1,8 @@
-- name: restart apache
+- name: restart apache2
   systemd:
-    name: "{{ 'apache2' if is_suse|bool else 'httpd' }}"
+    name: "apache2"
     state: restarted
     daemon_reload: yes
     enabled: yes
     masked: no
-  listen: "restart apache"
+  listen: "restart apache2"

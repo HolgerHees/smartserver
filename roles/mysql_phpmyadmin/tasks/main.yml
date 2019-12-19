@@ -47,18 +47,3 @@
     owner: "{{www_username}}"
     group: "{{www_group}}"
     mode: 0750
-  
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages/tmp"
-    setype: "httpd_sys_rw_content_t"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  when: is_fedora|bool and not dockerized_apache
-
-- name: reload selinux configuration => is_fedora
-  shell: "restorecon {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages/tmp"
-  when: is_fedora|bool and sefcontext_result.changed and not dockerized_apache
-  
-    

@@ -45,21 +45,12 @@
   tags: always
   
 # set apache environment variables
-- name: set apache vars => not dockerized_apache
+- name: set apache vars
   set_fact:
-    www_username: "{{ 'wwwrun' if is_suse else 'apache' }}"
-    www_group: "{{ 'www' if is_suse else 'apache' }}"
-    www_etc: "{{ '/etc/apache2/' if is_suse else '/etc/httpd/' }}"
+    www_username: "c_wwwrun"
+    www_group: "c_www"
+    www_etc: "{{global_etc}}apache2/"
   tags: always
-  when: "not dockerized_apache"
-  
-- name: set apache vars => dockerized_apache
-  set_fact:
-    www_username: "root"
-    www_group: "root"
-    www_etc: "{{global_etc}}apache2"
-  tags: always
-  when: "dockerized_apache|bool"
 
 # set environment specific variables [post]
 - name: set post state vars

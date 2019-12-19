@@ -13,20 +13,6 @@
     group: root
     mode: 0644
   
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{projects_path}}toolbox(/.*)?"
-    ftype: "a"
-    setype: "httpd_sys_content_t"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  when: is_fedora|bool and not dockerized_apache
-
-- name: reload selinux configuratio => is_fedora and sefcontext changed
-  shell: "restorecon -irv {{projects_path}}toolbox"
-  when: is_fedora|bool and sefcontext_result.changed and not dockerized_apache
-
 - name: set symbolic link to htdocs
   file:
     src: "{{projects_path}}toolbox/web/"
@@ -52,7 +38,7 @@
 - name: create cron job
   vars:
     name: "Weatherdata"
-    cmd: "/usr/bin/php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php"
+    cmd: "docker exec apache2 sh -c \"php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php\""
     file: "ansible_openhab_toolbox"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml

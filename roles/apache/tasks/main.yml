@@ -1,253 +1,98 @@
-- name: install required packages => is_fedora
-  yum:
-    name: [
-        httpd 
-      , mod_proxy_html
-    ]
-    state: present
-  when: is_fedora|bool
-  notify: "restart apache"
-  
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        apache2 
-      , apache2-mod_php7
-    ]
-    state: present
-  when: is_suse|bool
-  notify: "restart apache"
-  
+#https://stackify.com/docker-for-php-a-start-to-finish-guide/
+
 - name: prepare needed folder
   file:
-    path: "{{item.dir}}"
+    path: "{{item}}"
     state: directory
-    owner: "{{item.owner}}"
-    group: "{{item.group}}"
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
     mode: 0755
   with_items:
-    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}" }
-    - { owner: "{{ 'root' if is_suse|bool else www_username }}", group: "{{ 'root' if is_suse|bool else www_group }}", dir: "{{global_log}}apache2/" }
+    - "{{htdocs_path}}"
+    - "{{global_log}}apache2/"
 
+- name: get id from "{{www_username}}"
+  shell: "id -u {{www_username}}"
+  register: user_id
+  changed_when: no
 
-
+- name: get id from "{{www_group}}"
+  shell: "id -g {{www_username}}"
+  register: group_id
+  changed_when: no
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-- name: enable modules => is_fedora
-  lineinfile:
-    path: "{{www_etc}}conf.modules.d/{{item.file}}"
-    regexp: '^[#\s]*LoadModule\s*{{item.name}}_module\s*modules/{{item.prefix}}{{item.name}}.so\s*'
-    line: '{{ "" if item.enabled else "#" }}LoadModule {{item.name}}_module modules/{{item.prefix}}{{item.name}}.so'
-  with_items:
-    - { enabled: true, file: "00-base.conf", name: "auth_digest", prefix: "mod_" }
-    - { enabled: true, file: "00-base.conf", name: "headers", prefix: "mod_" }
-    - { enabled: true, file: "00-mpm.conf", name: "mpm_prefork", prefix: "mod_" }
-    - { enabled: false, file: "00-mpm.conf", name: "mpm_worker", prefix: "mod_" }
-    - { enabled: false, file: "00-mpm.conf", name: "mpm_event", prefix: "mod_" }
-    - { enabled: true, file: "00-proxy.conf", name: "proxy", prefix: "mod_" }
-    - { enabled: true, file: "00-proxyhtml.conf", name: "proxy_html", prefix: "mod_" } 
-    - { enabled: true, file: "00-proxy.conf", name: "proxy_http", prefix: "mod_" } 
-    - { enabled: true, file: "00-proxy.conf", name: "proxy_balancer", prefix: "mod_" }
-    - { enabled: true, file: "00-proxy.conf", name: "lbmethod_bytraffic", prefix: "mod_" } # used by proxy_balancer
-    - { enabled: true, file: "00-base.conf", name: "slotmem_shm", prefix: "mod_" } # used by proxy_balancer
-    - { enabled: true, file: "00-proxyhtml.conf", name: "xml2enc", prefix: "mod_" }
-    - { enabled: true, file: "00-base.conf", name: "deflate", prefix: "mod_" } 
-    - { enabled: true, file: "00-base.conf", name: "filter", prefix: "mod_" } 
-    - { enabled: true, file: "00-proxy.conf", name: "proxy_wstunnel", prefix: "mod_" } 
-    - { enabled: true, file: "00-base.conf", name: "rewrite", prefix: "mod_" } 
-    - { enabled: true, file: "15-php.conf", name: "php7", prefix: "lib" }
-    - { enabled: true, file: "00-base.conf", name: "substitute", prefix: "mod_" } # needed for instar camera webui
-  notify: "restart apache"
-  when: is_fedora|bool
-
-# **** SELINUX MODULE COMPILATION ****
-# sudo grep 'redis.sock' /var/log/audit/audit.log | audit2allow -m httpd_to_redis > httpd_to_redis.te
-# needed e.g. for redis sockets to allow httpd connecting sockets
-- name: check for selinux socket module => is_fedora
-  shell: "semodule -l | grep \"httpd_can_socket_connect\""
-  register: semodule_result 
-  changed_when: semodule_result.rc == 1
-  failed_when: no
-  when: is_fedora|bool
-
-- name: compile selinux socket module => is_fedora and semodule does not exists
-  shell: "{{item}}" 
-  with_items:
-    - "checkmodule -M -m -o {{global_tmp}}httpd_can_socket_connect.mod roles/apache/templates/selinux/httpd_can_socket_connect.te"
-    - "semodule_package -o {{global_tmp}}httpd_can_socket_connect.pp -m {{global_tmp}}httpd_can_socket_connect.mod"
-    - "semodule -i {{global_tmp}}httpd_can_socket_connect.pp"
-  when: "is_fedora|bool and semodule_result.rc == 1"
-
-- name: cleanup selinux module build => is_fedora and semodule does not exists
-  file: 
-    path: "{{item}}"
-    state: absent
-  with_items:
-    - "{{global_tmp}}httpd_can_socket_connect.mod"
-    - "{{global_tmp}}httpd_can_socket_connect.pp"
-  when: "is_fedora|bool and semodule_result.rc == 1"
-# **********************************************
-
-- name: set selinux port configuration => is_fedora
-  seport:
-    ports: 10114
-    proto: tcp
-    setype: http_port_t
-    state: present
-  when: is_fedora|bool
-
-- name: set selinux proxy configuration => is_fedora
-  seboolean:
-    name: httpd_can_network_connect
-    state: yes
-    persistent: yes
-  when: is_fedora|bool
-
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{item.target}}"
-    ftype: "{{item.ftype}}"
-    setype: "{{item.setype}}"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  with_items:
-    - { ftype: "d", setype: "httpd_log_t", target: "{{global_log}}apache2" }
-    - { ftype: "d", setype: "httpd_config_t", target: "{{www_etc | regex_replace('\\/$', '')}}(/.*)?" }
-    - { ftype: "d", setype: "httpd_sys_content_t", target: "{{htdocs_path | regex_replace('\\/$', '')}}(/.*)?" }
-  when: is_fedora|bool
-
-- name: reload selinux configuration => is_fedora and selinux configuration changed
-  shell: "restorecon {{item}}"
-  with_items:
-    - "{{global_log}}apache2"
-    - "-irv {{www_etc}}"
-    - "-irv {{htdocs_path}}"
-  when: is_fedora|bool and sefcontext_result.changed
- 
-- name: disable obsolete configs => is_fedora
-  lineinfile:
-    path: "{{www_etc}}conf/httpd.conf"
-    regexp: '^{{item.regexp}}'
-    line: '{{item.line}}'
-    backrefs: yes
-  with_items:
-    - { regexp: "(Listen.*)", line: "#\\1" }
-    - { regexp: "(IncludeOptional conf.d/\\*\\.conf)", line: "#\\1" }
-  notify: "restart apache"
-  when: is_fedora|bool
-
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-- name: enable modules => is_suse
-  apache2_module:
-    name: "{{item}}"
-    state: present
-  with_items:
-    - auth_digest
-    - headers 
-    - proxy 
-    - proxy_html 
-    - proxy_http 
-    - proxy_balancer
-    - lbmethod_bytraffic # used by proxy_balancer
-    - slotmem_shm # used by proxy_balancer
-    - xml2enc
-    - deflate 
-    - filter 
-    #- apcu 
-    - proxy_wstunnel 
-    #- enable 
-    - rewrite 
-    - php7
-    - substitute # needed for instar camera webui
-  notify: "restart apache"
-  when: is_suse|bool
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
     
-# fedora is using a shared one (cli & web)
-- name: set web config => is_suse
-  import_tasks: roles/php/tasks/php_ini.yml
-  vars:
-    php_ini_file: "/etc/php7/apache2/php.ini"
-  notify: "restart apache"
-  when: is_suse|bool
+- name: check docker image exists
+  shell: "docker images custom_apache2:1.0.0"
+  register: image_exists
+  changed_when: "'custom_apache2' not in image_exists.stdout"
+ 
+- name: compose docker image => image does not exists
+  shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{user_id.stdout}} --build-arg WWW_GID={{user_id.stdout}}"
+  register: output
+#  when: "'custom_apache2' not in image_exists.stdout"
   
-- name: disable obsolete configs => is_suse
-  lineinfile:
-    path: "{{www_etc}}httpd.conf"
-    regexp: '^{{item.regex}}'
-    line: '{{item.line}}'
-    backrefs: yes
-  with_items:
-    - { regex: "(IncludeOptional {{www_etc}}vhosts\\.d/\\*\\.conf)", line: "#\\1" }
-    - { regex: "(Include {{www_etc}}default-server\\.conf)", line: "#\\1" }
-    - { regex: "(Include {{www_etc}}listen\\.conf)", line: "#\\1" }
-  notify: "restart apache"
-  when: is_suse|bool
+- name: create docker container
+  docker_container:
+    name: apache2
+    image: custom_apache2:1.0.0
+    state: present
+    network_mode: "host"
+    recreate: true
+    env:
+      APACHE_RUN_USER: "#{{user_id.stdout}}"
+      APACHE_RUN_GROUP: "#{{group_id.stdout}}"
+    log_driver: journald
+    log_options:
+      tag: apache
+    volumes:
+      #- '{{htdocs_path}}:/var/www/html:z'
+      - '{{htdocs_path}}:{{htdocs_path}}:z'
+      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'
+      - '{{global_log}}apache2:{{global_log}}apache2:z'
+      - '{{global_log}}nextcloud:{{global_log}}nextcloud:z'
+      - '{{redis_socket_path}}redis.sock:{{redis_socket_path}}redis.sock:z'
+      - '{{www_etc}}_.ansible.d:/etc/apache2/_.ansible.d:z'
+      - '{{www_etc}}_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
+      - '/etc/certbot:/etc/certbot:z'
+#    ports:
+#      - "81:80"
+#      - "444:443"
+#      - "10115:10114"
+  notify: "restart apache2"
 
+#- name: clean old docker images
+#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
+#  when: "'custom_vsftpd' not in image_exists.stdout"
+  
+- name: disable old systemd service
+  shell: "if [ -f /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service ]; then mv /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service /usr/lib/systemd/system/{{ 'apache2' if is_suse else 'httpd' }}.service.org; echo \"1\"; else echo \"0\"; fi"
+  register: service_change
+  changed_when: "'1' in service_change.stdout"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-- name: set httpd config
-  lineinfile:
-    path: "{{www_etc}}{{ '' if is_suse else 'conf/' }}httpd.conf"
-    regexp: '^{{item.regex}}'
-    line: '{{item.line}}'
-  with_items:
-    - { regex: "Include {{www_etc}}_.ansible_vhost-ssl.conf", line: "Include {{www_etc}}_.ansible_vhost-ssl.conf" }
-    - { regex: 'ErrorLog', line: 'ErrorLog "{{global_log}}apache2/error.log"' }
-  notify: "restart apache"
+- name: create systemd service
+  vars:
+    container_name: "apache2"
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: copy config
   template:
     src: "templates/etc/apache2/{{item}}"
     dest: "{{www_etc}}{{item}}"
-    owner: root
-    group: root
+    owner: "root"
+    group: "root"
     mode: 0644
+
   with_items:
     - _.ansible.d/auth.conf
     - _.ansible.d/options.conf
     - _.ansible_vhost-ssl.conf
-  notify: "restart apache"
+  notify: "restart apache2"
 
 - name: copy fluentd config
   vars:
@@ -299,4 +144,3 @@
     owner: root
     group: root
     mode: 0640
-

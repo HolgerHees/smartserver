@@ -39,7 +39,7 @@
     - { regexp: "(Example.*)", line: "#\\1" }
     - { regexp: "(TCPSocket.*)", line: "#\\1" }
     - { regexp: "(TCPAddr.*)", line: "#\\1" }
-  notify: "restart apache"
+  notify: "restart apache2"
 
 - name: set config
   lineinfile:

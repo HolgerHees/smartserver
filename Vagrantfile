@@ -82,6 +82,7 @@ Vagrant.configure(2) do |config|
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
     setup.vm.provider :virtualbox do |vb|
+        vb.name = "smartserver_" + setup_config + "_" + setup_os
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end

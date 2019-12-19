@@ -2,11 +2,10 @@
   user:
     name: "{{vault_vpn_cloud_local_username}}"
     uid: 1005
-    shell: /sbin/nologin
+    shell: /bin/false
     home: "{{raid_path}}{{vault_vpn_cloud_local_username}}/"
     create_home: no
     groups: users
-    append: no
     
 - name: prepare user folder for "{{vault_vpn_cloud_local_username}}"
   file:

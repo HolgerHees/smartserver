@@ -1,11 +1,7 @@
-- name: copy config
-  template:
-    src: "templates/etc/apache2/_.ansible.d/proxy.conf"
-    dest: "{{www_etc}}_.ansible.d/proxy.conf"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart apache"
+- name: copy proxy config
+  vars:
+    config_file: "templates/etc/apache2/_.ansible.d/proxy.conf"
+  import_tasks: roles/apache/tasks/add_config.yml
 
 - name: prepare needed folder
   file:

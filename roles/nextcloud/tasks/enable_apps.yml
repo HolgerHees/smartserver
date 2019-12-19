@@ -2,7 +2,7 @@
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
     
 - name: install apps
-  shell: "php {{htdocs_path}}nextcloud/occ app:install {{item}}"
+  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
   become: yes
   become_user: "{{www_username}}"
   register: command_result
@@ -30,7 +30,7 @@
   when: not keeweb_exists.stat.exists
   
 - name: enable keeweb app => app does not exists
-  shell: "php {{htdocs_path}}nextcloud/occ app:enable keeweb"
+  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
   become: yes
   become_user: "{{www_username}}"
   when: not keeweb_exists.stat.exists
@@ -72,7 +72,7 @@
     mode: 0640
   
 - name: enable news app => app installation changed
-  shell: "php {{htdocs_path}}nextcloud/occ app:enable news"
+  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ app:enable news\""
   become: yes
   become_user: "{{www_username}}"
   when: news_installed.changed

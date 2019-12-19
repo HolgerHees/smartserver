@@ -1,33 +1,13 @@
-#- name: add zypper repository
-#  zypper_repository:
-#    name: Printing (ghostscript)
-#    repo: 'http://download.opensuse.org/repositories/Printing/openSUSE_Leap_{{ansible_distribution_version}}/'
-#    auto_import_keys: yes
-#    priority: "100"
-#    state: present
-
-#- name: uninstall blocking packages
-#  zypper:
-#    name: "ghostscript-x11"
-#    state: absent
-
-# ghostscript version 9.27 is available since suse 15.1 (is needed to fix a PDF indexation bug)
-
-- name: install required packages => is_fedora
-  yum:
-    name: [
-      "php-gmp"            # needed by bookmark app
-    ]
-    state: present
-  when: is_fedora|bool
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      "php7-gmp"            # needed by bookmark app
-    ]
-    state: present
-  when: is_suse|bool
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
+    mode: 0750
+  with_items:
+    - "{{nextcloud_data_path}}"
+    - "{{global_log}}nextcloud"
 
 - name: set nextcloud version
   set_fact:
@@ -84,41 +64,13 @@
     group: "{{www_group}}"
     mode: 0640
 
-- name: prepare data folder
-  file:
-    path: "{{nextcloud_data_path}}"
-    state: directory
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
-    mode: 0750
-    
 - name: prepare .ocdata file
   copy:
     content: ""
     dest: "{{nextcloud_data_path}}.ocdata"
     owner: "{{www_username}}"
     group: "{{www_group}}"
-    mode: 0640
-  
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{item.target}}"
-    ftype: "{{item.ftype}}"
-    setype: "{{item.setype}}"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  with_items:
-    - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{htdocs_path}}nextcloud-{{nextcloud_version}}(/.*)?" }
-    - { ftype: "a", setype: "httpd_sys_rw_content_t", target: "{{nextcloud_data_path | regex_replace('\\/$', '')}}(/.*)?" }
-  when: is_fedora|bool and not dockerized_apache
-  
-- name: reload selinux configuration => is_fedora
-  shell: "restorecon {{item}}"
-  with_items:
-    - "-irv {{htdocs_path}}nextcloud-{{nextcloud_version}}"
-    - "-irv {{nextcloud_data_path | regex_replace('\\/$', '')}}"
-  when: is_fedora|bool and sefcontext_result.changed and not dockerized_apache
+    mode: 0640 
   
 # ***** DATABASE ****
 - name: check mysql service
@@ -130,7 +82,7 @@
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: upgrade existing database => database exists and nextcloud installation changed
-  shell: "php {{htdocs_path}}nextcloud/occ upgrade"
+  shell: "docker exec apache2 sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
   become: yes
   become_user: "{{www_username}}"
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
@@ -167,20 +119,20 @@
   when: "'nextcloud' not in mysql_data_exists.stdout"
   
 - name: add user => database does not exists
-  shell: "export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"users\" {{item}}"
+  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   become: yes
   become_user: "{{www_username}}"
   with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: add user "{{vault_admin_username}}" => database does not exists
-  shell: "export OC_PASS={{vault_admin_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\"admin\" {{vault_admin_username}}"
+  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
   become: yes
   become_user: "{{www_username}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
-  shell: "php -f /dataDisk/htdocs/nextcloud/occ background:cron"
+  shell: "docker exec apache2 sh -c \"php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
   become: yes
   become_user: "{{www_username}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
@@ -194,7 +146,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m /usr/bin/php -f {{htdocs_path}}nextcloud/cron.php"
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec apache2 sh -c \"php -f {{htdocs_path}}nextcloud/cron.php\""
     file: "ansible_nextcloud"
     user: "{{www_username}}"
     minute: "*/15"
@@ -203,7 +155,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Fileindex"
-    cmd: "/usr/bin/php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null"
+    cmd: "docker exec apache2 sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
     file: "ansible_nextcloud"
     user: "{{www_username}}"
     hour: "1"

@@ -34,14 +34,10 @@
     - index.php
     - main/manifest.json
 
-- name: copy mainfest config
-  template:
-    src: "templates/etc/apache2/_.ansible.d/manifest.conf"
-    dest: "{{www_etc}}_.ansible.d/manifest.conf"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart apache"
+- name: copy proxy config
+  vars:
+    config_file: "templates/etc/apache2/_.ansible.d/manifest.conf"
+  import_tasks: roles/apache/tasks/add_config.yml
 
 - name: copy fetchPOTD cmd
   template:

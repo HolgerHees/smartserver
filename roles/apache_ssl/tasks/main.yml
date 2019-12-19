@@ -78,7 +78,7 @@
     dest: "/etc/"
     creates: "/etc/letsencrypt/"
     decrypt: yes
-  notify: "restart apache"
+  notify: "restart apache2"
   when: "certificate_file_mode == 'vault'"
 
 - name: create certificate symlink

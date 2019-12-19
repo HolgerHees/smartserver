@@ -114,6 +114,6 @@
 - name: create cron job
   vars:
     name: "Netdata error check"
-    cmd: "/usr/bin/php -f /opt/netdata_helper/inform_openhab.php"
+    cmd: "docker exec apache2 sh -c \"php -f /opt/netdata_helper/inform_openhab.php\""
     file: "ansible_netdata"
   import_tasks: roles/cron/tasks/add_cronjob.yml
