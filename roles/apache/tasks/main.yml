@@ -34,7 +34,7 @@
 - name: compose docker image => image does not exists
   shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{user_id.stdout}} --build-arg WWW_GID={{user_id.stdout}}"
   register: output
-#  when: "'custom_apache2' not in image_exists.stdout"
+  when: "'custom_apache2' not in image_exists.stdout"
   
 - name: create docker container
   docker_container:
@@ -42,7 +42,7 @@
     image: custom_apache2:1.0.0
     state: present
     network_mode: "host"
-    recreate: true
+#    recreate: true
     env:
       APACHE_RUN_USER: "#{{user_id.stdout}}"
       APACHE_RUN_GROUP: "#{{group_id.stdout}}"
