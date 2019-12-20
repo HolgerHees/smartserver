@@ -50,18 +50,12 @@
     group: "{{www_group}}"
   notify: "restart apache2"
 
-- name: bind data directory
-  vars:
-    source_path: "{{nextcloud_data_path}}"
-    target_path: "{{htdocs_path}}nextcloud-data"
-  import_tasks: roles/apache/tasks/bind_directory.yml
+#- name: bind data directory
+#  vars:
+#    source_path: "{{nextcloud_data_path}}"
+#    target_path: "{{htdocs_path}}nextcloud-data"
+#  import_tasks: roles/apache/tasks/bind_directory.yml
   
-- name: bind data directory
-  vars:
-    source_path: "{{global_log}}nextcloud"
-    target_path: "{{htdocs_path}}nextcloud-logs"
-  import_tasks: roles/apache/tasks/bind_directory.yml
-
 #- name: set symbolic link to data
 #  file:
 #    src: "{{nextcloud_data_path}}"

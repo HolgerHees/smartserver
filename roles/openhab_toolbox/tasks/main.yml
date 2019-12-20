@@ -13,16 +13,16 @@
     group: root
     mode: 0644
   
-- name: bind directory
-  vars:
-    source_path: "{{projects_path}}toolbox/"
-    target_path: "{{htdocs_path}}toolbox"
-  import_tasks: roles/apache/tasks/bind_directory.yml
+#- name: bind directory
+#  vars:
+#    source_path: "{{projects_path}}toolbox/"
+#    target_path: "{{htdocs_path}}toolbox"
+#  import_tasks: roles/apache/tasks/bind_directory.yml
 
 - name: set symbolic link to htdocs
   file:
-    src: "{{projects_path}}toolbox/web/"
-    dest: "{{htdocs_path}}tools"
+    src: "{{projects_path}}toolbox/"
+    dest: "{{htdocs_path}}toolbox"
     state: link
     follow: no
     owner: "{{www_username}}"

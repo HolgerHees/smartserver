@@ -52,10 +52,9 @@
     volumes:
       #- '{{htdocs_path}}:/var/www/html:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
-#      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'
-#      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'
-#      - '{{global_log}}nextcloud:{{global_log}}nextcloud:z'
-      - '{{global_log}}apache2:{{global_log}}apache2:z'
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
+      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
+      - '{{global_log}}:{{global_log}}:z'
       - '{{redis_socket_path}}:{{redis_socket_path}}:z'
       - '{{www_etc}}_.ansible.d:/etc/apache2/_.ansible.d:z'
       - '{{www_etc}}_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
