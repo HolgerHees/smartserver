@@ -1,4 +1,4 @@
-- name: Ensure user and group exists
+- name: ensure user and group exists
   vars:
     username: "c_ftp"
     groupname: "c_ftp"
@@ -14,46 +14,46 @@
 #    mode: u=rwX,g=rX,o=
 #    recurse: yes
 
-- name: check podman image exists => is_suse
-  shell: "podman images custom_vsftpd:1.0.0"
-  register: image_exists
-  changed_when: "'custom_vsftpd' not in image_exists.stdout"
-  when: "is_suse|bool"
+#- name: check podman image exists => is_suse
+#  shell: "podman images custom_vsftpd:1.0.0"
+#  register: image_exists
+#  changed_when: "'custom_vsftpd' not in image_exists.stdout"
+#  when: "is_suse|bool"
 
-- name: compose podman image => is_suse and image does not exists
-  shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
+#- name: compose podman image => is_suse and image does not exists
+#  shell: "podman build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
 #  register: output
-  when: "is_suse|bool and 'custom_vsftpd' not in image_exists.stdout"
+#  when: "is_suse|bool and 'custom_vsftpd' not in image_exists.stdout"
 
-- name: check podman container exists => is_suse
-  shell: "podman ps -a --filter \"name=vsftpd\""
-  register: container_exists
-  changed_when: "'vsftpd' not in container_exists.stdout"
-  when: "is_suse|bool"
+#- name: check podman container exists => is_suse
+#  shell: "podman ps -a --filter \"name=vsftpd\""
+#  register: container_exists
+#  changed_when: "'vsftpd' not in container_exists.stdout"
+#  when: "is_suse|bool"
 
-- name: compose podman image => is_suse and container does not exists
-  shell: >
-    podman create \
-    --name=vsftpd \
-    --env "FTP_USER={{vault_camera_username}}" \
-    --env "FTP_PASS={{vault_camera_linux_password}}" \
-    --env "FTP_UID={{user_ids['c_ftp']}}" \
-    --env "FTP_GID={{group_ids['c_ftp']}}" \
-    --env "ONLY_UPLOAD=YES" \
-    --env "ONLY_DOWNLOAD=NO" \
-    --env "PASV_ENABLE=YES" \
-    --env "PASV_ADDRESS=127.0.0.1" \
-    --env "PASV_MIN=50000" \
-    --env "PASV_MAX=50100" \
-    --env "UMASK=027" \
-    --log-driver=journald \
-    --volume="{{ftp_path}}:/home/uploads:rw" \
-    -p 9021:21 \
-    -p 50000-50100:30000-30100 \
-    custom_vsftpd:1.0.0
+#- name: compose podman image => is_suse and container does not exists
+#  shell: >
+#    podman create \
+#    --name=vsftpd \
+#    --env "FTP_USER={{vault_camera_username}}" \
+#    --env "FTP_PASS={{vault_camera_linux_password}}" \
+#    --env "FTP_UID={{user_ids['c_ftp']}}" \
+#    --env "FTP_GID={{group_ids['c_ftp']}}" \
+#    --env "ONLY_UPLOAD=YES" \
+#    --env "ONLY_DOWNLOAD=NO" \
+#    --env "PASV_ENABLE=YES" \
+#    --env "PASV_ADDRESS=127.0.0.1" \
+#    --env "PASV_MIN=50000" \
+#    --env "PASV_MAX=50100" \
+#    --env "UMASK=027" \
+#    --log-driver=journald \
+#    --volume="{{ftp_path}}:/home/uploads:rw" \
+#    -p 9021:21 \
+#    -p 50000-50100:30000-30100 \
+#    custom_vsftpd:1.0.0
 #  register: output
 #  notify: "restart vsftpd"
-  when: "is_suse|bool and 'vsftpd' not in container_exists.stdout"
+#  when: "is_suse|bool and 'vsftpd' not in container_exists.stdout"
 
 #- name: create systemd service
 #  vars:

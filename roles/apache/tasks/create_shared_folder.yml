@@ -1,4 +1,4 @@
-- name: Ensure user and group exists
+- name: ensure user and group exists
   vars:
     username: "{{www_username}}"
     groupname: "{{www_group}}"

@@ -1,9 +1,9 @@
-- name: Ensure group "{{groupname}}" exists
+- name: ensure group "{{groupname}}" exists
   group:
     name: "{{groupname}}"
     state: present
 
-- name: Ensure user "{{username}}" exists
+- name: ensure user "{{username}}" exists
   user:
     name: "{{username}}"
     group: "{{groupname}}"

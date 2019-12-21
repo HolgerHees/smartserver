@@ -1,4 +1,4 @@
-- name: Ensure user and group exists
+- name: ensure user and group exists
   vars:
     username: "{{vault_vpn_cloud_local_username}}"
     groupname: "users"

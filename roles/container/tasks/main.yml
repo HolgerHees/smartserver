@@ -1,3 +1,22 @@
+#https://kofler.info/docker-unter-centos-8-und-fedora-31-installieren/
+
+- name: make sure docker from distro is not installed => is_fedora
+  yum:
+    name: [
+      moby-engine
+      #,docker
+      #,docker-client
+      #,docker-common
+      #,docker-latest
+      #,docker-logrotate
+      #,container-selinux
+      #,docker-selinux
+      #,docker-engine-selinux
+      #,docker-engine
+    ]
+    state: absent
+  when: is_fedora|bool
+
 - name: make sure dnf-plugins.core installed => is_fedora
   dnf:
     name: dnf-plugins-core
@@ -6,35 +25,27 @@
 
 - name: install docker repository => is_fedora
   command: dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-  when: is_fedora|bool
-
-- name: make sure docker from distro is not installed => is_fedora
-  yum:
-    name: "{{ item }}"
-    state: absent
-  with_items:
-    - docker
-    - docker-common
-    - container-selinux
-    - docker-selinux
-    - docker-engine
+  args:
+    warn: no
+  changed_when: no
   when: is_fedora|bool
 
 - name: install docker => is_fedora
   dnf:
-    name: "{{ item }}"
+    name: [
+      docker-ce
+      #,docker-ce-cli 
+      #,containerd.io
+    ]
     state: present
-  with_items:
-    - docker-ce
-    - python-docker-py
   when: is_fedora|bool
     
 - name: install required packages => is_fedora
   yum:
     name: [
 #        docker
-        , python3-docker  # used by ansible docker module
-        , golang-github-docker-libnetwork-devel # needed to make docker running together with firewalld
+        python3-docker  # used by ansible docker module
+#        , golang-github-docker-libnetwork-devel # needed to make docker running together with firewalld
 #        , podman
     ]
     state: present
@@ -55,7 +66,7 @@
         docker
         , python2-docker  # used by ansible docker module
         #, python3-docker  # used by ansible docker module
-        , podman
+#        , podman
 #        , podman>=1.6.2
 #        , cni>=0.7.1
 #        , cni-plugins>=0.8.3
@@ -63,11 +74,49 @@
     state: present
   when: is_suse|bool
 
-- name: copy fluentd config => is_suse
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "/etc/docker/"
+    - "{{ global_lib }}docker"
+
+- name: set docker selinux configuration => is_fedora
+  sefcontext:
+    target: "{{global_lib}}docker"
+    ftype: "d"
+    setype: "container_var_lib_t"
+    seuser: "system_u"
+    state: present
+  register: sefcontext_result
+  when: is_fedora|bool
+
+- name: reload selinux configuration => is_fedora and sefcontext changed
+  shell: "restorecon {{global_lib}}docker"
+  when: is_fedora|bool and sefcontext_result.changed
+
+- name: copy daemon config
+  template:
+    src: "templates/etc/docker/daemon.json"
+    dest: "/etc/docker/daemon.json"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: copy fluentd config
   vars:
-    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
+    config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
-  when: is_suse|bool
+
+#- name: copy fluentd config => is_suse
+#  vars:
+#    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
+#  import_tasks: roles/fluentd/tasks/add_config.yml
+#  when: is_suse|bool
   
 #- name: set podman config
 #  lineinfile:
@@ -84,68 +133,6 @@
 #    - { file: 'libpod.conf', field: 'cgroup_manager', value: "{{ 'systemd' if is_suse|bool else 'systemd' }}" }
 #    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
 #    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
-
-- name: prepare needed folder
-  file:
-    path:  "{{ global_lib }}docker"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-
-- name: disable docker daemon.json
-  shell: "if [ -f /etc/docker/daemon.json ]; then mv /etc/docker/daemon.json /etc/docker/daemon.json.org; echo \"1\"; else echo \"0\"; fi"
-  register: dockerjson_change
-  changed_when: "'1' in dockerjson_change.stdout"
-    
-- name: change docker config => is_fedora
-  lineinfile:
-    path: /etc/sysconfig/docker
-    insertafter: '^OPTIONS='
-    regexp: '^\s*--{{item.field}}\s*='
-    line: '  --{{item.field}}={{item.value}} \'
-  with_items:
-    - { field: "log-driver", value: "journald" }
-    - { field: "graph", value: "{{global_lib}}docker" }
-  notify: "restart docker"
-  when: is_fedora|bool
-  
-- name: set docker selinux configuration => is_fedora
-  sefcontext:
-    target: "{{global_lib}}docker"
-    ftype: "d"
-    setype: "container_var_lib_t"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  when: is_fedora|bool
-
-- name: reload selinux configuration => is_fedora and sefcontext changed
-  shell: "restorecon {{global_lib}}docker"
-  when: is_fedora|bool and sefcontext_result.changed
-
-#- name: check started docker => is_fedora
-#  systemd:
-#    name: docker
-#    state: started
-#  when: is_fedora|bool
-
-- name: change docker config => is_suse
-  lineinfile:
-    path: /etc/sysconfig/docker
-    backrefs: yes
-    regexp: '^(\s*DOCKER_OPTS\s*=(?!.*{{item.field}})\s*)"(.*)"'
-    line: '\1"\2 --{{item.field}}={{item.value}}"'
-  with_items:
-    - { field: "log-driver", value: "journald" }
-    - { field: "graph", value: "{{global_lib}}docker" }
-  notify: "restart docker"
-  when: is_suse|bool
-
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
 
 # https://success.docker.com/article/node-using-swap-memory-instead-of-host-memory
 # vm.swappiness = 0   # Swap is disabled. In earlier versions, this meant that the kernel would swap only to avoid an out of memory condition, but in later versions this is achieved by setting to 1.
