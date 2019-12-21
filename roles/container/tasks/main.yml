@@ -1,7 +1,38 @@
+- name: make sure dnf-plugins.core installed => is_fedora
+  dnf:
+    name: dnf-plugins-core
+    state: present
+  when: is_fedora|bool
+
+- name: install docker repository => is_fedora
+  command: dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+  when: is_fedora|bool
+
+- name: make sure docker from distro is not installed => is_fedora
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - docker
+    - docker-common
+    - container-selinux
+    - docker-selinux
+    - docker-engine
+  when: is_fedora|bool
+
+- name: install docker => is_fedora
+  dnf:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - docker-ce
+    - python-docker-py
+  when: is_fedora|bool
+    
 - name: install required packages => is_fedora
   yum:
     name: [
-        docker
+#        docker
         , python3-docker  # used by ansible docker module
         , golang-github-docker-libnetwork-devel # needed to make docker running together with firewalld
 #        , podman

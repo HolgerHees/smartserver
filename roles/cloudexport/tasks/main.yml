@@ -1,11 +1,8 @@
-- name: add user "{{vault_vpn_cloud_local_username}}" with no login
-  user:
-    name: "{{vault_vpn_cloud_local_username}}"
-    uid: 1005
-    shell: /bin/false
-    home: "{{raid_path}}{{vault_vpn_cloud_local_username}}/"
-    create_home: no
-    groups: users
+- name: Ensure user and group exists
+  vars:
+    username: "{{vault_vpn_cloud_local_username}}"
+    groupname: "users"
+  import_tasks: roles/user/tasks/add_system_user.yml
     
 - name: prepare user folder for "{{vault_vpn_cloud_local_username}}"
   file:

@@ -30,6 +30,8 @@
   template:
     src: "templates/htdocs/{{item}}"
     dest: "{{htdocs_path}}/{{item}}"
+    owner: "{{www_username}}"
+    group: "{{www_group}}"
   with_items:
     - index.php
     - main/manifest.json

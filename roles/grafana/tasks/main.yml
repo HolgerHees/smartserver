@@ -57,6 +57,7 @@
 #      GF_LOG_MODE: "syslog"
 #      GF_LOG_SYSLOG_TAG: "grafana"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
+      TZ: "{{vault_timezone}}"
     log_driver: journald
     log_options:
       tag: grafana

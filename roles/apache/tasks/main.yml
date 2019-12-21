@@ -11,16 +11,6 @@
     - "{{htdocs_path}}"
     - "{{global_log}}apache2/"
 
-- name: get id from "{{www_username}}"
-  shell: "id -u {{www_username}}"
-  register: user_id
-  changed_when: no
-
-- name: get id from "{{www_group}}"
-  shell: "id -g {{www_username}}"
-  register: group_id
-  changed_when: no
-  
 - name: check started docker
   systemd:
     name: docker
@@ -32,7 +22,7 @@
   changed_when: "'custom_apache2' not in image_exists.stdout"
  
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{user_id.stdout}} --build-arg WWW_GID={{user_id.stdout}}"
+  shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{user_ids[www_username]}} --build-arg WWW_GID={{group_ids[www_group]}}"
   register: output
   when: "'custom_apache2' not in image_exists.stdout"
   
@@ -44,21 +34,24 @@
     network_mode: "host"
 #    recreate: true
     env:
-      APACHE_RUN_USER: "#{{user_id.stdout}}"
-      APACHE_RUN_GROUP: "#{{group_id.stdout}}"
+      APACHE_RUN_USER: "#{{user_ids[www_username]}}"
+      APACHE_RUN_GROUP: "#{{group_ids[www_group]}}"
+      TZ: "{{vault_timezone}}"
     log_driver: journald
     log_options:
       tag: apache
     volumes:
       #- '{{htdocs_path}}:/var/www/html:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
-      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
-      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
       - '{{global_log}}:{{global_log}}:z'
       - '{{redis_socket_path}}:{{redis_socket_path}}:z'
       - '{{www_etc}}_.ansible.d:/etc/apache2/_.ansible.d:z'
       - '{{www_etc}}_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
       - '/etc/certbot:/etc/certbot:z'
+
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
+      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
+      - '/opt/netdata_helper:/opt/netdata_helper:z'               # needed by netdata helper
 #    ports:
 #      - "81:80"
 #      - "444:443"

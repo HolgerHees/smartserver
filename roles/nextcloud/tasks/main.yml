@@ -128,11 +128,15 @@
 
 - name: add user => database does not exists
   shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; sudo -E -u {{www_username}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  register: result
+  failed_when: "'was created successfully' not in result.stdout"
   with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: add user "{{vault_admin_username}}" => database does not exists
   shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; sudo -E -u {{www_username}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
+  register: result
+  failed_when: "'was created successfully' not in result.stdout"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
@@ -140,6 +144,11 @@
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
 - name: copy apache config
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/nextcloud.conf"

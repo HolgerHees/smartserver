@@ -1,37 +1,18 @@
-- name: Ensure group "c_ftp" exists
-  group:
-    name: "c_ftp"
-    state: present
-    
-- name: Ensure user "c_ftp" exists
-  user:
-    name: "c_ftp"
-    group: "c_ftp"
-    shell: "/bin/false"
-    create_home: no
+- name: Ensure user and group exists
+  vars:
+    username: "c_ftp"
+    groupname: "c_ftp"
+  import_tasks: roles/user/tasks/add_system_user.yml
 
-- name: get id from "c_ftp"
-  shell: "id -u c_ftp"
-  register: user_id
-  changed_when: no
-
-- name: get id from "c_ftp"
-  shell: "id -g c_ftp"
-  register: group_id
-  changed_when: no
-  
-- name: prepare user camera folder
+- name: prepare ftp folder
   file:
     path: "{{ftp_path}}"
     state: directory
-    owner: "2000"
-    group: "2000"
+    owner: "{{user_ids['c_ftp']}}"
+    group: "{{group_ids['c_ftp']}}"
     mode: 0750
 #    mode: u=rwX,g=rX,o=
 #    recurse: yes
-
-
-
 
 - name: check podman image exists => is_suse
   shell: "podman images custom_vsftpd:1.0.0"
@@ -56,8 +37,8 @@
     --name=vsftpd \
     --env "FTP_USER={{vault_camera_username}}" \
     --env "FTP_PASS={{vault_camera_linux_password}}" \
-    --env "FTP_UID={{user_id}}" \
-    --env "FTP_GID={{group_id}}" \
+    --env "FTP_UID={{user_ids['c_ftp']}}" \
+    --env "FTP_GID={{group_ids['c_ftp']}}" \
     --env "ONLY_UPLOAD=YES" \
     --env "ONLY_DOWNLOAD=NO" \
     --env "PASV_ENABLE=YES" \
@@ -115,8 +96,8 @@
     env:
       FTP_USER: "{{vault_camera_username}}"
       FTP_PASS: "{{vault_camera_linux_password}}"
-      FTP_UID: "{{user_id}}"
-      FTP_GID: "{{group_id}}"
+      FTP_UID: "{{user_ids['c_ftp']}}"
+      FTP_GID: "{{group_ids['c_ftp']}}"
       ONLY_UPLOAD: "YES"
       ONLY_DOWNLOAD: "NO"
       PASV_ENABLE: "YES"
@@ -124,6 +105,7 @@
       PASV_MIN: "30000"
       PASV_MAX: "30100"
       UMASK: "027"
+      TZ: "{{vault_timezone}}"
     log_driver: journald
     log_options:
       tag: vsftpd

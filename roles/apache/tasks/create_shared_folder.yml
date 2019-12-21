@@ -1,14 +1,8 @@
-- name: Ensure group "{{www_group}}" exists
-  group:
-    name: "{{www_group}}"
-    state: present
-    
-- name: Ensure user "{{www_username}}" exists
-  user:
-    name: "{{www_username}}"
-    group: "{{www_group}}"
-    shell: "/bin/false"
-    create_home: no
+- name: Ensure user and group exists
+  vars:
+    username: "{{www_username}}"
+    groupname: "{{www_group}}"
+  import_tasks: roles/user/tasks/add_system_user.yml
     
 - name: prepare shared folder
   file:

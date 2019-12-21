@@ -4,93 +4,70 @@ ARG GLOBAL_LOG
 ARG WWW_UID
 ARG WWW_GID
 
-RUN groupadd -g $WWW_GID c_www
-RUN useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false c_wwwrun
-
-RUN apt-get update
-
-RUN apt-get install -y sudo
-
-RUN ln -s /etc/apache2/mods-available/auth_digest.load /etc/apache2/mods-enabled/
-RUN ln -s /etc/apache2/mods-available/authz_groupfile.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/expires.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/lbmethod_bytraffic.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/proxy.conf /etc/apache2/mods-enabled/
-RUN ln -s /etc/apache2/mods-available/proxy.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/proxy_html.conf /etc/apache2/mods-enabled/
-RUN ln -s /etc/apache2/mods-available/proxy_html.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/proxy_http.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/proxy_balancer.conf /etc/apache2/mods-enabled/
-RUN ln -s /etc/apache2/mods-available/proxy_balancer.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/proxy_wstunnel.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/slotmem_shm.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/socache_shmcb.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/ssl.conf /etc/apache2/mods-enabled/
-RUN ln -s /etc/apache2/mods-available/ssl.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/substitute.load /etc/apache2/mods-enabled/
-
-RUN ln -s /etc/apache2/mods-available/xml2enc.load /etc/apache2/mods-enabled/
-
-RUN sed -i "s@ErrorLog.*@ErrorLog $GLOBAL_LOG/error.log@g" /etc/apache2/apache2.conf
-
-RUN sed -i "s/Include ports\.conf/#Include ports\.conf/g" /etc/apache2/apache2.conf
-
-RUN echo 'Include /etc/apache2/_.ansible_vhost-ssl.conf' >> /etc/apache2/apache2.conf
-
-RUN mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini"
-
-RUN sed -i 's/memory_limit.*/memory_limit = 1024M/' /usr/local/etc/php/php.ini
+RUN groupadd -g $WWW_GID c_www \
+  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false c_wwwrun \
+  && apt-get update \
+  && apt-get install -y sudo
 
 #RUN apt-get install -y libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev
 
-RUN docker-php-ext-enable opcache
-
-RUN docker-php-ext-install pcntl
-
-# MYSQL
-RUN docker-php-ext-install mysqli pdo_mysql
+RUN docker-php-ext-enable opcache \
+  && docker-php-ext-install pcntl \
+  && docker-php-ext-install exif \
+  && docker-php-ext-install mysqli pdo_mysql
 
 # INTL
-RUN apt-get install -y libicu-dev
-RUN docker-php-ext-install intl
+RUN apt-get install -y libicu-dev \
+  && docker-php-ext-install intl
 
 # ZIP
-RUN apt-get install -y zlib1g-dev libzip-dev
-RUN docker-php-ext-install zip
+RUN apt-get install -y zlib1g-dev libzip-dev \
+  && docker-php-ext-install zip
 
 # APC Cache
-RUN pecl install apcu-5.1.11
-RUN docker-php-ext-enable apcu
+RUN pecl install apcu-5.1.11 \
+  && docker-php-ext-enable apcu
 
 # ImageMagick
 #RUN apt-get install -y libjpeg-dev libpng-dev libmagickwand-dev
-RUN apt-get install -y libmagickwand-dev
-RUN pecl install imagick
-RUN docker-php-ext-enable imagick
+RUN apt-get install -y libmagickwand-dev \
+  && pecl install imagick \
+  && docker-php-ext-enable imagick
 
 # GD Image library with freetype support
-RUN apt-get install -y libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev
-RUN docker-php-ext-configure gd --with-gd --with-webp-dir --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir
-RUN docker-php-ext-install gd
+RUN apt-get install -y libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev \
+  && docker-php-ext-configure gd --with-gd --with-webp-dir --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir \
+  && docker-php-ext-install gd
 
 # Redis
-RUN pecl install redis
-RUN docker-php-ext-enable redis
+RUN pecl install redis \
+  && docker-php-ext-enable redis
+
+RUN ln -s /etc/apache2/mods-available/auth_digest.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/authz_groupfile.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/expires.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/lbmethod_bytraffic.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy.conf /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy_html.conf /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy_html.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy_http.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy_balancer.conf /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy_balancer.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/proxy_wstunnel.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/slotmem_shm.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/socache_shmcb.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/ssl.conf /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/ssl.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/substitute.load /etc/apache2/mods-enabled/ \
+  && ln -s /etc/apache2/mods-available/xml2enc.load /etc/apache2/mods-enabled/ \
+  && sed -i "s@ErrorLog.*@ErrorLog $GLOBAL_LOG/error.log@g" /etc/apache2/apache2.conf \
+  && sed -i "s/Include ports\.conf/#Include ports\.conf/g" /etc/apache2/apache2.conf \
+  && echo 'Include /etc/apache2/_.ansible_vhost-ssl.conf' >> /etc/apache2/apache2.conf \
+  && mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini" \
+  && sed -i 's/memory_limit.*/memory_limit = 1024M/' /usr/local/etc/php/php.ini
 
 #TODO
 #      , systemd-devel         # php-systemd => nextcloud

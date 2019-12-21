@@ -57,3 +57,11 @@
   set_fact:
     local_import_path: "{{playbook_dir}}/{{config_path}}backup/"
   tags: always
+
+- name: register user_id map
+  set_fact:
+    user_ids: {}
+
+- name: register group_id map
+  set_fact:
+    group_ids: {}

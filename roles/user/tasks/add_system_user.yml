@@ -1,0 +1,29 @@
+- name: Ensure group "{{groupname}}" exists
+  group:
+    name: "{{groupname}}"
+    state: present
+
+- name: Ensure user "{{username}}" exists
+  user:
+    name: "{{username}}"
+    group: "{{groupname}}"
+    shell: "/bin/false"
+    create_home: no
+
+- name: get uid from "{{username}}"
+  shell: "id -u {{username}}"
+  register: user_id
+  changed_when: no
+
+- name: register uid
+  set_fact:
+    user_ids: "{{ user_ids | combine( { username: user_id.stdout } ) }}"
+
+- name: get gid from "{{groupname}}"
+  shell: "id -g {{username}}"
+  register: group_id
+  changed_when: no
+
+- name: register gid
+  set_fact:
+    group_ids: "{{ group_ids | combine( { groupname: group_id.stdout } ) }}"

@@ -9,6 +9,8 @@
     image: eclipse-mosquitto:1.6.7
     state: present
 #    recreate: true
+    env:
+      TZ: "{{vault_timezone}}"
     log_driver: journald
     log_options:
       tag: mosquitto
