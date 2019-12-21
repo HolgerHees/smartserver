@@ -38,6 +38,7 @@
       #,containerd.io
     ]
     state: present
+  notify: "restart docker"
   when: is_fedora|bool
     
 - name: install required packages => is_fedora
@@ -72,6 +73,7 @@
 #        , cni-plugins>=0.8.3
     ]
     state: present
+  notify: "restart docker"
   when: is_suse|bool
 
 - name: prepare needed folder
@@ -106,6 +108,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: "restart docker"
 
 - name: copy fluentd config
   vars:
