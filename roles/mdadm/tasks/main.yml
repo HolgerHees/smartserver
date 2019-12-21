@@ -35,11 +35,6 @@
     path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
     state: absent
 
-- name: disable default check cron jobs
-  file: 
-    path: '/etc/cron.d/mdadm'
-    state: absent
-
 - name: set cron job env
   cron:
     name: PATH
@@ -49,7 +44,7 @@
     user: root
   tags: cron
     
-- name: create cron job
+- name: create cron 'start' job
   vars:
     name: "RAID Check (Start)"
     cmd: "/usr/share/mdadm/mdcheck --duration 4 hours"
@@ -59,7 +54,7 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
-- name: create cron job
+- name: create cron 'continue' job
   vars:
     name: "RAID Check (Continue)"
     cmd: "/usr/share/mdadm/mdcheck --continue --duration 4 hours"

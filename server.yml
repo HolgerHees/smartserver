@@ -43,6 +43,10 @@
     - { import_role: { name: firewalld }, tags: [ 'firewalld' ] }                                # firewalld configuration
     - { import_role: { name: dns }, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
     
+    # ************ FLUSH HANDLER ***********    
+    - { meta: flush_handlers }                                                                   # activate network configs (network,firewall & dns). Otherwise docker related iptables rules are sometime lost and prevents to continue
+    # **************************************
+
     - { import_role: { name: cron }, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
     - { import_role: { name: cron_service_check }, tags: [ 'cron_service_check' ] }              # checking for failed service starts
 
