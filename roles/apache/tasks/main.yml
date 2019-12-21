@@ -72,6 +72,12 @@
     container_name: "apache2"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
+- name: check certificate chain file
+  stat:
+    path: /etc/letsencrypt/live/{{server_domain}}/chain.pem
+  register: chain_file
+  changed_when: no
+
 - name: copy config
   template:
     src: "templates/etc/apache2/{{item}}"
@@ -79,7 +85,8 @@
     owner: "root"
     group: "root"
     mode: 0644
-
+  vars:
+    enable_stapeling: "{{chain_file.stat.exists}}"
   with_items:
     - _.ansible.d/auth.conf
     - _.ansible.d/options.conf
