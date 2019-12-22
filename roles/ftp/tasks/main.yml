@@ -1,15 +1,19 @@
+# suse user: ftp:x:476:476:FTP Account:/srv/ftp:/sbin/nologin
+# suse group: ftp:!:476:
+# fedora user: ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+# fedora group: ftp:x:50:
 - name: ensure user and group exists
   vars:
-    username: "c_ftp"
-    groupname: "c_ftp"
+    user: { name: "ftp", id: "{{'476' if is_suse else '14'}}", home: "{{ftp_path}}" }
+    group: { name: "ftp", id: "{{'476' if is_suse else '50'}}" }
   import_tasks: roles/user/tasks/add_system_user.yml
 
 - name: prepare ftp folder
   file:
     path: "{{ftp_path}}"
     state: directory
-    owner: "{{user_ids['c_ftp']}}"
-    group: "{{group_ids['c_ftp']}}"
+    owner: "{{system_users['ftp'].name}}"
+    group: "{{system_groups['ftp'].name}}"
     mode: 0750
 #    mode: u=rwX,g=rX,o=
 #    recurse: yes
@@ -37,8 +41,8 @@
 #    --name=vsftpd \
 #    --env "FTP_USER={{vault_camera_username}}" \
 #    --env "FTP_PASS={{vault_camera_linux_password}}" \
-#    --env "FTP_UID={{user_ids['c_ftp']}}" \
-#    --env "FTP_GID={{group_ids['c_ftp']}}" \
+#    --env "FTP_UID={{system_users['ftp'].name}}" \
+#    --env "FTP_GID={{system_groups['ftp'].name}}" \
 #    --env "ONLY_UPLOAD=YES" \
 #    --env "ONLY_DOWNLOAD=NO" \
 #    --env "PASV_ENABLE=YES" \
@@ -96,8 +100,8 @@
     env:
       FTP_USER: "{{vault_camera_username}}"
       FTP_PASS: "{{vault_camera_linux_password}}"
-      FTP_UID: "{{user_ids['c_ftp']}}"
-      FTP_GID: "{{group_ids['c_ftp']}}"
+      FTP_UID: "{{system_users['ftp'].name}}"
+      FTP_GID: "{{system_groups['ftp'].name}}"
       ONLY_UPLOAD: "YES"
       ONLY_DOWNLOAD: "NO"
       PASV_ENABLE: "YES"

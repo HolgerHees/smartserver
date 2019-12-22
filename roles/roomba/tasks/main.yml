@@ -10,8 +10,8 @@
   file:
     path: "{{htdocs_path}}roomba"
     state: directory
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0755
 
 - name: prepare app folder

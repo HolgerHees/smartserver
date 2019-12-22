@@ -13,8 +13,8 @@
     src: "https://files.phpmyadmin.net/phpMyAdmin/{{phpmyadmin_version}}/phpMyAdmin-{{phpmyadmin_version}}-all-languages.zip"
     dest: "{{htdocs_path}}"
     remote_src: yes
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0750
   when: not phpmyadmin_exists.stat.exists
 
@@ -28,22 +28,22 @@
     dest: "{{htdocs_path}}mysql"
     state: link
     follow: no
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
   when: not phpmyadmin_exists.stat.exists
   
 - name: copy config
   template:
     src: "templates/config.inc.php"
     dest: "{{htdocs_path}}mysql/config.inc.php"
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0640
 
 - name: prepare config folder
   file:
     path: "{{htdocs_path}}mysql/tmp"
     state: directory
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0750

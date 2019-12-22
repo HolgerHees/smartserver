@@ -1,9 +1,14 @@
+# suse user: wwwrun:x:474:474:WWW daemon apache:/var/lib/wwwrun:/sbin/nologin
+# suse group: www:x:475:wwwrun
+# suse group: wwwrun:!:474:
+# fedora user: apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
+# fedora group: apache:x:48:
 - name: ensure user and group exists
   vars:
-    username: "{{www_username}}"
-    groupname: "{{www_group}}"
+    user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", id: "{{'474' if is_suse else '48'}}" }
+    group: { key: "www", name: "{{'www' if is_suse else 'apache'}}", id: "{{'475' if is_suse else '48'}}" }
   import_tasks: roles/user/tasks/add_system_user.yml
-    
+
 - name: prepare shared folder
   file:
     path: "{{item}}"
@@ -12,5 +17,5 @@
     group: root
     mode: 0755
   with_items:
-    - "{{www_etc}}"
-    - "{{www_etc}}_.ansible.d/"
+    - "{{global_etc}}apache2/"
+    - "{{global_etc}}apache2/_.ansible.d/"

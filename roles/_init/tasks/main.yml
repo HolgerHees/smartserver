@@ -44,14 +44,6 @@
   include_vars: "config/shared.yml"
   tags: always
   
-# set apache environment variables
-- name: set apache vars
-  set_fact:
-    www_username: "c_wwwrun"
-    www_group: "c_www"
-    www_etc: "{{global_etc}}apache2/"
-  tags: always
-
 # set environment specific variables [post]
 - name: set post state vars
   set_fact:
@@ -60,8 +52,8 @@
 
 - name: register user_id map
   set_fact:
-    user_ids: {}
+    system_users: {}
 
 - name: register group_id map
   set_fact:
-    group_ids: {}
+    system_groups: {}

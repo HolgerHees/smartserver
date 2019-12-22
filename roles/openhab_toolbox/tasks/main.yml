@@ -25,8 +25,8 @@
     dest: "{{htdocs_path}}toolbox"
     state: link
     follow: no
-    owner: "{{www_username}}"
-    group: "{{www_group}}"  
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"  
   notify: "restart apache2"
       
 - name: check mysql service

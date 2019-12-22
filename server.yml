@@ -28,12 +28,11 @@
         msg: 
           - "production: {{ 'active' if is_production else 'inactive' }}"
           - "flags:      is_suse: {{is_suse}}, is_fedora: {{is_fedora}}"
-          - "www:        user: {{www_username}}, group: {{www_group}}, etc: {{www_etc}}"
       tags: always
 
     - { import_role: { name: fluentd, tasks_from: create_shared_folder }, tags: [ 'fluentd' ] }  # is creating /etc/fluent/_.ansible.d
 
-    - { import_role: { name: apache, tasks_from: create_shared_folder }, tags: [ 'apache' ] }    # is creating /etc/{{www_etc}}/_.ansible.d
+    - { import_role: { name: apache, tasks_from: create_shared_folder }, tags: [ 'apache' ] }    # is creating {{global_etc}}apache2/_.ansible.d
 
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages

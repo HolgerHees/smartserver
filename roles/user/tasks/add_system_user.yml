@@ -1,29 +1,32 @@
-- name: ensure group "{{groupname}}" exists
+- name: ensure group "{{group.name}}" exists
   group:
-    name: "{{groupname}}"
+    name: "{{group.name}}"
+    gid: "{{group.id | default(omit)}}"
     state: present
 
-- name: ensure user "{{username}}" exists
+- name: ensure user "{{user.name}}" exists
   user:
-    name: "{{username}}"
-    group: "{{groupname}}"
+    name: "{{user.name}}"
+    group: "{{group.name}}"
+    uid: "{{user.id | default(omit)}}"
+    home: "{{user.home | default(omit)}}"
     shell: "/bin/false"
     create_home: no
 
-- name: get uid from "{{username}}"
-  shell: "id -u {{username}}"
+- name: get uid from "{{user.name}}"
+  shell: "id -u {{user.name}}"
   register: user_id
   changed_when: no
 
 - name: register uid
   set_fact:
-    user_ids: "{{ user_ids | combine( { username: user_id.stdout } ) }}"
+    system_users: "{{ system_users | combine( { user.key | default(user.name): { 'name': user.name, 'id': user_id.stdout } } ) }}"
 
-- name: get gid from "{{groupname}}"
-  shell: "id -g {{username}}"
+- name: get gid from "{{group.name}}"
+  shell: "id -g {{user.name}}"
   register: group_id
   changed_when: no
 
 - name: register gid
   set_fact:
-    group_ids: "{{ group_ids | combine( { groupname: group_id.stdout } ) }}"
+    system_groups: "{{ system_groups | combine( { group.key | default(group.name): { 'name': group.name, 'id': group_id.stdout } } ) }}"

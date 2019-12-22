@@ -11,15 +11,15 @@
     group: "{{item.group}}"
     mode: 0755
   with_items:
-    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/" }
-    - { owner: "{{www_username}}", group: "{{www_group}}", dir: "{{htdocs_path}}fallback/tmpfs/" }
+    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}fallback/" }
+    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}fallback/tmpfs/" }
 
 - name: copy balancer fallback files
   copy:
     src: "templates/device404.jpg"
     dest: "{{htdocs_path}}fallback/{{item}}"
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
   with_items:
     - cam.jpg # automower
     - cam.mjpg # automower

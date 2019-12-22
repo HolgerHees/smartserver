@@ -2,8 +2,8 @@
   file:
     path: "{{item}}"
     state: directory
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0750
   with_items:
     - "{{nextcloud_data_path}}"
@@ -31,8 +31,8 @@
     src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
     dest: "{{htdocs_path}}"
     remote_src: yes
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0750
   when: not nextcloud_exists.stat.exists
 
@@ -46,8 +46,8 @@
     dest: "{{htdocs_path}}nextcloud"
     state: link
     follow: no
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
   notify: "restart apache2"
 
 #- name: bind data directory
@@ -62,24 +62,24 @@
 #    dest: "{{htdocs_path}}nextcloud/data"
 #    state: link
 #    follow: no
-#    owner: "{{www_username}}"
-#    group: "{{www_group}}"  
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"  
 #  notify: "restart apache2"
 
 - name: copy config
   template:
     src: "templates/config.php"
     dest: "{{htdocs_path}}nextcloud/config/config.php"
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0640
 
 - name: prepare .ocdata file
   copy:
     content: ""
     dest: "{{nextcloud_data_path}}.ocdata"
-    owner: "{{www_username}}"
-    group: "{{www_group}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0640 
   
 # ***** DATABASE *****
@@ -123,24 +123,24 @@
 
 # ***** OCC *****
 - name: upgrade existing database => database exists and nextcloud installation changed
-  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php {{htdocs_path}}nextcloud/occ upgrade\""
+  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ upgrade\""
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
 
 - name: add user => database does not exists
-  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; sudo -E -u {{www_username}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; sudo -E -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: add user "{{vault_admin_username}}" => database does not exists
-  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; sudo -E -u {{www_username}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
+  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; sudo -E -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
-  shell: "docker exec apache2 sh -c \"sudo -u {{www_username}} php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
+  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****
@@ -157,7 +157,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec apache2 sh -c \"sudo -u {{www_username}} php -f {{htdocs_path}}nextcloud/cron.php\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php -f {{htdocs_path}}nextcloud/cron.php\""
     file: "ansible_nextcloud"
     minute: "*/15"
   import_tasks: roles/cron/tasks/add_cronjob.yml
@@ -165,7 +165,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Fileindex"
-    cmd: "docker exec apache2 sh -c \"sudo -u {{www_username}} php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
+    cmd: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
     file: "ansible_nextcloud"
     hour: "1"
     minute: "0"
