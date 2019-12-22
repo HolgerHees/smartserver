@@ -4,8 +4,8 @@ ARG GLOBAL_LOG
 ARG WWW_UID
 ARG WWW_GID
 
-RUN groupadd -g $WWW_GID c_www \
-  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false c_wwwrun \
+RUN groupadd -g $WWW_GID www \
+  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false wwwrun \
   && apt-get update \
   && apt-get install -y sudo
 
