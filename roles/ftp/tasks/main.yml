@@ -14,7 +14,14 @@
     state: directory
     owner: "{{system_users['ftp'].name}}"
     group: "{{system_groups['ftp'].name}}"
-    mode: u=rwX,g=rX,o=
+    mode: 750
+
+- name: check owner and group
+  file:
+    path: "{{ftp_path}}"
+    state: directory
+    owner: "{{system_users['ftp'].name}}"
+    group: "{{system_groups['ftp'].name}}"
     recurse: yes
 
 #- name: check podman image exists => is_suse

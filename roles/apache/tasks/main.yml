@@ -11,6 +11,17 @@
     - "{{htdocs_path}}"
     - "{{global_log}}apache2/"
 
+- name: check owner and group
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    recurse: yes
+  with_items:
+    - "{{htdocs_path}}"
+    - "{{global_log}}apache2/"
+
 - name: check started docker
   systemd:
     name: docker

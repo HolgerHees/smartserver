@@ -6,12 +6,19 @@
     
 - name: prepare user folder for "{{vault_vpn_cloud_local_username}}"
   file:
-    path: "{{vault_vpn_cloud_local_export_path}}/"
+    path: "{{vault_vpn_cloud_local_export_path}}"
     state: directory
     owner: "{{vault_vpn_cloud_local_username}}"
     group: users
     mode: 0777
-    recurse: true
+
+- name: check owner and group
+  file:
+    path: "{{vault_vpn_cloud_local_export_path}}"
+    state: directory
+    owner: "{{vault_vpn_cloud_local_username}}"
+    group: users
+    recurse: yes
 
 - name: add nfs exported folder for user "{{vault_vpn_cloud_local_username}}"
   lineinfile:
