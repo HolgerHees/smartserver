@@ -4,8 +4,8 @@
 # fedora group: ftp:x:50:
 - name: ensure user and group exists
   vars:
-    user: { name: "ftp", id: "{{'476' if is_suse else '14'}}", home: "{{ftp_path}}" }
-    group: { name: "ftp", id: "{{'476' if is_suse else '50'}}" }
+    user: { name: "ftp", system: true, home: "{{ftp_path}}" }
+    group: { name: "ftp", system: true }
   import_tasks: roles/user/tasks/add_system_user.yml
 
 - name: prepare ftp folder

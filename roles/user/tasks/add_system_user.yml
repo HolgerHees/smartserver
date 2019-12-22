@@ -2,6 +2,7 @@
   group:
     name: "{{group.name}}"
     gid: "{{group.id | default(omit)}}"
+    system: "{{group.system | default(omit)}}"
     state: present
 
 - name: ensure user "{{user.name}}" exists
@@ -9,6 +10,7 @@
     name: "{{user.name}}"
     group: "{{group.name}}"
     uid: "{{user.id | default(omit)}}"
+    system: "{{user.system | default(omit)}}"
     home: "{{user.home | default(omit)}}"
     shell: "/bin/false"
     create_home: no

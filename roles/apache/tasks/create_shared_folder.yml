@@ -5,8 +5,8 @@
 # fedora group: apache:x:48:
 - name: ensure user and group exists
   vars:
-    user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", id: "{{'474' if is_suse else '48'}}" }
-    group: { key: "www", name: "{{'www' if is_suse else 'apache'}}", id: "{{'475' if is_suse else '48'}}" }
+    user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", system: true, home: "{{htdocs_path}}" }
+    group: { key: "www", name: "{{'www' if is_suse else 'apache'}}", system: true }
   import_tasks: roles/user/tasks/add_system_user.yml
 
 - name: prepare shared folder
