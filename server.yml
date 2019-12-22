@@ -72,7 +72,7 @@
 
     - { import_role: { name: samba }, tags: [ 'samba' ] }                                        # smb file server
 
-    - { import_role: { name: ftp }, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker,c_ftp]
+    - { import_role: { name: ftp }, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker,user:ftp]
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker]
 
@@ -86,7 +86,7 @@
     - { import_role: { name: mosquitto }, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker]
 
     - { import_role: { name: apache_ssl }, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
-    - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker,c_wwwrun]
+    - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker,user:wwwrun|apache]
 
     - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
 
