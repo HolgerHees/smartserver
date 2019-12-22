@@ -9,6 +9,17 @@
     - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
 
+- name: check owner and group
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    recurse: yes
+  with_items:
+    - "{{nextcloud_data_path}}"
+    - "{{global_log}}nextcloud"
+
 - name: set nextcloud version
   set_fact:
     nextcloud_version: '17.0.0'
