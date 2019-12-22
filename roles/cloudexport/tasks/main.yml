@@ -1,6 +1,6 @@
 - name: ensure user and group exists
   vars:
-    user: { name: vault_vpn_cloud_local_username, home: "{{vault_vpn_cloud_local_export_path}}" }
+    user: { name: "{{vault_vpn_cloud_local_username}}", home: "{{vault_vpn_cloud_local_export_path}}" }
     group: { name: "users" }
   import_tasks: roles/user/tasks/add_system_user.yml
     
