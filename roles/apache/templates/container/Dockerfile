@@ -2,10 +2,12 @@ FROM php:7.3-apache
 
 ARG GLOBAL_LOG
 ARG WWW_UID
+ARG WWW_USERNAME
 ARG WWW_GID
+ARG WWW_GROUPNAME
 
-RUN groupadd -g $WWW_GID www \
-  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false wwwrun \
+RUN groupadd -g $WWW_GID $WWW_GROUPNAME \
+  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false $WWW_USERNAME \
   && apt-get update \
   && apt-get install -y sudo
 
