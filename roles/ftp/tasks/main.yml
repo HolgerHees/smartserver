@@ -14,9 +14,8 @@
     state: directory
     owner: "{{system_users['ftp'].name}}"
     group: "{{system_groups['ftp'].name}}"
-    mode: 0750
-#    mode: u=rwX,g=rX,o=
-#    recurse: yes
+    mode: u=rwX,g=rX,o=
+    recurse: yes
 
 #- name: check podman image exists => is_suse
 #  shell: "podman images custom_vsftpd:1.0.0"

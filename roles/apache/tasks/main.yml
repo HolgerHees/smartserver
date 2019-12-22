@@ -22,7 +22,7 @@
   changed_when: "'custom_apache2' not in image_exists.stdout"
  
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{user_ids[system_users['www'].name]}} --build-arg WWW_GID={{group_ids[system_groups['www'].name]}}"
+  shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_GID={{system_groups['www'].id}}"
   register: output
   when: "'custom_apache2' not in image_exists.stdout"
   
@@ -34,8 +34,8 @@
     network_mode: "host"
 #    recreate: true
     env:
-      APACHE_RUN_USER: "#{{user_ids[system_users['www'].name]}}"
-      APACHE_RUN_GROUP: "#{{group_ids[system_groups['www'].name]}}"
+      APACHE_RUN_USER: "#{{system_users['www'].id}}"
+      APACHE_RUN_GROUP: "#{{system_groups['www'].id}}"
       TZ: "{{vault_timezone}}"
     log_driver: journald
     log_options:

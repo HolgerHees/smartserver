@@ -11,6 +11,7 @@
     owner: "{{vault_vpn_cloud_local_username}}"
     group: users
     mode: 0777
+    recurse: true
 
 - name: add nfs exported folder for user "{{vault_vpn_cloud_local_username}}"
   lineinfile:
