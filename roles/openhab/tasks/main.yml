@@ -185,7 +185,7 @@
   notify: "restart openhab"
 
 - name: reload udev rules
-  command: "udevadm control --reload-rules && udevadm trigger"
+  shell: "udevadm control --reload-rules && udevadm trigger"
   when: udev_rules.changed
 # *******************
 

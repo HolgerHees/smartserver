@@ -87,7 +87,6 @@
 - name: install pexpect
   pip:
     name: pexpect          # needed for ansible expect module (openvpn)
-  become: yes
   
 #- name: change vagrant user
 #  user:
