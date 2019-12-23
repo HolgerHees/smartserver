@@ -99,8 +99,11 @@
 - name: set forwarder config => is_suse
   lineinfile:
     path: /etc/sysconfig/network/config
-    regexp: '^NETCONFIG_DNS_FORWARDER\s*='
-    line: 'NETCONFIG_DNS_FORWARDER="bind"'
+    regexp: '^{{item.field}}\s*='
+    line: '{{item.field}}="{{item.value}}"'
+  with_items:
+    - { field: "NETCONFIG_DNS_FORWARDER", value: "bind"}
+    - { field: "NETCONFIG_DNS_STATIC_SERVERS", value: ""}
   notify:
     - "refresh netconfig"
     - "restart named"

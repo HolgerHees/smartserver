@@ -14,15 +14,6 @@
     group: root
     mode: 0750
 
-- name: mount cloud data folder => is_production
-  mount:
-    name: "{{cloud_backup_target_path}}"
-    src: "{{cloud_net2_server_ip}}:{{vault_vpn_cloud_remote_export_path}}"
-    fstype: nfs
-    opts: "rw,noauto,rsize=8192,wsize=8192"
-    state: mounted
-  when: "is_production|bool"
-
 - name: "clone git"
   git:
 #    accept_hostkey: yes
@@ -65,3 +56,17 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
+
+- name: test reachability of {{cloud_net2_server_ip}}
+  wait_for: timeout=60 port=2049 host="{{cloud_net2_server_ip}}"
+  when: "is_production|bool"
+
+- name: mount cloud data folder => is_production
+  mount:
+    name: "{{cloud_backup_target_path}}"
+    src: "{{cloud_net2_server_ip}}:{{vault_vpn_cloud_remote_export_path}}"
+    fstype: nfs
+    opts: "rw,noauto,rsize=8192,wsize=8192"
+    state: mounted
+  when: "is_production|bool"
+

@@ -112,7 +112,7 @@
     dest: "/etc/systemd/system/openhab.service"
     owner: root
     group: root
-    mode: 644
+    mode: 0644
   notify: "restart openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
@@ -179,7 +179,7 @@
     dest: "/etc/udev/rules.d/{{item|basename}}"
     owner: root
     group: root
-    mode: 644
+    mode: 0644
   with_fileglob: "{{projects_path}}openhab2/templates/udev/rules.d/*"
   notify: "restart openhab"
 # *******************
