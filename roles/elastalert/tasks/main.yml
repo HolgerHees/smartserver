@@ -63,6 +63,11 @@
   #changed_when: yes
 #- debug: msg={{clone_status}}
 
+- name: check if elastalert is installed
+  shell: command -v elastalert >/dev/null 2>&1
+  register: is_elastalert_exist
+  ignore_errors: yes
+
 - name: "install => clone status changed"
   shell: '{{ item }}'
   args:
@@ -72,16 +77,16 @@
     - 'pip3 install --ignore-installed PyYAML'
     - 'pip3 install --upgrade cryptography==2.3.1'
     - 'python3 setup.py install --prefix=/usr'
-  when: clone_status.changed
+  when: clone_status.changed or is_elastalert_exist.rc == 1
 
 - name: check elasticsearch service => clone status changed
   import_tasks: roles/elasticsearch/tasks/wait_until_ready.yml
-  when: clone_status.changed
+  when: clone_status.changed or is_elastalert_exist.rc == 1
   
 - name: create search index => clone status changed
   shell: 'elastalert-create-index --config /etc/elastalert/config.yaml'
   notify: "restart elastalert"
-  when: clone_status.changed
+  when: clone_status.changed or is_elastalert_exist.rc == 1
   
 # first test run
 #elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
