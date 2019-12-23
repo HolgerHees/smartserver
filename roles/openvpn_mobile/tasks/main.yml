@@ -88,6 +88,19 @@
   notify: "restart openvpn@mobile"
   when: "easy_rsa_file_mode =='create'"
 
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "/etc/easy-rsa/pki/issued"
+    - "/etc/easy-rsa/pki/private"
+    - "/etc/easy-rsa/pki/reqs"
+  when: "easy_rsa_file_mode =='vault'"
+
 - name: copy easy-rsa certificates => easy_rsa_file_mode =='vault'
   copy:
     src: "{{config_path}}vault/easy-rsa/{{item.path}}"
