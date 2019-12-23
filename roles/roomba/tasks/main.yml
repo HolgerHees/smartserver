@@ -4,6 +4,7 @@
         paho-mqtt
       , pillow
     ]
+    executable: "pip3"
   notify: "restart roomba"
 
 - name: prepare map htdocs folder
