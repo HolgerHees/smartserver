@@ -180,8 +180,13 @@
     owner: root
     group: root
     mode: 0644
+  register: udev_rules
   with_fileglob: "{{projects_path}}openhab2/templates/udev/rules.d/*"
   notify: "restart openhab"
+
+- name: reload udev rules
+  command: "udevadm control --reload-rules && udevadm trigger"
+  when: udev_rules.changed
 # *******************
 
 # ***** SELINUX ****
