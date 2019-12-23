@@ -34,6 +34,8 @@
 
     - { import_role: { name: apache, tasks_from: create_shared_folder }, tags: [ 'apache' ] }    # is creating {{global_etc}}apache2/_.ansible.d
 
+    - { import_role: { name: apache, tasks_from: ensure_www_user_exists }, tags: [ 'always' ] }
+
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
