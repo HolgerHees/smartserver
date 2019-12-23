@@ -23,3 +23,9 @@
   vars:
     container_name: "mosquitto"
   import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
