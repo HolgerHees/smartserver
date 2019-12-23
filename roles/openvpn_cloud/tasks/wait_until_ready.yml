@@ -1,0 +1,13 @@
+- name: read service facts
+  service_facts:
+
+- name: check if openvpn@cloud is running
+  systemd:
+    name: openvpn@cloud
+    state: started
+    daemon_reload: yes
+  changed_when: ansible_facts.services["openvpn@cloud.service"].state != 'running'
+
+  
+  
+  
