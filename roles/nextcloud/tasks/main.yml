@@ -1,3 +1,8 @@
+- name: set nextcloud version
+  set_fact:
+    nextcloud_version: '17.0.2'
+    nextcloud_upgrade_from: '17.0.2.1' # the current installed version to be able to run "./occ upgrade"
+    
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -20,11 +25,6 @@
     - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
 
-- name: set nextcloud version
-  set_fact:
-    nextcloud_version: '17.0.0'
-    nextcloud_upgrade_from: '17.0.0.9' # the current installed version to be able to run "./occ upgrade"
-    
 - name: check nextcloud
   stat:
     path: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/"
