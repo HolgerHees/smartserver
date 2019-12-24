@@ -66,7 +66,8 @@
 - name: check if elastalert is installed
   shell: command -v elastalert >/dev/null 2>&1
   register: is_elastalert_exist
-  failed_when: yes
+  failed_when: no
+  changed_when: is_elastalert_exist.rc == 1
 
 - name: "install => clone status changed"
   shell: '{{ item }}'

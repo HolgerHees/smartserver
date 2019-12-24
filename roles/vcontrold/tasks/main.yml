@@ -57,7 +57,8 @@
 - name: check if vcontrold is installed
   shell: command -v vcontrold >/dev/null 2>&1
   register: is_vcontrold_exist
-  failed_when: yes
+  failed_when: no
+  changed_when: is_vcontrold_exist.rc == 1
 
 - name: "create build dir => clone status changed"
   file: 
