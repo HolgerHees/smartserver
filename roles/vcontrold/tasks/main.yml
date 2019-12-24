@@ -54,12 +54,18 @@
   register: clone_status
 #- debug: msg={{clone_status}}
 
+- name: check if vcontrold is installed
+  shell: command -v vcontrold >/dev/null 2>&1
+  register: is_vcontrold_exist
+  failed_when: no
+  changed_when: is_vcontrold_exist.rc == 1
+
 - name: "create build dir => clone status changed"
   file: 
     path: '{{global_build}}vcontrold/build'
     state: directory
   register: build_status
-  when: clone_status.changed
+  when: clone_status.changed or is_vcontrold_exist.rc == 1
 
 - name: "install => clone status changed"
   shell: '{{ item }}'
@@ -70,7 +76,7 @@
     - 'make'
     - 'make install'
   notify: "restart vcontrold"
-  when: clone_status.changed or build_status.changed
+  when: clone_status.changed or is_vcontrold_exist.rc == 1 or build_status.changed
 
 - name: set logrotate job
   vars:
