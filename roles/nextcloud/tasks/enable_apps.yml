@@ -34,11 +34,21 @@
     dest: "{{htdocs_path}}nextcloud/apps/"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+  register: keeweb_installation
   when: not keeweb_exists.stat.exists
+  
+- name: check keeweb max version
+  lineinfile:
+    path: "{{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml"
+    regexp: '(.*max-version)="[0-9]+"(.*)'
+    line: '\1="20"\2'
+    backrefs: yes
+  register: keeweb_installation
+  when: keeweb_exists.stat.exists
   
 - name: enable keeweb app => app does not exists
   shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
-  when: not keeweb_exists.stat.exists
+  when: keeweb_installation.changed
 
 - name: install news app
   unarchive:
