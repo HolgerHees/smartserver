@@ -1,13 +1,13 @@
 #!/bin/bash
 DIRNAME=`dirname "$0"`
 
-RESULT=`/usr/bin/vclient -h 127.0.0.1:3002 -f ${DIRNAME}/heizung.cmd -t ${DIRNAME}/heizung.tpl 2>&1`
+RESULT=`/usr/bin/vclient -h 127.0.0.1 -p 3002 -f ${DIRNAME}/heizung.cmd -t ${DIRNAME}/heizung.tpl 2>&1`
 CODE=${PIPESTATUS[0]}
 
 #while true; do
 while false; do
 
-    RESULT=`/usr/bin/vclient -h 127.0.0.1:3002 -f ${DIRNAME}/heizung.cmd -t ${DIRNAME}/heizung.tpl 2>&1`
+    RESULT=`/usr/bin/vclient -h 127.0.0.1 -p 3002 -f ${DIRNAME}/heizung.cmd -t ${DIRNAME}/heizung.tpl 2>&1`
     CODE=${PIPESTATUS[0]}
 
     #echo $STATUS
