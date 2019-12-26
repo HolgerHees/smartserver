@@ -48,16 +48,7 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/influxdb.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
-  
-- name: create cron job
-  vars:
-    name: "Influxdb OpenTSDB Backup"
-    cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-    file: "ansible_influxdb"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-  
+    
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"

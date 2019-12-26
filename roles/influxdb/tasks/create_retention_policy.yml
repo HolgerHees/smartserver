@@ -1,0 +1,12 @@
+#https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
+
+- name: prepare retention policy
+  template:
+    src: "roles/influxdb/templates/retention_policy.sql"
+    dest: "/tmp/retention_policy.sql"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: create retention policy
+  shell: "cat /tmp/retention_policy.sql | docker exec -i influxdb sh -c \"influx\""

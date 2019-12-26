@@ -105,12 +105,43 @@
     #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
     #- { field: "Nice", value: "0" } # was "#Nice=0" before
   notify: "restart netdata"
+  
+# ***** DATABASE ****
+- name: check influxdb data
+  stat:
+    path: "{{ global_lib }}influxdb/data/opentsdb"
+  register: influxdb_data_exists
+  changed_when: not influxdb_data_exists.stat.exists
+  
+- name: check influxdb service => database does not exists
+  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
+  when: "not influxdb_data_exists.stat.exists"
 
+- name: create missing influx databases => database does not exists
+  shell: "docker exec influxdb sh -c \"influx -execute 'CREATE DATABASE opentsdb'\""
+  when: "not influxdb_data_exists.stat.exists"
+
+- name: create retention policy
+  vars:
+    database: "opentsdb"
+  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
+  when: "not influxdb_data_exists.stat.exists"
+
+# ***** OTHER *****
 - name: copy apache config
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/netdata.conf"
   import_tasks: roles/apache/tasks/add_config.yml
   
+- name: create cron job
+  vars:
+    name: "Influxdb OpenTSDB Backup"
+    cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    file: "ansible_netdata"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
 - name: create cron job
   vars:
     name: "Netdata error check"
