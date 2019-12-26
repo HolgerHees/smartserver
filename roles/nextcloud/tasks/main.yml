@@ -119,7 +119,7 @@
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: initialise mysql database => database does not exists
-  shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
+  shell: "cat roles/nextcloud/templates/nextcloud.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
   
 # ***** REDIS ****

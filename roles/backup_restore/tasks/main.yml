@@ -10,7 +10,7 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import nextcloud database => mysql_backup_exists
-  shell: "bzcat {{local_import_path}}mysql/nextcloud* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\" -t"
+  shell: "bzcat {{local_import_path}}mysql/nextcloud* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\""
   when: mysql_backup_exists.stat.exists
 
 # force a rebuild of cached files like merged js and css files
@@ -19,7 +19,7 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import openhab database => mysql_backup_exists
-  shell: "bzcat {{local_import_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\" -t"
+  shell: "bzcat {{local_import_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: mysql_backup_exists.stat.exists
   
 # **** INFLUXDB ****     

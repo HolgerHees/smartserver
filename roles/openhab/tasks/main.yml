@@ -274,6 +274,12 @@
   shell: "docker exec influxdb sh -c \"influx -execute 'GRANT READ ON openhab_db TO {{vault_grafana_influxdb_username}}'\""
   when: "not influxdb_data_exists.stat.exists"
 
+#- name: create retention policy
+#  vars:
+#    database: "openhab_db"
+#  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
+#  when: "not influxdb_data_exists.stat.exists"
+
 # ***** OTHER *****
 - name: copy apache config
   vars:
