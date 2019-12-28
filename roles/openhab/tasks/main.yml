@@ -134,6 +134,15 @@
     mode: 0640
   notify: "restart openhab"
 
+- name: copy jython configuration
+  copy:
+    src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
+    dest: "{{data_path}}openhab-runtime/python/configuration.py"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart openhab"
+
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
   git:
@@ -162,7 +171,6 @@
     - conf/sitemaps
     - conf/transform
     - python/marvin
-    - python/configuration.py
   notify: "restart openhab"
 
 - name: copy habpanel config
