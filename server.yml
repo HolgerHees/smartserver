@@ -3,11 +3,6 @@
   become: yes
   become_user: root
   pre_tasks:
-    - name: enable tests
-      set_fact:
-        openhab_2_5_0: no
-      tags: always
-    
     # ************ INIT CONFIG ***********   
     - { import_role: { name: _init }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************   

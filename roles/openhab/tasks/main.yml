@@ -1,6 +1,6 @@
 - name: set openhab version
   set_fact:
-    openhab_version: "{{ '2.5.0' if openhab_2_5_0 else '2.4.0' }}"
+    openhab_version: "2.5.0"
     
 - name: check openhab-runtime
   stat:
@@ -67,6 +67,7 @@
     - "{{data_path}}openhab-runtime/conf/scripts"
     - "{{data_path}}openhab-runtime/conf/services"
     - "{{data_path}}openhab-runtime/conf/sounds"
+    - "{{data_path}}openhab-runtime/python"
     - "{{data_path}}openhab-runtime/userdata/config"
     - "{{data_path}}openhab-runtime/userdata/config/org"
     - "{{data_path}}openhab-runtime/userdata/config/org/openhab"
@@ -93,9 +94,11 @@
     regexp: '^{{item.field}}\s*='
     line: '{{item.field}} = {{item.value}}'
   with_items:
-    - { field: 'log4j2.logger.jsr223Default.name', value: 'org.eclipse.smarthome.automation' }
+    - { field: 'log4j2.logger.jsr223Script.name', value: 'jsr223.jython' }
+    - { field: 'log4j2.logger.jsr223Script.level', value: 'DEBUG' }
+    - { field: 'log4j2.logger.jsr223Default.name', value: 'org.openhab.core.automation' }
     - { field: 'log4j2.logger.jsr223Default.level', value: 'DEBUG' }
-    - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.eclipse.smarthome.automation.core.internal.RuleEngineImpl' }
+    - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.openhab.core.automation.internal.RuleEngineImpl' }
     - { field: 'log4j2.logger.jsr223Trigger.level', value: 'ERROR' }
     # hide warning like this
     # > 2018-12-20 14:38:30.140 [WARN ] [calimero.link.192.168.0.51:3671     ] - negative confirmation of 1/7/11: 2e009de0fffa0f0b010000
@@ -115,13 +118,29 @@
     mode: 0644
   notify: "restart openhab"
 
+# ****** GITHUB JYTHON PROJECT ******
+- name: "clone jython git"
+  git:
+    repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
+    dest: '{{global_build}}openhab-jython'
+    version: 'master'
+
+- name: copy jython classes
+  copy:
+    src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
+    dest: "{{data_path}}openhab-runtime/python/"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart openhab"
+
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
   git:
     accept_hostkey: yes
     repo: '{{vault_openhab_config_git}}'
     dest: '{{projects_path}}openhab2'
-    version: "{{ 'openhab_2.5.0' if openhab_2_5_0 else 'master' }}"
+    version: "master"
 
 - name: link configs
   file:
@@ -133,7 +152,6 @@
     group: root
   with_items:
     - start.sh
-    - python
     - addons
     - conf/automation
     - conf/html
@@ -143,6 +161,8 @@
     - conf/rules
     - conf/sitemaps
     - conf/transform
+    - python/marvin
+    - python/configuration.py
   notify: "restart openhab"
 
 - name: copy habpanel config
