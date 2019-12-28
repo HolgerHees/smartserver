@@ -129,6 +129,7 @@
   copy:
     src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
     dest: "{{data_path}}openhab-runtime/python/"
+    remote_src: yes
     owner: root
     group: root
     mode: 0640
@@ -138,6 +139,7 @@
   copy:
     src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
     dest: "{{data_path}}openhab-runtime/python/configuration.py"
+    remote_src: yes
     owner: root
     group: root
     mode: 0640
