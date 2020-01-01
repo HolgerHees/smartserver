@@ -4,7 +4,7 @@ class Setup
 {
     public static function getTimezone()
     {
-        return new DateTimezone( '{{vault_timezone}}' );
+        return new DateTimezone( '{{timezone}}' );
     }
     
 	public static function getOpenHabMysql()
@@ -29,7 +29,7 @@ class Setup
 
 	public static function getGeoLocation()
 	{
-        $pos = explode(",","{{vault_location}}");
+        $pos = explode(",","{{location}}");
         return new GeoLocation($pos[0],$pos[1]);
 	}
 }

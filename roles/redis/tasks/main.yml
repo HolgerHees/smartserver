@@ -33,7 +33,7 @@
     network_mode: "none"
 #    recreate: true
     env:
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: redis

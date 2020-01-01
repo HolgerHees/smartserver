@@ -115,7 +115,7 @@
       PASV_MIN: "30000"
       PASV_MAX: "30100"
       UMASK: "027"
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: vsftpd

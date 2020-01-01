@@ -47,7 +47,7 @@
     env:
       APACHE_RUN_USER: "#{{system_users['www'].id}}"
       APACHE_RUN_GROUP: "#{{system_groups['www'].id}}"
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: apache

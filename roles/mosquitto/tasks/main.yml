@@ -10,7 +10,7 @@
     state: present
 #    recreate: true
     env:
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: mosquitto

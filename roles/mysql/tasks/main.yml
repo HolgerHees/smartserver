@@ -24,7 +24,7 @@
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "true"
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: mysql

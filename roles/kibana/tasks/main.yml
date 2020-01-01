@@ -23,7 +23,7 @@
       SERVER_BASEPATH: "/kibana"
       SERVER_REWRITEBASEPATH: "true"
       ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: kibana

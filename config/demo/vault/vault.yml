@@ -1,6 +1,3 @@
-vault_timezone: "Europe/Berlin"
-vault_location: "52.520008,13.404954"
-
 vault_admin_mail: "test@test.com"
 vault_root_mail_account: "test@test.com"
 vault_root_mail_password: "default123"

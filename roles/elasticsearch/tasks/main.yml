@@ -25,7 +25,7 @@
     env:
       discovery.type: "single-node"
       opendistro_security.disabled: "true"
-      TZ: "{{vault_timezone}}"
+      TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: elasticsearch
