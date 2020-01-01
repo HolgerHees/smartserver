@@ -60,6 +60,7 @@ end
 $env_ip = ""
 $with_password = setup_config != 'demo'
 $is_reboot_possible = false
+$image_name = "smartserver_" + setup_config + "_" + setup_os
 
 Vagrant.configure(2) do |config|
     
@@ -73,7 +74,7 @@ Vagrant.configure(2) do |config|
   
   print "Used ip address: #{$env_ip}\n"
   
-  config.vm.define "smartserver", autostart: true do |setup|
+  config.vm.define $image_name, autostart: true do |setup|
     setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'
     setup.ssh.password = 'vagrant'
@@ -82,7 +83,7 @@ Vagrant.configure(2) do |config|
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
     setup.vm.provider :virtualbox do |vb|
-        vb.name = "smartserver_" + setup_config + "_" + setup_os
+        vb.name = $image_name
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
