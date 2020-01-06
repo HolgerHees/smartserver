@@ -7,4 +7,5 @@
     mode: 0755
   with_items:
     - "{{global_etc}}apache2/"
-    - "{{global_etc}}apache2/_.ansible.d/"
+    - "{{global_etc}}apache2/_.ansible.conf.d/"
+    - "{{global_etc}}apache2/_.ansible.vhost.d/"

@@ -22,6 +22,28 @@
     - "{{htdocs_path}}"
     - "{{global_log}}apache2/"
 
+- name: check certificate chain file
+  stat:
+    path: /etc/letsencrypt/live/{{server_domain}}/chain.pem
+  register: chain_file
+  changed_when: no
+
+- name: copy config
+  template:
+    src: "templates/etc/apache2/{{item}}"
+    dest: "{{global_etc}}apache2/{{item}}"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  vars:
+    enable_stapeling: "{{chain_file.stat.exists}}"
+  with_items:
+    - _.ansible.conf.d/auth.conf
+    - _.ansible.conf.d/options.conf
+    - _.ansible.vhost.d/default-ssl.conf
+    - _.ansible.server.conf
+  notify: "restart apache2"
+
 - name: check started docker
   systemd:
     name: docker
@@ -56,8 +78,9 @@
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'
       - '{{redis_socket_path}}:{{redis_socket_path}}:z'
-      - '{{global_etc}}apache2/_.ansible.d:/etc/apache2/_.ansible.d:z'
-      - '{{global_etc}}apache2/_.ansible_vhost-ssl.conf:/etc/apache2/_.ansible_vhost-ssl.conf:z'
+      - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d:z'
+      - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d:z'
+      - '{{global_etc}}apache2/_.ansible.server.conf:/etc/apache2/_.ansible.server.conf:z'
       - '/etc/certbot:/etc/certbot:z'
 
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
@@ -82,27 +105,6 @@
   vars:
     container_name: "apache2"
   import_tasks: roles/container/tasks/add_docker_service.yml
-
-- name: check certificate chain file
-  stat:
-    path: /etc/letsencrypt/live/{{server_domain}}/chain.pem
-  register: chain_file
-  changed_when: no
-
-- name: copy config
-  template:
-    src: "templates/etc/apache2/{{item}}"
-    dest: "{{global_etc}}apache2/{{item}}"
-    owner: "root"
-    group: "root"
-    mode: 0644
-  vars:
-    enable_stapeling: "{{chain_file.stat.exists}}"
-  with_items:
-    - _.ansible.d/auth.conf
-    - _.ansible.d/options.conf
-    - _.ansible_vhost-ssl.conf
-  notify: "restart apache2"
 
 - name: copy fluentd config
   vars:
