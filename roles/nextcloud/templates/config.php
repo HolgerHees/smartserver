@@ -5,7 +5,8 @@ $CONFIG = array (
   'trusted_domains' => 
   array (
     0 => '{{server_ip}}',
-    1 => '{{server_domain}}'
+    1 => '{{server_domain}}',
+    2 => 'cloud.{{server_domain}}'
   ),
   'auth.bruteforce.protection.enabled' => false,
   'overwrite.cli.url' => '/nextcloud',

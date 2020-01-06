@@ -12,7 +12,8 @@ RUN groupadd -g $WWW_GID $WWW_GROUPNAME \
   && apt-get install -y sudo
 
 # OpenID Connect
-RUN apt-get install -y libapache2-mod-auth-openid
+RUN apt-get install -y libapache2-mod-auth-openidc
+#libapache2-mod-auth-openid
 
 #RUN apt-get install -y libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev
 
@@ -49,8 +50,10 @@ RUN pecl install redis \
   && docker-php-ext-enable redis
 
 #https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=759209
+#  && ln -s /etc/apache2/mods-available/auth_openid.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/auth_openidc.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/auth_openidc.load /etc/apache2/mods-enabled/ \
 RUN ln -s /etc/apache2/mods-available/auth_digest.load /etc/apache2/mods-enabled/ \
-  && ln -s /etc/apache2/mods-available/auth_openid.load /etc/apache2/mods-enabled/ \
   && ln -s /etc/apache2/mods-available/authz_groupfile.load /etc/apache2/mods-enabled/ \
   && ln -s /etc/apache2/mods-available/expires.load /etc/apache2/mods-enabled/ \
   && ln -s /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/ \
@@ -69,7 +72,7 @@ RUN ln -s /etc/apache2/mods-available/auth_digest.load /etc/apache2/mods-enabled
   && ln -s /etc/apache2/mods-available/ssl.load /etc/apache2/mods-enabled/ \
   && ln -s /etc/apache2/mods-available/substitute.load /etc/apache2/mods-enabled/ \
   && ln -s /etc/apache2/mods-available/xml2enc.load /etc/apache2/mods-enabled/ \
-  && sed -i "s@LoadModule.*@LoadModule authopenid_module /usr/lib/apache2/modules/mod_auth_openid.so@g" /etc/apache2/mods-available/auth_openid.load \
+#  && sed -i "s@LoadModule.*@LoadModule authopenid_module /usr/lib/apache2/modules/mod_auth_openid.so@g" /etc/apache2/mods-available/auth_openid.load \
   && sed -i "s@ErrorLog.*@ErrorLog $GLOBAL_LOG/error.log@g" /etc/apache2/apache2.conf \
   && sed -i "s/Include ports\.conf/#Include ports\.conf/g" /etc/apache2/apache2.conf \
   && echo 'Include /etc/apache2/_.ansible.server.conf' >> /etc/apache2/apache2.conf \

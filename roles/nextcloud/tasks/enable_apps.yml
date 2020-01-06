@@ -21,7 +21,12 @@
     - calendar
     - notes
     - tasks
+#    - user_saml
     
+#INSERT INTO `oc_appconfig` (`appid`, `configkey`, `configvalue`) VALUES ('user_saml', 'type', 'environment-variable'); 
+#INSERT INTO `oc_appconfig` (`appid`, `configkey`, `configvalue`) VALUES ('user_saml', 'general-uid_mapping', 'REMOTE_USER'); 
+#SET configvalue = “REMOTE_USER” where appid = “user_saml” and configkey = “general-uid_mapping” ;
+
 - name: check keeweb app
   stat:
     path: "{{htdocs_path}}nextcloud/apps/keeweb"
