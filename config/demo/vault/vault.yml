@@ -7,8 +7,8 @@ vault_usernames: [
     "testuser2"
 ]
 vault_userdata: {
-    testuser: { name: "Test User 1", samba_password: "test", web_password: "test" },
-    testuser2: { name: "Test User 2", samba_password: "test", web_password: "test" }
+    testuser: { name: "Test User 1", email: "test1@test.de", samba_password: "test", web_password: "test" },
+    testuser2: { name: "Test User 2", email: "test2@test.de", samba_password: "test", web_password: "test" }
 }
 
 vault_admin_username: "admin"
