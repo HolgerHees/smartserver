@@ -14,6 +14,9 @@
 
 - name: "Import kibana's dashboard"
   shell: "curl -X POST \"http://localhost:5601/api/saved_objects/_import?overwrite=true\" -H \"kbn-xsrf: true\" --form file=@roles/kibana/templates/dashboard.ndjson"
+  register: import_result
+  failed_when: "'\"success\":true' not in import_result.stdout"
+  # {"success":true,"successCount":4}
   args:
     warn: false
 #  uri:

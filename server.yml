@@ -125,4 +125,4 @@
   post_tasks:
     - { import_role: { name: nextcloud, tasks_from: enable_apps }, tags: [ 'nextcloud' ] }       # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 
-    - { import_role: { name: kibana, tasks_from: import_dashboards }, tags: [ 'kibana' ] }       # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
+    - { import_role: { name: kibana, tasks_from: import_dashboards }, tags: [ 'kibana', 'kibana_dashboard' ] } # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
