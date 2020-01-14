@@ -61,7 +61,7 @@
   openssl_csr:
     path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-    common_name: "{{server_domain}}"
+    common_name: "*.{{server_domain}}"
   when: "certificate_file_mode == 'create'"
     
 - name: generate openssl certificate => certificate_file_mode == 'create'

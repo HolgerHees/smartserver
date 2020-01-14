@@ -1,0 +1,124 @@
+body, html {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      html {
+          height: 100%;
+          box-sizing: border-box;
+      }
+      body {
+          background: #fff;
+          font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+          margin: 0;
+          height: 100%;
+          box-sizing: border-box;
+      }
+      body > div {
+        height: 100%;
+        padding-top: 100px;
+        box-sizing: border-box;
+      }
+      .box {
+        border-radius: 8px;
+        border: 1px solid #dadce0;
+        display: block;
+        width: 80%;
+        max-width: 450px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+      .box > h1 {
+        text-align: center;
+      }
+      .box > div {
+        text-align: center;
+      }
+      .box > div > a.button {
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        letter-spacing: .15px;
+        margin: 16px;
+        outline: 0;
+        padding: 10px 24px;
+        text-align: center;
+        text-decoration: none;
+        white-space: normal;
+        color: #3c4043;
+        display: inline-block;
+      }
+      @media (hover: hover) {
+        .box > div > a.button:hover {
+          background-color: #f7f8f8;
+        }
+      }
+      .box > div > a.button:active {
+        background-color: #e8e8e9;
+        border-color:transparent;
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);
+        -webkit-tap-highlight-color: transparent;
+      }
+      .box > div > a.button:focus {
+        outline: none;
+      }
+      form.box > div {
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+      }
+      form.box label {
+        width: 100px;
+        display: inline-block;
+        font-size: 16px;
+        line-height: 35px;
+      }
+      form.box input {
+        width: calc(100% - 100px);
+        display: inline-block;
+        box-sizing: border-box;
+        border-radius: 4px;
+        border: 1px solid #dadce0;
+        padding: 5px;
+        font-size: 16px;
+      }
+
+      form.box input[type=submit] {
+        margin: 5px 0 16px 0;
+        width: 100%;
+        display: inline-block;
+        background: #1a73e8;
+        color: white;
+        height: 41px;
+      }
+      @media (hover: hover) {
+        form.box input[type=submit]:hover {
+          background: #287ae6;
+          box-shadow: 0 1px 1px 0 rgba(66,133,244,0.45),0 1px 3px 1px rgba(66,133,244,0.3);
+        }
+      }
+      form.box input[type=submit]:active {
+        background: #2065be;
+        box-shadow: 0 1px 1px 0 rgba(66,133,244,0.45),0 1px 3px 1px rgba(66,133,244,0.3);
+        -webkit-tap-highlight-color: transparent;
+      }
+      form.box input[type=submit]:focus {
+        outline: none;
+      }
+      form.box input[type=submit]::-moz-focus-inner {
+        border: 0;
+      }
+      form.box > div.login {
+        padding: 5px 5px 0 5px;
+      }
+      form.box #bw_error, #bw_logout {
+        display: none;
+        text-align: center;
+        font-size: 12px;
+      }
+      form.box #bw_error {
+        color: red;
+      }
+      form.box #bw_logout {
+        color: green;
+      }

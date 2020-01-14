@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <title>Authentication required</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="theme-color" content="#ffffff">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+   <meta name="robots" content="noindex, nofollow" />
+   <link href="/auth/style.css" rel="stylesheet">
+   <script>
+      document.addEventListener("DOMContentLoaded", function(){
+        // invalidate locale storage items after 5 seconds
+        var d = new Date();
+        limit = d.getTime() - 1000 * 5;
+        if(localStorage.getItem("bw_login") && localStorage.getItem("bw_login") < limit) {
+          localStorage.removeItem("bw_username");
+          localStorage.removeItem("bw_login");
+        }
+
+        if(localStorage.getItem("bw_login"))
+        {
+          document.getElementById("bw_error").style.display="block";
+        }
+
+        if(localStorage.getItem("bw_username") && localStorage.getItem("bw_username").length > 0)
+        {
+          document.getElementById("bw_username").value = localStorage.getItem("bw_username");
+          document.getElementById("bw_password").focus();
+        }
+        else
+        {
+          document.getElementById("bw_username").focus();
+        }
+
+        document.getElementsByTagName("form")[0].addEventListener("submit",function()
+        {
+          localStorage.setItem("bw_username", document.getElementById("bw_username").value );
+
+          var d = new Date();
+          localStorage.setItem("bw_login", d.getTime());
+        });
+
+        localStorage.removeItem("bw_username");
+        localStorage.removeItem('bw_login');
+      });
+   </script>
+</head>
+<body>
+    <div>
+        <form class="box" method="post" action="/">
+          <h1>
+            Login
+          </h1>
+          <div>
+            <label>Username</label>
+            <input type="text" name="bw_username" value="" id="bw_username" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input type="password" name="bw_password" value="" id="bw_password" />
+          </div>
+          <div id="bw_error">
+            Login failed! Please check the provided username and password and try again.
+          </div>
+          <div class="login">
+            <input type="submit" value="Login" name="bw_login" />
+          </div>
+        </form>
+    </div>
+</body>
+</html>

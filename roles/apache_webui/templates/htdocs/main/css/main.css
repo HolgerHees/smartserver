@@ -142,6 +142,36 @@ body {
     margin-right: 0;
     justify-content: space-between;
 }
+#menu .logout {
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    letter-spacing: .15px;
+    margin: 16px;
+    outline: 0;
+    padding: 10px 24px;
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    color: #3c4043;
+}
+@media (hover: hover) {
+  #menu .logout:hover {
+      background-color: #f7f8f8;
+  }
+}
+#menu .logout:active {
+    background-color: #e8e8e9;
+    border-color:transparent;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);
+    -webkit-tap-highlight-color: transparent;
+}
+#menu .logout:focus {
+    outline: none;
+}
 #menu .header {
     width: 100%;
     text-align: left;
@@ -181,6 +211,22 @@ body {
     -webkit-transition: background-color 200ms ease-out; 
     -moz-transition: background-color 200ms ease-out;
     -o-transition: background-color 200ms ease-out;
+}
+@media (hover: hover) {
+  #menu .service.button:hover {
+      background-color: #f2f2f2;
+      border: 1px solid rgba(0,0,0,0.1);
+  }
+}
+#menu .service.button:active {
+    background-color: rgba(51,122,183,.12);
+    -webkit-tap-highlight-color: transparent;
+}
+#menu .service.button.active {
+    background-color: rgba(51,122,183,.12);
+    border-top: 1px solid rgba(0,0,0,.1);
+    border-bottom: 1px solid rgba(0,0,0,.1);
+    color: #1976D2;
 }
 #background {
     background-repeat: no-repeat;
@@ -281,8 +327,15 @@ body.nobackground #submenu .service.button div:last-child {
     font-weight: 300;
     text-shadow: 0 1px 2px rgba(0,0,0,.6);
 }
+@media (hover: hover) {
+  #submenu .service.button:hover {
+      background-color: rgba(255,255,255,0.2);
+  }
+}
 #submenu .service.button:active {
     color: #444;
+    background-color: rgba(51,122,183,.12);
+    -webkit-tap-highlight-color: transparent;
 }
 #submenu .service.camera {
     display:flex;
@@ -334,13 +387,6 @@ body.nobackground #submenu .service.button div:last-child {
 body.desktop #menu {
     width: 300px;
 }
-body.desktop #menu .service.button:hover {
-    background-color: #f2f2f2;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-body.desktop #submenu .service.button:hover {
-    background-color: rgba(255,255,255,0.2);
-}
 body.desktop #side {
     margin-left: 300px;
 }
@@ -368,15 +414,5 @@ body.phone #menu .burger.button {
 }
 body.phone #menu .alarm.button {
     display:none;
-}
-
-#menu .service:active, #submenu .service:active {
-    background-color: rgba(51,122,183,.12);
-}
-#menu .service.active {
-    background-color: rgba(51,122,183,.12);
-    border-top: 1px solid rgba(0,0,0,.1);
-    border-bottom: 1px solid rgba(0,0,0,.1);
-    color: #1976D2;   
 }
 

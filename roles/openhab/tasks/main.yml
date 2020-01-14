@@ -311,10 +311,24 @@
 #  when: "not influxdb_data_exists.stat.exists"
 
 # ***** OTHER *****
-- name: copy apache config
+- name: copy apache vhost
   vars:
-    config_file: "templates/etc/apache2/_.ansible.d/openhab.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+    sub_domain: "openhab"
+    include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+- name: copy special vhosts
+  template:
+    src: "templates/etc/apache2/_.ansible.vhost.d/{{item}}"
+    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{item}}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - default-openhab.conf
+    - default-openhab-ssl.conf
+  notify: "restart apache2"
+  tags: ['apache_conf']
 
 - name: copy fluentd config
   vars:

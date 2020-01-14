@@ -20,8 +20,8 @@
     state: present
 #    recreate: true
     env:
-      SERVER_BASEPATH: "/kibana"
-      SERVER_REWRITEBASEPATH: "true"
+#      SERVER_BASEPATH: "/"
+#      SERVER_REWRITEBASEPATH: "true"
       ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
       TZ: "{{timezone}}"
     log_driver: journald
@@ -69,8 +69,8 @@
     config_file: "templates/etc/fluent/_.ansible.d/kibana.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
     
-- name: copy apache config
+- name: copy apache vhost
   vars:
-    config_file: "templates/etc/apache2/_.ansible.d/kibana.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
-
+    sub_domain: "kibana"
+    include: "templates/etc/apache2/_.ansible.vhost.d/kibana.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml

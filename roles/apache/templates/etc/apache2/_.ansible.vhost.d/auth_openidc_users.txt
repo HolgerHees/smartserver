@@ -1,0 +1,3 @@
+{% for username in vault_usernames %}
+{{vault_userdata[username].email}} {{username}}
+{% endfor %}

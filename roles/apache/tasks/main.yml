@@ -38,11 +38,38 @@
   vars:
     enable_stapeling: "{{chain_file.stat.exists}}"
   with_items:
-    - _.ansible.conf.d/auth.conf
+    - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
+    - _.ansible.conf.d/ssl.conf
+    - _.ansible.vhost.d/auth_basic.inc
+    - _.ansible.vhost.d/auth_form1.inc
+    - _.ansible.vhost.d/auth_form2.inc
     - _.ansible.vhost.d/default-ssl.conf
     - _.ansible.server.conf
   notify: "restart apache2"
+
+- name: copy config
+  template:
+    src: "templates/etc/apache2/{{item}}"
+    dest: "{{global_etc}}apache2/{{item}}"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  vars:
+    enable_stapeling: "{{chain_file.stat.exists}}"
+  with_items:
+    - _.ansible.vhost.d/auth_openidc1.inc
+    - _.ansible.vhost.d/auth_openidc2.inc
+    - _.ansible.vhost.d/auth_openidc_users.txt
+  notify: "restart apache2"
+  tags: ['user']
+
+- name: copy login form
+  copy:
+    src: "templates/auth"
+    dest: "{{htdocs_path}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
 
 - name: check started docker
   systemd:
@@ -115,15 +142,6 @@
   copy:
     content: ""
     dest: "{{htdocs_path}}.htpasswd"
-    force: no
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-
-- name: prepare .htdigest file
-  copy:
-    content: ""
-    dest: "{{htdocs_path}}.htdigest"
     force: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"

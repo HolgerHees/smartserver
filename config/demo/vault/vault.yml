@@ -59,10 +59,14 @@ vault_vpn_cloud_master_domain: "public.{{server_domain}}"
 
 vault_cloudsync_password: "default123"
 
-vault_openid_connect_url: "https://accounts.google.com/.well-known/openid-configuration"
-vault_openid_connect_client_id: "<client_id>"
-vault_openid_connect_client_secret: "<client_secret>"
-vault_openid_connect_passphrase: "<passphrase>"
+# for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
+# to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
+vault_openid_connect_url: ""
+vault_openid_connect_client_id: ""
+vault_openid_connect_client_secret: ""
+vault_openid_connect_passphrase: ""
+
+vault_form_auth_passphrase: "8924jkhf2/8?23"
 
 vault_server_alexa_domain: "public.{{server_domain}}"
 vault_server_alexa_port: "22432"

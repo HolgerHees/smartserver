@@ -80,5 +80,5 @@
       
 - name: copy apache config
   vars:
-    config_file: "templates/etc/apache2/_.ansible.d/grafana.conf"
+    config_file: "templates/etc/apache2/_.ansible.conf.d/grafana.conf"
   import_tasks: roles/apache/tasks/add_config.yml

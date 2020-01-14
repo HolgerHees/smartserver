@@ -30,6 +30,17 @@
 
         var readynessCount = 4; //(i18n, background image, background image title & initPage (documentready) )
 
+        var host = location.host;
+        var parts = host.split(".");
+        var authType = "";
+        if( parts.length == 3 )
+        {
+            var subDomain = parts.shift();
+            if( subDomain.indexOf("fa") === 0 ) authType = "fa_";
+            else if( subDomain.indexOf("ba") === 0 ) authType = "ba_";
+        }
+        var domain = parts.join(".");
+
         function loadBackgroundImage()
         {
             var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
@@ -150,7 +161,8 @@
             var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
             
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "/netdata/api/v1/alarms?active&_=" + id);
+            xhr.open("GET", "//" + authType + "netdata." + domain + "/api/v1/alarms?active&_=" + id);
+            xhr.withCredentials = true;
             xhr.onreadystatechange = function() {
                 if (this.readyState != 4) return;
                 
@@ -178,7 +190,7 @@
             mx.$$('.alarm.button').forEach(function(element){ 
                 element.addEventListener("click",function()
                 {
-                    openUrl(null,null,"/netdata/",false);
+                    openUrl(null,null,"//" + authType + "netdata." + domain,false);
                 });
             });
             loadAlerts();
@@ -348,12 +360,12 @@
             else prefix = getI18N('Good Morning');
 
 <?php
-    $name = $_SERVER['PHP_AUTH_USER'];
+    $name = $_SERVER['REMOTE_USERNAME'];
     $handle = fopen(".htdata", "r");
     if ($handle) {
         while (($line = fgets($handle)) !== false) {
             list($_username,$_name) = explode(":", $line);
-            if( trim($_username) == $_SERVER['PHP_AUTH_USER'] )
+            if( trim($_username) == $name )
             {
                 $name = trim($_name);
                 break;
@@ -397,15 +409,15 @@
         function initMenus()
         {
             subMenus['nextcloud'] = [
-                ['url','/nextcloud/',getI18N('Documents'),'',false],
-                ['url','/nextcloud/index.php/apps/news/',getI18N('News'),'',false],
-                ['url','/nextcloud/index.php/apps/keeweb/',getI18N('Keys'),getI18N('Keeweb'),true]
+                ['url','//' + authType + 'nextcloud.'+domain+'/',getI18N('Documents'),'',false],
+                ['url','//' + authType + 'nextcloud.'+domain+'/index.php/apps/news/',getI18N('News'),'',false],
+                ['url','//' + authType + 'nextcloud.'+domain+'/index.php/apps/keeweb/',getI18N('Keys'),getI18N('Keeweb'),true]
             ];
             subMenus['openhab'] = [
-                ['url','/basicui/app',getI18N('Control'),getI18N('Basic UI'),false],
-                ['url','/paperui/index.html',getI18N('Administration'),getI18N('Paper UI'),false],
-                ['url','/habpanel/index.html',getI18N('Tablet UI'),getI18N('HabPanel'),false],
-                ['url','/habot',getI18N('Chatbot'),getI18N('Habot'),false]
+                ['url','//' + authType + 'openhab.'+domain+'/basicui/app',getI18N('Control'),getI18N('Basic UI'),false],
+                ['url','//' + authType + 'openhab.'+domain+'/paperui/index.html',getI18N('Administration'),getI18N('Paper UI'),false],
+                ['url','//' + authType + 'openhab.'+domain+'/habpanel/index.html',getI18N('Tablet UI'),getI18N('HabPanel'),false],
+                ['url','//' + authType + 'openhab.'+domain+'/habot',getI18N('Chatbot'),getI18N('Habot'),false]
             ];
             subMenus['camera'] = [
                 ['html','<div class="service camera">'],
@@ -417,13 +429,13 @@
             ];
             subMenus['tools'] = [
                 ['url','/grafana/d/server-health/server-health',getI18N('Charts'),getI18N('Grafana'),false],
-                ['url','/kibana/app/kibana#/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175',getI18N('Analytics'),getI18N('Kibana'),false],
+                ['url','//' + authType + 'kibana.'+domain+'/app/kibana#/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175',getI18N('Analytics'),getI18N('Kibana'),false],
 //                ['url','/kibana/app/kibana#/dashboard/02e01270-1b34-11ea-9292-eb71d66d1d45',getI18N('Analytics'),getI18N('Kibana'),false],
-                ['url','/netdata/',getI18N('State'),getI18N('Netdata'),false]
+                ['url','//' + authType + 'netdata.'+domain+'/',getI18N('State'),getI18N('Netdata'),false]
             ];
             subMenus['admin'] = [
                 ['url','/mysql/',getI18N('MySQL'),getI18N('phpMyAdmin'),false],
-                ['url','/toolbox/web/weatherDetailOverview/', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
+                ['url','//' + authType + 'openhab.'+domain+'/toolbox/web/weatherDetailOverview.php', getI18N('Weatherforcast'),getI18N('Meteo Group'),false]
             ];
             subMenus['devices'] = [
                 {% for device in webui_urls.devices %}
@@ -568,6 +580,14 @@
             <div class="service button" onClick="openMenu(this,'admin')"><div data-i18n="Tools"></div><div></div></div>
             <div class="service button" onClick="openMenu(this,'devices')"><div data-i18n="Devices"></div><div></div></div>
         </div>
+        <?php
+            if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )
+            {
+        ?>
+        <a class="logout" href="/auth/logout/" data-i18n="Logout"></a>
+        <?php
+            }
+        ?>
     </div>
     <div id="side" class="fullsize">
         <div id="header" data-role="header">

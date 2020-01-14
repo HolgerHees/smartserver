@@ -2,9 +2,16 @@
 
 This project contains my complete automated IoT Server deployment setup.
 
-For a detailed overview check [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) or directly the main deployment [server.yml](https://github.com/HolgerHees/smartserver/blob/master/server.yml) file
+For a detailed overview check [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) or directly the main deployment [server.yml](https://github.com/HolgerHees/smartserver/blob/master/server.yml) file.
 
-## Requirements
+Later, I will document more special features like:
+
+* Seamless DNS resolving between public VPN and private WLAN or how I use it from outside in a secure way without any hussle
+* Different Authentication methods like OpenID Connect, Form Base Auth or Basic Auth
+* Main responsive WebUI which makes everything available in one place
+* more are comming soon
+
+## Demo setup
 
 Install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). The virtual machine needs at least 6GB of memory. On production I run it on a 4 core atom processor with 32GB memory, but 16GB should be fine too.
 
@@ -20,7 +27,21 @@ Or if you want to try a beta version of an [fedora](https://getfedora.org/) base
 vagrant --config=demo --os=fedora up
 ```
 
-If the deployment is done, open https://192.168.1.50/ in your webbrower and login with username "testuser" and password "test".
+If the deployment is done, add the folowing entries to your host file.
+
+```bash
+192.168.1.50    smartserver.test
+192.168.1.50    nextcloud.smartserver.test
+192.168.1.50    kibana.smartserver.test
+192.168.1.50    openhab.smartserver.test
+192.168.1.50    netdata.smartserver.test
+192.168.1.50    grafana.smartserver.test
+192.168.1.50    ba.smartserver.test
+```
+
+As everything is ready, open https://smartserver.test/ in your webbrower and login with username "testuser" and password "test".
+
+Maybe you have to accept the certificate for all individual subdomains separately, because they are selfsigned in the demo setup.
 
 ## Create your own deployment
 

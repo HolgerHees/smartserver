@@ -128,10 +128,11 @@
   when: "not influxdb_data_exists.stat.exists"
 
 # ***** OTHER *****
-- name: copy apache config
+- name: copy apache vhost
   vars:
-    config_file: "templates/etc/apache2/_.ansible.d/netdata.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+    sub_domain: "netdata"
+    include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
   
 - name: create cron job
   vars:

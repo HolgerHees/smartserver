@@ -1,6 +1,6 @@
-- name: copy proxy config
+- name: copy apache config
   vars:
-    config_file: "templates/etc/apache2/_.ansible.d/proxy.conf"
+    config_file: "templates/etc/apache2/_.ansible.conf.d/proxy.conf"
   import_tasks: roles/apache/tasks/add_config.yml
 
 - name: prepare needed folder

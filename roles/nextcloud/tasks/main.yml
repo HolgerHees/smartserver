@@ -92,7 +92,7 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640 
-  
+
 # ***** DATABASE *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
@@ -160,15 +160,10 @@
     config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-- name: copy apache config
-  vars:
-    config_file: "templates/etc/apache2/_.ansible.d/nextcloud.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
-  
 - name: copy apache vhost
   vars:
-    sub_domain: "cloud"
-    config: "{{ lookup('template', 'templates/nextcloud.conf') }}"
+    sub_domain: "nextcloud"
+    include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 
 - name: create cron job

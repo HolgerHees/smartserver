@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <title>You are logged out</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="theme-color" content="#ffffff">
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+   <meta name="robots" content="noindex, nofollow" />
+   <link href="/auth/style.css" rel="stylesheet">
+   <script>
+      function initPage()
+      {
+        localStorage.removeItem("bw_username");
+        localStorage.removeItem("bw_login");
+
+        var host = location.host;
+        var parts = host.split(".");
+        var authType = "";
+        if( parts.length == 3 )
+        {
+            var subDomain = parts.shift();
+            var domain = parts.join(".");
+            if( subDomain.indexOf("fa") === 0 )
+            {
+                if( subDomain.length > 2 ) subDomain = subDomain.substr(3) + ".";
+                else subDomain = "";
+                document.querySelector(".button.openid").style.display="inline-block";
+                document.querySelector(".button.openid").setAttribute("href","https://" + subDomain + domain);
+            }
+            else if( document.cookie.indexOf("openidc_supported=1") !== -1 )
+            {
+                if( subDomain.length > 2 ) subDomain = "fa_" + subDomain.substr(3) + ".";
+                else subDomain = "fa.";
+                document.querySelector(".button.form").style.display="inline-block";
+                document.querySelector(".button.form").setAttribute("href","https://" + subDomain + domain);
+            }
+        }
+        else if( document.cookie.indexOf("openidc_supported=1") !== -1 )
+        {
+            var domain = parts.join(".");
+            document.querySelector(".button.form").style.display="inline-block";
+            document.querySelector(".button.form").setAttribute("href","https://fa." + domain);
+        }
+      }
+
+      if (document.readyState === "complete" || document.readyState === "interactive")
+      {
+          initPage();
+      }
+      else
+      {
+          document.addEventListener("DOMContentLoaded", initPage);
+      }
+   </script>
+</head>
+<body>
+    <div>
+        <div class="box">
+          <h1>
+            You are logged out
+          </h1>
+          <div>
+            <a class="button" href="/">Login</a>
+            <a class="button form" href="/" style="display:none">Form based login</a>
+            <a class="button openid" href="/" style="display:none">OpenID based login</a>
+          </div>
+        </div>
+    </div>
+</body>
+</html>

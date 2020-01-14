@@ -14,7 +14,7 @@
       register: config_directory
 
     - assert:
-        then: config_directory.stat.exists
+        that: config_directory.stat.exists
         msg: "No valid config path. Config directory '{{config_path}}' does not exists"
 
     - name: prepare backup directories

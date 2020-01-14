@@ -6,10 +6,12 @@ $CONFIG = array (
   array (
     0 => '{{server_ip}}',
     1 => '{{server_domain}}',
-    2 => 'cloud.{{server_domain}}'
+    2 => 'nextcloud.{{server_domain}}',
+    3 => 'fa_nextcloud.{{server_domain}}',
+    4 => 'ba_nextcloud.{{server_domain}}'
   ),
   'auth.bruteforce.protection.enabled' => false,
-  'overwrite.cli.url' => '/nextcloud',
+  'overwrite.cli.url' => '/',
   'datadirectory' => '{{nextcloud_data_path}}',
   'dbtype' => 'mysql',
   'version' => '{{nextcloud_upgrade_from}}',

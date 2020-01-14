@@ -35,17 +35,6 @@
     password: "{{vault_userdata[item].web_password}}"
   with_items: "{{vault_usernames}}"
 
-- name: add user to apache .htdigest
-  vars:
-    username: "{{item}}"
-    password: "{{vault_userdata[item].web_password}}"
-    realm: "{{server_name|capitalize}}"
-  lineinfile:
-    path: "{{htdocs_path}}.htdigest"
-    regexp: '^{{item}}:{{server_name}}'
-    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
-  with_items: "{{vault_usernames}}"
-
 - name: add user name to .htdata
   lineinfile:
     path: "{{htdocs_path}}.htdata"
@@ -60,32 +49,12 @@
     name: "{{vault_admin_username}}"
     password: "{{vault_admin_web_password}}"
   
-- name: add user "{{vault_admin_username}}" to apache .htdigest
-  vars:
-    username: "{{vault_admin_username}}"
-    password: "{{vault_admin_web_password}}"
-    realm: "{{server_name|capitalize}}"
-  lineinfile:
-    path: "{{htdocs_path}}.htdigest"
-    regexp: '^{{vault_admin_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
-
 - name: add user "{{vault_alexa_username}}" to apache .htpasswd
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
     name: "{{vault_alexa_username}}"
     password: "{{vault_alexa_web_password}}"
 
-- name: add user "{{vault_alexa_username}}" to apache .htdigest
-  vars:
-    username: "{{vault_alexa_username}}"
-    password: "{{vault_alexa_web_password}}"
-    realm: "{{server_name|capitalize}}"
-  lineinfile:
-    path: "{{htdocs_path}}.htdigest"
-    regexp: '^{{vault_alexa_username}}:{{server_name}}'
-    line: "{{ lookup('template', 'roles/user/templates/htdigest') }}"
- 
 - name: check if 'USER' group exists in apache
   shell: "grep \"^USER\" {{htdocs_path}}.htgroups"
   register: user_check

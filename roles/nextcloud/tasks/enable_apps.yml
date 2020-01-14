@@ -16,45 +16,57 @@
   failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
   changed_when: "'enabled' in command_result.stdout"
   with_items:
+    - user_saml # must always be the first one
     - bookmarks
     - contacts
     - calendar
     - notes
     - tasks
-#    - user_saml
-    
-#INSERT INTO `oc_appconfig` (`appid`, `configkey`, `configvalue`) VALUES ('user_saml', 'type', 'environment-variable'); 
-#INSERT INTO `oc_appconfig` (`appid`, `configkey`, `configvalue`) VALUES ('user_saml', 'general-uid_mapping', 'REMOTE_USER'); 
-#SET configvalue = “REMOTE_USER” where appid = “user_saml” and configkey = “general-uid_mapping” ;
 
-- name: check keeweb app
-  stat:
-    path: "{{htdocs_path}}nextcloud/apps/keeweb"
-  register: keeweb_exists
-  changed_when: not keeweb_exists.stat.exists
-  
+- name: enable environment based authentication through user_saml app
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'type', 'environment-variable') ON DUPLICATE KEY UPDATE configvalue='environment-variable';\\\"\""
+  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+
+- name: set environment variable used by user_saml app
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'general-uid_mapping', 'REMOTE_USERNAME') ON DUPLICATE KEY UPDATE configvalue='REMOTE_USERNAME';\\\"\""
+  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+
+#- name: set environment variable used by user_saml app
+#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'types', 'authentication') ON DUPLICATE KEY UPDATE #configvalue='REMOTE_USERNAME';\\\"\""
+#  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+
+# ***** KEEWEB *****
 - name: install keeweb app => app does not exists
   unarchive:
-    src: "../templates/apps/keeweb.tar.gz"
+    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v0.5.1/keeweb-0.5.1.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
+    remote_src: yes
+    creates: "{{htdocs_path}}nextcloud/apps/keeweb/"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
   register: keeweb_installation
-  when: not keeweb_exists.stat.exists
   
+- name: copy patched script.js
+  template:
+    src: "templates/apps/script.js"
+    dest: "{{htdocs_path}}nextcloud/apps/keeweb/js/script.js"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+  when: keeweb_installation.changed
+
 - name: check keeweb max version
   lineinfile:
     path: "{{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml"
     regexp: '(.*max-version)="[0-9]+"(.*)'
     line: '\1="20"\2'
     backrefs: yes
-  register: keeweb_installation
-  when: keeweb_exists.stat.exists
+  when: keeweb_installation.changed
   
 - name: enable keeweb app => app does not exists
   shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
   when: keeweb_installation.changed
 
+# ***** NEWS *****
 - name: install news app
   unarchive:
     src: "https://github.com/nextcloud/news/releases/download/14.0.1/news.tar.gz"
