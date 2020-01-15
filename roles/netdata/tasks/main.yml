@@ -20,7 +20,7 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-        netdata
+        netdata>=1.18.1
       , fping
       # needed to rebuild rpm package
       #, rpm-build

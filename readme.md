@@ -122,6 +122,4 @@ ansible-playbook -i config/demo/server.ini --tags "nextcloud" server.yml
 
 ## Continuous integration testing
 
-https://ci.appveyor.com/project/HolgerHees/smartserver-suse
-
-https://ci.appveyor.com/project/HolgerHees/smartserver-fedora
+coming soon

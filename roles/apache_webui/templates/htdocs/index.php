@@ -41,6 +41,30 @@
         }
         var domain = parts.join(".");
 
+        function cleanRefreshTimer()
+        {
+            if(refreshTimer.length > 0 )
+            {
+                for( i = 0; i < refreshTimer.length; i++ )
+                {
+                    window.clearTimeout(refreshTimer[i]);
+                }
+                refreshTimer=[];
+            }
+        }
+
+        function refresh(func,timeout)
+        {
+            var refreshTimerID = window.setTimeout(function(){
+                if( refreshTimer.includes( refreshTimerID) )
+                { 
+                    refreshTimer.splice( refreshTimer.indexOf(refreshTimerID), 1 );
+                    func();
+                }
+            },timeout);
+            refreshTimer.push( refreshTimerID );
+        }
+
         function loadBackgroundImage()
         {
             var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
@@ -155,7 +179,7 @@
                 badgeButtons.forEach(function(element){ element.classList.remove("error") });
             }
         }            
-       
+
         function loadAlerts()
         {
             var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
@@ -223,10 +247,10 @@
                 image.setAttribute('src',src);
             };
             img.src = src;
-            
-            refreshTimer.push( window.setTimeout(function(){refreshCamera(container)},image.getAttribute('data-interval')) );
+
+            refresh(function(){refreshCamera(container);},image.getAttribute('data-interval'));
         }
-        
+
         function initCamera()
         {
             var containers = mx.$$('.service.camera > div');
@@ -244,7 +268,7 @@
                 refreshCamera(container);
             });
         }
-        
+
         function cleanMenu()
         {
             mx.$$(".service.active").forEach(function(element){ element.classList.remove("active") });
@@ -292,16 +316,9 @@
             }
             
             activeMenu = key;
-        
-            if(refreshTimer.length > 0 )
-            {
-                for( i = 0; i < refreshTimer.length; i++ )
-                {
-                    window.clearTimeout(refreshTimer[i]);
-                }
-                refreshTimer=[];
-            }
-            
+
+            cleanRefreshTimer();
+
             cleanMenu();
             
             var entries = [];
@@ -336,6 +353,26 @@
             if( element != null ) element.classList.add("active");
         }
              
+        function openUrl(event,element,url,newWindow)
+        {
+            cleanRefreshTimer();
+
+            activeMenu = "";
+        
+            if( (event && event.ctrlKey) || newWindow )
+            {
+                var win = window.open(url, '_blank');
+                win.focus();
+            }
+            else
+            {
+                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active") });
+                mx.$("#content #inline").style.display = "none";
+                mx.$("#content iframe").style.display = "";
+                mx.$("#content iframe").setAttribute('src',url);
+            }
+        }
+
         function openHome()
         {
             let isAlreadyActive = ( activeMenu == "home" );
@@ -384,26 +421,8 @@
             
             if( !isAlreadyActive ) setMenu(message,[]);
             else mx.$('#content #submenu').innerHTML = message;
-            
-            refreshTimer.push( window.setTimeout(openHome,60000 - (s * 1000)) );
-        }
-              
-        function openUrl(event,element,url,newWindow)
-        {
-            activeMenu = "";
-        
-            if( (event && event.ctrlKey) || newWindow )
-            {
-                var win = window.open(url, '_blank');
-                win.focus();
-            }
-            else
-            {
-                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active") });
-                mx.$("#content #inline").style.display = "none";
-                mx.$("#content iframe").style.display = "";
-                mx.$("#content iframe").setAttribute('src',url);
-            }
+
+            refresh(openHome,60000 - (s * 1000));
         }
 
         function initMenus()
