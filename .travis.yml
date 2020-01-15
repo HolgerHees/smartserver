@@ -9,7 +9,7 @@ services:
   
 before_install:
 - docker pull opensuse/leap:15.1
-- docker run -d -p 127.0.0.1:80:4567 opensuse/leap:15.1"
+- docker run -d -p 127.0.0.1:80:4567 opensuse/leap:15.1
 
 script:
 - docker exec -i opensuse/leap:15.1 sh -c "ip a"
