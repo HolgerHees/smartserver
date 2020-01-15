@@ -9,10 +9,11 @@ services:
   
 before_install:
 - docker pull opensuse/leap:15.1
-- docker run -d -p 127.0.0.1:80:4567 opensuse/leap:15.1
+- docker run -d --name suse opensuse/leap:15.1
+- docker ps
 
 script:
-- docker exec -i opensuse/leap:15.1 sh -c "ip a"
-- docker exec -i opensuse/leap:15.1 sh -c "zypper install -y ansible git"
-- docker exec -i opensuse/leap:15.1 sh -c "cd /root/; git clone https://github.com/HolgerHees/smartserver.git"
-- docker exec -i opensuse/leap:15.1 sh -c "cd /root/smartserver; ansible-playbook -i config/demo/server.ini --ask-vault-pass server.yml"
+- docker exec -i suse sh -c "ip a"
+- docker exec -i suse -c "zypper install -y ansible git"
+- docker exec -i suse sh -c "cd /root/; git clone https://github.com/HolgerHees/smartserver.git"
+- docker exec -i suse sh -c "cd /root/smartserver; ansible-playbook -i config/demo/server.ini --ask-vault-pass server.yml"
