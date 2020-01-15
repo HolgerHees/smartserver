@@ -9,8 +9,8 @@ services:
   
 before_install:
 - docker pull opensuse/leap:15.1
-- docker run -d --name suse opensuse/leap:15.1
-- docker ps
+- docker run --name suse -d opensuse/leap:15.1
+- docker ps -a
 
 script:
 - docker exec -i suse sh -c "ip a"
