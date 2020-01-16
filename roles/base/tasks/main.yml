@@ -73,10 +73,10 @@
       , zip
       , curl               # used to send multi part/formdata => kibana
       , smem               # useful tool to debug memory usage (including swap usage)
-      , python2-pip        # used for ansible pip module
+      , python2-pip        # used for ansible pip module => python2 is used because it installes python2-setuptools and depends on it. python3-pip still needs python2-setuptools
       #, python3-pip
       , bzip2              # used to import databases with bzcat
-      , python2-passlib    # used by ansible htpasswd module (user role)
+      , python2-passlib    # used by ansible htpasswd module (user role) => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/web_infrastructure/htpasswd.py" is using python2
       #, python3-passlib    # used by ansible htpasswd module (user role)
       , insserv-compat     # used by ansible systemd module
       , mailx              # used by elastalert

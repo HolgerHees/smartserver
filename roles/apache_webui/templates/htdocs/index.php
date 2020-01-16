@@ -182,7 +182,7 @@
 
         function loadAlerts()
         {
-            var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
+            var id = Math.round( Date.now() / 1000 );
             
             var xhr = new XMLHttpRequest();
             xhr.open("GET", "//" + authType + "netdata." + domain + "/api/v1/alarms?active&_=" + id);
@@ -204,7 +204,7 @@
                     mx.$(".alarm.button").classList.add("disabled");
                     alarmIsWorking = false;
                 }
-                window.setTimeout(loadAlerts,5000);
+                window.setTimeout(loadAlerts,4500);
             };
             xhr.send();
         }
