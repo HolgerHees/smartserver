@@ -6,9 +6,9 @@ branches:
   only:
     - master
     
-    
 before_install:
 - sudo apt-get update -q
+- sudo apt install linux-headers-$(uname -r)
 - sudo apt-get -y install virtualbox
 - sudo apt-get -y install vagrant
 #https://www.lewuathe.com/travisci/vagrant/vagrant-in-travisci.html
@@ -18,4 +18,4 @@ before_install:
 #- bundle install
   
 script:
-- cd HolgerHees/smartserver && vagrant --config=demo --os=suse up
+- vagrant --config=demo --os=suse up
