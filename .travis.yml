@@ -10,12 +10,13 @@ before_install:
 - sudo apt-get update -q
 - sudo apt install linux-headers-$(uname -r)
 - sudo apt-get -y install virtualbox
-#- sudo apt-get -y install vagrant
-#https://www.lewuathe.com/travisci/vagrant/vagrant-in-travisci.html
-#- sudo apt-get install -q virtualbox --fix-missing
 - sudo wget -nv https://releases.hashicorp.com/vagrant/2.2.6/vagrant_2.2.6_x86_64.deb
 - sudo dpkg -i vagrant_2.2.6_x86_64.deb
-#- bundle install
-  
+
+jobs:
+  include:
+  - env: OS=suse
+  - env: OS=fedora
+    
 script:
-- vagrant --config=demo --os=suse up
+- vagrant --config=demo --os=$OS up
