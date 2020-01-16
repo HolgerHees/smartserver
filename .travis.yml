@@ -14,7 +14,7 @@ before_install:
 #https://www.lewuathe.com/travisci/vagrant/vagrant-in-travisci.html
 #- sudo apt-get install -q virtualbox --fix-missing
 - sudo wget -nv https://releases.hashicorp.com/vagrant/2.2.6/vagrant_2.2.6_x86_64.deb
-- sudo dpkg -i vagrant_1.7.2_x86_64.deb
+- sudo dpkg -i vagrant_2.2.6_x86_64.deb
 - bundle install
   
 script:
