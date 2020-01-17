@@ -16,7 +16,7 @@ Later, I will also document more special features and usecases like:
 * OpenHAB as a central smarthome broker
 * Nextcloud for your content cloud
 * Containerized environment
-* Seamless DNS resolving between public VPN and private WLAN or how I use it from outside in a secure way without any hussle
+* Seamless DNS resolving between public VPN and private WLAN to make all mobile apps working from everywhere
 * Different Authentication methods like OpenID Connect, Form Base Auth or Basic Auth
 * Main responsive WebUI which makes everything available in one place
 * more are comming soon
