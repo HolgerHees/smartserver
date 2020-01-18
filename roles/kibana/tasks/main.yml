@@ -11,7 +11,7 @@
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
   shell: "docker build -t custom_kibana:1.2.1 roles/kibana/templates/container/"
-  async: 1200
+  async: 600
   poll: 0
   register: docker_build
   when: "'custom_kibana' not in image_exists.stdout"
@@ -20,7 +20,7 @@
   async_status: jid={{ docker_build.ansible_job_id }}
   register: job_result
   until: job_result.finished
-  retries: 20
+  retries: 10
   delay: 60
   when: "'custom_kibana' not in image_exists.stdout"
   

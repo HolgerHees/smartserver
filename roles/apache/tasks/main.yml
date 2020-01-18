@@ -84,7 +84,7 @@
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
   shell: "docker build -t custom_apache2:1.0.0 roles/apache/templates/container/ --build-arg GLOBAL_LOG={{global_log}}apache2 --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
-  async: 1200
+  async: 1800
   poll: 0
   register: docker_build
   when: "'custom_apache2' not in image_exists.stdout"
@@ -93,7 +93,7 @@
   async_status: jid={{ docker_build.ansible_job_id }}
   register: job_result
   until: job_result.finished
-  retries: 20
+  retries: 30
   delay: 60
   when: "'custom_apache2' not in image_exists.stdout"
   
