@@ -92,11 +92,22 @@
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
  
+# async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
   shell: "docker build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
-  register: output
+  async: 1200
+  poll: 0
+  register: docker_build
   when: "'custom_vsftpd' not in image_exists.stdout"
-  
+
+- name: wait for docker image => image does not exists
+  async_status: jid={{ docker_build.ansible_job_id }}
+  register: job_result
+  until: job_result.finished
+  retries: 20
+  delay: 60
+  when: "'custom_vsftpd' not in image_exists.stdout"
+
 - name: create docker container
   docker_container:
     name: vsftpd
