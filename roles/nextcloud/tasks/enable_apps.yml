@@ -52,7 +52,7 @@
     dest: "{{htdocs_path}}nextcloud/apps/keeweb/js/script.js"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-  when: keeweb_installation.changed
+#  when: keeweb_installation.changed
 
 - name: check keeweb max version
   lineinfile:
@@ -60,11 +60,14 @@
     regexp: '(.*max-version)="[0-9]+"(.*)'
     line: '\1="20"\2'
     backrefs: yes
-  when: keeweb_installation.changed
+#  when: keeweb_installation.changed
   
 - name: enable keeweb app => app does not exists
   shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
-  when: keeweb_installation.changed
+  register: command_result
+  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
+  changed_when: keeweb_installation.changed
+#  when: keeweb_installation.changed
 
 # ***** NEWS *****
 - name: install news app
@@ -105,6 +108,9 @@
   
 - name: enable news app => app installation changed
   shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable news\""
-  when: news_installed.changed
+  register: command_result
+  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
+  changed_when: news_installed.changed
+#  when: news_installed.changed
 
  
