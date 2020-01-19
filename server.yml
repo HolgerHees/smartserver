@@ -25,11 +25,11 @@
           - "flags:      is_suse: {{is_suse}}, is_fedora: {{is_fedora}}"
       tags: always
 
-    - { import_role: { name: fluentd, tasks_from: create_shared_folder }, tags: [ 'fluentd' ] }  # is creating /etc/fluent/_.ansible.d
+    - { import_role: { name: fluentd, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'fluentd' ] }  # is creating /etc/fluent/_.ansible.d
 
-    - { import_role: { name: apache, tasks_from: create_shared_folder }, tags: [ 'apache' ] }    # is creating {{global_etc}}apache2/_.ansible.d
+    - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache' ] }    # is creating {{global_etc}}apache2/_.ansible.d
 
-    - { import_role: { name: apache, tasks_from: ensure_www_user_exists }, tags: [ 'always' ] }
+    - { import_role: { name: apache, tasks_from: ensure_www_user_exists, handlers_from: empty }, tags: [ 'always' ] }
 
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
@@ -123,6 +123,6 @@
     # **************************************
     
   post_tasks:
-    - { import_role: { name: nextcloud, tasks_from: enable_apps }, tags: [ 'nextcloud' ] }       # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
+    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud' ] }       # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 
-    - { import_role: { name: kibana, tasks_from: import_dashboards }, tags: [ 'kibana', 'kibana_dashboard' ] } # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
+    - { import_role: { name: kibana, tasks_from: import_dashboards, handlers_from: empty }, tags: [ 'kibana', 'kibana_dashboard' ] } # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
