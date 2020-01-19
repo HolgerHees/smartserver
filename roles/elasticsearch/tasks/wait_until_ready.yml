@@ -8,7 +8,7 @@
     daemon_reload: yes
   changed_when: ansible_facts.services["elasticsearch.service"].state != 'running'
   
-# retries needs to increased to 180 to give kibana on travisci more time to start
+# retries needs to increased from 60 to 180 to give kibana on travisci more time to start
 - name: wait for elasticsearch to become ready
   uri:
     url: "http://localhost:9200/_cluster/health"
