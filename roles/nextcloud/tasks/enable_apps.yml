@@ -9,7 +9,7 @@
 - name: check apache service
   import_tasks: roles/apache/tasks/wait_until_ready.yml
 
-# ***** OCC *****
+# ***** INSTALL APPS *****
 - name: install apps
   shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
   register: command_result
@@ -22,7 +22,8 @@
     - calendar
     - notes
     - tasks
-
+    
+# ***** CONFIGURE user_saml *****
 - name: enable environment based authentication through user_saml app
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'type', 'environment-variable') ON DUPLICATE KEY UPDATE configvalue='environment-variable';\\\"\""
   when: "command_result.results[0].changed" # index 0 is app 'user_saml'
@@ -35,7 +36,7 @@
 #  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'types', 'authentication') ON DUPLICATE KEY UPDATE #configvalue='REMOTE_USERNAME';\\\"\""
 #  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
 
-# ***** KEEWEB *****
+# ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists
   unarchive:
     src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v0.5.1/keeweb-0.5.1.tar.gz"
@@ -62,17 +63,10 @@
     backrefs: yes
 #  when: keeweb_installation.changed
   
-- name: enable keeweb app => app does not exists
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable keeweb\""
-  register: command_result
-  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
-  changed_when: keeweb_installation.changed
-#  when: keeweb_installation.changed
-
-# ***** NEWS *****
+# ***** INSTALL NEWS *****
 - name: install news app
   unarchive:
-    src: "https://github.com/nextcloud/news/releases/download/14.0.1/news.tar.gz"
+    src: "https://github.com/nextcloud/news/releases/download/14.1.2/news.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"
@@ -106,11 +100,19 @@
     group: "{{system_groups['www'].name}}"
     mode: 0640
   
-- name: enable news app => app installation changed
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable news\""
+# ***** ENABLE ADDITIONAL APPS *****
+- name: get app status
+  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:list\""
+  register: app_status
+  changed_when: no
+
+- name: install apps
+  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable {{item}}\""
   register: command_result
-  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
-  changed_when: news_installed.changed
-#  when: news_installed.changed
+  failed_when: "'enabled' not in command_result.stdout"
+  when: "item not in app_status.stdout.split('Disabled')[0]"
+  with_items:
+    - keeweb
+    - news
 
  
