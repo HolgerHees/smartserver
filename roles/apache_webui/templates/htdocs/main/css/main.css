@@ -41,10 +41,6 @@ body {
     display: none;
     transition: opacity 300ms linear;
 }
-#layer.visible {
-    display: block;
-    opacity: 0.4;
-}
 #side, .vm-page {
     flex-grow: 1;
     height: 100%;

@@ -402,11 +402,18 @@
 
             menu.addEventListener("beforeOpen",function(){
                 mx.$("#side").classList.remove("fullsize");
-                if( isPhone ) layer.classList.add("visible");
+                if( isPhone ) 
+                {
+                    layer.style.display = "block";
+                    layer.style.opacity = "0.4";
+                }
             });
             menu.addEventListener("beforeClose",function(){
                 mx.$("#side").classList.add("fullsize");
-                layer.classList.remove("visible");
+                if( isPhone ) layer.style.opacity = "0.0";
+            });
+            menu.addEventListener("afterClose",function(){
+                if( isPhone ) layer.style.display = "";
             });
             menu.addEventListener("startMove",function(){
                 if( !isPhone ) return;
@@ -415,9 +422,6 @@
             menu.addEventListener("endMove",function(){
                 if( !isPhone ) return;
                 layer.style.transition = "";
-                window.setTimeout(function(){
-                    layer.style.opacity = "";
-                },10);
             });
             menu.addEventListener("isMoving",function(event){
                 if( !isPhone ) return;

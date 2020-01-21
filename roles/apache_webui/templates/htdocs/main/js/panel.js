@@ -52,7 +52,7 @@ mx.Panel = (function( ret ) {
                 }
 
                 mx.Core.triggerEvent(options.elements.panelContainer, "afterOpen", false );
-            },"Panel.open");
+            },"Panel.open",options._.transitionDuration);
             options.elements.panelContainer.classList.add(options.classes.open);
 
             options.elements.menuButtons.forEach(function(element){ element.classList.add(options.classes.open) });
@@ -77,7 +77,7 @@ mx.Panel = (function( ret ) {
 
                 mx.Core.triggerEvent(options.elements.panelContainer, "afterClose", false );
                 if (callback) callback();
-            },"Panel.close");
+            },"Panel.close",options._.transitionDuration);
             options.elements.panelContainer.classList.remove(options.classes.open);
             options.elements.menuButtons.forEach(function(element){ element.classList.remove(options.classes.open) });
         }
@@ -239,7 +239,10 @@ mx.Panel = (function( ret ) {
         options.elements.panelContainer.classList.add(options.classes.main);
 
         // should be delayed. Because the initial hide action should not be animated.
-        window.setTimeout(function() { options.elements.panelContainer.classList.add(options.classes.animation); },10);
+        window.setTimeout(function() { 
+            options.elements.panelContainer.classList.add(options.classes.animation); 
+            options._.transitionDuration = mx.Core.getTransitionDuration(options.elements.panelContainer);
+        },10);
 
         return {
             isOpen: function()
