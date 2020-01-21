@@ -6,7 +6,6 @@
     group: "{{item.group}}"
     mode: 0755
   with_items:
-    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}main/" }
     - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/" }
     - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/potd" }
     - { owner: root, group: root, dir: "/opt/potd_fetcher/" }
@@ -18,12 +17,14 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
   with_items:
+    - main/components
     - main/css
     - main/img
     - main/js
     - favicon.ico
-    - index.de.json
     - info.php
+    - index.php
+    - ressources.php
     - resize.php
   
 - name: copy htdocs (template)
@@ -33,7 +34,6 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
   with_items:
-    - index.php
     - main/manifest.json
 
 - name: copy proxy config

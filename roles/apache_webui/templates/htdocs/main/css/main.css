@@ -337,7 +337,7 @@ body.nobackground #submenu .service.button div:last-child {
     background-color: rgba(51,122,183,.12);
     -webkit-tap-highlight-color: transparent;
 }
-#submenu .service.camera {
+#submenu .service.imageWatcher {
     display:flex;
     align-items: center;
     justify-content: space-evenly;
@@ -345,39 +345,39 @@ body.nobackground #submenu .service.button div:last-child {
     flex-grow: 1;
     margin-top: -5vh;
 }
-#submenu .service.camera img {
+#submenu .service.imageWatcher img {
     width: 100%;
 }
-#submenu .service.camera > div {
+#submenu .service.imageWatcher > div {
     position: relative;
     max-width:640px;
 }
-#submenu .service.camera > div > a {
+#submenu .service.imageWatcher > div > a {
     display: block;
 }
-#submenu .service.camera > div > span {
+#submenu .service.imageWatcher > div > span {
     position: absolute;
     top: 3px;
     color: yellow;
 }
-#submenu .service.camera > div > span.name {
+#submenu .service.imageWatcher > div > span.name {
     left: 1%;    
 }
-#submenu .service.camera > div > span.time {
+#submenu .service.imageWatcher > div > span.time {
     right: 1%;
 }
 @media screen and (min-width: 1000px) {
-    #submenu .service.camera {
+    #submenu .service.imageWatcher {
         flex-direction: row;
         flex-grow: 0;
         margin-top: 0;
         align-items: stretch;
     }
-    #submenu .service.camera > div {
+    #submenu .service.imageWatcher > div {
         width:calc(50% - 10px);
         background-color: black;
     }
-    #submenu .service.camera > div > a {
+    #submenu .service.imageWatcher > div > a {
         position: relative;
         top: 50%;
         left: 50%;

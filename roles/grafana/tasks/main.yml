@@ -73,6 +73,13 @@
     container_name: "grafana"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
+- name: register webui
+  vars:
+    name: "grafana"
+    js_file: "templates/webui/grafana.js"
+    i18n_files: [ { language: "de", file: "templates/webui/grafana.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/grafana.conf"

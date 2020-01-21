@@ -32,6 +32,13 @@
     group: "{{system_groups['www'].name}}"
   when: not phpmyadmin_exists.stat.exists
   
+- name: register webui
+  vars:
+    name: "phpmyadmin"
+    js_file: "templates/webui/phpmyadmin.js"
+    i18n_files: [ { language: "de", file: "templates/webui/phpmyadmin.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy config
   template:
     src: "templates/config.inc.php"

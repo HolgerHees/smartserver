@@ -1,0 +1,6 @@
+{
+  "administration_tools": {
+    "MySQL": "MySQL",
+    "phpMyAdmin": "phpMyAdmin"
+  }
+}

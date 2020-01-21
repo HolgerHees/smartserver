@@ -62,6 +62,8 @@ RUN pecl install redis \
 #https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=759209
 #  && ln -s /etc/apache2/mods-available/auth_openidc.conf /etc/apache2/mods-enabled/ \
 #  && ln -s /etc/apache2/mods-available/auth_openidc.load /etc/apache2/mods-enabled/
+#  && ln -s /etc/apache2/mods-available/http2.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/http2.load /etc/apache2/mods-enabled/ \
 
 # auth_form, request, session, session_cookie and session_crypto are needed for apache session support
 

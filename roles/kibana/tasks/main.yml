@@ -75,6 +75,13 @@
     container_name: "kibana"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
+- name: register webui
+  vars:
+    name: "kibana"
+    js_file: "templates/webui/kibana.js"
+    i18n_files: [ { language: "de", file: "templates/webui/kibana.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/kibana.conf"

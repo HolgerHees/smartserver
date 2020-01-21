@@ -128,6 +128,13 @@
   when: "not influxdb_data_exists.stat.exists"
 
 # ***** OTHER *****
+- name: register webui
+  vars:
+    name: "netdata"
+    js_file: "templates/webui/netdata.js"
+    i18n_files: [ { language: "de", file: "templates/webui/netdata.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy apache vhost
   vars:
     sub_domain: "netdata"

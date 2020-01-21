@@ -155,6 +155,13 @@
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****
+- name: register webui
+  vars:
+    name: "nextcloud"
+    js_file: "templates/webui/nextcloud.js"
+    i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"

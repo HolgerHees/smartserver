@@ -1,3 +1,10 @@
+- name: register webui
+  vars:
+    name: "proxy"
+    js_file: "templates/webui/proxy.js"
+    i18n_files: [ { language: "de", file: "templates/webui/proxy.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy apache config
   vars:
     config_file: "templates/etc/apache2/_.ansible.conf.d/proxy.conf"

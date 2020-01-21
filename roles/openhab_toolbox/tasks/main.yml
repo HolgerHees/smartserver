@@ -41,6 +41,13 @@
   shell: "cat roles/openhab_toolbox/templates/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
+- name: register webui
+  vars:
+    name: "toolbox"
+    js_file: "templates/webui/toolbox.js"
+    i18n_files: [ { language: "de", file: "templates/webui/toolbox.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 # Weather data fetcher
 - name: create cron job
   vars:

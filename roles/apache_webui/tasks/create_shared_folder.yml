@@ -1,0 +1,10 @@
+- name: prepare shared folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0755
+  with_items:
+    - "{{htdocs_path}}main/"
+    - "{{htdocs_path}}main/components/"

@@ -1,0 +1,18 @@
+- name: "copy js file for '{{name}}'"
+  template:
+    src: "{{js_file}}"
+    dest: "{{htdocs_path}}main/components/{{name}}.js"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0644
+  tags: ['apache_webui','apache_webui_menus']
+
+- name: "copy i18n file for '{{name}}'"
+  template:
+    src: "{{item.file}}"
+    dest: "{{htdocs_path}}main/components/{{name}}.{{item.language}}.json"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0644
+  with_items: "{{i18n_files}}"
+  tags: ['apache_webui','apache_webui_menus']

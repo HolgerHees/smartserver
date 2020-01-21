@@ -7,345 +7,219 @@
     <link rel="icon" type="image/png" href="/main/img/res/mipmap-mdpi/ic_launcher.png" />
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"> 
     <link href="main/manifest.json" rel="manifest">
-    <link href="main/css/main.css" rel="stylesheet"> 
-    <link href="main/css/panel.css" rel="stylesheet"> 
 
-    <script type="text/javascript">var mx = {};</script>
-	<script src="main/js/core.js"></script>
-	<script src="main/js/swipe.js"></script>
-	<script src="main/js/panel.js"></script>
+    <link href="ressources?type=css" rel="stylesheet">
+    
+    <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
+    
+    <script src="ressources?type=js"></script>
+    
+	<script type="text/javascript">
 
-    <script type="text/javascript">
-        var menuPanel = false;
-        var isPhone = false;
-        
-        var readynessCount = 4; //(i18n, background image, background image title & initPage (documentready) )
+    <?php
+        $name = $_SERVER['REMOTE_USERNAME'];
+        $handle = fopen(".htdata", "r");
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+                list($_username,$_name) = explode(":", $line);
+                if( trim($_username) == $name )
+                {
+                    $name = trim($_name);
+                    break;
+                }
+            }
 
-        var host = location.host;
-        var parts = host.split(".");
-        var authType = "";
-        if( parts.length == 3 )
-        {
-            var subDomain = parts.shift();
-            if( subDomain.indexOf("fa") === 0 ) authType = "fa_";
-            else if( subDomain.indexOf("ba") === 0 ) authType = "ba_";
+            fclose($handle);
         }
-        var domain = parts.join(".");
-        
-        mx.Timer = (function( ret ) {
-            var refreshTimer = [];
-        
-            ret.clean = function()
+        echo "        var activeUserName = " . json_encode($name) . ";\n";
+    ?>
+
+        // mx.Menu needs to be defined in the beginning, because it is used during component initialisation
+        mx.Menu = (function( ret ) {
+            var menuGroups = {};
+
+            function processI18N( str, mainKey )
             {
-                if(refreshTimer.length > 0 )
+                matches = str.matchAll(/{i18n_([^}]*)}/g);
+                for (const match of matches) {
+                    str = str.replace(match[0],mx.I18N.get(match[1],mainKey));
+                }
+                return str;
+            }
+
+            function sortMenu(entries)
+            {
+                entries.sort(function(a,b)
                 {
-                    for( i = 0; i < refreshTimer.length; i++ )
-                    {
-                        window.clearTimeout(refreshTimer[i]);
+                    if( a['order'] < b['order'] ) return -1;
+                    if( a['order'] > b['order'] ) return 1;
+                    return 0;
+                });
+
+                return entries;
+            }
+
+            ret.getMainGroup = function(mainGroupId)
+            {
+                return menuGroups[mainGroupId]['_'];
+            }
+
+            ret.addMainGroup = function(mainGroupId,order,title)
+            {
+                menuGroups[mainGroupId] = {
+                    id:mainGroupId,
+                    order: order,
+                    title: title,
+                    subGroups: {},
+                    _: {
+                        getSubGroup: function(subGroupId){
+                            return menuGroups[mainGroupId]['subGroups'][subGroupId]['_'];
+                        },
+                        addSubGroup: function(subGroupId,order,title){
+                            menuGroups[mainGroupId]['subGroups'][subGroupId] = {
+                                id:subGroupId,
+                                order: order,
+                                title: title,
+                                menuEntries: [],
+                                _: {
+                                    getEntries: function()
+                                    {
+                                        return menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'];
+                                    },
+                                    addUrl: function(order,type,url,title,info,newWindow){
+                                        menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'].push({order:order,type:type,url:url,title:title,info:info,newWindow:newWindow});
+                                    },
+                                    addHtml: function(order,html,callback){
+                                        menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'].push({order:order,type:'html',html:html,callback:callback});
+                                    }
+                                }
+                            };
+                            return menuGroups[mainGroupId]['subGroups'][subGroupId]['_'];
+                        }
                     }
-                    refreshTimer=[];
-                }
-            }
-
-            ret.register = function(func,timeout)
-            {
-                var refreshTimerID = window.setTimeout(function(){
-                    if( refreshTimer.includes( refreshTimerID) )
-                    { 
-                        refreshTimer.splice( refreshTimer.indexOf(refreshTimerID), 1 );
-                        func();
-                    }
-                },timeout);
-                refreshTimer.push( refreshTimerID );
-            }
-
-            return ret;
-        })( mx.Timer || {} );
-
-        mx.MainImage = (function( ret ) {
-            var imageTitle = "";
-            var imageUrl = "";
-
-            function loadImage()
-            {
-                var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
-                var src = "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg?" + id;
-                var img = new Image();
-                img.onload = function()
-                {
-                    imageUrl = src;
-                    initContent();
                 };
-                img.onerror = function()
+
+                return menuGroups[mainGroupId]['_'];
+            }
+
+            ret.buildMenu = function(mainGroupId,subGroupId, callback)
+            {
+                var entries = [];
+                var callbacks = [];
+
+                //console.log(key);
+                //console.log(typeof subMenus[key]);
+                //console.log(subMenus[key]);
+
+                var menuEntries = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId).getEntries();
+                for(var i = 0; i < menuEntries.length; i++)
                 {
-                    initContent();
-                };
-                img.src = src;
-            }
+                    var entry = menuEntries[i];
 
-            function loadTitle()
-            {
-                var id = Math.round( Date.now() / 1000 / ( 60 * 60 ) );
-                //mx.Actions.openMenu(mx.$('#defaultEntry'),"nextcloud");
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", "/img/potd/todayTitle.txt?" + id);
-                xhr.onreadystatechange = function() {
-                    if (this.readyState != 4) return;
-                    
-                    if( this.status == 200 ) imageTitle = this.response;
-                    else alert("was not able to download '/img/potd/todayTitle.txt?'");
-                    initContent();
-                };
-                xhr.send();
-            }
-            
-            ret.getUrl = function()
-            {
-                return imageUrl;
-            }
-
-            ret.getTitle = function()
-            {
-                return imageTitle;
-            }
-            
-            ret.init = function()
-            {
-                loadImage();
-                loadTitle();
-            }
-
-            return ret;
-        })( mx.MainImage || {} );
-
-        mx.I18N = (function( ret ) {
-            var translations = null;
-
-            ret.init = function()
-            {
-                var lang = navigator.language || navigator.userLanguage;
-
-                var url = "";
-                if( lang.indexOf("de") === 0 ) url = "index.de.json";
-                if( url !== "" )
-                {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open("GET", url, true);
-                    xhr.onreadystatechange = function() {
-                        if (this.readyState != 4) return;
-
-                        if( this.status == 200 ) translations = JSON.parse(this.responseText);
-                        else alert("was not able to download '" + url + "'");
-                        initContent();
-                    };
-                    xhr.send();
-                }
-                else
-                {
-                    initContent();
-                }
-            }
-
-            ret.get = function(string)
-            {
-                if( translations )
-                {
-                    if( typeof translations[string] !== "undefined" )
+                    if( entry['type'] == 'html' )
                     {
-                        return translations[string];
+                        entries.push(entry['html']);
+                        callbacks.push(entry['callback']);
                     }
                     else
                     {
-                        console.error("translation key '" + string + "' not found" );
+                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openUrl(event,this,\'' + entry['url'] + '\',' + entry['newWindow'] + ')"><div>' + entry['title'] + '</div><div>' + entry['info'] + '</div></div>');
                     }
                 }
-                return string;
+
+                callback(entries,callbacks);
             }
 
-            return ret;
-        })( mx.I18N || {} );
-        
-        mx.Alarms = (function( ret ) {
-            var alarmIsWorking = true;
-
-            function handleAlarms(data) 
-            { 
-                var warnCount = 0;
-                var errorCount = 0;
-                
-                for(x in data.alarms) 
-                {
-                    if(!data.alarms.hasOwnProperty(x)) continue;
-
-                    var alarm = data.alarms[x];
-                    if(alarm.status === 'WARNING')
-                    {
-                        warnCount++;
-                    }
-                    if(alarm.status === 'CRITICAL')
-                    {
-                        errorCount++;
-                    }
-                }
-            
-                mx.$$('.alarm.button .badge').forEach(function(element){ element.innerText = warnCount + errorCount });
-
-                var badgeButtons = mx.$$('.alarm.button');
-                if( warnCount > 0 )
-                {
-                    badgeButtons.forEach(function(element){ element.classList.add("warn") });
-                }
-                else
-                {
-                    badgeButtons.forEach(function(element){ element.classList.remove("warn") });
-                }
-                if( errorCount > 0 )
-                {
-                    badgeButtons.forEach(function(element){ element.classList.add("error") });
-                }
-                else
-                {
-                    badgeButtons.forEach(function(element){ element.classList.remove("error") });
-                }
-            }            
-
-            function loadAlerts()
+            ret.init = function()
             {
-                var id = Math.round( Date.now() / 1000 );
-                
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", "//" + authType + "netdata." + domain + "/api/v1/alarms?active&_=" + id);
-                xhr.withCredentials = true;
-                xhr.onreadystatechange = function() {
-                    if (this.readyState != 4) return;
-                    
-                    if( this.status == 200 )
+                for( mainKey in menuGroups )
+                {
+                    var mainGroup = menuGroups[mainKey];
+
+                    var match = mainGroup['title'].match(/{i18n_([^}]*)}/);
+                    if( match !== null ) mainGroup['title'] = mainGroup['title'].replace(match[0],mx.I18N.get(match[1],mainKey));
+
+                    for( subKey in mainGroup['subGroups'] )
                     {
-                        if( !alarmIsWorking )
+                        var subGroup = mainGroup['subGroups'][subKey];
+
+                        subGroup['title'] = processI18N(subGroup['title'],mainKey);
+
+                        for( var i = 0; i < subGroup['menuEntries'].length; i++ )
                         {
-                            mx.$(".alarm.button").classList.remove("disabled");
-                            alarmIsWorking = true;
+                            var entry = subGroup['menuEntries'][i];
+
+                            if( entry['type'] === 'url' )
+                            {
+                                entry['title'] = processI18N(entry['title'],mainKey+'_'+subKey);
+                                entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
+
+                                match = entry['url'].match(/(\/\/)([^\.]*)\.({host})/);
+                                if( match !== null ) entry['url'] = entry['url'].replace('//' + match[2] + "." + match[3], "//" + mx.Host.getAuthType() + match[2] + "." + mx.Host.getDomain() );
+                            }
+                            else
+                            {
+                                entry['html'] = processI18N(entry['html'],mainKey+'_'+subKey);
+                            }
                         }
-                        handleAlarms( JSON.parse(this.response) );
                     }
-                    else if( alarmIsWorking )
+                }
+
+                var template = mx.$('#menuTemplate');
+
+                var _menuGroups = sortMenu( Object.values(menuGroups) );
+                for( index in _menuGroups )
+                {
+                    var mainGroup = _menuGroups[index];
+
+                    var menuDiv = template.cloneNode(true);
+                    menuDiv.setAttribute('id',mainGroup['id']);
+                    menuDiv.querySelector('.header').innerHTML = mainGroup['title'];
+                    menuDiv.style.display = "";
+                    template.parentNode.appendChild(menuDiv);
+
+                    var buttonTemplate = menuDiv.querySelector('.service.button');
+                    menuDiv.removeChild(buttonTemplate);
+
+                    var _subGroups = sortMenu( Object.values(mainGroup['subGroups']) );
+                    for( index in _subGroups )
                     {
-                        mx.$(".alarm.button").classList.add("disabled");
-                        alarmIsWorking = false;
+                        var subGroup = _subGroups[index];
+
+                        var button = buttonTemplate.cloneNode(true);
+                        button.setAttribute("onClick","mx.Actions.openMenu(this,'" + mainGroup['id'] + "','" + subGroup['id'] + "');");
+                        button.firstChild.innerHTML = subGroup['title'];
+                        menuDiv.appendChild(button);
+
+                        subGroup['menuEntries'] = sortMenu( subGroup['menuEntries'] );
                     }
-                    window.setTimeout(loadAlerts,4500);
-                };
-                xhr.send();
+                }
             }
 
-            ret.init = function()
-            {
-                mx.$$('.alarm.button').forEach(function(element){ 
-                    element.addEventListener("click",function()
-                    {
-                        mx.Actions.openUrl(null,null,"//" + authType + "netdata." + domain,false);
-                    });
-                });
-                loadAlerts();
-            }
+            var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
+            mainGroup.addSubGroup('cameras', 900, '{i18n_Cameras}');
+
+            mainGroup = ret.addMainGroup('administration', 3000, '{i18n_Administration}');
+            mainGroup.addSubGroup('states', 100, '{i18n_Logs & States}');
+            mainGroup.addSubGroup('tools', 200, '{i18n_Tools}');
+            mainGroup.addSubGroup('devices', 300, '{i18n_Devices}');
 
             return ret;
-        })( mx.Alarms || {} );
+        })( mx.Menu || {} );
+    </script>
 
-        mx.Cameras = (function( ret ) {
-            function refreshCamera(container)
-            {
-                var image = container.querySelector('img');
-                var timeSpan = container.querySelector('span.time');
-                var nameSpan = container.querySelector('span.name');
-                
-                var datetime = new Date();
-                var h = datetime.getHours();
-                var m = datetime.getMinutes();
-                var s = datetime.getSeconds();
+    <script src="ressources?type=components"></script>
 
-                var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2) + ':' + ("0" + s).slice(-2);
-                timeSpan.innerText = time;
-                nameSpan.innerText = image.getAttribute('data-name');
-                
-                var img = new Image();
-                var id = Date.now();
-                let src = image.getAttribute('data-src') + '?' + id;
-                img.onload = function()
-                {
-                    image.setAttribute('src',src);
-                };
-                img.onerror = function()
-                {
-                    image.setAttribute('src',src);
-                };
-                img.src = src;
+    <script type="text/javascript">
+        //var lang = navigator.language || navigator.userLanguage;
+        var pageReady = false;
+        var menuPanel = false;
+        var isPhone = false;
 
-                mx.Timer.register(function(){refreshCamera(container);},image.getAttribute('data-interval'));
-            }
-
-            ret.init = function()
-            {
-                var containers = mx.$$('.service.camera > div');
-                containers.forEach(function(container){
-
-                    var timeSpan = document.createElement("span");
-                    timeSpan.classList.add("time");
-
-                    var nameSpan = document.createElement("span");
-                    nameSpan.classList.add("name");
-
-                    container.appendChild(timeSpan);
-                    container.appendChild(nameSpan);
-
-                    refreshCamera(container);
-                });
-            }
-
-            return ret;
-        })( mx.Cameras || {} );
+        var readynessCount = 3; //(background image (scriptready), background image title (scriptready) & initPage (documentready) )
 
         mx.Actions = (function( ret ) {
             var activeMenu = "";
-            var subMenus = [];
-            
-            function initMenus()
-            {
-                subMenus['nextcloud'] = [
-                    ['url','//' + authType + 'nextcloud.'+domain+'/',mx.I18N.get('Documents'),'',false],
-                    ['url','//' + authType + 'nextcloud.'+domain+'/index.php/apps/news/',mx.I18N.get('News'),'',false],
-                    ['url','//' + authType + 'nextcloud.'+domain+'/index.php/apps/keeweb/',mx.I18N.get('Keys'),mx.I18N.get('Keeweb'),true]
-                ];
-                subMenus['openhab'] = [
-                    ['url','//' + authType + 'openhab.'+domain+'/basicui/app',mx.I18N.get('Control'),mx.I18N.get('Basic UI'),false],
-                    ['url','//' + authType + 'openhab.'+domain+'/paperui/index.html',mx.I18N.get('Administration'),mx.I18N.get('Paper UI'),false],
-                    ['url','//' + authType + 'openhab.'+domain+'/habpanel/index.html',mx.I18N.get('Tablet UI'),mx.I18N.get('HabPanel'),false],
-                    ['url','//' + authType + 'openhab.'+domain+'/habot',mx.I18N.get('Chatbot'),mx.I18N.get('Habot'),false]
-                ];
-                subMenus['camera'] = [
-                    ['html','<div class="service camera">'],
-                    {% for camera in webui_urls.cameras %}
-                        ['html','<div><a href="{{camera.clickUrl}}" target="_blank"><img src="/main/img/loading.png" data-name="{{camera.title}}" data-src="{{camera.imageUrl}}" data-interval="{{camera.interval}}"></a></div>'],
-                    {% endfor %}
-                    ['html','</div>'],
-                    ['js','mx.Cameras.init']
-                ];
-                subMenus['tools'] = [
-                    ['url','/grafana/d/server-health/server-health',mx.I18N.get('Charts'),mx.I18N.get('Grafana'),false],
-                    ['url','//' + authType + 'kibana.'+domain+'/app/kibana#/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175',mx.I18N.get('Analytics'),mx.I18N.get('Kibana'),false],
-    //                ['url','/kibana/app/kibana#/dashboard/02e01270-1b34-11ea-9292-eb71d66d1d45',mx.I18N.get('Analytics'),mx.I18N.get('Kibana'),false],
-                    ['url','//' + authType + 'netdata.'+domain+'/',mx.I18N.get('State'),mx.I18N.get('Netdata'),false]
-                ];
-                subMenus['admin'] = [
-                    ['url','/mysql/',mx.I18N.get('MySQL'),mx.I18N.get('phpMyAdmin'),false],
-                    ['url','//' + authType + 'openhab.'+domain+'/toolbox/web/weatherDetailOverview.php', mx.I18N.get('Weatherforcast'),mx.I18N.get('Meteo Group'),false]
-                ];
-                subMenus['devices'] = [
-                    {% for device in webui_urls.devices %}
-                        ['url','{{device.url}}','{{device.title}}','{{device.name}}','{{device.openInNewWindow}}']{{'' if loop.last else ','}}
-                    {% endfor %}
-                ];
-            }
 
             function cleanMenu()
             {
@@ -385,58 +259,35 @@
 
                 if( isPhone ) menuPanel.close();
             }        
-     
-            ret.openMenu = function(element,key)
+
+            ret.openMenu = function(element,mainGroupId,subGroupId)
             {
+                key = mainGroupId + '_' + subGroupId;
+
                 if( activeMenu == key )
                 {
                   return;
                 }
-                
+
                 activeMenu = key;
 
                 mx.Timer.clean();
 
                 cleanMenu();
-                
-                var entries = [];
-                var callbacks = [];
-                
-                //console.log(key);
-                //console.log(typeof subMenus[key]);
-                //console.log(subMenus[key]);
-                
-                for(var i = 0; i < subMenus[key].length; i++)
-                {
-                    var entry = subMenus[key][i];
 
-                    if( entry[0] == 'html' )
-                    {
-                        entries.push(entry[1]);
-                        //entries.push('<div class="service ' + key + '">' + entry[2] + '</div>');
-                        //postInit = this[entry[1]];
-                    }
-                    else if( entry[0] == 'js' )
-                    {
-                        callbacks.push(eval(entry[1]));
-                    }
-                    else
-                    {
-                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openUrl(event,this,\'' + entry[1] + '\',' + entry[4] + ')"><div>' + entry[2] + '</div><div>' + entry[3] + '</div></div>');
-                    }
-                }
-                
-                setMenu(entries.join(""),callbacks);
-                
+                mx.Menu.buildMenu( mainGroupId, subGroupId, function(entries,callbacks){
+                    setMenu(entries.join(""),callbacks);
+                });
+
                 if( element != null ) element.classList.add("active");
             }
-                
+
             ret.openUrl = function(event,element,url,newWindow)
             {
                 mx.Timer.clean();
 
                 activeMenu = "";
-            
+
                 if( (event && event.ctrlKey) || newWindow )
                 {
                     var win = window.open(url, '_blank');
@@ -454,72 +305,50 @@
             ret.openHome = function()
             {
                 let isAlreadyActive = ( activeMenu == "home" );
-                
+
                 if( !isAlreadyActive )
                 {
                     activeMenu = "home";
             
                     cleanMenu();
                 }
-                
+
                 var datetime = new Date();
                 var h = datetime.getHours();
                 var m = datetime.getMinutes();
                 var s = datetime.getSeconds();
 
                 var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2);
-                
+
                 var prefix = '';
                 if(h >= 18) prefix = mx.I18N.get('Good Evening');
                 else if(h >  12) prefix = mx.I18N.get('Good Afternoon');
                 else prefix = mx.I18N.get('Good Morning');
 
-    <?php
-        $name = $_SERVER['REMOTE_USERNAME'];
-        $handle = fopen(".htdata", "r");
-        if ($handle) {
-            while (($line = fgets($handle)) !== false) {
-                list($_username,$_name) = explode(":", $line);
-                if( trim($_username) == $name )
-                {
-                    $name = trim($_name);
-                    break;
-                }
-            }
-        
-            fclose($handle);
-        }
-        echo "            var name = " . json_encode($name) . ";\n";
-    ?>            
                 message = '<div class="service home">';
                 message += '<div class="time">' + time + '</div>';
-                message += '<div class="slogan">' + prefix + ', ' + name + '.</div>';
+                message += '<div class="slogan">' + prefix + ', ' + activeUserName + '.</div>';
                 message += '<div class="imageTitle">' + mx.MainImage.getTitle() + '</div>';
                 message += '</div>';
-                
+
                 if( !isAlreadyActive ) setMenu(message,[]);
                 else mx.$('#content #submenu').innerHTML = message;
 
                 mx.Timer.register(mx.Actions.openHome,60000 - (s * 1000));
             }
-            
+
             ret.isMenuActive = function()
             {
                 return !!activeMenu;
             }
-            
-            ret.init = function()
-            {
-                initMenus();
-            }
-            
+
             return ret;
         })( mx.Actions || {} );
 
         function initContent()
         {
             readynessCount--;
-            if( readynessCount > 0 ) return;
+            if( readynessCount > 0 || !pageReady ) return;
 
             if( mx.MainImage.getUrl() !== "" )
             {
@@ -539,7 +368,7 @@
                 element.innerHTML = mx.I18N.get(key);
             });
 
-            mx.Actions.init();
+            mx.Menu.init();
 
             mx.$('#logo').addEventListener("click",mx.Actions.openHome);
 
@@ -550,6 +379,8 @@
 
         function initPage()
         {
+            pageReady = true;
+
             mx.Swipe.init();
 
             function isPhoneListener(mql){
@@ -568,7 +399,7 @@
             var mql = window.matchMedia('(max-width: 600px)');
             mql.addListener(isPhoneListener);
             isPhoneListener(mql);
-            
+
             menuPanel = mx.Panel.init(
                 {
                     isSwipeable: true,
@@ -604,24 +435,20 @@
                 menuMql.addListener(checkMenu);
                 checkMenu();
             }
-            
+
             initContent();
 
-            mx.Alarms.init();
+            // defined in netdata.js (/components/)
+            mx.Alarms.init('.alarm.button','.alarm.button .badge');
         }
 
-        mx.I18N.init();
+        mx.OnScriptReady.push( function(){
+            var imageUrl = "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg";
+            var titleUrl = "/img/potd/todayTitle.txt";
+            mx.MainImage.init(imageUrl,titleUrl,initContent);
+        });
 
-        mx.MainImage.init();
-
-        if (document.readyState === "complete" || document.readyState === "interactive") 
-        {
-            initPage();
-        }
-        else 
-        {
-            document.addEventListener("DOMContentLoaded", initPage);
-        }
+        mx.OnDocReady.push( initPage );
 	</script>
 </head>
 <body>
@@ -637,20 +464,9 @@
                 <svg style="fill:white;stroke:white;" transform="scale(1.0)" enable-background="new 0 0 91 91" id="Layer_1" version="1.1" viewBox="0 0 91 91" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><rect height="3.4" width="39.802" x="27.594" y="31.362"/><rect height="3.4" width="39.802" x="27.594" y="44.962"/><rect height="3.4" width="39.802" x="27.594" y="58.562"/></g></svg>
             </div>
         </div>
-        <div class="group flexInfo autoWidth">
-            <div class="header" data-i18n="NextCloud"></div>
-            <div class="service button" id="defaultEntry" onClick="mx.Actions.openMenu(this,'nextcloud')"><div data-i18n="NextCloud"></div><div></div></div>
-        </div>
-        <div class="group">
-            <div class="header" data-i18n="Automation"></div>
-            <div class="service button" onClick="mx.Actions.openMenu(this,'openhab')"><div data-i18n="Openhab"></div><div></div></div>
-            <div class="service button" onClick="mx.Actions.openMenu(this,'camera')"><div data-i18n="Cameras"></div><div></div></div>
-        </div>
-        <div class="group flexInfo">
-            <div class="header" data-i18n="Administration"></div>
-            <div class="service button" onClick="mx.Actions.openMenu(this,'tools')"><div data-i18n="Logs &amp; States"></div><div></div></div>
-            <div class="service button" onClick="mx.Actions.openMenu(this,'admin')"><div data-i18n="Tools"></div><div></div></div>
-            <div class="service button" onClick="mx.Actions.openMenu(this,'devices')"><div data-i18n="Devices"></div><div></div></div>
+        <div class="group" id="menuTemplate" style="display:none">
+            <div class="header"></div>
+            <div class="service button"><div></div><div></div></div>
         </div>
         <?php
             if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )

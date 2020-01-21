@@ -1,0 +1,11 @@
+{
+  "nextcloud": {
+    "Nextcloud": "Nextcloud"
+  },
+  "nextcloud_nextcloud": {
+    "Documents": "Dokumente",
+    "News": "News",
+    "Keys": "Keys",
+    "Keeweb": "Keeweb"
+  }
+}
