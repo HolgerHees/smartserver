@@ -19,7 +19,7 @@ Later, I will also document more special features and usecases like:
 * Seamless DNS resolving between public VPN and private WLAN to connect your mobile apps (openhab, nextcloud, news reader, camera viewer, keepass etc.) from everywhere, regardless if you are at home or away
 * Different Authentication methods like OpenID Connect, Form Base Auth or Basic Auth
 * Main responsive WebUI which makes everything available in one place
-* more are comming soon
+* More details are documented on [the wiki](https://github.com/HolgerHees/smartserver/wiki)
 
 ## Demo setup
 
