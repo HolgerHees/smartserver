@@ -7,10 +7,20 @@
     version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
   register: clone_status
 
+# async jython build is used to show progress and prevent travisci killing our job because of inactivity
 - name: run install => clone status changed
-  shell: '{{ item }}'
+  shell: 'ant installer'
   args:
     chdir: '/opt/jython'
-  with_items:
-    - 'ant installer'
+  async: 900
+  poll: 0
+  register: jython_build
+  when: clone_status.changed
+
+- name: wait for jython build => clone status changed
+  async_status: jid={{ jython_build.ansible_job_id }}
+  register: job_result
+  until: job_result.finished
+  retries: 30
+  delay: 60
   when: clone_status.changed

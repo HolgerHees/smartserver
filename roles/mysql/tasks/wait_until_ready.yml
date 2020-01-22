@@ -13,11 +13,11 @@
 #    port: 3306
 #  changed_when: yes
 
-# retries needs to increased from 120 to 180 to give mysql on travisci more time to start
+# retries needs to increased from 120 to 240 to give mysql on travisci more time to start
 - name: wait for mysql to become ready
   command: "docker exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
   register: result
   until: not result.rc  # or result.rc == 0 if you prefer
-  retries: 180
+  retries: 240
   delay: 1
   changed_when: ansible_facts.services["mysql.service"].state != 'running'
