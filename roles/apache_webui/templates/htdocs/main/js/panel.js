@@ -2,9 +2,12 @@ mx.Panel = (function( ret ) {
     var _options = {
         topMargin: "0px",
         isSwipeable: false,
+        isBackgroundLayerEnabled: false,
+        maxBackgroundLayerOpacity: 0.5,
         selectors: {
             menuButtons: null,
-            panelContainer: null
+            panelContainer: null,
+            backgroundLayer: null
         },
         selectorsConfig : {
             asList: ['menuButtons']
@@ -18,6 +21,89 @@ mx.Panel = (function( ret ) {
     };
 
     var activeInstance = null;
+    
+    function enableBackgroundLayer(options,enabled)
+    {
+        options.isBackgroundLayerEnabled = enabled;
+        if( options.isBackgroundLayerEnabled )
+        {
+            if( isOpen(options) )
+            {
+                options.elements.backgroundLayer.style.display = "block";
+                options.elements.backgroundLayer.style.opacity = options.maxBackgroundLayerOpacity;
+            }
+        }
+        else 
+        {
+            options.elements.backgroundLayer.style.display = "";
+            options.elements.backgroundLayer.style.opacity = "";
+        }
+    }
+    function beforeOpen(options,skipBeforeTrigger)
+    {
+        if( options.isBackgroundLayerEnabled ) 
+        {
+            options.elements.backgroundLayer.style.display = "block";
+            options.elements.backgroundLayer.style.opacity = options.maxBackgroundLayerOpacity;
+        }
+        if( skipBeforeTrigger !== true )
+        {
+            mx.Core.triggerEvent(options.elements.panelContainer, "beforeOpen", false);
+        }
+    }
+    
+    function beforeClose(options)
+    {
+        if( options.isBackgroundLayerEnabled ) 
+        {
+            options.elements.backgroundLayer.style.opacity = "";
+        }
+        mx.Core.triggerEvent(options.elements.panelContainer, "beforeClose", false );
+    }
+    
+    function afterOpen(options)
+    {
+        /*if( options.isBackgroundLayerEnabled ) 
+        {
+            options.elements.backgroundLayer.style.display = "block";
+            options.elements.backgroundLayer.style.opacity = options.maxBackgroundLayerOpacity;
+        }*/
+        mx.Core.triggerEvent(options.elements.panelContainer, "afterOpen", false );
+    }
+    
+    function afterClose(options)
+    {
+        if( options.isBackgroundLayerEnabled ) 
+        {
+            options.elements.backgroundLayer.style.display = "";
+        }
+        mx.Core.triggerEvent(options.elements.panelContainer, "afterClose", false );
+    }
+    
+    function startMoving(options)
+    {
+        if( options.isBackgroundLayerEnabled ) 
+        {
+            options.elements.backgroundLayer.style.transition = "none";
+        }
+    }
+    
+    function isMoving(options,diff)
+    {
+        if( options.isBackgroundLayerEnabled ) 
+        {
+            var percent = Math.abs(diff) * 100.0 / options._.panelContainerWidth;
+            options.elements.backgroundLayer.style.opacity = percent * options.maxBackgroundLayerOpacity / 100.0;
+        }
+    }
+
+    function endMoving(options)
+    {
+        if( options.isBackgroundLayerEnabled ) 
+        {
+            options.elements.backgroundLayer.style.transition = "";
+        }
+    }
 
     function isOpen(options)
     {
@@ -35,10 +121,7 @@ mx.Panel = (function( ret ) {
         {
             initTopMargin(options);
 
-            if( skipBeforeTrigger !== true )
-            {
-                mx.Core.triggerEvent(options.elements.panelContainer, "beforeOpen", false);
-            }
+            beforeOpen(options,skipBeforeTrigger);
 
             mx.Core.waitForTransitionEnd(options.elements.panelContainer, function()
             {
@@ -51,7 +134,7 @@ mx.Panel = (function( ret ) {
                     activeInstance = options.elements.panelContainer;
                 }
 
-                mx.Core.triggerEvent(options.elements.panelContainer, "afterOpen", false );
+                afterOpen(options);
             },"Panel.open",options._.transitionDuration);
             options.elements.panelContainer.classList.add(options.classes.open);
 
@@ -63,7 +146,7 @@ mx.Panel = (function( ret ) {
     {
         if ( options.elements.panelContainer.classList.contains(options.classes.open) )
         {
-            mx.Core.triggerEvent(options.elements.panelContainer, "beforeClose", false );
+            beforeClose(options);
 
             mx.Core.waitForTransitionEnd(options.elements.panelContainer, function(){
                 // was open again
@@ -75,7 +158,8 @@ mx.Panel = (function( ret ) {
                     activeInstance = null;
                 }
 
-                mx.Core.triggerEvent(options.elements.panelContainer, "afterClose", false );
+                afterClose(options);
+
                 if (callback) callback();
             },"Panel.close",options._.transitionDuration);
             options.elements.panelContainer.classList.remove(options.classes.open);
@@ -160,20 +244,18 @@ mx.Panel = (function( ret ) {
         if( !options._.isOpen && Math.abs(diff) > 45 && !options._.openEventTriggered )
         {
             options._.openEventTriggered = true;
-            mx.Core.triggerEvent(options.elements.panelContainer, "startMove", false );
-            mx.Core.triggerEvent(options.elements.panelContainer, "beforeOpen", false );
+            startMoving(options);
+            beforeOpen(options);
         }
 
         options.elements.panelContainer.style.transform = "translate3d("+options._.panelContainerOffset+"px, 0, 0)";
 
-        var percent = Math.abs(diff) * 100.0 / options._.panelContainerWidth;
-
-        mx.Core.triggerEvent(options.elements.panelContainer, "isMoving", false, percent );
+        isMoving(options,diff);
     }
 
     function tapEnd(options,e)
     {
-        mx.Core.triggerEvent(options.elements.panelContainer, "endMove", false );
+        endMoving(options);
 
         window.removeEventListener( "tapmove", options._.tapMoveListener );
         window.removeEventListener("tapend", options._.tapEndListener );
@@ -193,8 +275,8 @@ mx.Panel = (function( ret ) {
             {
                 // was trying to open but it never opens
                 // trigger close trigger both together
-                mx.Core.triggerEvent(options.elements.panelContainer, "beforeClose", false );
-                mx.Core.triggerEvent(options.elements.panelContainer, "afterClose", false );
+                beforeClose(options);
+                afterClose(options);
             }
         }
 
@@ -256,6 +338,10 @@ mx.Panel = (function( ret ) {
             close: function()
             {
                 close(options);
+            },
+            enableBackgroundLayer: function(enabled)
+            {   
+                enableBackgroundLayer(options,enabled);
             },
             cleanup: function(callback) {
                 close(options,function()

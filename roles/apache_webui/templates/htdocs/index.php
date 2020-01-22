@@ -210,7 +210,7 @@
         //var lang = navigator.language || navigator.userLanguage;
         var pageReady = false;
         var menuPanel = false;
-        var isPhone = false;
+        var visualisationType = "phone";
 
         var readynessCount = 3; //(background image (scriptready), background image title (scriptready) & initPage (documentready) )
 
@@ -255,7 +255,7 @@
                     submenu.style.opacity = "0";
                 },100);
 
-                if( isPhone ) menuPanel.close();
+                if( visualisationType != "desktop" ) menuPanel.close();
             }        
 
             ret.openMenu = function(element,mainGroupId,subGroupId)
@@ -366,85 +366,83 @@
             mx.$('#page').style.opacity = "1";
         }
 
+        function checkVisualisationType()
+        {
+            if( window.innerWidth < 600 ) visualisationType = "phone";
+            else if( window.innerWidth < 1024 ) visualisationType = "tablet";
+            else visualisationType = "desktop";
+            
+            menuPanel.enableBackgroundLayer(visualisationType !== "desktop");
+
+            if( visualisationType !== "desktop" )
+            {
+                mx.$("#side").classList.add("fullsize");
+            }
+            
+            if( visualisationType === "phone" )
+            {
+                mx.$('body').classList.add('phone');
+                mx.$('body').classList.remove('desktop');
+            }
+            else
+            {
+                mx.$('body').classList.remove('phone');
+                mx.$('body').classList.add('desktop');
+            }
+        }
+        
         function initPage()
         {
             pageReady = true;
-
+        
             mx.Swipe.init();
-
-            function isPhoneListener(mql){
-                isPhone=mql.matches;
-                if( isPhone )
-                {
-                    mx.$('body').classList.add('phone');
-                    mx.$('body').classList.remove('desktop');
-                }
-                else
-                {
-                    mx.$('body').classList.remove('phone');
-                    mx.$('body').classList.add('desktop');
-                }
-            }
-            var mql = window.matchMedia('(max-width: 600px)');
-            mql.addListener(isPhoneListener);
-            isPhoneListener(mql);
-
+                        
             menuPanel = mx.Panel.init({
                 isSwipeable: true,
+                enableBackgroundLayer: false,
                 selectors: {
                     menuButtons: ".burger.button",
-                    panelContainer: '#menu'
+                    panelContainer: '#menu',
+                    backgroundLayer: '#layer',
                 }
             });
 
-            var menu = mx.$('#menu');
-            var layer = mx.$("#layer");
-
-            menu.addEventListener("beforeOpen",function(){
-                mx.$("#side").classList.remove("fullsize");
-                if( isPhone ) 
-                {
-                    layer.style.display = "block";
-                    layer.style.opacity = "0.4";
-                }
+            mx.$('#menu').addEventListener("beforeOpen",function(){
+                if( visualisationType == "desktop" ) mx.$("#side").classList.remove("fullsize");
             });
-            menu.addEventListener("beforeClose",function(){
-                mx.$("#side").classList.add("fullsize");
-                if( isPhone ) layer.style.opacity = "0.0";
-            });
-            menu.addEventListener("afterClose",function(){
-                if( isPhone ) layer.style.display = "";
-            });
-            menu.addEventListener("startMove",function(){
-                if( !isPhone ) return;
-                layer.style.transition = "none";
-            });
-            menu.addEventListener("endMove",function(){
-                if( !isPhone ) return;
-                layer.style.transition = "";
-            });
-            menu.addEventListener("isMoving",function(event){
-                if( !isPhone ) return;
-                var opacity = Math.round( (event.detail * 0.4 / 100.0) * 100.0 ) / 100.0;
-                layer.style.opacity = opacity;
+            mx.$('#menu').addEventListener("beforeClose",function(){
+                if( visualisationType == "desktop" ) mx.$("#side").classList.add("fullsize");
             });
 
-            layer.addEventListener("click",function()
+            mx.$("#layer").addEventListener("click",function()
             {
                 menuPanel.close();
             });
 
-            if( !isPhone )
-            {
-                var menuMql = window.matchMedia('(min-width: 800px)');
-                function checkMenu()
-                {
-                    if( menuMql.matches ) menuPanel.open();
-                    else menuPanel.close();
-                }
-                menuMql.addListener(checkMenu);
-                checkMenu();
+            function isPhoneListener(mql){ 
+                checkVisualisationType(); 
             }
+            var phoneMql = window.matchMedia('(max-width: 600px)');
+            phoneMql.addListener(isPhoneListener);
+            isPhoneListener(phoneMql);
+
+            var desktopMql = window.matchMedia('(min-width: 1024px)');
+            function checkMenu(mql)
+            {
+                checkVisualisationType();
+
+                if( visualisationType === "desktop" ) 
+                {
+                    mx.$("#side").classList.remove("fullsize");
+                    menuPanel.open();
+                }
+                else 
+                {
+                    menuPanel.close();
+                }
+            }
+            desktopMql.addListener(checkMenu);
+            checkMenu(desktopMql);
 
             initContent();
 
