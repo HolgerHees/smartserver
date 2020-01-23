@@ -3,12 +3,14 @@ require 'getoptlong'
 opts = GetoptLong.new(
     [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
     ['--config', GetoptLong::REQUIRED_ARGUMENT], 
-    ['--os', GetoptLong::REQUIRED_ARGUMENT ]
+    ['--os', GetoptLong::REQUIRED_ARGUMENT ],
+    ['--ansible', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
 setup_os = ""
 setup_image = ""
 setup_config = ""
+setup_ansible = ""
 
 begin
   opts.each do |opt, arg|
@@ -26,6 +28,9 @@ vagrant [OPTION] ... CMD
 --os <suse|fedora>:
   Used linux distribution. 
 
+--ansible [-vvv]:
+  Optional argument to provide additional parameters for ansible. 
+
 CMD: 'up', 'destroy' or any other vagrant command
 
 Example: vagrant --config=demo --os=suse up 
@@ -42,6 +47,8 @@ Example: vagrant --config=demo --os=suse up
             setup_os = "fedora"
             setup_image = "fedora/31-cloud-base"
         end
+      when '--ansible'
+        setup_ansible=arg
     end
   end
   rescue
@@ -124,7 +131,8 @@ Vagrant.configure(2) do |config|
       ansible.inventory_path = "config/#{setup_config}/server.ini"
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
-      
+      ansible.raw_arguments = setup_ansible
+          
       if setup_config != 'demo' then
         ansible.vault_password_file = "/tmp/vault_pass"
       end

@@ -2,6 +2,8 @@ language: ruby
 os: linux
 dist: bionic
 
+sudo: required
+
 branches:
   only:
     - master
@@ -15,8 +17,12 @@ before_install:
 
 jobs:
   include:
-  - env: OS=suse
-  - env: OS=fedora
+  - env: 
+    - OS=suse
+    - ANSIBLE_ARGS=
+  - env: 
+    - OS=fedora
+    - ANSIBLE_ARGS=-vvv
     
 script:
-- vagrant --config=demo --os=$OS up
+- vagrant --config=demo --os=$OS --ansible=$ANSIBLE_ARGS up
