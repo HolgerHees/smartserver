@@ -7,19 +7,7 @@ For a detailed overview about installed software and services check
 * [http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/](http://www.intranet-of-things.com/smarthome/infrastructure/server/setup/) 
 * or the main deployment [server.yml](https://github.com/HolgerHees/smartserver/blob/master/server.yml) file
 
-Later, I will also document more special features and usecases like:
-
-* VPN based private cloud between 2 identical smart servers
-* Central logging with fluentd, elasticsearch, kibana and elastalert
-* Servermonitoring with netdata
-* Grafana and InfluxDB for visualisation
-* OpenHAB as a central smarthome broker
-* Nextcloud for your content cloud
-* Containerized environment
-* Seamless DNS resolving between public VPN and private WLAN to connect your mobile apps (openhab, nextcloud, news reader, camera viewer, keepass etc.) from everywhere, regardless if you are at home or away
-* Different Authentication methods like OpenID Connect, Form Base Auth or Basic Auth
-* Main responsive WebUI which makes everything available in one place
-* More details are documented on [the wiki](https://github.com/HolgerHees/smartserver/wiki)
+For a detailed description about the main features and a lot more, check [the wiki](https://github.com/HolgerHees/smartserver/wiki)
 
 ## Demo setup
 
