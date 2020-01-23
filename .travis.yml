@@ -22,7 +22,7 @@ jobs:
     - ANSIBLE_ARGS=
   - env: 
     - OS=fedora
-    - ANSIBLE_ARGS=-vvv
+    - ANSIBLE_ARGS=
     
 script:
 - vagrant --config=demo --os=$OS --ansible=$ANSIBLE_ARGS up
