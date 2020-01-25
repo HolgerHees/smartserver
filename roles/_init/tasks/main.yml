@@ -18,13 +18,13 @@
   set_fact:
     host_ip: "{{ item }}"
   with_items: "{{ ansible_all_ipv4_addresses }}"
-  when: "item == production_ip or item == develop_ip"
+  when: "item == production_ip or item == staging_ip"
   tags: always
     
 # check for a valid main ip
 - assert:
     that: host_ip is defined
-    msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), develop ({{ develop_ip if develop_ip else 'disabled' }})"
+    msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), staging ({{ staging_ip if staging_ip else 'disabled' }})"
 
 # load vault file
 - name: load vault vars

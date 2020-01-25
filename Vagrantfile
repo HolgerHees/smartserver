@@ -72,11 +72,11 @@ $image_name = "smartserver_" + setup_config + "_" + setup_os
 Vagrant.configure(2) do |config|
     
   env_config = File.read("config/#{setup_config}/env.yml")
-  env_match = env_config.scan(/develop_ip:\s*"([^"]*)"/).last
+  env_match = env_config.scan(/staging_ip:\s*"([^"]*)"/).last
   if env_match then
     $env_ip = env_match.first
   else
-    raise "no 'develop_ip' found in file 'config/#{setup_config}/env.yml'"
+    raise "no 'staging_ip' found in file 'config/#{setup_config}/env.yml'"
   end
   
   print "Used ip address: #{$env_ip}\n"
