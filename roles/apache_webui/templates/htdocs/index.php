@@ -193,7 +193,6 @@
             }
 
             var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
-            mainGroup.addSubGroup('cameras', 900, '{i18n_Cameras}');
 
             mainGroup = ret.addMainGroup('administration', 3000, '{i18n_Administration}');
             mainGroup.addSubGroup('states', 100, '{i18n_Logs & States}');

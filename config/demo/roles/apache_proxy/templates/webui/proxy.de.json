@@ -1,4 +1,7 @@
 {
+  "automation": {
+    "Cameras": "Kameras"
+  },
   "automation_cameras": {
     "Street": "Strasse",
     "Automower": "Automower"

@@ -2,7 +2,9 @@ var html = '<div class="service imageWatcher">';
 html += '<div><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="{i18n_Street}" data-src="/cameraStrasseImage" data-interval="3000"></a></div>';
 html += '<div><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png" data-name="{i18n_Automower}" data-src="/cameraAutomowerImage" data-interval="3000"></a></div>';
 html += '</div>';
-mx.Menu.getMainGroup('automation').getSubGroup('cameras').addHtml(100, html, function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); });
+
+var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}');
+cameraSubGroup.addHtml(100, html, function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); });
 
 var subGroup = mx.Menu.getMainGroup('administration').getSubGroup('devices');
 subGroup.addUrl(100, 'url', '/automowerDevice/', '{i18n_Automower}', '{i18n_Robonect}', false);
