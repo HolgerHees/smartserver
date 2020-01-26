@@ -45,8 +45,8 @@
 #  shell: >
 #    podman create \
 #    --name=vsftpd \
-#    --env "FTP_USER={{vault_camera_username}}" \
-#    --env "FTP_PASS={{vault_camera_linux_password}}" \
+#    --env "FTP_USER={{vault_ftp_username}}" \
+#    --env "FTP_PASS={{vault_ftp__password}}" \
 #    --env "FTP_UID={{system_users['ftp'].id}}" \
 #    --env "FTP_GID={{system_groups['ftp'].id}}" \
 #    --env "ONLY_UPLOAD=YES" \
@@ -115,8 +115,8 @@
     state: present
 #    recreate: true
     env:
-      FTP_USER: "{{vault_camera_username}}"
-      FTP_PASS: "{{vault_camera_linux_password}}"
+      FTP_USER: "{{vault_ftp_username}}"
+      FTP_PASS: "{{vault_ftp_password}}"
       FTP_UID: "{{system_users['ftp'].id}}"
       FTP_GID: "{{system_groups['ftp'].id}}"
       ONLY_UPLOAD: "YES"
