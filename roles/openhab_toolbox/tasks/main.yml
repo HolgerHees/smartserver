@@ -47,7 +47,7 @@
     js_file: "templates/webui/toolbox.js"
     i18n_files: [ { language: "de", file: "templates/webui/toolbox.de.json" } ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
-  when: "vault_weather_api_username"
+  when: "vault_weather_api_username != ''"
 
 # Weather data fetcher
 - name: create cron job
@@ -57,4 +57,4 @@
     file: "ansible_openhab_toolbox"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: "vault_weather_api_username"
+  when: "vault_weather_api_username != ''"
