@@ -14,14 +14,20 @@ vault_userdata: {
 vault_admin_username: "admin"
 vault_admin_web_password: "default123"
 
-vault_camera_username: "camera"
-vault_camera_linux_password: "default123"
-vault_camera_device_username: "admin"
-vault_camera_device_password: "default123"
+# for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
+# to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
+vault_openid_connect_url: ""
+vault_openid_connect_client_id: ""
+vault_openid_connect_client_secret: ""
+vault_openid_connect_passphrase: ""
 
-vault_telegram_chat_id: "<chat_id>"
-vault_telegram_chat_token: "<chat_token>"
+vault_form_auth_passphrase: "8924jkhf2/8?23"
 
+vault_ftp_username: "ftp"
+vault_ftp_password: "default123"
+
+# to enable obtain a login from https://api.weather.mg/
+# to disable, leave the username empty
 vault_weather_api_username: "<username>"
 vault_weather_api_password: "<password>"
 
@@ -30,14 +36,6 @@ vault_nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
 vault_nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
 vault_nextcloud_mysql_username: "nextcloud"
 vault_nextcloud_mysql_password: "default123"
-
-vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
-vault_openhab_mysql_username: "openhab"
-vault_openhab_mysql_password: "default123"
-vault_openhab_influxdb_username: "openhab"
-vault_openhab_influxdb_password: "default123"
-vault_openhab_fritzbox_username: "openhab"
-vault_openhab_fritzbox_password: "default123"
 
 vault_grafana_influxdb_username: "grafana"
 vault_grafana_influxdb_password: "default123"
@@ -49,6 +47,16 @@ vault_vpn_mobile_port: "1195"
 vault_vpn_mobile_public_port: "277"
 vault_vpn_mobile_public_domain: "public.{{server_domain}}"
 
+vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
+vault_openhab_mysql_username: "openhab"
+vault_openhab_mysql_password: "default123"
+vault_openhab_influxdb_username: "openhab"
+vault_openhab_influxdb_password: "default123"
+
+# ****** OPTIONAL VARIABLES ******
+# variables are optional and only necessary if they are referenced in one of the optional roles or configurations
+
+# used in generic optional role 'openvpn_cloud'
 vault_vpn_cloud_type: "master" # master|slave
 vault_vpn_cloud_port: "1194"
 vault_vpn_cloud_local_username: "clouduser"
@@ -57,17 +65,29 @@ vault_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
 vault_vpn_cloud_master_port: "3421"
 vault_vpn_cloud_master_domain: "public.{{server_domain}}"
 
+# used in generic optional role 'cloudsync'
 vault_cloudsync_password: "default123"
 
-# for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
-# to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
-vault_openid_connect_url: ""
-vault_openid_connect_client_id: ""
-vault_openid_connect_client_secret: ""
-vault_openid_connect_passphrase: ""
+# used in generic optional role 'roomba'
+vault_roomba_password: "default123"
+vault_roomba_blid: "<blid>"
 
-vault_form_auth_passphrase: "8924jkhf2/8?23"
+# used in custom external openhab config repository
+vault_fritzbox_username: "openhab"
+vault_fritzbox_password: "default123"
+vault_telegram_chat_id: "<chat_id>"
+vault_telegram_chat_token: "<chat_token>"
+vault_hue_user_id: "<userid>"
 
+# used in custom external openhab config repository and custom role 'apache_proxy'
+vault_automower_device_username: "automower"
+vault_automower_device_password: "default123"
+
+# used in custom role 'apache_proxy'
+vault_camera_device_username: "admin"
+vault_camera_device_password: "default123"
+
+# used in generic optional role 'alexa'
 vault_server_alexa_domain: "public.{{server_domain}}"
 vault_server_alexa_port: "22432"
 vault_alexa_username: "alexa"
@@ -84,10 +104,5 @@ vault_alexa_device_id5: "<alexa_device_id5>"
 vault_alexa_device_id6: "<alexa_device_id6>"
 vault_alexa_device_id7: "<alexa_device_id7>"
 
-vault_automower_device_username: "automower"
-vault_automower_device_password: "default123"
 
-vault_roomba_password: "default123"
-vault_roomba_blid: "<blid>"
 
-vault_hue_user_id: "<userid>"

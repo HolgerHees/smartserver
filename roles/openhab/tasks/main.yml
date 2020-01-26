@@ -172,7 +172,7 @@
     - conf/rules
     - conf/sitemaps
     - conf/transform
-    - python/marvin
+    - python/custom
   notify: "restart openhab"
 
 - name: copy habpanel config
