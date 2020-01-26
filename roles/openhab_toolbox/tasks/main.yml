@@ -9,8 +9,8 @@
   template:
     src: "templates/config.php"
     dest: "{{projects_path}}toolbox/_lib/config.php"
-    owner: root
-    group: root
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0644
   
 #- name: bind directory
