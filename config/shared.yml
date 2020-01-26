@@ -39,7 +39,7 @@ mobile_vpn_network:               "10.100.{{netgroup}}.0"
 cloud_vpn_network:                "10.0.{{netgroup}}.0"
 cloud_vpn_endpoint_master:        "10.0.{{netgroup}}.1"
 cloud_vpn_endpoint_slave:         "10.0.{{netgroup}}.2"
- 
+
 cloud_net1_server_ip:             "10.1.{{netgroup}}.50"
 cloud_net1_gateway:               "10.1.{{netgroup}}.1"
 cloud_net1_network:               "10.1.{{netgroup}}.0"
