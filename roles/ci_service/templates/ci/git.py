@@ -39,5 +39,5 @@ def setStatus(repository_owner, access_token, git_hash, state, context, descript
         "description": description
     }
     result = requests.post("https://api.github.com/repos/{}/statuses/{}".format(repository_owner,git_hash), headers=headers, data=json.dumps(data))
-    if result.status_code == 201:
+    if result.status_code != 201:
         helper.log( "Unable to set git status. Code: {}, Body: {}".format(result.status_code,result.text), "err" )
