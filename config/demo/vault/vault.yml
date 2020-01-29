@@ -47,6 +47,9 @@ vault_vpn_mobile_port: "1195"
 vault_vpn_mobile_public_port: "277"
 vault_vpn_mobile_public_domain: "public.{{server_domain}}"
 
+vault_deployment_config_git: "https://github.com/HolgerHees/smartserver.git"
+vault_deployment_token_git: ""
+
 vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
 vault_openhab_mysql_username: "openhab"
 vault_openhab_mysql_password: "default123"

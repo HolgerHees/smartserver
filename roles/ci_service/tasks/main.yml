@@ -1,0 +1,64 @@
+- name: install required packages => is_fedora
+  yum:
+    name: virtualbox
+    state: present
+  when: is_fedora|bool
+  notify: "restart virtualbox" 
+
+- name: install required packages => is_suse
+  zypper:
+    name: virtualbox
+    state: present
+  when: is_suse|bool
+  notify: "restart virtualbox" 
+  
+#- name: install required python pip modules
+#  pip: 
+#    name: PyGithub
+#    executable: pip3 
+
+- name: prepare needed folder
+  file:
+    path: "{{item.path}}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/ci_service" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci" }
+
+- name: install archive => nextcloud does not exists
+  unarchive:
+    src: "https://releases.hashicorp.com/vagrant/2.2.6/vagrant_2.2.6_linux_amd64.zip"
+    dest: "/opt/ci_service"
+    remote_src: yes
+    creates: "/opt/ci_service/vagrant"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy ci package
+  copy:
+    src: "templates/ci"
+    dest: "/opt/ci_service"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy ci_service
+  template:
+    src: "templates/ci_service"
+    dest: "/opt/ci_service/ci_service"
+    owner: root
+    group: root
+    mode: 0750
+    
+#- name: create cron job
+#  vars:
+#    name: "Continues integration job"
+#    cmd: "/opt/ci_service/ci_service start"
+#    file: "ansible_ci_service"
+#    minute: "*/15"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: "is_production|bool"

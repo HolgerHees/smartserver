@@ -106,7 +106,7 @@
   register: app_status
   changed_when: no
 
-- name: install apps
+- name: enable keeweb and news apps
   shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable {{item}}\""
   register: command_result
   failed_when: "'enabled' not in command_result.stdout"
