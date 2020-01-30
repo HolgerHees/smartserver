@@ -22,28 +22,55 @@ repository_dir = "{{global_build}}smartserver"
 repository_url = "{{vault_deployment_config_git}}"
 access_token = "{{vault_deployment_token_git}}"
 
-deployments = ["suse","fedora"]
+branch = "master"
+
+deployments = [u"suse",u"fedora"]
 
 repository_owner = repository_url.replace("https://github.com/","")
 repository_owner = repository_owner.replace(".git","")
 
 cmd = ""
-if len(sys.argv) == 2:
+if len(sys.argv) >= 2:
     cmd = sys.argv[1]
     
-if cmd == "stop":
-    service.stopRunningJob(status_file,log_dir)
+if cmd == "status":
+    service.showRunningJobs()
+    exit(0)
+elif cmd == "clean":
+    if len(sys.argv) == 3:
+        vid = sys.argv[2]
+        service.cleanRunningJobs(vid)
+    else:
+        print(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
+    exit(0)
+elif cmd == "stop":
+    stopped_state_obj = service.stopRunningJob(status_file,log_dir)
+    if stopped_state_obj != None:
+        valid_state = job.getLastValidState(log_dir,stopped_state_obj,deployments,branch)
+        if valid_state != None:
+            if valid_state == "success":
+                print(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+                git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
+            elif valid_state == "failure":
+                print(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("failure", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+                git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build errored")
+            else:
+                print(u"Unable to restore github state '{}' for deployment '{}' on commit '{}'".format(valid_state, stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+        else:
+            print(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+            git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
+    exit(0)
 elif cmd == "start" or cmd == "restart":
     processed_git_hash = service.checkRunningJob(status_file)
 
     git.initRepository(repository_dir, repository_url, build_dir)
 
-    git.updateRepository(repository_dir)
+    git.updateRepository(repository_dir,branch)
 
     current_git_hash = git.getHash(repository_dir)
 
     if processed_git_hash != current_git_hash or cmd == "restart":
-        status.setStatus(status_file,u"running")
+        status.setState(status_file,u"running")
         print(u"Check for commit '{}' started.".format(current_git_hash))
 
         pid = os.fork()
@@ -53,30 +80,36 @@ elif cmd == "start" or cmd == "restart":
                 
                 status.setGitHash(status_file,current_git_hash)
                 
-                job_obj = job.Job(log_dir, lib_dir, repository_dir, status_file, current_git_hash )
+                commit = git.getLog(repository_dir,current_git_hash)
+                
+                job_obj = job.Job(log_dir, lib_dir, repository_dir, status_file, branch, current_git_hash, commit )
                 
                 for deployment in deployments:
+                    status.setDeployment(status_file,deployment)
                     if access_token != "":
-                        git.setStatus(repository_owner,access_token,current_git_hash,"pending",deployment,"Build pending")
+                        git.setState(repository_owner,access_token,current_git_hash,"pending",deployment,"Build pending")
                     successful = job_obj.startCheck( "demo", deployment, None )
                     if not successful:
                         if access_token != "":
-                            git.setStatus(repository_owner,access_token,current_git_hash,"failure",deployment,"Build Errored")
+                            git.setState(repository_owner,access_token,current_git_hash,"failure",deployment,"Build errored")
                         helper.sendEmail("CI Test for 'demo' on '{}' not successful","Commit: https://github.com/{}/commit/{}".format(deployment,repository_owner,current_git_hash));
                     else:
                         if access_token != "":
-                            git.setStatus(repository_owner,access_token,current_git_hash,"success",deployment,"Build succeeded")
+                            git.setState(repository_owner,access_token,current_git_hash,"success",deployment,"Build succeeded")
                 
-                status.setStatus(status_file,u"finished")
+                status.setState(status_file,u"finished")
             except:
                 helper.log( traceback.format_exc(), "err" )
-                status.setStatus(status_file,u"crashed")
+                status.setState(status_file,u"crashed")
             exit(0)
         else:
             exit(0)
     else:
         print(u"Nothing to do. Commit '{}' already processed.".format(current_git_hash))
+        exit(0)
 elif cmd != "":
     print(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop>".format(cmd))
+    exit(0)
 else:
-    print(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop>")
+    print(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop|clean|status>")
+    exit(0)

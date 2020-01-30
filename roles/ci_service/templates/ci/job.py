@@ -4,6 +4,7 @@ import subprocess
 import pathlib
 import glob
 import os
+import re
 
 from datetime import datetime
 from datetime import timedelta
@@ -12,6 +13,7 @@ from ci import helper
 from ci import virtualbox
 from ci import status
 
+max_subject_length = 50
 max_cleanup_time = 60*10
 max_runtime = 60*60*2
 max_retries = 2
@@ -91,15 +93,27 @@ def modifyStoppedFile(log_dir):
         
         print(u"Logfile '{}' processed.".format(finished_log_file.split('/')[-1]))
         break
-      
+
+def getLastValidState(log_dir,state_obj,deployments,branch):
+    files = glob.glob("{}*-{}-{}-{}-*.log".format(log_dir,state_obj['deployment'], branch, state_obj['git_hash']))
+    files.sort(key=os.path.getmtime, reverse=True)
+    for deployment_log_file in files:
+        if deployment_log_file.find("-success-"):
+            return u"success"
+        elif deployment_log_file.find("-failure-"):
+            return u"failure"
+    return None
+  
 class Job:
   
-    def __init__( self, log_dir, lib_dir, repository_dir, status_file, git_hash ):
+    def __init__( self, log_dir, lib_dir, repository_dir, status_file, branch, git_hash, commit ):
         self.log_dir = log_dir
         self.lib_dir = lib_dir
         self.repository_dir = repository_dir
         self.status_file = status_file
+        self.branch = branch
         self.git_hash = git_hash
+        self.commit = commit
 
         self.registeredMachines = {}
         self.activeMachine = None
@@ -140,6 +154,13 @@ class Job:
         #output = pexpect.run("sleep 30", timeout=1, cwd=self.repository_dir, withexitstatus=True, events={pexpect.TIMEOUT:self.searchDeploymentVID})
         #print("end")
         #return
+        
+        author = re.sub('\\W+|\\s+', "_", self.commit['author'] );
+        subject = re.sub('\\W+|\\s+', "_", self.commit['subject'] );
+        if len(subject) > max_subject_length:
+            subject = subject[0:max_subject_length]
+            pos = subject.rfind("_")
+            subject = u"{}_".format(subject[0:pos])
 
         i = 0
         while True:
@@ -150,7 +171,7 @@ class Job:
             self.start_time = datetime.now()
             start_time_str = self.start_time.strftime(START_TIME_STR_FORMAT)
 
-            deployment_log_file = u"{}{}-{}-{}-{}-{}-{}.log".format(self.log_dir,start_time_str,0,"running",config_name,os_name,self.git_hash)
+            deployment_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,start_time_str,0,"running",config_name,os_name,self.branch,self.git_hash,author,subject)
             
             vagrant_path = pathlib.Path(__file__).parent.absolute().as_posix() + "/../vagrant"
 
@@ -204,7 +225,7 @@ class Job:
                     if retry:
                         status_msg = 'retry'
                     else:
-                        status_msg = 'error'
+                        status_msg = 'failed'
 
                     if self.cancelReason != None:
                         lf.write("{}\n".format(retry_messages[self.cancelReason]))
@@ -212,7 +233,7 @@ class Job:
                     lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,deploy_exit_status,timedelta(seconds=duration)))
 
             # Rename logfile
-            finished_log_file = u"{}{}-{}-{}-{}-{}-{}.log".format(self.log_dir,start_time_str,duration,status_msg,config_name,os_name,self.git_hash)
+            finished_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,start_time_str,duration,status_msg,config_name,os_name,self.branch,self.git_hash,author,subject)
             os.rename(deployment_log_file, finished_log_file)
 
             # Cleanup start

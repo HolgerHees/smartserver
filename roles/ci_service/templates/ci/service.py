@@ -14,6 +14,57 @@ def getPid():
     pid = helper.getPid(1,"/usr/bin/python3 \\./ci_service")
     return pid if pid != "" else None
 
+skipped_names = [
+    "grep",
+    "ci_service status",
+    "VBoxXPCOMIPCD",
+    "VBoxSVC"
+]
+def checkIfSkippedName(line):
+    for name in skipped_names:
+        if line.find(name) != -1 or line == "":
+            return True
+  
+def formatProcesses(lines,processes):
+    for line in lines:
+        line = line.strip()
+        if checkIfSkippedName(line):
+            continue
+        processes.append(u"  {}".format(line))
+  
+def showRunningJobs():
+    pid = getPid()
+    if pid != None:
+        print(u"Main process is running with pid '{}'.".format(pid))
+    else:
+        print(u"Main process is not running.")
+    
+    processes = []
+    
+    ci_result = helper.execCommand("ps -alx | grep ci_service")
+    ci_lines = ci_result.stdout.decode("utf-8").split(u"\n")
+    formatProcesses(ci_lines,processes)
+    
+    vm_result = helper.execCommand("ps -alx | grep virtualbox")
+    vm_lines = vm_result.stdout.decode("utf-8").split(u"\n")
+    formatProcesses(vm_lines,processes)
+    
+    if len(processes) > 2:
+        print(u"Following sub processes are running.")
+        print(u"\n".join(processes))
+    else:
+        print(u"No sub processes are running.")
+
+    virtualbox.checkMachines(True)
+      
+def cleanRunningJobs(vid):
+    if vid == "all":
+        machines = virtualbox.getRegisteredMachines()
+        for vid in machines.keys():
+            virtualbox.destroyMachine(vid)
+    else:
+        virtualbox.destroyMachine(vid)
+
 def stopRunningJob(status_file,log_dir):
     cleaned = False
     pid = getPid()
@@ -25,44 +76,49 @@ def stopRunningJob(status_file,log_dir):
         # Prepare file
         job.modifyStoppedFile(log_dir)
     
-    status_obj = status.getStatus(status_file)
+    state_obj = status.getState(status_file)
     
-    if status_obj["vid"] != None:
-        if virtualbox.destroyMachine(status_obj["vid"]):
+    if state_obj["vid"] != None:
+        if virtualbox.destroyMachine(state_obj["vid"]):
             cleaned = True
         else:
             print(u"Cleaning status file.")
         status.setVID(status_file,None)
+        
+    virtualbox.checkMachines(False)
 
     if cleaned:
-        if status_obj != None:
-            status.setStatus(status_file,u"cleaned")
+        if state_obj != None:
+            status.setState(status_file,u"cleaned")
+            return status.getState(status_file);
     else:
         print(u"Nothing stopped.")
+        
+    return None
 
 def checkRunningJob(status_file):
-    status_obj = status.getStatus(status_file)
-    if status_obj:
+    state_obj = status.getState(status_file)
+    if state_obj:
         # check 4 hours
-        if time() - status_obj["last_modified"] > 14000:
-            if status_obj["status"] == "running":
-                status.setStatus(status_file,u"crashed")
-                print(u"Check for commit '{}' is running too long. Marked as 'crashed' now. Maybe it is stucked and you should try to cleanup manually.".format(status_obj["git_hash"]), file=sys.stderr )
+        if time() - state_obj["last_modified"] > 14000:
+            if state_obj["status"] == "running":
+                status.setState(status_file,u"crashed")
+                print(u"Check for commit '{}' is running too long. Marked as 'crashed' now. Maybe it is stucked and you should try to cleanup manually.".format(state_obj["git_hash"]), file=sys.stderr )
                 # check for frozen processes
                 exit(1)
-            elif status_obj["status"] == "crashed":
-                print(u"Skipped check. Previous check for commit '{}' was crashing.".format(status_obj["git_hash"]))
+            elif state_obj["status"] == "crashed":
+                print(u"Skipped check. Previous check for commit '{}' was crashing.".format(state_obj["git_hash"]))
                 exit(0)
         else:
-            if status_obj["status"] == "running":
+            if state_obj["status"] == "running":
                 pid = getPid()
                 if pid != None:
-                    print(u"Check for commit '{}' is still running with pid '{}'.".format(status_obj["git_hash"],pid))
+                    print(u"Check for commit '{}' is still running with pid '{}'.".format(state_obj["git_hash"],pid))
                     exit(0)
                 else:
-                    status.setStatus(status_file,u"crashed")
-                    print(u"Check for commit '{}' marked as 'running', but pid was not found. Marked as 'crashed' now.".format(status_obj["git_hash"]), file=sys.stderr)
+                    status.setState(status_file,u"crashed")
+                    print(u"Check for commit '{}' marked as 'running', but pid was not found. Marked as 'crashed' now.".format(state_obj["git_hash"]), file=sys.stderr)
                     exit(1)
 
-        return status_obj["git_hash"]
+        return state_obj["git_hash"]
     return ""

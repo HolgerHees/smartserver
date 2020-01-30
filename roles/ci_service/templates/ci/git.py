@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import re
 
 #from github import Github
 
@@ -15,7 +16,7 @@ def initRepository(repository_dir, repository_url, build_dir):
       else:
           print( u"error: {}".format(cloneResult.stdout.decode("utf-8")), flush=True, file=sys.stderr )
 
-def updateRepository(repository_dir):
+def updateRepository(repository_dir,branch):
     # git ls-remote {{vault_deployment_config_git}} HEAD
     helper.execCommand( u"git pull", repository_dir )
 
@@ -23,11 +24,30 @@ def getHash(repository_dir):
     checkResult = helper.execCommand( u"git rev-parse @", repository_dir )
     return checkResult.stdout.decode("utf-8").strip()
 
+def getLog(repository_dir,git_hash):
+    result = helper.execCommand( u"git show --quiet {}".format(git_hash), repository_dir )
+    lines = result.stdout.decode("utf-8").split("\n")
+    
+    author = ""
+    subject = ""
+    is_subject = False
+    for line in lines:
+        line = line.strip()
+        if line.startswith("Author"):
+            author = re.findall(r'Author: ([^<]+).*',line)[0].strip()
+        elif line.startswith("Date"):
+            is_subject = True
+        elif is_subject and line != "":
+            subject = line
+            break;
+    
+    return {"author":author,"subject":subject}
+    
 #def initAccount(access_token):
 #    return Github(access_token)
   
 # https://developer.github.com/v3/repos/statuses/
-def setStatus(repository_owner, access_token, git_hash, state, context, description ):
+def setState(repository_owner, access_token, git_hash, state, context, description ):
     headers = {
         "Authorization": "token {}".format(access_token),
         # This header allows for beta access to Checks API

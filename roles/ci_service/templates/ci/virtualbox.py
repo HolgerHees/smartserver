@@ -24,12 +24,17 @@ def destroyMachine(vid):
             vmCleaned = True
         else:
             print(u"VM - vid: '{}' not found.".format(vid))
+    return vmCleaned
 
+def checkMachines(show_info):
     machines = getRegisteredMachines()
     if len(machines.keys()) > 0:
-        print(u"Some machines are still there. Check leftovers.")
+        if show_info:
+            print(u"Following machines are registered.")
+        else:
+            print(u"Some machines are still there. Check leftovers.")
         for vid,name in machines.items():
-            print(u"VM - vid: '{}', name: '{}'".format(vid,name))
-
-    return vmCleaned
+            print(u"  VM - vid: '{}', name: '{}'".format(vid,name))
+    elif show_info:
+        print(u"No machines are registered.")
   
