@@ -49,7 +49,7 @@ def showRunningJobs():
     vm_lines = vm_result.stdout.decode("utf-8").split(u"\n")
     formatProcesses(vm_lines,processes)
     
-    if len(processes) > 2:
+    if len(processes) > 0:
         print(u"Following sub processes are running.")
         print(u"\n".join(processes))
     else:
