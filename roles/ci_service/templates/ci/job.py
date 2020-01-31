@@ -36,7 +36,10 @@ class LogFile:
         self.hasPrefix =  False
         
     def write(self,text):
-        if not self.hasPrefix:
+        if text == "":
+            return
+          
+        if text != "\n" and not self.hasPrefix:
             self.file.write(datetime.now().strftime("%H:%M:%S.%f")[:-3])
             self.file.write(" ")
             self.hasPrefix = True
@@ -63,8 +66,7 @@ class LogFile:
                 self.file.write(text1)
                 #self.file.write(text1.decode("utf-8"))
                 self.file.write(u"\n")
-                if text2 != "":
-                    self.write(text2)
+                self.write(text2)
         else:
             self.file.write(text)
             #self.file.write(text.decode("utf-8"))
