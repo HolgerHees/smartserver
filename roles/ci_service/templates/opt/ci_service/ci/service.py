@@ -12,7 +12,7 @@ from ci import log
 
 def getPid():
     #vagrantPID = helper.getPid(1,"vagrant")
-    pid = helper.getPid(1,"/usr/bin/python3 \\./ci_service")
+    pid = helper.getPid(1,"/usr/bin/python3.*ci_service")
     return pid if pid != "" else None
 
 skipped_names = [

@@ -169,7 +169,9 @@ mx.CIDetails = (function( ret ) {
                 }
                 else 
                 {
-                    alert("was not able to download '" + 'details_update.php?' + window.location.search + "'");
+                    updateTimer = window.setTimeout(mx.CIDetails.updateDetails,1000);
+
+                    console.warn("Was not able to download '" + 'details_update.php?' + window.location.search + "'");
                 }
             };
             xhr.send();

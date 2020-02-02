@@ -114,13 +114,13 @@ mx.CIList = (function( ret ) {
                     
                     hasRunningJobs = Object.keys(elementRunningDuration).length > 0
                     refreshInterval = getRefreshInterval(hasRunningJobs);
-                  
-                    updateTimer = window.setTimeout(mx.CIList.updateList, hasRunningJobs ? 1000 : refreshInterval * 1000);
                 }
                 else 
                 {
-                    alert("was not able to download '" + 'index_update.php?' + window.location.search + "'");
+                    console.warn("was not able to download '" + 'index_update.php?' + window.location.search + "'");
                 }
+
+                updateTimer = window.setTimeout(mx.CIList.updateList, hasRunningJobs ? 1000 : refreshInterval * 1000);
             };
             
             var data = {};

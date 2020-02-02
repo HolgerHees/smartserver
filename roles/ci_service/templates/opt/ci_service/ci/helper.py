@@ -2,7 +2,7 @@ import subprocess
 
 
 def getPid(ppid,name):
-    checkPidResult = execCommand( u"ps -f -o pid,cmd --ppid {} | grep \"{}\"".format(ppid,name) )
+    checkPidResult = execCommand( u"ps -f -o pid,cmd --ppid {} | grep -i \"{}\"".format(ppid,name) )
     pid = checkPidResult.stdout.decode("utf-8").strip().split(" ")[0];
     return pid
 
