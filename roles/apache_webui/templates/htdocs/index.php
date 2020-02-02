@@ -119,7 +119,7 @@
                     }
                     else
                     {
-                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openUrl(event,this,\'' + entry['url'] + '\',' + entry['newWindow'] + ')"><div>' + entry['title'] + '</div><div>' + entry['info'] + '</div></div>');
+                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openUrl(event,\'' + entry['url'] + '\',' + entry['newWindow'] + ')"><div>' + entry['title'] + '</div><div>' + entry['info'] + '</div></div>');
                     }
                 }
 
@@ -183,7 +183,8 @@
                         var subGroup = _subGroups[index];
 
                         var button = buttonTemplate.cloneNode(true);
-                        button.setAttribute("onClick","mx.Actions.openMenu(this,'" + mainGroup['id'] + "','" + subGroup['id'] + "');");
+                        button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
+                        button.setAttribute("onClick","mx.Actions.openMenu('" + mainGroup['id'] + "','" + subGroup['id'] + "');");
                         button.firstChild.innerHTML = subGroup['title'];
                         menuDiv.appendChild(button);
 
@@ -257,7 +258,7 @@
                 if( visualisationType != "desktop" ) menuPanel.close();
             }        
 
-            ret.openMenu = function(element,mainGroupId,subGroupId)
+            ret.openMenu = function(mainGroupId,subGroupId)
             {
                 key = mainGroupId + '_' + subGroupId;
 
@@ -268,10 +269,15 @@
 
                 mx.Menu.buildMenu( mainGroupId, subGroupId, setMenu);
 
-                if( element != null ) element.classList.add("active");
+                var element = document.getElementById(mainGroupId + '-' + subGroupId);
+                element.classList.add("active");
+                
+                localStorage.setItem("state_active_main_group", mainGroupId);
+                localStorage.setItem("state_active_sub_group", subGroupId);
+                localStorage.removeItem("state_iframe_url");
             }
 
-            ret.openUrl = function(event,element,url,newWindow)
+            ret.openUrl = function(event,url,newWindow)
             {
                 mx.Timer.clean();
 
@@ -288,6 +294,8 @@
                     mx.$("#content #inline").style.display = "none";
                     mx.$("#content iframe").style.display = "";
                     mx.$("#content iframe").setAttribute('src',url);
+
+                    localStorage.setItem("state_iframe_url", url);
                 }
             }
 
@@ -300,6 +308,10 @@
                     activeMenu = "home";
             
                     cleanMenu();
+                    
+                    localStorage.removeItem("state_active_main_group");
+                    localStorage.removeItem("state_active_sub_group");
+                    localStorage.removeItem("state_iframe_url");
                 }
 
                 var datetime = new Date();
@@ -360,9 +372,34 @@
 
             mx.$('#logo').addEventListener("click",mx.Actions.openHome);
 
-            if( !mx.Actions.isMenuActive() ) mx.Actions.openHome();
+            if( !mx.Actions.isMenuActive() ) 
+            {
+                var stateActiveMainGroup = localStorage.getItem("state_active_main_group");
+                var stateActiveSubGroup = localStorage.getItem("state_active_sub_group");
+                if( stateActiveMainGroup && stateActiveSubGroup )
+                {
+                    var stateIframeUrl = localStorage.getItem("state_iframe_url");
+
+                    mx.Actions.openMenu(stateActiveMainGroup,stateActiveSubGroup);
+                    
+                    if(stateIframeUrl) mx.Actions.openUrl(null,stateIframeUrl,false);
+                }
+                else
+                {
+                    mx.Actions.openHome();
+                }
+            }
 
             mx.$('#page').style.opacity = "1";
+            
+            mx.$("#content iframe").addEventListener('load', function(e) {
+                try
+                {
+                    var url = e.target.contentWindow.location.href;
+                    localStorage.setItem("state_iframe_url", url);
+                }
+                catch{}
+            });
         }
 
         function checkVisualisationType()
