@@ -1,0 +1,127 @@
+/* disable font-bosting */
+body, body * {
+    max-height: 1000000px;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-size: 16px;
+    background-color: white;
+    margin: 0;
+}
+@media only screen and (max-width: 600px) {
+    div.header.table:not(.sticky) {
+        display: flex;
+    }
+    div.header.table:not(.sticky) > div.row {
+        display: flex;
+        width: 100%;
+        overflow: auto;
+    }
+    div.header.table:not(.sticky) > div.row > div {
+        width: auto;
+    }
+}
+div.header.table {
+    position: sticky;
+    top: 0px;
+    background-color: white;
+    transition: all 200ms ease-in-out;
+}
+
+body.sticky div.header.table {
+    display: table;
+    width: 100%;
+}
+div.header div.row > div {
+    transition: all 200ms ease-in-out;
+}
+body.sticky div.header {
+    max-width: 100px;
+}
+
+body.sticky div.header div.row > div {
+    width: auto;
+}
+
+body.sticky div.header div.row > div:nth-child(1),
+body.sticky div.header div.row > div:nth-child(2),
+body.sticky div.header div.row > div:nth-child(3) {
+    width: 0;
+    min-width: 0;
+    max-width: 0;
+    height: 0;
+    max-height: 0;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+body.sticky div.header div.row > div:nth-child(1) *,
+body.sticky div.header div.row > div:nth-child(2) *,
+body.sticky div.header div.row > div:nth-child(3) *,
+body.sticky div.header div.row > div span.datetime,
+body.sticky div.header div.row > div span.hash 
+{
+    display: none;
+}
+
+
+div.scrollControl, div.goToTopControl {
+    position: fixed;
+    right: 0;
+    width: 15px;
+    height: 15px;
+    opacity: 0.9;
+    margin: 15px;
+    cursor: pointer;
+}
+div.scrollControl:hover, div.goToTopControl:hover {
+    opacity: 1.0;
+}
+
+div.scrollControl {
+    top: 83px;
+    background-color: white;
+    border: 8px solid gray;
+    border-radius: 18px;
+}
+body.sticky div.scrollControl {
+    top: 39px;
+}
+
+div.goToTopControl {
+    top: 133px;
+    color: white;
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+    padding: 6px;
+}
+
+body.sticky div.goToTopControl {
+    top: 83px;
+}
+
+body.sticky div.goToTopControl.singleButton {
+    top: 39px;
+}
+
+div.scrollControl.active {
+    background-color: yellow;
+}
+
+
+
+div.log {
+    background-color: #222;
+    padding: 5px;
+    color: #cdcdcd;
+    overflow-x: auto;
+    font-family: monospace;
+    white-space: pre;
+    font-size: 15px;
+}
+div.log > div {
+    white-space: nowrap;
+    min-height: 18px;
+}

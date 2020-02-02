@@ -1,0 +1,6 @@
+{
+  "administration_states": {
+    "CI Service": "CI Service",
+    "Continues Integration": "Continues Integration"
+  }
+}

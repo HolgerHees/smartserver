@@ -1,4 +1,5 @@
 from ci import helper
+from ci import log
 
 def getRegisteredMachines():
     result = helper.execCommand("VBoxManage list vms")
@@ -18,23 +19,23 @@ def destroyMachine(vid):
         
         if vid in machines:
             name = machines[vid]
-            print(u"VM - vid: '{}', name: '{}' - destroyed.".format(vid,name))
+            log.info(u"VM - vid: '{}', name: '{}' - destroyed.".format(vid,name))
             helper.execCommand("VBoxManage controlvm \"{}\" poweroff".format(vid))
             helper.execCommand("VBoxManage unregistervm --delete \"{}\"".format(vid))
             vmCleaned = True
         else:
-            print(u"VM - vid: '{}' not found.".format(vid))
+            log.error(u"VM - vid: '{}' not found.".format(vid))
     return vmCleaned
 
 def checkMachines(show_info):
     machines = getRegisteredMachines()
     if len(machines.keys()) > 0:
         if show_info:
-            print(u"Following machines are registered.")
+            log.info(u"Following machines are registered.")
         else:
-            print(u"Some machines are still there. Check leftovers.")
+            log.info(u"Some machines are still there. Check leftovers.")
         for vid,name in machines.items():
-            print(u"  VM - vid: '{}', name: '{}'".format(vid,name))
+            log.info(u"  VM - vid: '{}', name: '{}'".format(vid,name))
     elif show_info:
-        print(u"No machines are registered.")
+        log.info(u"No machines are registered.")
   

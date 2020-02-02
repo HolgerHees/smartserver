@@ -12,6 +12,7 @@ from datetime import timedelta
 from ci import helper
 from ci import virtualbox
 from ci import status
+from ci import log
 
 max_subject_length = 50
 max_cleanup_time = 60*10
@@ -33,43 +34,119 @@ START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 class LogFile:
     def __init__(self,file):
         self.file = file
-        self.hasPrefix =  False
+        self.new_line =  False
+        self.active_colors = []
+        self.cleaned_color = False
         
     def write(self,text):
-        if text == "":
-            return
-          
-        if text != "\n" and not self.hasPrefix:
-            self.file.write(datetime.now().strftime("%H:%M:%S.%f")[:-3])
-            self.file.write(" ")
-            self.hasPrefix = True
-        
         try:
             text = text.decode("utf-8")
-            #self.file.write("XXXX")
         except AttributeError:
-            #self.file.write("YYYY")
             pass
-          
-        pos = text.find("\n")
-        #pos = text.find(b"\n")
-        if pos != -1:
-            self.hasPrefix = False
-            if pos == len(text) - 1:
-                #self.file.write("AAAA")
-                self.file.write(text)
-                #self.write(text.decode("utf-8"))
-            else:
-                (text1,text2) = text.split("\n",1)
-                #(text1,text2) = text.split(b"\n",1)
-                #self.file.write("BBBB")
-                self.file.write(text1)
-                #self.file.write(text1.decode("utf-8"))
-                self.file.write(u"\n")
-                self.write(text2)
-        else:
-            self.file.write(text)
-            #self.file.write(text.decode("utf-8"))
+
+        # clean linefeeds
+        text = text.replace("\r\n","\n")
+
+        # handle carriage return
+        text = text.replace("\r\x1b[K","\n")
+        text = text.replace("\r","\n")
+
+        lines = text.split("\n")
+        
+        for i in range(len(lines)):
+            line = lines[i]
+
+            if i > 0:
+                # add the date on any line which was empty before
+                if self.new_line == True:
+                    self.file.write("{} ".format(datetime.now().strftime("%H:%M:%S.%f")[:-3]))
+                # cleaned any color, if it was not cleaned before
+                if len(self.active_colors) > 0 and self.cleaned_color == False:
+                    self.file.write("\x1b[0m")
+                # start new line
+                self.file.write("\n")
+                self.new_line =  True
+            
+            # remove any clean color statement from the beginning of a line
+            while len(line) >= 4:
+                prefix = line[0:4]
+                if prefix=="\x1b[0m":
+                    #self.file.write(prefix)
+                    line = line[4:]
+                    self.active_colors = []
+                else:
+                    break
+                        
+            if line != "":
+                if self.new_line == True:
+                    # add the date to any new non empty line
+                    self.file.write("{} ".format(datetime.now().strftime("%H:%M:%S.%f")[:-3]))
+                    # reinitialize registered colors
+                    if len(self.active_colors) > 0:
+                        for color in self.active_colors:
+                            self.file.write(color)
+                    self.new_line =  False
+
+                # check if there are registered colors, is needed for the later 'cleanup' ending check
+                had_colors = len(self.active_colors) > 0
+                
+                # find all color definitions
+                colors = re.findall(r"(\x1b\[([0-9]+[;0-9]*)m)",line)
+                for color in colors:
+                    # handle clean color
+                    if color[1] == "0":
+                        self.active_colors = []
+                    # else register color
+                    else:
+                        self.active_colors.append(color[0])
+                        had_colors = True
+
+                if len(line) >= 4:
+                    # is the line ending with a cleanup?
+                    if line[-4:] == "\x1b[0m":
+                        # keep cleanup, because we had colors
+                        if had_colors:
+                            self.cleaned_color = True
+                        # remove cleanup, because there was no used color
+                        else:
+                            line = line[0:-4]
+                            self.cleaned_color = False
+                    # no cleanup at the end
+                    else:
+                        self.cleaned_color = False
+
+                self.file.write(u"{}".format(line))
+
+            '''if i > 0:
+                self.new_line =  True
+                self.file.write("\n")
+            
+            if len(line) >= 4:
+                prefix = line[0:4]
+                if prefix=="\x1b[0m":
+                    self.file.write(prefix)
+                    line = line[4:]
+                    self.active_colors = []
+                        
+            if line != "":
+                if self.new_line == True:
+                    if len(self.active_colors) > 0:
+                        self.file.write("\x1b[0m")
+                    self.file.write("{} ".format(datetime.now().strftime("%H:%M:%S.%f")[:-3]))
+                    if len(self.active_colors) > 0:
+                        for color in self.active_colors:
+                            self.file.write(color)
+                    #self.file.write("{}|{} ".format(len(self.active_colors),datetime.now().strftime("%H:%M:%S.%f")[:-3]))
+                    self.new_line =  False
+
+                self.file.write(u"{}".format(line))
+
+                colors = re.findall(r"(\x1b\[([0-9]+[;0-9]*)m)",line)
+                for color in colors:
+                    if color[1] == "0":
+                        self.active_colors = []
+                    else:
+                        self.active_colors.append(color[0])'''
         
     def flush(self):
         self.file.flush()
@@ -93,7 +170,7 @@ def modifyStoppedFile(log_dir):
 
         os.rename(deployment_log_file, finished_log_file)
         
-        print(u"Logfile '{}' processed.".format(finished_log_file.split('/')[-1]))
+        log.info(u"Logfile '{}' processed.".format(finished_log_file.split('/')[-1]))
         break
 
 def getLastValidState(log_dir,state_obj,deployments,branch):
@@ -152,9 +229,7 @@ class Job:
         if args != None:
             argsStr = u" --args={}".format(args)
 
-        #print("start")
         #output = pexpect.run("sleep 30", timeout=1, cwd=self.repository_dir, withexitstatus=True, events={pexpect.TIMEOUT:self.searchDeploymentVID})
-        #print("end")
         #return
         
         author = re.sub('\\W+|\\s+', "_", self.commit['author'] );
@@ -193,7 +268,7 @@ class Job:
                     (deploy_output,deploy_exit_status) = pexpect.run(cmd, timeout=1, logfile=LogFile(f), cwd=self.repository_dir, env = env, withexitstatus=True, events={pexpect.TIMEOUT:self.searchMachineVID})
                 except ValueError:
                     pass
-                  
+                    
             # Deployment done
             retry = False
             if deploy_exit_status == 0:

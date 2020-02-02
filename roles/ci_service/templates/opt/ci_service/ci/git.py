@@ -6,15 +6,16 @@ import re
 #from github import Github
 
 from ci import helper
+from ci import log
 
 def initRepository(repository_dir, repository_url, build_dir):
   if not os.path.isdir(repository_dir):
-      print("Clone repository: {} ... ".format(repository_url), end='', flush=True)
+      log.info("Clone repository: {} ... ".format(repository_url), end='', flush=True)
       cloneResult = helper.execCommand( u"git clone {}".format(repository_url), build_dir )
       if cloneResult.returncode == 0:
-          print( u"done", flush=True )
+          log.info( u"done", flush=True )
       else:
-          print( u"error: {}".format(cloneResult.stdout.decode("utf-8")), flush=True, file=sys.stderr )
+          log.error( u"error: {}".format(cloneResult.stdout.decode("utf-8")), flush=True, file=sys.stderr )
 
 def updateRepository(repository_dir,branch):
     # git ls-remote {{vault_deployment_config_git}} HEAD

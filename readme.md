@@ -44,7 +44,3 @@ Maybe you have to accept the certificate for all individual subdomains separatel
 ## How to start
 
 To see how you can create your own setup and a lot more, check [the wiki](https://github.com/HolgerHees/smartserver/wiki)
-  
-## Continuous integration testing
-
-coming soon

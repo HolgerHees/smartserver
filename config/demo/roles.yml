@@ -13,3 +13,5 @@
 #- { import_role: { name: electricmeter }, tags: [ 'electricmeter' ] }                        # electricity
 
 - { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }      # proxy and redirect configs for custom devices
+
+#- { import_role: { name: ci_service }, tags: [ 'ci_service' ] }                             # continues integration test service

@@ -1,0 +1,93 @@
+div.table {
+  width: 100%;
+  max-width: 800px;
+  margin: 10px auto;
+  font-size: 16px;
+  overflow: auto;
+}
+div.table > div.row {
+  display: table-row;
+  cursor: pointer;
+}
+div.table > div.row:hover {
+  background-color: #f2f2f2;
+}
+div.table > div.row > div {
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+  color: #333;
+  display: table-cell;
+}
+div.table > div.row > div {
+  width: 1%;
+}
+div.table > div.row > div.subject {
+  width: auto;
+  min-width:100px;
+}
+div.table > div.row > div:last-child {
+  text-align: right;
+}
+div.table > div.row > div:first-child {
+  width: 5px;
+}
+div.table > div.row > div > span {
+  display: block;
+  margin-top: 5px;
+}
+div.table > div.row > div > span:first-child {
+  margin-top: 0;
+}
+div.table > div.row > div.running {
+  background-color: #dbab09;
+}
+div.table > div.row > div > span.state.running {
+  color: #dbab09;
+}
+div.table > div.row > div.success {
+  background-color: #28a745;
+}
+div.table > div.row > div > span.state.success {
+  color: #28a745;
+}
+div.table > div.row > div.stopped {
+  background-color: #868686;
+}
+div.table > div.row > div > span.state.stopped {
+  color: #868686;
+}
+div.table > div.row > div.retry {
+  background-color: #541edc;
+}
+div.table > div.row > div > span.state.retry {
+  color: #541edc;
+}
+div.table > div.row > div.failed {
+  background-color: #cb2431;
+}
+div.table > div.row > div > span.state.failed {
+  color: #cb2431;
+}
+div.table > div.row > div > span.state, 
+div.table > div.row > div > span.hash {
+  display: flex;
+  justify-content: space-between;
+}
+div.table > div.row > div > span.hash {
+   cursor: pointer;
+}
+div.table > div.row > div > span.state > span.text {
+  padding-right: 5px;
+}
+div.table > div.row > div > span.runtime, 
+div.table > div.row > div > span.datetime, 
+div.table > div.row > div > span.author, 
+div.table > div.row > div > span.state, 
+div.table > div.row > div > span.hash {
+  white-space: nowrap;
+}
+div.table > div.row > div > span.state > span.icon-dot:before {
+  font-size: 40px;
+  margin: -12px -8px -10px -5px;
+}

@@ -38,9 +38,25 @@
     group: root
     mode: 0750
 
+- name: copy ci webui
+  copy:
+    src: "templates/htdocs/ci"
+    dest: "{{htdocs_path}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+
+- name: copy ci webui config
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}ci/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+
 - name: copy ci package
   copy:
-    src: "templates/ci"
+    src: "templates/opt/ci_service/ci"
     dest: "/opt/ci_service"
     owner: root
     group: root
@@ -48,17 +64,24 @@
 
 - name: copy ci_service
   template:
-    src: "templates/ci_service"
+    src: "templates/opt/ci_service/ci_service"
     dest: "/opt/ci_service/ci_service"
     owner: root
     group: root
     mode: 0750
     
-#- name: create cron job
-#  vars:
-#    name: "Continues integration job"
-#    cmd: "/opt/ci_service/ci_service start"
-#    file: "ansible_ci_service"
-#    minute: "*/15"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
-#  when: "is_production|bool"
+- name: register webui
+  vars:
+    name: "ci_service"
+    js_file: "templates/webui/ci_service.js"
+    i18n_files: [ { language: "de", file: "templates/webui/ci_service.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: create cron job
+  vars:
+    name: "Continues integration job"
+    cmd: "/opt/ci_service/ci_service start > /dev/null"
+    file: "ansible_ci_service"
+    minute: "*/5"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: "is_production|bool"

@@ -9,6 +9,7 @@ from ci import status
 from ci import service
 from ci import job
 from ci import git
+from ci import log
 
 import pexpect 
 
@@ -40,24 +41,25 @@ elif cmd == "clean":
     if len(sys.argv) == 3:
         vid = sys.argv[2]
         service.cleanRunningJobs(vid)
+        exit(0)
     else:
-        print(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
-    exit(0)
+        log.error(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
+        exit(1)
 elif cmd == "stop":
     stopped_state_obj = service.stopRunningJob(status_file,log_dir)
     if stopped_state_obj != None:
         valid_state = job.getLastValidState(log_dir,stopped_state_obj,deployments,branch)
         if valid_state != None:
             if valid_state == "success":
-                print(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+                log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
                 git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
             elif valid_state == "failure":
-                print(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("failure", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+                log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("failure", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
                 git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build errored")
             else:
-                print(u"Unable to restore github state '{}' for deployment '{}' on commit '{}'".format(valid_state, stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+                log.error(u"Unable to restore github state '{}' for deployment '{}' on commit '{}'".format(valid_state, stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
         else:
-            print(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+            log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
             git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
     exit(0)
 elif cmd == "start" or cmd == "restart":
@@ -71,7 +73,7 @@ elif cmd == "start" or cmd == "restart":
 
     if processed_git_hash != current_git_hash or cmd == "restart":
         status.setState(status_file,u"running")
-        print(u"Check for commit '{}' started.".format(current_git_hash))
+        log.info(u"Check for commit '{}' started.".format(current_git_hash))
 
         pid = os.fork()
         if pid == 0:
@@ -105,11 +107,11 @@ elif cmd == "start" or cmd == "restart":
         else:
             exit(0)
     else:
-        print(u"Nothing to do. Commit '{}' already processed.".format(current_git_hash))
+        log.info(u"Nothing to do. Commit '{}' already processed.".format(current_git_hash))
         exit(0)
 elif cmd != "":
-    print(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop>".format(cmd))
-    exit(0)
+    log.error(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop>".format(cmd))
+    exit(1)
 else:
-    print(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop|clean|status>")
-    exit(0)
+    log.error(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop|clean|status>")
+    exit(1)
