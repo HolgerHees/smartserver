@@ -102,6 +102,24 @@
                 return menuGroups[mainGroupId]['_'];
             }
 
+            ret.findEntry = function(url)
+            {
+                for( mainGroupId in menuGroups )
+                {
+                    for( subGroupId in menuGroups[mainGroupId]['subGroups'] )
+                    {
+                        for( i in menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'] )
+                        {
+                            var entry = menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'][i];
+                            if( entry['type'] == 'url' && entry['url'] == url )
+                            {
+                                return [mainGroupId,subGroupId,url];
+                            }
+                        }
+                    }
+                }
+            }
+            
             ret.buildMenu = function(mainGroupId,subGroupId, callback)
             {
                 var entries = [];
@@ -429,6 +447,21 @@
         
         function initPage()
         {
+            var url = mx.Host.getParameter('url');
+            if( url ) 
+            {
+                url = url.replace(document.location.origin,"");
+                var entry = mx.Menu.findEntry(url);
+                if( entry )
+                {
+                    sessionStorage.setItem("state_active_main_group", entry[0] );
+                    sessionStorage.setItem("state_active_sub_group", entry[1] );
+                    sessionStorage.setItem("state_iframe_url", entry[2] );
+                    
+                    document.location.href = document.location.origin
+                }
+            }
+            
             var infoLayer = mx.$("#info");
 
             function showInfo(info)

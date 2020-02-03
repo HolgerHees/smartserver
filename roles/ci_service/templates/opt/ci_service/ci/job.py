@@ -174,7 +174,7 @@ def modifyStoppedFile(log_dir):
         log.info(u"Logfile '{}' processed.".format(finished_log_file.split('/')[-1]))
         break
 
-def getLastValidState(log_dir,state_obj,deployments,branch):
+def getLastValidState(log_dir,state_obj,branch):
     files = glob.glob("{}*-{}-{}-{}-*.log".format(log_dir,state_obj['deployment'], branch, state_obj['git_hash']))
     files.sort(key=os.path.getmtime, reverse=True)
     for deployment_log_file in files:
@@ -195,10 +195,11 @@ class Job:
         self.git_hash = git_hash
         self.commit = commit
 
-        self.registeredMachines = {}
-        self.activeMachine = None
-        self.cancelReason = None
+        self.registered_machines = {}
+        self.active_machine = None
+        self.cancel_reason = None
         self.start_time = None
+        self.start_time_str = None
 
     def checkForRetry(self,lines):
         for line in lines:
@@ -210,18 +211,18 @@ class Job:
     def searchMachineVID(self,d):
         duration = int(round(datetime.now().timestamp() - self.start_time.timestamp()))
       
-        if not self.activeMachine:
-            registeredMachines = virtualbox.getRegisteredMachines()
-            diff = set(registeredMachines.keys()) - set(self.registeredMachines.keys())
+        if not self.active_machine:
+            registered_machines = virtualbox.getRegisteredMachines()
+            diff = set(registered_machines.keys()) - set(self.registered_machines.keys())
             if len(diff) > 0:
-                self.activeMachine = diff.pop()
-                status.setVID(self.status_file,self.activeMachine)
+                self.active_machine = diff.pop()
+                status.setVID(self.status_file,self.active_machine)
             elif duration > 60:
-                self.cancelReason = "max_starttime"
+                self.cancel_reason = "max_starttime"
                 d["child"].close()
                 
         if duration > max_runtime:
-            self.cancelReason = "max_runtime"
+            self.cancel_reason = "max_runtime"
             d["child"].close()
             
         
@@ -242,14 +243,14 @@ class Job:
 
         i = 0
         while True:
-            self.registeredMachines = virtualbox.getRegisteredMachines()
-            self.activeMachine = None
-            self.cancelReason = None
+            self.registered_machines = virtualbox.getRegisteredMachines()
+            self.active_machine = None
+            self.cancel_reason = None
           
             self.start_time = datetime.now()
-            start_time_str = self.start_time.strftime(START_TIME_STR_FORMAT)
+            self.start_time_str = self.start_time.strftime(START_TIME_STR_FORMAT)
 
-            deployment_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,start_time_str,0,"running",config_name,os_name,self.branch,self.git_hash,author,subject)
+            deployment_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,self.start_time_str,0,"running",config_name,os_name,self.branch,self.git_hash,author,subject)
             
             vagrant_path = pathlib.Path(__file__).parent.absolute().as_posix() + "/../vagrant"
 
@@ -282,12 +283,12 @@ class Job:
                     # Check if retry is possible
                     if self.checkForRetry(log_lines_to_check):
                         if i < max_retries:
-                            self.cancelReason = "retry"
+                            self.cancel_reason = "retry"
                             retry = True
                         else:
-                            self.cancelReason = "max_retries"
+                            self.cancel_reason = "max_retries"
                 
-                reason = u" ({})".format( self.cancelReason ) if self.cancelReason != None else ""
+                reason = u" ({})".format( self.cancel_reason ) if self.cancel_reason != None else ""
                 helper.log( u"Deployment for commit '{}' unsuccessful {}".format(self.git_hash, reason ) )
 
             # Final logfile preperation
@@ -305,13 +306,13 @@ class Job:
                     else:
                         status_msg = 'failed'
 
-                    if self.cancelReason != None:
-                        lf.write("{}\n".format(retry_messages[self.cancelReason]))
+                    if self.cancel_reason != None:
+                        lf.write("{}\n".format(retry_messages[self.cancel_reason]))
                     
                     lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,deploy_exit_status,timedelta(seconds=duration)))
 
             # Rename logfile
-            finished_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,start_time_str,duration,status_msg,config_name,os_name,self.branch,self.git_hash,author,subject)
+            finished_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,self.start_time_str,duration,status_msg,config_name,os_name,self.branch,self.git_hash,author,subject)
             os.rename(deployment_log_file, finished_log_file)
 
             # Cleanup start
@@ -330,6 +331,6 @@ class Job:
                 helper.log( u"Retry deployment for commit '{}'".format(self.git_hash) )
                 continue
 
-            return deploy_exit_status == 0
+            return deploy_exit_status == 0, self.start_time_str, None
 
-        return False 
+        return False, self.start_time_str, self.cancel_reason if self.cancel_reason != None else "deployment"

@@ -4,6 +4,8 @@ import os
 import traceback
 import sys
 
+import urllib.parse
+
 from ci import helper
 from ci import status
 from ci import service
@@ -12,6 +14,8 @@ from ci import git
 from ci import log
 
 import pexpect 
+
+server_host = "{{server_domain}}"
 
 status_file = "{{global_tmp}}ci_service.status"
 
@@ -25,7 +29,7 @@ access_token = "{{vault_deployment_token_git}}"
 
 branch = "master"
 
-deployments = [u"suse",u"fedora"]
+deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" } ]
 
 repository_owner = repository_url.replace("https://github.com/","")
 repository_owner = repository_owner.replace(".git","")
@@ -48,7 +52,7 @@ elif cmd == "clean":
 elif cmd == "stop":
     stopped_state_obj = service.stopRunningJob(status_file,log_dir)
     if stopped_state_obj != None:
-        valid_state = job.getLastValidState(log_dir,stopped_state_obj,deployments,branch)
+        valid_state = job.getLastValidState(log_dir,stopped_state_obj,branch)
         if valid_state != None:
             if valid_state == "success":
                 log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
@@ -87,17 +91,29 @@ elif cmd == "start" or cmd == "restart":
                 job_obj = job.Job(log_dir, lib_dir, repository_dir, status_file, branch, current_git_hash, commit )
                 
                 for deployment in deployments:
-                    status.setDeployment(status_file,deployment)
+                    status.setDeployment(status_file,deployment['os'])
                     if access_token != "":
-                        git.setState(repository_owner,access_token,current_git_hash,"pending",deployment,"Build pending")
-                    successful = job_obj.startCheck( "demo", deployment, None )
+                        git.setState(repository_owner,access_token,current_git_hash,"pending",deployment['os'],"Build pending")
+                    
+                    successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
+
                     if not successful:
                         if access_token != "":
-                            git.setState(repository_owner,access_token,current_git_hash,"failure",deployment,"Build errored")
-                        helper.sendEmail("CI Test for 'demo' on '{}' not successful","Commit: https://github.com/{}/commit/{}".format(deployment,repository_owner,current_git_hash));
+                            git.setState(repository_owner,access_token,current_git_hash,"failure",deployment['os'],"Build failed")
+                            
+                        log_url = "https://{}/ci/details.php?datetime={}&config={}&os={}&branch={}&hash={}".format(server_host,start_time_str, deployment['config'],deployment['os'],branch,current_git_hash)
+                        log_url = urllib.parse.quote_plus(log_url)
+                        
+                        body = "Reason: {}".format(error_reason);
+                        body += "\n\n"
+                        body += "Logs: https://{}/?url={}".format(server_host,log_url);
+                        body += "\n\n"
+                        body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash);
+                        
+                        helper.sendEmail("CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body);
                     else:
                         if access_token != "":
-                            git.setState(repository_owner,access_token,current_git_hash,"success",deployment,"Build succeeded")
+                            git.setState(repository_owner,access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
                 
                 status.setState(status_file,u"finished")
 

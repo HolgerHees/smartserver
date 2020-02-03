@@ -25,5 +25,19 @@ mx.Host = (function( ret ) {
         return domain;
     }
     
+    ret.getParameter = function(name) {
+
+        var str = window.location.search;
+        var params = {};
+
+        str.replace(
+            new RegExp( "([^?=&]+)(=([^&]*))?", "g" ),
+            function( $0, $1, $2, $3 ){
+                params[ $1 ] = $3;
+            }
+        );
+        return typeof name != "undefined" ? params[name] : params;
+    }
+    
     return ret;
 })( mx.Host || {} );
