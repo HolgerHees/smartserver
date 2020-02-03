@@ -244,35 +244,51 @@
                 mx.$("#content iframe").setAttribute('src',"about:blank");
                 mx.$("#content #inline").style.display = "";
             }
-
-            function setMenu(data,callbacks)
+            
+            function fadeInMenu(submenu,callbacks)
             {
-                var submenu = mx.$('#content #submenu');
-                submenu.style.transition = "opacity 50ms linear";
+                submenu.style.transition = "opacity 200ms linear";
                 window.setTimeout( function()
                 {
                     mx.Core.waitForTransitionEnd(submenu,function()
                     {
-                        submenu.innerHTML = data;
-                        submenu.style.transition = "opacity 200ms linear";
-                        window.setTimeout( function()
+                        if( callbacks.length > 0 ) 
                         {
-                            mx.Core.waitForTransitionEnd(submenu,function()
+                            callbacks.forEach(function(callback)
                             {
-                                if( callbacks.length > 0 ) 
-                                {
-                                    callbacks.forEach(function(callback)
-                                    {
-                                        callback();
-                                    });
-                                }
-                            },"setSubMenu2");
-                            submenu.style.opacity = "";
-                        },0);
-                    },"setSubMenu1");
-                    submenu.style.opacity = "0";
-                },100);
+                                callback();
+                            });
+                        }
+                    },"setSubMenu2");
+                    submenu.style.opacity = "";
+                },0);
+            }
 
+            function setMenu(data,callbacks)
+            {
+                var submenu = mx.$('#content #submenu');
+
+                if( activeMenu == "" )
+                {
+                    submenu.style.opacity = "0";
+                    submenu.innerHTML = data;
+                    fadeInMenu(submenu,callbacks);
+                }
+                else
+                {
+                    submenu.style.transition = "opacity 50ms linear";
+                    window.setTimeout( function()
+                    {
+                        mx.Core.waitForTransitionEnd(submenu,function()
+                        {
+                            submenu.innerHTML = data;
+                            fadeInMenu(submenu,callbacks);
+                            
+                        },"setSubMenu1");
+                        submenu.style.opacity = "0";
+                    }, 100);
+                }
+                
                 if( visualisationType != "desktop" ) menuPanel.close();
             }        
 
@@ -281,11 +297,12 @@
                 key = mainGroupId + '_' + subGroupId;
 
                 if( activeMenu == key ) return;
-                activeMenu = key;
 
                 cleanMenu();
 
                 mx.Menu.buildMenu( mainGroupId, subGroupId, setMenu);
+
+                activeMenu = key;
 
                 var element = document.getElementById(mainGroupId + '-' + subGroupId);
                 element.classList.add("active");
