@@ -19,7 +19,8 @@ max_cleanup_time = 60*10
 max_runtime = 60*60*2
 max_retries = 2
 retry_reasons = [
-    b"Network is unreachable"
+    b"Network is unreachable",
+    b"Failed to download packages: Curl error (7): Couldn't connect to server"
 ]
 retry_messages = {
     "max_runtime": "Max runtime exceeded",
