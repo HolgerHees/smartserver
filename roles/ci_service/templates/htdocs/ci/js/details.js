@@ -25,7 +25,7 @@ mx.CIDetails = (function( ret ) {
         var scrollControl = document.querySelector(".scrollControl");
         scrollControl.classList.add("active");
         bottomScrollEnabled = true;
-        goToBottom();
+        mx.CIDetails.goToBottom();
     }
 
     function disableBottomScroll()
@@ -35,17 +35,17 @@ mx.CIDetails = (function( ret ) {
         bottomScrollEnabled = false;
     }
     
-    function goToBottom()
-    {
-        window.scrollTo(0,document.body.scrollHeight);
-        logElement.scrollLeft = 0;
-    }
-    
     function refreshDuration()
     {
         formattedDuration = mx.CICore.formatDuration(++duration);
         
         runtimeElement.innerHTML = formattedDuration;
+    }
+    
+    ret.goToBottom = function()
+    {
+        window.scrollTo(0,document.body.scrollHeight + 100);
+        logElement.scrollLeft = 0;
     }
     
     ret.goToTop = function()
@@ -82,7 +82,7 @@ mx.CIDetails = (function( ret ) {
         }
     }
 
-    ret.checkScrollPosition = function(e,body,goToTopControl,logLayerScrolled)
+    ret.checkScrollPosition = function(e,body,goToControl,logLayerScrolled)
     {
         if( bottomScrollEnabled )
         {
@@ -102,12 +102,32 @@ mx.CIDetails = (function( ret ) {
             if( window.scrollY > 0 )
             {
                 body.classList.add('sticky');
-                goToTopControl.style.opacity = "";
+                if( goToControl.classList.contains("singleButton") )
+                {
+                    goToControl.firstChild.classList.remove("icon-down-1")
+                }
+                else
+                {
+                    goToControl.style.opacity = "";
+                }
+
+                goToControl.setAttribute("onClick", "mx.CIDetails.goToTop()");
+                goToControl.firstChild.classList.add("icon-up")
             }
             else
             {
                 body.classList.remove('sticky');
-                goToTopControl.style.opacity = "0";
+                if( goToControl.classList.contains("singleButton") )
+                {
+                    goToControl.setAttribute("onClick", "mx.CIDetails.goToBottom()");
+                    goToControl.firstChild.classList.add("icon-down-1")
+                    goToControl.firstChild.classList.remove("icon-up")
+                }
+                else
+                {
+                    goToControl.style.opacity = "0";
+                    goToControl.setAttribute("onClick", "");
+                }
             }
         }
     }

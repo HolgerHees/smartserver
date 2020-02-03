@@ -66,7 +66,7 @@ body.sticky div.header div.row > div span.hash
 }
 
 
-div.scrollControl, div.goToTopControl {
+div.scrollControl, div.goToControl {
     position: fixed;
     right: 0;
     width: 15px;
@@ -75,7 +75,7 @@ div.scrollControl, div.goToTopControl {
     margin: 15px;
     cursor: pointer;
 }
-div.scrollControl:hover, div.goToTopControl:hover {
+div.scrollControl:hover, div.goToControl:hover {
     opacity: 1.0;
 }
 
@@ -89,20 +89,24 @@ body.sticky div.scrollControl {
     top: 39px;
 }
 
-div.goToTopControl {
-    top: 133px;
+div.goToControl {
+    top: 145px;
     color: white;
     font-size: 30px;
     width: 30px;
     height: 30px;
-    padding: 6px;
+    padding-right: 6px;
 }
 
-body.sticky div.goToTopControl {
+body.sticky div.goToControl {
+    top: 101px;
+}
+
+div.goToControl.singleButton {
     top: 83px;
 }
 
-body.sticky div.goToTopControl.singleButton {
+body.sticky div.goToControl.singleButton {
     top: 39px;
 }
 

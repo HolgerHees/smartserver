@@ -83,6 +83,12 @@
       "css": "up",
       "code": 59401,
       "src": "typicons"
+    },
+    {
+      "uid": "xq9z5jujkqhrf97s70hjek6otohmhr1y",
+      "css": "down-1",
+      "code": 59402,
+      "src": "typicons"
     }
   ]
 }

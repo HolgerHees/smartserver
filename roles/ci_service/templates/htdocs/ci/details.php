@@ -43,7 +43,7 @@ else
 function initPage()
 {
     var body = mx.$('body');
-    var goToTopControl = document.querySelector('div.goToTopControl');
+    var goToControl = document.querySelector('div.goToControl');
     mx.CIDetails.init(<?php echo $job->getDuration(); ?>,mx.$("div.state"),mx.$("span.state"),mx.$('span.runtime'), mx.$('div.log'));
     
 <?php if( $job->getState() == 'running' ){ ?>
@@ -51,25 +51,25 @@ function initPage()
 <?php } else { ?>
     var scrollControl = document.querySelector('div.scrollControl');
     scrollControl.style.display = "none";
-    goToTopControl.classList.add("singleButton");
+    goToControl.classList.add("singleButton");
 <?php } ?>
 
     mx.$('div.log').addEventListener("scroll", function(e) { 
-        mx.CIDetails.checkScrollPosition(e,body,goToTopControl,true);
+        mx.CIDetails.checkScrollPosition(e,body,goToControl,true);
     },false);
 
     window.addEventListener("scroll",function(e)
     {
-        mx.CIDetails.checkScrollPosition(e,body,goToTopControl,false);
+        mx.CIDetails.checkScrollPosition(e,body,goToControl,false);
     });
-    mx.CIDetails.checkScrollPosition(null,body,goToTopControl,false);
+    mx.CIDetails.checkScrollPosition(null,body,goToControl,false);
 }
 mx.OnDocReady.push( initPage );
 </script>
 </head>
 <body>
 <?php
-    echo '<div class ="header table">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.CIDetails.toggleBottomScroll()"></div><div class="goToTopControl" onClick="mx.CIDetails.goToTop()"><div class="icon-up"></div></div><div class="log">';
+    echo '<div class ="header table">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.CIDetails.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
     
     foreach( $job->getLines() as $line )
     {

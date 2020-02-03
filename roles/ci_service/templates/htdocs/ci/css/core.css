@@ -26,6 +26,11 @@ div.table > div.row > div.subject {
   width: auto;
   min-width:100px;
 }
+div.table > div.row > div.subject > div{
+  max-height: 43px;
+  overflow-y: hidden;
+  line-height: 22px;
+}
 div.table > div.row > div:last-child {
   text-align: right;
 }

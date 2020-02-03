@@ -89,7 +89,7 @@ class JobTemplate
         $result .= '>';
         $result .= '<div class="state ' . $job->getState() . '"></div>';
         $result .= '<div><span class="icon-down branch">' . $job->getBranch() . '</span><span class="author">' . $job->getAuthor(). '<span></div>';
-        $result .= '<div class="subject">' . $job->getSubject() . '</div>';
+        $result .= '<div class="subject"><div>' . $job->getSubject() . '</div></div>';
         
         $result .= '<div>' . $job->getConfig() . '</div>';
         $result .= '<div>' . $job->getOs() . '</div>';
