@@ -272,9 +272,9 @@
                 var element = document.getElementById(mainGroupId + '-' + subGroupId);
                 element.classList.add("active");
                 
-                localStorage.setItem("state_active_main_group", mainGroupId);
-                localStorage.setItem("state_active_sub_group", subGroupId);
-                localStorage.removeItem("state_iframe_url");
+                sessionStorage.setItem("state_active_main_group", mainGroupId);
+                sessionStorage.setItem("state_active_sub_group", subGroupId);
+                sessionStorage.removeItem("state_iframe_url");
             }
 
             ret.openUrl = function(event,url,newWindow)
@@ -295,7 +295,7 @@
                     mx.$("#content iframe").style.display = "";
                     mx.$("#content iframe").setAttribute('src',url);
 
-                    localStorage.setItem("state_iframe_url", url);
+                    sessionStorage.setItem("state_iframe_url", url);
                 }
             }
 
@@ -309,9 +309,9 @@
             
                     cleanMenu();
                     
-                    localStorage.removeItem("state_active_main_group");
-                    localStorage.removeItem("state_active_sub_group");
-                    localStorage.removeItem("state_iframe_url");
+                    sessionStorage.removeItem("state_active_main_group");
+                    sessionStorage.removeItem("state_active_sub_group");
+                    sessionStorage.removeItem("state_iframe_url");
                 }
 
                 var datetime = new Date();
@@ -374,11 +374,11 @@
 
             if( !mx.Actions.isMenuActive() ) 
             {
-                var stateActiveMainGroup = localStorage.getItem("state_active_main_group");
-                var stateActiveSubGroup = localStorage.getItem("state_active_sub_group");
+                var stateActiveMainGroup = sessionStorage.getItem("state_active_main_group");
+                var stateActiveSubGroup = sessionStorage.getItem("state_active_sub_group");
                 if( stateActiveMainGroup && stateActiveSubGroup )
                 {
-                    var stateIframeUrl = localStorage.getItem("state_iframe_url");
+                    var stateIframeUrl = sessionStorage.getItem("state_iframe_url");
 
                     mx.Actions.openMenu(stateActiveMainGroup,stateActiveSubGroup);
                     
@@ -396,7 +396,7 @@
                 try
                 {
                     var url = e.target.contentWindow.location.href;
-                    if(url != 'about:blank') localStorage.setItem("state_iframe_url", url);
+                    if(url != 'about:blank') sessionStorage.setItem("state_iframe_url", url);
                 }
                 catch{}
             });
