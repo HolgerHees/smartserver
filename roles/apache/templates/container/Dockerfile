@@ -18,7 +18,7 @@ RUN apt-get install -y libapache2-mod-auth-openidc \
     && apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjansson-dev libcjose-dev libpcre++-dev \
     && git clone https://github.com/zmartzone/mod_auth_openidc.git \
     && cd mod_auth_openidc/ \
-    && git branch v2.4.0.4 \
+    && git checkout v2.4.0.4 \
     && ./autogen.sh \
     && ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" \
     && make clean && make test \
