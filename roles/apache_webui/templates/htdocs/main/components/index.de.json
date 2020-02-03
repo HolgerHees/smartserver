@@ -13,6 +13,7 @@
     "Logout": "Abmelden",
     "Good Morning": "Guten Morgen",
     "Good Afternoon": "Guten Tag",
-    "Good Evening": "Guten Abend"
+    "Good Evening": "Guten Abend",
+    "Authentication failed. Please try again.": "Anmeldung fehlgeschlagen. Bitte melde dich erneut an."
   }
 }

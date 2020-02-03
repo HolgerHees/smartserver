@@ -19,6 +19,14 @@ mx.Host = (function( ret ) {
     {
         return domain;
     }
+    
+    ret.forceLogin = function(status)
+    {
+        if( confirm( mx.I18N.get("Authentication failed. Please try again." + ( status ? "\n(" + status + ")" : "" ) ) ) )
+        {
+            window.location.reload();
+        }
+    }
 
     return ret;
 })( mx.Host || {} );

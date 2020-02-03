@@ -69,6 +69,11 @@ mx.Alarms = (function( ret ) {
             {
                 mx.$$(buttonSelector).forEach(function(element){ element.classList.add("disabled") });
                 alarmIsWorking = false;
+
+                if( this.status == 0 || this.status == 401 || this.status == 302 )
+                {
+                    mx.Host.forceLogin("HTTP response code was: " + this.status);
+                }
             }
             // must be 10000, because the apache KeepAlive timeout is 15 seconds. 
             // Otherwise, the https connection is established again and again and will take ~700ms instead of 40ms 
