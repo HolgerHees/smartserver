@@ -14,6 +14,8 @@
     "Good Morning": "Guten Morgen",
     "Good Afternoon": "Guten Tag",
     "Good Evening": "Guten Abend",
+    "Internet Offline": "Internet Offline",
+    "VPN Offline": "VPN Offline",
     "Authentication failed. Please try again.": "Anmeldung fehlgeschlagen. Bitte melde dich erneut an."
   }
 }

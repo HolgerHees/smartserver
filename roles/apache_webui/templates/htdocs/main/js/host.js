@@ -1,18 +1,23 @@
 mx.Host = (function( ret ) {
     var host = location.host;
     var parts = host.split(".");
-    var authType = "";
+    var authType = false;
     if( parts.length == 3 )
     {
         var subDomain = parts.shift();
-        if( subDomain.indexOf("fa") === 0 ) authType = "fa_";
-        else if( subDomain.indexOf("ba") === 0 ) authType = "ba_";
+        if( subDomain.indexOf("fa") === 0 ) authType = "fa";
+        else if( subDomain.indexOf("ba") === 0 ) authType = "ba";
     }
     var domain = parts.join(".");
 
-    ret.getAuthType = function()
+    ret.getAuthPrefix = function()
     {
-        return authType;
+        return authType ? authType + '_' : "";
+    }
+
+    ret.getAuthSubDomain = function()
+    {
+        return authType ? authType + '.' : "";
     }
 
     ret.getDomain = function()
@@ -20,13 +25,5 @@ mx.Host = (function( ret ) {
         return domain;
     }
     
-    ret.forceLogin = function(status)
-    {
-        if( confirm( mx.I18N.get("Authentication failed. Please try again." + ( status ? "\n(" + status + ")" : "" ) ) ) )
-        {
-            window.location.reload();
-        }
-    }
-
     return ret;
 })( mx.Host || {} );

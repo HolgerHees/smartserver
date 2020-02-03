@@ -151,7 +151,7 @@
                                 entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
 
                                 match = entry['url'].match(/(\/\/)([^\.]*)\.({host})/);
-                                if( match !== null ) entry['url'] = entry['url'].replace('//' + match[2] + "." + match[3], "//" + mx.Host.getAuthType() + match[2] + "." + mx.Host.getDomain() );
+                                if( match !== null ) entry['url'] = entry['url'].replace('//' + match[2] + "." + match[3], "//" + mx.Host.getAuthPrefix() + match[2] + "." + mx.Host.getDomain() );
                             }
                             else
                             {
@@ -396,7 +396,7 @@
                 try
                 {
                     var url = e.target.contentWindow.location.href;
-                    localStorage.setItem("state_iframe_url", url);
+                    if(url != 'about:blank') localStorage.setItem("state_iframe_url", url);
                 }
                 catch{}
             });
@@ -429,6 +429,44 @@
         
         function initPage()
         {
+            var infoLayer = mx.$("#info");
+
+            function showInfo(info)
+            {
+                infoLayer.firstChild.innerHTML = info;
+                infoLayer.style.display = "flex";
+                window.setTimeout(function(){ infoLayer.style.backgroundColor = "rgba(0,0,0,0.5)", 0 });
+            }
+            
+            function hideInfo()
+            {
+                infoLayer.firstChild.innerHTML = "";
+                mx.Core.waitForTransitionEnd(infoLayer, function(){ infoLayer.style.display = ""; },"Info closed");
+                infoLayer.style.backgroundColor = "rgba(0,0,0,0)";
+            }
+            
+            mx.State.init(function(connectionState)
+            {
+                //console.log("STATE: " + connectionState );
+                
+                if( connectionState == mx.State.OFFLINE )
+                {
+                    showInfo(mx.I18N.get("Internet Offline"));
+                }
+                else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE )
+                {
+                    showInfo(mx.I18N.get("VPN Offline"));
+                }
+                else if( connectionState == mx.State.REACHABLE || connectionState == mx.State.UNAUTHORIZED )
+                {
+                    showInfo("");
+                }
+                else
+                {
+                    hideInfo();
+                }
+            });
+        
             pageReady = true;
         
             mx.Swipe.init();
@@ -539,6 +577,7 @@
         </div>
     </div>
     <div id="layer"></div>
+    <div id="info"><div></div></div>
 </div>
 </body>
 </html>

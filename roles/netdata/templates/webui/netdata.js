@@ -51,9 +51,11 @@ mx.Alarms = (function( ret ) {
         var id = Math.round( Date.now() / 1000 );
 
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "//" + mx.Host.getAuthType() + "netdata." + mx.Host.getDomain() + "/api/v1/alarms?active&_=" + id);
+        xhr.open("GET", "//" + mx.Host.getAuthPrefix() + "netdata." + mx.Host.getDomain() + "/api/v1/alarms?active&_=" + id);
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
+            //console.log(this.responseURL);
+    
             if (this.readyState != 4) return;
 
             if( this.status == 200 )
@@ -64,20 +66,18 @@ mx.Alarms = (function( ret ) {
                     alarmIsWorking = true;
                 }
                 handleAlarms( JSON.parse(this.response) );
+
+                // must be 10000, because the apache KeepAlive timeout is 15 seconds. 
+                // Otherwise, the https connection is established again and again and will take ~700ms instead of 40ms 
+                window.setTimeout(loadAlerts,10000);
             }
             else if( alarmIsWorking )
             {
                 mx.$$(buttonSelector).forEach(function(element){ element.classList.add("disabled") });
                 alarmIsWorking = false;
 
-                if( this.status == 0 || this.status == 401 || this.status == 302 )
-                {
-                    mx.Host.forceLogin("HTTP response code was: " + this.status);
-                }
+                mx.State.handleRequestError(this,loadAlerts);
             }
-            // must be 10000, because the apache KeepAlive timeout is 15 seconds. 
-            // Otherwise, the https connection is established again and again and will take ~700ms instead of 40ms 
-            window.setTimeout(loadAlerts,10000);
         };
         xhr.send();
     }
@@ -90,7 +90,7 @@ mx.Alarms = (function( ret ) {
         mx.$$(buttonSelector).forEach(function(element){ 
             element.addEventListener("click",function()
             {
-                mx.Actions.openUrl(null,null,"//" + mx.Host.getAuthType() + "netdata." + mx.Host.getDomain(),false);
+                mx.Actions.openUrl(null,null,"//" + mx.Host.getAuthPrefix() + "netdata." + mx.Host.getDomain(),false);
             });
         });
         loadAlerts();
