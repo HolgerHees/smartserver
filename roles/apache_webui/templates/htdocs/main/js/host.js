@@ -12,7 +12,7 @@ mx.Host = (function( ret ) {
 
     ret.getAuthPrefix = function()
     {
-        return authType ? authType + '_' : "";
+        return authType ? authType + '-' : "";
     }
 
     ret.getAuthSubDomain = function()

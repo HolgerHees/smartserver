@@ -167,6 +167,11 @@ mx.State = (function( ret ) {
                 clearTimer();
                 checkReachability();
             }
+            else
+            {
+                if( debug ) console.log("mx.Status.handleRequestError: unreachable");
+                setConnectionState(mx.State.UNREACHABLE);
+            }
         }
     }
     

@@ -7,8 +7,8 @@ $CONFIG = array (
     0 => '{{server_ip}}',
     1 => '{{server_domain}}',
     2 => 'nextcloud.{{server_domain}}',
-    3 => 'fa_nextcloud.{{server_domain}}',
-    4 => 'ba_nextcloud.{{server_domain}}'
+    3 => 'fa-nextcloud.{{server_domain}}',
+    4 => 'ba-nextcloud.{{server_domain}}'
   ),
   'auth.bruteforce.protection.enabled' => false,
   'overwrite.cli.url' => '/',

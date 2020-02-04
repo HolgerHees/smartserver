@@ -29,7 +29,7 @@
             }
             else if( document.cookie.indexOf("openidc_supported=1") !== -1 )
             {
-                if( subDomain.length > 2 ) subDomain = "fa_" + subDomain.substr(3) + ".";
+                if( subDomain.length > 2 ) subDomain = "fa-" + subDomain.substr(3) + ".";
                 else subDomain = "fa.";
                 document.querySelector(".button.form").style.display="inline-block";
                 document.querySelector(".button.form").setAttribute("href","https://" + subDomain + domain);

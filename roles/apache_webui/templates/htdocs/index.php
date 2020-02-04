@@ -381,6 +381,69 @@
             return ret;
         })( mx.Actions || {} );
 
+        mx.Page = (function( ret ) {
+            ret.checkDeeplink = function()
+            {
+                var url = mx.Host.getParameter('url');
+                if( url ) 
+                {
+                    url = url.replace(document.location.origin,"");
+                    var entry = mx.Menu.findEntry(url);
+                    if( entry )
+                    {
+                        sessionStorage.setItem("state_active_main_group", entry[0] );
+                        sessionStorage.setItem("state_active_sub_group", entry[1] );
+                        sessionStorage.setItem("state_iframe_url", entry[2] );
+                        
+                        document.location.href = document.location.origin
+                    }
+                }
+            }
+            
+            ret.initInfoLayer = function()
+            {
+                var infoLayer = mx.$("#info");
+
+                function showInfo(info)
+                {
+                    infoLayer.firstChild.innerHTML = info;
+                    infoLayer.style.display = "flex";
+                    window.setTimeout(function(){ infoLayer.style.backgroundColor = "rgba(0,0,0,0.5)", 0 });
+                }
+                
+                function hideInfo()
+                {
+                    infoLayer.firstChild.innerHTML = "";
+                    mx.Core.waitForTransitionEnd(infoLayer, function(){ infoLayer.style.display = ""; },"Info closed");
+                    infoLayer.style.backgroundColor = "rgba(0,0,0,0)";
+                }
+                
+                mx.State.init(function(connectionState)
+                {
+                    //console.log("STATE: " + connectionState );
+                    
+                    if( connectionState == mx.State.OFFLINE )
+                    {
+                        showInfo(mx.I18N.get("Internet Offline"));
+                    }
+                    else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE )
+                    {
+                        showInfo(mx.I18N.get("VPN Offline"));
+                    }
+                    else if( connectionState == mx.State.REACHABLE || connectionState == mx.State.UNAUTHORIZED )
+                    {
+                        showInfo("");
+                    }
+                    else
+                    {
+                        hideInfo();
+                    }
+                });
+            }
+            
+            return ret;
+        })( mx.Page || {} );
+
         function initContent()
         {
             readynessCount--;
@@ -460,62 +523,13 @@
                 mx.$('body').classList.remove('phone');
                 mx.$('body').classList.add('desktop');
             }
-        }
+        }       
         
         function initPage()
         {
-            var url = mx.Host.getParameter('url');
-            if( url ) 
-            {
-                url = url.replace(document.location.origin,"");
-                var entry = mx.Menu.findEntry(url);
-                if( entry )
-                {
-                    sessionStorage.setItem("state_active_main_group", entry[0] );
-                    sessionStorage.setItem("state_active_sub_group", entry[1] );
-                    sessionStorage.setItem("state_iframe_url", entry[2] );
-                    
-                    document.location.href = document.location.origin
-                }
-            }
+            mx.Page.checkDeeplink();
             
-            var infoLayer = mx.$("#info");
-
-            function showInfo(info)
-            {
-                infoLayer.firstChild.innerHTML = info;
-                infoLayer.style.display = "flex";
-                window.setTimeout(function(){ infoLayer.style.backgroundColor = "rgba(0,0,0,0.5)", 0 });
-            }
-            
-            function hideInfo()
-            {
-                infoLayer.firstChild.innerHTML = "";
-                mx.Core.waitForTransitionEnd(infoLayer, function(){ infoLayer.style.display = ""; },"Info closed");
-                infoLayer.style.backgroundColor = "rgba(0,0,0,0)";
-            }
-            
-            mx.State.init(function(connectionState)
-            {
-                //console.log("STATE: " + connectionState );
-                
-                if( connectionState == mx.State.OFFLINE )
-                {
-                    showInfo(mx.I18N.get("Internet Offline"));
-                }
-                else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE )
-                {
-                    showInfo(mx.I18N.get("VPN Offline"));
-                }
-                else if( connectionState == mx.State.REACHABLE || connectionState == mx.State.UNAUTHORIZED )
-                {
-                    showInfo("");
-                }
-                else
-                {
-                    hideInfo();
-                }
-            });
+            mx.Page.initInfoLayer();
         
             pageReady = true;
         

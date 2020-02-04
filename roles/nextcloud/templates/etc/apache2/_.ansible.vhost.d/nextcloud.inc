@@ -23,9 +23,12 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
 #    Require all granted
 #</LocationMatch>
 
-<LocationMatch "^/status.php|^/index.php/login/flow|^/index.php/apps/theming/manifest">
+<LocationMatch "^/status\.php|^/index.php/login/flow|^/index.php/apps/theming/|^\/(?!remote).*\.css?|^\/(?!remote).*\.js?|^\/(?!remote).*\.svg|/js/accessibility">
     Require all granted
 </LocationMatch>
+#<LocationMatch "^/status.php|^/index.php/login/flow|^/index.php/apps/theming/manifest">
+#    Require all granted
+#</LocationMatch>
 
 Header always unset X-Frame-Options
 Header edit Content-Security-Policy "frame-ancestors 'self'" "frame-ancestors {{server_domain}} *.{{server_domain}}"

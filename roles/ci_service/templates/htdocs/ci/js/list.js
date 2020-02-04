@@ -56,6 +56,8 @@ mx.CIList = (function( ret ) {
                     
                     var newJobs = content.querySelector("#newJobs").childNodes;
                     var runningJobs = content.querySelector("#runningJobs").childNodes;
+                    var removedJobHashes = content.querySelector("#removedJobs").innerHTML;
+                    if( removedJobHashes ) removedJobHashes = removedJobHashes.split(",");
                     
                     if( runningJobs.length > 0 )
                     {
@@ -109,6 +111,21 @@ mx.CIList = (function( ret ) {
                             firstElement = newNode;
                             
                             var job = newJobs[i];
+                        }
+                    }
+                    
+                    if( removedJobHashes.length > 0 )
+                    {
+                        for( i = 0; i < removedJobHashes.length ; i++ )
+                        {
+                            var hash = removedJobHashes[i];
+                            var row = document.getElementById(hash);
+                            if( row )
+                            {
+                                row.parentNode.removeChild(row);
+                                delete elementRunningDuration[hash];
+                                delete elementStates[hash];
+                            }
                         }
                     }
                     
