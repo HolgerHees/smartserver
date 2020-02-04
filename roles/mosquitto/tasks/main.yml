@@ -29,3 +29,9 @@
     config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
+- name: register update watcher
+  vars:
+    name: "mosquitto"
+    type: "docker"
+    current_version: "1.6.7"
+  import_tasks: roles/update_notifier/tasks/add_watcher.yml

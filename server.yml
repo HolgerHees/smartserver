@@ -40,6 +40,8 @@
     # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones
     - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui' ] }    # creates {{htdocs_path}}main/components
 
+    - { import_role: { name: update_notifier, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_notifier' ] }  # prototype
+
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
