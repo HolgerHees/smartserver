@@ -128,7 +128,7 @@ mx.State = (function( ret ) {
                     reachabilityTimer = window.setTimeout(function(){ 
                         reachabilityTimer = false;
                         checkReachability(); 
-                    },5000);
+                    },2000);
 
                     checkInProgress = false;
                 }
