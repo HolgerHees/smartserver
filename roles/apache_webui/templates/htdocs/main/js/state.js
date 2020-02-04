@@ -128,7 +128,7 @@ mx.State = (function( ret ) {
                     reachabilityTimer = window.setTimeout(function(){ 
                         reachabilityTimer = false;
                         checkReachability(); 
-                    },2000);
+                    },5000);
 
                     checkInProgress = false;
                 }
@@ -167,7 +167,7 @@ mx.State = (function( ret ) {
                 clearTimer();
                 checkReachability();
             }
-            else
+            else if( connectionState > mx.State.UNREACHABLE )
             {
                 if( debug ) console.log("mx.Status.handleRequestError: unreachable");
                 setConnectionState(mx.State.UNREACHABLE);
@@ -175,8 +175,29 @@ mx.State = (function( ret ) {
         }
     }
     
+    // https://developers.google.com/web/updates/2018/07/page-lifecycle-api
     ret.init = function(_connectionChangedCallback)
     {
+        function resumeState()
+        {
+            if( connectionState < mx.State.AUTHORIZED )
+            {
+                clearTimer();
+                checkReachability();
+            }
+        }
+        
+        function handleVisibilityFallback()
+        {
+            if( !isVisible )
+            {
+                if( debug ) console.log("mx.Status.handleVisibilityFallback: true");
+
+                isVisible = true;
+                resumeState();
+            }
+        }
+
         connectionChangedCallback = _connectionChangedCallback;
         
         document.addEventListener("visibilitychange", function()
@@ -186,14 +207,12 @@ mx.State = (function( ret ) {
             isVisible = !document['hidden'];
             if( isVisible )
             {
-                if( connectionState < mx.State.AUTHORIZED )
-                {
-                    clearTimer();
-                    checkReachability();
-                }
+                window.removeEventListener("mousedown", handleVisibilityFallback);
+                resumeState();
             }
             else
             {
+                window.addEventListener("mousedown", handleVisibilityFallback);
                 clearTimer();
             }
         }, false);
