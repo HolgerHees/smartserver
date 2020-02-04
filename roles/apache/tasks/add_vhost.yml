@@ -1,4 +1,3 @@
-
 - name: "copy apache include for '{{sub_domain}}.{{server_domain}}'"
   template:
     src: "{{include}}"
