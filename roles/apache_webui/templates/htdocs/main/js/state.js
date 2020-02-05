@@ -1,4 +1,5 @@
 mx.State = (function( ret ) {
+    ret.SUSPEND = -1;
     ret.OFFLINE = 0;
     ret.ONLINE = 1;
     ret.UNREACHABLE = 2;
@@ -24,7 +25,7 @@ mx.State = (function( ret ) {
         if( connectionState != state )
         {
             connectionState = state;
-            connectionChangedCallback(connectionState);
+            if( isVisible ) connectionChangedCallback(connectionState);
         }
         
         if( typeof connectionStateCallbacks[connectionState] != "undefined" && connectionStateCallbacks[connectionState].length > 0 ) 
@@ -67,7 +68,7 @@ mx.State = (function( ret ) {
         xhr.send();
     }
 
-    function checkReachability()
+    function checkReachability(showProgress)
     {       
         if( connectionState == mx.State.OFFLINE )
         {
@@ -76,6 +77,7 @@ mx.State = (function( ret ) {
         else if( !checkInProgress )
         {
             checkInProgress = true;
+            if( showProgress ) progressCallback(true);
             
             if( debug ) console.log("mx.Status.checkReachability: check reachability");
 
@@ -118,6 +120,7 @@ mx.State = (function( ret ) {
                         }
 
                         checkInProgress = false;
+                        if( showProgress ) progressCallback(false);
                     });
                 }
                 else
@@ -127,27 +130,24 @@ mx.State = (function( ret ) {
                     
                     reachabilityTimer = window.setTimeout(function(){ 
                         reachabilityTimer = false;
-                        checkReachability(); 
+                        checkReachability(false); 
                     },2000);
 
                     checkInProgress = false;
+                    if( showProgress ) progressCallback(false);
                 }
             });
             
         }
     }
     
-    ret.handleRequestError = function(response,callback)
+    ret.handleRequestError = function(response,callback,url)
     {
-        if( debug ) console.log("mx.Status.handleRequestError: " + response.status);
+        if( debug ) console.log("mx.Status.handleRequestError: status => " + response.status + ", url => " + url);
         
-        if( response.status == 404 )
+        if( response.status == 404 || response.status == 500 )
         {
-            if( debug ) console.error("Url '" + response.responseURL + "' not found [404].");
-        }
-        else if( response.status == 500 )
-        {
-            if( debug ) console.error("Url '" + response.responseURL + "' was not successful [500].");
+            if( debug ) console.error("Skipped state check for 404 and 500");
         }
         /*else if( ( this.status == 401 || this.status == 403 ) && connectionState >= mx.State.REACHABLE && isVisible )
         {
@@ -159,13 +159,12 @@ mx.State = (function( ret ) {
         }*/
         else
         {
-            connectionStateCallbacks = {}
-            connectionStateCallbacks[mx.State.AUTHORIZED] = [ callback ];
+            connectionStateCallbacks[mx.State.AUTHORIZED].push( callback );
 
             if( isVisible ) 
             {
                 clearTimer();
-                checkReachability();
+                checkReachability(false);
             }
             else if( connectionState > mx.State.UNREACHABLE )
             {
@@ -176,14 +175,34 @@ mx.State = (function( ret ) {
     }
     
     // https://developers.google.com/web/updates/2018/07/page-lifecycle-api
-    ret.init = function(_connectionChangedCallback)
+    ret.init = function(_connectionChangedCallback,_progressCallback)
     {
-        function resumeState()
+        connectionChangedCallback = _connectionChangedCallback;
+        progressCallback = _progressCallback;
+        
+        connectionStateCallbacks = {}
+        connectionStateCallbacks[mx.State.AUTHORIZED] = [];
+        
+        function handleState( _isVisible )
         {
-            if( connectionState < mx.State.AUTHORIZED )
+            isVisible = _isVisible;
+            
+            if( isVisible )
             {
+                connectionChangedCallback(connectionState);
+                window.removeEventListener("mousedown", handleVisibilityFallback);
+
+                if( connectionState < mx.State.AUTHORIZED )
+                {
+                    clearTimer();
+                    checkReachability(true);
+                }
+            }
+            else
+            {
+                connectionChangedCallback(mx.State.SUSPEND);
+                window.addEventListener("mousedown", handleVisibilityFallback);
                 clearTimer();
-                checkReachability();
             }
         }
         
@@ -193,28 +212,15 @@ mx.State = (function( ret ) {
             {
                 if( debug ) console.log("mx.Status.handleVisibilityFallback: true");
 
-                isVisible = true;
-                resumeState();
+                handleState(true);
             }
         }
 
-        connectionChangedCallback = _connectionChangedCallback;
-        
         document.addEventListener("visibilitychange", function()
         {
             if( debug ) console.log("mx.Status.handleVisibilityChange: " + !document['hidden']);
 
-            isVisible = !document['hidden'];
-            if( isVisible )
-            {
-                window.removeEventListener("mousedown", handleVisibilityFallback);
-                resumeState();
-            }
-            else
-            {
-                window.addEventListener("mousedown", handleVisibilityFallback);
-                clearTimer();
-            }
+            handleState( !document['hidden'] );
         }, false);
 
         window.addEventListener("offline", function(e) {
@@ -231,7 +237,7 @@ mx.State = (function( ret ) {
             if( isVisible ) 
             {
                 clearTimer();
-                checkReachability();
+                checkReachability(true);
             }
         });
     }

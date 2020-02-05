@@ -42,6 +42,101 @@ mx.CIDetails = (function( ret ) {
         runtimeElement.innerHTML = formattedDuration;
     }
     
+    function handleDetailUpdates(data)
+    {
+        var content = document.createElement("div");
+        content.innerHTML = data;
+
+        currentPosition = parseInt(content.querySelector("#currentPosition").innerHTML);
+        duration = parseInt(content.querySelector("#duration").innerHTML);
+        
+        runtimeElement.innerHTML = content.querySelector("#durationFormatted").innerHTML;
+        
+        var _stateElement = content.querySelector("#stateFormatted");
+        if( stateTextElement.innerHTML != _stateElement.firstChild.innerHTML )
+        {
+            stateTextElement.innerHTML = _stateElement.firstChild.innerHTML;
+            stateTextElement.className = _stateElement.firstChild.className;
+        }
+        
+        var _logElements = content.querySelector("#logs").childNodes;
+        if( _logElements.length > 0 )
+        {
+            logElement.lastChild.innerHTML = logElement.lastChild.innerHTML + _logElements[0].innerHTML;
+            
+            for( i = 1; i < _logElements.length; i++ )
+            {
+                logElement.appendChild(_logElements[i].cloneNode(true));
+            }
+
+            if( bottomScrollEnabled ) mx.CIDetails.goToBottom();
+        }
+        
+        var stateRawElement = content.querySelector("#state");
+        if( stateRawElement.innerHTML == 'running' )
+        {
+            return true;
+        }
+        else
+        {
+            stateColorElement.classList.remove('running');
+            stateColorElement.classList.add(stateRawElement.innerHTML);
+            return false;
+        }        
+    }
+    
+    function updateDetails(force)
+    {
+        var refreshInterval = bottomScrollEnabled ? 2 : 10;
+        
+        if( force ) currentInterval = 0;
+        
+        if( currentInterval == 0 )
+        {
+            var url = mx.Host.getBase() + 'details_update.php' + window.location.search + '&position=' + currentPosition;
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url );
+            xhr.onreadystatechange = function() {
+                if (this.readyState != 4) return;
+                
+                if( this.status == 200 ) 
+                {
+                    var isRunning = handleDetailUpdates(this.response);
+                    
+                    if( isRunning )
+                    {
+                        updateTimer = window.setTimeout(updateDetails,1000);
+                    }
+                    else
+                    {
+                        updateTimer = false;
+                    }        
+                }
+                else 
+                {
+                    try 
+                    {
+                        window.top.mx.State.handleRequestError(updateDetails,url);
+                    }
+                    catch
+                    {
+                        updateTimer = window.setTimeout(updateDetails,5000);
+                    }
+                }
+            };
+            xhr.send();
+        }
+        else if( updateTimer )
+        {
+            refreshDuration();
+            updateTimer = window.setTimeout(updateDetails,1000);
+        }
+
+        currentInterval += 1;
+        if( currentInterval == refreshInterval ) currentInterval = 0;
+    } 
+
     ret.goToBottom = function()
     {
         window.scrollTo(0,document.body.scrollHeight + 100);
@@ -67,7 +162,7 @@ mx.CIDetails = (function( ret ) {
             {
                 window.clearTimeout(updateTimer);
                 updateTimer = false;
-                mx.CIDetails.updateDetails(true);
+                updateDetails(true);
             }
             
             location.hash = '#autoscroll';
@@ -131,81 +226,7 @@ mx.CIDetails = (function( ret ) {
             }
         }
     }
-    
-    ret.updateDetails = function(force)
-    {
-        var refreshInterval = bottomScrollEnabled ? 2 : 10;
         
-        if( force ) currentInterval = 0;
-        
-        if( currentInterval == 0 )
-        {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", 'details_update.php' + window.location.search + '&position=' + currentPosition );
-            xhr.onreadystatechange = function() {
-                if (this.readyState != 4) return;
-                
-                if( this.status == 200 ) 
-                {
-                    var content = document.createElement("div");
-                    content.innerHTML = this.response;
-                    
-                    currentPosition = parseInt(content.querySelector("#currentPosition").innerHTML);
-                    duration = parseInt(content.querySelector("#duration").innerHTML);
-                    
-                    runtimeElement.innerHTML = content.querySelector("#durationFormatted").innerHTML;
-                    
-                    var _stateElement = content.querySelector("#stateFormatted");
-                    if( stateTextElement.innerHTML != _stateElement.firstChild.innerHTML )
-                    {
-                        stateTextElement.innerHTML = _stateElement.firstChild.innerHTML;
-                        stateTextElement.className = _stateElement.firstChild.className;
-                    }
-                    
-                    var _logElements = content.querySelector("#logs").childNodes;
-                    if( _logElements.length > 0 )
-                    {
-                        logElement.lastChild.innerHTML = logElement.lastChild.innerHTML + _logElements[0].innerHTML;
-                        
-                        for( i = 1; i < _logElements.length; i++ )
-                        {
-                            logElement.appendChild(_logElements[i].cloneNode(true));
-                        }
-
-                        if( bottomScrollEnabled ) goToBottom();
-                    }
-                    
-                    var stateRawElement = content.querySelector("#state");
-                    if( stateRawElement.innerHTML == 'running' )
-                    {
-                        updateTimer = window.setTimeout(mx.CIDetails.updateDetails,1000);
-                    }
-                    else
-                    {
-                        stateColorElement.classList.remove('running');
-                        stateColorElement.classList.add(stateRawElement.innerHTML);
-                        updateTimer = false;
-                    }
-                }
-                else 
-                {
-                    updateTimer = window.setTimeout(mx.CIDetails.updateDetails,1000);
-
-                    console.warn("Was not able to download '" + 'details_update.php?' + window.location.search + "'");
-                }
-            };
-            xhr.send();
-        }
-        else if( updateTimer )
-        {
-            refreshDuration();
-            updateTimer = window.setTimeout(mx.CIDetails.updateDetails,1000);
-        }
-
-        currentInterval += 1;
-        if( currentInterval == refreshInterval ) currentInterval = 0;
-    } 
-    
     ret.startUpdateProcess = function(position)
     {
         if( location.hash == '#autoscroll' )
@@ -214,7 +235,7 @@ mx.CIDetails = (function( ret ) {
         }
         
         currentPosition = position;
-        mx.CIDetails.updateDetails(true);
+        updateDetails(true);
     }
     
     ret.init = function(_duration, _stateColorElement, _stateTextElement, _runtimeElement, _logElement)

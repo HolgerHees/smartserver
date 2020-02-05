@@ -50,8 +50,10 @@ mx.Alarms = (function( ret ) {
     {
         var id = Math.round( Date.now() / 1000 );
 
+        var url = "//" + mx.Host.getAuthPrefix() + "netdata." + mx.Host.getDomain() + "/api/v1/alarms?active&_=" + id;
+        
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "//" + mx.Host.getAuthPrefix() + "netdata." + mx.Host.getDomain() + "/api/v1/alarms?active&_=" + id);
+        xhr.open("GET", url );
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
             //console.log(this.responseURL);
@@ -76,7 +78,7 @@ mx.Alarms = (function( ret ) {
                 mx.$$(buttonSelector).forEach(function(element){ element.classList.add("disabled") });
                 alarmIsWorking = false;
 
-                mx.State.handleRequestError(this,loadAlerts);
+                mx.State.handleRequestError(this,loadAlerts,url);
             }
         };
         xhr.send();

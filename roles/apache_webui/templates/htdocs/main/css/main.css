@@ -43,7 +43,6 @@ body {
 }
 #info {
     background-color: rgba(0,0,0,0);
-    color: white;
     position: fixed;
     top: 0;
     left: 0;
@@ -53,12 +52,34 @@ body {
     transition: background-color 300ms linear;
     z-index: 100000;
     justify-content: center;
-    align-items: center; 
+    align-items: center;
 }
-#info > div {
+#info > div > span {
+    display: block;
+    text-align: center;
+    color: white;
+    text-shadow: 0 1px 5px rgba(0,0,0,.6);
+}
+
+#info > div > span.info {
     font-size: 40px;
     font-weight: bold;
 }
+
+#info > div > span.hint {
+    font-size: 20px;
+    font-weight: normal;
+}
+
+#info > div > span.progress {
+    visibility: hidden;
+}
+
+#info > div > span.progress svg {
+    height: 80px;
+    width: 80px;
+}
+
 #side, .vm-page {
     flex-grow: 1;
     height: 100%;

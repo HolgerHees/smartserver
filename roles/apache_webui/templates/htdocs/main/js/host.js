@@ -9,6 +9,11 @@ mx.Host = (function( ret ) {
         else if( subDomain.indexOf("ba") === 0 ) authType = "ba";
     }
     var domain = parts.join(".");
+    
+    var base = window.location.href;
+    base = base.replace(document.location.protocol,"");
+    base = base.substring(0,base.lastIndexOf("/")+1);
+
 
     ret.getAuthPrefix = function()
     {
@@ -23,6 +28,11 @@ mx.Host = (function( ret ) {
     ret.getDomain = function()
     {
         return domain;
+    }
+    
+    ret.getBase = function()
+    {
+        return base;
     }
     
     ret.getParameter = function(name) {

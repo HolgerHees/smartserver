@@ -16,6 +16,8 @@
     "Good Evening": "Guten Abend",
     "Internet Offline": "Internet Offline",
     "VPN Offline": "VPN Offline",
+    "APP Suspend": "APP angehalten",
+    "tap to resume": "klicke zum aktivieren",
     "Authentication failed. Please try again.": "Anmeldung fehlgeschlagen. Bitte melde dich erneut an."
   }
 }

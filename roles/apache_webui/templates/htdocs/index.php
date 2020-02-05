@@ -402,35 +402,44 @@
             
             ret.initInfoLayer = function()
             {
-                var infoLayer = mx.$("#info");
+                var divLayer = mx.$("#info");
+                var infoLayer = mx.$("#info .info");
+                var hintLayer = mx.$("#info .hint");
+                var progressLayer = mx.$("#info .progress");
 
-                function showInfo(info)
+                function showInfo(info,hint)
                 {
-                    infoLayer.firstChild.innerHTML = info;
-                    infoLayer.style.display = "flex";
-                    window.setTimeout(function(){ infoLayer.style.backgroundColor = "rgba(0,0,0,0.5)", 0 });
+                    infoLayer.innerHTML = info;
+                    hintLayer.innerHTML =  hint ? hint : "&nbsp;";
+                    hintLayer.style.visibility = hint ? "" : "hidden";
+                    
+                    divLayer.style.display = "flex";
+                    window.setTimeout(function(){ divLayer.style.backgroundColor = "rgba(0,0,0,0.5)", 0 });
                 }
                 
                 function hideInfo()
                 {
-                    infoLayer.firstChild.innerHTML = "";
-                    mx.Core.waitForTransitionEnd(infoLayer, function(){ infoLayer.style.display = ""; },"Info closed");
-                    infoLayer.style.backgroundColor = "rgba(0,0,0,0)";
+                    mx.Core.waitForTransitionEnd(divLayer, function(){ divLayer.style.display = ""; },"Info closed");
+                    divLayer.style.backgroundColor = "rgba(0,0,0,0)";
                 }
                 
                 mx.State.init(function(connectionState)
                 {
                     //console.log("STATE: " + connectionState );
                     
-                    if( connectionState == mx.State.OFFLINE )
+                    if( connectionState == mx.State.SUSPEND )
+                    {
+                        showInfo(mx.I18N.get("APP Suspend"),mx.I18N.get("tap to resume"));
+                    }
+                    else if( connectionState == mx.State.OFFLINE )
                     {
                         showInfo(mx.I18N.get("Internet Offline"));
                     }
-                    else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE )
+                    else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE || connectionState == mx.State.REACHABLE )
                     {
                         showInfo(mx.I18N.get("VPN Offline"));
                     }
-                    else if( connectionState == mx.State.REACHABLE || connectionState == mx.State.UNAUTHORIZED )
+                    else if( connectionState == mx.State.UNAUTHORIZED )
                     {
                         showInfo("");
                     }
@@ -438,6 +447,9 @@
                     {
                         hideInfo();
                     }
+                }, function(inProgress)
+                {
+                    progressLayer.style.visibility = inProgress ? "visible" : "";
                 });
             }
             
@@ -641,7 +653,13 @@
         </div>
     </div>
     <div id="layer"></div>
-    <div id="info"><div></div></div>
+    <div id="info"><div><span class="info"></span><span class="hint"></span><span class="progress">
+    <svg version="1.1" id="L9" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
+        <path fill="#fff" d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50">
+            <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 50 50" to="360 50 50" repeatCount="indefinite"></animateTransform>
+        </path>
+    </svg>
+    </span></div></div>
 </div>
 </body>
 </html>

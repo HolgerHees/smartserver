@@ -19,7 +19,7 @@ require "config.php";
 function initPage()
 {
     mx.CIList.init(mx.$$('div.row'),mx.$("div.table"), 'div.state', 'span.state','span.runtime');
-    mx.CIList.updateList();
+    mx.CIList.startUpdateProcess();
 }
 mx.OnDocReady.push( initPage );
 </script>
