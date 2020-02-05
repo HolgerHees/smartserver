@@ -25,7 +25,7 @@ mx.State = (function( ret ) {
         if( connectionState != state )
         {
             connectionState = state;
-            if( isVisible ) connectionChangedCallback(connectionState);
+            if( isVisible ) connectionChangedCallback(connectionState,true);
         }
         
         if( typeof connectionStateCallbacks[connectionState] != "undefined" && connectionStateCallbacks[connectionState].length > 0 ) 
@@ -183,13 +183,13 @@ mx.State = (function( ret ) {
         connectionStateCallbacks = {}
         connectionStateCallbacks[mx.State.AUTHORIZED] = [];
         
-        function handleState( _isVisible )
+        function handleState( _isVisible, animated )
         {
             isVisible = _isVisible;
             
             if( isVisible )
             {
-                connectionChangedCallback(connectionState);
+                connectionChangedCallback(connectionState,false);
                 window.removeEventListener("mousedown", handleVisibilityFallback);
 
                 if( connectionState < mx.State.AUTHORIZED )
@@ -200,7 +200,7 @@ mx.State = (function( ret ) {
             }
             else
             {
-                connectionChangedCallback(mx.State.SUSPEND);
+                connectionChangedCallback(mx.State.SUSPEND,true);
                 window.addEventListener("mousedown", handleVisibilityFallback);
                 clearTimer();
             }
@@ -212,7 +212,7 @@ mx.State = (function( ret ) {
             {
                 if( debug ) console.log("mx.Status.handleVisibilityFallback: true");
 
-                handleState(true);
+                handleState(true, true);
             }
         }
 
@@ -220,7 +220,7 @@ mx.State = (function( ret ) {
         {
             if( debug ) console.log("mx.Status.handleVisibilityChange: " + !document['hidden']);
 
-            handleState( !document['hidden'] );
+            handleState( !document['hidden'], false );
         }, false);
 
         window.addEventListener("offline", function(e) {

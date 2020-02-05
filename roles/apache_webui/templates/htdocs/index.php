@@ -407,45 +407,59 @@
                 var hintLayer = mx.$("#info .hint");
                 var progressLayer = mx.$("#info .progress");
 
-                function showInfo(info,hint)
+                function showInfo(animated,info,hint)
                 {
                     infoLayer.innerHTML = info;
                     hintLayer.innerHTML =  hint ? hint : "&nbsp;";
                     hintLayer.style.visibility = hint ? "" : "hidden";
                     
                     divLayer.style.display = "flex";
-                    window.setTimeout(function(){ divLayer.style.backgroundColor = "rgba(0,0,0,0.5)", 0 });
+                    if( animated )
+                    {
+                        window.setTimeout(function(){ divLayer.style.backgroundColor = "rgba(0,0,0,0.5)"; }, 0);
+                    }
+                    else
+                    {
+                        divLayer.style.backgroundColor = "rgba(0,0,0,0.5)";
+                    }
                 }
                 
-                function hideInfo()
+                function hideInfo(animated)
                 {
-                    mx.Core.waitForTransitionEnd(divLayer, function(){ divLayer.style.display = ""; },"Info closed");
+                    if( animated )
+                    {
+                        mx.Core.waitForTransitionEnd(divLayer, function(){ divLayer.style.display = ""; },"Info closed");
+                    }
+                    else
+                    {
+                        divLayer.style.display = "";
+                    }
                     divLayer.style.backgroundColor = "rgba(0,0,0,0)";
                 }
                 
-                mx.State.init(function(connectionState)
+                mx.State.init(function(connectionState,animated)
                 {
                     //console.log("STATE: " + connectionState );
                     
                     if( connectionState == mx.State.SUSPEND )
                     {
-                        showInfo(mx.I18N.get("APP Suspend"),mx.I18N.get("tap to resume"));
+                        showInfo(animated,mx.I18N.get("APP Suspend"),mx.I18N.get("tap to resume"));
                     }
                     else if( connectionState == mx.State.OFFLINE )
                     {
-                        showInfo(mx.I18N.get("Internet Offline"));
+                        showInfo(animated,mx.I18N.get("Internet Offline"));
                     }
                     else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE || connectionState == mx.State.REACHABLE )
                     {
-                        showInfo(mx.I18N.get("VPN Offline"));
+                        showInfo(animated,mx.I18N.get("VPN Offline"));
                     }
                     else if( connectionState == mx.State.UNAUTHORIZED )
                     {
-                        showInfo("");
+                        showInfo(animated,"");
                     }
                     else
                     {
-                        hideInfo();
+                        hideInfo(animated);
                     }
                 }, function(inProgress)
                 {
