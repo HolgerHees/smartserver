@@ -141,11 +141,11 @@ mx.State = (function( ret ) {
         }
     }
     
-    ret.handleRequestError = function(response,callback,url)
+    ret.handleRequestError = function(status,url,callback)
     {
-        if( debug ) console.log("mx.Status.handleRequestError: status => " + response.status + ", url => " + url);
+        if( debug ) console.log("mx.Status.handleRequestError: status => " + status + ", url => " + url);
         
-        if( response.status == 404 || response.status == 500 )
+        if( status == 404 || status == 500 )
         {
             if( debug ) console.error("Skipped state check for 404 and 500");
         }
@@ -172,7 +172,7 @@ mx.State = (function( ret ) {
                 setConnectionState(mx.State.UNREACHABLE);
             }
         }
-    }
+    };
     
     // https://developers.google.com/web/updates/2018/07/page-lifecycle-api
     ret.init = function(_connectionChangedCallback,_progressCallback)
@@ -240,7 +240,7 @@ mx.State = (function( ret ) {
                 checkReachability(true);
             }
         });
-    }
+    };
         
     return ret;
 })( mx.State || {} );

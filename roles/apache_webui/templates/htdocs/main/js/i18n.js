@@ -31,7 +31,7 @@ mx.I18N = (function( ret ) {
             }
         }
         return string;
-    }
+    };
     
     for (var n in mx.Translations) {
         push(mx.Translations[n]);

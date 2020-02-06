@@ -39,18 +39,18 @@ mx.MainImage = (function( ret ) {
     ret.getUrl = function()
     {
         return url;
-    }
+    };
 
     ret.getTitle = function()
     {
         return title;
-    }
+    };
 
     ret.init = function(imageUrl,titleUrl,finishCallback)
     {
         loadImage(imageUrl,finishCallback);
         loadTitle(titleUrl,finishCallback);
-    }
+    };
 
     return ret;
 })( mx.MainImage || {} ); 

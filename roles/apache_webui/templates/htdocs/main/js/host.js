@@ -18,22 +18,22 @@ mx.Host = (function( ret ) {
     ret.getAuthPrefix = function()
     {
         return authType ? authType + '-' : "";
-    }
+    };
 
     ret.getAuthSubDomain = function()
     {
         return authType ? authType + '.' : "";
-    }
+    };
 
     ret.getDomain = function()
     {
         return domain;
-    }
+    };
     
     ret.getBase = function()
     {
         return base;
-    }
+    };
     
     ret.getParameter = function(name) {
 
@@ -47,7 +47,7 @@ mx.Host = (function( ret ) {
             }
         );
         return typeof name != "undefined" ? params[name] : params;
-    }
+    };
     
     return ret;
 })( mx.Host || {} );

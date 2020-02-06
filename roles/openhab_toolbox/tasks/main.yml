@@ -4,6 +4,7 @@
     repo: 'https://github.com/HolgerHees/toolbox.git'
     dest: '{{projects_path}}toolbox'
     version: 'master'
+  tags: ['apache_webui_page']
 
 - name: copy config
   template:
@@ -12,6 +13,7 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
+  tags: ['apache_webui_page']
   
 #- name: bind directory
 #  vars:
@@ -27,8 +29,8 @@
     follow: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"  
-  notify: "restart apache2"
-      
+  tags: ['apache_webui_page']
+
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
 

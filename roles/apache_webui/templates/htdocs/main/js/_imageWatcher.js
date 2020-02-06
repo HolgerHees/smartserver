@@ -20,14 +20,16 @@ mx.ImageWatcher = (function( ret ) {
         img.onload = function()
         {
             image.setAttribute('src',src);
+
+            mx.Timer.register(function(){refreshImage(container);},image.getAttribute('data-interval'));
         };
         img.onerror = function()
         {
-            image.setAttribute('src',src);
+            //image.setAttribute('src',src);
+            
+            mx.State.handleRequestError(0,src,function(){refreshImage(container);});
         };
         img.src = src;
-
-        mx.Timer.register(function(){refreshImage(container);},image.getAttribute('data-interval'));
     }
 
     ret.init = function(selector)
@@ -46,7 +48,7 @@ mx.ImageWatcher = (function( ret ) {
 
             refreshImage(container);
         });
-    }
+    };
 
     return ret;
 })( mx.ImageWatcher || {} ); 

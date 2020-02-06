@@ -11,7 +11,7 @@ mx.Timer = (function( ret ) {
             }
             refreshTimer=[];
         }
-    }
+    };
 
     ret.register = function(func,timeout)
     {
@@ -23,7 +23,7 @@ mx.Timer = (function( ret ) {
             }
         },timeout);
         refreshTimer.push( refreshTimerID );
-    }
+    };
 
     return ret;
 })( mx.Timer || {} );

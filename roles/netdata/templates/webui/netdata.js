@@ -1,4 +1,4 @@
-mx.Menu.getMainGroup('administration').getSubGroup('states').addUrl(300, 'url', '//netdata.{host}/', '{i18n_State}', '{i18n_Netdata}', false);
+mx.Menu.getMainGroup('administration').getSubGroup('states').addUrl('netdata',300, 'url', '//netdata.{host}/', '{i18n_State}', '{i18n_Netdata}', false);
 
 mx.Alarms = (function( ret ) {
     var buttonSelector;
@@ -78,7 +78,7 @@ mx.Alarms = (function( ret ) {
                 mx.$$(buttonSelector).forEach(function(element){ element.classList.add("disabled") });
                 alarmIsWorking = false;
 
-                mx.State.handleRequestError(this,loadAlerts,url);
+                mx.State.handleRequestError(this.status,url,loadAlerts);
             }
         };
         xhr.send();

@@ -252,7 +252,7 @@ mx.Core = (function( ret ) {
                 func.call();
             }
         };
-    }
+    };
 
     return ret;
 })( mx.Core || {} );

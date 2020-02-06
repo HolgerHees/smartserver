@@ -117,7 +117,7 @@ mx.CIDetails = (function( ret ) {
                 {
                     try 
                     {
-                        window.top.mx.State.handleRequestError(updateDetails,url);
+                        window.top.mx.State.handleRequestError(this.status,url,updateDetails);
                     }
                     catch
                     {

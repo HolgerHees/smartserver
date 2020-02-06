@@ -38,22 +38,6 @@
     group: root
     mode: 0750
 
-- name: copy ci webui
-  copy:
-    src: "templates/htdocs/ci"
-    dest: "{{htdocs_path}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-
-- name: copy ci webui config
-  template:
-    src: "templates/config.php"
-    dest: "{{htdocs_path}}ci/config.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-
 - name: copy ci package
   copy:
     src: "templates/opt/ci_service/ci"
@@ -70,6 +54,24 @@
     group: root
     mode: 0750
     
+- name: copy ci webui
+  copy:
+    src: "templates/htdocs/ci"
+    dest: "{{htdocs_path}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+
+- name: copy ci webui config
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}ci/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+
 - name: register webui
   vars:
     name: "ci_service"

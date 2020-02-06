@@ -5,7 +5,7 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
-  tags: ['apache_webui','apache_webui_menus']
+  tags: ['apache_webui_menu']
 
 - name: "copy i18n file for '{{name}}'"
   template:
@@ -15,4 +15,4 @@
     group: "{{system_groups['www'].name}}"
     mode: 0644
   with_items: "{{i18n_files}}"
-  tags: ['apache_webui','apache_webui_menus']
+  tags: ['apache_webui_menu']

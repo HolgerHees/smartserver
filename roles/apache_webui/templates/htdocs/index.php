@@ -49,20 +49,34 @@
 
             function sortMenu(entries)
             {
-                entries.sort(function(a,b)
+                var keys = Object.keys(entries);
+                
+                keys.sort(function(a,b)
                 {
-                    if( a['order'] < b['order'] ) return -1;
-                    if( a['order'] > b['order'] ) return 1;
+                    if( entries[a]['order'] < entries[b]['order'] ) return -1;
+                    if( entries[a]['order'] > entries[b]['order'] ) return 1;
                     return 0;
                 });
+                
+                var result = {};
+                
+                for( key in keys )
+                {
+                    result[keys[key].toString()] = entries[keys[key]];
+                }
 
-                return entries;
+                return result;
             }
 
             ret.getMainGroup = function(mainGroupId)
             {
                 return menuGroups[mainGroupId]['_'];
-            }
+            };
+
+            /*ret.getMainGroups = function()
+            {
+                return Object.values(menuGroups).map( entry => entry['_'] );
+            };*/
 
             ret.addMainGroup = function(mainGroupId,order,title)
             {
@@ -72,25 +86,51 @@
                     title: title,
                     subGroups: {},
                     _: {
-                        getSubGroup: function(subGroupId){
-                            return menuGroups[mainGroupId]['subGroups'][subGroupId]['_'];
-                        },
+                        getId: function(){ return mainGroupId; },
+                        getTitle: function(){ return menuGroups[mainGroupId]['title']; },
+                        getSubGroup: function(subGroupId){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['_']; },
+                        //getSubGroups: function(){ return Object.values(menuGroups[mainGroupId]['subGroups']).map( entry => entry['_'] ); },
                         addSubGroup: function(subGroupId,order,title){
                             menuGroups[mainGroupId]['subGroups'][subGroupId] = {
                                 id:subGroupId,
                                 order: order,
                                 title: title,
-                                menuEntries: [],
+                                menuEntries: {},
                                 _: {
-                                    getEntries: function()
-                                    {
-                                        return menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'];
+                                    getId: function(){ return subGroupId; },
+                                    getTitle: function(){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['title']; },
+                                    getMainGroup: function(){ return menuGroups[mainGroupId]['_']; },
+                                    getEntry: function(entryId){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'][entryId]['_']; },
+                                    getEntries: function(){ return Object.values(menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries']).map( entry => entry['_'] ); },
+                                    addUrl: function(entryId,order,type,url,title,info,newWindow){
+                                        var entries = menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'];
+                                        entries[entryId] = {
+                                            id: entryId, order:order,type:type,url:url,title:title,info:info,newWindow:newWindow,
+                                            _: {
+                                                getId: function(){ return entries[entryId]['id']; },
+                                                //getOrder: function(){ return entries[entryId]['order']; },
+                                                getType: function(){ return entries[entryId]['type']; },
+                                                getSubGroup: function(){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['_']; },
+                                                getTitle: function(){ return entries[entryId]['title']; },
+                                                getInfo: function(){ return entries[entryId]['info']; },
+                                                getNewWindow: function(){ return entries[entryId]['newWindow']; },
+                                                getUrl: function(){ return entries[entryId]['url']; }
+                                            }
+                                        };
                                     },
-                                    addUrl: function(order,type,url,title,info,newWindow){
-                                        menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'].push({order:order,type:type,url:url,title:title,info:info,newWindow:newWindow});
-                                    },
-                                    addHtml: function(order,html,callback){
-                                        menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'].push({order:order,type:'html',html:html,callback:callback});
+                                    addHtml: function(entryId,order,html,callback){
+                                        var entries = menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'];
+                                        entries[entryId] = {
+                                            id: entryId, order:order,type:'html',html:html,callback:callback,
+                                            _: {
+                                                getId: function(){ return entries[entryId]['id']; },
+                                                //getOrder: function(){ return entries[entryId]['order']; },
+                                                getType: function(){ return entries[entryId]['type']; },
+                                                getSubGroup: function(){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['_']; },
+                                                getHtml: function(){ return entries[entryId]['html']; },
+                                                getCallback: function(){ return entries[entryId]['callback']; }
+                                            }
+                                        };
                                     }
                                 }
                             };
@@ -100,56 +140,39 @@
                 };
 
                 return menuGroups[mainGroupId]['_'];
-            }
+            };
 
-            ret.findEntry = function(url)
-            {
-                for( mainGroupId in menuGroups )
-                {
-                    for( subGroupId in menuGroups[mainGroupId]['subGroups'] )
-                    {
-                        for( i in menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'] )
-                        {
-                            var entry = menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'][i];
-                            if( entry['type'] == 'url' && entry['url'] == url )
-                            {
-                                return [mainGroupId,subGroupId,url];
-                            }
-                        }
-                    }
-                }
-            }
-            
-            ret.buildMenu = function(mainGroupId,subGroupId, callback)
+            ret.buildMenu = function(subGroup, callback)
             {
                 var entries = [];
                 var callbacks = [];
 
-                var menuEntries = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId).getEntries();
+                var menuEntries = subGroup.getEntries();
                 for(var i = 0; i < menuEntries.length; i++)
                 {
                     var entry = menuEntries[i];
 
-                    if( entry['type'] == 'html' )
+                    if( entry.getType() == 'html' )
                     {
-                        entries.push(entry['html']);
-                        callbacks.push(entry['callback']);
+                        entries.push(entry.getHtml());
+                        callbacks.push(entry.getCallback());
                     }
                     else
                     {
-                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openUrl(event,\'' + entry['url'] + '\',' + entry['newWindow'] + ')"><div>' + entry['title'] + '</div><div>' + entry['info'] + '</div></div>');
+                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openEntryById(event,\'' + subGroup.getMainGroup().getId() + '\',\'' + subGroup.getId() + '\',\'' + entry.getId() + '\')"><div>' + entry.getTitle() + '</div><div>' + entry.getInfo() + '</div></div>');
                     }
                 }
 
                 callback(entries.join(""),callbacks);
-            }
+            };
 
             ret.init = function()
             {
+                // needs to work with keys directly, because this is the post processing part of the data
                 for( mainKey in menuGroups )
                 {
                     var mainGroup = menuGroups[mainKey];
-
+                    
                     var match = mainGroup['title'].match(/{i18n_([^}]*)}/);
                     if( match !== null ) mainGroup['title'] = mainGroup['title'].replace(match[0],mx.I18N.get(match[1],mainKey));
 
@@ -159,9 +182,9 @@
 
                         subGroup['title'] = processI18N(subGroup['title'],mainKey);
 
-                        for( var i = 0; i < subGroup['menuEntries'].length; i++ )
+                        for( entryKey in subGroup['menuEntries'] )
                         {
-                            var entry = subGroup['menuEntries'][i];
+                            var entry = subGroup['menuEntries'][entryKey];
 
                             if( entry['type'] === 'url' )
                             {
@@ -181,11 +204,11 @@
 
                 var template = mx.$('#menuTemplate');
 
-                var _menuGroups = sortMenu( Object.values(menuGroups) );
+                var _menuGroups = sortMenu( menuGroups );
                 for( index in _menuGroups )
                 {
                     var mainGroup = _menuGroups[index];
-
+                    
                     var menuDiv = template.cloneNode(true);
                     menuDiv.setAttribute('id',mainGroup['id']);
                     menuDiv.querySelector('.header').innerHTML = mainGroup['title'];
@@ -195,21 +218,21 @@
                     var buttonTemplate = menuDiv.querySelector('.service.button');
                     menuDiv.removeChild(buttonTemplate);
 
-                    var _subGroups = sortMenu( Object.values(mainGroup['subGroups']) );
+                    var _subGroups = sortMenu( mainGroup['subGroups'] );
                     for( index in _subGroups )
                     {
                         var subGroup = _subGroups[index];
 
                         var button = buttonTemplate.cloneNode(true);
                         button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
-                        button.setAttribute("onClick","mx.Actions.openMenu('" + mainGroup['id'] + "','" + subGroup['id'] + "');");
+                        button.setAttribute("onClick","mx.Actions.openMenuById('" + mainGroup['id'] + "','" + subGroup['id'] + "');");
                         button.firstChild.innerHTML = subGroup['title'];
                         menuDiv.appendChild(button);
 
                         subGroup['menuEntries'] = sortMenu( subGroup['menuEntries'] );
                     }
                 }
-            }
+            };
 
             var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
@@ -233,7 +256,9 @@
         var readynessCount = 3; //(background image (scriptready), background image title (scriptready) & initPage (documentready) )
 
         mx.Actions = (function( ret ) {
-            var activeMenu = "";
+            var visibleMenuKey = "";
+            var activeMenu = null;
+            var activeEntry = null;
 
             function cleanMenu()
             {
@@ -268,7 +293,7 @@
             {
                 var submenu = mx.$('#content #submenu');
 
-                if( activeMenu == "" )
+                if( visibleMenuKey == "" )
                 {
                     submenu.style.opacity = "0";
                     submenu.innerHTML = data;
@@ -292,61 +317,80 @@
                 if( visualisationType != "desktop" ) menuPanel.close();
             }        
 
-            ret.openMenu = function(mainGroupId,subGroupId)
+            ret.openMenuById = function(mainGroupId,subGroupId)
             {
+                menu = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId);
+                mx.Actions.openMenu(menu);
+            
+            };
+            ret.openMenu = function(subGroup)
+            {
+                var mainGroupId = subGroup.getMainGroup().getId();
+                var subGroupId = subGroup.getId();
+                
                 key = mainGroupId + '_' + subGroupId;
 
-                if( activeMenu == key ) return;
+                if( visibleMenuKey == key ) return;
 
                 cleanMenu();
 
-                mx.Menu.buildMenu( mainGroupId, subGroupId, setMenu);
+                mx.Menu.buildMenu( subGroup, setMenu);
 
-                activeMenu = key;
+                visibleMenuKey = key;
+                activeMenu = subGroup
+                activeEntry = null;
 
                 var element = document.getElementById(mainGroupId + '-' + subGroupId);
                 element.classList.add("active");
                 
-                sessionStorage.setItem("state_active_main_group", mainGroupId);
-                sessionStorage.setItem("state_active_sub_group", subGroupId);
-                sessionStorage.removeItem("state_iframe_url");
-            }
+                mx.History.addMenu(activeMenu);
+            };
 
-            ret.openUrl = function(event,url,newWindow)
+            ret.openEntryById = function(event,mainGroupId,subGroupId,entryId)
             {
-                mx.Timer.clean();
+                var entry = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId).getEntry(entryId);
 
-                activeMenu = "";
-
-                if( (event && event.ctrlKey) || newWindow )
+                if( (event && event.ctrlKey) || entry.getNewWindow() )
                 {
-                    var win = window.open(url, '_blank');
+                    var win = window.open(entry.getUrl(), '_blank');
                     win.focus();
                 }
                 else
                 {
-                    mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
-                    mx.$("#content #inline").style.display = "none";
-                    mx.$("#content iframe").style.display = "";
-                    mx.$("#content iframe").setAttribute('src',url);
-
-                    sessionStorage.setItem("state_iframe_url", url);
+                    mx.Actions.openEntry(entry);
                 }
-            }
+            };
+            
+            ret.openEntry = function(entry,url)
+            {
+                activeMenu = entry.getSubGroup();
+                activeEntry = entry;
+                
+                mx.Timer.clean();
+
+                visibleMenuKey = "";
+                
+                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
+                mx.$("#content #inline").style.display = "none";
+                mx.$("#content iframe").style.display = "";
+                mx.$("#content iframe").setAttribute('src', url ? url : entry.getUrl() );
+                
+                mx.History.addEntry( entry, url );
+            };
 
             ret.openHome = function()
             {
-                let isAlreadyActive = ( activeMenu == "home" );
+                let isAlreadyActive = ( visibleMenuKey == "home" );
 
                 if( !isAlreadyActive )
                 {
-                    activeMenu = "home";
-            
+                    visibleMenuKey = "home";
+                    activeMenu = null;
+                    activeEntry = null;
+           
                     cleanMenu();
                     
-                    sessionStorage.removeItem("state_active_main_group");
-                    sessionStorage.removeItem("state_active_sub_group");
-                    sessionStorage.removeItem("state_iframe_url");
+                    mx.History.addMenu(activeMenu);
                 }
 
                 var datetime = new Date();
@@ -371,12 +415,17 @@
                 else mx.$('#content #submenu').innerHTML = message;
 
                 mx.Timer.register(mx.Actions.openHome,60000 - (s * 1000));
-            }
+            };
 
-            ret.isMenuActive = function()
+            ret.getActiveMenu = function()
             {
-                return !!activeMenu;
-            }
+                return activeMenu;
+            };
+
+            ret.getActiveEntry = function()
+            {
+                return activeEntry;
+            };
 
             return ret;
         })( mx.Actions || {} );
@@ -384,21 +433,23 @@
         mx.Page = (function( ret ) {
             ret.checkDeeplink = function()
             {
-                var url = mx.Host.getParameter('url');
-                if( url ) 
+                var ref = mx.Host.getParameter('ref');
+                if( ref ) 
                 {
-                    url = url.replace(document.location.origin,"");
-                    var entry = mx.Menu.findEntry(url);
-                    if( entry )
+                    var parts = ref.split("|");
+                    var subMenuGroup = mx.Menu.getMainGroup(parts[0]).getSubGroup(parts[1]);
+                    if( parts.length > 2 )
                     {
-                        sessionStorage.setItem("state_active_main_group", entry[0] );
-                        sessionStorage.setItem("state_active_sub_group", entry[1] );
-                        sessionStorage.setItem("state_iframe_url", entry[2] );
+                        var entry = subMenuGroup.getEntry(parts[2]);
                         
-                        document.location.href = document.location.origin
+                        mx.Actions.openEntry(entry, parts.length > 3 ? decodeURIComponent( parts[3] ) : null );
+                    }
+                    else
+                    {
+                        mx.Actions.openMenu(subMenuGroup);
                     }
                 }
-            }
+            };
             
             ret.initInfoLayer = function()
             {
@@ -465,7 +516,7 @@
                 {
                     progressLayer.style.visibility = inProgress ? "visible" : "";
                 });
-            }
+            };
             
             return ret;
         })( mx.Page || {} );
@@ -496,23 +547,9 @@
 
             mx.$('#logo').addEventListener("click",mx.Actions.openHome);
 
-            if( !mx.Actions.isMenuActive() ) 
-            {
-                var stateActiveMainGroup = sessionStorage.getItem("state_active_main_group");
-                var stateActiveSubGroup = sessionStorage.getItem("state_active_sub_group");
-                if( stateActiveMainGroup && stateActiveSubGroup )
-                {
-                    var stateIframeUrl = sessionStorage.getItem("state_iframe_url");
+            mx.Page.checkDeeplink();
 
-                    mx.Actions.openMenu(stateActiveMainGroup,stateActiveSubGroup);
-                    
-                    if(stateIframeUrl) mx.Actions.openUrl(null,stateIframeUrl,false);
-                }
-                else
-                {
-                    mx.Actions.openHome();
-                }
-            }
+            if( !mx.Actions.getActiveMenu() ) mx.Actions.openHome();
 
             mx.$('#page').style.opacity = "1";
             
@@ -520,7 +557,20 @@
                 try
                 {
                     var url = e.target.contentWindow.location.href;
-                    if(url != 'about:blank') sessionStorage.setItem("state_iframe_url", url);
+                    if(url != 'about:blank')
+                    {
+                        var activeEntry = mx.Actions.getActiveEntry();
+                        if( activeEntry )
+                        {
+                            var _url = activeEntry.getUrl();
+                            if( _url != url && document.location.origin + _url != url )
+                            {
+                                //console.log(document.location.origin + _url);
+                                //console.log(url);
+                                //mx.History.addEntry(activeEntry,url);
+                            }
+                        }
+                    }
                 }
                 catch{}
             });
@@ -553,8 +603,24 @@
         
         function initPage()
         {
-            mx.Page.checkDeeplink();
-            
+            mx.History.init(function(mainGroup,subGroup,entry,url){
+                if( subGroup )
+                {
+                    if( entry )
+                    {
+                        mx.Actions.openEntry(entry,url);
+                    }
+                    else
+                    {
+                        mx.Actions.openMenu(subGroup);
+                    }
+                }
+                else
+                {
+                    mx.Actions.openHome();
+                }
+            });
+
             mx.Page.initInfoLayer();
         
             pageReady = true;
