@@ -310,28 +310,8 @@
                 }
             }
             
-            function setIFrame(url)
+            function setIFrameUrl(url)
             {
-
-                /*var current_url = null;
-                try
-                {
-                    var current_url = iframeElement.contentWindow.location.href;
-                    if( current_url != url )
-                    {
-                        console.log("IFRAME SRC SET " + current_url + ' => ' + url);
-                        iframeElement.contentWindow.location.href = url;
-                    }
-                    else
-                    {
-                        console.log("IFRAME SRC SKIPPED "+ url );
-                    }
-                }
-                catch
-                {
-                    iframeElement.setAttribute('src', url );
-                }*/         
-
                 iframeElement.setAttribute('src', url );
                 //iframeElement.contentWindow.location = url;
             
@@ -468,7 +448,7 @@
                 
                 mx.Actions.showIFrame(new_url);
                 
-                setIFrame(new_url);
+                setIFrameUrl(new_url);
                 
                 mx.History.addEntry( entry, url );
             };
