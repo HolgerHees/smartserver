@@ -5,10 +5,12 @@ mx.History = (function( ret ) {
         {
             if( history.state && history.state['subGroupId'] == subGroup.getId() && history.state['entryId'] == null )
             {
+                console.log("HISTORY ADD MENU SKIP");
                 return;
             }
             else
             {
+                console.log("HISTORY ADD MENU");
                 var mainGroup = subGroup.getMainGroup();
                 name = mainGroup.getTitle() + "/" + subGroup.getTitle();
                 
@@ -20,10 +22,12 @@ mx.History = (function( ret ) {
         {
             if( history.state && history.state['subGroupId'] == null )
             {
+                console.log("HISTORY ADD HOME SKIP");
                 return;
             }
             else
             {
+                console.log("HISTORY ADD HOME");
                 var stateObj = { mainGroupId: null, subGroupId: null, entryId: null, url: null };
                 history.pushState(stateObj, 'Home', document.location.origin );
             }
@@ -33,10 +37,12 @@ mx.History = (function( ret ) {
     {
         if( history.state && history.state['entryId'] == entry.getId() && history.state['url'] == url )
         {
+            console.log("HISTORY ADD ENTRY SKIP");
             return;
         }
         else
         {
+            console.log("HISTORY ADD ENTRY");
             var subGroup = entry.getSubGroup();
             var mainGroup = subGroup.getMainGroup();
             
@@ -50,7 +56,10 @@ mx.History = (function( ret ) {
     ret.init = function(callback)
     {
         window.addEventListener("popstate", function(event) {
+            
+            console.log(">>>> POPSTATE <<<<");
             //console.log(event);
+            console.log(event.state);
             
             if( event.state )
             {
@@ -84,10 +93,9 @@ mx.History = (function( ret ) {
         
         if( history.state == null )
         {
+            console.log("force blocker");
             history.pushState(null, '', '?-' );
         }
-
-        //console.log("mx.History init"); 
     };
         
     return ret;

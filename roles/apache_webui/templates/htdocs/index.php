@@ -80,66 +80,69 @@
 
             ret.addMainGroup = function(mainGroupId,order,title)
             {
-                menuGroups[mainGroupId] = {
+                var mainGroup = menuGroups[mainGroupId] = {
                     id:mainGroupId,
                     order: order,
                     title: title,
                     subGroups: {},
                     _: {
                         getId: function(){ return mainGroupId; },
-                        getTitle: function(){ return menuGroups[mainGroupId]['title']; },
-                        getSubGroup: function(subGroupId){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['_']; },
-                        //getSubGroups: function(){ return Object.values(menuGroups[mainGroupId]['subGroups']).map( entry => entry['_'] ); },
+                        getTitle: function(){ return mainGroup['title']; },
+                        getSubGroup: function(subGroupId){ return mainGroup['subGroups'][subGroupId]['_']; },
+                        //getSubGroups: function(){ return Object.values(mainGroup['subGroups']).map( entry => entry['_'] ); },
                         addSubGroup: function(subGroupId,order,title){
-                            menuGroups[mainGroupId]['subGroups'][subGroupId] = {
+                            var subGroup = mainGroup['subGroups'][subGroupId] = {
                                 id:subGroupId,
                                 order: order,
                                 title: title,
                                 menuEntries: {},
                                 _: {
+                                    isEntry: function(){ return false; },
                                     getId: function(){ return subGroupId; },
-                                    getTitle: function(){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['title']; },
-                                    getMainGroup: function(){ return menuGroups[mainGroupId]['_']; },
-                                    getEntry: function(entryId){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'][entryId]['_']; },
-                                    getEntries: function(){ return Object.values(menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries']).map( entry => entry['_'] ); },
+                                    getTitle: function(){ return subGroup['title']; },
+                                    getMainGroup: function(){ return mainGroup['_']; },
+                                    getEntry: function(entryId){ return subGroup['menuEntries'][entryId]['_']; },
+                                    getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
                                     addUrl: function(entryId,order,type,url,title,info,newWindow){
-                                        var entries = menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'];
-                                        entries[entryId] = {
+                                        var entries = subGroup['menuEntries'];
+                                        var entry = entries[entryId] = {
                                             id: entryId, order:order,type:type,url:url,title:title,info:info,newWindow:newWindow,
                                             _: {
-                                                getId: function(){ return entries[entryId]['id']; },
-                                                //getOrder: function(){ return entries[entryId]['order']; },
-                                                getType: function(){ return entries[entryId]['type']; },
-                                                getSubGroup: function(){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['_']; },
-                                                getTitle: function(){ return entries[entryId]['title']; },
-                                                getInfo: function(){ return entries[entryId]['info']; },
-                                                getNewWindow: function(){ return entries[entryId]['newWindow']; },
-                                                getUrl: function(){ return entries[entryId]['url']; }
+                                                isEntry: function(){ return true; },
+                                                getId: function(){ return entry['id']; },
+                                                //getOrder: function(){ return entry['order']; },
+                                                getType: function(){ return entry['type']; },
+                                                getSubGroup: function(){ return subGroup['_']; },
+                                                getTitle: function(){ return entry['title']; },
+                                                getInfo: function(){ return entry['info']; },
+                                                getNewWindow: function(){ return entry['newWindow']; },
+                                                getUrl: function(){ return entry['url']; }
                                             }
                                         };
                                     },
                                     addHtml: function(entryId,order,html,callback){
-                                        var entries = menuGroups[mainGroupId]['subGroups'][subGroupId]['menuEntries'];
-                                        entries[entryId] = {
+                                        var entries = subGroup['menuEntries'];
+                                        var entry = entries[entryId] = {
                                             id: entryId, order:order,type:'html',html:html,callback:callback,
                                             _: {
-                                                getId: function(){ return entries[entryId]['id']; },
-                                                //getOrder: function(){ return entries[entryId]['order']; },
-                                                getType: function(){ return entries[entryId]['type']; },
-                                                getSubGroup: function(){ return menuGroups[mainGroupId]['subGroups'][subGroupId]['_']; },
-                                                getHtml: function(){ return entries[entryId]['html']; },
-                                                getCallback: function(){ return entries[entryId]['callback']; }
+                                                isEntry: function(){ return true; },
+                                                getId: function(){ return entry['id']; },
+                                                //getOrder: function(){ return entry['order']; },
+                                                getType: function(){ return entry['type']; },
+                                                getSubGroup: function(){ return subGroup['_']; },
+                                                getHtml: function(){ return entry['html']; },
+                                                getCallback: function(){ return entry['callback']; }
                                             }
                                         };
                                     }
                                 }
                             };
-                            return menuGroups[mainGroupId]['subGroups'][subGroupId]['_'];
+                            return subGroup['_'];
                         }
                     }
                 };
 
-                return menuGroups[mainGroupId]['_'];
+                return mainGroup['_'];
             };
 
             ret.buildMenu = function(subGroup, callback)
@@ -159,7 +162,7 @@
                     }
                     else
                     {
-                        entries.push('<div class="service button ' + key + '" onClick="mx.Actions.openEntryById(event,\'' + subGroup.getMainGroup().getId() + '\',\'' + subGroup.getId() + '\',\'' + entry.getId() + '\')"><div>' + entry.getTitle() + '</div><div>' + entry.getInfo() + '</div></div>');
+                        entries.push('<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + subGroup.getMainGroup().getId() + '\',\'' + subGroup.getId() + '\',\'' + entry.getId() + '\')"><div>' + entry.getTitle() + '</div><div>' + entry.getInfo() + '</div></div>');
                     }
                 }
 
@@ -209,6 +212,8 @@
                 {
                     var mainGroup = _menuGroups[index];
                     
+                    if( mainGroup['id'] == 'home' ) continue;
+                    
                     var menuDiv = template.cloneNode(true);
                     menuDiv.setAttribute('id',mainGroup['id']);
                     menuDiv.querySelector('.header').innerHTML = mainGroup['title'];
@@ -234,6 +239,8 @@
                 }
             };
 
+            ret.addMainGroup('home', -1, 'Home').addSubGroup('home', -1, 'Home');
+
             var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
             mainGroup = ret.addMainGroup('administration', 3000, '{i18n_Administration}');
@@ -250,24 +257,112 @@
     <script type="text/javascript">
         //var lang = navigator.language || navigator.userLanguage;
         var pageReady = false;
+        
         var menuPanel = false;
         var visualisationType = "phone";
 
         var readynessCount = 3; //(background image (scriptready), background image title (scriptready) & initPage (documentready) )
 
         mx.Actions = (function( ret ) {
-            var visibleMenuKey = "";
-            var activeMenu = null;
-            var activeEntry = null;
+            var activeNavigation = null;
+            var activeUrl = null;
+
+            var inlineElement = null;
+            var iframeElement = null;
+            
+            function iFrameLoadHandler(e)
+            {
+                var url = null;
+                try
+                {
+                    var url = e.target.contentWindow.location.href;
+                }
+                catch{}
+                
+                console.log(">>>> IFRAME ") + url + " <<<<";
+                console.log(history.state);
+
+                if( url )
+                {
+                    if( url == 'about:blank' )
+                    {
+                        // current content entry is still active, so we have to skip the last history back step which is an empty page
+                        if( history.state && history.state['entryId'] )
+                        {
+                            console.log(" ADDITIONAL POP ");
+                            history.back();
+                        }
+                        // this happens if a content page is active and we click on another menu group
+                        else
+                        {
+                            console.log(" SKIPPED POP ");
+                        }
+                    }
+                    else
+                    {
+                        var entry = mx.Actions.getActiveNavigation();
+                        if( entry )
+                        {
+                            console.log(" ACTIVE ENTRY " + entry.getId() );
+                        }
+                        mx.Actions.showIFrame(url);
+                    }
+                }
+            }
+            
+            function setIFrame(url)
+            {
+
+                /*var current_url = null;
+                try
+                {
+                    var current_url = iframeElement.contentWindow.location.href;
+                    if( current_url != url )
+                    {
+                        console.log("IFRAME SRC SET " + current_url + ' => ' + url);
+                        iframeElement.contentWindow.location.href = url;
+                    }
+                    else
+                    {
+                        console.log("IFRAME SRC SKIPPED "+ url );
+                    }
+                }
+                catch
+                {
+                    iframeElement.setAttribute('src', url );
+                }*/         
+
+                iframeElement.setAttribute('src', url );
+                //iframeElement.contentWindow.location = url;
+            
+            }
+            
+            function showIFrame()
+            {
+                if( iframeElement.style.display == 'none' )
+                {
+                    mx.Timer.clean();
+
+                    //mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
+                    inlineElement.style.display = "none";
+
+                    iframeElement.style.display = "";
+                }
+            }
 
             function cleanMenu()
             {
                 mx.Timer.clean();
 
-                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
-                mx.$("#content iframe").style.display = "none";
-                mx.$("#content iframe").setAttribute('src',"about:blank");
-                mx.$("#content #inline").style.display = "";
+                inlineElement.style.display = "";
+                
+                if( iframeElement.style.display == "" )
+                {
+                    iframeElement.style.display = "none";
+                    iframeElement.removeAttribute('src');
+                    
+                    //iframeElement.contentWindow.location = "about:blank";
+                }
             }
             
             function fadeInMenu(submenu,callbacks)
@@ -289,11 +384,11 @@
                 },0);
             }
 
-            function setMenu(data,callbacks)
+            function setMenuEntries(data,callbacks)
             {
                 var submenu = mx.$('#content #submenu');
 
-                if( visibleMenuKey == "" )
+                if( activeNavigation == null || activeNavigation.isEntry() )
                 {
                     submenu.style.opacity = "0";
                     submenu.innerHTML = data;
@@ -316,6 +411,15 @@
                 
                 if( visualisationType != "desktop" ) menuPanel.close();
             }        
+            
+            function activateMenu(subGroup)
+            {
+                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
+                
+                var element = document.getElementById(subGroup.getMainGroup().getId() + '-' + subGroup.getId());
+                
+                element.classList.add("active");
+            }
 
             ret.openMenuById = function(mainGroupId,subGroupId)
             {
@@ -325,25 +429,18 @@
             };
             ret.openMenu = function(subGroup)
             {
-                var mainGroupId = subGroup.getMainGroup().getId();
-                var subGroupId = subGroup.getId();
+                if( activeNavigation === subGroup ) return;
                 
-                key = mainGroupId + '_' + subGroupId;
-
-                if( visibleMenuKey == key ) return;
-
                 cleanMenu();
 
-                mx.Menu.buildMenu( subGroup, setMenu);
+                mx.Menu.buildMenu( subGroup, setMenuEntries);
 
-                visibleMenuKey = key;
-                activeMenu = subGroup
-                activeEntry = null;
-
-                var element = document.getElementById(mainGroupId + '-' + subGroupId);
-                element.classList.add("active");
+                activeNavigation = subGroup
+                activeUrl = null;
+                  
+                activateMenu(subGroup);
                 
-                mx.History.addMenu(activeMenu);
+                mx.History.addMenu(activeNavigation);
             };
 
             ret.openEntryById = function(event,mainGroupId,subGroupId,entryId)
@@ -363,34 +460,43 @@
             
             ret.openEntry = function(entry,url)
             {
-                activeMenu = entry.getSubGroup();
-                activeEntry = entry;
+                activeNavigation = entry;
                 
-                mx.Timer.clean();
+                activateMenu(entry.getSubGroup());
 
-                visibleMenuKey = "";
+                var new_url = url ? url : entry.getUrl();
                 
-                mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
-                mx.$("#content #inline").style.display = "none";
-                mx.$("#content iframe").style.display = "";
-                mx.$("#content iframe").setAttribute('src', url ? url : entry.getUrl() );
+                mx.Actions.showIFrame(new_url);
+                
+                setIFrame(new_url);
                 
                 mx.History.addEntry( entry, url );
             };
 
+            ret.showIFrame = function(url)
+            {
+                if( activeUrl != url )
+                {
+                    activeUrl = url;
+
+                    showIFrame();
+                }
+            }
+            
             ret.openHome = function()
             {
-                let isAlreadyActive = ( visibleMenuKey == "home" );
-
-                if( !isAlreadyActive )
+                var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
+                
+                var isActive = ( activeNavigation === subGroup );
+                
+                if( !isActive )
                 {
-                    visibleMenuKey = "home";
-                    activeMenu = null;
-                    activeEntry = null;
-           
+                    activeNavigation = subGroup;
+                    activeUrl = null;
+
                     cleanMenu();
                     
-                    mx.History.addMenu(activeMenu);
+                    mx.History.addMenu(null);
                 }
 
                 var datetime = new Date();
@@ -411,21 +517,29 @@
                 message += '<div class="imageTitle">' + mx.MainImage.getTitle() + '</div>';
                 message += '</div>';
 
-                if( !isAlreadyActive ) setMenu(message,[]);
+                if( !isActive ) setMenuEntries(message,[]);
                 else mx.$('#content #submenu').innerHTML = message;
 
                 mx.Timer.register(mx.Actions.openHome,60000 - (s * 1000));
             };
 
-            ret.getActiveMenu = function()
+            ret.getActiveNavigation = function()
             {
-                return activeMenu;
+                return activeNavigation;
             };
 
-            ret.getActiveEntry = function()
+            ret.getActiveUrl = function()
             {
-                return activeEntry;
+                return activeUrl;
             };
+            
+            ret.init = function()
+            {
+                inlineElement = mx.$("#content #inline");
+                
+                iframeElement = mx.$("#content iframe");
+                iframeElement.addEventListener('load', iFrameLoadHandler);      
+            }
 
             return ret;
         })( mx.Actions || {} );
@@ -547,33 +661,23 @@
 
             mx.$('#logo').addEventListener("click",mx.Actions.openHome);
 
-            mx.Page.checkDeeplink();
+            mx.Actions.init();
 
-            if( !mx.Actions.getActiveMenu() ) mx.Actions.openHome();
+            mx.History.init(function(mainGroup,subGroup,entry,url){
+                if( subGroup )
+                {
+                    if( entry ) mx.Actions.openEntry(entry,url);
+                    else mx.Actions.openMenu(subGroup);
+                }
+                else mx.Actions.openHome();
+            });
+
+            mx.Page.checkDeeplink();
+            
+
+            if( !mx.Actions.getActiveNavigation() ) mx.Actions.openHome();
 
             mx.$('#page').style.opacity = "1";
-            
-            mx.$("#content iframe").addEventListener('load', function(e) {
-                try
-                {
-                    var url = e.target.contentWindow.location.href;
-                    if(url != 'about:blank')
-                    {
-                        var activeEntry = mx.Actions.getActiveEntry();
-                        if( activeEntry )
-                        {
-                            var _url = activeEntry.getUrl();
-                            if( _url != url && document.location.origin + _url != url )
-                            {
-                                //console.log(document.location.origin + _url);
-                                //console.log(url);
-                                //mx.History.addEntry(activeEntry,url);
-                            }
-                        }
-                    }
-                }
-                catch{}
-            });
         }
 
         function checkVisualisationType()
@@ -603,27 +707,7 @@
         
         function initPage()
         {
-            mx.History.init(function(mainGroup,subGroup,entry,url){
-                if( subGroup )
-                {
-                    if( entry )
-                    {
-                        mx.Actions.openEntry(entry,url);
-                    }
-                    else
-                    {
-                        mx.Actions.openMenu(subGroup);
-                    }
-                }
-                else
-                {
-                    mx.Actions.openHome();
-                }
-            });
-
             mx.Page.initInfoLayer();
-        
-            pageReady = true;
         
             mx.Swipe.init();
                         
@@ -674,6 +758,8 @@
             desktopMql.addListener(checkMenu);
             checkMenu(desktopMql);
 
+            pageReady = true;
+        
             initContent();
 
             // defined in netdata.js (/components/)
@@ -729,7 +815,7 @@
                 <div id="background"></div>
                 <div id="submenu"></div>
             </div>
-            <iframe frameborder="0"></iframe>
+            <iframe frameborder="0" style="display:none"></iframe>
         </div>
     </div>
     <div id="layer"></div>
