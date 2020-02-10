@@ -1,9 +1,72 @@
+:root {
+  --light-bg: white;
+  --dark-bg: black;
+  
+  --light-header-bg: #1976D2;
+  --dark-header-bg: #0d447a;
+  
+  --light-accent-color: #1976D2;
+  --dark-accent-color: #0e559c;
+
+  --light-fullsize-header-bg: rgba(0,0,0,0.7);
+  --dark-fullsize-header-bg: rgba(0,0,0,0.7);
+  
+  --light-embed-progress: #555;
+  --dark-embed-progress: #777;
+  
+  --light-button-text: #3c4043;
+  --light-button-hover-bg: #f7f8f8;
+  --light-button-active-bg: #e8e8e9;
+  --dark-button-text: #bbb;
+  --dark-button-hover-bg: rgba(51,122,183,.12);
+  --dark-button-active-bg: rgba(51,122,183,.30);
+
+  --light-menu-text: #111;
+  --light-menu-info: #444;
+  --dark-menu-text: #ccc;
+  --dark-menu-info: #ddd;
+  
+  --light-menu-hover-bg: #f2f2f2;
+  --light-menu-active-bg: rgba(51,122,183,.12);
+  --dark-menu-hover-bg: rgba(51,122,183,.20);
+  --dark-menu-active-bg: rgba(51,122,183,.30);
+
+  --light-content-nobackground-text: #111;
+  --light-content-background-text: white;
+  --light-content-image-text: rgba(255,255,255,.85);
+  --light-content-nobackground-info: rgba(40,40,40,.9);
+  --light-content-background-info: rgba(255,255,255,.9);
+  --light-content-hover-bg: rgba(255,255,255,0.2);
+  --light-content-active-text: #444;
+  --light-content-active-bg: rgba(51,122,183,.12);
+  --dark-content-nobackground-text: #bbb;
+  --dark-content-background-text: #eee;
+  --dark-content-image-text: rgba(255,255,255,.85);
+  --dark-content-nobackground-info: rgba(255,255,255,.3);
+  --dark-content-background-info: rgba(255,255,255,.9);
+  --dark-content-hover-bg: rgba(255,255,255,0.2);
+  --dark-content-active-text: #444;
+  --dark-content-active-bg: rgba(51,122,183,.12);
+
+  --alarm-button-default: white;
+  --alarm-button-warn: #fe7d37;
+  --alarm-button-error: #db4437;
+  --alarm-button-disabled: #db4437;
+  
+  --menu-panel-layer: black;
+  --info-panel-layer: rgba(0,0,0,0);
+  --info-panel-text: white;
+  
+  --image-watcher-text: yellow;
+  --image-watcher-bg: black;
+}
+
 html {
     height: 100%;
     box-sizing: border-box;
 }
 body {
-    background: #fff;
+    background-color: var(--light-bg);
     font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
     margin: 0;
     height: 100%;
@@ -13,6 +76,9 @@ body {
        -moz-user-select: none; /* Firefox */
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
+}
+body.dark {
+    background-color: var(--dark-bg);
 }
 #page {
     display: flex;
@@ -28,10 +94,13 @@ body {
     padding: 0;
     max-width: 80%;
     box-sizing: border-box;
-    background-color: white;
+    background-color: var(--light-bg);
+}
+body.dark #menu {
+    background-color: var(--dark-bg);
 }
 #layer {
-    background-color: #000;
+    background-color: var(--menu-panel-layer);
     opacity: 0;
     position: fixed;
     top: 0;
@@ -42,7 +111,7 @@ body {
     transition: opacity 300ms linear;
 }
 #info {
-    background-color: rgba(0,0,0,0);
+    background-color: var(--info-panel-layer);
     position: fixed;
     top: 0;
     left: 0;
@@ -57,7 +126,7 @@ body {
 #info > div > span {
     display: block;
     text-align: center;
-    color: white;
+    color: var(--info-panel-text);
     text-shadow: 0 1px 5px rgba(0,0,0,.6);
 }
 
@@ -78,8 +147,8 @@ body {
 #info > div > span.progress svg {
     height: 80px;
     width: 80px;
+    fill: #fff;
 }
-
 #side, .vm-page {
     flex-grow: 1;
     height: 100%;
@@ -91,10 +160,13 @@ body {
     align-content: stretch; /* Extra space in Cross Axis */
 }
 #side #header {
-    background-color: #1976D2;
+    background-color: var(--light-header-bg);
     display: flex;
     flex-direction:row;   
     justify-content: space-between;
+}
+body.dark #side #header {
+    background-color: var(--dark-header-bg);
 }
 .burger.button svg {
     height: 56px;
@@ -115,10 +187,10 @@ body {
 .alarm.button svg {
     height: 21px;
     width: 21px;
-    color: white;
+    color: var(--alarm-button-default);
 }
 .alarm.button.disabled svg {
-    color: #db4437;
+    color: var(--alarm-button-disabled);
 }
 .alarm.button .badge {
     margin-left: 4px;
@@ -129,16 +201,13 @@ body {
     line-height: 20px;
     padding: 0 2px;
     text-align: center;
-    color: white;
-}
-.alarm.button span.badge {
-    /*color: #4c1;*/
+    color: var(--alarm-button-default);
 }
 .alarm.button.warn span.badge {
-    background-color: #fe7d37;
+    background-color: var(--alarm-button-warn);
 }
 .alarm.button.error span.badge {
-    background-color: #db4437;
+    background-color: var(--alarm-button-error);
 }
 .button {
     cursor: pointer;
@@ -151,9 +220,25 @@ body {
     display: flex;
     flex-direction: column;
 }
-#side #content iframe {
+#side #content #embed {
     height: 100%;
     width: 100%;
+    transition: opacity 300ms linear;
+    opacity: 0;
+}
+#side #content #embedProgress {
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+#side #content #embedProgress svg {
+    height: 80px;
+    width: 80px;
+    margin: auto;
+    color: var(--light-embed-progress);
+}
+body.dark #side #content #embedProgress svg {
+    color: var(--dark-embed-progress);
 }
 #menu #logo {
     margin: 6px 6px 6px 0;
@@ -172,10 +257,13 @@ body {
 }
 #menu .group:first-child {
     height: 56px;
-    background-color: #1976D2;
+    background-color: var(--light-header-bg);
     display: flex;
     margin-right: 0;
     justify-content: space-between;
+}
+body.dark #menu .group:first-child {
+    background-color: var(--dark-header-bg);
 }
 #menu .logout {
     border: 1px solid #dadce0;
@@ -191,18 +279,27 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    color: #3c4043;
+    color: var(--light-button-text);
+}
+body.dark #menu .logout {
+    color: var(--dark-button-text);
 }
 @media (hover: hover) {
-  #menu .logout:hover {
-      background-color: #f7f8f8;
-  }
+    #menu .logout:hover {
+        background-color: var(--light-button-hover-bg);
+    }
+    body.dark #menu .logout:hover {
+        background-color: var(--dark-button-hover-bg);
+    }
 }
 #menu .logout:active {
-    background-color: #e8e8e9;
+    background-color: var(--light-button-active-bg);
     border-color:transparent;
     box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);
     -webkit-tap-highlight-color: transparent;
+}
+body.dark #menu .logout:active {
+    background-color: var(--dark-button-active-bg);
 }
 #menu .logout:focus {
     outline: none;
@@ -210,13 +307,16 @@ body {
 #menu .header {
     width: 100%;
     text-align: left;
-    color: white;
     font-size: 18px;
     margin: 0 0 0 5px;
     padding: 2px 2px 2px 5px;
     box-sizing: border-box;
-    border-bottom: 1px solid #1976D2;
-    color: #1976D2;
+    border-bottom: 1px solid var(--light-accent-color);
+    color: var(--light-accent-color);
+}
+body.dark #menu .header {
+    color: var(--dark-accent-color);
+    border-bottom: 1px solid var(--dark-accent-color);
 }
 #menu .service {
     box-sizing: border-box;
@@ -231,15 +331,21 @@ body {
 }
 #menu .service div:first-child {
     padding-right: 10px;
-    color: #111;
+    color: var(--light-menu-text);
     font-size: 16px;
+}
+body.dark #menu .service div:first-child {
+    color: var(--dark-menu-text);
 }
 #menu .service div:last-child {
     padding-left: 10px;
     width: 50%;
     box-sizing: border-box;
-    color: #444;
+    color: var(--light-menu-info);
     font-size: 16px;
+}
+body.dark #menu .service div:last-child {
+    color: var(--dark-menu-info);
 }
 #menu .service, #submenu .service {
     transition: background-color 200ms ease-out; 
@@ -249,19 +355,28 @@ body {
 }
 @media (hover: hover) {
   #menu .service.button:hover {
-      background-color: #f2f2f2;
+      background-color: var(--light-menu-hover-bg);
       border: 1px solid rgba(0,0,0,0.1);
+  }
+  body.dark #menu .service.button:hover {
+      background-color: var(--dark-menu-hover-bg);
   }
 }
 #menu .service.button:active {
-    background-color: rgba(51,122,183,.12);
+    background-color: var(--light-menu-active-bg);
     -webkit-tap-highlight-color: transparent;
 }
+body.dark #menu .service.button:active {
+    background-color: var(--dark-menu-active-bg);
+}
 #menu .service.button.active {
-    background-color: rgba(51,122,183,.12);
+    background-color: var(--light-menu-active-bg);
     border-top: 1px solid rgba(0,0,0,.1);
     border-bottom: 1px solid rgba(0,0,0,.1);
     color: #1976D2;
+}
+body.dark #menu .service.button.active {
+    background-color: var(--dark-menu-active-bg);
 }
 #background {
     background-repeat: no-repeat;
@@ -279,6 +394,9 @@ body {
     -webkit-transition: opacity 200ms ease-out; 
     -moz-transition: opacity 200ms ease-out;
     -o-transition: opacity 200ms ease-out;
+}
+body.dark #background {
+    filter: brightness(50%);
 }
 #submenu .service.home {
     height: 100%;
@@ -320,13 +438,19 @@ body.phone #submenu .service.home .time {
     justify-content: center;
     font-size: 106.25%;
     line-height: 60px;
-    color: rgba(255,255,255,.85);
+    color: var(--light-content-image-text);
+}
+body.dark #submenu .service.home .imageTitle {
+    color: var(--dark-content-image-text);
 }
 body.nobackground #submenu {
-    color: #111;
+    color: var(--light-content-nobackground-text);
+}
+body.dark.nobackground #submenu {
+    color: var(--dark-content-nobackground-text);
 }
 #submenu {
-    color: white;
+    color: var(--light-content-background-text);
     height: 100%;
     width: 100%;
     flex-grow: 1;
@@ -334,6 +458,9 @@ body.nobackground #submenu {
     flex-direction: column;
     padding-top: 5vh;
     box-sizing: border-box;
+}
+body.dark #submenu {
+    color: var(--dark-content-background-text);
 }
 #submenu .service.button {
     padding: 10px;
@@ -354,23 +481,36 @@ body.nobackground #submenu {
     }
 }
 body.nobackground #submenu .service.button div:last-child {
-    color: rgba(40,40,40,.9);
+    color: var(--light-content-nobackground-info);
+}
+body.dark.nobackground #submenu .service.button div:last-child {
+    color: var(--dark-content-nobackground-info);
 }
 #submenu .service.button div:last-child {
-    color: rgba(255,255,255,.9);
+    color: var(--light-content-background-info);
     font-size: 112.5%;
     font-weight: 300;
     text-shadow: 0 1px 2px rgba(0,0,0,.6);
 }
+body.dark #submenu .service.button div:last-child {
+    color: var(--dark-content-background-info);
+}
 @media (hover: hover) {
   #submenu .service.button:hover {
-      background-color: rgba(255,255,255,0.2);
+      background-color: var(--light-content-hover-bg);
+  }
+  body.dark #submenu .service.button:hover {
+      background-color: var(--dark-content-hover-bg);
   }
 }
 #submenu .service.button:active {
-    color: #444;
-    background-color: rgba(51,122,183,.12);
+    color: var(--light-content-active-text);
+    background-color: var(--light-content-active-bg);
     -webkit-tap-highlight-color: transparent;
+}
+body.dark #submenu .service.button:active {
+    color: var(--dark-content-active-text);
+    background-color: var(--dark-content-active-bg);
 }
 #submenu .service.imageWatcher {
     display:flex;
@@ -393,7 +533,7 @@ body.nobackground #submenu .service.button div:last-child {
 #submenu .service.imageWatcher > div > span {
     position: absolute;
     top: 3px;
-    color: yellow;
+    color: var(--image-watcher-text);
 }
 #submenu .service.imageWatcher > div > span.name {
     left: 1%;    
@@ -410,7 +550,7 @@ body.nobackground #submenu .service.button div:last-child {
     }
     #submenu .service.imageWatcher > div {
         width:calc(50% - 10px);
-        background-color: black;
+        background-color: var(--image-watcher-bg);
     }
     #submenu .service.imageWatcher > div > a {
         position: relative;
@@ -434,9 +574,12 @@ body.desktop #side #header {
 body.desktop #side.fullsize #header {
     display:inline-block;
     width: 56px;
-    background-color: rgba(0,0,0,0.7);
+    background-color: var(--light-fullsize-header-bg);
     position: absolute;
     z-index: 1000;
+}
+body.dark.desktop #side.fullsize #header {
+    background-color: var(--dark-fullsize-header-bg);
 }
 body.desktop #side.fullsize .alarm.button {
     padding: 16px 6px;

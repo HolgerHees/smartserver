@@ -12,12 +12,18 @@ div.table > div.row {
 div.table > div.row:hover {
   background-color: #f2f2f2;
 }
+body.dark div.table > div.row:hover {
+  background-color: rgba(51,122,183,.20);
+}
 div.table > div.row > div {
   padding: 10px;
   text-align: left;
   vertical-align: top;
-  color: #333;
   display: table-cell;
+  color: #333;
+}
+body.dark div.table > div.row > div {
+  color: #eee;
 }
 div.table > div.row > div {
   width: 1%;

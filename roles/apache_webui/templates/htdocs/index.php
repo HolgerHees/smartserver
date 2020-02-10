@@ -10,12 +10,11 @@
 
     <link href="ressources?type=css" rel="stylesheet">
     
-    <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
+    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
     
     <script src="ressources?type=js"></script>
     
-	<script type="text/javascript">
-
+    <script>
     <?php
         $name = $_SERVER['REMOTE_USERNAME'];
         $handle = fopen(".htdata", "r");
@@ -254,7 +253,7 @@
 
     <script src="ressources?type=components"></script>
 
-    <script type="text/javascript">
+    <script>
         //var lang = navigator.language || navigator.userLanguage;
         var pageReady = false;
         
@@ -264,11 +263,9 @@
         var readynessCount = 3; //(background image (scriptready), background image title (scriptready) & initPage (documentready) )
 
         mx.Actions = (function( ret ) {
-            var activeNavigation = null;
-            var activeUrl = null;
-
             var inlineElement = null;
             var iframeElement = null;
+            var iframeProgressElement = null;
             
             function iFrameLoadHandler(e)
             {
@@ -279,54 +276,93 @@
                 }
                 catch{}
                 
-                console.log(">>>> IFRAME " + url + " <<<<");
+                if( !url )
+                {
+                    url = iframeElement.getAttribute("src");
+                    if( url ) console.log(" FALLBACK URL");
+                }
+
+                console.log(">>>> IFRAME " + history.length + " " + url + " <<<<");
                 console.log(history.state);
 
                 if( url )
                 {
                     if( url == 'about:blank' )
                     {
-                        // current content entry is still active, so we have to skip the last history back step which is an empty page
-                        if( history.state && history.state['entryId'] )
+                        if( history.state && history.state["entryId"] )
                         {
-                            console.log(" ADDITIONAL POP ");
+                            console.log(" ADDITIONAL POP");
                             history.back();
                         }
-                        // this happens if a content page is active and we click on another menu group
-                        else
-                        {
-                            console.log(" SKIPPED POP ");
-                        }
+                        return;
                     }
                     else
                     {
-                        var entry = mx.Actions.getActiveNavigation();
+                        var entry = mx.History.getEntry(url);
                         if( entry )
                         {
-                            console.log(" ACTIVE ENTRY " + entry.getId() );
+                            if( entry !== mx.History.getActiveNavigation() )
+                            {
+                                activateMenu(entry.getSubGroup());
+                                mx.History.replaceEntry(entry,null);
+                            }
                         }
-                        mx.Actions.showIFrame(url);
+                        else
+                        {
+                            console.err("iFrameLoadHandler: MATCHING HISTORY NOT FOUND");
+                        }
                     }
-                }
+                }    
+                
+                hideMenu();
+                showIFrame();
             }
             
             function setIFrameUrl(url)
             {
-                iframeElement.setAttribute('src', url );
-                //iframeElement.contentWindow.location = url;
-            
+                if( iframeElement.getAttribute("url") != url )
+                {
+                    iframeElement.setAttribute('src', url );
+                    //iframeElement.contentWindow.location = url;
+
+                    iframeProgressElement.style.display = "";
+
+                    hideMenu();
+                }
             }
             
             function showIFrame()
             {
                 if( iframeElement.style.display == 'none' )
                 {
+                    iframeProgressElement.style.display = "none";
+
+                    iframeElement.style.display = "";
+                    window.setTimeout(function(){ iframeElement.style.opacity = 1; }, 0);
+                }
+            }
+            
+            function hideIFrame()
+            {
+                if( iframeElement.style.display == "" )
+                {
+                    iframeElement.removeAttribute('src');
+                    
+                    mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"setSubMenu2");
+                    iframeElement.style.opacity = "";
+                    
+                    //iframeElement.contentWindow.location.replace("about:blank");
+                }
+            }
+            
+            function hideMenu()
+            {
+                if( inlineElement.style.display == "" )
+                {
                     mx.Timer.clean();
 
                     //mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
                     inlineElement.style.display = "none";
-
-                    iframeElement.style.display = "";
                 }
             }
 
@@ -335,14 +371,8 @@
                 mx.Timer.clean();
 
                 inlineElement.style.display = "";
-                
-                if( iframeElement.style.display == "" )
-                {
-                    iframeElement.style.display = "none";
-                    iframeElement.removeAttribute('src');
-                    
-                    //iframeElement.contentWindow.location = "about:blank";
-                }
+
+                hideIFrame();
             }
             
             function fadeInMenu(submenu,callbacks)
@@ -368,7 +398,7 @@
             {
                 var submenu = mx.$('#content #submenu');
 
-                if( activeNavigation == null || activeNavigation.isEntry() )
+                if( mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().isEntry() )
                 {
                     submenu.style.opacity = "0";
                     submenu.innerHTML = data;
@@ -409,18 +439,15 @@
             };
             ret.openMenu = function(subGroup)
             {
-                if( activeNavigation === subGroup ) return;
+                if( mx.History.getActiveNavigation() === subGroup ) return;
                 
                 cleanMenu();
 
                 mx.Menu.buildMenu( subGroup, setMenuEntries);
 
-                activeNavigation = subGroup
-                activeUrl = null;
-                  
                 activateMenu(subGroup);
-                
-                mx.History.addMenu(activeNavigation);
+
+                mx.History.addMenu(subGroup);
             };
 
             ret.openEntryById = function(event,mainGroupId,subGroupId,entryId)
@@ -434,49 +461,34 @@
                 }
                 else
                 {
-                    mx.Actions.openEntry(entry);
+                    mx.Actions.openEntry(entry,null);
                 }
             };
             
             ret.openEntry = function(entry,url)
             {
-                activeNavigation = entry;
-                
+                mx.History.addEntry( entry, url );
+
                 activateMenu(entry.getSubGroup());
 
                 var new_url = url ? url : entry.getUrl();
                 
-                mx.Actions.showIFrame(new_url);
+                //showIFrame();
                 
                 setIFrameUrl(new_url);
-                
-                mx.History.addEntry( entry, url );
             };
 
-            ret.showIFrame = function(url)
-            {
-                if( activeUrl != url )
-                {
-                    activeUrl = url;
-
-                    showIFrame();
-                }
-            }
-            
             ret.openHome = function()
             {
                 var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
                 
-                var isActive = ( activeNavigation === subGroup );
+                var isActive = ( mx.History.getActiveNavigation() === subGroup );
                 
                 if( !isActive )
                 {
-                    activeNavigation = subGroup;
-                    activeUrl = null;
-
                     cleanMenu();
                     
-                    mx.History.addMenu(null);
+                    mx.History.addMenu(subGroup);
                 }
 
                 var datetime = new Date();
@@ -503,21 +515,13 @@
                 mx.Timer.register(mx.Actions.openHome,60000 - (s * 1000));
             };
 
-            ret.getActiveNavigation = function()
-            {
-                return activeNavigation;
-            };
-
-            ret.getActiveUrl = function()
-            {
-                return activeUrl;
-            };
-            
             ret.init = function()
             {
                 inlineElement = mx.$("#content #inline");
                 
-                iframeElement = mx.$("#content iframe");
+                iframeProgressElement = mx.$("#content #embedProgress");
+
+                iframeElement = mx.$("#content #embed");
                 iframeElement.addEventListener('load', iFrameLoadHandler);      
             }
 
@@ -527,7 +531,7 @@
         mx.Page = (function( ret ) {
             ret.checkDeeplink = function()
             {
-                var ref = mx.Host.getParameter('ref');
+                var ref = mx.Host.getParameter("ref");
                 if( ref ) 
                 {
                     var parts = ref.split("|");
@@ -623,7 +627,7 @@
             if( mx.MainImage.getUrl() !== "" )
             {
                 mx.$("#background").style.backgroundImage = "url(" + mx.MainImage.getUrl() + ")";
-                mx.$("#background").style.opacity = "1";
+                mx.$("#background").style.opacity = mx.darkLayout ? "0.7" : "1";
             }
             else
             {
@@ -655,7 +659,7 @@
             mx.Page.checkDeeplink();
             
 
-            if( !mx.Actions.getActiveNavigation() ) mx.Actions.openHome();
+            if( !mx.History.getActiveNavigation() ) mx.Actions.openHome();
 
             mx.$('#page').style.opacity = "1";
         }
@@ -756,6 +760,14 @@
 	</script>
 </head>
 <body>
+<script>
+    var darkMql = window.matchMedia('(prefers-color-scheme: dark) and (max-width: 600px)');
+    if( darkMql.matches )
+    {
+        document.body.classList.add("dark");
+    }
+    document.cookie = "theme=" + ( darkMql.matches ? "dark" : "light" ) + "; expires=0; domain=" + document.location.hostname;
+</script>
 <div id="page" style="opacity:0;transition:opacity 300ms linear;">
     <div id="menu" class="c-panel">
         <div class="group">
@@ -795,17 +807,26 @@
                 <div id="background"></div>
                 <div id="submenu"></div>
             </div>
-            <iframe frameborder="0" style="display:none"></iframe>
+            <iframe id="embed" frameborder="0" style="display:none"></iframe>
+            <div id="embedProgress" style="display:none">
+                <svg x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve"><use href="#progress" /></svg>
+            </div>
         </div>
     </div>
     <div id="layer"></div>
-    <div id="info"><div><span class="info"></span><span class="hint"></span><span class="progress">
-    <svg version="1.1" id="L9" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
-        <path fill="#fff" d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50">
-            <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 50 50" to="360 50 50" repeatCount="indefinite"></animateTransform>
-        </path>
-    </svg>
-    </span></div></div>
+    <div id="info">
+        <div>
+            <span class="info"></span>
+            <span class="hint"></span>
+            <span class="progress">
+                <svg id="progress" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
+                    <path fill="currentColor" d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50">
+                        <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 50 50" to="360 50 50" repeatCount="indefinite"></animateTransform>
+                    </path>
+                </svg>
+            </span>
+        </div>
+    </div>
 </div>
 </body>
 </html>

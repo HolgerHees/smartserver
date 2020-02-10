@@ -68,6 +68,10 @@ mx.OnDocReady.push( initPage );
 </script>
 </head>
 <body>
+<script>
+    var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
+    if( theme ) document.body.classList.add(theme);
+</script>
 <?php
     echo '<div class ="header table">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.CIDetails.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
     
