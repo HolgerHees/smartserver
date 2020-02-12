@@ -1,36 +1,28 @@
-- name: prepare folder
-  file:
-    path: "{{redis_socket_path}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0777
-    
 - name: check started docker
   systemd:
     name: docker
     state: started
     
-- name: check docker image exists
-  shell: "docker images custom_redis:1.0.0"
-  register: image_exists
-  changed_when: "'custom_redis' not in image_exists.stdout"
+#- name: check docker image exists
+#  shell: "docker images custom_redis:1.0.0"
+#  register: image_exists
+#  changed_when: "'custom_redis' not in image_exists.stdout"
   
-# async docker build is used to show progress and prevent travisci killing our job because of inactivity
-- name: compose docker image => image does not exists
-  shell: "docker build -t custom_redis:1.0.0 roles/redis/templates/container/"
-  async: 600
-  poll: 0
-  register: docker_build
-  when: "'custom_redis' not in image_exists.stdout"
+## async docker build is used to show progress and prevent travisci killing our job because of inactivity
+#- name: compose docker image => image does not exists
+#  shell: "docker build -t custom_redis:1.0.0 roles/redis/templates/container/"
+#  async: 600
+#  poll: 0
+#  register: docker_build
+#  when: "'custom_redis' not in image_exists.stdout"
 
-- name: wait for docker image => image does not exists
-  async_status: jid={{ docker_build.ansible_job_id }}
-  register: job_result
-  until: job_result.finished
-  retries: 10
-  delay: 60
-  when: "'custom_redis' not in image_exists.stdout"
+#- name: wait for docker image => image does not exists
+#  async_status: jid={{ docker_build.ansible_job_id }}
+#  register: job_result
+#  until: job_result.finished
+#  retries: 10
+#  delay: 60
+#  when: "'custom_redis' not in image_exists.stdout"
   
 #- name: debug
 #  debug:
@@ -39,17 +31,17 @@
 - name: create docker container
   docker_container:
     name: redis
-    image: custom_redis:1.0.0
+    image: redis:5.0.7-alpine
     state: present
-    network_mode: "none"
+#    network_mode: "none"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: redis
-    volumes:
-      - '{{redis_socket_path}}:/var/run/redis:z'
+    ports:
+     - "127.0.0.1:6379:6379"
   notify: "restart redis"
 
 #- name: clean old docker images => image does not exists

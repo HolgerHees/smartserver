@@ -55,7 +55,7 @@
 - name: create cron job
   vars:
     name: "Weatherdata"
-    cmd: "docker exec apache2 sh -c \"php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php\""
+    cmd: "docker exec php sh -c \"php -f {{projects_path}}toolbox/cmd/dataProvider/fetchWeatherData.php\""
     file: "ansible_openhab_toolbox"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml

@@ -47,12 +47,12 @@
     name: grafana
     image: grafana/grafana:6.4.4
     state: present
-    network_mode: "host"
+#    network_mode: "host"
     user: "root:root"
 #    recreate: true
     env:
       GF_SERVER_DOMAIN: "{{server_domain}}"
-      GF_SERVER_HTTP_ADDR: "127.0.0.1"
+#      GF_SERVER_HTTP_ADDR: "127.0.0.1"
       GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:/grafana"
 #      GF_LOG_MODE: "syslog"
 #      GF_LOG_SYSLOG_TAG: "grafana"
@@ -64,10 +64,17 @@
     volumes:
       - '{{global_lib}}grafana:/var/lib/grafana:z'
       - '{{global_lib}}grafana/provisioning:/etc/grafana/provisioning:z'
-    #ports:
-    # - "9000:3000"  
+    ports:
+     - "127.0.0.1:3000:3000"
   notify: "restart grafana"
     
+- name: connect grafana with databases
+  docker_network:
+    name: grafana_databases
+    connected:
+      - grafana
+      - influxdb
+
 - name: create systemd service
   vars:
     container_name: "grafana"

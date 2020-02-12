@@ -279,7 +279,7 @@
                 if( !url )
                 {
                     url = iframeElement.getAttribute("src");
-                    if( url ) console.log(" FALLBACK URL");
+                    if( url ) console.log(" FALLBACK URL" );
                 }
 
                 console.log(">>>> IFRAME " + history.length + " " + url + " <<<<");
@@ -303,8 +303,16 @@
                         {
                             if( entry !== mx.History.getActiveNavigation() )
                             {
-                                activateMenu(entry.getSubGroup());
-                                mx.History.replaceEntry(entry,null);
+                                if( entry.isEntry() )
+                                {
+                                    activateMenu(entry.getSubGroup());
+                                    mx.History.replaceEntry(entry,null);
+                                }
+                                else
+                                {
+                                    console.log("Should not happen " + entry.getId() );
+                                    debugger;
+                                }
                             }
                         }
                         else
@@ -314,8 +322,11 @@
                     }
                 }    
                 
-                hideMenu();
-                showIFrame();
+                if( iframeElement.style.display != "" )
+                {
+                    hideMenu();
+                    showIFrame();
+                }
             }
             
             function setIFrameUrl(url)
@@ -323,7 +334,6 @@
                 if( iframeElement.getAttribute("url") != url )
                 {
                     iframeElement.setAttribute('src', url );
-                    //iframeElement.contentWindow.location = url;
 
                     iframeProgressElement.style.display = "";
 
@@ -333,7 +343,7 @@
             
             function showIFrame()
             {
-                if( iframeElement.style.display == 'none' )
+                if( iframeElement.style.display != "" )
                 {
                     iframeProgressElement.style.display = "none";
 
@@ -344,35 +354,38 @@
             
             function hideIFrame()
             {
-                if( iframeElement.style.display == "" )
+                if( iframeElement.style.display == "" || iframeProgressElement.style.display == "" )
                 {
                     iframeElement.removeAttribute('src');
                     
                     mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"setSubMenu2");
                     iframeElement.style.opacity = "";
                     
-                    //iframeElement.contentWindow.location.replace("about:blank");
+                    iframeProgressElement.style.display = "none";
                 }
             }
             
             function hideMenu()
             {
+                mx.Timer.clean();
+
                 if( inlineElement.style.display == "" )
                 {
-                    mx.Timer.clean();
-
                     //mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
                     inlineElement.style.display = "none";
                 }
             }
 
-            function cleanMenu()
+            function showMenu()
             {
                 mx.Timer.clean();
 
-                inlineElement.style.display = "";
+                if( inlineElement.style.display != "" )
+                {
+                    inlineElement.style.display = "";
 
-                hideIFrame();
+                    hideIFrame();
+                }
             }
             
             function fadeInMenu(submenu,callbacks)
@@ -441,7 +454,7 @@
             {
                 if( mx.History.getActiveNavigation() === subGroup ) return;
                 
-                cleanMenu();
+                showMenu();
 
                 mx.Menu.buildMenu( subGroup, setMenuEntries);
 
@@ -486,7 +499,7 @@
                 
                 if( !isActive )
                 {
-                    cleanMenu();
+                    showMenu();
                     
                     mx.History.addMenu(subGroup);
                 }

@@ -17,7 +17,7 @@ datasources:
     # <int> org id. will default to orgId 1 if not specified
     orgId: 1
     # <string> url
-    url: http://127.0.0.1:8086
+    url: http://influxdb:8086
     # <string> database password, if used
     password: {{vault_grafana_influxdb_password}}
     # <string> database user, if used

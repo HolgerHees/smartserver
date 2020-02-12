@@ -16,7 +16,7 @@
     priority: "100"
     state: present
   when: is_suse|bool
-    
+
 - name: install required packages => is_suse
   zypper:
     name: [
@@ -36,21 +36,22 @@
     state: present
   notify: "restart netdata"
   when: is_suse|bool
-  
+
 - name: prepare needed folder
   file:
-    path: '{{ item }}'
+    path: '{{ item.path }}'
     state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: '{{ item.mode }}'
   with_items:
-    - "{{ global_lib }}netdata"
-    - "{{ global_lib }}netdata/cache"
-    #- "/etc/netdata/custom-plugins.d"
-    - "/etc/netdata/health.d"
-    - "/opt/netdata_helper"
-  
+    - { mode: "u=rwx,g=rx,o=", path: "{{data_path}}" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{ global_lib }}netdata" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{ global_lib }}netdata/cache" }
+    #- { mode: "u=rwx,g=rx,o=rx", path: "/etc/netdata/custom-plugins.d" }
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/netdata/health.d" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "/opt/netdata_helper" }
+
 - name: prepare missing folder => is_fedora
   file:
     path: '{{item}}'
@@ -63,7 +64,7 @@
     - "/usr/lib64/netdata/"
     - "/usr/lib64/netdata/conf.d/"
   when: is_fedora|bool
-    
+
 - name: copy config
   template:
     src: "templates{{item}}"
@@ -82,17 +83,17 @@
     - "/etc/netdata/health.d/net.conf"
     - "/etc/netdata/health.d/fping.conf"
   notify: "restart netdata"
-  
+
 - name: copy helper
   template:
-    src: "templates{{item}}"
-    dest: "{{item}}"
+    src: "templates{{item.path}}"
+    dest: "{{item.path}}"
     owner: root
     group: root
-    mode: 0750
+    mode: "{{item.mode}}"
   with_items:
-    - "/opt/netdata_helper/send_notification.sh"
-    - "/opt/netdata_helper/inform_openhab.php"
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/netdata_helper/send_notification.sh" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "/opt/netdata_helper/inform_openhab.php" }
 
 - name: change runtime user
   lineinfile:
@@ -105,14 +106,14 @@
     #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
     #- { field: "Nice", value: "0" } # was "#Nice=0" before
   notify: "restart netdata"
-  
+
 # ***** DATABASE ****
 - name: check influxdb data
   stat:
     path: "{{ global_lib }}influxdb/data/opentsdb"
   register: influxdb_data_exists
   changed_when: not influxdb_data_exists.stat.exists
-  
+
 - name: check influxdb service => database does not exists
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
   when: "not influxdb_data_exists.stat.exists"
@@ -140,7 +141,7 @@
     sub_domain: "netdata"
     include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
-  
+
 - name: create cron job
   vars:
     name: "Influxdb OpenTSDB Backup"
@@ -153,6 +154,6 @@
 - name: create cron job
   vars:
     name: "Netdata error check"
-    cmd: "docker exec apache2 sh -c \"php -f /opt/netdata_helper/inform_openhab.php\""
+    cmd: "docker exec php sh -c \"php -f /opt/netdata_helper/inform_openhab.php\""
     file: "ansible_netdata"
   import_tasks: roles/cron/tasks/add_cronjob.yml

@@ -1,132 +1,65 @@
-- name: install required packages => is_fedora
-  yum:
-    name: [
-        php 
-      , php-mysqlnd
-      #, php-cli              # pcntl & posix
-      , php-devel 
-      , php-pecl-imagick
-      , php-pecl-redis
-      , php-mbstring 
-      , php-process          # posix 
-      , php-pecl-zip 
-      , php-gd 
-      , php-pear-Net-Curl
-      , php-common           # openssl, fileinfo, ctype & iconv
-      , php-json             
-      , php-xml              # dom, xmlwriter, xmlreader
-      , php-intl             
-      , php-pecl-apcu
-      , php-opcache          
-      , systemd-devel         # php-systemd => nextcloud
-    ]
-    state: present
-  notify: "restart apache2"
-  when: is_fedora|bool
-  
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        php7 
-      , php7-mysql 
-      #, php7-pcntl 
-      , php7-devel 
-      , php7-imagick
-      , php7-redis 
-      , php7-mbstring 
-      , php7-posix            # nextcloud
-      , php7-zip 
-      , php7-gd 
-      , php7-curl 
-      , php7-openssl 
-      , php7-fileinfo
-      , php7-json             # phpmyadmin
-      , php7-ctype            # nextcloud
-      , php7-dom              # nextcloud
-      , php7-iconv            # nextcloud
-      , php7-intl             # nextcloud
-      , php7-xmlwriter        # nextcloud
-      , php7-xmlreader        # nextcloud
-      , php7-APCu             # nextcloud & resize.php
-      , php7-opcache          # nextcloud
-      , systemd-devel         # php-systemd => nextcloud
-    ]
-    state: present
-  notify: "restart apache2"
-  when: is_suse|bool
-  
-#- shell: "pecl info inotify"
-#  failed_when: "'command-not-found' in inotify_installed.stderr"
-#  changed_when: False
-#  register: inotify_installed
-        
-#- name: install inotify pecl module
-#  pear:
-#    name: pecl/inotify
-#    state: present
-#  when: inotify_installed.rc == 1
-#  notify: "restart apache2"
-  
-# nextcloud
-- name: "clone php-systemd git" 
-  git:
-#    accept_hostkey: yes
-    repo: 'https://github.com/systemd/php-systemd.git'
-    dest: '{{global_build}}php-systemd'
-#    force: yes
-    version: 'master'
-  register: clone_status
-  
-# nextcloud
-- name: "install php-systemd => clone status changed" 
-  shell: '{{ item }}'
-  args:
-    chdir: '{{global_build}}php-systemd'
-  with_items:
-    - 'phpize'
-    - './configure --with-systemd'
-    - 'make'
-    - 'make install'
-  notify: "restart apache2"
-  when: clone_status.changed
-  
-- name: copy config
-  template:
-    src: roles/php/templates/etc/php7/conf.d/{{item}}
-    dest: "/etc/{{ 'php7/conf.d/' if is_suse|bool else 'php.d/90-' }}{{item}}"
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - apcu.ini
-#    - inotify.ini
-    - systemd.ini
-  notify: "restart apache2"
-    
-- name: prepare opcache config
-  lineinfile:
-    path: /etc/{{ 'php7/cli/' if is_suse|bool else '' }}php.ini
-    regexp: '^\[opcache\]'
-    line: '[opcache]'
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
 
-- name: set cli config
-  import_tasks: roles/php/tasks/php_ini.yml
+- name: check docker image exists
+  shell: "docker images custom_php:7.3"
+  register: image_exists
+  changed_when: "'custom_php' not in image_exists.stdout"
+
+# async docker build is used to show progress and prevent travisci killing our job because of inactivity
+- name: compose docker image => image does not exists
+  shell: "docker build -t custom_php:7.3 roles/php/templates/container/ --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
+  async: 1800
+  poll: 0
+  register: docker_build
+  when: "'custom_php' not in image_exists.stdout"
+
+- name: wait for docker image => image does not exists
+  async_status: jid={{ docker_build.ansible_job_id }}
+  register: job_result
+  until: job_result.finished
+  retries: 30
+  delay: 60
+  when: "'custom_php' not in image_exists.stdout"
+
+# network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
+# php fpm is always listening only to 127.0.0.1 by default
+- name: create docker container
+  docker_container:
+    name: php
+    image: custom_php:7.3
+    state: present
+    network_mode: "host"
+    user: "{{system_users['www'].name}}:{{system_groups['www'].name}}"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: php
+    volumes:
+      - '{{htdocs_path}}:{{htdocs_path}}:z'
+      - '{{global_log}}:{{global_log}}:z'
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
+      - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
+      - '/opt/netdata_helper:/opt/netdata_helper:z'               # needed by netdata helper
+#    ports:
+#      - "127.0.0.1:9000:9000"
+  notify: "restart php"
+
+#- name: connect php with databases
+#  docker_network:
+#    name: php_databases
+#    connected:
+#      - php
+#      - mysql
+#      - influxdb
+#      - elasticsearch
+#      - redis
+
+- name: create systemd service
   vars:
-    php_ini_file: "/etc/{{ 'php7/cli/' if is_suse|bool else '' }}php.ini"
-
-- name: copy imagick config
-  template:
-    src: roles/php/templates/etc/ImageMagick-7/policy.xml
-    dest: /etc/ImageMagick-{{ '7' if is_suse|bool else '6' }}/policy.xml
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart apache2"
-
-#cp /etc/systemd/system/lognotifier.service
-#???cp /etc/systemd/system/doorkeeper.service
-#systemctl start lognotifier
-#systemctl enable lognotifier
-#???systemctl start doorkeeper
-#???systemctl enable doorkeeper
-
+    container_name: "php"
+  import_tasks: roles/container/tasks/add_docker_service.yml

@@ -24,7 +24,7 @@ echo "$message"  | systemd-cat -t system -p $level
 notify_openhab()
 {
   touch {{global_tmp}}netdata_notification.lock
-  docker exec apache2 sh -c "php -f /opt/netdata_helper/inform_openhab.php"
+  docker exec php sh -c "php -f /opt/netdata_helper/inform_openhab.php"
   sleep 60
   rm {{global_tmp}}netdata_notification.lock
 }

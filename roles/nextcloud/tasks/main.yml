@@ -134,24 +134,24 @@
 
 # ***** OCC *****
 - name: upgrade existing database => database exists and nextcloud installation changed
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ upgrade\""
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
   when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
 
 - name: add user => database does not exists
-  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; sudo -E -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: add user "{{vault_admin_username}}" => database does not exists
-  shell: "docker exec apache2 sh -c \"export OC_PASS={{vault_admin_web_password}}; sudo -E -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_admin_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
+  shell: "docker exec php sh -c \"php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # **** OTHER ****
@@ -176,7 +176,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
-    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php -f {{htdocs_path}}nextcloud/cron.php\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php\""
     file: "ansible_nextcloud"
     minute: "*/15"
   import_tasks: roles/cron/tasks/add_cronjob.yml
@@ -184,7 +184,7 @@
 - name: create cron job
   vars:
     name: "Nextcloud Fileindex"
-    cmd: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
+    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
     file: "ansible_nextcloud"
     hour: "1"
     minute: "0"

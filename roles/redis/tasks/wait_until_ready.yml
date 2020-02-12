@@ -10,5 +10,5 @@
 
 - name: wait for redis to become ready
   wait_for:
-    path: "{{redis_socket_path}}redis.sock"
+    port: 6379
   changed_when: ansible_facts.services["redis.service"].state != 'running'

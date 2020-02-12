@@ -11,7 +11,7 @@
 
 # ***** INSTALL APPS *****
 - name: install apps
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
   register: command_result
   failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
   changed_when: "'enabled' in command_result.stdout"
@@ -102,12 +102,12 @@
   
 # ***** ENABLE ADDITIONAL APPS *****
 - name: get app status
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:list\""
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:list\""
   register: app_status
   changed_when: no
 
 - name: enable keeweb and news apps
-  shell: "docker exec apache2 sh -c \"sudo -u {{system_users['www'].name}} php {{htdocs_path}}nextcloud/occ app:enable {{item}}\""
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item}}\""
   register: command_result
   failed_when: "'enabled' not in command_result.stdout"
   when: "item not in app_status.stdout.split('Disabled')[0]"
