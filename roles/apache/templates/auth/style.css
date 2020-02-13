@@ -29,10 +29,9 @@ body, html {
         margin: 0 auto;
         padding: 10px;
       }
-      .box > h1 {
-        text-align: center;
-      }
-      .box > div {
+      .box > h1,
+      .box > div,
+      .box > p {
         text-align: center;
       }
       .box > div > a.button {

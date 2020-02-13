@@ -1,3 +1,4 @@
+Alias /auth/invalid/ "{{htdocs_path}}auth/invalid.html"
 Alias /auth/relogin/ "{{htdocs_path}}auth/relogin.html"
 Alias /auth/ "{{htdocs_path}}auth/"
 

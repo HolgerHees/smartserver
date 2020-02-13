@@ -349,7 +349,7 @@
                     iframeProgressElement.style.display = "";
                     
                     // is needed to show iframe content in case of a loading error.
-                    // happens e.g. if the demo site is loaded the first side and the self signed certificate is not accepted for all subdomains
+                    // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
                     iframeLoadingTimer = setTimeout(function(){ showIFrame(); },10000);
 
                     hideMenu();
