@@ -3,7 +3,7 @@ body {
   background-color: white;
 }
 body.dark {
-    background-color: black;
+    background-color: #202124;
 }
 div.table {
   border: 1px solid #d2d2d2;

@@ -2,7 +2,7 @@
   --light-bg: white;
   --dark-bg: #202124;
   
-  --light-header-bg: #1976D2;
+  --light-header-bg: rgba(85,118,210,0.3);
   --dark-header-bg: rgba(25,118,210,0.3);
   
   --light-fullsize-header-bg: rgba(0,0,0,0.7);
@@ -27,9 +27,7 @@
   --dark-button-active-bg: rgba(25,118,210,0.3);
 
   --light-menu-text: #111;
-  --light-menu-info: #444;
   --dark-menu-text: #fff;
-  --dark-menu-info: #ddd;
   
   --light-menu-hover-bg: #f2f2f2;
   --light-menu-active-bg: rgba(51,122,183,.12);
@@ -72,7 +70,7 @@ html {
 }
 body {
     background-color: var(--light-bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-family: 'Open Sans', sans-serif;
     margin: 0;
     height: 100%;
     box-sizing: border-box;
@@ -254,6 +252,11 @@ body.dark #side #content #embedProgress svg {
 }
 #menu .spacer {
     flex-grow: 1;
+    color: var(--alarm-button-default);
+    line-height: 56px;
+    overflow: hidden;
+    font-weight: bold;
+    opacity: 0;
 }
 #menu .group {
     margin-bottom: 5px;
@@ -330,35 +333,26 @@ body.phone #menu .header {
     width: calc(100% - 10px);
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
     padding: 7px 5px;
     margin: 5px 10px 0 0px;
     box-sizing: border-box;
     border: 1px solid transparent;
+    padding-left: 40px;
 }
 #menu .service div:first-child {
-    padding-right: 10px;
     color: var(--light-menu-text);
     font-size: 16px;
 }
 body.dark #menu .service div:first-child {
     color: var(--dark-menu-text);
 }
-#menu .service div:last-child {
-    padding-left: 10px;
-    width: 50%;
-    box-sizing: border-box;
-    color: var(--light-menu-info);
-    font-size: 16px;
-}
-body.dark #menu .service div:last-child {
-    color: var(--dark-menu-info);
-}
 #menu .service, #submenu .service {
     transition: background-color 200ms ease-out; 
     -webkit-transition: background-color 200ms ease-out; 
     -moz-transition: background-color 200ms ease-out;
     -o-transition: background-color 200ms ease-out;
+}
+#menu .service {
     border-radius: 0 20px 20px 0;    
 }
 @media (hover: hover) {
@@ -601,4 +595,6 @@ body.phone #menu .burger.button {
 body.phone #menu .alarm.button {
     display:none;
 }
-
+body.phone #menu .spacer {
+    opacity: 1;
+}

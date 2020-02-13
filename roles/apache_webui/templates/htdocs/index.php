@@ -267,6 +267,8 @@
             var iframeElement = null;
             var iframeProgressElement = null;
             
+            var iframeLoadingTimer = null;
+            
             function iFrameLoadHandler(e)
             {
                 var url = null;
@@ -329,6 +331,15 @@
                 }
             }
             
+            function clearIFrameTimer()
+            {
+                if( iframeLoadingTimer ) 
+                {
+                    clearTimeout(iframeLoadingTimer);
+                    iframeLoadingTimer = null; 
+                }
+            }
+            
             function setIFrameUrl(url)
             {
                 if( iframeElement.getAttribute("url") != url )
@@ -336,6 +347,10 @@
                     iframeElement.setAttribute('src', url );
 
                     iframeProgressElement.style.display = "";
+                    
+                    // is needed to show iframe content in case of a loading error.
+                    // happens e.g. if the demo site is loaded the first side and the self signed certificate is not accepted for all subdomains
+                    iframeLoadingTimer = setTimeout(function(){ showIFrame(); },10000);
 
                     hideMenu();
                 }
@@ -345,6 +360,8 @@
             {
                 if( iframeElement.style.display != "" )
                 {
+                    clearIFrameTimer();
+
                     iframeProgressElement.style.display = "none";
 
                     iframeElement.style.display = "";
@@ -356,6 +373,8 @@
             {
                 if( iframeElement.style.display == "" || iframeProgressElement.style.display == "" )
                 {
+                    clearIFrameTimer();
+
                     iframeElement.removeAttribute('src');
                     
                     mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"setSubMenu2");
@@ -535,7 +554,7 @@
                 iframeProgressElement = mx.$("#content #embedProgress");
 
                 iframeElement = mx.$("#content #embed");
-                iframeElement.addEventListener('load', iFrameLoadHandler);      
+                iframeElement.addEventListener('load', iFrameLoadHandler);    
             }
 
             return ret;
@@ -700,6 +719,8 @@
                 mx.$('body').classList.remove('phone');
                 mx.$('body').classList.add('desktop');
             }
+            
+            mx.Page.initTheme();
         }       
         
         function initPage()
@@ -761,6 +782,8 @@
 
             // defined in netdata.js (/components/)
             mx.Alarms.init('.alarm.button','.alarm.button .badge');
+            
+            mx.$(".spacer").innerHTML = document.location.hostname;
         }
 
         mx.OnScriptReady.push( function(){
@@ -774,12 +797,25 @@
 </head>
 <body>
 <script>
-    var darkMql = window.matchMedia('(prefers-color-scheme: dark) and (max-width: 600px)');
-    if( darkMql.matches )
-    {
-        document.body.classList.add("dark");
-    }
-    document.cookie = "theme=" + ( darkMql.matches ? "dark" : "light" ) + "; expires=0; domain=" + document.location.hostname;
+    mx.Page = (function( ret ) {
+        ret.initTheme = function()
+        {
+            var darkMql = window.matchMedia('(prefers-color-scheme: dark) and (max-width: 600px)');
+            if( darkMql.matches )
+            {
+                document.body.classList.add("dark");
+            }
+            else
+            {
+                document.body.classList.remove("dark");
+            }
+            document.cookie = "theme=" + ( darkMql.matches ? "dark" : "light" ) + "; expires=0; domain=" + document.location.hostname;
+        };
+        
+        return ret;
+    })( mx.Page || {} );
+    
+    mx.Page.initTheme();
 </script>
 <div id="page" style="opacity:0;transition:opacity 300ms linear;">
     <div id="menu" class="c-panel">
@@ -795,7 +831,7 @@
         </div>
         <div class="group" id="menuTemplate" style="display:none">
             <div class="header"></div>
-            <div class="service button"><div></div><div></div></div>
+            <div class="service button"><div></div></div>
         </div>
         <?php
             if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )

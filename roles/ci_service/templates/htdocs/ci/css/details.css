@@ -9,7 +9,7 @@ body {
     margin: 0;
 }
 body.dark {
-    background-color: black;
+    background-color: #202124;
 }
 @media only screen and (max-width: 600px) {
     div.header.table:not(.sticky) {
@@ -31,7 +31,10 @@ div.header.table {
     transition: all 200ms ease-in-out;
 }
 body.dark div.header.table {
-    background-color: black;
+    background-color: #202124;
+    border-bottom: 1px solid #383a3e;
+    border-left: 1px solid #383a3e;
+    border-right: 1px solid #383a3e;
 }
 body.sticky div.header.table {
     display: table;

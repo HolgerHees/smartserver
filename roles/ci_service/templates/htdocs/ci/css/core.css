@@ -51,22 +51,22 @@ div.table > div.row > div > span:first-child {
   margin-top: 0;
 }
 div.table > div.row > div.running {
-  background-color: #dbab09;
+  background-color: #ffd768;
 }
 div.table > div.row > div > span.state.running {
-  color: #dbab09;
+  color: #ffd768;
 }
 div.table > div.row > div.success {
-  background-color: #28a745;
+  background-color: #b5ce69;
 }
 div.table > div.row > div > span.state.success {
-  color: #28a745;
+  color: #b5ce69;
 }
 div.table > div.row > div.stopped {
-  background-color: #868686;
+  background-color: #959595;
 }
 div.table > div.row > div > span.state.stopped {
-  color: #868686;
+  color: #959595;
 }
 div.table > div.row > div.retry {
   background-color: #541edc;
@@ -75,10 +75,10 @@ div.table > div.row > div > span.state.retry {
   color: #541edc;
 }
 div.table > div.row > div.failed {
-  background-color: #cb2431;
+  background-color: #ff7479;
 }
 div.table > div.row > div > span.state.failed {
-  color: #cb2431;
+  color: #ff7479;
 }
 div.table > div.row > div > span.state, 
 div.table > div.row > div > span.hash {
