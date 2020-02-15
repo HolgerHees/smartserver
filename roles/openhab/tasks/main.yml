@@ -316,6 +316,7 @@
     name: "openhab"
     js_file: "templates/webui/openhab.js"
     i18n_files: [ { language: "de", file: "templates/webui/openhab.de.json" } ]
+    icons: [ 'templates/webui/icons/openhab_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: copy apache vhost

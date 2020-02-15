@@ -192,12 +192,19 @@ mx.Panel = (function( ret ) {
         var offsetX = e.detail.pageX;
 
         options._.isOpen = isOpen(options);
+        
+        if( !options._.panelContainerWidth )
+        {
+            options._.panelContainerWidth = mx.Core.getBoundingClientRect(options.elements.panelContainer).width;
+        }
 
-        if( Math.abs(offsetX) < 45 || options._.isOpen )
+        // OPEN action is only active if the touch event is close to the left screen side
+        // CLOSE action is only active if the panel is open and
+        //    - the panel is fullsize (background layer is active)
+        //    - or the touch event is close to the right panel side (max 20% overlapping)
+        if( Math.abs(offsetX) < 45 || ( options._.isOpen && ( options.isBackgroundLayerEnabled || offsetX <= options._.panelContainerWidth * 1.2 ) ) )
         {
             initTopMargin(options);
-
-            options._.panelContainerWidth = mx.Core.getBoundingClientRect(options.elements.panelContainer).width;
 
             options._.touchStartPosition = offsetX;
 

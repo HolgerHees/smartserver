@@ -8,3 +8,4 @@
   with_items:
     - "{{htdocs_path}}main/"
     - "{{htdocs_path}}main/components/"
+    - "{{htdocs_path}}main/listener/"

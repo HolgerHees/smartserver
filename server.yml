@@ -29,12 +29,12 @@
     # search for "import_tasks: roles/fluentd/tasks/add_config.yml" to see which ones
     - { import_role: { name: fluentd, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'fluentd' ] }  # creates /etc/fluent/_.ansible.d
 
+    # is creating and fetching wwwrun uid and gid to make them available globaly for all roles
+    - { import_role: { name: apache, tasks_from: ensure_www_user_exists, handlers_from: empty }, tags: [ 'always' ] }
+
     # needed by all roles which needs to register their own vhost
     # search for "import_tasks: roles/apache/tasks/add_vhost.yml" to see which ones
     - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache' ] }    # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
-
-    # is creating and fetching wwwrun uid and gid to make them available globaly for all roles
-    - { import_role: { name: apache, tasks_from: ensure_www_user_exists, handlers_from: empty }, tags: [ 'always' ] }
 
     # needed by all roles which needs to register menu entries in the web ui like
     # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones

@@ -44,7 +44,7 @@
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0750
+    mode: 0755
   when: not nextcloud_exists.stat.exists
 
 - name: rename folder => nextcloud does not exists
@@ -160,6 +160,7 @@
     name: "nextcloud"
     js_file: "templates/webui/nextcloud.js"
     i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
+    icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: copy fluentd config

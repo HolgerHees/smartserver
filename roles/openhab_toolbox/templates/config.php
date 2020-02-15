@@ -1,5 +1,4 @@
 <?php
-
 class Setup
 {
     public static function getTimezone()

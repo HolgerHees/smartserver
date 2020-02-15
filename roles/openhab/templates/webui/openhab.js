@@ -1,4 +1,4 @@
-var subGroup = mx.Menu.getMainGroup('automation').addSubGroup('openhab', 100, '{i18n_Openhab}');
+var subGroup = mx.Menu.getMainGroup('automation').addSubGroup('openhab', 100, '{i18n_Openhab}', 'openhab_logo.svg');
 
 subGroup.addUrl('basicui',100, 'url', '//openhab.{host}/basicui/app', '{i18n_Control}', '{i18n_Basic UI}', false);
 subGroup.addUrl('paperui',200, 'url', '//openhab.{host}/paperui/index.html', '{i18n_Administration}', '{i18n_Paper UI}', false);

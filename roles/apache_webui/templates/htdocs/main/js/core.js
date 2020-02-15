@@ -256,22 +256,3 @@ mx.Core = (function( ret ) {
 
     return ret;
 })( mx.Core || {} );
-
-for (var n in mx.OnScriptReady) {
-    mx.OnScriptReady[n].call();
-}
-
-mx.OnScriptReady = {
-    push: function(func) {
-        func.call();
-    }
-};
-
-if (document.readyState === "complete" || document.readyState === "interactive")
-{
-    mx.Core.OnDocReady();
-}
-else
-{
-    document.addEventListener("DOMContentLoaded", mx.Core.OnDocReady);
-}

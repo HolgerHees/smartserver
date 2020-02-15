@@ -29,8 +29,8 @@
   --light-menu-text: #111;
   --dark-menu-text: #fff;
   
-  --light-menu-hover-bg: #f2f2f2;
-  --light-menu-active-bg: rgba(51,122,183,.12);
+  --light-menu-hover-bg: rgba(51,122,183,.12);
+  --light-menu-active-bg: rgba(51,122,183,.22);
   --dark-menu-hover-bg: rgba(51,122,183,.20);
   --dark-menu-active-bg: rgba(51,122,183,.30);
 
@@ -244,11 +244,15 @@ body.dark #side #content #embedProgress svg {
     color: var(--dark-embed-progress);
 }
 #menu #logo {
-    margin: 6px 6px 6px 0;
+    margin: 6px 6px 6px 2px;
     background-image:url(/main/img/marvinRightSmall.png);
     background-size: 44px 44px;
     height: 44px;
     width: 44px;
+    -webkit-tap-highlight-color: transparent;
+}
+body.phone #menu #logo {
+    margin-left: 14px;
 }
 #menu .spacer {
     flex-grow: 1;
@@ -316,7 +320,7 @@ body.dark #menu .logout:active {
     text-align: left;
     font-size: 18px;
     margin: 0 0 0 0;
-    padding: 2px 2px 2px 10px;
+    padding: 2px 2px 2px 25px;
     box-sizing: border-box;
     border-bottom: 1px solid var(--light-menu-headline-color);
     color: var(--light-menu-border-color);
@@ -333,17 +337,26 @@ body.phone #menu .header {
     width: calc(100% - 10px);
     display: flex;
     flex-direction: row;
-    padding: 7px 5px;
+    padding: 10px 0px;
     margin: 5px 10px 0 0px;
     box-sizing: border-box;
-    border: 1px solid transparent;
-    padding-left: 40px;
 }
 #menu .service div:first-child {
+    width: 16px;
+    padding: 1px 25px 2px 25px;
+}
+#menu .service div:first-child img {
+    filter: invert(28%);
+    /*filter: invert(50%);*/
+}
+body.dark #menu .service div:first-child img {
+    filter: invert(100%);
+}
+#menu .service div:last-child {
     color: var(--light-menu-text);
     font-size: 16px;
 }
-body.dark #menu .service div:first-child {
+body.dark #menu .service div:last-child {
     color: var(--dark-menu-text);
 }
 #menu .service, #submenu .service {
@@ -353,12 +366,14 @@ body.dark #menu .service div:first-child {
     -o-transition: background-color 200ms ease-out;
 }
 #menu .service {
-    border-radius: 0 20px 20px 0;    
+    border-radius: 0 21px 21px 0;    
+}
+#submenu .service {
+    border-radius: 20px;    
 }
 @media (hover: hover) {
   #menu .service.button:hover {
       background-color: var(--light-menu-hover-bg);
-      border: 1px solid rgba(0,0,0,0.1);
   }
   body.dark #menu .service.button:hover {
       background-color: var(--dark-menu-hover-bg);
@@ -373,8 +388,6 @@ body.dark #menu .service.button:active {
 }
 #menu .service.button.active {
     background-color: var(--light-menu-active-bg);
-    border-top: 1px solid rgba(0,0,0,.1);
-    border-bottom: 1px solid rgba(0,0,0,.1);
     color: #1976D2;
 }
 body.dark #menu .service.button.active {

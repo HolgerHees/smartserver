@@ -12,7 +12,7 @@
     dest: "{{projects_path}}toolbox/_lib/config.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0644
+    mode: 0640
   tags: ['apache_webui_page']
   
 #- name: bind directory

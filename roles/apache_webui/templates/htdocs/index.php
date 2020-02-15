@@ -89,11 +89,9 @@
                         getTitle: function(){ return mainGroup['title']; },
                         getSubGroup: function(subGroupId){ return mainGroup['subGroups'][subGroupId]['_']; },
                         //getSubGroups: function(){ return Object.values(mainGroup['subGroups']).map( entry => entry['_'] ); },
-                        addSubGroup: function(subGroupId,order,title){
+                        addSubGroup: function(subGroupId,order,title,iconUrl){
                             var subGroup = mainGroup['subGroups'][subGroupId] = {
-                                id:subGroupId,
-                                order: order,
-                                title: title,
+                                id:subGroupId, order: order, title: title, iconUrl: iconUrl,
                                 menuEntries: {},
                                 _: {
                                     isEntry: function(){ return false; },
@@ -102,10 +100,10 @@
                                     getMainGroup: function(){ return mainGroup['_']; },
                                     getEntry: function(entryId){ return subGroup['menuEntries'][entryId]['_']; },
                                     getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
-                                    addUrl: function(entryId,order,type,url,title,info,newWindow){
+                                    addUrl: function(entryId,order,type,url,title,info,newWindow,iconUrl){
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {
-                                            id: entryId, order:order,type:type,url:url,title:title,info:info,newWindow:newWindow,
+                                            id: entryId, order:order,type:type,url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
@@ -115,6 +113,7 @@
                                                 getTitle: function(){ return entry['title']; },
                                                 getInfo: function(){ return entry['info']; },
                                                 getNewWindow: function(){ return entry['newWindow']; },
+                                                getIconUrl: function(){ return entry['iconUrl']; },
                                                 getUrl: function(){ return entry['url']; }
                                             }
                                         };
@@ -230,7 +229,8 @@
                         var button = buttonTemplate.cloneNode(true);
                         button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
                         button.setAttribute("onClick","mx.Actions.openMenuById('" + mainGroup['id'] + "','" + subGroup['id'] + "');");
-                        button.firstChild.innerHTML = subGroup['title'];
+                        button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="main/icons/' + subGroup['iconUrl'] + '" height="20" width="20" />' : '';
+                        button.lastChild.innerHTML = subGroup['title'];
                         menuDiv.appendChild(button);
 
                         subGroup['menuEntries'] = sortMenu( subGroup['menuEntries'] );
@@ -243,9 +243,9 @@
             var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
             mainGroup = ret.addMainGroup('administration', 3000, '{i18n_Administration}');
-            mainGroup.addSubGroup('states', 100, '{i18n_Logs & States}');
-            mainGroup.addSubGroup('tools', 200, '{i18n_Tools}');
-            mainGroup.addSubGroup('devices', 300, '{i18n_Devices}');
+            mainGroup.addSubGroup('states', 100, '{i18n_Logs & States}', 'core_stats.svg');
+            mainGroup.addSubGroup('tools', 200, '{i18n_Tools}', 'core_tools.svg');
+            mainGroup.addSubGroup('devices', 300, '{i18n_Devices}', 'core_devices.svg');
 
             return ret;
         })( mx.Menu || {} );
@@ -458,9 +458,11 @@
             {
                 mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
                 
-                var element = document.getElementById(subGroup.getMainGroup().getId() + '-' + subGroup.getId());
-                
-                element.classList.add("active");
+                if( subGroup )
+                {
+                    var element = document.getElementById(subGroup.getMainGroup().getId() + '-' + subGroup.getId());
+                    element.classList.add("active");
+                }
             }
 
             ret.openMenuById = function(mainGroupId,subGroupId)
@@ -510,7 +512,7 @@
                 setIFrameUrl(new_url);
             };
 
-            ret.openHome = function()
+            ret.openHome = function(event)
             {
                 var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
                 
@@ -518,6 +520,8 @@
                 
                 if( !isActive )
                 {
+                    activateMenu(null);
+                    
                     showMenu();
                     
                     mx.History.addMenu(subGroup);
@@ -541,8 +545,15 @@
                 message += '<div class="imageTitle">' + mx.MainImage.getTitle() + '</div>';
                 message += '</div>';
 
-                if( !isActive ) setMenuEntries(message,[]);
-                else mx.$('#content #submenu').innerHTML = message;
+                if( !isActive ) 
+                {
+                    setMenuEntries(message,[]);
+                }
+                else 
+                {
+                    mx.$('#content #submenu').innerHTML = message;
+                    if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
+                }
 
                 mx.Timer.register(mx.Actions.openHome,60000 - (s * 1000));
             };
@@ -831,7 +842,7 @@
         </div>
         <div class="group" id="menuTemplate" style="display:none">
             <div class="header"></div>
-            <div class="service button"><div></div></div>
+            <div class="service button"><div></div><div></div></div>
         </div>
         <?php
             if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )

@@ -15,7 +15,7 @@
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0750
+    mode: 0755
   when: not phpmyadmin_exists.stat.exists
 
 - name: rename folder => phpmyadmin does not exists
@@ -37,6 +37,7 @@
     name: "phpmyadmin"
     js_file: "templates/webui/phpmyadmin.js"
     i18n_files: [ { language: "de", file: "templates/webui/phpmyadmin.de.json" } ]
+    listener: { "prefix": "mysql", "js_file": "templates/webui/phpmyadmin.listener.js" }
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: copy config

@@ -3,7 +3,7 @@ html += '<div><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/im
 html += '<div><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png" data-name="{i18n_Automower}" data-src="/cameraAutomowerImage" data-interval="3000"></a></div>';
 html += '</div>';
 
-var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}');
+var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}', 'proxy_camera.svg');
 cameraSubGroup.addHtml('cameras',100, html, function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); });
 
 var subGroup = mx.Menu.getMainGroup('administration').getSubGroup('devices');

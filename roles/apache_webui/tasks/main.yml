@@ -19,6 +19,7 @@
   with_items:
     - main/components
     - main/css
+    - main/icons
     - main/img
     - main/js
     - favicon.ico
