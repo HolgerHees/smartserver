@@ -45,7 +45,6 @@
     group: root
     mode: '{{ item.mode }}'
   with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "{{data_path}}" }
     - { mode: "u=rwx,g=rx,o=", path: "{{ global_lib }}netdata" }
     - { mode: "u=rwx,g=rx,o=", path: "{{ global_lib }}netdata/cache" }
     #- { mode: "u=rwx,g=rx,o=rx", path: "/etc/netdata/custom-plugins.d" }
