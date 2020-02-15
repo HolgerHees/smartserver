@@ -39,7 +39,7 @@
 
 - name: prepare needed folder
   file:
-    path: '{{ item.path }}'
+    path: '{{item}}'
     state: directory
     owner: root
     group: root
