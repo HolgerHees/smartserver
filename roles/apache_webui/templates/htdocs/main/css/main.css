@@ -171,6 +171,14 @@ body.dark #menu {
 body.dark #side #header {
     background-color: var(--dark-header-bg);
 }
+#side.iframe #header {
+  background-color: var(--light-panel-header-bg);
+
+}
+body.dark #side.iframe #header {
+  background-color: var(--dark-panel-header-bg);
+
+}
 .burger.button svg {
     height: 56px;
     width: 56px;

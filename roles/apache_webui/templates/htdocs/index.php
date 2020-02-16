@@ -254,7 +254,8 @@
     <script src="ressources?type=components"></script>
 
     <script>
-        //var lang = navigator.language || navigator.userLanguage;
+        var demoMode = document.location.search.indexOf("demo=") !== -1;
+
         var pageReady = false;
         
         var menuPanel = false;
@@ -263,6 +264,7 @@
         var readynessCount = 3; //(background image (scriptready), background image title (scriptready) & initPage (documentready) )
 
         mx.Actions = (function( ret ) {
+            var sideElement = null;
             var inlineElement = null;
             var iframeElement = null;
             var iframeProgressElement = null;
@@ -392,6 +394,8 @@
                 {
                     //mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
                     inlineElement.style.display = "none";
+                    sideElement.classList.remove("inline");
+                    sideElement.classList.add("iframe");
                 }
             }
 
@@ -402,6 +406,8 @@
                 if( inlineElement.style.display != "" )
                 {
                     inlineElement.style.display = "";
+                    sideElement.classList.add("inline");
+                    sideElement.classList.remove("iframe");
 
                     hideIFrame();
                 }
@@ -531,6 +537,8 @@
                 var h = datetime.getHours();
                 var m = datetime.getMinutes();
                 var s = datetime.getSeconds();
+                
+                if( demoMode ) h = 20;
 
                 var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2);
 
@@ -560,6 +568,8 @@
 
             ret.init = function()
             {
+                sideElement = mx.$("#side");
+                
                 inlineElement = mx.$("#content #inline");
                 
                 iframeProgressElement = mx.$("#content #embedProgress");
@@ -796,9 +806,10 @@
             
             mx.$(".spacer").innerHTML = document.location.hostname;
         }
-
+        
         mx.OnScriptReady.push( function(){
             var imageUrl = "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg";
+            if( demoMode ) imageUrl = "https://images.pexels.com/photos/814499/pexels-photo-814499.jpeg";
             var titleUrl = "/img/potd/todayTitle.txt";
             mx.MainImage.init(imageUrl,titleUrl,initContent);
         });
@@ -811,7 +822,7 @@
     mx.Page = (function( ret ) {
         ret.initTheme = function()
         {
-            var darkMql = window.matchMedia('(prefers-color-scheme: dark) and (max-width: 600px)');
+            var darkMql = window.matchMedia( ( demoMode ? '' : '(prefers-color-scheme: dark) and ' ) + '(max-width: 600px)');
             if( darkMql.matches )
             {
                 document.body.classList.add("dark");
