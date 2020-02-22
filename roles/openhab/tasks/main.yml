@@ -177,7 +177,7 @@
 
 - name: copy habpanel config
   copy:
-    src: "{{projects_path}}openhab2/templates/habpanel.config"
+    src: "{{projects_path}}openhab2/habpanel.config"
     dest: "{{data_path}}openhab-runtime/userdata/config/org/openhab/habpanel.config"
     owner: root
     group: root

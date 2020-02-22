@@ -1,9 +1,17 @@
 Alias /toolbox "{{htdocs_path}}toolbox"
 
+# forced http1 is needed for openhab app on android. Soemtimes is stucks with http2 enabled
+Protocols http/1.1
+ProtocolsHonorOrder Off
+
 <Location />
   ProxyPass http://127.0.0.1:8080/
   ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
+</Location>
+
+<Location /basicui/manifest.json>
+  Require all granted
 </Location>
 
 <Location /toolbox>

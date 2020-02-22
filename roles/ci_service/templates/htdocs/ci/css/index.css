@@ -6,9 +6,14 @@ body.dark {
     background-color: #202124;
 }
 div.table {
-  border: 1px solid #d2d2d2;
-  border-bottom: none;
+  border-top: 1px solid #d2d2d2;
 }
+div.table > div.row > div:first-child {
+  border-left: 1px solid #d2d2d2;
+} 
+div.table > div.row > div:last-child {
+  border-right: 1px solid #d2d2d2;
+} 
 div.table > div.row > div {
   border-bottom: 1px solid #d2d2d2;
 } 

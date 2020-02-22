@@ -1,145 +1,165 @@
 mx.Swipe = (function( ret ) {
-	var supportTouch;
-	var touchStartEvent;
-	var touchEndEvent;
-	var touchMoveEvent;
-	var touchCancelEvent;
-	var scrollEvent;
+    var supportTouch;
+    var touchStartEvent;
+    var touchEndEvent;
+    var touchMoveEvent;
+    var touchCancelEvent;
+    var scrollEvent;
 
-	var currentTarget;
-	var lastX;
-	var lastY;
-	var startX;
-	var startY;
-	var posHistory;
+    var currentTarget;
+    var lastX;
+    var lastY;
+    var startX;
+    var startY;
+    var posHistory;
 
-	var swipeActive = false;
-	var clickAttached = false;
+    var swipeActive = false;
+    var clickAttached = false;
 
-	function click(event)
-	{
-		event.preventDefault();
-		event.stopPropagation();
-	}
+    function click(event)
+    {
+        event.preventDefault();
+        event.stopPropagation();
 
-	function touchEnd(event)
-	{
-		swipeActive = false;
+        //console.log("prevent click");
+    }
 
-		window.removeEventListener(touchMoveEvent,touchMove);
-		window.removeEventListener(touchEndEvent,touchEnd);
-		window.removeEventListener(touchCancelEvent,touchEnd);
+    function touchEnd(event)
+    {
+        swipeActive = false;
 
-		if( clickAttached )
-		{
-			if (event === null)
-			{
-				currentTarget.removeEventListener("click", click);
-				clickAttached = false;
-			}
-			else
-			{
-				// Remove click event handler with a small delay. Because click event is triggered after the touchEnd event.
-				window.setTimeout(function()
-				{
-					currentTarget.removeEventListener("click", click);
-					clickAttached = false;
-				}, 100);
-			}
-		}
+        window.removeEventListener(touchMoveEvent,touchMove);
+        window.removeEventListener(touchEndEvent,touchEnd);
+        window.removeEventListener(touchCancelEvent,touchEnd);
 
-		var posEntry = posHistory[ posHistory.length - 1 ];
-		var lastTime = posEntry.time;
-		lastX = posEntry.pageX;
-		lastY = posEntry.pageY;
+        if( clickAttached )
+        {
+            if (event === null)
+            {
+                //console.log("touchEndForced");
+                currentTarget.removeEventListener("click", click);
+            }
+            else
+            {
+                //console.log("touchEndPre");
+                // Remove click event handler with a small delay. Because click event is triggered after the touchEnd event.
+                window.setTimeout(function()
+                {
+                    //console.log("touchEndPost");
+                    //if( this !== currentTarget )
+                    //{
+                    //    console.log("touchEndFixed !!!!!!!!!!!!!!!!!");
+                    //}
 
-		var accelerationX = 0;
-		var accelerationY = 0;
-		for( var i = posHistory.length - 1; i >= 0 ; i-- )
-		{
-			var posEntry = posHistory[i];
-			var accelerationTime = lastTime - posEntry.time;
-			if( accelerationTime >= 100 || i === 0 )
-			{
-				accelerationX = ( lastX - posEntry.pageX ) / accelerationTime;
-				accelerationY = ( lastY - posEntry.pageY ) / accelerationTime;
-				break;
-			}
-		}
+                    this.removeEventListener("click", click);
 
-		mx.Core.triggerEvent(currentTarget, 'tapend', true, { accelerationX: accelerationX, accelerationY: accelerationY } );
-	}
+                }.bind(currentTarget), 100);
 
-	function touchMove(event)
-	{
-		var touchEvent = mx.Core.getEvent(event);
+                // we have to use bind, otherwise if another touch event happens during this timeout period it will overwrite the currentTarget
+            }
 
-		var diffX = Math.abs( startX - touchEvent.pageX );
-		var diffY = Math.abs( startY - touchEvent.pageY );
+            clickAttached = false;
+        }
+        //else
+        //{
+            //console.log("touchEnd");
+        //}
 
-		if( diffX < 10 && diffY < 10 ) return;
+        var posEntry = posHistory[ posHistory.length - 1 ];
+        var lastTime = posEntry.time;
+        lastX = posEntry.pageX;
+        lastY = posEntry.pageY;
 
-		if( !clickAttached )
-		{
-			// prevent triggering click events
-			//document.addEventListener("click",click);
-			currentTarget.addEventListener("click", click);
-			clickAttached = true;
-		}
+        var accelerationX = 0;
+        var accelerationY = 0;
+        for( var i = posHistory.length - 1; i >= 0 ; i-- )
+        {
+            var posEntry = posHistory[i];
+            var accelerationTime = lastTime - posEntry.time;
+            if( accelerationTime >= 100 || i === 0 )
+            {
+                accelerationX = ( lastX - posEntry.pageX ) / accelerationTime;
+                accelerationY = ( lastY - posEntry.pageY ) / accelerationTime;
+                break;
+            }
+        }
 
-		mx.Core.triggerEvent(currentTarget, 'tapmove', true, { pageX: touchEvent.pageX, pageY: touchEvent.pageY, diffX: lastX - touchEvent.pageX, diffY: lastY - touchEvent.pageY } );
+        mx.Core.triggerEvent(currentTarget, 'tapend', true, { accelerationX: accelerationX, accelerationY: accelerationY } );
+    };
 
-		lastX = touchEvent.pageX;
-		lastY= touchEvent.pageY;
+    function touchMove(event)
+    {
+        var touchEvent = mx.Core.getEvent(event);
 
-		posHistory.push({pageX: lastX, pageY: lastY, time: Date.now()});
-	}
+        var diffX = Math.abs( startX - touchEvent.pageX );
+        var diffY = Math.abs( startY - touchEvent.pageY );
 
-	function touchStart(event)
-	{
-		if ( event.which && event.which !== 1 ) {
-			return false;
-		}
+        if( diffX < 10 && diffY < 10 ) return;
 
-		// we missed a touchEnd event so we have to simulate it
-		if( swipeActive ) touchEnd(null);
+        if( !clickAttached )
+        {
+            //console.log("touchMove");
+            // prevent triggering click events
+            //document.addEventListener("click",click);
+            currentTarget.addEventListener("click", click);
+            clickAttached = true;
+        }
 
-		swipeActive = true;
+        mx.Core.triggerEvent(currentTarget, 'tapmove', true, { pageX: touchEvent.pageX, pageY: touchEvent.pageY, diffX: lastX - touchEvent.pageX, diffY: lastY - touchEvent.pageY } );
 
-		var touchEvent = mx.Core.getEvent(event);
-		currentTarget = touchEvent.target;
+        lastX = touchEvent.pageX;
+        lastY= touchEvent.pageY;
 
-		startX = lastX = touchEvent.pageX;
-		startY = lastY = touchEvent.pageY;
+        posHistory.push({pageX: lastX, pageY: lastY, time: Date.now()});
+    };
 
-		posHistory = [{pageX: startX, pageY: startY, time: Date.now()}];
+    function touchStart(event)
+    {
+        if ( event.which && event.which !== 1 ) {
+            return false;
+        }
 
-		window.addEventListener(touchMoveEvent,touchMove);
-		window.addEventListener(touchEndEvent,touchEnd);
-		window.addEventListener(touchCancelEvent,touchEnd);
+        // we missed a touchEnd event so we have to simulate it
+        if( swipeActive ) touchEnd(null);
 
-		// IE does not handle window leave events. A workaround is to catch body leave events
-		if( mx.Core.isIEorEdge() ) mx.$("body").addEventListener("mouseleave", touchEnd);
+        swipeActive = true;
 
-		mx.Core.triggerEvent(currentTarget, 'tapstart', true, {pageX: startX, pageY: startY} );
-	}
+        //console.log("touchStart");
+        
+        var touchEvent = mx.Core.getEvent(event);
+        currentTarget = touchEvent.target;
 
-	ret.init = function()
-	{
-		supportTouch = mx.Core.isTouchDevice();
-		touchStartEvent = supportTouch ? "touchstart" : "mousedown";
-		touchEndEvent = supportTouch ? "touchend" : "mouseup";
-		touchMoveEvent = supportTouch ? "touchmove" : "mousemove";
-		touchCancelEvent = supportTouch ? "touchcancel" : "mousecancel";
-		scrollEvent = "touchmove scroll";
+        startX = lastX = touchEvent.pageX;
+        startY = lastY = touchEvent.pageY;
 
-		window.addEventListener(touchStartEvent, touchStart);
+        posHistory = [{pageX: startX, pageY: startY, time: Date.now()}];
 
-		/*window.addEventListener(scrollEvent,function(e)
-		{
-			console.log("scrollEvent");
-		});*/
-	};
+        window.addEventListener(touchMoveEvent,touchMove);
+        window.addEventListener(touchEndEvent,touchEnd);
+        window.addEventListener(touchCancelEvent,touchEnd);
 
-	return ret;
+        // IE does not handle window leave events. A workaround is to catch body leave events
+        if( mx.Core.isIEorEdge() ) mx.$("body").addEventListener("mouseleave", touchEnd);
+
+        mx.Core.triggerEvent(currentTarget, 'tapstart', true, {pageX: startX, pageY: startY} );
+    };
+
+    ret.init = function()
+    {
+        supportTouch = mx.Core.isTouchDevice();
+        touchStartEvent = supportTouch ? "touchstart" : "mousedown";
+        touchEndEvent = supportTouch ? "touchend" : "mouseup";
+        touchMoveEvent = supportTouch ? "touchmove" : "mousemove";
+        touchCancelEvent = supportTouch ? "touchcancel" : "mousecancel";
+        scrollEvent = "touchmove scroll";
+
+        window.addEventListener(touchStartEvent, touchStart);
+
+        /*window.addEventListener(scrollEvent,function(e)
+        {
+            console.log("scrollEvent");
+        });*/
+    };
+
+    return ret;
 })( mx.Swipe || {} );
