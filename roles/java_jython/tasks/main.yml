@@ -4,8 +4,18 @@
     repo: 'https://github.com/jythontools/jython.git'
     dest: '/opt/jython'
     # commit key from 27.09.2018
-    version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
+    #version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
+    # commit key from 25.02.2020 - much slower then version from 27.09.2018
+    version: 'f93926de404142f1fcf950c0c058194e61c3b91f'
   register: clone_status
+
+- name: copy ant.properties
+  copy:
+    src: "templates/ant.properties"
+    dest: "/opt/jython/ant.properties"
+    owner: "root"
+    group: "root"
+  register: property_status
 
 # async jython build is used to show progress and prevent travisci killing our job because of inactivity
 - name: run install => clone status changed
@@ -15,7 +25,7 @@
   async: 900
   poll: 0
   register: jython_build
-  when: clone_status.changed
+  when: clone_status.changed or property_status.changed
 
 - name: wait for jython build => clone status changed
   async_status: jid={{ jython_build.ansible_job_id }}
@@ -23,4 +33,4 @@
   until: job_result.finished
   retries: 30
   delay: 60
-  when: clone_status.changed
+  when: clone_status.changed or property_status.changed
