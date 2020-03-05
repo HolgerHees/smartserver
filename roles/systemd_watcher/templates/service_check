@@ -1,0 +1,60 @@
+#!/usr/bin/python3
+
+import subprocess
+import sys
+import glob
+from os import path
+import re
+
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    
+config_dir = "/dataDisk/etc/systemd_watcher/services/"
+
+exit_status = 0
+
+result = subprocess.run([ "/usr/sbin/service --status-all | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+lines = result.stdout.decode("utf-8").split("\n")
+for line in lines:
+    columns = line.split()
+    if len(columns) == 0:
+        continue
+    
+    error("Service '{}' failed".format(columns[0]))
+    exit_status = 1
+
+files = glob.glob("{}*.conf".format(config_dir))
+for config_file in files:
+    with open(config_file) as f:
+        
+        config = f.readline().strip().split(":")
+        
+        systemd_service = config[0]
+        role_name = config[0]
+        
+        result = subprocess.run([ "/usr/bin/systemctl status {}".format(systemd_service) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        status = result.stdout.decode("utf-8")
+        
+        m = re.search("could not be found",status)
+        if m:
+            error("Service '{}' from role '{}' is unknown".format(systemd_service,role_name)) 
+            exit_status = 1
+            continue
+
+        m = re.search("Loaded:[^;]+; ([^;]+); .*",status)
+        is_enabled = m.group(1) == "enabled" or m.group(1) == "static"
+        
+        m = re.search("Active: ([^\s]+).*",status)
+        is_active = m.group(1) == "active"
+
+        if not is_enabled or not is_active:
+            status = []
+            if not is_active:
+                status.append("active")
+            if not is_enabled:
+                status.append("enabled")
+
+            error("Service '{}' is not {}".format(systemd_service," and ".join(status)))
+            exit_status = 1
+
+exit(exit_status)

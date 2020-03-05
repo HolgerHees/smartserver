@@ -35,6 +35,11 @@
     path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
     state: absent
 
+- name: register systemd service watcher
+  vars:
+    name: "mdmonitor"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
 - name: set cron job env
   cron:
     name: PATH

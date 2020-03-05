@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+
+import json
+import glob
+import os.path
+
+from plugins import docker
+
+target_dir = "/dataDisk/var/log/update_notifier/"
+config_dir = "/dataDisk/etc/update_notifier/"
+
+state_file = "{}software_versions.state".format(target_dir)
+
+last_states = {}
+if os.path.isfile(state_file):
+    with open(state_file, 'r') as f:
+        data = json.load(f)
+        for state in data:
+            last_states[state['name']] = state
+
+current_states = []
+
+#print("Processing docker projects")
+
+update_message_r = []
+upgrade_message_r = []
+
+files = glob.glob("{}*.conf".format(config_dir))
+for config_file in files:
+    with open(config_file) as json_data:
+        data = json.load(json_data)
+
+        if data['type'] == "docker":
+
+            #print("  - '{}'".format(data['name']), end='')
+
+            repo = docker.Repository(data['docker_repository'],data['docker_pattern'])
+
+            current_version = repo.getCurrentVersion()
+            
+            new_versions = repo.getNewVersions()
+            
+            current_state = { 'name': data['name'], 'current': current_version, 'update': "", 'upgrades': [] }
+            for branch in new_versions:
+                if repo.getCurrentBranch() == branch:
+                    if new_versions[branch] != current_version:
+                        current_state['update'] = new_versions[branch]
+                else:
+                    current_state['upgrades'].append(new_versions[branch])
+               
+            #status = []
+            #color = ""
+            #if current_state['update'] != "":
+            #    status.append("updates")
+            #    color = "\033[0;31m"
+                    
+            #if len(current_state['upgrades']) > 0:
+            #    status.append("upgrades")
+            #    if color == "":
+            #        color = "\033[1;33m"
+
+            #if len(status) > 0:
+            #    print( " {}has {}\033[0m".format(color," & ".join(status)))
+            #else:
+            #    print( " \033[0;32mis updatet\033[0m")
+                
+            if current_state['name'] in last_states:
+                last_state = last_states[current_state['name']]
+                if last_state['update'] != current_state['update']:
+                    update_message_r.append("{}: version {} is available".format(current_state['name'], current_state['update']))
+
+                if last_state['upgrades'] != current_state['upgrades']:
+                    upgrade_message_r.append("{}: versions {} are available".format(current_state['name'], current_state['upgrades']))
+                    
+            current_states.append(current_state)
+            
+with open(state_file, 'w') as f:
+    json.dump(current_states, f)
+    
+if len(update_message_r) > 0:
+    print("There are new updates")
+    for message in update_message_r:
+        print("  - {}".format(message))
+
+if len(upgrade_message_r) > 0:
+    if len(update_message_r) > 0:
+        print("")
+        
+    print("There are new upgrades")
+    for message in upgrade_message_r:
+        print("  - {}".format(message))

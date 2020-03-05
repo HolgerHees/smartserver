@@ -7,3 +7,7 @@
     mode: 0644
   notify: "restart {{container_name}}"
  
+- name: register systemd service watcher
+  vars:
+    name: "{{container_name}}"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

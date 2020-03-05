@@ -20,3 +20,8 @@
     group: root
     mode: 0640
   notify: "restart smartd"
+
+- name: register service watcher
+  vars:
+    name: "smartd"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

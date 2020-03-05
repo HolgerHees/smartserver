@@ -121,6 +121,11 @@
   with_items:
     - "heating_sensors/TempCmd"
 
+- name: register service watcher
+  vars:
+    name: "vcontrold"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
 - name: create cron job => is_production
   vars:
     name: "Heating Control"

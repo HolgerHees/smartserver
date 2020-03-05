@@ -92,6 +92,11 @@
 # first test run
 #elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
 
+- name: register systemd service watcher
+  vars:
+    name: "elastalert"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/elastalert.conf"

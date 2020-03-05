@@ -92,3 +92,11 @@
     sub_domain: "kibana"
     include: "templates/etc/apache2/_.ansible.vhost.d/kibana.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
+
+- name: register update notifier
+  vars:
+    name: "kibana"
+    type: "docker"
+    docker_repository: "amazon/opendistro-for-elasticsearch-kibana"
+    docker_pattern: "^([0-9\\.]+)$"
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

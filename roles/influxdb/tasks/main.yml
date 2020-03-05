@@ -57,3 +57,11 @@
     hour: "0"
     minute: "45"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: register update notifier
+  vars:
+    name: "influxdb"
+    type: "docker"
+    docker_repository: "influxdb"
+    docker_pattern: "^([0-9\\.]+)$"
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

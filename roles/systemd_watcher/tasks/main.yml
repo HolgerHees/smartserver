@@ -6,20 +6,20 @@
     group: root
     mode: 0750
   with_items:
-    - "/opt/service_check"
+    - "/opt/systemd_watcher"
 
 - name: copy cmd
   template:
-    src: "templates/service_check.sh"
-    dest: "/opt/service_check/service_check.sh"
+    src: "templates/service_check"
+    dest: "/opt/systemd_watcher/service_check"
     owner: root
     group: root
     mode: 0750
 
 - name: create cron job
   vars:
-    name: "Systemd service check"
-    cmd: "/opt/service_check/service_check.sh"
-    file: "ansible_cron_service_check"
+    name: "Systemd watcher"
+    cmd: "/opt/systemd_watcher/service_check"
+    file: "ansible_systemd_watcher"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml

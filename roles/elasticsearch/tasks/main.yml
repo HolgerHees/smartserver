@@ -45,3 +45,11 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/elasticsearch.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: register update notifier
+  vars:
+    name: "elasticsearch"
+    type: "docker"
+    docker_repository: "amazon/opendistro-for-elasticsearch"
+    docker_pattern: "^([0-9\\.]+)$"
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

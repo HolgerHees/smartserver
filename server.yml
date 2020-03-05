@@ -40,6 +40,8 @@
     # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones
     - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui' ] }    # creates {{htdocs_path}}main/components
 
+    - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher' ] }
+    
     - { import_role: { name: update_notifier, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_notifier' ] }  # prototype
 
   tasks:
@@ -55,7 +57,8 @@
     # **************************************
 
     - { import_role: { name: cron }, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
-    - { import_role: { name: cron_service_check }, tags: [ 'cron_service_check' ] }              # checking for failed service starts
+
+    - { import_role: { name: systemd_watcher }, tags: [ 'systemd_watcher' ] }                    # checking for failed service starts
 
     - { import_role: { name: mdadm }, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
     - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring

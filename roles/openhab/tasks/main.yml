@@ -109,6 +109,15 @@
     #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
   notify: "restart openhab"
 
+- name: set web config
+  lineinfile:
+    path: "{{data_path}}openhab-runtime/userdata/etc/org.ops4j.pax.web.cfg"
+    regexp: '^{{item.field}}\s*='
+    line: '{{item.field}} = {{item.value}}'
+  with_items:
+    - { field: 'org.ops4j.pax.web.listening.addresses', value: '127.0.0.1' }
+  notify: "restart openhab"
+
 - name: copy systemd service
   template:
     src: "templates/etc/systemd/system/openhab.service"
@@ -337,6 +346,11 @@
     - default-openhab-ssl.conf
   notify: "restart apache2"
   tags: ['apache_conf']
+
+- name: register service watcher
+  vars:
+    name: "openhab"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
 - name: copy fluentd config
   vars:

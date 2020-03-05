@@ -79,6 +79,11 @@
     i18n_files: [ { language: "de", file: "templates/webui/ci_service.de.json" } ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
+- name: register service watcher
+  vars:
+    name: "vboxdrv"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
 - name: create check cron job
   vars:
     name: "Continues integration job"

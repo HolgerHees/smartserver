@@ -20,3 +20,13 @@
     group: root
     mode: 0640
   notify: "restart samba"
+
+- name: register smb systemd service watcher
+  vars:
+    name: "smb"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
+- name: register nmb systemd service watcher
+  vars:
+    name: "nmb"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

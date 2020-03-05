@@ -133,3 +133,8 @@
   command: "/usr/bin/newaliases"
   when: aliases_status.changed
   notify: "restart postfix"
+
+- name: register service watcher
+  vars:
+    name: "postfix"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

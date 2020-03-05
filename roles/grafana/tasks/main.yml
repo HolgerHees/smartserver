@@ -96,3 +96,11 @@
   vars:
     config_file: "templates/etc/apache2/_.ansible.conf.d/grafana.conf"
   import_tasks: roles/apache/tasks/add_config.yml
+
+- name: register update notifier
+  vars:
+    name: "grafana"
+    type: "docker"
+    docker_repository: "grafana/grafana"
+    docker_pattern: "^([0-9\\.]+)$"
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

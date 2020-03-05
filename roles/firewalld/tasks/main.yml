@@ -22,3 +22,8 @@
     - public.xml
     - trusted.xml
   notify: "restart firewalld"
+
+- name: register systemd service watcher
+  vars:
+    name: "firewalld"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

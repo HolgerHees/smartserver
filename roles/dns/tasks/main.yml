@@ -108,3 +108,8 @@
     - "refresh netconfig"
     - "restart named"
   when: is_suse|bool
+
+- name: register systemd service watcher
+  vars:
+    name: "named"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
