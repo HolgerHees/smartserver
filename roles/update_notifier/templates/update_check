@@ -6,8 +6,8 @@ import os.path
 
 from plugins import docker
 
-target_dir = "/dataDisk/var/log/update_notifier/"
-config_dir = "/dataDisk/etc/update_notifier/"
+target_dir = "{{global_log}}update_notifier/"
+config_dir = "{{global_etc}}update_notifier/"
 
 state_file = "{}software_versions.state".format(target_dir)
 

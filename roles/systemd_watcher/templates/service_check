@@ -9,7 +9,7 @@ import re
 def error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
     
-config_dir = "/dataDisk/etc/systemd_watcher/services/"
+config_dir = "{{global_etc}}systemd_watcher/services/"
 
 exit_status = 0
 

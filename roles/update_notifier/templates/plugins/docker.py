@@ -1,17 +1,9 @@
-#!/usr/bin/python3
-
 import urllib.request
 import json
 import re
 import subprocess
 
 from packaging import version
-
-#7.3-fpm
-#https://registry.hub.docker.com/api/content/v1/repositories/public/library/php/tags/
-#https://registry.hub.docker.com/v2/repositories/library/php/tags/fpm/
-#https://registry.hub.docker.com/v2/pgp/tags/list
-#https://registry.hub.docker.com/api/content/v1/repositories/public/library/ubuntu/tags?page=${page}&page_size=${size}
 
 class Version:
     def __init__(self,version_string):
@@ -61,7 +53,7 @@ class Repository:
         
         if Repository.repositories is None:
             Repository.repositories = {}
-            result = subprocess.run([ "docker image list" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            result = subprocess.run([ "/usr/bin/docker image list" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
             lines = result.stdout.decode("utf-8").split("\n")
             for line in lines:
                 columns = line.split()
