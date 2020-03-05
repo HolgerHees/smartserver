@@ -1,7 +1,10 @@
 - name: prepare shared folder
   file:
-    path: "{{global_etc}}systemd_watcher/"
+    path: "{{item}}"
     state: directory
     owner: root
     group: root
     mode: 0755
+  with_items:
+    - "{{global_etc}}systemd_watcher/"
+    - "{{global_etc}}systemd_watcher/services"
