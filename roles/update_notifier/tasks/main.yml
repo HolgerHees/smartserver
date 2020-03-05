@@ -9,9 +9,20 @@
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_notifier" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_notifier" }
 
+- name: copy plugins
+  copy:
+    src: "templates/update_notifier/{{item}}"
+    dest: "/opt/update_notifier/"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - helper
+    - plugins
+
 - name: copy cmd
   template:
-    src: "templates/update_check"
+    src: "templates/update_notifier/update_check"
     dest: "/opt/update_notifier/update_check"
     owner: root
     group: root
