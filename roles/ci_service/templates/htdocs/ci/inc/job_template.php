@@ -4,6 +4,7 @@ class JobTemplate
     private static $map = array(
       '0' => "</span>",
       '1' => "<span style='font-weight:bold'>",
+      '0;31' => "<span style='color:red'>",
       '0;32' => "<span style='color:green'>",
       '0;33' => "<span style='color:yellow'>",
       '0;35' => "<span style='color:magenta'>",
