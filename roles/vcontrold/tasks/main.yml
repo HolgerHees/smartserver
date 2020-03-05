@@ -50,7 +50,8 @@
     repo: 'https://github.com/openv/vcontrold.git'
     dest: '{{global_build}}vcontrold'
 #    force: yes
-    version: 'master'
+    # stable version from 05.03.2020
+    version: '09b789ee3856a49a9b972e37a0cb1ece1389cc63'
   register: clone_status
 #- debug: msg={{clone_status}}
 

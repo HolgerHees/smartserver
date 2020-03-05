@@ -132,7 +132,8 @@
   git:
     repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
     dest: '{{global_build}}openhab-jython'
-    version: 'master'
+    # stable version from 05.03.2020
+    version: 'f09f63eba986833fead2c363bbd56e34106fed12'
 
 - name: copy jython classes
   copy:
