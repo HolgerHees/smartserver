@@ -109,7 +109,7 @@
     #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
   notify: "restart openhab"
 
-- name: copy service
+- name: copy systemd service
   template:
     src: "templates/etc/systemd/system/openhab.service"
     dest: "/etc/systemd/system/openhab.service"
