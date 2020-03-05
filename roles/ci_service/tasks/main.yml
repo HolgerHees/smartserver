@@ -54,7 +54,7 @@
     group: root
     mode: 0750
     
-- name: copy ci webui
+- name: copy webui
   copy:
     src: "templates/htdocs/ci"
     dest: "{{htdocs_path}}"
@@ -63,7 +63,7 @@
     mode: 0750
   tags: ['apache_webui_page']
 
-- name: copy ci webui config
+- name: copy webui config
   template:
     src: "templates/config.php"
     dest: "{{htdocs_path}}ci/config.php"
