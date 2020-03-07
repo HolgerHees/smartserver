@@ -19,6 +19,7 @@
   with_items:
     - main/components
     - main/css
+    - main/fonts
     - main/icons
     - main/img
     - main/js

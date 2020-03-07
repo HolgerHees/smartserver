@@ -33,6 +33,8 @@
   vars:
     name: "mosquitto"
     type: "docker"
-    docker_repository: "eclipse-mosquitto"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: { 
+      repository: "eclipse-mosquitto", 
+      pattern: "^([0-9\\.]+)$" 
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

@@ -1,6 +1,5 @@
 {
     "name": "{{name}}",
     "type": "{{type}}",
-    "docker_repository": "{{docker_repository}}",
-    "docker_pattern": "{{docker_pattern}}"
+    "config": {{config}}
 }

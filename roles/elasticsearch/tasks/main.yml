@@ -50,6 +50,8 @@
   vars:
     name: "elasticsearch"
     type: "docker"
-    docker_repository: "amazon/opendistro-for-elasticsearch"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: {
+      repository: "amazon/opendistro-for-elasticsearch",
+      pattern: "^([0-9\\.]+)$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

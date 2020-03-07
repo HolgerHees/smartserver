@@ -57,6 +57,8 @@
   vars:
     name: "redis"
     type: "docker"
-    docker_repository: "redis"
-    docker_pattern: "^([0-9\\.]+)-alpine$"
+    config: {
+      repository: "redis",
+      pattern: "^([0-9\\.]+)-alpine$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

@@ -97,6 +97,8 @@
   vars:
     name: "kibana"
     type: "docker"
-    docker_repository: "amazon/opendistro-for-elasticsearch-kibana"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: {
+      repository: "amazon/opendistro-for-elasticsearch-kibana",
+      pattern: "^([0-9\\.]+)$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

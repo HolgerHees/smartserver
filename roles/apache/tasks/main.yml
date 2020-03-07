@@ -259,6 +259,8 @@
   vars:
     name: "apache"
     type: "docker"
-    docker_repository: "httpd"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: {
+      repository: "httpd", 
+      pattern: "^([0-9\\.]+)$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

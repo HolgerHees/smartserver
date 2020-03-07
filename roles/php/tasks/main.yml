@@ -67,6 +67,8 @@
   vars:
     name: "php"
     type: "docker"
-    docker_repository: "php"
-    docker_pattern: "^([0-9\\.]+)-fpm$"
+    config: {
+      repository: "php",
+      pattern: "^([0-9\\.]+)-fpm$" 
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

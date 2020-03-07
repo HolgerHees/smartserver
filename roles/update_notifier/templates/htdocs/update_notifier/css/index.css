@@ -29,7 +29,6 @@ div.table {
 }
 div.table > div.row {
   display: table-row;
-  cursor: pointer;
 }
 div.table > div.row:hover {
   background-color: #f2f2f2;
@@ -48,12 +47,28 @@ div.table > div.row > div {
   color: #333;
   white-space: nowrap;
 }
+body.dark div.table > div.row > div {
+  color: #eee;
+}
 div.table > div.row > div:nth-child(2) {
     width: 100%;
     white-space: normal; 
 }
 div.table > div.row > div.active {
     font-weight: bold;
+}
+div.table > div.row > div:first-child {
+    width: 5px;
+    min-width: 5px;
+    padding: 2px;
+    color: #666;
+}
+body.dark div.table > div.row > div:first-child {
+  color: #bbb;
+}
+
+div.table > div.row:first-child > div:first-child {
+    background-color: #aaa;
 }
 div.table > div.row.red > div:first-child {
     background-color: #ff7479;
@@ -64,4 +79,9 @@ div.table > div.row.yellow > div:first-child  {
 
 div.table > div.row.green > div:first-child  {
     background-color: #b5ce69;
+}
+
+div.versionLink {
+    cursor: pointer;
+    display: inline-block;
 }

@@ -41,3 +41,14 @@
 #    path: "/opt/amazon-corretto-8.212.04.2-linux-x64/bin/java"
     link: /usr/bin/java
   when: jdk_exists.changed
+
+- name: register update notifier
+  vars:
+    name: "java"
+    type: "github"
+    config: { 
+      project: "corretto/corretto-8", 
+      pattern: "^([0-9\\.\\-]+)$",
+      version: "8.222.10.1" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

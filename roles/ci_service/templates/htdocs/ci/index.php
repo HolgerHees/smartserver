@@ -7,8 +7,8 @@ require "config.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="./fonts/css/animation.css">
-<link rel="stylesheet" href="./fonts/css/fontello.css">
+<link rel="stylesheet" href="/main/fonts/css/animation.css">
+<link rel="stylesheet" href="/main/fonts/css/fontello.css">
 <link rel="stylesheet" href="./css/core.css">
 <link rel="stylesheet" href="./css/index.css">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>

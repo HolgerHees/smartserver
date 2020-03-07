@@ -2,6 +2,17 @@
   set_fact:
     phpmyadmin_version: '5.0.0'
     
+- name: register update notifier
+  vars:
+    name: "phpmyadmin"
+    type: "github"
+    config: { 
+      project: "phpmyadmin/phpmyadmin", 
+      pattern: "^RELEASE_([0-9_]+)$",
+      version: "RELEASE_5_0_0" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
 - name: check installation
   stat:
     path: "{{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"

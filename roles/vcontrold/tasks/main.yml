@@ -55,6 +55,16 @@
   register: clone_status
 #- debug: msg={{clone_status}}
 
+- name: register update notifier
+  vars:
+    name: "vcontrold"
+    type: "github"
+    config: { 
+      project: "openv/vcontrold", 
+      version: "09b789ee3856a49a9b972e37a0cb1ece1389cc63" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
 - name: check if vcontrold is installed
   shell: command -v vcontrold >/dev/null 2>&1
   register: is_vcontrold_exist

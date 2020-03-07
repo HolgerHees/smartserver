@@ -11,7 +11,7 @@
 
 - name: copy plugins
   copy:
-    src: "templates/update_notifier/{{item}}"
+    src: "templates/opt/update_notifier/{{item}}"
     dest: "/opt/update_notifier/"
     owner: root
     group: root
@@ -22,7 +22,7 @@
 
 - name: copy cmd
   template:
-    src: "templates/update_notifier/update_check"
+    src: "templates/opt/update_notifier/update_check"
     dest: "/opt/update_notifier/update_check"
     owner: root
     group: root

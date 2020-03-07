@@ -3,6 +3,17 @@
     nextcloud_version: '18.0.0'
     nextcloud_upgrade_from: '18.0.0.10' # the current installed version to be able to run "./occ upgrade"
     
+- name: register update notifier
+  vars:
+    name: "nextcloud"
+    type: "github"
+    config: { 
+      project: "nextcloud/server", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v18.0.0" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
 - name: prepare needed folder
   file:
     path: "{{item}}"

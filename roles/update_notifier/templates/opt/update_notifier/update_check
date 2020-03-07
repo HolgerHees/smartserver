@@ -3,22 +3,35 @@
 import json
 import glob
 import os.path
+import sys
 
 import importlib
+
+from datetime import datetime
 
 target_dir = "{{global_log}}update_notifier/"
 config_dir = "{{global_etc}}update_notifier/"
 
 state_file = "{}software_versions.state".format(target_dir)
 
+global_config = { 
+  "github_access_token": "{{vault_deployment_token_git}}"
+}
+
+limit_config = None
+if len(sys.argv) >= 2:
+    limit_config = sys.argv[1]
+
 last_states = {}
 if os.path.isfile(state_file):
     with open(state_file, 'r') as f:
         data = json.load(f)
-        for state in data:
+        for state in data['states']:
             last_states[state['name']] = state
 
-current_states = []
+update_time = "{}Z".format(datetime.now().utcnow().isoformat('T'))
+            
+current_states = { 'last_update': update_time, 'states': [] }
 
 #print("Processing docker projects")
 
@@ -29,6 +42,9 @@ files = glob.glob("{}*.conf".format(config_dir))
 for config_file in files:
     with open(config_file) as json_data:
         config = json.load(json_data)
+        
+        if limit_config != None and limit_config != config['name']:
+            continue
 
         #print("  - '{}'".format(config['name']), end='')
 
@@ -38,15 +54,15 @@ for config_file in files:
             print("Plugin '{}' not found".format(config['type']))
             continue
         
-        repo = plugin.Repository(config)
+        repo = plugin.Repository(config['config'], global_config)
 
         current_version = repo.getCurrentVersion()
         new_versions = repo.getNewVersions()
         
-        current_state = { 'name': config['name'], 'current': current_version, 'update': "", 'upgrades': [] }
+        current_state = { 'name': config['name'], 'type': config['type'], 'last_update': update_time, 'current': current_version, 'update': "", 'upgrades': [] }
         for branch in new_versions:
             if repo.getCurrentBranch() == branch:
-                if new_versions[branch] != current_version:
+                if new_versions[branch]['version'] != current_version['version']:
                     current_state['update'] = new_versions[branch]
             else:
                 current_state['upgrades'].append(new_versions[branch])
@@ -68,17 +84,37 @@ for config_file in files:
         #    print( " \033[0;32mis updatet\033[0m")
             
         if current_state['name'] in last_states:
-            last_state = last_states[current_state['name']]
-            if last_state['update'] != current_state['update']:
-                update_message_r.append("{}: version {} is available".format(current_state['name'], current_state['update']))
-
-            if last_state['upgrades'] != current_state['upgrades']:
-                upgrade_message_r.append("{}: versions {} are available".format(current_state['name'], current_state['upgrades']))
-                
-        current_states.append(current_state)
             
-with open(state_file, 'w') as f:
-    json.dump(current_states, f)
+            last_state = last_states[current_state['name']]
+
+            is_updated = False
+            
+            if current_state['update'] and ( not last_state['update'] or last_state['update']['version'] != current_state['update']['version']):
+                update_message_r.append("{}: version {} is available".format(current_state['name'], current_state['update']['version']))
+                is_updated = True
+
+            new_upgrades = []
+            for current_upgrade in current_state['upgrades']:
+                found = False
+                for last_upgrade in last_state['upgrades']:
+                    if last_upgrade['version'] == current_upgrade['version']:
+                        found = True
+                
+                if not found:
+                    new_upgrades.append(current_upgrade['version'])
+
+            if len(new_upgrades) > 0:
+                upgrade_message_r.append("{}: versions {} are available".format(current_state['name'], new_upgrades))
+                is_updated = True
+                
+            if not is_updated:
+                current_state['last_update'] = last_state['last_update']
+                
+        current_states['states'].append(current_state)
+            
+if limit_config == None:
+    with open(state_file, 'w') as f:
+        json.dump(current_states, f)
     
 if len(update_message_r) > 0:
     print("There are new updates")

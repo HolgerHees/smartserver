@@ -101,6 +101,8 @@
   vars:
     name: "grafana"
     type: "docker"
-    docker_repository: "grafana/grafana"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: {
+      repository: "grafana/grafana",
+      pattern: "^([0-9\\.]+)$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

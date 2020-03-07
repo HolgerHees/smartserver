@@ -162,3 +162,14 @@
     cmd: "/opt/netdata_helper/inform_openhab"
     file: "ansible_netdata"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+  
+- name: register update notifier
+  vars:
+    name: "netdata"
+    type: "github"
+    config: { 
+      project: "netdata/netdata", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v1.20.0" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

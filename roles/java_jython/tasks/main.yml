@@ -9,6 +9,16 @@
     version: 'f93926de404142f1fcf950c0c058194e61c3b91f'
   register: clone_status
 
+- name: register update notifier
+  vars:
+    name: "jython"
+    type: "github"
+    config: { 
+      project: "jythontools/jython", 
+      version: "f93926de404142f1fcf950c0c058194e61c3b91f" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
 - name: copy ant.properties
   copy:
     src: "templates/ant.properties"

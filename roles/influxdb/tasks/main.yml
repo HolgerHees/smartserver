@@ -62,6 +62,8 @@
   vars:
     name: "influxdb"
     type: "docker"
-    docker_repository: "influxdb"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: {
+      repository: "influxdb",
+      pattern: "^([0-9\\.]+)$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

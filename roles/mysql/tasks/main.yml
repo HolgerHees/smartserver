@@ -67,6 +67,8 @@
   vars:
     name: "mysql"
     type: "docker"
-    docker_repository: "mariadb"
-    docker_pattern: "^([0-9\\.]+)$"
+    config: {
+      repository: "mariadb",
+      pattern: "^([0-9\\.]+)$"
+    }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
