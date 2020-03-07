@@ -69,6 +69,7 @@ body.dark div.table > div.row > div:first-child {
 
 div.table > div.row:first-child > div:first-child {
     background-color: #aaa;
+    text-align: center;
 }
 div.table > div.row.red > div:first-child {
     background-color: #ff7479;

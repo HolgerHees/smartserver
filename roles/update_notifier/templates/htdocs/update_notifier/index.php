@@ -56,7 +56,7 @@ mx.OnDocReady.push( initPage );
     }
 ?>
 <div class="row">
-<div></div>
+<div><?php echo count($states); ?></div>
 <div>Name</div>
 <div>Version</div>
 <div>Update</div>
