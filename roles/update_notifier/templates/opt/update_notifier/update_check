@@ -85,19 +85,17 @@ for config_file in files:
         #else:
         #    print( " \033[0;32mis updatet\033[0m")
             
-        if current_state['name'] in last_states:
+        if last_updates != None:
             
-            last_state = last_states[current_state['name']]
-
             new_updates = []
-            for current_upgrade in current_state['updates']:
+            for current_update in current_state['updates']:
                 found = False
-                for last_upgrade in last_state['updates']:
-                    if last_upgrade['version'] == current_upgrade['version']:
+                for last_update in last_updates:
+                    if last_update['version'] == current_update['version']:
                         found = True
                 
                 if not found:
-                    new_updates.append(current_upgrade['version'])
+                    new_updates.append(current_update['version'])
 
             if len(new_updates) > 0:
                 update_message_r.append("{}: versions {} are available".format(current_state['name'], new_updates))
