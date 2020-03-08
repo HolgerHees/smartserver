@@ -13,8 +13,9 @@ import time
 import re
 
 class Repository:
-  
-    REGISTRY = "https://registry-1.docker.io/v2/"
+    API_BASE = "https://registry-1.docker.io/v2/"
+    WEB_BASE = "https://hub.docker.com/"
+
     repositories = None
   
     def __init__(self,plugin_config,global_config):
@@ -47,7 +48,10 @@ class Repository:
         self.token = token_result['token']
 
     def _getUpdateUrl(self,tag):
-        return "{}r/{}/tags?name={}".format(Repository.REGISTRY,self.repository,tag)
+        if self.repository.startswith("library/"):
+            return "{}_/{}?tab=tags&name={}".format(Repository.WEB_BASE,self.repository[8:],tag)
+        else:
+            return "{}r/{}/tags?name={}".format(Repository.WEB_BASE,self.repository,tag)
           
     def _requestData(self,url,token=None,count=0):
         req = urllib.request.Request(url)
@@ -57,16 +61,21 @@ class Repository:
             try:
                 raw = response.read().decode("utf-8")
             except (http.client.IncompleteRead) as e:
+                raw = None
+                
+            # handle retry outside the exception block
+            if raw is None:
                 if count > 5:
                     raise Exception('More then 5 retries to fetch data from docker repository {} and tag {}'.format(self.repository,tag))
-                time.sleep(10)
+                time.sleep(15)
                 return self._requestData(url,token,count+1)
+
             data = json.loads(raw)
             return data
         raise Exception('Something went wrong during fetching data from docker repository {} and tag {}'.format(self.repository,tag))
       
     def _getCreationDate(self,tag):
-        url = "{}{}/manifests/{}".format(Repository.REGISTRY,self.repository,tag)
+        url = "{}{}/manifests/{}".format(Repository.API_BASE,self.repository,tag)
         image_data_r = self._requestData(url,self.token)
         for image_raw_data in image_data_r['history']:
             image_data = json.loads(image_raw_data['v1Compatibility'])
@@ -90,7 +99,7 @@ class Repository:
                 version = Version(last_update['version'])
                 current_updates_r[version.getBranch()] = [ version, last_update['date'], None ]
         
-        url = "{}{}/tags/list".format(Repository.REGISTRY,self.repository)
+        url = "{}{}/tags/list".format(Repository.API_BASE,self.repository)
         data = self._requestData(url,self.token)
         
         for tag in data['tags']:
