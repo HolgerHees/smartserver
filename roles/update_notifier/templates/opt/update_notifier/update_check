@@ -36,7 +36,6 @@ current_states = { 'last_update': update_time, 'states': [] }
 #print("Processing docker projects")
 
 update_message_r = []
-upgrade_message_r = []
 
 files = glob.glob("{}*.conf".format(config_dir))
 for config_file in files:
@@ -55,17 +54,20 @@ for config_file in files:
             continue
         
         repo = plugin.Repository(config['config'], global_config)
-
-        current_version = repo.getCurrentVersion()
-        new_versions = repo.getNewVersions()
         
-        current_state = { 'name': config['name'], 'type': config['type'], 'last_update': update_time, 'current': current_version, 'update': "", 'upgrades': [] }
+        last_state = last_states.get(config['name'], None)
+
+        last_updates = last_state['updates'] if last_state != None else None
+
+        current_version = last_state['current'] if last_state != None else None
+        if current_version == None:
+            current_version = repo.getCurrentVersion()
+
+        current_state = { 'name': config['name'], 'type': config['type'], 'current': current_version, 'updates': [] }
+        
+        new_versions = repo.getUpdates(last_updates)
         for branch in new_versions:
-            if repo.getCurrentBranch() == branch:
-                if new_versions[branch]['version'] != current_version['version']:
-                    current_state['update'] = new_versions[branch]
-            else:
-                current_state['upgrades'].append(new_versions[branch])
+            current_state['updates'].append(new_versions[branch])
             
         #status = []
         #color = ""
@@ -87,28 +89,18 @@ for config_file in files:
             
             last_state = last_states[current_state['name']]
 
-            is_updated = False
-            
-            if current_state['update'] and ( not last_state['update'] or last_state['update']['version'] != current_state['update']['version']):
-                update_message_r.append("{}: version {} is available".format(current_state['name'], current_state['update']['version']))
-                is_updated = True
-
-            new_upgrades = []
-            for current_upgrade in current_state['upgrades']:
+            new_updates = []
+            for current_upgrade in current_state['updates']:
                 found = False
-                for last_upgrade in last_state['upgrades']:
+                for last_upgrade in last_state['updates']:
                     if last_upgrade['version'] == current_upgrade['version']:
                         found = True
                 
                 if not found:
-                    new_upgrades.append(current_upgrade['version'])
+                    new_updates.append(current_upgrade['version'])
 
-            if len(new_upgrades) > 0:
-                upgrade_message_r.append("{}: versions {} are available".format(current_state['name'], new_upgrades))
-                is_updated = True
-                
-            if not is_updated:
-                current_state['last_update'] = last_state['last_update']
+            if len(new_updates) > 0:
+                update_message_r.append("{}: versions {} are available".format(current_state['name'], new_updates))
                 
         current_states['states'].append(current_state)
             
@@ -119,12 +111,4 @@ if limit_config == None:
 if len(update_message_r) > 0:
     print("There are new updates")
     for message in update_message_r:
-        print("  - {}".format(message))
-
-if len(upgrade_message_r) > 0:
-    if len(update_message_r) > 0:
-        print("")
-        
-    print("There are new upgrades")
-    for message in upgrade_message_r:
         print("  - {}".format(message))

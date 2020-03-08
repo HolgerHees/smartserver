@@ -59,8 +59,7 @@ mx.OnDocReady.push( initPage );
 <div><?php echo count($states); ?></div>
 <div>Name</div>
 <div>Version</div>
-<div>Update</div>
-<div>Upgrades</div>
+<div>Updates</div>
 <div><?php echo $last_update; ?></div>
 </div>
 <?php
@@ -76,11 +75,18 @@ mx.OnDocReady.push( initPage );
     foreach( $states as $state)
     {
         $class = "green";
-        if( count($state->upgrades) > 0 ) $class = "yellow";
-        if( $state->update ) $class = "red";
-        
-        $update_class = $class == 'red' ? ' class="active"' : '';
-        $upgrade_class = $class == 'yellow' ? ' class="active"' : '';
+        if( count($state->updates) > 0 )
+        {
+            $class = "yellow";
+            foreach( $state->updates as $update)
+            {
+                if( $state->current->branch == $update->branch )
+                {
+                    $class = "red";
+                    break;
+                }
+            }
+        }
     
         switch($state->type)
         {
@@ -99,35 +105,62 @@ mx.OnDocReady.push( initPage );
         echo '<div><span class="' . $icon . '"></span></div>';
         echo '<div>' . $state->name . '</div>';
         echo '<div>' . formatVersion($state->current->version) . '</div>';
-        if( $state->update )
+        if( count($state->updates) > 0)
         {
-            $updateHTML = '<div class="versionLink" onClick="mx.UNCore.openUrl(event,\'' .$state->update->url . '\')" ><span>' . formatVersion($state->update->version) . '</span><span class="icon-export"></span></div>';
-        }
-        else
-        {
-            $updateHTML = "";
-        }
-        echo '<div'.$update_class.'>' . $updateHTML . '</div>';
-        if( count($state->upgrades) > 0)
-        {
-            $upgradesHTML_r = array();
-            foreach( $state->upgrades as $upgrade)
+            $updates = $state->updates;
+            usort($updates,function($a,$b)
             {
-                $upgradesHTML_r[] = '<div class="versionLink" onClick="mx.UNCore.openUrl(event,\'' .$upgrade->url . '\')" ><span>' . formatVersion($upgrade->version) . '</span><span class="icon-export"></span></div>';
+                return strcmp($a->version,$b->version);
+            });
+            
+            $latest_date = null;
+            $upgradesHTML_r = array();
+            foreach( $updates as $update)
+            {
+                error_log($update->date);
+
+                $date = date_create($update->date);
+                
+                #error_log($date);
+                
+                if( $latest_date == null or $latest_date < $date ) $latest_date = $date;
+
+                $current_branch = $state->current->branch == $update->branch;
+                
+                $upgradesHTML_r[] = '<div class="versionLink' . ( $current_branch ? ' currentBranch' : '' ) . '" onClick="mx.UNCore.openUrl(event,\'' .$update->url . '\')" ><span>' . formatVersion($update->version) . '</span><span class="icon-export"></span></div>';
             }
             $upgradesHTML = implode(", ",$upgradesHTML_r);
+            
+            $now = new DateTime();
+            $diff = $latest_date->diff($now)->format("%a");
+            if( $diff == 0 )
+            {
+                $last_update = 'Today ' . $latest_date->format("H:i");
+            }
+            else if( $diff > 30 )
+            {
+                $last_update = $latest_date->format("d.m.Y");
+            }
+            else
+            {
+                $last_update = $diff . ' days ago';//$latest_date->format("d.m.Y H:i");
+            }
+            $last_update = '<span class="default">' . $last_update . '</span>';
+            $last_update_details = '<span class="hover">' . $latest_date->format("d.m.Y H:i") . '</span>';
         }
         else
         {
             $upgradesHTML = "";
+            $last_update = "";
+            $last_update_details = "";
         }
-        echo '<div'.$upgrade_class.'>' . $upgradesHTML . '</div>';
+        echo '<div>' . $upgradesHTML . '</div>';
         
-        $date = date_create($state->last_update);
-        $date->setTimezone(new DateTimeZone('Europe/Berlin'));
-        $last_update = $date->format("d.m.Y H:i");
+        #$date = date_create($state->last_update);
+        #$date->setTimezone(new DateTimeZone('Europe/Berlin'));
+        #$last_update = $date->format("d.m.Y H:i");
 
-        echo '<div>' . $last_update . '</div>';
+        echo '<div class="tooltip">' . $last_update . $last_update_details . '</div>';
         echo '</div>';
     }
 ?>
