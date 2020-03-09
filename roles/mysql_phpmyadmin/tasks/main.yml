@@ -1,15 +1,16 @@
 - name: set phpmyadmin version
   set_fact:
-    phpmyadmin_version: '5.0.0'
+    phpmyadmin_version: '5.0.1'
     
 - name: register update notifier
   vars:
     name: "phpmyadmin"
     type: "github"
+    url: "https://www.phpmyadmin.net/news/"
     config: { 
       project: "phpmyadmin/phpmyadmin", 
       pattern: "^RELEASE_([0-9_]+)$",
-      version: "RELEASE_5_0_0" 
+      version: "RELEASE_5_0_1" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
