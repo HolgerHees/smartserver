@@ -67,6 +67,7 @@
   vars:
     name: "elastalert"
     type: "github"
+    url: "https://github.com/Yelp/elastalert/blob/master/changelog.md"
     config: { 
       project: "Yelp/elastalert", 
       version: "325f1dfe7a45f3ca2a2cc00127ab71fcd4f9cead" 
