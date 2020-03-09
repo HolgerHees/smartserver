@@ -6,6 +6,7 @@
   vars:
     name: "openhab"
     type: "github"
+    url: "https://github.com/openhab/openhab-distro/releases"
     config: { 
       project: "openhab/openhab-distro", 
       pattern: "^([0-9\\.]+)$",
@@ -150,6 +151,7 @@
   vars:
     name: "jsr223"
     type: "github"
+    url: "https://github.com/openhab-scripters/openhab-helper-libraries"
     config: { 
       project: "openhab-scripters/openhab-helper-libraries", 
       version: "f09f63eba986833fead2c363bbd56e34106fed12" 
