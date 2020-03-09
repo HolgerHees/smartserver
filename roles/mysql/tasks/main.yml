@@ -17,7 +17,7 @@
 - name: create docker container
   docker_container:
     name: mysql
-    image: mariadb:10.4.10
+    image: mariadb:10.4.12
     state: present
 #    recreate: true
     env:
@@ -67,6 +67,7 @@
   vars:
     name: "mysql"
     type: "docker"
+    url: "https://mariadb.com/kb/en/release-notes/"
     config: {
       repository: "mariadb",
       pattern: "^([0-9\\.]+)$"
