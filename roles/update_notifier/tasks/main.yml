@@ -58,5 +58,5 @@
     name: "Systemd service check"
     cmd: "/opt/update_notifier/update_check"
     file: "ansible_update_notifier"
-    minute: "4"
+    hour: "4"
   import_tasks: roles/cron/tasks/add_cronjob.yml

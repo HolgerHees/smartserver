@@ -5,7 +5,9 @@ from helper.version import Version
 
 from datetime import datetime
 
-class Repository:
+from plugins.plugin import Plugin
+
+class Repository(Plugin):
     API_BASE = "https://api.github.com/repos/"
     WEB_BASE = "https://github.com/"
     
@@ -27,6 +29,7 @@ class Repository:
             self.current_version = plugin_config['version']
             
     def _requestData(self,url):
+        #print("github project '{}' url '{}'".format( self.project, url ) )
         req = urllib.request.Request(url)
         req.add_header('Authorization', "token {}".format(self.access_token))
         with urllib.request.urlopen(req) as response:
@@ -46,20 +49,18 @@ class Repository:
     def getCurrentVersion(self):
         commit_url = "{}{}/commits/{}".format(Repository.API_BASE,self.project,self.current_version if self.tag is None else self.tag)
         commit_data = self._requestData(commit_url)
-        return { 'version': self.current_version, 'branch': self.getCurrentBranch(), 'date': commit_data['commit']['author']['date'], 'url': self._getUpdateUrl(self.tag) }
+        return self.createUpdate( version = self.current_version, branch = self.getCurrentBranch(), date = commit_data['commit']['author']['date'], url = self._getUpdateUrl(self.tag) )
+
+    def getCurrentVersionString(self):
+        return self.current_version
 
     def getUpdates(self, last_updates):
         new_updates_r = {}
 
         if self.pattern != None:
-            current_updates_r = {}
-            if last_updates is not None:
-                for last_update in last_updates:
-                    version = Version(last_update['version'])
-                    current_updates_r[version.getBranch()] = [ version, last_update['date'], None ]
-            
             current_version = Version(self.current_version)
-        
+            current_updates_r = self.filterPossibleVersions(current_version=current_version,last_updates=last_updates)
+            
             url = "{}{}/tags".format(Repository.API_BASE,self.project)
             data = self._requestData(url)
             
@@ -68,26 +69,20 @@ class Repository:
                 if version is None:
                     continue
                   
-                if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][2] is None:
-                    current_updates_r[version.getBranch()][2] = tag['name']
+                self.updateCurrentUpdates(version=version,current_updates_r=current_updates_r,tag=tag['name'])
                   
-                if current_version.compare(version) == 1:
-                    if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][0].compare(version) < 1:
-                        continue
+                if self.isNewUpdate(version=version,current_updates_r=current_updates_r,current_version=current_version):
+                    commit_data = self._requestData(tag['commit']['url'])
+                    self.registerNewUpdate(current_updates_r=current_updates_r, version=version, date=commit_data['commit']['author']['date'], tag=tag['name'])
 
-                    commit_url = tag['commit']['url']
-                    commit_data = self._requestData(commit_url)
-
-                    current_updates_r[version.getBranch()] = [ version, commit_data['commit']['author']['date'], tag['name'] ]
-                        
-            for branch in current_updates_r:
-                version = current_updates_r[branch]
-                new_updates_r[branch] = { 'version': version[0].getVersionString(), 'branch': branch, 'date': version[1], 'url': self._getUpdateUrl(version[2]) }
+            new_updates_r = self.convertUpdates(current_updates_r=current_updates_r,project=self.project)
 
         else:
             current_update = None
             if last_updates is not None:
                 for last_update in last_updates:
+                    if last_update['version'] == self.current_version:
+                        continue
                     current_update = last_update
           
             total_commits = 0
@@ -104,6 +99,6 @@ class Repository:
                     commit_url = '{}{}/commits/master'.format(Repository.API_BASE, self.project)
                     commit_data = self._requestData(commit_url)
                   
-                    new_updates_r['master'] = { 'version': version, 'branch': 'master', 'date': commit_data['commit']['author']['date'], 'url': self._getUpdateUrl() }
+                    new_updates_r['master'] = self.createUpdate( version = version, branch = 'master', date = commit_data['commit']['author']['date'], url = self._getUpdateUrl() )
                 
         return new_updates_r

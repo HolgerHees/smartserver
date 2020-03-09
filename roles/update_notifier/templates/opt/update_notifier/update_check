@@ -60,10 +60,10 @@ for config_file in files:
         last_updates = last_state['updates'] if last_state != None else None
 
         current_version = last_state['current'] if last_state != None else None
-        if current_version == None:
+        if current_version == None or current_version['version'] != repo.getCurrentVersionString():
             current_version = repo.getCurrentVersion()
 
-        current_state = { 'name': config['name'], 'type': config['type'], 'current': current_version, 'updates': [] }
+        current_state = { 'name': config['name'], 'type': config['type'], 'url': config['url'], 'current': current_version, 'updates': [] }
         
         new_versions = repo.getUpdates(last_updates)
         for branch in new_versions:

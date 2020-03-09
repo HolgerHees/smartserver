@@ -12,7 +12,9 @@ import time
 
 import re
 
-class Repository:
+from plugins.plugin import Plugin
+
+class Repository(Plugin):
     API_BASE = "https://registry-1.docker.io/v2/"
     WEB_BASE = "https://hub.docker.com/"
 
@@ -33,10 +35,20 @@ class Repository:
                 columns = line.split()
                 if len(columns) == 0:
                     continue
-                Repository.repositories[columns[0]] = {'tag': columns[1],'image': columns[2]}
+                
+                if columns[0] not in Repository.repositories:
+                    Repository.repositories[columns[0]] = []
 
-        data = Repository.repositories[plugin_config['repository']]
-        version = Version.parseVersionString(data['tag'],self.pattern)
+                Repository.repositories[columns[0]].append({'tag': columns[1],'image': columns[2]})
+                
+
+        data_r = Repository.repositories[plugin_config['repository']]
+        version = None
+        for data in data_r:
+            _version = Version.parseVersionString(data['tag'],self.pattern)
+            if version is None or version.compare(_version) == 1:
+                version = _version
+
         if version:
             self.current_version = version.getVersionString()
             self.current_tag = data['tag']
@@ -47,13 +59,17 @@ class Repository:
         token_result = self._requestData(url)
         self.token = token_result['token']
 
-    def _getUpdateUrl(self,tag):
-        if self.repository.startswith("library/"):
-            return "{}_/{}?tab=tags&name={}".format(Repository.WEB_BASE,self.repository[8:],tag)
+    def _getUpdateUrl(self,tag = None):
+        if tag != None:
+            if self.repository.startswith("library/"):
+                return "{}_/{}?tab=tags&name={}".format(Repository.WEB_BASE,self.repository[8:],tag)
+            else:
+                return "{}r/{}/tags?name={}".format(Repository.WEB_BASE,self.repository,tag)
         else:
-            return "{}r/{}/tags?name={}".format(Repository.WEB_BASE,self.repository,tag)
+            return "{}r/{}/tags".format(Repository.WEB_BASE,self.repository)
           
     def _requestData(self,url,token=None,count=0):
+        #print("docker project '{}' url '{}'".format( self.repository, url ) )
         req = urllib.request.Request(url)
         if token != None:
             req.add_header('Authorization', "Bearer {}".format(token))
@@ -87,17 +103,15 @@ class Repository:
         return Version(self.current_version).getBranch()
 
     def getCurrentVersion(self):
-        update_time = self._getCreationDate(self.current_tag)
-        return { 'version': self.current_version, 'branch': self.getCurrentBranch(), 'date': update_time, 'url': self._getUpdateUrl(self.current_tag) }
+        creationDate = self._getCreationDate(self.current_tag)
+        return self.createUpdate( version = self.current_version, branch = self.getCurrentBranch(), date = creationDate, url = self._getUpdateUrl(self.current_tag) )
+
+    def getCurrentVersionString(self):
+        return self.current_version
 
     def getUpdates(self, last_updates):
         current_version = Version(self.current_version)
-
-        current_updates_r = {}
-        if last_updates is not None:
-            for last_update in last_updates:
-                version = Version(last_update['version'])
-                current_updates_r[version.getBranch()] = [ version, last_update['date'], None ]
+        current_updates_r = self.filterPossibleVersions(current_version=current_version,last_updates=last_updates)
         
         url = "{}{}/tags/list".format(Repository.API_BASE,self.repository)
         data = self._requestData(url,self.token)
@@ -106,22 +120,16 @@ class Repository:
             version = Version.parseVersionString(tag,self.pattern)
             if version is None:
                 continue
-              
-            if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][2] is None:
-                current_updates_r[version.getBranch()][2] = tag
             
-            if current_version.compare(version) == 1:
-                if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][0].compare(version) < 1:
-                    continue
-                  
+            self.updateCurrentUpdates(version=version,current_updates_r=current_updates_r,tag=tag)
+            
+            if self.isNewUpdate(version=version,current_updates_r=current_updates_r,current_version=current_version):
+                print("new")
+                
                 update_time = self._getCreationDate(tag)
-                current_updates_r[version.getBranch()] = [ version, update_time, tag ]
-                    
-        new_updates_r = {}
-        for branch in current_updates_r:
-            version = current_updates_r[branch]
-            new_updates_r[branch] = { 'version': version[0].getVersionString(), 'branch': branch, 'date': version[1], 'url': self._getUpdateUrl(version[2]) }
-                  
+                self.registerNewUpdate(current_updates_r=current_updates_r, version=version, date=update_time, tag=tag )
+
+        new_updates_r = self.convertUpdates(current_updates_r=current_updates_r,project=self.repository)
         return new_updates_r
 
 #print(data)

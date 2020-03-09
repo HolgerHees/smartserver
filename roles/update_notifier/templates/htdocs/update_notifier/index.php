@@ -94,7 +94,7 @@ mx.OnDocReady.push( initPage );
                 $icon="icon-inbox";
                 break;
             case 'github':
-                $icon="icon-github";
+                $icon="icon-git";
                 break;
             default:
                 $icon="";
@@ -102,7 +102,7 @@ mx.OnDocReady.push( initPage );
         }
     
         echo '<div class="row ' . $class . '">';
-        echo '<div><span class="' . $icon . '"></span></div>';
+        echo '<div class="typeLink" onClick="mx.UNCore.openUrl(event,\'' .$state->url . '\')"><span class="' . $icon . '"></span></div>';
         echo '<div>' . $state->name . '</div>';
         echo '<div>' . formatVersion($state->current->version) . '</div>';
         if( count($state->updates) > 0)
@@ -117,7 +117,7 @@ mx.OnDocReady.push( initPage );
             $upgradesHTML_r = array();
             foreach( $updates as $update)
             {
-                error_log($update->date);
+                #error_log($update->date);
 
                 $date = date_create($update->date);
                 
@@ -161,6 +161,7 @@ mx.OnDocReady.push( initPage );
         #$last_update = $date->format("d.m.Y H:i");
 
         echo '<div class="tooltip">' . $last_update . $last_update_details . '</div>';
+        
         echo '</div>';
     }
 ?>
