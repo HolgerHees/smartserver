@@ -1,4 +1,4 @@
-FROM php:7.3-fpm
+FROM php:7.3.15-fpm
 
 ARG WWW_UID
 ARG WWW_USERNAME

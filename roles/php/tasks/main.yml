@@ -4,13 +4,13 @@
     state: started
 
 - name: check docker image exists
-  shell: "docker images custom_php:7.3"
+  shell: "docker images custom_php:7.3.15"
   register: image_exists
   changed_when: "'custom_php' not in image_exists.stdout"
 
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_php:7.3 roles/php/templates/container/ --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
+  shell: "docker build -t custom_php:7.3.15 roles/php/templates/container/ --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
   async: 1800
   poll: 0
   register: docker_build
@@ -29,7 +29,7 @@
 - name: create docker container
   docker_container:
     name: php
-    image: custom_php:7.3
+    image: custom_php:7.3.15
     state: present
     network_mode: "host"
     user: "{{system_users['www'].name}}:{{system_groups['www'].name}}"
@@ -67,6 +67,7 @@
   vars:
     name: "php"
     type: "docker"
+    url: "https://www.php.net/ChangeLog-7.php"
     config: {
       repository: "php",
       pattern: "^([0-9\\.]+)-fpm$" 
