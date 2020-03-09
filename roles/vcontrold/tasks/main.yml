@@ -50,8 +50,7 @@
     repo: 'https://github.com/openv/vcontrold.git'
     dest: '{{global_build}}vcontrold'
 #    force: yes
-    # stable version from 05.03.2020
-    version: '09b789ee3856a49a9b972e37a0cb1ece1389cc63'
+    version: 'v0.98.9'
   register: clone_status
 #- debug: msg={{clone_status}}
 
@@ -59,9 +58,11 @@
   vars:
     name: "vcontrold"
     type: "github"
+    url: "https://github.com/openv/vcontrold/releases"
     config: { 
       project: "openv/vcontrold", 
-      version: "09b789ee3856a49a9b972e37a0cb1ece1389cc63" 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v0.98.9" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
