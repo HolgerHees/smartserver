@@ -133,7 +133,18 @@ div.log {
     white-space: pre;
     font-size: 15px;
 }
+/*@media (hover: hover) {
+    div.log {
+        min-width: 1024px;
+    }
+}*/
 div.log > div {
     white-space: nowrap;
     min-height: 18px;
+}
+
+@media (hover: hover) {
+    div.log > div {
+        white-space: pre-wrap;  
+    }
 }

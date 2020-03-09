@@ -24,8 +24,11 @@ mx.CIDetails = (function( ret ) {
     {
         var scrollControl = document.querySelector(".scrollControl");
         scrollControl.classList.add("active");
-        bottomScrollEnabled = true;
         mx.CIDetails.goToBottom();
+        window.setTimeout(function()
+        {
+            bottomScrollEnabled = true;
+        },500);
     }
 
     function disableBottomScroll()
