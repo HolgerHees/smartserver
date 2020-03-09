@@ -6,7 +6,7 @@
 - name: create docker container
   docker_container:
     name: mosquitto
-    image: eclipse-mosquitto:1.6.7
+    image: eclipse-mosquitto:1.6.9
     state: present
 #    recreate: true
     env:
@@ -33,6 +33,7 @@
   vars:
     name: "mosquitto"
     type: "docker"
+    url: "https://mosquitto.org/blog/"
     config: { 
       repository: "eclipse-mosquitto", 
       pattern: "^([0-9\\.]+)$" 
