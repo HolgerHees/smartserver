@@ -4,13 +4,13 @@
     state: started
 
 - name: check docker image exists
-  shell: "docker images custom_kibana:1.2.1"
+  shell: "docker images custom_kibana:1.4.0"
   register: image_exists
   changed_when: "'custom_kibana' not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_kibana:1.2.1 roles/kibana/templates/container/"
+  shell: "docker build -t custom_kibana:1.4.0 roles/kibana/templates/container/"
   async: 600
   poll: 0
   register: docker_build
@@ -27,7 +27,7 @@
 - name: create docker container
   docker_container:
     name: kibana
-    image: custom_kibana:1.2.1
+    image: custom_kibana:1.4.0
     state: present
 #    recreate: true
     env:
@@ -97,6 +97,7 @@
   vars:
     name: "kibana"
     type: "docker"
+    url: "https://opendistro.github.io/for-elasticsearch-docs/version-history/"
     config: {
       repository: "amazon/opendistro-for-elasticsearch-kibana",
       pattern: "^([0-9\\.]+)$"

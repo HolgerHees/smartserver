@@ -1,4 +1,4 @@
-FROM amazon/opendistro-for-elasticsearch-kibana:1.2.1
+FROM amazon/opendistro-for-elasticsearch-kibana:1.4.0
 
 COPY kibana.yml /usr/share/kibana/config/kibana.yml
 
