@@ -57,6 +57,7 @@
   vars:
     name: "redis"
     type: "docker"
+    url: "https://raw.githubusercontent.com/antirez/redis/5.0/00-RELEASENOTES"
     config: {
       repository: "redis",
       pattern: "^([0-9\\.]+)-alpine$"
