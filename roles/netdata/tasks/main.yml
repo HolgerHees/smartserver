@@ -167,6 +167,7 @@
   vars:
     name: "netdata"
     type: "github"
+    url: "https://github.com/netdata/netdata/releases"
     config: { 
       project: "netdata/netdata", 
       pattern: "^v([0-9\\.]+)$",
