@@ -20,13 +20,7 @@
   register: openhab_exists
   changed_when: not openhab_exists.stat.exists
   
-# **** PREPARATION and CLEANUP ****
-- name: clean old symlink => openhab not exists
-  file:
-    dest: "{{data_path}}openhab-runtime"
-    state: absent
-  when: not openhab_exists.stat.exists
-
+# **** PREPARATION ****
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -39,6 +33,20 @@
     - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
 
+# **** INSTALL ****
+- name: install archive => openhab not exists
+  unarchive:
+    src: "https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F{{openhab_version}}%2Fopenhab-{{openhab_version}}.zip"
+    dest: "{{data_path}}openhab-runtime-{{openhab_version}}/"
+    remote_src: yes
+  when: not openhab_exists.stat.exists
+
+#- name: clean old symlink => openhab not exists
+#  file:
+#    dest: "{{data_path}}openhab-runtime"
+#    state: absent
+#  when: not openhab_exists.stat.exists
+
 - name: set runtime link
   file:
     src: "openhab-runtime-{{openhab_version}}"
@@ -47,14 +55,6 @@
     follow: no
     owner: root
     group: root
-
-# **** INSTALL ****
-- name: install archive => openhab not exists
-  unarchive:
-    src: "https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F{{openhab_version}}%2Fopenhab-{{openhab_version}}.zip"
-    dest: "{{data_path}}openhab-runtime-{{openhab_version}}/"
-    remote_src: yes
-  when: not openhab_exists.stat.exists
 
 # **** BACKUP ****
 - name: backup original conf and start.sh => openhab not exists

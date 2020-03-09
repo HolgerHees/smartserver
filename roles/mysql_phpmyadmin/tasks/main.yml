@@ -23,7 +23,7 @@
 - name: install archive => phpmyadmin does not exists
   unarchive:
     src: "https://files.phpmyadmin.net/phpMyAdmin/{{phpmyadmin_version}}/phpMyAdmin-{{phpmyadmin_version}}-all-languages.zip"
-    dest: "{{htdocs_path}}"
+    dest: "{{global_tmp}}"
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
@@ -31,7 +31,7 @@
   when: not phpmyadmin_exists.stat.exists
 
 - name: rename folder => phpmyadmin does not exists
-  command: "mv {{htdocs_path}}phpMyAdmin-{{phpmyadmin_version}}-all-languages/ {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
+  command: "mv {{global_tmp}}phpMyAdmin-{{phpmyadmin_version}}-all-languages/ {{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
   when: not phpmyadmin_exists.stat.exists
   
 - name: set symbolic link => phpmyadmin does not exists

@@ -60,16 +60,10 @@
   register: nextcloud_version_exists
   changed_when: not nextcloud_version_exists.stat.exists
   
-- name: prepare tmp folder
-  file:
-    path: "{{htdocs_path}}/nextcloud-tmp"
-    state: directory
-  when: not nextcloud_version_exists.stat.exists
-
 - name: install archive => nextcloud does not exists
   unarchive:
     src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
-    dest: "{{htdocs_path}}/nextcloud-tmp"
+    dest: "{{global_tmp}}"
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
@@ -77,15 +71,9 @@
   when: not nextcloud_version_exists.stat.exists
 
 - name: rename folder => nextcloud does not exists
-  command: "mv {{htdocs_path}}nextcloud-tmp/nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
+  command: "mv {{global_tmp}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: not nextcloud_version_exists.stat.exists
 
-- name: clean old tmp folder => nextcloud does not exists
-  file:
-    path: "{{htdocs_path}}nextcloud-tmp"
-    state: absent
-  when: not nextcloud_version_exists.stat.exists
-    
 #- name: clean old symlink => nextcloud does not exists
 #  file:
 #    dest: "{{htdocs_path}}nextcloud"
