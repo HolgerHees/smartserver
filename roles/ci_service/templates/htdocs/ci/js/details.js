@@ -176,7 +176,7 @@ mx.CIDetails = (function( ret ) {
         
             disableBottomScroll();
 
-            location.hash = location.hash.replace('#autoscroll','');
+            location.hash = location.hash.replace('#autoscroll','_');
         }
     }
 
