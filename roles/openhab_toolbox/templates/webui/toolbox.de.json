@@ -1,6 +1,6 @@
 {
-  "administration_tools": {
-    "Weatherforcast": "Wetterbericht",
+  "administration_states": {
+    "Weatherforecast": "Wetterbericht",
     "Meteo Group": "Meteo Group"
   }
 }

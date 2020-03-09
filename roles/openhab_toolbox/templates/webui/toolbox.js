@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('administration').getSubGroup('tools').addUrl('toolbox',200, 'url', '//openhab.{host}/toolbox/web/weatherDetailOverview.php', '{i18n_Weatherforcast}', '{i18n_Meteo Group}', false);
+mx.Menu.getMainGroup('administration').getSubGroup('states').addUrl('toolbox',800, 'url', '//openhab.{host}/toolbox/web/weatherDetailOverview.php', '{i18n_Weatherforecast}', '{i18n_Meteo Group}', false);
