@@ -45,7 +45,7 @@
 - name: create docker container
   docker_container:
     name: grafana
-    image: grafana/grafana:6.4.4
+    image: grafana/grafana:6.6.2
     state: present
 #    network_mode: "host"
     user: "root:root"
@@ -101,6 +101,7 @@
   vars:
     name: "grafana"
     type: "docker"
+    url: "https://grafana.com/docs/grafana/latest/guides/whats-new-in-v6-6/"
     config: {
       repository: "grafana/grafana",
       pattern: "^([0-9\\.]+)$"
