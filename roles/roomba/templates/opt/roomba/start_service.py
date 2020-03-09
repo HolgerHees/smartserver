@@ -94,7 +94,7 @@ try:
         mqttc.loop_forever()
     else:
         while True:
-            print("Roomba Data: %s" % json.dumps(myroomba.master_state, indent=2))
+            #print("Roomba Data: %s" % json.dumps(myroomba.master_state, indent=2))
             time.sleep(5)
 
 except (KeyboardInterrupt, SystemExit):
