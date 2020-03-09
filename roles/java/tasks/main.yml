@@ -23,13 +23,29 @@
 #    creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
 #    remote_src: true
     
+- name: set phpmyadmin version
+  set_fact:
+    java_version: '8.242.08.1'
+    
+- name: register update notifier
+  vars:
+    name: "java"
+    type: "github"
+    url: "https://github.com/corretto/corretto-8/releases"
+    config: { 
+      project: "corretto/corretto-8", 
+      pattern: "^([0-9\\.\\-]+)$",
+      version: "8.242.08.1" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
 - name: install jdk archive
   unarchive:
-    src: "https://d3pxv6yz143wms.cloudfront.net/8.222.10.1/amazon-corretto-8.222.10.1-linux-x64.tar.gz"
-#    src: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
+    src: "https://corretto.aws/downloads/resources/{{java_version}}/amazon-corretto-{{java_version}}-linux-x64.tar.gz"
+    #src: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
     dest: "/opt"
     remote_src: true
-    creates: "/opt/amazon-corretto-8.222.10.1-linux-x64/"
+    creates: "/opt/amazon-corretto-{{java_version}}-linux-x64/"
 #    creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
   register: jdk_exists
 
@@ -37,18 +53,7 @@
 - name: set alternatives => jdk changed
   alternatives:
     name: java
-    path: "/opt/amazon-corretto-8.222.10.1-linux-x64//bin/java"
+    path: "/opt/amazon-corretto-{{java_version}}-linux-x64//bin/java"
 #    path: "/opt/amazon-corretto-8.212.04.2-linux-x64/bin/java"
     link: /usr/bin/java
   when: jdk_exists.changed
-
-- name: register update notifier
-  vars:
-    name: "java"
-    type: "github"
-    config: { 
-      project: "corretto/corretto-8", 
-      pattern: "^([0-9\\.\\-]+)$",
-      version: "8.222.10.1" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
