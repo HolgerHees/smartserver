@@ -5,7 +5,7 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
-  tags: ['apache_webui_menu']
+  tags: ['apache_webui_configs']
 
 - name: "copy i18n file for '{{name}}'"
   template:
@@ -15,7 +15,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0644
   with_items: "{{i18n_files}}"
-  tags: ['apache_webui_menu']
+  tags: ['apache_webui_configs']
 
 - name: "copy icons for '{{name}}'"
   template:
@@ -25,7 +25,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0644
   with_items: "{{icons | default([])}}"
-  tags: ['apache_webui_menu']
+  tags: ['apache_webui_configs']
 
 - name: "copy js listener for '{{name}}'"
   template:
