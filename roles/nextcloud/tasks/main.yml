@@ -1,19 +1,37 @@
 - name: set nextcloud version
   set_fact:
-    nextcloud_version: '18.0.0'
-    nextcloud_upgrade_from: '18.0.0.10' # the current installed version to be able to run "./occ upgrade"
+    nextcloud_version: '18.0.1'
     
 - name: register update notifier
   vars:
     name: "nextcloud"
     type: "github"
+    url: "https://nextcloud.com/changelog/"
     config: { 
       project: "nextcloud/server", 
       pattern: "^v([0-9\\.]+)$",
-      version: "v18.0.0" 
+      version: "v18.0.1" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
+     
+- name: check current nextcloud
+  stat:
+    path: "{{htdocs_path}}nextcloud/"
+  register: current_nextcloud_exists
+  changed_when: not current_nextcloud_exists.stat.exists
 
+- name: read current nextcloud version
+  slurp:
+    src: "{{htdocs_path}}nextcloud/config/config.php"
+  register: current_nextcloud_config
+  when: current_nextcloud_exists.stat.exists
+
+- name: set current nextcloud version
+  set_fact:
+    # the current installed version is needed to run "./occ upgrade" properly
+    # used in 'config.php'
+    current_nextcloud_version: "{{current_nextcloud_config['content'] | b64decode | regex_search(\"'version'\\s*=>\\s*'([0-9\\.]+)'\") | regex_search(\"[0-9\\.]+\") if current_nextcloud_config['content'] is defined else nextcloud_version }}"
+    
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -35,32 +53,44 @@
   with_items:
     - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
-
+    
 - name: check nextcloud
   stat:
     path: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/"
-  register: nextcloud_exists
-  changed_when: not nextcloud_exists.stat.exists
+  register: nextcloud_version_exists
+  changed_when: not nextcloud_version_exists.stat.exists
   
-- name: clean old symlink => nextcloud does not exists
+- name: prepare tmp folder
   file:
-    dest: "{{htdocs_path}}nextcloud"
-    state: absent
-  when: not nextcloud_exists.stat.exists
+    path: "{{htdocs_path}}/nextcloud-tmp"
+    state: directory
+  when: not nextcloud_version_exists.stat.exists
 
 - name: install archive => nextcloud does not exists
   unarchive:
     src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
-    dest: "{{htdocs_path}}"
+    dest: "{{htdocs_path}}/nextcloud-tmp"
     remote_src: yes
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0755
-  when: not nextcloud_exists.stat.exists
+  when: not nextcloud_version_exists.stat.exists
 
 - name: rename folder => nextcloud does not exists
-  command: "mv {{htdocs_path}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
-  when: not nextcloud_exists.stat.exists
+  command: "mv {{htdocs_path}}nextcloud-tmp/nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
+  when: not nextcloud_version_exists.stat.exists
+
+- name: clean old tmp folder => nextcloud does not exists
+  file:
+    path: "{{htdocs_path}}nextcloud-tmp"
+    state: absent
+  when: not nextcloud_version_exists.stat.exists
+    
+#- name: clean old symlink => nextcloud does not exists
+#  file:
+#    dest: "{{htdocs_path}}nextcloud"
+#    state: absent
+#  when: not nextcloud_version_exists.stat.exists
 
 - name: set symbolic link to htdocs
   file:
@@ -70,7 +100,6 @@
     follow: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-  notify: "restart apache2"
 
 #- name: bind data directory
 #  vars:
@@ -141,12 +170,12 @@
 # ***** APACHE *****  
 - name: check apache service
   import_tasks: roles/apache/tasks/wait_until_ready.yml
-  when: "'nextcloud' not in mysql_data_exists.stdout or not nextcloud_exists.stat.exists"
+  when: "'nextcloud' not in mysql_data_exists.stdout or not nextcloud_version_exists.stat.exists"
 
 # ***** OCC *****
 - name: upgrade existing database => database exists and nextcloud installation changed
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
-  when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_exists.stat.exists"
+  when: "'nextcloud' in mysql_data_exists.stdout and not nextcloud_version_exists.stat.exists"
 
 - name: add user => database does not exists
   shell: "docker exec php sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""

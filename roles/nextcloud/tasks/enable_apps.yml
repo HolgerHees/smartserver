@@ -47,14 +47,6 @@
     group: "{{system_groups['www'].name}}"
   register: keeweb_installation
   
-- name: copy patched script.js
-  template:
-    src: "templates/apps/script.js"
-    dest: "{{htdocs_path}}nextcloud/apps/keeweb/js/script.js"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-#  when: keeweb_installation.changed
-
 - name: check keeweb max version
   lineinfile:
     path: "{{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml"
