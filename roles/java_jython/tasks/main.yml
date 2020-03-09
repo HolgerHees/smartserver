@@ -13,6 +13,7 @@
   vars:
     name: "jython"
     type: "github"
+    url: "https://www.jython.org/news"
     config: { 
       project: "jythontools/jython", 
       version: "f93926de404142f1fcf950c0c058194e61c3b91f" 
