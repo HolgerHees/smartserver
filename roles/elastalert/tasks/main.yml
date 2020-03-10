@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    elastalert_version: '325f1dfe7a45f3ca2a2cc00127ab71fcd4f9cead' # => master of 25.11. 'v0.2.1'
+  tags: [ 'update_notifier_configs' ]    
+
 - name: prepare needed folder
   file:
     path: '/etc/elastalert/'
@@ -58,21 +63,10 @@
     repo: 'https://github.com/Yelp/elastalert.git'
     dest: '{{global_build}}elastalert'
 #    force: yes
-    version: '325f1dfe7a45f3ca2a2cc00127ab71fcd4f9cead' # => master of 25.11. 'v0.2.1'
+    version: '{{elastalert_version}}'
   register: clone_status
   #changed_when: yes
 #- debug: msg={{clone_status}}
-
-- name: register update notifier
-  vars:
-    name: "elastalert"
-    type: "github"
-    url: "https://github.com/Yelp/elastalert/blob/master/changelog.md"
-    config: { 
-      project: "Yelp/elastalert", 
-      version: "325f1dfe7a45f3ca2a2cc00127ab71fcd4f9cead" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: check if elastalert is installed
   shell: command -v elastalert >/dev/null 2>&1
@@ -103,13 +97,24 @@
 # first test run
 #elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
 
-- name: register systemd service watcher
-  vars:
-    name: "elastalert"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
+# ***** FINALIZE *****
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/elastalert.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
+- name: register systemd service watcher
+  vars:
+    name: "elastalert"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
+- name: register update notifier
+  vars:
+    name: "elastalert"
+    type: "github"
+    url: "https://github.com/Yelp/elastalert/blob/master/changelog.md"
+    config: { 
+      project: "Yelp/elastalert", 
+      version: "{{elastalert_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

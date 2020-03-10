@@ -21,6 +21,7 @@
     mode: 0640
   notify: "restart samba"
 
+# ***** FINALIZE *****
 - name: register smb systemd service watcher
   vars:
     name: "smb"

@@ -18,6 +18,7 @@
   notify: "restart nfs-server"
   when: is_suse|bool
 
+# ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
     name: "{{ 'nfsserver' if is_suse|bool else 'nfs-server' }}"

@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    alpine_version: "3.11.3"
+  tags: [ 'update_notifier_configs' ]
+
 # suse user: ftp:x:476:476:FTP Account:/srv/ftp:/sbin/nologin
 # suse group: ftp:!:476:
 # fedora user: ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
@@ -88,13 +93,13 @@
     state: started
     
 - name: check docker image exists
-  shell: "docker images custom_vsftpd:1.0.0"
+  shell: "docker images custom_vsftpd:{{alpine_version}}"
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
  
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_vsftpd:1.0.0 roles/ftp/templates/container/"
+  shell: "docker build -t custom_vsftpd:{{alpine_version}} roles/ftp/templates/container/ --build-arg VERSION={{alpine_version}}"
   async: 600
   poll: 0
   register: docker_build
@@ -111,7 +116,7 @@
 - name: create docker container
   docker_container:
     name: vsftpd
-    image: custom_vsftpd:1.0.0
+    image: "custom_vsftpd:{{alpine_version}}"
     state: present
 #    recreate: true
     env:
@@ -141,18 +146,7 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "'custom_vsftpd' not in image_exists.stdout"
   
-- name: create systemd service
-  vars:
-    container_name: "vsftpd"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-
-
-  
-  
-  
-  
-  
-  
+# ***** FINALIZE *****
 - name: create cron job
   vars:
     name: "Camera Cleanup"
@@ -162,6 +156,21 @@
     minute: "50"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
+- name: create systemd service
+  vars:
+    container_name: "vsftpd"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: register update notifier
+  vars:
+    name: "vsftpd"
+    type: "docker"
+    url: "https://alpinelinux.org/"
+    config: {
+      repository: "alpine",
+      pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
           
           
           

@@ -48,11 +48,6 @@
 # first test run
 #./bin/fluentd -c ./fluent/fluent.conf
 
-- name: register systemd service watcher
-  vars:
-    name: "fluentd"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
 - name: create cron job
   vars:
     name: "Fluentd elasticsearch index cleanup"
@@ -61,3 +56,9 @@
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+
+# ***** FINALIZE *****
+- name: register systemd service watcher
+  vars:
+    name: "fluentd"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

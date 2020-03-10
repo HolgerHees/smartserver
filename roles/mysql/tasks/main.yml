@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    mysql_version: "10.4.12"
+  tags: [ 'update_notifier_configs' ]
+  
 - name: prepare needed folder
   file:
     path: '{{item}}'
@@ -17,7 +22,7 @@
 - name: create docker container
   docker_container:
     name: mysql
-    image: mariadb:10.4.12
+    image: "mariadb:{{mysql_version}}"
     state: present
 #    recreate: true
     env:
@@ -35,16 +40,7 @@
       - "127.0.0.1:3306:3306"  
   notify: "restart mysql"
 
-- name: create systemd service
-  vars:
-    container_name: "mysql"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-  
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/mysql.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-  
+# ***** FINALIZE *****
 - name: create cron job
   vars:
     name: "MySQL Core Backup"
@@ -63,6 +59,16 @@
     minute: "45"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/mysql.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: create systemd service
+  vars:
+    container_name: "mysql"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+    
 - name: register update notifier
   vars:
     name: "mysql"

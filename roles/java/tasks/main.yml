@@ -1,45 +1,9 @@
-# *** Download and install JDK ***
-#- name: check jdk
-#  stat:
-#    path: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-#  register: jdk_exists
-#  changed_when: not jdk_exists.stat.exists
-
-#- name: download jdk archive
-#  get_url:
-#    dest: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-#    url: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-#    validate_certs: yes
-#    timeout: 60
-#    force: no
-#  register: oracle_jdk_task_download
-#  until: oracle_jdk_task_download is succeeded 
-#  when: not jdk_exists.stat.exists
-
-#- name: install jdk archive
-#  unarchive:
-#    src: "{{ global_build }}amazon-corretto-8.212.04.2-linux-x64.tar.gz"
-#    dest: "/opt"
-#    creates: "/opt/amazon-corretto-8.212.04.2-linux-x64/"
-#    remote_src: true
-    
-- name: set phpmyadmin version
+- name: set version
   set_fact:
     java_version: '8.242.08.1'
-    
-- name: register update notifier
-  vars:
-    name: "java"
-    type: "github"
-    url: "https://github.com/corretto/corretto-8/releases"
-    config: { 
-      project: "corretto/corretto-8", 
-      pattern: "^([0-9\\.\\-]+)$",
-      version: "8.242.08.1" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  tags: [ 'update_notifier_configs' ]
 
-- name: install jdk archive
+- name: install archive
   unarchive:
     src: "https://corretto.aws/downloads/resources/{{java_version}}/amazon-corretto-{{java_version}}-linux-x64.tar.gz"
     #src: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
@@ -57,3 +21,16 @@
 #    path: "/opt/amazon-corretto-8.212.04.2-linux-x64/bin/java"
     link: /usr/bin/java
   when: jdk_exists.changed
+    
+# ***** FINALIZE *****
+- name: register update notifier
+  vars:
+    name: "java"
+    type: "github"
+    url: "https://github.com/corretto/corretto-8/releases"
+    config: { 
+      project: "corretto/corretto-8", 
+      pattern: "^([0-9\\.\\-]+)$",
+      version: "{{java_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

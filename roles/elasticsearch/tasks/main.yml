@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    elasticsearch_version: '1.4.0'
+  tags: [ 'update_notifier_configs' ]    
+
 - name: install required python pip modules
   pip: 
     name: elasticsearch-curator # provides "curator-cli" and is used by fluent to clean old log files
@@ -18,8 +23,7 @@
 - name: create docker container
   docker_container:
     name: elasticsearch
-    image: amazon/opendistro-for-elasticsearch:1.4.0
-#    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    image: "amazon/opendistro-for-elasticsearch:{{elasticsearch_version}}"
     state: present
 #    recreate: true
     env:
@@ -36,16 +40,17 @@
      - "127.0.0.1:9300:9300"  
   notify: "restart elasticsearch"
     
-- name: create systemd service
-  vars:
-    container_name: "elasticsearch"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-  
+# ***** FINALIZE *****
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/elasticsearch.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
+- name: create systemd service
+  vars:
+    container_name: "elasticsearch"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
 - name: register update notifier
   vars:
     name: "elasticsearch"

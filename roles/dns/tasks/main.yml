@@ -109,6 +109,7 @@
     - "restart named"
   when: is_suse|bool
 
+# ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
     name: "named"

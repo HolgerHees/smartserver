@@ -1,16 +1,21 @@
+- name: set version
+  set_fact:
+    php_version: "7.3.15"
+  tags: [ 'update_notifier_configs' ]
+  
 - name: check started docker
   systemd:
     name: docker
     state: started
 
 - name: check docker image exists
-  shell: "docker images custom_php:7.3.15"
+  shell: "docker images custom_php:{{php_version}}"
   register: image_exists
   changed_when: "'custom_php' not in image_exists.stdout"
 
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_php:7.3.15 roles/php/templates/container/ --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
+  shell: "docker build -t custom_php:{{php_version}} roles/php/templates/container/ --build-arg VERSION={{php_version}} --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
   async: 1800
   poll: 0
   register: docker_build
@@ -29,7 +34,7 @@
 - name: create docker container
   docker_container:
     name: php
-    image: custom_php:7.3.15
+    image: "custom_php:{{php_version}}"
     state: present
     network_mode: "host"
     user: "{{system_users['www'].name}}:{{system_groups['www'].name}}"
@@ -58,6 +63,7 @@
 #      - elasticsearch
 #      - redis
 
+# ***** FINALIZE *****
 - name: create systemd service
   vars:
     container_name: "php"

@@ -1,16 +1,21 @@
+- name: set version
+  set_fact:
+    kibana_version: "1.4.0"
+  tags: [ 'update_notifier_configs' ]
+  
 - name: check started docker
   systemd:
     name: docker
     state: started
 
 - name: check docker image exists
-  shell: "docker images custom_kibana:1.4.0"
+  shell: "docker images custom_kibana:{{kibana_version}}"
   register: image_exists
   changed_when: "'custom_kibana' not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_kibana:1.4.0 roles/kibana/templates/container/"
+  shell: "docker build -t custom_kibana:{{kibana_version}} roles/kibana/templates/container/ --build-arg VERSION={{kibana_version}}"
   async: 600
   poll: 0
   register: docker_build
@@ -27,7 +32,7 @@
 - name: create docker container
   docker_container:
     name: kibana
-    image: custom_kibana:1.4.0
+    image: "custom_kibana:{{kibana_version}}"
     state: present
 #    recreate: true
     env:
@@ -70,11 +75,7 @@
 #  register: docker_status
 #  notify: "restart kibana"
     
-- name: create systemd service
-  vars:
-    container_name: "kibana"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-  
+# ***** FINALIZE *****
 - name: register webui
   vars:
     name: "kibana"
@@ -82,17 +83,22 @@
     i18n_files: [ { language: "de", file: "templates/webui/kibana.de.json" } ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/kibana.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-    
 - name: copy apache vhost
   vars:
     sub_domain: "kibana"
     include: "templates/etc/apache2/_.ansible.vhost.d/kibana.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/kibana.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "kibana"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
 - name: register update notifier
   vars:
     name: "kibana"

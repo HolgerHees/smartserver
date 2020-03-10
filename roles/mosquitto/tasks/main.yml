@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    mosquitto_version: "1.6.9"
+  tags: [ 'update_notifier_configs' ]
+  
 - name: check started docker
   systemd:
     name: docker
@@ -6,7 +11,7 @@
 - name: create docker container
   docker_container:
     name: mosquitto
-    image: eclipse-mosquitto:1.6.9
+    image: "eclipse-mosquitto:{{mosquitto_version}}"
     state: present
 #    recreate: true
     env:
@@ -19,15 +24,16 @@
      - "127.0.0.1:9001:9001"  
   notify: "restart mosquitto"
     
-- name: create systemd service
-  vars:
-    container_name: "mosquitto"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-
+# ***** FINALIZE *****
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: create systemd service
+  vars:
+    container_name: "mosquitto"
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier
   vars:

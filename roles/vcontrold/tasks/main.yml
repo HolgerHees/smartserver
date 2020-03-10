@@ -1,3 +1,8 @@
+- name: set vcontrold version
+  set_fact:
+    vcontrold_version: 'v0.98.9'
+  tags: [ 'update_notifier_configs' ]
+
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -50,21 +55,9 @@
     repo: 'https://github.com/openv/vcontrold.git'
     dest: '{{global_build}}vcontrold'
 #    force: yes
-    version: 'v0.98.9'
+    version: '{{vcontrold_version}}'
   register: clone_status
 #- debug: msg={{clone_status}}
-
-- name: register update notifier
-  vars:
-    name: "vcontrold"
-    type: "github"
-    url: "https://github.com/openv/vcontrold/releases"
-    config: { 
-      project: "openv/vcontrold", 
-      pattern: "^v([0-9\\.]+)$",
-      version: "v0.98.9" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: check if vcontrold is installed
   shell: command -v vcontrold >/dev/null 2>&1
@@ -133,11 +126,6 @@
   with_items:
     - "heating_sensors/TempCmd"
 
-- name: register service watcher
-  vars:
-    name: "vcontrold"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
 - name: create cron job => is_production
   vars:
     name: "Heating Control"
@@ -164,3 +152,21 @@
     hour: "0"
     minute: "50"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+
+# ***** FINALIZE *****
+- name: register service watcher
+  vars:
+    name: "vcontrold"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
+- name: register update notifier
+  vars:
+    name: "vcontrold"
+    type: "github"
+    url: "https://github.com/openv/vcontrold/releases"
+    config: { 
+      project: "openv/vcontrold", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "{{vcontrold_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

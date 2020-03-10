@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    influxdb_version: '1.7.10'
+  tags: [ 'update_notifier_configs' ]    
+
 - name: prepare needed folder
   file:
     path: '{{item}}'
@@ -21,7 +26,7 @@
 - name: create docker container
   docker_container:
     name: influxdb
-    image: influxdb:1.7.10
+    image: "influxdb:{{influxdb_version}}"
     state: present
 #    recreate: true
     entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
@@ -39,16 +44,7 @@
      - "127.0.0.1:4242:4242"  
   notify: "restart influxdb"
     
-- name: create systemd service
-  vars:
-    container_name: "influxdb"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-  
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/influxdb.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-    
+# ***** FINALIZE *****
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"
@@ -58,6 +54,16 @@
     minute: "45"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/influxdb.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "influxdb"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
 - name: register update notifier
   vars:
     name: "influxdb"

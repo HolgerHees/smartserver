@@ -189,7 +189,8 @@
   notify: "restart openvpn@mobile"
   when: is_fedora|bool
 
-- name: register service watcher
+# ***** FINALIZE *****
+- name: register systemd service watcher
   vars:
     name: "openvpn@mobile"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

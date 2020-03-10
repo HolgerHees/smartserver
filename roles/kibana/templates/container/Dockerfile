@@ -1,4 +1,6 @@
-FROM amazon/opendistro-for-elasticsearch-kibana:1.4.0
+ARG VERSION
+
+FROM amazon/opendistro-for-elasticsearch-kibana:$VERSION
 
 COPY kibana.yml /usr/share/kibana/config/kibana.yml
 

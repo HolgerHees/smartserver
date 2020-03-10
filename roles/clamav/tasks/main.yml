@@ -76,6 +76,7 @@
 #  import_tasks: roles/cron/tasks/add_cronjob.yml
 #  when: "is_production|bool"
 
+# ***** FINALIZE *****
 - name: register service watcher => is_fedora
   vars:
     name: "clamd@scan"

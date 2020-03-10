@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    grafana_version: '6.6.2'
+  tags: [ 'update_notifier_configs' ]    
+
 - name: prepare needed folder
   file:
     path: '{{item}}'
@@ -45,7 +50,7 @@
 - name: create docker container
   docker_container:
     name: grafana
-    image: grafana/grafana:6.6.2
+    image: "grafana/grafana:{{grafana_version}}"
     state: present
 #    network_mode: "host"
     user: "root:root"
@@ -75,11 +80,7 @@
       - grafana
       - influxdb
 
-- name: create systemd service
-  vars:
-    container_name: "grafana"
-  import_tasks: roles/container/tasks/add_docker_service.yml
-  
+# ***** FINALIZE *****
 - name: register webui
   vars:
     name: "grafana"
@@ -87,16 +88,21 @@
     i18n_files: [ { language: "de", file: "templates/webui/grafana.de.json" } ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/grafana.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-      
 - name: copy apache config
   vars:
     config_file: "templates/etc/apache2/_.ansible.conf.d/grafana.conf"
   import_tasks: roles/apache/tasks/add_config.yml
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/grafana.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+      
+- name: create systemd service
+  vars:
+    container_name: "grafana"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
 - name: register update notifier
   vars:
     name: "grafana"

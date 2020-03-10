@@ -1,4 +1,6 @@
-FROM alpine
+ARG VERSION
+
+FROM alpine:$VERSION
 
 COPY entrypoint.sh /usr/sbin/
 

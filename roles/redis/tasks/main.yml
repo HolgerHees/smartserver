@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    redis_version: '5.0.7'
+  tags: [ 'update_notifier_configs' ]
+  
 - name: check started docker
   systemd:
     name: docker
@@ -31,7 +36,7 @@
 - name: create docker container
   docker_container:
     name: redis
-    image: redis:5.0.7-alpine
+    image: "redis:{{redis_version}}-alpine"
     state: present
 #    network_mode: "none"
 #    recreate: true
@@ -48,6 +53,7 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "'custom_redis' not in image_exists.stdout"
   
+# ***** FINALIZE *****
 - name: create systemd service
   vars:
     container_name: "redis"

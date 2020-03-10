@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    netdata_version: '1.20.0'
+  tags: [ 'update_notifier_configs' ]
+
 - name: install required packages => is_fedora
   yum:
     name: [
@@ -20,7 +25,7 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-        netdata>=1.18.1
+        "netdata>={{netdata_version}}"
       , fping
       # needed to rebuild rpm package
       #, rpm-build
@@ -142,11 +147,6 @@
     include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 
-- name: register systemd service watcher
-  vars:
-    name: "netdata"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
 - name: create cron job
   vars:
     name: "Influxdb OpenTSDB Backup"
@@ -163,6 +163,12 @@
     file: "ansible_netdata"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   
+# ***** FINALIZE *****
+- name: register systemd service watcher
+  vars:
+    name: "netdata"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
 - name: register update notifier
   vars:
     name: "netdata"
@@ -171,6 +177,6 @@
     config: { 
       project: "netdata/netdata", 
       pattern: "^v([0-9\\.]+)$",
-      version: "v1.20.0" 
+      version: "v{{netdata_version}}" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

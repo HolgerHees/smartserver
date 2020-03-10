@@ -23,6 +23,7 @@
     - trusted.xml
   notify: "restart firewalld"
 
+# ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
     name: "firewalld"

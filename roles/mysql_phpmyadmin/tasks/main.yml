@@ -1,19 +1,8 @@
-- name: set phpmyadmin version
+- name: set version
   set_fact:
     phpmyadmin_version: '5.0.1'
-    
-- name: register update notifier
-  vars:
-    name: "phpmyadmin"
-    type: "github"
-    url: "https://www.phpmyadmin.net/news/"
-    config: { 
-      project: "phpmyadmin/phpmyadmin", 
-      pattern: "^RELEASE_([0-9_]+)$",
-      version: "RELEASE_5_0_1" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-
+  tags: [ 'update_notifier_configs' ]
+  
 - name: check installation
   stat:
     path: "{{htdocs_path}}mysql-phpMyAdmin-{{phpmyadmin_version}}-all-languages"
@@ -67,3 +56,16 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0750
+    
+# ***** FINALIZE *****
+- name: register update notifier
+  vars:
+    name: "phpmyadmin"
+    type: "github"
+    url: "https://www.phpmyadmin.net/news/"
+    config: { 
+      project: "phpmyadmin/phpmyadmin", 
+      pattern: "^RELEASE_([0-9_]+)$",
+      version: "RELEASE_{{phpmyadmin_version | regex_replace('\\.','_')}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

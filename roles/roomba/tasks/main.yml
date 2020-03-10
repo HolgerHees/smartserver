@@ -49,7 +49,8 @@
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/roomba.service" }
   notify: "restart roomba"
 
-- name: register service watcher
+# ***** FINALIZE *****
+- name: register systemd service watcher
   vars:
     name: "roomba"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

@@ -1,19 +1,14 @@
 - name: set openhab version
   set_fact:
-    openhab_version: "2.5.0"
+    openhab_version: "2.5.2"
+  tags: [ 'update_notifier_configs' ]
+  
+- name: set jython script version
+  set_fact:
+    # stable version from 05.03.2020
+    jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
+  tags: [ 'update_notifier_configs' ]
     
-- name: register update notifier
-  vars:
-    name: "openhab"
-    type: "github"
-    url: "https://github.com/openhab/openhab-distro/releases"
-    config: { 
-      project: "openhab/openhab-distro", 
-      pattern: "^([0-9\\.]+)$",
-      version: "2.5.0" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-
 - name: check openhab-runtime
   stat:
     path: "{{data_path}}openhab-runtime-{{openhab_version}}"
@@ -144,19 +139,7 @@
   git:
     repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
     dest: '{{global_build}}openhab-jython'
-    # stable version from 05.03.2020
-    version: 'f09f63eba986833fead2c363bbd56e34106fed12'
-
-- name: register update notifier
-  vars:
-    name: "jsr223"
-    type: "github"
-    url: "https://github.com/openhab-scripters/openhab-helper-libraries"
-    config: { 
-      project: "openhab-scripters/openhab-helper-libraries", 
-      version: "f09f63eba986833fead2c363bbd56e34106fed12" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+    version: '{{jython_script_version}}'
 
 - name: copy jython classes
   copy:
@@ -343,7 +326,25 @@
 #  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
 #  when: "not influxdb_data_exists.stat.exists"
 
-# ***** OTHER *****
+# ***** FINALIZE *****
+- name: create cron job
+  vars:
+    name: "MySQL Openhab Backup"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
+    file: "ansible_openhab"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: create cron job
+  vars:
+    name: "Influxdb Openhab Backup"
+    cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    file: "ansible_openhab"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
 - name: register webui
   vars:
     name: "openhab"
@@ -371,30 +372,35 @@
   notify: "restart apache2"
   tags: ['apache_conf']
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
 - name: register service watcher
   vars:
     name: "openhab"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
-- name: copy fluentd config
+- name: register openhab update notifier
   vars:
-    config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-  
-- name: create cron job
-  vars:
-    name: "MySQL Openhab Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-    file: "ansible_openhab"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+    name: "openhab"
+    type: "github"
+    url: "https://github.com/openhab/openhab-distro/releases"
+    config: { 
+      project: "openhab/openhab-distro", 
+      pattern: "^([0-9\\.]+)$",
+      version: "{{openhab_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: create cron job
+- name: register jython script update notifier
   vars:
-    name: "Influxdb Openhab Backup"
-    cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-    file: "ansible_openhab"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+    name: "jsr223"
+    type: "github"
+    url: "https://github.com/openhab-scripters/openhab-helper-libraries"
+    config: { 
+      project: "openhab-scripters/openhab-helper-libraries", 
+      version: "{{jython_script_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

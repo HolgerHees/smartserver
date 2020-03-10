@@ -110,11 +110,6 @@
     mode: 0644
   notify: "restart docker"
 
-- name: register systemd service watcher
-  vars:
-    name: "docker"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
@@ -159,3 +154,9 @@
 - name: refresh sysctl to activate sysctl changes => sysctl changed
   shell: sysctl -p
   when: sysctlchanged.changed
+
+# ***** FINALIZE *****
+- name: register systemd service watcher
+  vars:
+    name: "docker"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml

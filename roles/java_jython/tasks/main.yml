@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    jython_version: "f93926de404142f1fcf950c0c058194e61c3b91f"
+  tags: [ 'update_notifier_configs' ]
+  
 - name: clone git
   git:
 #    accept_hostkey: yes
@@ -6,19 +11,8 @@
     # commit key from 27.09.2018
     #version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
     # commit key from 25.02.2020 - much slower then version from 27.09.2018
-    version: 'f93926de404142f1fcf950c0c058194e61c3b91f'
+    version: '{{jython_version}}'
   register: clone_status
-
-- name: register update notifier
-  vars:
-    name: "jython"
-    type: "github"
-    url: "https://www.jython.org/news"
-    config: { 
-      project: "jythontools/jython", 
-      version: "f93926de404142f1fcf950c0c058194e61c3b91f" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: copy ant.properties
   copy:
@@ -45,3 +39,15 @@
   retries: 30
   delay: 60
   when: clone_status.changed or property_status.changed
+
+# ***** FINALIZE *****
+- name: register update notifier
+  vars:
+    name: "jython"
+    type: "github"
+    url: "https://www.jython.org/news"
+    config: { 
+      project: "jythontools/jython", 
+      version: "{{jython_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
