@@ -29,13 +29,11 @@ class Repository(Plugin):
             self.current_version = plugin_config['version']
             
     def _requestData(self,url):
-        #print("github project '{}' url '{}'".format( self.project, url ) )
         req = urllib.request.Request(url)
         req.add_header('Authorization', "token {}".format(self.access_token))
-        with urllib.request.urlopen(req) as response:
-            raw = response.read().decode("utf-8") 
-            return json.loads(raw)
-        raise Exception('Something went wrong during fetching data from github project {}'.format(self.project))
+        
+        raw = self.requestUrl(req)
+        return json.loads(raw)
       
     def _getUpdateUrl(self,tag = None):
         if tag != None:

@@ -55,7 +55,7 @@
   
 - name: create cron job
   vars:
-    name: "Systemd service check"
+    name: "Update notifier"
     cmd: "/opt/update_notifier/update_check"
     file: "ansible_update_notifier"
     hour: "4"

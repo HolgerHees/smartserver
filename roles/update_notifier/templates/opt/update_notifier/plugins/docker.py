@@ -6,10 +6,6 @@ from datetime import datetime
 
 from helper.version import Version
 
-import http.client
-
-import time
-
 import re
 
 from plugins.plugin import Plugin
@@ -46,7 +42,7 @@ class Repository(Plugin):
         version = None
         for data in data_r:
             _version = Version.parseVersionString(data['tag'],self.pattern)
-            if version is None or version.compare(_version) == 1:
+            if _version is not None and (version is None or version.compare(_version) == 1):
                 version = _version
 
         if version:
@@ -69,26 +65,13 @@ class Repository(Plugin):
             return "{}r/{}/tags".format(Repository.WEB_BASE,self.repository)
           
     def _requestData(self,url,token=None,count=0):
-        #print("docker project '{}' url '{}'".format( self.repository, url ) )
         req = urllib.request.Request(url)
         if token != None:
             req.add_header('Authorization', "Bearer {}".format(token))
-        with urllib.request.urlopen(req) as response:
-            try:
-                raw = response.read().decode("utf-8")
-            except (http.client.IncompleteRead) as e:
-                raw = None
-                
-            # handle retry outside the exception block
-            if raw is None:
-                if count > 5:
-                    raise Exception('More then 5 retries to fetch data from docker repository {} and tag {}'.format(self.repository,tag))
-                time.sleep(15)
-                return self._requestData(url,token,count+1)
 
-            data = json.loads(raw)
-            return data
-        raise Exception('Something went wrong during fetching data from docker repository {} and tag {}'.format(self.repository,tag))
+        raw = self.requestUrl(req)
+        data = json.loads(raw)
+        return data
       
     def _getCreationDate(self,tag):
         url = "{}{}/manifests/{}".format(Repository.API_BASE,self.repository,tag)
@@ -124,7 +107,6 @@ class Repository(Plugin):
             self.updateCurrentUpdates(version=version,current_updates_r=current_updates_r,tag=tag)
             
             if self.isNewUpdate(version=version,current_updates_r=current_updates_r,current_version=current_version):
-                print("new")
                 
                 update_time = self._getCreationDate(tag)
                 self.registerNewUpdate(current_updates_r=current_updates_r, version=version, date=update_time, tag=tag )

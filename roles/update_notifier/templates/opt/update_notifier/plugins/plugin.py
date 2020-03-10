@@ -1,4 +1,11 @@
 import abc
+import urllib.request
+
+import urllib.error
+import http.client
+import traceback
+
+import time
 
 from helper.version import Version
 
@@ -21,8 +28,8 @@ class Plugin:
         if current_version.compare(version) == 1:
             if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][0].compare(version) < 1:
                 return False
-            print(current_updates_r)
-            print(version)
+            #print(current_updates_r)
+            #print(version)
             return True
         return False
     
@@ -34,13 +41,43 @@ class Plugin:
         for branch in current_updates_r:
             version = current_updates_r[branch]
             if version[2] is None:
-                raise Exception('Tag missing in version data in project {} version {}'.format(project,version[0].getVersionString()))
+                # ignore versions which are not valid anymore
+                continue
+                #raise Exception('Tag missing in version data in project {} version {}'.format(project,version[0].getVersionString()))
             new_updates_r[branch] = self.createUpdate( version = version[0].getVersionString(), branch = branch, date = version[1], url = self._getUpdateUrl(version[2]) )
         return new_updates_r
     
     def createUpdate(self,version,branch,date,url):
         return { 'version': version, 'branch': branch, 'date': date, 'url': url }
+    
+    def requestUrl(self,req,count = 0):
+        #print("request url '{}'".format( req.get_full_url() ) )
+        try:
+            with urllib.request.urlopen(req) as response:
+                try:
+                    raw = response.read().decode("utf-8")
+                    exception = None
+                except (http.client.IncompleteRead) as e:
+                    raw = None
+                    exception = e
+        except (urllib.error.URLError) as e:
+            raw = None
+            exception = e
+
+        # handle retry outside the exception block
+        if raw is None:
+            count = count + 1
+            if count >= 5:
+                print("Traceback (most recent call last):")
+                traceback.print_tb(exception.__traceback__)
+                print("Exception:  {}".format(exception))
+                print("----")
+                raise Exception('More then 5 retries to fetch data from url {}'.format(req.get_full_url()))
+            time.sleep(count * 4)
+            return self.requestUrl(req,count)
         
+        return raw
+    
     @abc.abstractmethod
     def _getUpdateUrl(self,tag = None):
         return
