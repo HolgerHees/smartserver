@@ -60,4 +60,5 @@ $CONFIG = array (
   ),
   'mysql.utf8mb4' => true,
   'mail_smtpauthtype' => 'LOGIN',
+  'theme' => 'smartserver'
 );

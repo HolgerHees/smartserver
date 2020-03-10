@@ -1,19 +1,8 @@
-- name: set nextcloud version
+- name: set version
   set_fact:
     nextcloud_version: '18.0.1'
-    
-- name: register update notifier
-  vars:
-    name: "nextcloud"
-    type: "github"
-    url: "https://nextcloud.com/changelog/"
-    config: { 
-      project: "nextcloud/server", 
-      pattern: "^v([0-9\\.]+)$",
-      version: "v18.0.1" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-     
+  tags: [ 'update_notifier_configs' ]
+  
 - name: check current nextcloud
   stat:
     path: "{{htdocs_path}}nextcloud/"
@@ -105,6 +94,14 @@
 #    group: "{{system_groups['www'].name}}"  
 #  notify: "restart apache2"
 
+- name: copy theme
+  copy:
+    src: "templates/themes/smartserver/"
+    dest: "{{htdocs_path}}nextcloud/themes/smartserver/"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+
 - name: copy config
   template:
     src: "templates/config.php"
@@ -182,26 +179,7 @@
   shell: "docker exec php sh -c \"php -f /dataDisk/htdocs/nextcloud/occ background:cron\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
-# **** OTHER ****
-- name: register webui
-  vars:
-    name: "nextcloud"
-    js_file: "templates/webui/nextcloud.js"
-    i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
-    icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
-
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-
-- name: copy apache vhost
-  vars:
-    sub_domain: "nextcloud"
-    include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
-  import_tasks: roles/apache/tasks/add_vhost.yml
-
+# ***** FINALIZE *****
 - name: create cron job
   vars:
     name: "Nextcloud Updates"
@@ -227,3 +205,34 @@
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: register webui
+  vars:
+    name: "nextcloud"
+    js_file: "templates/webui/nextcloud.js"
+    i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
+    icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "nextcloud"
+    include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: register update notifier
+  vars:
+    name: "nextcloud"
+    type: "github"
+    url: "https://nextcloud.com/changelog/"
+    config: { 
+      project: "nextcloud/server", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{nextcloud_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
