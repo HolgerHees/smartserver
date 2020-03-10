@@ -13,12 +13,12 @@ mx.CIDetails = (function( ret ) {
     var updateTimer = false;
 
     var lastScrollY = 0;
-    var lastHashScrollY = 0;
+    /*var lastHashScrollY = 0;
     
     window.addEventListener("hashchange", function(e) {
       if( lastHashScrollY == -1 ) return;
       window.scrollTo(0,lastHashScrollY);
-    },false);
+    },false);*/
 
     function enableBottomScroll()
     {
@@ -157,7 +157,7 @@ mx.CIDetails = (function( ret ) {
     {
         if( !bottomScrollEnabled )
         {
-            lastHashScrollY = -1;
+            //lastHashScrollY = -1;
             
             enableBottomScroll();
             
@@ -172,7 +172,7 @@ mx.CIDetails = (function( ret ) {
         }
         else
         {
-            lastHashScrollY = window.scrollY;
+            //lastHashScrollY = window.scrollY;
         
             disableBottomScroll();
 
