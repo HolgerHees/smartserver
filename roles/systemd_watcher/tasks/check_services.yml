@@ -1,0 +1,4 @@
+- name: check running services
+  shell: "/opt/systemd_watcher/service_check"
+  register: service_status
+  failed_when: service_status.rc != 0
