@@ -26,3 +26,4 @@
   vars:
     name: "smartd"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  when: "is_production|bool" # restart handler is also disabled if no production

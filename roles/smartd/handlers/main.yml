@@ -6,4 +6,4 @@
     enabled: yes
     masked: no
   listen: "restart smartd"
-
+  when: "is_production|bool"
