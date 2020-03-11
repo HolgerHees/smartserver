@@ -9,6 +9,10 @@ import importlib
 
 from datetime import datetime
 
+import subprocess
+
+server_host = "{{server_domain}}"
+
 target_dir = "{{global_log}}update_notifier/"
 config_dir = "{{global_etc}}update_notifier/"
 
@@ -33,7 +37,7 @@ update_time = "{}Z".format(datetime.now().utcnow().isoformat('T'))
             
 current_states = { 'last_update': update_time, 'states': [] }
 
-#print("Processing docker projects")
+print("Processing projects")
 
 update_message_r = []
 
@@ -45,12 +49,12 @@ for config_file in files:
         if limit_config != None and limit_config != config['name']:
             continue
 
-        #print("  - '{}'".format(config['name']), end='')
+        print("  - '{}'".format(config['name']), end='')
 
         try:
             plugin = importlib.import_module("plugins.{}".format(config['type']))
         except ModuleNotFoundError:
-            print("Plugin '{}' not found".format(config['type']))
+            print("Plugin '{}' not found".format(config['type']),file=sys.stderr)
             continue
         
         repo = plugin.Repository(config['config'], global_config)
@@ -69,21 +73,10 @@ for config_file in files:
         for branch in new_versions:
             current_state['updates'].append(new_versions[branch])
             
-        #status = []
-        #color = ""
-        #if current_state['update'] != "":
-        #    status.append("updates")
-        #    color = "\033[0;31m"
-                
-        #if len(current_state['upgrades']) > 0:
-        #    status.append("upgrades")
-        #    if color == "":
-        #        color = "\033[1;33m"
-
-        #if len(status) > 0:
-        #    print( " {}has {}\033[0m".format(color," & ".join(status)))
-        #else:
-        #    print( " \033[0;32mis updatet\033[0m")
+        if len(current_state['updates']) > 0:
+            print( " \033[1;33mhas updates\033[0m")
+        else:
+            print( " \033[0;32mis updatet\033[0m")
             
         if last_updates != None:
             
@@ -103,10 +96,16 @@ for config_file in files:
         current_states['states'].append(current_state)
             
 if limit_config == None:
+    if len(update_message_r) > 0:
+        message_r = []
+        message_r.append("There are new updates")
+        for message in update_message_r:
+            message_r.append("  - {}".format(message))
+        message_r.append("\n\nCheck https://{}/?ref=administration|tools|update_notifier for details".format(server_host))
+        
+        print("Send notification mail")
+
+        subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" root".format("\n".join(message_r.append),"New updates available") ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+
     with open(state_file, 'w') as f:
         json.dump(current_states, f)
-    
-if len(update_message_r) > 0:
-    print("There are new updates")
-    for message in update_message_r:
-        print("  - {}".format(message))

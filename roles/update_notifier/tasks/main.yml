@@ -56,7 +56,7 @@
 - name: create cron job
   vars:
     name: "Update notifier"
-    cmd: "/opt/update_notifier/update_check"
+    cmd: "/opt/update_notifier/update_check > /dev/null"
     file: "ansible_update_notifier"
     hour: "4"
   import_tasks: roles/cron/tasks/add_cronjob.yml
