@@ -73,14 +73,9 @@ for config_file in files:
         for branch in new_versions:
             current_state['updates'].append(new_versions[branch])
             
-        if len(current_state['updates']) > 0:
-            print( " \033[1;33mhas updates\033[0m")
-        else:
-            print( " \033[0;32mis updatet\033[0m")
-            
+        new_updates = []
         if last_updates != None:
             
-            new_updates = []
             for current_update in current_state['updates']:
                 found = False
                 for last_update in last_updates:
@@ -90,9 +85,14 @@ for config_file in files:
                 if not found:
                     new_updates.append(current_update['version'])
 
-            if len(new_updates) > 0:
-                update_message_r.append("{}: versions {} are available".format(current_state['name'], new_updates))
-                
+        if len(new_updates) > 0:
+            print( " \033[0;31mhas new updates {}\033[0m".format(new_updates))
+            update_message_r.append("{}: versions {} are available".format(current_state['name'], new_updates))
+        elif len(current_state['updates']) > 0:
+            print( " \033[1;33mhas updates\033[0m")
+        else:
+            print( " \033[0;32mis updatet\033[0m")
+            
         current_states['states'].append(current_state)
             
 if limit_config == None:
