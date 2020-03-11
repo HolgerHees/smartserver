@@ -47,6 +47,14 @@
     group: "{{system_groups['www'].name}}"
   register: keeweb_installation
   
+- name: copy patched service-worker.js
+  template:
+    src: "templates/apps/service-worker.js"
+    dest: "{{htdocs_path}}nextcloud/apps/keeweb/templates/service-worker.js"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+#  when: keeweb_installation.changed
+
 - name: check keeweb max version
   lineinfile:
     path: "{{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml"
