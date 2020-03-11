@@ -26,7 +26,7 @@ RUN apt-get install -y zlib1g-dev libzip-dev \
   && docker-php-ext-install zip
 
 # APC Cache
-RUN pecl install apcu-5.1.11 \
+RUN pecl install apcu-5.1.18 \
   && docker-php-ext-enable apcu
 
 # ImageMagick
