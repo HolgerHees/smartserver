@@ -22,6 +22,7 @@
     - calendar
     - notes
     - tasks
+#    - onlyoffice
     
 # ***** CONFIGURE user_saml *****
 - name: enable environment based authentication through user_saml app
@@ -35,6 +36,12 @@
 #- name: set environment variable used by user_saml app
 #  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'types', 'authentication') ON DUPLICATE KEY UPDATE #configvalue='REMOTE_USERNAME';\\\"\""
 #  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+
+# ***** CONFIGURE onlyoffice *****
+#- name: set environment variable used by user_saml app
+#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'DocumentServerUrl', 'https://onlyoffice.{{server_domain}}/') ON DUPLICATE KEY UPDATE configvalue='https://onlyoffice.{{server_domain}}/';\\\"\""
+#  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+
 
 # ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists

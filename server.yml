@@ -120,6 +120,7 @@
     - { import_role: { name: apache_webui }, tags: [ 'apache_webui' ] }                          # responsive web ui
 
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
+    - { import_role: { name: nextcloud_onlyoffice }, tags: [ 'nextcloud_onlyoffice' ] }          # private cloud office editor                                       [docker,user:106|108]
      
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools

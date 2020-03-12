@@ -1,0 +1,8 @@
+- name: restart onlyoffice
+  systemd:
+    name: onlyoffice
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart onlyoffice"

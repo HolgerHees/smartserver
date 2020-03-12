@@ -1,0 +1,67 @@
+- name: set version
+  set_fact:
+    onlyoffice_version: "5.5.0.165"
+  tags: [ 'update_notifier_configs' ]
+  
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "106" # user id from docker container
+    group: "108" # group id from docker container
+    mode: 0755
+  with_items:
+    - "{{global_log}}onlyoffice"
+    - "{{global_lib}}onlyoffice"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: onlyoffice
+    image: "onlyoffice/documentserver:{{onlyoffice_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: onlyoffice
+    volumes:
+      - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
+      - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
+    ports:
+     - "127.0.0.1:9080:80"  
+     - "127.0.0.1:9443:443"  
+#  notify: "restart onlyoffice"
+    
+# ***** FINALIZE *****
+#- name: copy fluentd config
+#  vars:
+#    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
+#  import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "onlyoffice"
+    include: "templates/etc/apache2/_.ansible.vhost.d/onlyoffice.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+#- name: create systemd service
+#  vars:
+#    container_name: "onlyoffice"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: register update notifier
+  vars:
+    name: "onlyoffice"
+    type: "docker"
+    url: "https://helpcenter.onlyoffice.com/de/server/document/changelog.aspx"
+    config: { 
+      repository: "onlyoffice/documentserver", 
+      pattern: "^([0-9\\.]+)$" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
