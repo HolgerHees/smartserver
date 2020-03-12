@@ -1,16 +1,21 @@
+- name: check if raid exists
+  stat:
+    path: "/etc/mdadm.conf"
+  register: mdraid
+
 - name: install required packages => is_fedora
   yum:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: is_fedora|bool
+  when: mdraid.stat.exists and is_fedora|bool
   
 - name: install required packages => is_suse
   zypper:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: is_suse|bool
+  when: mdraid.stat.exists and is_suse|bool
   
 - name: set config
   lineinfile:
@@ -29,11 +34,13 @@
     - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
     - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
   notify: "restart mdmonitor"
+  when: mdraid.stat.exists
 
 - name: disable default check cron jobs
   file: 
     path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
     state: absent
+  when: mdraid.stat.exists
 
 - name: set cron job env
   cron:
@@ -43,6 +50,7 @@
     cron_file: ansible_mdadm
     user: root
   tags: cron
+  when: mdraid.stat.exists
     
 - name: create cron 'start' job
   vars:
@@ -53,6 +61,7 @@
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: mdraid.stat.exists
 
 - name: create cron 'continue' job
   vars:
@@ -63,10 +72,11 @@
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: mdraid.stat.exists
 
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
     name: "mdmonitor"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-  when: "is_production|bool" # is not running in staging
+  when: mdraid.stat.exists
