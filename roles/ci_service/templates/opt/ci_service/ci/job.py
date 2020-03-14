@@ -246,6 +246,7 @@ class Job:
             self.registered_machines = virtualbox.getRegisteredMachines()
             self.active_machine = None
             self.cancel_reason = None
+            self.deploy_exit_status = 1
           
             self.start_time = datetime.now()
             self.start_time_str = self.start_time.strftime(START_TIME_STR_FORMAT)
@@ -260,34 +261,35 @@ class Job:
             env = {"VAGRANT_HOME": self.lib_dir }
             
             # Deployment start
-            deploy_exit_status = 1
             deploy_output = ""
             cmd = u"{} --config={} --os={}{} up".format(vagrant_path,config_name,os_name,argsStr)
             #cmd = u"echo '\033[31mtest1\033[0m' && echo '\033[200mtest2' && echo 1 && sleep 5 && echo 2 && sleep 5 && echo 3 2>&1"
             helper.log( u"Deployment for commit '{}' ('{}') started".format(self.git_hash,cmd) )
             with open(deployment_log_file, 'w') as f:
                 try:
-                    (deploy_output,deploy_exit_status) = pexpect.run(cmd, timeout=1, logfile=LogFile(f), cwd=self.repository_dir, env = env, withexitstatus=True, events={pexpect.TIMEOUT:self.searchMachineVID})
+                    (deploy_output,self.deploy_exit_status) = pexpect.run(cmd, timeout=1, logfile=LogFile(f), cwd=self.repository_dir, env = env, withexitstatus=True, events={pexpect.TIMEOUT:self.searchMachineVID})
                 except ValueError:
                     pass
                     
             # Deployment done
             retry = False
-            if deploy_exit_status == 0:
+            if self.deploy_exit_status == 0:
                 helper.log( u"Deployment for commit '{}' successful".format(self.git_hash) )
+                self.cancel_reason = None
             else:
-                if deploy_exit_status != 0:
-                    log_lines = deploy_output.split(b"\n")
-                    log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
-                    i = i + 1
-                    # Check if retry is possible
-                    if self.checkForRetry(log_lines_to_check):
-                        if i < max_retries:
-                            self.cancel_reason = "retry"
-                            retry = True
-                        else:
-                            self.cancel_reason = "max_retries"
-                
+                log_lines = deploy_output.split(b"\n")
+                log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
+                i = i + 1
+                # Check if retry is possible
+                if self.checkForRetry(log_lines_to_check):
+                    if i < max_retries:
+                        self.cancel_reason = "retry"
+                        retry = True
+                    else:
+                        self.cancel_reason = "max_retries"
+                else:
+                    self.cancel_reason = None
+
                 reason = u" ({})".format( self.cancel_reason ) if self.cancel_reason != None else ""
                 helper.log( u"Deployment for commit '{}' unsuccessful {}".format(self.git_hash, reason ) )
 
@@ -297,7 +299,7 @@ class Job:
             with open(deployment_log_file, 'a') as f:
                 f.write("\n")
                 lf = LogFile(f)
-                if deploy_exit_status == 0:
+                if self.deploy_exit_status == 0:
                     lf.write("The command '{}' exited with 0 (successful) after {}.\n".format(cmd,timedelta(seconds=duration)))
                     status_msg = 'success'
                 else:
@@ -309,7 +311,7 @@ class Job:
                     if self.cancel_reason != None:
                         lf.write("{}\n".format(retry_messages[self.cancel_reason]))
                     
-                    lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,deploy_exit_status,timedelta(seconds=duration)))
+                    lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,self.deploy_exit_status,timedelta(seconds=duration)))
 
             # Rename logfile
             finished_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,self.start_time_str,duration,status_msg,config_name,os_name,self.branch,self.git_hash,author,subject)
@@ -331,6 +333,6 @@ class Job:
                 helper.log( u"Retry deployment for commit '{}'".format(self.git_hash) )
                 continue
 
-            return deploy_exit_status == 0, self.start_time_str, None
+            break
 
-        return False, self.start_time_str, self.cancel_reason if self.cancel_reason != None else "deployment"
+        return self.deploy_exit_status == 0, self.start_time_str, self.cancel_reason if self.cancel_reason != None else "deployment"
