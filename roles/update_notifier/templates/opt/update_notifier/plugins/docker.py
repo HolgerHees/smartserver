@@ -40,16 +40,20 @@ class Repository(Plugin):
 
         data_r = Repository.repositories[plugin_config['repository']]
         version = None
+        tag = None
+        tag_r = []
         for data in data_r:
             _version = Version.parseVersionString(data['tag'],self.pattern)
             if _version is not None and (version is None or version.compare(_version) == 1):
                 version = _version
+                tag = data['tag']
+            tag_r.append(data['tag'])
 
         if version:
             self.current_version = version.getVersionString()
-            self.current_tag = data['tag']
+            self.current_tag = tag
         else:
-            raise Exception('Can\'t parse version \'{}\' with pattern \'{}\''.format(data['tag'],self.pattern))
+            raise Exception('Can\'t find current version with pattern \'{}\'. Available versions are {}'.format(self.pattern,tag_r))
               
         url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:{}:pull".format(self.repository)
         token_result = self._requestData(url)
