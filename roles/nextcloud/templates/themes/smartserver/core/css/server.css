@@ -53,6 +53,9 @@ button.primary:focus,
     height: 56px !important;
     background-image: none !important;
 }
+#content {
+    padding-top: 56px !important;
+}
 #header .logo-icon {
     height: 56px !important;
 }

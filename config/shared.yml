@@ -48,6 +48,9 @@ cloud_net2_server_ip:             "10.0.{{netgroup}}.2"
 cloud_net2_gateway:               "10.2.0.1"
 cloud_net2_network:               "10.2.0.0"
 
+docker_hostaccess_network:        "172.16.0.0"
+docker_hostaccess_gateway:        "172.16.0.1"
+
 dns1:                             "8.8.8.8"
 dns2:                             "9.9.9.9"
 

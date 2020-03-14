@@ -13,6 +13,7 @@
   with_items:
     - "{{global_log}}onlyoffice"
     - "{{global_lib}}onlyoffice"
+    - "{{global_etc}}onlyoffice"
 
 - name: check started docker
   systemd:
@@ -24,19 +25,25 @@
     name: onlyoffice
     image: "onlyoffice/documentserver:{{onlyoffice_version}}"
     state: present
+#    network_mode: "host"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
+      JWT_ENABLED: "true"
+      JWT_SECRET: "{{vault_onlyoffice_shared_key}}"
     log_driver: journald
     log_options:
       tag: onlyoffice
     volumes:
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
+    networks:
+      - name: "hostaccess"
+    networks_cli_compatible: yes
     ports:
-     - "127.0.0.1:9080:80"  
-     - "127.0.0.1:9443:443"  
-#  notify: "restart onlyoffice"
+     - "127.0.0.1:8090:80"  
+     - "127.0.0.1:8453:443"  
+  notify: "restart onlyoffice"
     
 # ***** FINALIZE *****
 #- name: copy fluentd config
@@ -50,10 +57,10 @@
     include: "templates/etc/apache2/_.ansible.vhost.d/onlyoffice.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 
-#- name: create systemd service
-#  vars:
-#    container_name: "onlyoffice"
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "onlyoffice"
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier
   vars:

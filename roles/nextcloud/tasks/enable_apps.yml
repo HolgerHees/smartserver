@@ -1,5 +1,4 @@
 # ***** CHECK *****
-
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
     
@@ -17,31 +16,43 @@
   changed_when: "'enabled' in command_result.stdout"
   with_items:
     - user_saml # must always be the first one
+    - onlyoffice # must always be the second one
     - bookmarks
     - contacts
     - calendar
     - notes
     - tasks
-#    - onlyoffice
     
 # ***** CONFIGURE user_saml *****
 - name: enable environment based authentication through user_saml app
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'type', 'environment-variable') ON DUPLICATE KEY UPDATE configvalue='environment-variable';\\\"\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
+  with_items:
+    - { name: "type", value: "environment-variable" }
+    - { name: "general-uid_mapping", value: "REMOTE_USERNAME" }
   when: "command_result.results[0].changed" # index 0 is app 'user_saml'
-
-- name: set environment variable used by user_saml app
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'general-uid_mapping', 'REMOTE_USERNAME') ON DUPLICATE KEY UPDATE configvalue='REMOTE_USERNAME';\\\"\""
-  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
-
-#- name: set environment variable used by user_saml app
-#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', 'types', 'authentication') ON DUPLICATE KEY UPDATE #configvalue='REMOTE_USERNAME';\\\"\""
-#  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
 
 # ***** CONFIGURE onlyoffice *****
-#- name: set environment variable used by user_saml app
-#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'DocumentServerUrl', 'https://onlyoffice.{{server_domain}}/') ON DUPLICATE KEY UPDATE configvalue='https://onlyoffice.{{server_domain}}/';\\\"\""
-#  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+- name: set onlyoffice configuration
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
+  with_items:
+    - { name: "DocumentServerInternalUrl", value: "" }
+    - { name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
+    - { name: "StorageUrl", value: "" }
+    - { name: "customizationChat", value: "false" }
+    - { name: "customizationCompactHeader", value: "true" }
+    - { name: "customizationFeedback", value: "false" }
+    - { name: "customizationHelp", value: "true" }
+    - { name: "customizationToolbarNoTabs", value: "true" }
+    - { name: "defFormats", value: '{\\\"csv\\\":\\\"true\\\",\\\"doc\\\":\\\"true\\\",\\\"docm\\\":\\\"false\\\",\\\"docx\\\":\\\"true\\\",\\\"dotx\\\":\\\"true\\\",\\\"epub\\\":\\\"false\\\",\\\"html\\\":\\\"false\\\",\\\"odp\\\":\\\"true\\\",\\\"ods\\\":\\\"true\\\",\\\"odt\\\":\\\"true\\\",\\\"pdf\\\":\\\"false\\\",\\\"potm\\\":\\\"false\\\",\\\"potx\\\":\\\"false\\\",\\\"ppsm\\\":\\\"false\\\",\\\"ppsx\\\":\\\"true\\\",\\\"ppt\\\":\\\"false\\\",\\\"pptm\\\":\\\"false\\\",\\\"pptx\\\":\\\"false\\\",\\\"rtf\\\":\\\"true\\\",\\\"txt\\\":\\\"true\\\",\\\"xls\\\":\\\"true\\\",\\\"xlsm\\\":\\\"false\\\",\\\"xlsx\\\":\\\"true\\\",\\\"xltm\\\":\\\"false\\\",\\\"xltx\\\":\\\"false\\\"}' }
+    - { name: "editFormats", value: '{\\\"csv\\\":\\\"true\\\",\\\"odp\\\":\\\"false\\\",\\\"ods\\\":\\\"false\\\",\\\"odt\\\":\\\"false\\\",\\\"rtf\\\":\\\"false\\\",\\\"txt\\\":\\\"true\\\"}' }
+    - { name: "enabled", value: "yes" }
+    - { name: "groups", value: "[]" }
+    - { name: "sameTab", value: "false" }
+  when: "command_result.results[1].changed"
 
+- name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
+  when: "command_result.results[1].changed"
 
 # ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists

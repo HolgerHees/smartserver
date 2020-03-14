@@ -37,6 +37,8 @@ vault_nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2
 vault_nextcloud_mysql_username: "nextcloud"
 vault_nextcloud_mysql_password: "default123"
 
+vault_onlyoffice_shared_key: "qwe0983yxcxy435"
+
 vault_grafana_influxdb_username: "grafana"
 vault_grafana_influxdb_password: "default123"
 vault_grafana_app_username: "admin"
