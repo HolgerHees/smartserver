@@ -582,9 +582,8 @@
         })( mx.Actions || {} );
 
         mx.Page = (function( ret ) {
-            ret.checkDeeplink = function()
+            ret.checkDeeplink = function(ref)
             {
-                var ref = mx.Host.getParameter("ref");
                 if( ref ) 
                 {
                     var parts = ref.split("|");
@@ -700,6 +699,8 @@
 
             mx.Actions.init();
 
+            var ref = mx.Host.getParameter("ref");
+
             mx.History.init(function(mainGroup,subGroup,entry,url){
                 if( subGroup )
                 {
@@ -709,8 +710,7 @@
                 else mx.Actions.openHome();
             });
 
-            mx.Page.checkDeeplink();
-            
+            mx.Page.checkDeeplink(ref);
 
             if( !mx.History.getActiveNavigation() ) mx.Actions.openHome();
 
