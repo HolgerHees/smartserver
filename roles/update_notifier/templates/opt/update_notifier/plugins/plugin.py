@@ -4,6 +4,7 @@ import urllib.request
 import urllib.error
 import http.client
 import traceback
+import sys
 
 import time
 
@@ -68,10 +69,10 @@ class Plugin:
         if raw is None:
             count = count + 1
             if count >= 5:
-                print("Traceback (most recent call last):")
+                print("Traceback (most recent call last):",file=sys.stderr)
                 traceback.print_tb(exception.__traceback__)
-                print("Exception:  {}".format(exception))
-                print("----")
+                print("Exception:  {}".format(exception),file=sys.stderr)
+                print("----",file=sys.stderr)
                 raise Exception('More then 5 retries to fetch data from url {}'.format(req.get_full_url()))
             time.sleep(count * 4)
             return self.requestUrl(req,count)

@@ -58,5 +58,6 @@
     name: "Update notifier"
     cmd: "/opt/update_notifier/update_check > /dev/null"
     file: "ansible_update_notifier"
-    hour: "4"
+    minute: "0"
+    hour: "3"
   import_tasks: roles/cron/tasks/add_cronjob.yml
