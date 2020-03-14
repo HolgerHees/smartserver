@@ -110,14 +110,6 @@
     mode: 0644
   notify: "restart docker"
 
-# bridge network to allow containers host access without beeing in networkmode "host"
-- name: create host accessible network
-  docker_network:
-    name: hostaccess
-    ipam_config:
-      - subnet: "{{docker_hostaccess_network}}/24"
-        gateway: "{{docker_hostaccess_gateway}}"
-          
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
@@ -163,6 +155,20 @@
   shell: sysctl -p
   when: sysctlchanged.changed
 
+# needs to be started to create docker_network
+- name: starting docker
+  systemd:
+    name: docker
+    state: started
+    
+# bridge network to allow containers host access without beeing in networkmode "host"
+- name: create host accessible network
+  docker_network:
+    name: hostaccess
+    ipam_config:
+      - subnet: "{{docker_hostaccess_network}}/24"
+        gateway: "{{docker_hostaccess_gateway}}"
+          
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
