@@ -69,7 +69,14 @@
 
             ret.getMainGroup = function(mainGroupId)
             {
-                return menuGroups[mainGroupId]['_'];
+                if(mainGroupId in menuGroups)
+                {
+                    return menuGroups[mainGroupId]['_'];
+                }
+                else
+                {
+                    console.error("MenuGroup '" + mainGroupId + "' not found");
+                }
             };
 
             /*ret.getMainGroups = function()
@@ -586,7 +593,7 @@
             {
                 if( ref ) 
                 {
-                    var parts = ref.split("|");
+                    var parts = ref.split(/%7C|\|/);
                     var subMenuGroup = mx.Menu.getMainGroup(parts[0]).getSubGroup(parts[1]);
                     if( parts.length > 2 )
                     {
