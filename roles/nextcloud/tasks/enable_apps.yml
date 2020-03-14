@@ -117,6 +117,9 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640
+ 
+# maybe cleanup 
+# UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'
   
 # ***** ENABLE ADDITIONAL APPS *****
 - name: get app status
