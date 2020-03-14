@@ -116,7 +116,7 @@
     name: hostaccess
     ipam_config:
       - subnet: "{{docker_hostaccess_network}}/24"
-        gateway: "{{docker_hostaccess_gateway}"
+        gateway: "{{docker_hostaccess_gateway}}"
           
 - name: copy fluentd config
   vars:
