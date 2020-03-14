@@ -31,6 +31,14 @@
       TZ: "{{timezone}}"
       JWT_ENABLED: "true"
       JWT_SECRET: "{{vault_onlyoffice_shared_key}}"
+      REDIS_SERVER_HOST: "redis"
+      REDIS_SERVER_PORT: "6379"
+      DB_TYPE: "mysql"
+      DB_HOST: "mysql"
+      DB_PORT: "3306"
+      DB_NAME: "onlyoffice"
+      DB_USER: "{{vault_onlyoffice_mysql_username}}"
+      DB_PWD: "{{vault_onlyoffice_mysql_password}}"
     log_driver: journald
     log_options:
       tag: onlyoffice
@@ -45,6 +53,39 @@
      - "127.0.0.1:8453:443"  
   notify: "restart onlyoffice"
     
+- name: connect onlyoffice with databases
+  docker_network:
+    name: onlyoffice_databases
+    connected:
+      - onlyoffice
+      - mysql
+      - redis
+
+# ***** DATABASE *****
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  
+- name: check mysql databases
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
+  register: mysql_data_exists
+  changed_when: "'onlyoffice' not in mysql_data_exists.stdout"
+
+- name: create missing mysql databases => database does not exists
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create onlyoffice\""
+  when: "'onlyoffice' not in mysql_data_exists.stdout"
+  
+- name: create missing mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{vault_onlyoffice_mysql_username}}'@'%' IDENTIFIED BY '{{vault_onlyoffice_mysql_password}}';\\\"\""
+  when: "'onlyoffice' not in mysql_data_exists.stdout"
+
+- name: grant permissions to mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON onlyoffice.* TO '{{vault_onlyoffice_mysql_username}}'@'%';\\\"\""
+  when: "'onlyoffice' not in mysql_data_exists.stdout"
+
+- name: refresh mysql privileges => database does not exists
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
+  when: "'onlyoffice' not in mysql_data_exists.stdout"
+  
 # ***** FINALIZE *****
 #- name: copy fluentd config
 #  vars:

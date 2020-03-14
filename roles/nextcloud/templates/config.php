@@ -26,7 +26,6 @@ $CONFIG = array (
   'log_type' => 'file',
   'logfile' => '{{global_log}}nextcloud/nextcloud.log',
   'loglevel' => 2,
-  'theme' => '',
   'maintenance' => false,
   'mail_smtpmode' => 'sendmail',
   'mail_domain' => '{{server_domain}}',

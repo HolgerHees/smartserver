@@ -33,6 +33,7 @@
 
 # ***** CONFIGURE onlyoffice *****
 - name: set onlyoffice configuration
+#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ --no-warnings config:system:set onlyoffice {{item.name}} --value=\\\"{{item.value}}\\\"\""
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
   with_items:
     - { name: "DocumentServerInternalUrl", value: "" }
