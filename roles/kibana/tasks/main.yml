@@ -49,10 +49,11 @@
 
 - name: connect elasticsearch and kibana
   docker_network:
-    name: elasticsearch_kibana
+    name: kibana_databases
     connected:
       - kibana
       - elasticsearch
+  tags: ['elasticsearch']
 
 #- name: create docker container
 #  docker_container:

@@ -79,7 +79,8 @@
     connected:
       - grafana
       - influxdb
-
+  tags: ['influxdb']
+  
 # ***** FINALIZE *****
 - name: register webui
   vars:
