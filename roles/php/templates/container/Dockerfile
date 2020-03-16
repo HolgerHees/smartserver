@@ -17,6 +17,14 @@ RUN docker-php-ext-enable opcache \
   && docker-php-ext-install exif \
   && docker-php-ext-install mysqli pdo_mysql
 
+# GMP => needed by nextcloud bookmarks
+#RUN apt-get install -y libgmp-dev re2c libmhash-dev libmcrypt-dev file \
+#  && ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/local/include/ \
+#  && docker-php-ext-configure gmp \
+#  && docker-php-ext-install gmp
+RUN apt-get install -y libgmp-dev \
+   && docker-php-ext-install gmp
+  
 # INTL
 RUN apt-get install -y libicu-dev \
   && docker-php-ext-install intl
