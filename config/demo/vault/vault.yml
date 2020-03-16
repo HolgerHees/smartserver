@@ -1,7 +1,8 @@
 vault_root_email: "test@test.com"
 vault_root_mail_username: "test@test.com"
 vault_root_mail_password: "default123"
-vault_root_main_server: "[smtp.gmail.com]:587"
+vault_root_mail_host: "smtp.gmail.com"
+vault_root_mail_port: "587"
 
 vault_usernames: [
     "testuser",

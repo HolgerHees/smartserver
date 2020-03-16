@@ -64,7 +64,7 @@
     line: '{{item.field}} = {{item.value}}'
   with_items:
     - { field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
-    - { field: 'relayhost', value: '{{vault_root_main_server}}' }                                    # POSTFIX_RELAYHOST
+    - { field: 'relayhost', value: '[{{vault_root_mail_host}}]:{{vault_root_mail_port}}' }           # POSTFIX_RELAYHOST
 
     - { field: 'smtp_sasl_auth_enable', value: 'yes' }                                               # POSTFIX_SMTP_AUTH = yes
     - { field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }                   # POSTFIX_SMTP_AUTH = yes
@@ -96,8 +96,8 @@
 - name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
-    regexp: "^{{vault_root_main_server | regex_escape('posix_basic')}} "
-    line: '{{vault_root_main_server}} {{ vault_root_mail_username }}:{{ vault_root_mail_password }}'
+    regexp: "^\[{{vault_root_mail_host | regex_escape('posix_basic')}}\]:{{vault_root_mail_port}} "
+    line: '[{{vault_root_mail_host}}]:{{vault_root_mail_port}} {{ vault_root_mail_username }}:{{ vault_root_mail_password }}'
     create: true # needed for fedora
     owner: root
     group: root
