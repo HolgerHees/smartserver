@@ -96,7 +96,7 @@
 - name: set sasl_passwd
   lineinfile:
     path: /etc/postfix/sasl_passwd
-    regexp: "^\[{{vault_root_mail_host | regex_escape('posix_basic')}}\]:{{vault_root_mail_port}} "
+    regexp: '^\[{{vault_root_mail_host | regex_escape("posix_basic")}}\]:{{vault_root_mail_port}} '
     line: '[{{vault_root_mail_host}}]:{{vault_root_mail_port}} {{ vault_root_mail_username }}:{{ vault_root_mail_password }}'
     create: true # needed for fedora
     owner: root
