@@ -169,8 +169,8 @@
   with_items: "{{vault_usernames}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: add user "{{vault_admin_username}}" => database does not exists
-  shell: "docker exec php sh -c \"export OC_PASS={{vault_admin_web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_admin_username}}\""
+- name: add user "{{vault_nextcloud_admin_username}}" => database does not exists
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"admin\\\" {{vault_nextcloud_admin_username}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'nextcloud' not in mysql_data_exists.stdout"
