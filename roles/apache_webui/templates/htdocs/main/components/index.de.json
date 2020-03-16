@@ -2,9 +2,10 @@
   "automation": {
     "Automation": "Automation"
   },
-  "administration": {
-    "Administration": "Administration",
+  "other": {
+    "Other": "Sonstiges",
     "Logs & States": "Logs & Status",
+    "States": "Status",
     "Tools": "Tools",
     "Devices": "Geräte"
   },

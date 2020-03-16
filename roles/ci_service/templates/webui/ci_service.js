@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('administration').getSubGroup('tools').addUrl('ci',900, 'url', '/ci/', '{i18n_CI Service}', '{i18n_Continues Integration}', false);
+mx.Menu.getMainGroup('other').getSubGroup('tools').addUrl('ci',900, 'admin', '/ci/', '{i18n_CI Service}', '{i18n_Continues Integration}', false);

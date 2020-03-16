@@ -1,18 +1,17 @@
-vault_admin_mail: "test@test.com"
-vault_root_mail_account: "test@test.com"
+vault_root_email: "test@test.com"
+vault_root_mail_username: "test@test.com"
 vault_root_mail_password: "default123"
+vault_root_main_server: "[smtp.gmail.com]:587"
 
-vault_usernames: [ 
+vault_usernames: [
     "testuser",
     "testuser2"
 ]
-vault_userdata: {
-    testuser: { name: "Test User 1", email: "test1@test.de", samba_password: "test", web_password: "test" },
-    testuser2: { name: "Test User 2", email: "test2@test.de", samba_password: "test", web_password: "test" }
-}
 
-vault_admin_username: "admin"
-vault_admin_web_password: "default123"
+vault_userdata: {
+    testuser: { name: "Test User 1", email: "test1@test.de", samba_password: "test", web_password: "test", webui: "admin" },
+    testuser2: { name: "Test User 2", email: "test2@test.de", samba_password: "test", web_password: "test", webui: "user" }
+}
 
 # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
 # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
@@ -36,6 +35,8 @@ vault_nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
 vault_nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
 vault_nextcloud_mysql_username: "nextcloud"
 vault_nextcloud_mysql_password: "default123"
+vault_nextcloud_admin_username: "admin"
+vault_nextcloud_admin_password: "default123"
 
 vault_onlyoffice_shared_key: "qwe0983yxcxy435"
 vault_onlyoffice_mysql_username: "onlyoffice"

@@ -550,7 +550,8 @@ body.dark #submenu .service.button:active {
     position: relative;
     max-width:640px;
 }
-#submenu .service.imageWatcher > div > a {
+#submenu .service.imageWatcher > div > a,
+#submenu .service.imageWatcher > div > img {
     display: block;
 }
 #submenu .service.imageWatcher > div > span {
@@ -575,7 +576,8 @@ body.dark #submenu .service.button:active {
         width:calc(50% - 10px);
         background-color: var(--image-watcher-bg);
     }
-    #submenu .service.imageWatcher > div > a {
+    #submenu .service.imageWatcher > div > a,
+    #submenu .service.imageWatcher > div > img {
         position: relative;
         top: 50%;
         left: 50%;

@@ -38,17 +38,24 @@
 - name: add user name to .htdata
   lineinfile:
     path: "{{htdocs_path}}.htdata"
-    regexp: '^{{item}}: {{vault_userdata[item].name}}'
-    line: '{{item}}: {{vault_userdata[item].name}}'
+    regexp: '^{{item}}:{{vault_userdata[item].name}}'
+    line: '{{item}}:{{vault_userdata[item].name}}:{{vault_userdata[item].webui}}'
   with_items: "{{vault_usernames}}"
    
 # **** APACHE USERS (WEB) ****
-- name: add user "{{vault_admin_username}}" to apache .htpasswd
+- name: add user "{{vault_nextcloud_admin_username}}" to apache .htpasswd
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
-    name: "{{vault_admin_username}}"
-    password: "{{vault_admin_web_password}}"
+    name: "{{vault_nextcloud_admin_username}}"
+    password: "{{vault_nextcloud_admin_password}}"
   
+- name: add admin to apache groups
+  lineinfile:
+    path: "{{htdocs_path}}.htgroups"
+    backrefs: yes
+    regexp: '^(USER:(?!.*{{vault_nextcloud_admin_username}}).*)'
+    line: '\1 {{vault_nextcloud_admin_username}}'
+    
 - name: add user "{{vault_alexa_username}}" to apache .htpasswd
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"
@@ -67,13 +74,6 @@
     regexp: '^USER[\s:]{1}.*'
     line: 'USER:'
   when: user_check.stdout == ""
-
-- name: add admin to apache groups
-  lineinfile:
-    path: "{{htdocs_path}}.htgroups"
-    backrefs: yes
-    regexp: '^(USER:(?!.*{{vault_admin_username}}).*)'
-    line: '\1 {{vault_admin_username}}'
 
 - name: add user to apache groups
   lineinfile:

@@ -10,27 +10,30 @@
 
     <link href="ressources?type=css" rel="stylesheet">
     
-    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
+    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], UILevel: { 'admin': 1, 'user': 0 }, User: { 'name': '', 'uilevel': 0, 'hasAdminUi': function(){ return mx.User.uilevel == mx.UILevel.admin; }  } };</script>
     
     <script src="ressources?type=js"></script>
     
     <script>
     <?php
         $name = $_SERVER['REMOTE_USERNAME'];
+        $uilevel = "user";
         $handle = fopen(".htdata", "r");
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
-                list($_username,$_name) = explode(":", $line);
+                list($_username,$_name,$_uilevel) = explode(":", $line);
                 if( trim($_username) == $name )
                 {
                     $name = trim($_name);
+                    $uilevel = trim($_uilevel);
                     break;
                 }
             }
 
             fclose($handle);
         }
-        echo "        var activeUserName = " . json_encode($name) . ";\n";
+        echo "mx.User.name = " . json_encode($name) . ";\n";
+        echo "mx.User.uilevel = mx.UILevel[" . json_encode($uilevel) . "];\n";
     ?>
 
         // mx.Menu needs to be defined in the beginning, because it is used during component initialisation
@@ -107,14 +110,15 @@
                                     getMainGroup: function(){ return mainGroup['_']; },
                                     getEntry: function(entryId){ return subGroup['menuEntries'][entryId]['_']; },
                                     getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
-                                    addUrl: function(entryId,order,type,url,title,info,newWindow,iconUrl){
+                                    addUrl: function(entryId,order,uilevel,url,title,info,newWindow,iconUrl){
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {
-                                            id: entryId, order:order,type:type,url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
+                                            id: entryId, order:order,uilevel:mx.UILevel[uilevel],type:'url',url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
                                                 //getOrder: function(){ return entry['order']; },
+                                                getUiLevel: function(){ return entry['uilevel']; },
                                                 getType: function(){ return entry['type']; },
                                                 getSubGroup: function(){ return subGroup['_']; },
                                                 getTitle: function(){ return entry['title']; },
@@ -125,14 +129,15 @@
                                             }
                                         };
                                     },
-                                    addHtml: function(entryId,order,html,callback){
+                                    addHtml: function(entryId,order,uilevel,html,callback){
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {
-                                            id: entryId, order:order,type:'html',html:html,callback:callback,
+                                            id: entryId, order:order,uilevel:mx.UILevel[uilevel],type:'html',html:html,callback:callback,
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
                                                 //getOrder: function(){ return entry['order']; },
+                                                getUiLevel: function(){ return entry['uilevel']; },
                                                 getType: function(){ return entry['type']; },
                                                 getSubGroup: function(){ return subGroup['_']; },
                                                 getHtml: function(){ return entry['html']; },
@@ -159,6 +164,11 @@
                 for(var i = 0; i < menuEntries.length; i++)
                 {
                     var entry = menuEntries[i];
+                    
+                    if( entry.getUiLevel() > mx.User.uilevel )
+                    {
+                        continue;
+                    }
 
                     if( entry.getType() == 'html' )
                     {
@@ -219,6 +229,28 @@
                     
                     if( mainGroup['id'] == 'home' ) continue;
                     
+                    var _subGroups = sortMenu( mainGroup['subGroups'] );
+
+                    var entryStates = {}
+                    for( index in _subGroups )
+                    {
+                        var subGroup = _subGroups[index];
+                        
+                        var hasEntries = false;
+                        for( entryKey in subGroup['menuEntries'] )
+                        {
+                            var entry = subGroup['menuEntries'][entryKey];
+                            
+                            if( entry['uilevel'] <= mx.User.uilevel )
+                            {
+                                hasEntries = true;
+                                break;
+                            }
+                        }
+                        
+                        entryStates[subGroup['id']] = hasEntries
+                    }
+                    
                     var menuDiv = template.cloneNode(true);
                     menuDiv.setAttribute('id',mainGroup['id']);
                     menuDiv.querySelector('.header').innerHTML = mainGroup['title'];
@@ -228,10 +260,11 @@
                     var buttonTemplate = menuDiv.querySelector('.service.button');
                     menuDiv.removeChild(buttonTemplate);
 
-                    var _subGroups = sortMenu( mainGroup['subGroups'] );
                     for( index in _subGroups )
                     {
                         var subGroup = _subGroups[index];
+                        
+                        if( !entryStates[subGroup['id']] ) continue;
 
                         var button = buttonTemplate.cloneNode(true);
                         button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
@@ -249,8 +282,8 @@
 
             var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
-            mainGroup = ret.addMainGroup('administration', 3000, '{i18n_Administration}');
-            mainGroup.addSubGroup('states', 100, '{i18n_Logs & States}', 'core_stats.svg');
+            mainGroup = ret.addMainGroup('other', 3000, '{i18n_Other}');
+            mainGroup.addSubGroup('states', 100, mx.User.uilevel == 1 ? '{i18n_Logs & States}' : '{i18n_States}', 'core_stats.svg');
             mainGroup.addSubGroup('tools', 200, '{i18n_Tools}', 'core_tools.svg');
             mainGroup.addSubGroup('devices', 300, '{i18n_Devices}', 'core_devices.svg');
 
@@ -556,7 +589,7 @@
 
                 message = '<div class="service home">';
                 message += '<div class="time">' + time + '</div>';
-                message += '<div class="slogan">' + prefix + ', ' + activeUserName + '.</div>';
+                message += '<div class="slogan">' + prefix + ', ' + mx.User.name + '.</div>';
                 message += '<div class="imageTitle">' + mx.MainImage.getTitle() + '</div>';
                 message += '</div>';
 

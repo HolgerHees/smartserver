@@ -91,4 +91,4 @@
     group: root
     
 # TODO add renew job
-#certbot certonly --manual --preferred-challenges=dns --email {{vault_admin_mail}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
+#certbot certonly --manual --preferred-challenges=dns --email {{vault_root_email}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
