@@ -17,25 +17,54 @@
     regexp: '^{{server_ip}} '
     line: '{{server_ip}} {{server_name}}'
     
-# needed to fix "netdev budget ran outs" on a atom cpu
-# https://github.com/netdata/netdata/issues/4624
-- name: set netdev budget
+- name: set sysctl network related values
   lineinfile:
     path: /etc/sysctl.conf
-    regexp: '^net\.core\.netdev_budget_usecs\s*='
-    line: 'net.core.netdev_budget_usecs = 20000'
-  register: netdevchanged
-
-- name: set ipv6
-  lineinfile:
-    path: /etc/sysctl.conf
-    regexp: '^net\.ipv6\.conf\.all\.disable_ipv6\s*='
-    line: 'net.ipv6.conf.all.disable_ipv6 = 0'
-  register: ipv6changed
+    regexp: '^{{item.regex}}\s*='
+    line: '{{item.line}}'
+  with_items:
+    # IPV6 not needed yet
+    - { regex: "net\\.ipv6\\.conf\\.all\\.disable_ipv6", line: "net.ipv6.conf.all.disable_ipv6 = 0" }
     
-- name: refresh sysctl to activate ipv6 => netdev or ipv6 changed
+    # needed to fix "netdev budget ran outs" on a atom cpu
+    # https://github.com/netdata/netdata/issues/4624
+    - { regex: "net\\.core\\.netdev_budget_usecs", line: "net.core.netdev_budget_usecs = 20000" }
+
+    #https://github.com/netdata/netdata/issues/6527
+    ### TUNING NETWORK PERFORMANCE ###
+    # https://www.ibm.com/support/knowledgecenter/en/SSQPD3_2.6.0/com.ibm.wllm.doc/UDPSocketBuffers.html
+    # On the Linux platform Tx ring buffer overruns can occur when transmission rates approach 1Gbps and the default send socket buffer is greater than 65536.
+    # It is recommended to set the net.core.wmem_default kernel parameter to no larger than 65536 bytes.
+    # Transmitting applications can configure the send socket buffer size for InfiniBand, UDP, or TCP protocols independently in a transmit instance.
+
+    # Default and Maximum Socket Receive Buffer
+    - { regex: "net\\.core\\.rmem_default", line: "net.core.rmem_default = 8388608" }
+    - { regex: "net\\.core\\.rmem_max", line: "net.core.rmem_max = 16777216" }
+    # Default and Maximum Socket Send Buffer
+    - { regex: "net\\.core\\.wmem_default", line: "net.core.wmem_default = 65536" }
+    - { regex: "net\\.core\\.wmem_max", line: "net.core.wmem_max = 16777216" }
+    # Increase the maximum amount of option memory buffers
+    - { regex: "net\\.core\\.optmem_max", line: "net.core.optmem_max = 65536" }
+    # Increase number of incoming connections backlog
+    - { regex: "net\\.core\\.netdev_max_backlog", line: "net.core.netdev_max_backlog = 100000" }
+    # Increase the tcp read and write-buffer-space allocatable
+    - { regex: "net\\.ipv4\\.tcp_rmem", line: "net.ipv4.tcp_rmem = 4096 1048576 2097152" }
+    - { regex: "net\\.ipv4\\.tcp_wmem", line: "net.ipv4.tcp_wmem = 4096 65536 16777216" }
+    # Increase the ucp read and write-buffer-space allocatable
+    - { regex: "net\\.ipv4\\.udp_rmem_min", line: "net.ipv4.udp_rmem_min = 4096" }
+    - { regex: "net\\.ipv4\\.udp_wmem_min", line: "net.ipv4.udp_wmem_min = 4096" }
+    # Maximum number of microseconds in one NAPI polling cycle.
+    # Polling will exit when either netdev_budget_usecs have elapsed during
+    # the poll cycle or the number of packets processed reaches netdev_budget.
+    #- { regex: "net\\.core\\.netdev_budget", line: "net.core.netdev_budget = 60000" }
+    #- { regex: "net\\.core\\.netdev_budget_usecs", line: "net.core.netdev_budget_usecs = 6000" }
+    # Disable TCP slow start on idle connections
+    - { regex: "net\\.ipv4\\.tcp_slow_start_after_idle", line: "net.ipv4.tcp_slow_start_after_idle = 0" }
+  register: sysctlchanged
+  
+- name: refresh sysctl to activate sysctl changes => sysctl changed
   shell: sysctl -p
-  when: netdevchanged.changed or ipv6changed.changed
+  when: sysctlchanged.changed
   
 #- name: set network intferface eth0
 #  nmcli:
