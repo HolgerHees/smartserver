@@ -6,10 +6,10 @@
 - { import_role: { name: cloudsync }, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
 - { import_role: { name: cloudexport }, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (clouduser and nfs export)
 
-- { import_role: { name: alexa }, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
+#- { import_role: { name: alexa }, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
 
-- { import_role: { name: roomba }, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
-- { import_role: { name: vcontrold }, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
+#- { import_role: { name: roomba }, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
+#- { import_role: { name: vcontrold }, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
 #- { import_role: { name: electricmeter }, tags: [ 'electricmeter' ] }                        # electricity
 
 - { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }      # proxy and redirect configs for custom devices
