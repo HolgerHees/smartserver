@@ -94,7 +94,7 @@
 #    uid: 2000
 #  when: not is_production
   
-- name: prepare vagrant backup folder => not is_production
+- name: prepare shared backup folder
   file:
     path: "{{item}}"
     state: directory
@@ -103,6 +103,4 @@
     mode: 0750
   with_items:
     - "{{local_backup_path}}archive"
-    - "{{local_backup_path}}intranet-der-dinge.de"
-  when: not is_production
 
