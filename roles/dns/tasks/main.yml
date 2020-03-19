@@ -84,48 +84,6 @@
     - "-irv /var/named"
   when: is_fedora|bool and sefcontext_result.changed
 
-#- name: read service facts
-#  service_facts:
-  
-#- name: set resolv config => is_fedora with NetworkManager
-#  lineinfile:
-#    path: /etc/sysconfig/network-scripts/ifcfg-eth0
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}}="{{item.value}}"'
-#  with_items:
-#    - { field: "PEERDNS", value: "no" }
-#    - { field: "DNS1", value: "127.0.0.1" }
-#    - { field: "SEARCH", value: "{{server_domain}}" }
-#  notify: "restart networkmanager"
-#  when: is_fedora|bool and ansible_facts.services["NetworkManager.service"].state == 'running'
-
-#- name: set resolved config => is_fedora with systemd-resolved
-#  lineinfile:
-#    path: /etc/systemd/resolved.conf
-#    insertafter: '^\[Resolve\]'
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}}="{{item.value}}"'
-#  with_items:
-#    - { field: "DNS", value: "127.0.0.1 2001:4860:4860::8888 2001:4860:4860::8844" }
-#    - { field: "Domains", value: "{{server_domain}}" }
-#  notify: 
-#    - "restart systemd-networkd"
-#    - "restart systemd-resolved"
-#  when: is_fedora|bool and ansible_facts.services["systemd-resolved.service"].state == 'running'
-  
-#- name: set forwarder config => is_suse
-#  lineinfile:
-#    path: /etc/sysconfig/network/config
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}}="{{item.value}}"'
-#  with_items:
-#    - { field: "NETCONFIG_DNS_FORWARDER", value: "bind"}
-#    - { field: "NETCONFIG_DNS_STATIC_SERVERS", value: ""}
-#  notify:
-#    - "refresh netconfig"
-#    - "restart named"
-#  when: is_suse|bool
-
 - name: disable NetworkManager dns handling => is_fedora
   lineinfile:
     path: /etc/NetworkManager/NetworkManager.conf
