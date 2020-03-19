@@ -135,7 +135,7 @@ mx.OnDocReady.push( initPage );
             $diff = $latest_date->diff($now)->format("%a");
             if( $diff == 0 )
             {
-                $last_update = 'Today ' . $latest_date->format("H:i");
+                $last_update = ( $latest_date->format("d") == $now->format("d") ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i");
             }
             else if( $diff > 30 )
             {
