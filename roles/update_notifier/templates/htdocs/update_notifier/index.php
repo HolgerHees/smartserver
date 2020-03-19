@@ -132,19 +132,24 @@ mx.OnDocReady.push( initPage );
             $upgradesHTML = implode(", ",$upgradesHTML_r);
             
             $now = new DateTime();
-            $diff = $latest_date->diff($now)->format("%a");
-            if( $diff == 0 )
+            $day_diff = $now->format("d") - $latest_date->format("d");
+            if( $day_diff <= 1)
             {
-                $last_update = ( $latest_date->format("d") == $now->format("d") ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i");
-            }
-            else if( $diff > 30 )
-            {
-                $last_update = $latest_date->format("d.m.Y");
+                $last_update = ( $day_diff == 0 ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i");
             }
             else
             {
-                $last_update = $diff . ' days ago';//$latest_date->format("d.m.Y H:i");
+                $diff = $latest_date->diff($now)->format("%a");
+                if( $diff > 30 )
+                {
+                    $last_update = $latest_date->format("d.m.Y");
+                }
+                else
+                {
+                    $last_update = $diff . ' days ago';//$latest_date->format("d.m.Y H:i");
+                }
             }
+            
             $last_update = '<span class="default">' . $last_update . '</span>';
             $last_update_details = '<span class="hover">' . $latest_date->format("d.m.Y H:i") . '</span>';
         }
