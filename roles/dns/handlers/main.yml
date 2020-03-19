@@ -19,21 +19,3 @@
 - name: netconfig update
   shell: "netconfig update -f"
   listen: "refresh netconfig"
-
-- name: restart systemd-networkd
-  systemd:
-    name: systemd-networkd
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart systemd-networkd"
-
-- name: restart systemd-resolved
-  systemd:
-    name: systemd-resolved
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart systemd-resolved"
