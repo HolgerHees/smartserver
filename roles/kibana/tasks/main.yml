@@ -15,10 +15,13 @@
   
 - name: copy dockerfile
   copy:
-    src: "roles/kibana/templates/container/Dockerfile"
-    dest: "{{global_build}}container/Dockerfile"
+    src: "roles/kibana/templates/container/{{item}}"
+    dest: "{{global_build}}container/{{item}}"
     owner: root
     group: root
+  with_items:
+    - Dockerfile
+    - kibana.yml
   when: "'custom_kibana' not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
@@ -39,8 +42,11 @@
   
 - name: cleanup dockerfile
   file:
-    path: "{{global_build}}container/Dockerfile"
+    path: "{{global_build}}container/{{item}}"
     state: absent
+  with_items:
+    - Dockerfile
+    - kibana.yml
   when: "'custom_kibana' not in image_exists.stdout"
 
 - name: create docker container
