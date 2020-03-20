@@ -841,8 +841,15 @@
         
             initContent();
 
-            // defined in netdata.js (/components/)
-            mx.Alarms.init('.alarm.button','.alarm.button .badge');
+            if( mx.User.hasAdminUi() )
+            {
+                // defined in netdata.js (/components/)
+                mx.Alarms.init('.alarm.button','.alarm.button .badge');
+            }
+            else
+            {
+                mx.$(".alarm.button").style.display = 'none';
+            }
             
             mx.$(".spacer").innerHTML = document.location.hostname;
         }

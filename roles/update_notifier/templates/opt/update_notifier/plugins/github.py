@@ -3,8 +3,6 @@ import json
 
 from helper.version import Version
 
-from datetime import datetime
-
 from plugins.plugin import Plugin
 
 class Repository(Plugin):
@@ -41,13 +39,12 @@ class Repository(Plugin):
         else:
             return "{}{}/commits/master".format(Repository.WEB_BASE,self.project)
 
-    def getCurrentBranch(self):
-        return Version(self.current_version).getBranch() if self.tag != None else self.current_version
-
     def getCurrentVersion(self):
+        branch = Version(self.current_version).getBranchString() if self.tag != None else 'master'
+    
         commit_url = "{}{}/commits/{}".format(Repository.API_BASE,self.project,self.current_version if self.tag is None else self.tag)
         commit_data = self._requestData(commit_url)
-        return self.createUpdate( version = self.current_version, branch = self.getCurrentBranch(), date = commit_data['commit']['author']['date'], url = self._getUpdateUrl(self.tag) )
+        return self.createUpdate( version = self.current_version, branch = branch, date = commit_data['commit']['author']['date'], url = self._getUpdateUrl(self.tag) )
 
     def getCurrentVersionString(self):
         return self.current_version
@@ -76,12 +73,7 @@ class Repository(Plugin):
             new_updates_r = self.convertUpdates(current_updates_r=current_updates_r,project=self.project)
 
         else:
-            current_update = None
-            if last_updates is not None:
-                for last_update in last_updates:
-                    if last_update['version'] == self.current_version:
-                        continue
-                    current_update = last_update
+            current_update = last_updates[0] if last_updates is not None and len(last_updates) > 0 else None
           
             total_commits = 0
             url = '{}{}/compare/{}...master'.format(Repository.API_BASE, self.project, self.current_version)

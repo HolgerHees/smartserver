@@ -15,15 +15,15 @@ class Version:
         if len(self.id_r) == 1:
             self.id_r.append("0")
 
-        self.branch = ".".join(self.id_r[0:2])
+        self.branch_string = ".".join(self.id_r[0:2])
         
         self.version_string = ".".join(self.id_r)
         
     def __repr__(self):
         return ".".join(self.id_r)
             
-    def getBranch(self):
-        return self.branch
+    def getBranchString(self):
+        return self.branch_string
     
     def getVersionString(self):
         return self.version_string

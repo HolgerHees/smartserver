@@ -96,6 +96,10 @@ mx.OnDocReady.push( initPage );
             case 'github':
                 $icon="icon-git";
                 break;
+            case 'opensuse':
+            case 'fedora':
+                $icon="icon-desktop";
+                break;
             default:
                 $icon="";
                 break;

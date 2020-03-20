@@ -2,5 +2,5 @@
     "name": "{{name}}",
     "type": "{{type}}",
     "url": "{{url}}",
-    "config": {{config}}
+    "config": {{config | default('{}')}}
 }

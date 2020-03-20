@@ -2,8 +2,6 @@ import urllib.request
 import json
 import subprocess
 
-from datetime import datetime
-
 from helper.version import Version
 
 import re
@@ -86,12 +84,11 @@ class Repository(Plugin):
             return date
         raise Exception('No able to fetch creation date from docker repository {} and tag {}'.format(self.repository,tag))
           
-    def getCurrentBranch(self):
-        return Version(self.current_version).getBranch()
-
     def getCurrentVersion(self):
+        branch = Version(self.current_version).getBranchString()
+        
         creationDate = self._getCreationDate(self.current_tag)
-        return self.createUpdate( version = self.current_version, branch = self.getCurrentBranch(), date = creationDate, url = self._getUpdateUrl(self.current_tag) )
+        return self.createUpdate( version = self.current_version, branch = branch, date = creationDate, url = self._getUpdateUrl(self.current_tag) )
 
     def getCurrentVersionString(self):
         return self.current_version

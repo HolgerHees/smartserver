@@ -55,6 +55,7 @@ for config_file in files:
             plugin = importlib.import_module("plugins.{}".format(config['type']))
         except ModuleNotFoundError:
             print("Plugin '{}' not found".format(config['type']),file=sys.stderr)
+            print("")
             continue
         
         repo = plugin.Repository(config['config'], global_config)

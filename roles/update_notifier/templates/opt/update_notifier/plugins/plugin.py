@@ -18,16 +18,16 @@ class Plugin:
                 version = Version(last_update['version'])
                 if current_version.compare(version) < 1:
                     continue
-                current_updates_r[version.getBranch()] = [ version, last_update['date'], None ]
+                current_updates_r[version.getBranchString()] = [ version, last_update['date'], None ]
         return current_updates_r
 
     def updateCurrentUpdates(self,version,current_updates_r,tag):
-        if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][0].compare(version) == 0:
-            current_updates_r[version.getBranch()][2] = tag
+        if version.getBranchString() in current_updates_r and current_updates_r[version.getBranchString()][0].compare(version) == 0:
+            current_updates_r[version.getBranchString()][2] = tag
 
     def isNewUpdate(self,version,current_updates_r,current_version):
         if current_version.compare(version) == 1:
-            if version.getBranch() in current_updates_r and current_updates_r[version.getBranch()][0].compare(version) < 1:
+            if version.getBranchString() in current_updates_r and current_updates_r[version.getBranchString()][0].compare(version) < 1:
                 return False
             #print(current_updates_r)
             #print(version)
@@ -35,7 +35,7 @@ class Plugin:
         return False
     
     def registerNewUpdate(self,current_updates_r, version, date, tag):
-        current_updates_r[version.getBranch()] = [ version, date, tag ]
+        current_updates_r[version.getBranchString()] = [ version, date, tag ]
         
     def convertUpdates(self,current_updates_r,project):
         new_updates_r = {}
