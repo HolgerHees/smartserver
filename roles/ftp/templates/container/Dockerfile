@@ -2,7 +2,7 @@ ARG VERSION
 
 FROM alpine:$VERSION
 
-COPY entrypoint.sh /usr/sbin/
+COPY {{global_tmp}}entrypoint.sh /usr/sbin/
 
 RUN apk update && apk upgrade &&  apk --update --no-cache add vsftpd
 
