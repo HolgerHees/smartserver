@@ -36,6 +36,7 @@
   copy:
     src: "{{item.src}}"
     dest: "{{item.target}}"
+    remote_src: true
     owner: root
     group: root
     mode: "{{item.permissions}}"
@@ -49,6 +50,7 @@
   copy:
     src: "/usr/lib/systemd/system/openvpn-client@.service"
     dest: "/usr/lib/systemd/system/openvpn@.service"
+    remote_src: true
     owner: root
     group: root
     mode: 0640
