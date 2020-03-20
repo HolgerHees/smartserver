@@ -6,7 +6,7 @@
     name: openvpn@cloud
     state: started
     daemon_reload: yes
-  changed_when: "ansible_facts.services|selectattr('openvpn@cloud.service',{})|selectattr('state') != 'running'"
+  changed_when: "'openvpn@cloud.service' not in ansible_facts.services or ansible_facts.services['openvpn@cloud.service'].state != 'running'"
 
   
   

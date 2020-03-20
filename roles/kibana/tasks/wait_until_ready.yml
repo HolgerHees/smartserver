@@ -6,7 +6,7 @@
     name: kibana
     state: started
     daemon_reload: yes
-  changed_when: "ansible_facts.services|selectattr('kibana.service',{})|selectattr('state') != 'running'"
+  changed_when: "'kibana.service' not in ansible_facts.services or ansible_facts.services['kibana.service'].state != 'running'"
   
 - name: wait for kibana to become ready
   uri:
@@ -16,7 +16,7 @@
   until: "result.status == 200"
   retries: 180
   delay: 1
-  changed_when: "ansible_facts.services|selectattr('kibana.service',{})|selectattr('state') != 'running'"
+  changed_when: "'kibana.service' not in ansible_facts.services or ansible_facts.services['kibana.service'].state != 'running'"
 
   
   

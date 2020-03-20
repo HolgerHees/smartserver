@@ -6,7 +6,7 @@
     name: elasticsearch
     state: started
     daemon_reload: yes
-  changed_when: "ansible_facts.services|selectattr('elasticsearch.service',{})|selectattr('state') != 'running'"
+  changed_when: "'elasticsearch.service' not in ansible_facts.services or ansible_facts.services['elasticsearch.service'].state != 'running'"
   
 # retries needs to increased from 60 to 180 to give kibana on travisci more time to start
 - name: wait for elasticsearch to become ready
@@ -17,7 +17,7 @@
   until: "result.status == 200 and ('\"status\":\"yellow\"' in result.content or '\"status\":\"green\"' in result.content)"
   retries: 180
   delay: 1
-  changed_when: "ansible_facts.services|selectattr('elasticsearch.service',{})|selectattr('state') != 'running'"
+  changed_when: "'elasticsearch.service' not in ansible_facts.services or ansible_facts.services['elasticsearch.service'].state != 'running'"
 
   
   

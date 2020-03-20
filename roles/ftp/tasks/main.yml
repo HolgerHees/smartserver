@@ -98,9 +98,9 @@
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
  
 - name: copy dockerfiles
-  template:
+  copy:
     src: "roles/ftp/templates/container/{{item}}"
-    dest: "{{global_tmp}}/{{item}}"
+    dest: "{{global_build}}container/{{item}}"
     owner: root
     group: root
   with_items:
@@ -110,7 +110,7 @@
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_vsftpd:{{alpine_version}} --build-arg VERSION={{alpine_version}} - < {{global_tmp}}/Dockerfile"
+  shell: "docker build -t custom_vsftpd:{{alpine_version}} {{global_build}}container/ --build-arg VERSION={{alpine_version}}"
   async: 600
   poll: 0
   register: docker_build
@@ -126,7 +126,7 @@
 
 - name: cleanup dockerfiles
   file:
-    path: "{{global_tmp}}/{{item}}"
+    path: "{{global_build}}container/{{item}}"
     state: absent
   with_items:
     - Dockerfile
