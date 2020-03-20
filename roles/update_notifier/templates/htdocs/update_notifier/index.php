@@ -136,14 +136,16 @@ mx.OnDocReady.push( initPage );
             $upgradesHTML = implode(", ",$upgradesHTML_r);
             
             $now = new DateTime();
-            $day_diff = $now->format("d") - $latest_date->format("d");
+            $diff = $latest_date->diff($now);
+            
+            $day_diff = $diff->days;
             if( $day_diff <= 1)
             {
                 $last_update = ( $day_diff == 0 ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i");
             }
             else
             {
-                $diff = $latest_date->diff($now)->format("%a");
+                $diff = $diff->format("%a");
                 if( $diff > 30 )
                 {
                     $last_update = $latest_date->format("d.m.Y");
