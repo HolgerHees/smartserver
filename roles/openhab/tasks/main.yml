@@ -1,6 +1,6 @@
 - name: set openhab version
   set_fact:
-    openhab_version: "2.5.2"
+    openhab_version: "2.5.3"
   tags: [ 'update_notifier_configs' ]
   
 - name: set jython script version
