@@ -149,6 +149,9 @@
   with_items:
     - { regex: "vm\\.swappiness", line: "vm.swappiness = 1" }
     - { regex: "vm\\.overcommit_memory", line: "vm.overcommit_memory = 1" }
+
+    # IPV4 forwarding is not needed during docker build process. If you get problems, restart firewalld
+    #- { regex: "net\\.ipv4\\.ip_forward", line: "net.ipv4.ip_forward = 0" }
   register: sysctlchanged
     
 - name: refresh sysctl to activate sysctl changes => sysctl changed

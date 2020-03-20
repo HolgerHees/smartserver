@@ -97,9 +97,17 @@
   register: image_exists
   changed_when: "'custom_vsftpd' not in image_exists.stdout"
  
+- name: copy dockerfile
+  copy:
+    src: "roles/ftp/templates/container/Dockerfile"
+    dest: "{{global_tmp}}/Dockerfile"
+    owner: root
+    group: root
+  when: "'custom_vsftpd' not in image_exists.stdout"
+  
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_vsftpd:{{alpine_version}} roles/ftp/templates/container/ --build-arg VERSION={{alpine_version}}"
+  shell: "docker build -t custom_vsftpd:{{alpine_version}} --build-arg VERSION={{alpine_version}} - < {{global_tmp}}/Dockerfile"
   async: 600
   poll: 0
   register: docker_build
@@ -113,6 +121,12 @@
   delay: 60
   when: "'custom_vsftpd' not in image_exists.stdout"
 
+- name: cleanup dockerfile
+  file:
+    path: "{{global_tmp}}/Dockerfile"
+    state: absent
+  when: "'custom_vsftpd' not in image_exists.stdout"
+  
 - name: create docker container
   docker_container:
     name: vsftpd

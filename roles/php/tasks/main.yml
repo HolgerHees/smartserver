@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    php_version: "7.3.15"
+    php_version: "7.3.16"
   tags: [ 'update_notifier_configs' ]
   
 - name: check started docker
@@ -13,9 +13,17 @@
   register: image_exists
   changed_when: "'custom_php' not in image_exists.stdout"
 
+- name: copy dockerfile
+  copy:
+    src: "roles/php/templates/container/Dockerfile"
+    dest: "{{global_tmp}}/Dockerfile"
+    owner: root
+    group: root
+  when: "'custom_php' not in image_exists.stdout"
+
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_php:{{php_version}} roles/php/templates/container/ --build-arg VERSION={{php_version}} --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}}"
+  shell: "docker build -t custom_php:{{php_version}} --build-arg VERSION={{php_version}} --build-arg WWW_UID={{system_users['www'].id}} --build-arg WWW_USERNAME={{system_users['www'].name}} --build-arg WWW_GID={{system_groups['www'].id}} --build-arg WWW_GROUPNAME={{system_groups['www'].name}} - < {{global_tmp}}/Dockerfile"
   async: 1800
   poll: 0
   register: docker_build
@@ -29,6 +37,12 @@
   delay: 60
   when: "'custom_php' not in image_exists.stdout"
 
+- name: cleanup dockerfile
+  file:
+    path: "{{global_tmp}}/Dockerfile"
+    state: absent
+  when: "'custom_php' not in image_exists.stdout"
+    
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
 - name: create docker container

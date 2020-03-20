@@ -13,14 +13,22 @@
   register: image_exists
   changed_when: "'custom_kibana' not in image_exists.stdout"
   
+- name: copy dockerfile
+  copy:
+    src: "roles/kibana/templates/container/Dockerfile"
+    dest: "{{global_tmp}}/Dockerfile"
+    owner: root
+    group: root
+  when: "'custom_kibana' not in image_exists.stdout"
+  
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_kibana:{{kibana_version}} roles/kibana/templates/container/ --build-arg VERSION={{kibana_version}}"
+  shell: "docker build -t custom_kibana:{{kibana_version}} --build-arg VERSION={{kibana_version}} - < {{global_tmp}}/Dockerfile"
   async: 600
   poll: 0
   register: docker_build
   when: "'custom_kibana' not in image_exists.stdout"
-
+  
 - name: wait for docker image => image does not exists
   async_status: jid={{ docker_build.ansible_job_id }}
   register: job_result
@@ -29,6 +37,12 @@
   delay: 60
   when: "'custom_kibana' not in image_exists.stdout"
   
+- name: cleanup dockerfile
+  file:
+    path: "{{global_tmp}}/Dockerfile"
+    state: absent
+  when: "'custom_kibana' not in image_exists.stdout"
+
 - name: create docker container
   docker_container:
     name: kibana
