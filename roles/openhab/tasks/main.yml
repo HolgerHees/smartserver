@@ -195,6 +195,7 @@
   copy:
     src: "{{projects_path}}openhab2/habpanel.config"
     dest: "{{data_path}}openhab-runtime/userdata/config/org/openhab/habpanel.config"
+    remote_src: yes
     owner: root
     group: root
     mode: 0640
@@ -203,6 +204,7 @@
   template:
     src: "{{item}}"
     dest: "{{data_path}}openhab-runtime/conf/services/{{item|basename}}"
+    remote_src: yes
     owner: root
     group: root
     mode: 0640
@@ -213,6 +215,7 @@
   template:
     src: "{{item}}"
     dest: "{{data_path}}openhab-runtime/conf/things/{{item|basename}}"
+    remote_src: yes
     owner: root
     group: root
     mode: 0640
@@ -223,6 +226,7 @@
   template:
     src: "{{item}}"
     dest: "/etc/udev/rules.d/{{item|basename}}"
+    remote_src: yes
     owner: root
     group: root
     mode: 0644
