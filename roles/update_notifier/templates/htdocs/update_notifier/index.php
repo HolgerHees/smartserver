@@ -139,20 +139,26 @@ mx.OnDocReady.push( initPage );
             $diff = $latest_date->diff($now);
             
             $day_diff = $diff->days;
+            $now_minutes = $now->format("H") * 60 + $now->format("i");
+            $latest_minutes = $latest_date->format("H") * 60 + $latest_date->format("i");
+            if( $now_minutes < $latest_minutes )
+            {
+                $day_diff++;
+            }
+            
             if( $day_diff <= 1)
             {
-                $last_update = ( $day_diff == 0 ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i");
+                $last_update = ( $day_diff == 0 ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i") . ' ' . $diff->h . ' ' . $diff->i . ' ' . $diff->d ;
             }
             else
             {
-                $diff = $diff->format("%a");
-                if( $diff > 30 )
+                if( $day_diff > 30 )
                 {
                     $last_update = $latest_date->format("d.m.Y");
                 }
                 else
                 {
-                    $last_update = $diff . ' days ago';//$latest_date->format("d.m.Y H:i");
+                    $last_update = $day_diff . ' days ago';
                 }
             }
             
