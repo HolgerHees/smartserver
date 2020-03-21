@@ -1,43 +1,17 @@
--- phpMyAdmin SQL Dump
--- version 4.9.2
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Nov 26, 2019 at 08:38 AM
--- Server version: 10.4.10-MariaDB-1:10.4.10+maria~bionic
--- PHP Version: 7.2.5
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `nextcloud`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_accounts`
---
 
 CREATE TABLE `oc_accounts` (
   `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `data` longtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_activity`
---
 
 CREATE TABLE `oc_activity` (
   `activity_id` bigint(20) NOT NULL,
@@ -57,12 +31,6 @@ CREATE TABLE `oc_activity` (
   `object_id` bigint(20) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_activity_mq`
---
-
 CREATE TABLE `oc_activity_mq` (
   `mail_id` bigint(20) NOT NULL,
   `amq_timestamp` int(11) NOT NULL DEFAULT 0,
@@ -76,12 +44,6 @@ CREATE TABLE `oc_activity_mq` (
   `object_id` bigint(20) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_addressbookchanges`
---
-
 CREATE TABLE `oc_addressbookchanges` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `uri` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -89,12 +51,6 @@ CREATE TABLE `oc_addressbookchanges` (
   `addressbookid` bigint(20) NOT NULL,
   `operation` smallint(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_addressbooks`
---
 
 CREATE TABLE `oc_addressbooks` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -105,23 +61,11 @@ CREATE TABLE `oc_addressbooks` (
   `synctoken` int(10) UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_appconfig`
---
-
 CREATE TABLE `oc_appconfig` (
   `appid` varchar(32) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `configkey` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `configvalue` longtext COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_authtoken`
---
 
 CREATE TABLE `oc_authtoken` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -142,12 +86,6 @@ CREATE TABLE `oc_authtoken` (
   `password_invalid` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_bookmarks`
---
-
 CREATE TABLE `oc_bookmarks` (
   `id` int(11) NOT NULL,
   `url` varchar(4096) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -161,12 +99,6 @@ CREATE TABLE `oc_bookmarks` (
   `last_preview` int(10) UNSIGNED DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_bookmarks_folders`
---
-
 CREATE TABLE `oc_bookmarks_folders` (
   `id` bigint(20) NOT NULL,
   `parent_folder` bigint(20) DEFAULT NULL,
@@ -175,34 +107,16 @@ CREATE TABLE `oc_bookmarks_folders` (
   `index` bigint(20) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_bookmarks_folders_bookmarks`
---
-
 CREATE TABLE `oc_bookmarks_folders_bookmarks` (
   `folder_id` bigint(20) DEFAULT NULL,
   `bookmark_id` bigint(20) DEFAULT NULL,
   `index` bigint(20) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_bookmarks_tags`
---
-
 CREATE TABLE `oc_bookmarks_tags` (
   `bookmark_id` bigint(20) DEFAULT NULL,
   `tag` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_bruteforce_attempts`
---
 
 CREATE TABLE `oc_bruteforce_attempts` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -213,12 +127,6 @@ CREATE TABLE `oc_bruteforce_attempts` (
   `metadata` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendarchanges`
---
-
 CREATE TABLE `oc_calendarchanges` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `uri` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -227,12 +135,6 @@ CREATE TABLE `oc_calendarchanges` (
   `operation` smallint(6) NOT NULL,
   `calendartype` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendarobjects`
---
 
 CREATE TABLE `oc_calendarobjects` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -250,12 +152,6 @@ CREATE TABLE `oc_calendarobjects` (
   `calendartype` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendarobjects_props`
---
-
 CREATE TABLE `oc_calendarobjects_props` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `calendarid` bigint(20) NOT NULL DEFAULT 0,
@@ -265,12 +161,6 @@ CREATE TABLE `oc_calendarobjects_props` (
   `value` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `calendartype` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendars`
---
 
 CREATE TABLE `oc_calendars` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -285,12 +175,6 @@ CREATE TABLE `oc_calendars` (
   `components` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
   `transparent` smallint(6) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendarsubscriptions`
---
 
 CREATE TABLE `oc_calendarsubscriptions` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -308,12 +192,6 @@ CREATE TABLE `oc_calendarsubscriptions` (
   `source` longtext COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendar_invitations`
---
-
 CREATE TABLE `oc_calendar_invitations` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `uid` varchar(255) COLLATE utf8mb4_bin NOT NULL,
@@ -324,12 +202,6 @@ CREATE TABLE `oc_calendar_invitations` (
   `token` varchar(60) COLLATE utf8mb4_bin NOT NULL,
   `expiration` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendar_reminders`
---
 
 CREATE TABLE `oc_calendar_reminders` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -347,12 +219,6 @@ CREATE TABLE `oc_calendar_reminders` (
   `is_repeat_based` smallint(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendar_resources`
---
-
 CREATE TABLE `oc_calendar_resources` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `backend_id` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -362,24 +228,12 @@ CREATE TABLE `oc_calendar_resources` (
   `group_restrictions` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendar_resources_md`
---
-
 CREATE TABLE `oc_calendar_resources_md` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `resource_id` bigint(20) UNSIGNED NOT NULL,
   `key` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `value` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendar_rooms`
---
 
 CREATE TABLE `oc_calendar_rooms` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -390,24 +244,12 @@ CREATE TABLE `oc_calendar_rooms` (
   `group_restrictions` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_calendar_rooms_md`
---
-
 CREATE TABLE `oc_calendar_rooms_md` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `room_id` bigint(20) UNSIGNED NOT NULL,
   `key` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `value` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_cards`
---
 
 CREATE TABLE `oc_cards` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -420,12 +262,6 @@ CREATE TABLE `oc_cards` (
   `uid` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_cards_properties`
---
-
 CREATE TABLE `oc_cards_properties` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `addressbookid` bigint(20) NOT NULL DEFAULT 0,
@@ -435,12 +271,6 @@ CREATE TABLE `oc_cards_properties` (
   `preferred` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_collres_accesscache`
---
-
 CREATE TABLE `oc_collres_accesscache` (
   `user_id` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `collection_id` bigint(20) DEFAULT 0,
@@ -449,34 +279,16 @@ CREATE TABLE `oc_collres_accesscache` (
   `access` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_collres_collections`
---
-
 CREATE TABLE `oc_collres_collections` (
   `id` bigint(20) NOT NULL,
   `name` varchar(64) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_collres_resources`
---
 
 CREATE TABLE `oc_collres_resources` (
   `collection_id` bigint(20) NOT NULL,
   `resource_type` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `resource_id` varchar(64) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_comments`
---
 
 CREATE TABLE `oc_comments` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -493,12 +305,6 @@ CREATE TABLE `oc_comments` (
   `object_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_comments_read_markers`
---
-
 CREATE TABLE `oc_comments_read_markers` (
   `user_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `marker_datetime` datetime DEFAULT NULL,
@@ -506,23 +312,11 @@ CREATE TABLE `oc_comments_read_markers` (
   `object_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_credentials`
---
-
 CREATE TABLE `oc_credentials` (
   `user` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `identifier` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `credentials` longtext COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_dav_cal_proxy`
---
 
 CREATE TABLE `oc_dav_cal_proxy` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -530,12 +324,6 @@ CREATE TABLE `oc_dav_cal_proxy` (
   `proxy_id` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `permissions` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_dav_shares`
---
 
 CREATE TABLE `oc_dav_shares` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -546,12 +334,6 @@ CREATE TABLE `oc_dav_shares` (
   `publicuri` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_directlink`
---
-
 CREATE TABLE `oc_directlink` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -560,11 +342,17 @@ CREATE TABLE `oc_directlink` (
   `expiration` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_documents_invite`
---
+CREATE TABLE `oc_direct_edit` (
+  `id` bigint(20) NOT NULL,
+  `editor_id` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `file_id` bigint(20) NOT NULL,
+  `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
+  `share_id` bigint(20) DEFAULT NULL,
+  `timestamp` bigint(20) UNSIGNED NOT NULL,
+  `accessed` tinyint(1) NOT NULL DEFAULT 0,
+  `file_path` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 CREATE TABLE `oc_documents_invite` (
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Related editing session id',
@@ -572,12 +360,6 @@ CREATE TABLE `oc_documents_invite` (
   `status` smallint(6) DEFAULT 0,
   `sent_on` int(10) UNSIGNED DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_documents_member`
---
 
 CREATE TABLE `oc_documents_member` (
   `member_id` int(10) UNSIGNED NOT NULL COMMENT 'Unique per user and session',
@@ -590,24 +372,12 @@ CREATE TABLE `oc_documents_member` (
   `status` smallint(5) UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_documents_op`
---
-
 CREATE TABLE `oc_documents_op` (
   `seq` int(10) UNSIGNED NOT NULL COMMENT 'Sequence number',
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Editing session id',
   `member` int(10) UNSIGNED NOT NULL DEFAULT 1 COMMENT 'User and time specific',
   `opspec` longtext COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'json-string'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_documents_revisions`
---
 
 CREATE TABLE `oc_documents_revisions` (
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Related editing session id',
@@ -617,12 +387,6 @@ CREATE TABLE `oc_documents_revisions` (
   `save_hash` varchar(128) COLLATE utf8mb4_bin NOT NULL COMMENT 'used to lookup revision in documents folder of member, eg hash.odt'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_documents_session`
---
-
 CREATE TABLE `oc_documents_session` (
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Editing session id',
   `genesis_url` varchar(512) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Relative to owner documents storage /welcome.odt',
@@ -631,12 +395,6 @@ CREATE TABLE `oc_documents_session` (
   `owner` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'oC user who created the session'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_external_applicable`
---
-
 CREATE TABLE `oc_external_applicable` (
   `applicable_id` bigint(20) NOT NULL,
   `mount_id` bigint(20) NOT NULL,
@@ -644,24 +402,12 @@ CREATE TABLE `oc_external_applicable` (
   `value` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_external_config`
---
-
 CREATE TABLE `oc_external_config` (
   `config_id` bigint(20) NOT NULL,
   `mount_id` bigint(20) NOT NULL,
   `key` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `value` varchar(4096) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_external_mounts`
---
 
 CREATE TABLE `oc_external_mounts` (
   `mount_id` bigint(20) NOT NULL,
@@ -672,12 +418,6 @@ CREATE TABLE `oc_external_mounts` (
   `type` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_external_options`
---
-
 CREATE TABLE `oc_external_options` (
   `option_id` bigint(20) NOT NULL,
   `mount_id` bigint(20) NOT NULL,
@@ -685,22 +425,10 @@ CREATE TABLE `oc_external_options` (
   `value` varchar(256) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_federated_reshares`
---
-
 CREATE TABLE `oc_federated_reshares` (
   `share_id` int(11) NOT NULL,
   `remote_id` int(11) NOT NULL COMMENT 'share ID at the remote server'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_filecache`
---
 
 CREATE TABLE `oc_filecache` (
   `fileid` bigint(20) NOT NULL,
@@ -721,12 +449,6 @@ CREATE TABLE `oc_filecache` (
   `checksum` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_filecache_bak`
---
-
 CREATE TABLE `oc_filecache_bak` (
   `fileid` int(11) NOT NULL,
   `storage` int(11) NOT NULL DEFAULT 0,
@@ -746,24 +468,12 @@ CREATE TABLE `oc_filecache_bak` (
   `checksum` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_filecache_extended`
---
-
 CREATE TABLE `oc_filecache_extended` (
   `fileid` int(10) UNSIGNED NOT NULL,
   `metadata_etag` varchar(40) COLLATE utf8mb4_bin DEFAULT NULL,
   `creation_time` bigint(20) NOT NULL DEFAULT 0,
   `upload_time` bigint(20) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_files_trash`
---
 
 CREATE TABLE `oc_files_trash` (
   `id` varchar(250) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -775,24 +485,12 @@ CREATE TABLE `oc_files_trash` (
   `auto_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_file_locks`
---
-
 CREATE TABLE `oc_file_locks` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `lock` int(11) NOT NULL DEFAULT 0,
   `key` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `ttl` int(11) NOT NULL DEFAULT -1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_flow_checks`
---
 
 CREATE TABLE `oc_flow_checks` (
   `id` int(11) NOT NULL,
@@ -802,57 +500,37 @@ CREATE TABLE `oc_flow_checks` (
   `hash` varchar(32) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_flow_operations`
---
-
 CREATE TABLE `oc_flow_operations` (
   `id` int(11) NOT NULL,
   `class` varchar(256) COLLATE utf8mb4_bin NOT NULL,
   `name` varchar(256) COLLATE utf8mb4_bin NOT NULL,
   `checks` longtext COLLATE utf8mb4_bin DEFAULT NULL,
-  `operation` longtext COLLATE utf8mb4_bin DEFAULT NULL
+  `operation` longtext COLLATE utf8mb4_bin DEFAULT NULL,
+  `entity` varchar(256) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+  `events` longtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_groups`
---
+CREATE TABLE `oc_flow_operations_scope` (
+  `id` bigint(20) NOT NULL,
+  `operation_id` int(11) NOT NULL DEFAULT 0,
+  `type` int(11) NOT NULL DEFAULT 0,
+  `value` varchar(64) COLLATE utf8mb4_bin DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 CREATE TABLE `oc_groups` (
-  `gid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
+  `gid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+  `displayname` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_group_admin`
---
 
 CREATE TABLE `oc_group_admin` (
   `gid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_group_user`
---
-
 CREATE TABLE `oc_group_user` (
   `gid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_jobs`
---
 
 CREATE TABLE `oc_jobs` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -863,12 +541,6 @@ CREATE TABLE `oc_jobs` (
   `reserved_at` int(11) DEFAULT 0,
   `execution_duration` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_login_flow_v2`
---
 
 CREATE TABLE `oc_login_flow_v2` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -884,44 +556,20 @@ CREATE TABLE `oc_login_flow_v2` (
   `app_password` varchar(1024) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_lucene_status`
---
-
 CREATE TABLE `oc_lucene_status` (
   `fileid` int(11) NOT NULL DEFAULT 0,
   `status` varchar(1) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_migrations`
---
 
 CREATE TABLE `oc_migrations` (
   `app` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `version` varchar(255) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_mimetypes`
---
-
 CREATE TABLE `oc_mimetypes` (
   `id` bigint(20) NOT NULL,
   `mimetype` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_moneyforecast_accounts`
---
 
 CREATE TABLE `oc_moneyforecast_accounts` (
   `id` int(11) NOT NULL,
@@ -930,12 +578,6 @@ CREATE TABLE `oc_moneyforecast_accounts` (
   `date` date NOT NULL,
   `user_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_moneyforecast_bookings`
---
 
 CREATE TABLE `oc_moneyforecast_bookings` (
   `id` int(11) NOT NULL,
@@ -949,24 +591,12 @@ CREATE TABLE `oc_moneyforecast_bookings` (
   `account` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_moneyforecast_categories`
---
-
 CREATE TABLE `oc_moneyforecast_categories` (
   `id` int(11) NOT NULL,
   `user_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `name` varchar(1000) COLLATE utf8mb4_bin NOT NULL,
   `color` varchar(10) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_mounts`
---
 
 CREATE TABLE `oc_mounts` (
   `id` bigint(20) NOT NULL,
@@ -977,35 +607,17 @@ CREATE TABLE `oc_mounts` (
   `mount_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_mozilla_sync_collections`
---
-
 CREATE TABLE `oc_mozilla_sync_collections` (
   `id` int(10) UNSIGNED NOT NULL,
   `userid` int(10) UNSIGNED NOT NULL,
   `name` varchar(32) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_mozilla_sync_users`
---
-
 CREATE TABLE `oc_mozilla_sync_users` (
   `id` int(10) UNSIGNED NOT NULL,
   `username` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `sync_user` varchar(128) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_mozilla_sync_wbo`
---
 
 CREATE TABLE `oc_mozilla_sync_wbo` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -1018,12 +630,6 @@ CREATE TABLE `oc_mozilla_sync_wbo` (
   `payload` longtext COLLATE utf8mb4_bin NOT NULL,
   `ttl` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_news_feeds`
---
 
 CREATE TABLE `oc_news_feeds` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -1052,12 +658,6 @@ CREATE TABLE `oc_news_feeds` (
   `last_modified` bigint(20) UNSIGNED DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_news_folders`
---
-
 CREATE TABLE `oc_news_folders` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `parent_id` bigint(20) DEFAULT NULL,
@@ -1067,12 +667,6 @@ CREATE TABLE `oc_news_folders` (
   `deleted_at` bigint(20) UNSIGNED DEFAULT 0,
   `last_modified` bigint(20) UNSIGNED DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_news_items`
---
 
 CREATE TABLE `oc_news_items` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -1097,22 +691,10 @@ CREATE TABLE `oc_news_items` (
   `starred` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_nextant_live_queue`
---
-
 CREATE TABLE `oc_nextant_live_queue` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `item` varchar(512) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_notes_meta`
---
 
 CREATE TABLE `oc_notes_meta` (
   `id` int(11) NOT NULL,
@@ -1121,12 +703,6 @@ CREATE TABLE `oc_notes_meta` (
   `last_update` int(11) NOT NULL,
   `etag` varchar(32) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_notifications`
---
 
 CREATE TABLE `oc_notifications` (
   `notification_id` int(11) NOT NULL,
@@ -1144,12 +720,6 @@ CREATE TABLE `oc_notifications` (
   `icon` varchar(4000) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_notifications_pushtokens`
---
-
 CREATE TABLE `oc_notifications_pushtokens` (
   `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `token` int(11) NOT NULL DEFAULT 0,
@@ -1161,12 +731,6 @@ CREATE TABLE `oc_notifications_pushtokens` (
   `apptype` varchar(32) COLLATE utf8mb4_bin NOT NULL DEFAULT 'unknown'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_oauth2_access_tokens`
---
-
 CREATE TABLE `oc_oauth2_access_tokens` (
   `id` int(10) UNSIGNED NOT NULL,
   `token_id` int(11) NOT NULL,
@@ -1174,12 +738,6 @@ CREATE TABLE `oc_oauth2_access_tokens` (
   `hashed_code` varchar(128) COLLATE utf8mb4_bin NOT NULL,
   `encrypted_token` varchar(786) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_oauth2_clients`
---
 
 CREATE TABLE `oc_oauth2_clients` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -1189,12 +747,6 @@ CREATE TABLE `oc_oauth2_clients` (
   `secret` varchar(64) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_preferences`
---
-
 CREATE TABLE `oc_preferences` (
   `userid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `appid` varchar(32) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -1202,34 +754,16 @@ CREATE TABLE `oc_preferences` (
   `configvalue` longtext COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_preview_generation`
---
-
 CREATE TABLE `oc_preview_generation` (
   `id` int(11) NOT NULL,
   `uid` varchar(256) COLLATE utf8mb4_bin NOT NULL,
   `file_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_privacy_admins`
---
-
 CREATE TABLE `oc_privacy_admins` (
   `id` int(11) NOT NULL,
   `displayname` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_privatedata`
---
 
 CREATE TABLE `oc_privatedata` (
   `keyid` int(10) UNSIGNED NOT NULL,
@@ -1239,12 +773,6 @@ CREATE TABLE `oc_privatedata` (
   `value` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_properties`
---
-
 CREATE TABLE `oc_properties` (
   `id` bigint(20) NOT NULL,
   `userid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -1253,24 +781,12 @@ CREATE TABLE `oc_properties` (
   `propertyvalue` longtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_richdocuments_invite`
---
-
 CREATE TABLE `oc_richdocuments_invite` (
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Related editing session id',
   `uid` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
   `status` smallint(6) DEFAULT 0,
   `sent_on` int(10) UNSIGNED DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_richdocuments_member`
---
 
 CREATE TABLE `oc_richdocuments_member` (
   `member_id` int(10) UNSIGNED NOT NULL COMMENT 'Unique per user and session',
@@ -1282,12 +798,6 @@ CREATE TABLE `oc_richdocuments_member` (
   `status` smallint(5) UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_richdocuments_op`
---
-
 CREATE TABLE `oc_richdocuments_op` (
   `seq` int(10) UNSIGNED NOT NULL COMMENT 'Sequence number',
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Editing session id',
@@ -1295,12 +805,6 @@ CREATE TABLE `oc_richdocuments_op` (
   `optype` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Operation type',
   `opspec` longtext COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'json-string'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_richdocuments_revisions`
---
 
 CREATE TABLE `oc_richdocuments_revisions` (
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Related editing session id',
@@ -1310,12 +814,6 @@ CREATE TABLE `oc_richdocuments_revisions` (
   `save_hash` varchar(128) COLLATE utf8mb4_bin NOT NULL COMMENT 'used to lookup revision in documents folder of member, eg hash.odt'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_richdocuments_session`
---
-
 CREATE TABLE `oc_richdocuments_session` (
   `es_id` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'Editing session id',
   `genesis_url` varchar(512) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Relative to owner documents storage /welcome.odt',
@@ -1323,12 +821,6 @@ CREATE TABLE `oc_richdocuments_session` (
   `file_id` varchar(512) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Relative to storage e.g. /welcome.odt',
   `owner` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'oC user who created the session'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_richdocuments_wopi`
---
 
 CREATE TABLE `oc_richdocuments_wopi` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -1343,12 +835,6 @@ CREATE TABLE `oc_richdocuments_wopi` (
   `guest_displayname` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_schedulingobjects`
---
-
 CREATE TABLE `oc_schedulingobjects` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `principaluri` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -1358,12 +844,6 @@ CREATE TABLE `oc_schedulingobjects` (
   `etag` varchar(32) COLLATE utf8mb4_bin DEFAULT NULL,
   `size` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_share`
---
 
 CREATE TABLE `oc_share` (
   `id` bigint(20) NOT NULL,
@@ -1391,12 +871,6 @@ CREATE TABLE `oc_share` (
   `label` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_share_external`
---
-
 CREATE TABLE `oc_share_external` (
   `id` int(11) NOT NULL,
   `remote` varchar(512) COLLATE utf8mb4_bin NOT NULL COMMENT 'Url of the remove owncloud instance',
@@ -1413,24 +887,12 @@ CREATE TABLE `oc_share_external` (
   `share_type` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_storages`
---
-
 CREATE TABLE `oc_storages` (
   `id` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
   `numeric_id` bigint(20) NOT NULL,
   `available` int(11) NOT NULL DEFAULT 1,
   `last_checked` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_systemtag`
---
 
 CREATE TABLE `oc_systemtag` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -1439,22 +901,10 @@ CREATE TABLE `oc_systemtag` (
   `editable` smallint(6) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_systemtag_group`
---
-
 CREATE TABLE `oc_systemtag_group` (
   `systemtagid` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
   `gid` varchar(255) COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_systemtag_object_mapping`
---
 
 CREATE TABLE `oc_systemtag_object_mapping` (
   `objectid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -1462,22 +912,10 @@ CREATE TABLE `oc_systemtag_object_mapping` (
   `systemtagid` bigint(20) UNSIGNED NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_talk_guests`
---
-
 CREATE TABLE `oc_talk_guests` (
   `session_hash` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL,
   `display_name` varchar(64) COLLATE utf8mb4_bin DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_talk_participants`
---
 
 CREATE TABLE `oc_talk_participants` (
   `user_id` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -1487,12 +925,6 @@ CREATE TABLE `oc_talk_participants` (
   `participant_type` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
   `in_call` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_talk_rooms`
---
 
 CREATE TABLE `oc_talk_rooms` (
   `id` int(11) NOT NULL,
@@ -1504,24 +936,12 @@ CREATE TABLE `oc_talk_rooms` (
   `active_guests` int(10) UNSIGNED NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_talk_signaling`
---
-
 CREATE TABLE `oc_talk_signaling` (
   `sender` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `recipient` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `message` longtext COLLATE utf8mb4_bin NOT NULL,
   `timestamp` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_text_documents`
---
 
 CREATE TABLE `oc_text_documents` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -1531,12 +951,6 @@ CREATE TABLE `oc_text_documents` (
   `last_saved_version_etag` varchar(64) COLLATE utf8mb4_bin DEFAULT '',
   `base_version_etag` varchar(64) COLLATE utf8mb4_bin DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_text_sessions`
---
 
 CREATE TABLE `oc_text_sessions` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -1548,12 +962,6 @@ CREATE TABLE `oc_text_sessions` (
   `last_contact` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_text_steps`
---
-
 CREATE TABLE `oc_text_steps` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `document_id` bigint(20) UNSIGNED NOT NULL,
@@ -1561,12 +969,6 @@ CREATE TABLE `oc_text_steps` (
   `data` longtext COLLATE utf8mb4_bin NOT NULL,
   `version` bigint(20) UNSIGNED NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_trusted_servers`
---
 
 CREATE TABLE `oc_trusted_servers` (
   `id` int(11) NOT NULL,
@@ -1578,12 +980,6 @@ CREATE TABLE `oc_trusted_servers` (
   `sync_token` varchar(512) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'cardDav sync token'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_twofactor_backupcodes`
---
-
 CREATE TABLE `oc_twofactor_backupcodes` (
   `id` bigint(20) NOT NULL,
   `user_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -1591,35 +987,17 @@ CREATE TABLE `oc_twofactor_backupcodes` (
   `used` smallint(6) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_twofactor_providers`
---
-
 CREATE TABLE `oc_twofactor_providers` (
   `provider_id` varchar(32) COLLATE utf8mb4_bin NOT NULL,
   `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `enabled` smallint(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_twofactor_totp_secrets`
---
-
 CREATE TABLE `oc_twofactor_totp_secrets` (
   `id` int(11) NOT NULL,
   `user_id` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `secret` longtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_users`
---
 
 CREATE TABLE `oc_users` (
   `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
@@ -1628,11 +1006,26 @@ CREATE TABLE `oc_users` (
   `uid_lower` varchar(64) COLLATE utf8mb4_bin DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
+CREATE TABLE `oc_user_saml_auth_token` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+  `name` longtext COLLATE utf8mb4_bin NOT NULL,
+  `token` varchar(200) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
---
--- Table structure for table `oc_vcategory`
---
+CREATE TABLE `oc_user_saml_users` (
+  `uid` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+  `displayname` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+  `home` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
+
+CREATE TABLE `oc_user_transfer_owner` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `source_user` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `target_user` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `file_id` bigint(20) NOT NULL,
+  `node_name` varchar(255) COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
 CREATE TABLE `oc_vcategory` (
   `id` bigint(20) UNSIGNED NOT NULL,
@@ -1641,23 +1034,11 @@ CREATE TABLE `oc_vcategory` (
   `category` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_vcategory_to_object`
---
-
 CREATE TABLE `oc_vcategory_to_object` (
   `objid` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
   `categoryid` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
   `type` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `oc_whats_new`
---
 
 CREATE TABLE `oc_whats_new` (
   `id` int(10) UNSIGNED NOT NULL,
@@ -1667,19 +1048,10 @@ CREATE TABLE `oc_whats_new` (
   `data` longtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=COMPRESSED;
 
---
--- Indexes for dumped tables
---
 
---
--- Indexes for table `oc_accounts`
---
 ALTER TABLE `oc_accounts`
   ADD PRIMARY KEY (`uid`);
 
---
--- Indexes for table `oc_activity`
---
 ALTER TABLE `oc_activity`
   ADD PRIMARY KEY (`activity_id`),
   ADD KEY `activity_user_time` (`affecteduser`,`timestamp`),
@@ -1687,40 +1059,25 @@ ALTER TABLE `oc_activity`
   ADD KEY `activity_filter_app` (`affecteduser`,`app`,`timestamp`),
   ADD KEY `activity_object` (`object_type`(191),`object_id`);
 
---
--- Indexes for table `oc_activity_mq`
---
 ALTER TABLE `oc_activity_mq`
   ADD PRIMARY KEY (`mail_id`),
   ADD KEY `amp_user` (`amq_affecteduser`),
   ADD KEY `amp_latest_send_time` (`amq_latest_send`),
   ADD KEY `amp_timestamp_time` (`amq_timestamp`);
 
---
--- Indexes for table `oc_addressbookchanges`
---
 ALTER TABLE `oc_addressbookchanges`
   ADD PRIMARY KEY (`id`),
   ADD KEY `addressbookid_synctoken` (`addressbookid`,`synctoken`);
 
---
--- Indexes for table `oc_addressbooks`
---
 ALTER TABLE `oc_addressbooks`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `addressbook_index` (`principaluri`,`uri`);
 
---
--- Indexes for table `oc_appconfig`
---
 ALTER TABLE `oc_appconfig`
   ADD PRIMARY KEY (`appid`,`configkey`),
   ADD KEY `appconfig_config_key_index` (`configkey`),
   ADD KEY `appconfig_appid_key` (`appid`);
 
---
--- Indexes for table `oc_authtoken`
---
 ALTER TABLE `oc_authtoken`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `authtoken_token_index` (`token`),
@@ -1728,135 +1085,81 @@ ALTER TABLE `oc_authtoken`
   ADD KEY `authtoken_uid_index` (`uid`),
   ADD KEY `authtoken_version_index` (`version`);
 
---
--- Indexes for table `oc_bookmarks`
---
 ALTER TABLE `oc_bookmarks`
   ADD PRIMARY KEY (`id`),
   ADD KEY `IDX_3EE1CD04A76ED395` (`user_id`),
   ADD KEY `IDX_3EE1CD04DF091378` (`last_preview`);
 
---
--- Indexes for table `oc_bookmarks_folders`
---
 ALTER TABLE `oc_bookmarks_folders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `IDX_60F60C03A76ED395` (`user_id`);
 
---
--- Indexes for table `oc_bookmarks_folders_bookmarks`
---
 ALTER TABLE `oc_bookmarks_folders_bookmarks`
   ADD KEY `IDX_8AFF796292741D25` (`bookmark_id`);
 
---
--- Indexes for table `oc_bookmarks_tags`
---
 ALTER TABLE `oc_bookmarks_tags`
   ADD UNIQUE KEY `bookmark_tag` (`bookmark_id`,`tag`);
 
---
--- Indexes for table `oc_bruteforce_attempts`
---
 ALTER TABLE `oc_bruteforce_attempts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `bruteforce_attempts_ip` (`ip`),
   ADD KEY `bruteforce_attempts_subnet` (`subnet`);
 
---
--- Indexes for table `oc_calendarchanges`
---
 ALTER TABLE `oc_calendarchanges`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calid_type_synctoken` (`calendarid`,`calendartype`,`synctoken`);
 
---
--- Indexes for table `oc_calendarobjects`
---
 ALTER TABLE `oc_calendarobjects`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `calobjects_index` (`calendarid`,`calendartype`,`uri`);
 
---
--- Indexes for table `oc_calendarobjects_props`
---
 ALTER TABLE `oc_calendarobjects_props`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendarobject_index` (`objectid`,`calendartype`),
   ADD KEY `calendarobject_name_index` (`name`,`calendartype`),
   ADD KEY `calendarobject_value_index` (`value`,`calendartype`);
 
---
--- Indexes for table `oc_calendars`
---
 ALTER TABLE `oc_calendars`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `calendars_index` (`principaluri`,`uri`);
 
---
--- Indexes for table `oc_calendarsubscriptions`
---
 ALTER TABLE `oc_calendarsubscriptions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `calsub_index` (`principaluri`,`uri`);
 
---
--- Indexes for table `oc_calendar_invitations`
---
 ALTER TABLE `oc_calendar_invitations`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendar_invitation_tokens` (`token`);
 
---
--- Indexes for table `oc_calendar_reminders`
---
 ALTER TABLE `oc_calendar_reminders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendar_reminder_objid` (`object_id`),
   ADD KEY `calendar_reminder_uidrec` (`uid`,`recurrence_id`);
 
---
--- Indexes for table `oc_calendar_resources`
---
 ALTER TABLE `oc_calendar_resources`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendar_resources_bkdrsc` (`backend_id`,`resource_id`),
   ADD KEY `calendar_resources_email` (`email`),
   ADD KEY `calendar_resources_name` (`displayname`);
 
---
--- Indexes for table `oc_calendar_resources_md`
---
 ALTER TABLE `oc_calendar_resources_md`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendar_resources_md_idk` (`resource_id`,`key`);
 
---
--- Indexes for table `oc_calendar_rooms`
---
 ALTER TABLE `oc_calendar_rooms`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendar_rooms_bkdrsc` (`backend_id`,`resource_id`),
   ADD KEY `calendar_rooms_email` (`email`),
   ADD KEY `calendar_rooms_name` (`displayname`);
 
---
--- Indexes for table `oc_calendar_rooms_md`
---
 ALTER TABLE `oc_calendar_rooms_md`
   ADD PRIMARY KEY (`id`),
   ADD KEY `calendar_rooms_md_idk` (`room_id`,`key`);
 
---
--- Indexes for table `oc_cards`
---
 ALTER TABLE `oc_cards`
   ADD PRIMARY KEY (`id`),
   ADD KEY `cards_abid` (`addressbookid`);
 
---
--- Indexes for table `oc_cards_properties`
---
 ALTER TABLE `oc_cards_properties`
   ADD PRIMARY KEY (`id`),
   ADD KEY `card_contactid_index` (`cardid`),
@@ -1864,29 +1167,17 @@ ALTER TABLE `oc_cards_properties`
   ADD KEY `card_value_index` (`value`),
   ADD KEY `cards_prop_abid` (`addressbookid`);
 
---
--- Indexes for table `oc_collres_accesscache`
---
 ALTER TABLE `oc_collres_accesscache`
   ADD UNIQUE KEY `collres_unique_user` (`user_id`,`collection_id`,`resource_type`,`resource_id`),
   ADD KEY `collres_user_res` (`user_id`,`resource_type`,`resource_id`),
   ADD KEY `collres_user_coll` (`user_id`,`collection_id`);
 
---
--- Indexes for table `oc_collres_collections`
---
 ALTER TABLE `oc_collres_collections`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_collres_resources`
---
 ALTER TABLE `oc_collres_resources`
   ADD UNIQUE KEY `collres_unique_res` (`collection_id`,`resource_type`,`resource_id`);
 
---
--- Indexes for table `oc_comments`
---
 ALTER TABLE `oc_comments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `comments_parent_id_index` (`parent_id`),
@@ -1894,84 +1185,55 @@ ALTER TABLE `oc_comments`
   ADD KEY `comments_object_index` (`object_type`,`object_id`,`creation_timestamp`),
   ADD KEY `comments_actor_index` (`actor_type`,`actor_id`);
 
---
--- Indexes for table `oc_comments_read_markers`
---
 ALTER TABLE `oc_comments_read_markers`
   ADD UNIQUE KEY `comments_marker_index` (`user_id`,`object_type`,`object_id`),
   ADD KEY `comments_marker_object_index` (`object_type`,`object_id`);
 
---
--- Indexes for table `oc_credentials`
---
 ALTER TABLE `oc_credentials`
   ADD PRIMARY KEY (`user`,`identifier`),
   ADD KEY `credentials_user` (`user`);
 
---
--- Indexes for table `oc_dav_cal_proxy`
---
 ALTER TABLE `oc_dav_cal_proxy`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `dav_cal_proxy_uidx` (`owner_id`,`proxy_id`,`permissions`),
   ADD KEY `dav_cal_proxy_ioid` (`owner_id`),
   ADD KEY `dav_cal_proxy_ipid` (`proxy_id`);
 
---
--- Indexes for table `oc_dav_shares`
---
 ALTER TABLE `oc_dav_shares`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `dav_shares_index` (`principaluri`,`resourceid`,`type`,`publicuri`);
 
---
--- Indexes for table `oc_directlink`
---
 ALTER TABLE `oc_directlink`
   ADD PRIMARY KEY (`id`),
   ADD KEY `directlink_token_idx` (`token`),
   ADD KEY `directlink_expiration_idx` (`expiration`);
 
---
--- Indexes for table `oc_external_applicable`
---
+ALTER TABLE `oc_direct_edit`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `IDX_4D5AFECA5F37A13B` (`token`);
+
 ALTER TABLE `oc_external_applicable`
   ADD PRIMARY KEY (`applicable_id`),
   ADD UNIQUE KEY `applicable_type_value_mount` (`type`,`value`,`mount_id`),
   ADD KEY `applicable_mount` (`mount_id`),
   ADD KEY `applicable_type_value` (`type`,`value`);
 
---
--- Indexes for table `oc_external_config`
---
 ALTER TABLE `oc_external_config`
   ADD PRIMARY KEY (`config_id`),
   ADD UNIQUE KEY `config_mount_key` (`mount_id`,`key`),
   ADD KEY `config_mount` (`mount_id`);
 
---
--- Indexes for table `oc_external_mounts`
---
 ALTER TABLE `oc_external_mounts`
   ADD PRIMARY KEY (`mount_id`);
 
---
--- Indexes for table `oc_external_options`
---
 ALTER TABLE `oc_external_options`
   ADD PRIMARY KEY (`option_id`),
   ADD UNIQUE KEY `option_mount_key` (`mount_id`,`key`),
   ADD KEY `option_mount` (`mount_id`);
 
---
--- Indexes for table `oc_federated_reshares`
---
 ALTER TABLE `oc_federated_reshares`
   ADD UNIQUE KEY `share_id_index` (`share_id`);
 
---
--- Indexes for table `oc_filecache`
---
 ALTER TABLE `oc_filecache`
   ADD PRIMARY KEY (`fileid`),
   ADD UNIQUE KEY `fs_storage_path_hash` (`storage`,`path_hash`),
@@ -1981,9 +1243,6 @@ ALTER TABLE `oc_filecache`
   ADD KEY `fs_storage_size` (`storage`,`size`,`fileid`),
   ADD KEY `fs_mtime` (`mtime`);
 
---
--- Indexes for table `oc_filecache_bak`
---
 ALTER TABLE `oc_filecache_bak`
   ADD PRIMARY KEY (`fileid`),
   ADD UNIQUE KEY `fs_storage_path_hash` (`storage`,`path_hash`),
@@ -1992,96 +1251,61 @@ ALTER TABLE `oc_filecache_bak`
   ADD KEY `fs_storage_mimepart` (`storage`,`mimepart`),
   ADD KEY `fs_storage_size` (`storage`,`size`,`fileid`);
 
---
--- Indexes for table `oc_filecache_extended`
---
 ALTER TABLE `oc_filecache_extended`
   ADD UNIQUE KEY `fce_fileid_idx` (`fileid`),
   ADD KEY `fce_ctime_idx` (`creation_time`),
   ADD KEY `fce_utime_idx` (`upload_time`);
 
---
--- Indexes for table `oc_files_trash`
---
 ALTER TABLE `oc_files_trash`
   ADD PRIMARY KEY (`auto_id`),
   ADD KEY `id_index` (`id`),
   ADD KEY `timestamp_index` (`timestamp`),
   ADD KEY `user_index` (`user`);
 
---
--- Indexes for table `oc_file_locks`
---
 ALTER TABLE `oc_file_locks`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `lock_key_index` (`key`),
   ADD KEY `lock_ttl_index` (`ttl`);
 
---
--- Indexes for table `oc_flow_checks`
---
 ALTER TABLE `oc_flow_checks`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `flow_unique_hash` (`hash`);
 
---
--- Indexes for table `oc_flow_operations`
---
 ALTER TABLE `oc_flow_operations`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_groups`
---
+ALTER TABLE `oc_flow_operations_scope`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `flow_unique_scope` (`operation_id`,`type`,`value`);
+
 ALTER TABLE `oc_groups`
   ADD PRIMARY KEY (`gid`);
 
---
--- Indexes for table `oc_group_admin`
---
 ALTER TABLE `oc_group_admin`
   ADD PRIMARY KEY (`gid`,`uid`),
   ADD KEY `group_admin_uid` (`uid`);
 
---
--- Indexes for table `oc_group_user`
---
 ALTER TABLE `oc_group_user`
   ADD PRIMARY KEY (`gid`,`uid`),
   ADD KEY `gu_uid_index` (`uid`);
 
---
--- Indexes for table `oc_jobs`
---
 ALTER TABLE `oc_jobs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `job_class_index` (`class`);
 
---
--- Indexes for table `oc_login_flow_v2`
---
 ALTER TABLE `oc_login_flow_v2`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `poll_token` (`poll_token`),
   ADD UNIQUE KEY `login_token` (`login_token`),
   ADD KEY `timestamp` (`timestamp`);
 
---
--- Indexes for table `oc_migrations`
---
 ALTER TABLE `oc_migrations`
   ADD PRIMARY KEY (`app`,`version`);
 
---
--- Indexes for table `oc_mimetypes`
---
 ALTER TABLE `oc_mimetypes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `mimetype_id_index` (`mimetype`);
 
---
--- Indexes for table `oc_mounts`
---
 ALTER TABLE `oc_mounts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `mounts_user_root_index` (`user_id`,`root_id`),
@@ -2090,9 +1314,6 @@ ALTER TABLE `oc_mounts`
   ADD KEY `mounts_root_index` (`root_id`),
   ADD KEY `mounts_mount_id_index` (`mount_id`);
 
---
--- Indexes for table `oc_news_feeds`
---
 ALTER TABLE `oc_news_feeds`
   ADD PRIMARY KEY (`id`),
   ADD KEY `news_feeds_user_id_index` (`user_id`),
@@ -2100,18 +1321,12 @@ ALTER TABLE `oc_news_feeds`
   ADD KEY `news_feeds_url_hash_index` (`url_hash`),
   ADD KEY `news_feeds_last_mod_idx` (`last_modified`);
 
---
--- Indexes for table `oc_news_folders`
---
 ALTER TABLE `oc_news_folders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `news_folders_last_mod_idx` (`last_modified`),
   ADD KEY `news_folders_parent_id_idx` (`parent_id`),
   ADD KEY `news_folders_user_id_idx` (`user_id`);
 
---
--- Indexes for table `oc_news_items`
---
 ALTER TABLE `oc_news_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `news_items_feed_id_index` (`feed_id`),
@@ -2119,24 +1334,15 @@ ALTER TABLE `oc_news_items`
   ADD KEY `news_items_last_mod_idx` (`last_modified`),
   ADD KEY `news_items_fingerprint_idx` (`fingerprint`);
 
---
--- Indexes for table `oc_nextant_live_queue`
---
 ALTER TABLE `oc_nextant_live_queue`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_notes_meta`
---
 ALTER TABLE `oc_notes_meta`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `notes_meta_file_user_index` (`file_id`,`user_id`),
   ADD KEY `notes_meta_file_id_index` (`file_id`),
   ADD KEY `notes_meta_user_id_index` (`user_id`);
 
---
--- Indexes for table `oc_notifications`
---
 ALTER TABLE `oc_notifications`
   ADD PRIMARY KEY (`notification_id`),
   ADD KEY `oc_notifications_app` (`app`),
@@ -2144,99 +1350,54 @@ ALTER TABLE `oc_notifications`
   ADD KEY `oc_notifications_timestamp` (`timestamp`),
   ADD KEY `oc_notifications_object` (`object_type`,`object_id`);
 
---
--- Indexes for table `oc_notifications_pushtokens`
---
 ALTER TABLE `oc_notifications_pushtokens`
   ADD UNIQUE KEY `oc_notifpushtoken` (`uid`,`token`);
 
---
--- Indexes for table `oc_oauth2_access_tokens`
---
 ALTER TABLE `oc_oauth2_access_tokens`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `oauth2_access_hash_idx` (`hashed_code`),
   ADD KEY `oauth2_access_client_id_idx` (`client_id`);
 
---
--- Indexes for table `oc_oauth2_clients`
---
 ALTER TABLE `oc_oauth2_clients`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `oauth2_client_id_idx` (`client_identifier`);
 
---
--- Indexes for table `oc_preferences`
---
 ALTER TABLE `oc_preferences`
   ADD PRIMARY KEY (`userid`,`appid`,`configkey`);
 
---
--- Indexes for table `oc_preview_generation`
---
 ALTER TABLE `oc_preview_generation`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_privacy_admins`
---
 ALTER TABLE `oc_privacy_admins`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_privatedata`
---
 ALTER TABLE `oc_privatedata`
   ADD PRIMARY KEY (`keyid`);
 
---
--- Indexes for table `oc_properties`
---
 ALTER TABLE `oc_properties`
   ADD PRIMARY KEY (`id`),
   ADD KEY `property_index` (`userid`);
 
---
--- Indexes for table `oc_richdocuments_member`
---
 ALTER TABLE `oc_richdocuments_member`
   ADD PRIMARY KEY (`member_id`);
 
---
--- Indexes for table `oc_richdocuments_op`
---
 ALTER TABLE `oc_richdocuments_op`
   ADD PRIMARY KEY (`seq`),
   ADD UNIQUE KEY `richdocuments_op_eis_idx` (`es_id`,`seq`);
 
---
--- Indexes for table `oc_richdocuments_revisions`
---
 ALTER TABLE `oc_richdocuments_revisions`
   ADD UNIQUE KEY `richdocuments_rev_eis_idx` (`es_id`,`seq_head`);
 
---
--- Indexes for table `oc_richdocuments_session`
---
 ALTER TABLE `oc_richdocuments_session`
   ADD PRIMARY KEY (`es_id`);
 
---
--- Indexes for table `oc_richdocuments_wopi`
---
 ALTER TABLE `oc_richdocuments_wopi`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `rd_wopi_token_idx` (`token`);
 
---
--- Indexes for table `oc_schedulingobjects`
---
 ALTER TABLE `oc_schedulingobjects`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_share`
---
 ALTER TABLE `oc_share`
   ADD PRIMARY KEY (`id`),
   ADD KEY `item_share_type_index` (`item_type`,`share_type`),
@@ -2247,548 +1408,305 @@ ALTER TABLE `oc_share`
   ADD KEY `owner_index` (`uid_owner`),
   ADD KEY `initiator_index` (`uid_initiator`);
 
---
--- Indexes for table `oc_share_external`
---
 ALTER TABLE `oc_share_external`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `sh_external_mp` (`user`,`mountpoint_hash`),
   ADD KEY `sh_external_user` (`user`);
 
---
--- Indexes for table `oc_storages`
---
 ALTER TABLE `oc_storages`
   ADD PRIMARY KEY (`numeric_id`),
   ADD UNIQUE KEY `storages_id_index` (`id`);
 
---
--- Indexes for table `oc_systemtag`
---
 ALTER TABLE `oc_systemtag`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `tag_ident` (`name`,`visibility`,`editable`);
 
---
--- Indexes for table `oc_systemtag_group`
---
 ALTER TABLE `oc_systemtag_group`
   ADD PRIMARY KEY (`gid`,`systemtagid`);
 
---
--- Indexes for table `oc_systemtag_object_mapping`
---
 ALTER TABLE `oc_systemtag_object_mapping`
   ADD UNIQUE KEY `mapping` (`objecttype`,`objectid`,`systemtagid`);
 
---
--- Indexes for table `oc_talk_guests`
---
 ALTER TABLE `oc_talk_guests`
   ADD UNIQUE KEY `tg_session_hash` (`session_hash`);
 
---
--- Indexes for table `oc_talk_rooms`
---
 ALTER TABLE `oc_talk_rooms`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `tr_room_token` (`token`);
 
---
--- Indexes for table `oc_talk_signaling`
---
 ALTER TABLE `oc_talk_signaling`
   ADD KEY `ts_recipient_time` (`recipient`,`timestamp`);
 
---
--- Indexes for table `oc_text_documents`
---
 ALTER TABLE `oc_text_documents`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `oc_text_sessions`
---
 ALTER TABLE `oc_text_sessions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `rd_session_token_idx` (`token`);
 
---
--- Indexes for table `oc_text_steps`
---
 ALTER TABLE `oc_text_steps`
   ADD PRIMARY KEY (`id`),
   ADD KEY `rd_steps_did_idx` (`document_id`),
   ADD KEY `rd_steps_version_idx` (`version`);
 
---
--- Indexes for table `oc_trusted_servers`
---
 ALTER TABLE `oc_trusted_servers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `url_hash` (`url_hash`);
 
---
--- Indexes for table `oc_twofactor_backupcodes`
---
 ALTER TABLE `oc_twofactor_backupcodes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `twofactor_backupcodes_uid` (`user_id`);
 
---
--- Indexes for table `oc_twofactor_providers`
---
 ALTER TABLE `oc_twofactor_providers`
   ADD PRIMARY KEY (`provider_id`,`uid`),
   ADD KEY `twofactor_providers_uid` (`uid`);
 
---
--- Indexes for table `oc_twofactor_totp_secrets`
---
 ALTER TABLE `oc_twofactor_totp_secrets`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `totp_secrets_user_id` (`user_id`);
 
---
--- Indexes for table `oc_users`
---
 ALTER TABLE `oc_users`
   ADD PRIMARY KEY (`uid`),
   ADD KEY `user_uid_lower` (`uid_lower`);
 
---
--- Indexes for table `oc_vcategory`
---
+ALTER TABLE `oc_user_saml_auth_token`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `oc_user_saml_users`
+  ADD PRIMARY KEY (`uid`);
+
+ALTER TABLE `oc_user_transfer_owner`
+  ADD PRIMARY KEY (`id`);
+
 ALTER TABLE `oc_vcategory`
   ADD PRIMARY KEY (`id`),
   ADD KEY `uid_index` (`uid`),
   ADD KEY `type_index` (`type`),
   ADD KEY `category_index` (`category`);
 
---
--- Indexes for table `oc_vcategory_to_object`
---
 ALTER TABLE `oc_vcategory_to_object`
   ADD PRIMARY KEY (`categoryid`,`objid`,`type`),
   ADD KEY `vcategory_objectd_index` (`objid`,`type`);
 
---
--- Indexes for table `oc_whats_new`
---
 ALTER TABLE `oc_whats_new`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `version` (`version`),
   ADD KEY `version_etag_idx` (`version`,`etag`);
 
---
--- AUTO_INCREMENT for dumped tables
---
 
---
--- AUTO_INCREMENT for table `oc_activity`
---
 ALTER TABLE `oc_activity`
   MODIFY `activity_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_activity_mq`
---
 ALTER TABLE `oc_activity_mq`
   MODIFY `mail_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_addressbookchanges`
---
 ALTER TABLE `oc_addressbookchanges`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_addressbooks`
---
 ALTER TABLE `oc_addressbooks`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_authtoken`
---
 ALTER TABLE `oc_authtoken`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_bookmarks`
---
 ALTER TABLE `oc_bookmarks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_bookmarks_folders`
---
 ALTER TABLE `oc_bookmarks_folders`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_bruteforce_attempts`
---
 ALTER TABLE `oc_bruteforce_attempts`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendarchanges`
---
 ALTER TABLE `oc_calendarchanges`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendarobjects`
---
 ALTER TABLE `oc_calendarobjects`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendarobjects_props`
---
 ALTER TABLE `oc_calendarobjects_props`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendars`
---
 ALTER TABLE `oc_calendars`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendarsubscriptions`
---
 ALTER TABLE `oc_calendarsubscriptions`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendar_invitations`
---
 ALTER TABLE `oc_calendar_invitations`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendar_reminders`
---
 ALTER TABLE `oc_calendar_reminders`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendar_resources`
---
 ALTER TABLE `oc_calendar_resources`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendar_resources_md`
---
 ALTER TABLE `oc_calendar_resources_md`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendar_rooms`
---
 ALTER TABLE `oc_calendar_rooms`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_calendar_rooms_md`
---
 ALTER TABLE `oc_calendar_rooms_md`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_cards`
---
 ALTER TABLE `oc_cards`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_cards_properties`
---
 ALTER TABLE `oc_cards_properties`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_collres_collections`
---
 ALTER TABLE `oc_collres_collections`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_comments`
---
 ALTER TABLE `oc_comments`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_dav_cal_proxy`
---
 ALTER TABLE `oc_dav_cal_proxy`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_dav_shares`
---
 ALTER TABLE `oc_dav_shares`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_directlink`
---
 ALTER TABLE `oc_directlink`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_external_applicable`
---
+ALTER TABLE `oc_direct_edit`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
 ALTER TABLE `oc_external_applicable`
   MODIFY `applicable_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_external_config`
---
 ALTER TABLE `oc_external_config`
   MODIFY `config_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_external_mounts`
---
 ALTER TABLE `oc_external_mounts`
   MODIFY `mount_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_external_options`
---
 ALTER TABLE `oc_external_options`
   MODIFY `option_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_filecache`
---
 ALTER TABLE `oc_filecache`
   MODIFY `fileid` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_files_trash`
---
 ALTER TABLE `oc_files_trash`
   MODIFY `auto_id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_file_locks`
---
 ALTER TABLE `oc_file_locks`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_flow_checks`
---
 ALTER TABLE `oc_flow_checks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_flow_operations`
---
 ALTER TABLE `oc_flow_operations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_jobs`
---
+ALTER TABLE `oc_flow_operations_scope`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
 ALTER TABLE `oc_jobs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_login_flow_v2`
---
 ALTER TABLE `oc_login_flow_v2`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_mimetypes`
---
 ALTER TABLE `oc_mimetypes`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_mounts`
---
 ALTER TABLE `oc_mounts`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_news_feeds`
---
 ALTER TABLE `oc_news_feeds`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_news_folders`
---
 ALTER TABLE `oc_news_folders`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_news_items`
---
 ALTER TABLE `oc_news_items`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_nextant_live_queue`
---
 ALTER TABLE `oc_nextant_live_queue`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_notes_meta`
---
 ALTER TABLE `oc_notes_meta`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_notifications`
---
 ALTER TABLE `oc_notifications`
   MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_oauth2_access_tokens`
---
 ALTER TABLE `oc_oauth2_access_tokens`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_oauth2_clients`
---
 ALTER TABLE `oc_oauth2_clients`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_preview_generation`
---
 ALTER TABLE `oc_preview_generation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_privacy_admins`
---
 ALTER TABLE `oc_privacy_admins`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_privatedata`
---
 ALTER TABLE `oc_privatedata`
   MODIFY `keyid` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_properties`
---
 ALTER TABLE `oc_properties`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_richdocuments_member`
---
 ALTER TABLE `oc_richdocuments_member`
   MODIFY `member_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Unique per user and session';
 
---
--- AUTO_INCREMENT for table `oc_richdocuments_op`
---
 ALTER TABLE `oc_richdocuments_op`
   MODIFY `seq` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Sequence number';
 
---
--- AUTO_INCREMENT for table `oc_richdocuments_wopi`
---
 ALTER TABLE `oc_richdocuments_wopi`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_schedulingobjects`
---
 ALTER TABLE `oc_schedulingobjects`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_share`
---
 ALTER TABLE `oc_share`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_share_external`
---
 ALTER TABLE `oc_share_external`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_storages`
---
 ALTER TABLE `oc_storages`
   MODIFY `numeric_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_systemtag`
---
 ALTER TABLE `oc_systemtag`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_talk_rooms`
---
 ALTER TABLE `oc_talk_rooms`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_text_documents`
---
 ALTER TABLE `oc_text_documents`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_text_sessions`
---
 ALTER TABLE `oc_text_sessions`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_text_steps`
---
 ALTER TABLE `oc_text_steps`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_trusted_servers`
---
 ALTER TABLE `oc_trusted_servers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_twofactor_backupcodes`
---
 ALTER TABLE `oc_twofactor_backupcodes`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_twofactor_totp_secrets`
---
 ALTER TABLE `oc_twofactor_totp_secrets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_vcategory`
---
+ALTER TABLE `oc_user_saml_auth_token`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `oc_user_transfer_owner`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
 ALTER TABLE `oc_vcategory`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT for table `oc_whats_new`
---
 ALTER TABLE `oc_whats_new`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 COMMIT;
