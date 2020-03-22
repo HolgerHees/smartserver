@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    jython_version: "f93926de404142f1fcf950c0c058194e61c3b91f"
+    jython_version: "v2.7.2"
   tags: [ 'update_notifier_configs' ]
   
 - name: clone git
@@ -8,9 +8,6 @@
 #    accept_hostkey: yes
     repo: 'https://github.com/jythontools/jython.git'
     dest: '/opt/jython'
-    # commit key from 27.09.2018
-    #version: '1454169f3186780fd996c3d8d44d9024ee3e9642'
-    # commit key from 25.02.2020 - much slower then version from 27.09.2018
     version: '{{jython_version}}'
   register: clone_status
 
@@ -47,7 +44,8 @@
     type: "github"
     url: "https://www.jython.org/news"
     config: { 
-      project: "jythontools/jython", 
+      project: "jythontools/jython",
+      pattern: "^v([0-9\\.]+)$",
       version: "{{jython_version}}" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
