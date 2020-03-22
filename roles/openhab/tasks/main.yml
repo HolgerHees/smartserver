@@ -283,7 +283,7 @@
   when: "'openhab' not in mysql_data_exists.stdout"
 
 - name: create missing mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER '{{vault_openhab_mysql_username}}'@'%' IDENTIFIED BY '{{vault_openhab_mysql_password}}';\\\"\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{vault_openhab_mysql_username}}'@'%' IDENTIFIED BY '{{vault_openhab_mysql_password}}';\\\"\""
   when: "'openhab' not in mysql_data_exists.stdout"
 
 - name: grant permissions to mysql user => database does not exists

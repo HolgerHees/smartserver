@@ -13,17 +13,25 @@
 #  register: image_exists
 #  changed_when: "'custom_redis' not in image_exists.stdout"
   
+#- name: prepare build folder
+#  file:
+#    path: "{{global_build}}redis/"
+#    state: directory
+#    owner: root
+#    group: root
+#    mode: 0750
+    
 #- name: copy dockerfile
 #  copy:
 #    src: "roles/redis/templates/container/Dockerfile"
-#    dest: "{{global_build}}container/Dockerfile"
+#    dest: "{{global_build}}redis/Dockerfile"
 #    owner: root
 #    group: root
 #  when: "'custom_redis' not in image_exists.stdout"
 
 ## async docker build is used to show progress and prevent travisci killing our job because of inactivity
 #- name: compose docker image => image does not exists
-#  shell: "docker build -t custom_redis:1.0.0 {{global_build}}container/"
+#  shell: "docker build -t custom_redis:1.0.0 {{global_build}}redis/"
 #  async: 600
 #  poll: 0
 #  register: docker_build
@@ -35,12 +43,6 @@
 #  until: job_result.finished
 #  retries: 10
 #  delay: 60
-#  when: "'custom_redis' not in image_exists.stdout"
-
-#- name: cleanup dockerfile
-#  file:
-#    path: "{{global_build}}container/Dockerfile"
-#    state: absent
 #  when: "'custom_redis' not in image_exists.stdout"
   
 #- name: debug

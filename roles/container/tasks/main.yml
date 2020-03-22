@@ -76,7 +76,7 @@
   notify: "restart docker"
   when: is_suse|bool
 
-- name: prepare needed folder
+- name: prepare build folder
   file:
     path: "{{item}}"
     state: directory
@@ -85,8 +85,7 @@
     mode: 0750
   with_items:
     - "/etc/docker/"
-    - "{{ global_lib }}docker"
-    - "{{global_build}}container/"
+    - "{{global_lib}}docker"
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:

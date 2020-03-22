@@ -13,10 +13,18 @@
   register: image_exists
   changed_when: "'custom_kibana' not in image_exists.stdout"
   
+- name: prepare build folder
+  file:
+    path: "{{global_build}}kibana/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+    
 - name: copy dockerfile
   copy:
     src: "roles/kibana/templates/container/{{item}}"
-    dest: "{{global_build}}container/{{item}}"
+    dest: "{{global_build}}kibana/{{item}}"
     owner: root
     group: root
   with_items:
@@ -26,7 +34,7 @@
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_kibana:{{kibana_version}} {{global_build}}container/ --build-arg VERSION={{kibana_version}}"
+  shell: "docker build -t custom_kibana:{{kibana_version}} {{global_build}}kibana/ --build-arg VERSION={{kibana_version}}"
   async: 600
   poll: 0
   register: docker_build
@@ -40,15 +48,6 @@
   delay: 60
   when: "'custom_kibana' not in image_exists.stdout"
   
-- name: cleanup dockerfile
-  file:
-    path: "{{global_build}}container/{{item}}"
-    state: absent
-  with_items:
-    - Dockerfile
-    - kibana.yml
-  when: "'custom_kibana' not in image_exists.stdout"
-
 - name: create docker container
   docker_container:
     name: kibana
