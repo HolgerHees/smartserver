@@ -12,8 +12,15 @@
   changed_when: "result.status != 200"
   failed_when: "result.status != 200 and result.status != 404"
 
+- name: copy dashboard.ndjson
+  copy:
+    src: "roles/kibana/templates/dashboard.ndjson"
+    dest: "{{global_build}}kibana/dashboard.ndjson"
+    owner: root
+    group: root
+
 - name: "Import kibana's dashboard"
-  shell: "curl -X POST \"http://localhost:5601/api/saved_objects/_import?overwrite=true\" -H \"kbn-xsrf: true\" --form file=@roles/kibana/templates/dashboard.ndjson"
+  shell: "curl -X POST \"http://localhost:5601/api/saved_objects/_import?overwrite=true\" -H \"kbn-xsrf: true\" --form file=@{{global_build}}kibana/dashboard.ndjson"
   register: import_result
   failed_when: "'\"success\":true' not in import_result.stdout"
   # {"success":true,"successCount":4}
