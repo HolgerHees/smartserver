@@ -76,7 +76,7 @@
   notify: "restart docker"
   when: is_suse|bool
 
-- name: prepare build folder
+- name: prepare needed folder
   file:
     path: "{{item}}"
     state: directory

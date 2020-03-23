@@ -20,6 +20,7 @@
 #    owner: root
 #    group: root
 #    mode: 0750
+#  when: "'custom_redis' not in image_exists.stdout"
     
 #- name: copy dockerfile
 #  copy:

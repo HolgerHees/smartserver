@@ -4,9 +4,20 @@
 
 - name: trigger service check handler
   command: "/bin/true"
-  changed_when: "service not in ansible_facts.services or ansible_facts.services[service].state != 'running' or ansible_facts.services[service].status == 'disabled'"
+  changed_when: "service not in ansible_facts.services or ansible_facts.services[service].status == 'disabled'"
   notify: "{{notify}}"
   
+- name: trigger process check handler
+  shell: "pgrep {{process}}"
+  register: result
+  changed_when: "result.rc == 1"
+  failed_when: False
+  notify: "{{notify}}"
+
+#- name: test
+#  debug:
+#    msg: "{{result}}"
+
 #enabled :: explicitly installed
 #static :: installed as dependency      => mdmonitor
 #disabled :: not installed

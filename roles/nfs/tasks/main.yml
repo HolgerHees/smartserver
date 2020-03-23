@@ -28,6 +28,7 @@
   vars:
     notify: "restart nfs-server"
     service: "{{'nfsserver.service' if is_suse|bool else 'nfs-server.service'}}"
-  import_tasks: roles/base/tasks/service_check.yml
+    process: "nfsd"
+  import_tasks: roles/base/tasks/service_process_check.yml
 
   

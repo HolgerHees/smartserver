@@ -104,6 +104,7 @@
     owner: root
     group: root
     mode: 0750
+  when: "'custom_vsftpd' not in image_exists.stdout"
 
 - name: copy dockerfiles
   copy:
