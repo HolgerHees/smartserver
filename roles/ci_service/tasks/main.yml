@@ -107,5 +107,6 @@
   vars:
     notify: "restart virtualbox"
     service: "vboxdrv.service"
-  import_tasks: roles/base/tasks/service_single_check.yml
+    process: "lsmod | grep vbox"
+  import_tasks: roles/base/tasks/service_process_check.yml
   

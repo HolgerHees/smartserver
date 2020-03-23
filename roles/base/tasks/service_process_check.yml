@@ -8,7 +8,7 @@
   notify: "{{notify}}"
   
 - name: trigger process check handler
-  shell: "pgrep {{process}}"
+  shell: "{{process}}"
   register: result
   changed_when: "result.rc == 1"
   failed_when: False
