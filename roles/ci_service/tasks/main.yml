@@ -102,3 +102,10 @@
   vars:
     name: "vboxdrv"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
+- name: trigger service check handler
+  vars:
+    notify: "restart virtualbox"
+    service: "vboxdrv.service"
+  import_tasks: roles/base/tasks/service_check.yml
+  

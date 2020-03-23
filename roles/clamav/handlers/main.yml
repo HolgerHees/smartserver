@@ -22,4 +22,3 @@
     - freshclam
   listen: "restart clamav"
   when: is_suse|bool
-

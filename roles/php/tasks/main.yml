@@ -95,3 +95,9 @@
       pattern: "^([0-9\\.]+)-fpm$" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: trigger service check handler
+  vars:
+    notify: "restart php"
+    service: "php.service"
+  import_tasks: roles/base/tasks/service_check.yml

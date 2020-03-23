@@ -80,3 +80,10 @@
     name: "mdmonitor"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
   when: mdraid.stat.exists
+
+- name: trigger service check handler
+  vars:
+    notify: "restart mdmonitor"
+    service: "mdmonitor.service"
+  import_tasks: roles/base/tasks/service_check.yml
+  when: mdraid.stat.exists

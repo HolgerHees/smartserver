@@ -190,9 +190,12 @@
       pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
-          
-          
-          
+
+- name: trigger service check handler
+  vars:
+    notify: "restart vsftpd"
+    service: "vsftpd.service"
+  import_tasks: roles/base/tasks/service_check.yml
           
     
     

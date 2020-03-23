@@ -2,6 +2,10 @@
 #  debug: msg="{{ hostvars }}"
 #  tags: always
   
+- name: read service facts
+  service_facts:
+  tags: always
+      
 # set config path based on hostname
 - name: set config path
   set_fact:

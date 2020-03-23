@@ -1,0 +1,5 @@
+- name: trigger service check handler
+  command: "/bin/true"
+  changed_when: "service not in ansible_facts.services or ansible_facts.services[service].state != 'running' or ansible_facts.services[service].status != 'enabled'"
+  notify: "{{notify}}"
+

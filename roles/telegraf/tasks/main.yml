@@ -33,3 +33,9 @@
   vars:
     container_name: "telegraf"
   import_tasks: roles/container/tasks/add_docker_service.yml  
+
+- name: trigger service check handler
+  vars:
+    notify: "restart telegraf"
+    service: "telegraf.service"
+  import_tasks: roles/base/tasks/service_check.yml

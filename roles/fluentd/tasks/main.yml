@@ -62,3 +62,9 @@
   vars:
     name: "fluentd"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
+- name: trigger service check handler
+  vars:
+    notify: "restart fluentd"
+    service: "fluentd.service"
+  import_tasks: roles/base/tasks/service_check.yml

@@ -7,6 +7,8 @@
     - { import_role: { name: _init }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************   
 
+    - { import_role: { name: _init, tasks_from: fedora_precondition }, when: is_fedora }
+  
     - name: loaded values from config files
       debug:
         msg: 
