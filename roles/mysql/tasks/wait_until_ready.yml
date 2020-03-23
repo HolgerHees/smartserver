@@ -6,7 +6,7 @@
     name: mysql
     state: started
     daemon_reload: yes
-  changed_when: "'mysql' not in ansible_facts.services or ansible_facts.services['mysql'].state != 'running'"
+  changed_when: "'mysql.service' not in ansible_facts.services or ansible_facts.services['mysql.service'].state != 'running'"
 
 #- name: wait for mysql to become ready
 #  wait_for:
@@ -20,4 +20,4 @@
   until: not result.rc  # or result.rc == 0 if you prefer
   retries: 240
   delay: 1
-  changed_when: "'mysql' not in ansible_facts.services or ansible_facts.services['mysql'].state != 'running'"
+  changed_when: "'mysql.service' not in ansible_facts.services or ansible_facts.services['mysql.service'].state != 'running'"

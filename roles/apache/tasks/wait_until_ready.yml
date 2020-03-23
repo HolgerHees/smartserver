@@ -6,4 +6,4 @@
     name: apache2
     state: started
     daemon_reload: yes
-  changed_when: "'apache2' not in ansible_facts.services or ansible_facts.services['apache2'].state != 'running'"
+  changed_when: "'apache2.service' not in ansible_facts.services or ansible_facts.services['apache2.service'].state != 'running'"

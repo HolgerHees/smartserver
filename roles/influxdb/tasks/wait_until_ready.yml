@@ -6,7 +6,7 @@
     name: influxdb
     state: started
     daemon_reload: yes
-  changed_when: "'influxdb' not in ansible_facts.services or ansible_facts.services['influxdb'].state != 'running'"
+  changed_when: "'influxdb.service' not in ansible_facts.services or ansible_facts.services['influxdb.service'].state != 'running'"
   
 - name: wait for influxdb to become ready
   uri:
@@ -16,5 +16,5 @@
   until: result.status == 204
   retries: 60
   delay: 1
-  changed_when: "'influxdb' not in ansible_facts.services or ansible_facts.services['influxdb'].state != 'running'"
+  changed_when: "'influxdb.service' not in ansible_facts.services or ansible_facts.services['influxdb.service'].state != 'running'"
  
