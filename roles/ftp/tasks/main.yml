@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    alpine_version: "3.11.3"
+    alpine_version: "3.11.5"
   tags: [ 'update_notifier_configs' ]
 
 # suse user: ftp:x:476:476:FTP Account:/srv/ftp:/sbin/nologin
