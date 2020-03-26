@@ -114,6 +114,21 @@
 - name: netconfig update => is_suse and netconfig changed
   shell: "netconfig update -f"
   when: "is_suse|bool and netconfig_status.changed"
+  
+- name: remove symlink => is_suse and netconfig changed
+  file:
+    path: /etc/resolv.conf
+    state: absent
+  when: "is_suse|bool and netconfig_status.changed"
+
+- name: create file => is_suse and netconfig changed
+  file:
+    path: /etc/resolv.conf
+    state: touch
+    owner: named
+    group: named
+    mode: 0755
+  when: "is_suse|bool and netconfig_status.changed"
 
 - name: set dns config
   lineinfile:
