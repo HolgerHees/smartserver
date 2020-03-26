@@ -86,7 +86,7 @@ div.versionLink {
     display: inline-block;
 }
 
-div.versionLink.currentBranch {
+div.currentBranch {
     font-weight: bold;
 }
 

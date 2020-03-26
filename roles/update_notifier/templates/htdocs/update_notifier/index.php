@@ -131,7 +131,14 @@ mx.OnDocReady.push( initPage );
 
                 $current_branch = $state->current->branch == $update->branch;
                 
-                $upgradesHTML_r[] = '<div class="versionLink' . ( $current_branch ? ' currentBranch' : '' ) . '" onClick="mx.UNCore.openUrl(event,\'' .$update->url . '\')" ><span>' . formatVersion($update->version) . '</span><span class="icon-export"></span></div>';
+                if( $update->url )
+                {
+                    $upgradesHTML_r[] = '<div class="versionLink' . ( $current_branch ? ' currentBranch' : '' ) . '" onClick="mx.UNCore.openUrl(event,\'' .$update->url . '\')" ><span>' . formatVersion($update->version) . '</span><span class="icon-export"></span></div>';
+                }
+                else
+                {
+                    $upgradesHTML_r[] = '<div class="' . ( $current_branch ? 'currentBranch' : '' ) . '"><span>' . formatVersion($update->version) . '</span></div>';
+                }
             }
             $upgradesHTML = implode(", ",$upgradesHTML_r);
             
