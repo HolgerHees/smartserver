@@ -155,7 +155,7 @@ mx.OnDocReady.push( initPage );
             
             if( $day_diff <= 1)
             {
-                $last_update = ( $day_diff == 0 ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i") . ' ' . $diff->h . ' ' . $diff->i . ' ' . $diff->d ;
+                $last_update = ( $day_diff == 0 ? 'Today' : 'Yesterday' ) . ' ' . $latest_date->format("H:i");
             }
             else
             {
