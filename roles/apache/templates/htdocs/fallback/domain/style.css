@@ -1,0 +1,37 @@
+body, html {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+html {
+    height: 100%;
+    box-sizing: border-box;
+}
+body {
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+body > div {
+  height: 100%;
+  padding-top: 100px;
+  box-sizing: border-box;
+}
+.box {
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+  display: block;
+  width: 80%;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 10px;
+}
+.box > h1,
+.box > div,
+.box > p {
+  text-align: center;
+}
+

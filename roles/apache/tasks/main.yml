@@ -12,6 +12,8 @@
     mode: 0755
   with_items:
     - "{{htdocs_path}}"
+    - "{{htdocs_path}}/fallback"
+    - "{{htdocs_path}}/fallback/domain"
     - "{{global_log}}apache2/"
 
 - name: check owner and group
@@ -70,10 +72,20 @@
 
 - name: copy login form
   copy:
-    src: "templates/auth"
+    src: "templates/htdocs/auth"
     dest: "{{htdocs_path}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+
+- name: copy domain fallback
+  template:
+    src: "templates/htdocs/fallback/domain/{{item}}"
+    dest: "{{htdocs_path}}fallback/domain/{{item}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+  with_items:
+    - index.html
+    - style.css
 
 - name: check started docker
   systemd:
