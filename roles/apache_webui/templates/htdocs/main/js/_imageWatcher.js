@@ -14,22 +14,28 @@ mx.ImageWatcher = (function( ret ) {
         timeSpan.innerText = time;
         nameSpan.innerText = image.getAttribute('data-name');
 
-        var img = new Image();
-        var id = Date.now();
+        let id = Date.now();
         let src = image.getAttribute('data-src') + '?' + id;
-        img.onload = function()
-        {
-            image.setAttribute('src',src);
 
-            mx.Timer.register(function(){refreshImage(container);},image.getAttribute('data-interval'));
-        };
-        img.onerror = function()
-        {
-            //image.setAttribute('src',src);
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", src);
+        xhr.withCredentials = true;
+        xhr.responseType = 'blob';
+        xhr.onreadystatechange = function() {
+            if (this.readyState != 4) return;
             
-            mx.State.handleRequestError(0,src,function(){refreshImage(container);});
+            if( this.status == 200 ) 
+            {
+                var imageURL = window.URL.createObjectURL(this.response);
+                image.setAttribute('src', imageURL );
+                mx.Timer.register(function(){refreshImage(container);},image.getAttribute('data-interval'));
+            }
+            else
+            {
+                mx.State.handleRequestError(this.status,src,function(){refreshImage(container);});
+            }
         };
-        img.src = src;
+        xhr.send();
     }
 
     ret.init = function(selector)
