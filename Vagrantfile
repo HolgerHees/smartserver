@@ -94,6 +94,16 @@ Vagrant.configure(2) do |config|
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
+    setup.vm.provider "hyperv" do |hv|
+        hv.vmname = $image_name
+        hv.memory = 6144
+        hv.cpus = 2
+    end
+    #setup.vm.provider "vmware_desktop" do |vw|
+    #  vw.vmx["memsize"] = "6144"
+    #  vw.vmx["numvcpus"] = "2"
+    #end
+
     
     if setup_os == 'fedora' then
         $is_reboot_possible = true
