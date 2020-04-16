@@ -1,3 +1,16 @@
+- name: check if '{{group}}' group exists in apache
+  shell: "grep \"^{{group}}\" {{htdocs_path}}.htgroups"
+  register: group_check
+  changed_when: group_check.stdout == ""
+  failed_when: no
+    
+- name: add '{{group}}' group to apache
+  lineinfile:
+    path: "{{htdocs_path}}.htgroups"
+    regexp: '^{{group}}[\s:]{1}.*'
+    line: '{{group}}:'
+  when: group_check.stdout == ""
+
 - name: add user "{{username}}" to apache .htpasswd
   htpasswd:
     path: "{{htdocs_path}}.htpasswd"

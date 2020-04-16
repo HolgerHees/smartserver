@@ -28,19 +28,6 @@
   with_items: "{{vault_usernames}}"
   notify: "restart samba"
 
-- name: check if 'USER' group exists in apache
-  shell: "grep \"^USER\" {{htdocs_path}}.htgroups"
-  register: user_check
-  changed_when: user_check.stdout == ""
-  failed_when: no
-    
-- name: add 'USER' group to apache
-  lineinfile:
-    path: "{{htdocs_path}}.htgroups"
-    regexp: '^USER[\s:]{1}.*'
-    line: 'USER:'
-  when: user_check.stdout == ""
-
 - name: add user to apache .htpasswd
   vars:
     username: "{{item}}"
