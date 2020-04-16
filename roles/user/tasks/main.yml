@@ -28,40 +28,6 @@
   with_items: "{{vault_usernames}}"
   notify: "restart samba"
 
-- name: add user to apache .htpasswd
-  htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
-    name: "{{item}}"
-    password: "{{vault_userdata[item].web_password}}"
-  with_items: "{{vault_usernames}}"
-
-- name: add user name to .htdata
-  lineinfile:
-    path: "{{htdocs_path}}.htdata"
-    regexp: '^{{item}}:{{vault_userdata[item].name}}'
-    line: '{{item}}:{{vault_userdata[item].name}}:{{vault_userdata[item].webui}}'
-  with_items: "{{vault_usernames}}"
-   
-# **** APACHE USERS (WEB) ****
-- name: add user "{{vault_nextcloud_admin_username}}" to apache .htpasswd
-  htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
-    name: "{{vault_nextcloud_admin_username}}"
-    password: "{{vault_nextcloud_admin_password}}"
-  
-- name: add admin to apache groups
-  lineinfile:
-    path: "{{htdocs_path}}.htgroups"
-    backrefs: yes
-    regexp: '^(USER:(?!.*{{vault_nextcloud_admin_username}}).*)'
-    line: '\1 {{vault_nextcloud_admin_username}}'
-    
-- name: add user "{{vault_alexa_username}}" to apache .htpasswd
-  htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
-    name: "{{vault_alexa_username}}"
-    password: "{{vault_alexa_web_password}}"
-
 - name: check if 'USER' group exists in apache
   shell: "grep \"^USER\" {{htdocs_path}}.htgroups"
   register: user_check
@@ -75,10 +41,18 @@
     line: 'USER:'
   when: user_check.stdout == ""
 
-- name: add user to apache groups
-  lineinfile:
-    path: "{{htdocs_path}}.htgroups"
-    backrefs: yes
-    regexp: '^(USER:(?!.*{{item}}).*)'
-    line: '\1 {{item}}'
+- name: add user to apache .htpasswd
+  vars:
+    username: "{{item}}"
+    password: "{{vault_userdata[item].web_password}}"
+    group: "USER"
+  include_tasks: roles/user/tasks/add_web_user.yml
   with_items: "{{vault_usernames}}"
+
+- name: add user name to .htdata
+  lineinfile:
+    path: "{{htdocs_path}}.htdata"
+    regexp: '^{{item}}:{{vault_userdata[item].name}}'
+    line: '{{item}}:{{vault_userdata[item].name}}:{{vault_userdata[item].webui}}'
+  with_items: "{{vault_usernames}}"
+

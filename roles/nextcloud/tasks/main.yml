@@ -243,6 +243,13 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
+- name: add admin web user
+  vars:
+    username: "{{vault_nextcloud_admin_username}}"
+    password: "{{vault_nextcloud_admin_password}}"
+    group: "USER"
+  import_tasks: roles/user/tasks/add_web_user.yml
+
 - name: register webui
   vars:
     name: "nextcloud"

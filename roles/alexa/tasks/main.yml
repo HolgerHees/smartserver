@@ -71,3 +71,9 @@
     - environment.js
     - test.js
   when: not alexa_config.stat.exists
+
+- name: add web user
+  vars:
+    username: "{{vault_alexa_username}}"
+    password: "{{vault_alexa_web_password}}"
+  import_tasks: roles/user/tasks/add_web_user.yml

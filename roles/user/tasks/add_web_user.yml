@@ -1,0 +1,13 @@
+- name: add user "{{username}}" to apache .htpasswd
+  htpasswd:
+    path: "{{htdocs_path}}.htpasswd"
+    name: "{{username}}"
+    password: "{{password}}"
+ 
+- name: add user "{{username}}" to apache groups
+  lineinfile:
+    path: "{{htdocs_path}}.htgroups"
+    backrefs: yes
+    regexp: '^({{group}}:(?!.*{{username}}).*)'
+    line: '\1 {{username}}'
+  when: "group is defined"
