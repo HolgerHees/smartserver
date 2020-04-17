@@ -62,4 +62,5 @@
       copy:
         src: "/etc/openvpn/cloud_shared.key"
         dest: "{{config_path}}vault_backup/openvpn/cloud_shared.key"
+      failed_when: false
       tags: [vault_certificates]
