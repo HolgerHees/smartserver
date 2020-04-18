@@ -21,13 +21,13 @@
   with_items: "{{vault_usernames}}"
     
 - name: add user to samba
-  shell: "( (pdbedit -L | grep {{item}}) && echo 'skipped' ) || ( ( printf '{{ vault_userdata[item].samba_password }}\n{{ vault_userdata[item].samba_password }}\n' | smbpasswd -a {{item}} ) && echo 'created' )"
+  shell: "((echo '{{vault_userdata[item].samba_password}}'; echo '{{vault_userdata[item].samba_password}}';) | smbpasswd -s -a {{item}}) && ((pdbedit -L | grep {{item}}) || echo 'created';)"
   register: command_result
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "'created' in command_result.stdout"
   with_items: "{{vault_usernames}}"
-  notify: "restart samba"
-
+  #notify: "restart samba"
+  
 - name: add user to apache .htpasswd
   vars:
     username: "{{item}}"
