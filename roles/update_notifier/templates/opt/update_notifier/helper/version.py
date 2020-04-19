@@ -41,7 +41,9 @@ class Version:
                 elif int(self.id_r[index]) < int(version.id_r[index]):
                     break;
             else:
-                if int(self.id_r[index]) > 0:
+                if int(self.id_r[index]) == 0:
+                    result = 0
+                elif int(self.id_r[index]) > 0:
                     result = -1
                 break;
         return result 
