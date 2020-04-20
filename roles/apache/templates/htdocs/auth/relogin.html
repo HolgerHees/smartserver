@@ -13,11 +13,12 @@
         localStorage.removeItem("bw_username");
         localStorage.removeItem("bw_login");
 
-        var host = location.host;
-        var parts = host.split(".");
-        var authType = "";
-        if( parts.length == 3 )
+        var BASE_DOMAIN = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "base_domain" ];
+        
+        var domain = location.host;
+        if( domain != BASE_DOMAIN )
         {
+            var parts = domain.split(".");
             var subDomain = parts.shift();
             var domain = parts.join(".");
             if( subDomain.indexOf("fa") === 0 )
@@ -37,7 +38,6 @@
         }
         else if( document.cookie.indexOf("openidc_supported=1") !== -1 )
         {
-            var domain = parts.join(".");
             document.querySelector(".button.form").style.display="inline-block";
             document.querySelector(".button.form").setAttribute("href","https://fa." + domain);
         }
