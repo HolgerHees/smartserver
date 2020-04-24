@@ -48,10 +48,14 @@ vault_grafana_influxdb_password: "default123"
 vault_grafana_app_username: "admin"
 vault_grafana_app_password: "admin"
 
+# used in generic optional role 'wireguard_roadwarrior'
+vault_vpn_roadwarrior_internal_port: "51820" # the port, used on your server
+vault_vpn_roadwarrior_public_port: "51820" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+
+# used in generic optional role 'openvpn_mobile'
 vault_vpn_mobile_pass: "default123"
 vault_vpn_mobile_port: "1195"
 vault_vpn_mobile_public_port: "277"
-vault_vpn_mobile_public_domain: "public.{{server_domain}}"
 
 vault_deployment_config_git: "https://github.com/HolgerHees/smartserver.git"
 vault_deployment_token_git: ""
@@ -72,7 +76,7 @@ vault_vpn_cloud_local_username: "clouduser"
 vault_vpn_cloud_local_export_path: "{{raid_path}}{{vault_vpn_cloud_local_username}}"
 vault_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
 vault_vpn_cloud_master_port: "3421"
-vault_vpn_cloud_master_domain: "public.{{server_domain}}"
+vault_vpn_cloud_master_domain: "{{public_server_domain}}"
 
 # used in generic optional role 'cloudsync'
 vault_cloudsync_password: "default123"
@@ -97,8 +101,7 @@ vault_camera_device_username: "admin"
 vault_camera_device_password: "default123"
 
 # used in generic optional role 'alexa'
-vault_server_alexa_domain: "public.{{server_domain}}"
-vault_server_alexa_port: "22432"
+vault_server_alexa_port: "22432" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
 vault_alexa_username: "alexa"
 vault_alexa_web_password: "default123"
 vault_alexa_deployment_access_key_id: "<access_key_id>"
