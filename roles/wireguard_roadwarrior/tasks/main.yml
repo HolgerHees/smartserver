@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    alpine_version: "3.11.5"
+    alpine_version: "3.11.6"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare config folder
