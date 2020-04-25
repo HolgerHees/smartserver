@@ -43,7 +43,7 @@
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_wireguard_roadwarrior:{{alpine_version}} {{global_build}}wireguard_roadwarrior/ --build-arg VERSION={{alpine_version}}"
+  shell: "docker build -t custom_wireguard_roadwarrior:{{alpine_version}} {{global_build}}wireguard_roadwarrior/ --build-arg VERSION={{alpine_version}} --build-arg PORT=51820"
   async: 600
   poll: 0
   register: docker_build

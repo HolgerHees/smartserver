@@ -2,6 +2,8 @@ ARG VERSION
 
 FROM alpine:$VERSION
 
+ARG PORT
+
 RUN apk add --no-cache --update wireguard-tools
 # openssh
 
@@ -16,7 +18,7 @@ RUN mkdir /etc/wireguard/config
 
 VOLUME /etc/wireguard/config
 
-EXPOSE 51820/udp
+EXPOSE ${PORT}/udp
 #EXPOSE 22
 
 ENTRYPOINT [ "/etc/wireguard/util/wg-startup.sh" ]

@@ -13,7 +13,7 @@ $data = apcu_fetch( $_GET["url"] );
 if( empty($data) )
 {
 	//error_log($_GET["url"] . " 2");
-	$content = fetchUrl( $_GET["url"], $_GET["auth"] );
+	$content = fetchUrl( $_GET["url"] );
 	if( !empty( $content ) )
 	{
 		//error_log($_GET["url"] . " 3");
@@ -30,7 +30,7 @@ else
 	if( empty($_GET['age']) || time() - $time > $_GET['age'] / 1000 )
 	{
 		//error_log($_GET["url"] . " 5");
-		$_content = fetchUrl( $_GET["url"], $_GET["auth"] );
+		$_content = fetchUrl( $_GET["url"] );
 		if( !empty( $_content ) )
 		{
 			//error_log($_GET["url"] . " 6");
@@ -70,12 +70,12 @@ else
     http_response_code(404);
 }
 
-function fetchUrl( $url, $auth )
+function fetchUrl( $url )
 {
 	$c = curl_init();
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-	$headers = array( 'Authorization: Basic '. $auth );
-	curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
+	#$headers = array( 'Authorization: Basic '. $auth );
+	#curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
 	curl_setopt($c, CURLOPT_URL, $url );
 	$content = curl_exec($c);
 	curl_close($c);
