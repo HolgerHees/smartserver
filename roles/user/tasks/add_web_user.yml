@@ -3,13 +3,14 @@
   register: group_check
   changed_when: group_check.stdout == ""
   failed_when: no
+  when: "group is defined"
     
 - name: add '{{group}}' group to apache
   lineinfile:
     path: "{{htdocs_path}}.htgroups"
     regexp: '^{{group}}[\s:]{1}.*'
     line: '{{group}}:'
-  when: group_check.stdout == ""
+  when: "group is defined and group_check.stdout == ''"
 
 - name: add user "{{username}}" to apache .htpasswd
   htpasswd:
