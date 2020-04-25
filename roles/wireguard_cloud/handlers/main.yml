@@ -1,0 +1,8 @@
+- name: restart wireguard_cloud
+  systemd:
+    name: wireguard_cloud
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart wireguard_cloud"
