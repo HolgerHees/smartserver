@@ -4,6 +4,11 @@
   become: yes
   become_user: root
   tasks:
+    # load shared variables
+    - name: load shared vars
+      include_vars: "{{playbook_dir}}/../config/shared.yml"
+      tags: always
+  
     - name: set config path
       set_fact:
         config_path: "{{playbook_dir}}/../config/{{inventory_hostname}}/"
@@ -63,4 +68,10 @@
         src: "/etc/openvpn/cloud_shared.key"
         dest: "{{config_path}}vault_backup/openvpn/cloud_shared.key"
       failed_when: false
+      tags: [vault_certificates]
+
+    - name: backup wireguard mobile key
+      copy:
+        src: "{{global_etc}}/wireguard_mobile/keys/"
+        dest: "{{config_path}}vault_backup/wireguard_mobile/"
       tags: [vault_certificates]

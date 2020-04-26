@@ -1,0 +1,8 @@
+- name: restart wireguard_mobile
+  systemd:
+    name: wireguard_mobile
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart wireguard_mobile"

@@ -4,7 +4,7 @@
     regexp: '^{{item.field}} '
     line: '{{item.field}} {{item.value}}'
   with_items:
-    - { field: 'AllowUsers', value: "{{ '' if is_production else '*@10.0.2.2 '}}*@{{server_network}}/24 *@{{cloud_net1_network}}/24 *@{{cloud_net2_network}}/24 *@{{mobile_vpn_network}}/24 vpn" }
+    - { field: 'AllowUsers', value: "{{ '' if is_production else '*@10.0.2.2 '}}*@{{server_network}}/24 *@{{docker_hostaccess_network}}/24 *@{{mobile_vpn_network}}/24" }
   notify: "restart sshd"
 
 # ***** FINALIZE *****

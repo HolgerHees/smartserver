@@ -5,49 +5,64 @@
   
 - name: prepare config folder
   file:
-    path: "{{global_etc}}wireguard_roadwarrior"
+    path: "{{item}}"
     state: directory
     owner: "root"
     group: "root"
-    mode: 750
-
+    mode: 700
+  with_items:
+    - "{{global_etc}}wireguard_mobile"
+    - "{{global_etc}}wireguard_mobile/keys"
+    - "{{global_etc}}wireguard_mobile/clients"
+    
+- name: copy keys => is_production
+  copy:
+    src: "{{item}}"
+    dest: "{{global_etc}}wireguard_mobile/keys/{{item|basename}}"
+    decrypt: yes
+    owner: root
+    group: root
+    mode: 0600
+  with_fileglob: "{{config_path}}vault/wireguard_mobile/*"
+  when: is_production
+  
 - name: check started docker
   systemd:
     name: docker
     state: started
 
 - name: check docker image exists
-  shell: "docker images custom_wireguard_roadwarrior:{{alpine_version}}"
+  shell: "docker images custom_wireguard_mobile:{{alpine_version}}"
   register: image_exists
-  changed_when: "'custom_wireguard_roadwarrior' not in image_exists.stdout"
+  changed_when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 - name: prepare build folder
   file:
-    path: "{{global_build}}wireguard_roadwarrior/"
+    path: "{{global_build}}wireguard_mobile/"
     state: directory
     owner: root
     group: root
     mode: 0750
-  when: "'custom_wireguard_roadwarrior' not in image_exists.stdout"
+  when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 - name: copy dockerfiles
   template:
-    src: "roles/wireguard_roadwarrior/templates/container/{{item}}"
-    dest: "{{global_build}}wireguard_roadwarrior/{{item}}"
+    src: "roles/wireguard_mobile/templates/container/{{item}}"
+    dest: "{{global_build}}wireguard_mobile/{{item}}"
     owner: root
     group: root
   with_items:
     - Dockerfile
     - wg-startup.sh
-  when: "'custom_wireguard_roadwarrior' not in image_exists.stdout"
+  when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_wireguard_roadwarrior:{{alpine_version}} {{global_build}}wireguard_roadwarrior/ --build-arg VERSION={{alpine_version}} --build-arg PORT=51820"
+  shell: "docker build -t custom_wireguard_mobile:{{alpine_version}} {{global_build}}wireguard_mobile/ --build-arg VERSION={{alpine_version}} --build-arg PORT=51820"
   async: 600
   poll: 0
   register: docker_build
-  when: "'custom_wireguard_roadwarrior' not in image_exists.stdout"
+  when: "'custom_wireguard_mobile' not in image_exists.stdout"
 
 - name: wait for docker image => image does not exists
   async_status: jid={{ docker_build.ansible_job_id }}
@@ -55,12 +70,12 @@
   until: job_result.finished
   retries: 10
   delay: 60
-  when: "'custom_wireguard_roadwarrior' not in image_exists.stdout"
+  when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 - name: create docker container
   docker_container:
-    name: wireguard_roadwarrior
-    image: "custom_wireguard_roadwarrior:{{alpine_version}}"
+    name: wireguard_mobile
+    image: "custom_wireguard_mobile:{{alpine_version}}"
     state: present
 #    network_mode: "none"
 #    recreate: true
@@ -71,10 +86,10 @@
       VPN_NETWORK: "{{mobile_vpn_network}}"
       ENDPOINT: "{{public_server_domain}}"
       EXPOSED_PORT: "51820"
-      PUBLIC_PORT: "{{vault_vpn_roadwarrior_public_port}}"
+      PUBLIC_PORT: "{{vault_wireguard_mobile_public_port}}"
     log_driver: journald
     log_options:
-      tag: custom_wireguard_roadwarrior
+      tag: custom_wireguard_mobile
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
@@ -82,24 +97,24 @@
       - name: "hostaccess"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}wireguard_roadwarrior:/etc/wireguard/config:z'
+      - '{{global_etc}}wireguard_mobile:/etc/wireguard/config:z'
     ports:
-     - "{{vault_vpn_roadwarrior_internal_port}}:51820/udp"
-  notify: "restart wireguard_roadwarrior"
+     - "{{vault_wireguard_mobile_internal_port}}:51820/udp"
+  notify: "restart wireguard_mobile"
 
 #- name: clean old docker images => image does not exists
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "'custom_wireguard_roadwarrior' not in image_exists.stdout"
+#  when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 # ***** FINALIZE *****
 - name: create systemd service
   vars:
-    container_name: "wireguard_roadwarrior"
+    container_name: "wireguard_mobile"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier
   vars:
-    name: "wireguard_roadwarrior"
+    name: "wireguard_mobile"
     type: "docker"
     url: "https://alpinelinux.org/"
     config: {
@@ -110,6 +125,6 @@
 
 - name: trigger service check handler
   vars:
-    notify: "restart wireguard_roadwarrior"
-    service: "wireguard_roadwarrior.service"
+    notify: "restart wireguard_mobile"
+    service: "wireguard_mobile.service"
   import_tasks: roles/base/tasks/service_check.yml

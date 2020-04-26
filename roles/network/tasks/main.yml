@@ -75,12 +75,3 @@
 #    gw4: "{{server_gateway}}"
 #    dns4: "{{dns1}} {{dns2}}"
 #    state: present
-
-#- name: set network intferface eth0:1
-#  nmcli:
-#    conn_name: eth0:1
-#    ifname: eth0
-#    type: ethernet
-#    ip4: "{{cloud_net1_server_ip}}/24"
-#    gw4: "{{cloud_net1_gateway}}"
-#    state: present

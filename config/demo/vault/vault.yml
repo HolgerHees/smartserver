@@ -49,8 +49,8 @@ vault_grafana_app_username: "admin"
 vault_grafana_app_password: "admin"
 
 # used in generic optional role 'wireguard_roadwarrior'
-vault_vpn_roadwarrior_internal_port: "51820" # the port, used on your server
-vault_vpn_roadwarrior_public_port: "51820" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+vault_wireguard_mobile_internal_port: "51820" # the port, used on your server
+vault_wireguard_mobile_public_port: "51820" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
 
 # used in generic optional role 'openvpn_mobile'
 vault_vpn_mobile_pass: "default123"

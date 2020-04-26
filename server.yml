@@ -73,7 +73,7 @@
     - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
 
     - { import_role: { name: wireguard }, tags: [ 'wireguard' ] }                                # vpn kernel module installation
-    - { import_role: { name: wireguard_roadwarrior }, tags: [ 'wireguard' ] }                    # vpn configuration (roadwarrior access)                            [docker,user:root]
+    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard' ] }                         # vpn configuration (roadwarrior access)                            [docker,user:root]
 
     - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
