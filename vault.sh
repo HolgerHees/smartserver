@@ -41,12 +41,12 @@ if [ "${ACTION}" = "encrypt" ]; then
   grep -rilL ANSIBLE_VAULT ./config/*/vault/ | grep -v demo | while read N 
   do 
     echo -n "$N • "
-    ansible-vault --vault-password-file $vaultpipe encrypt $N
+    ansible-vault encrypt --vault-password-file $vaultpipe $N
   done
 elif [ "${ACTION}" = "decrypt" ]; then
   grep -ril ANSIBLE_VAULT ./config/*/vault/ | grep -v demo | while read N 
   do 
     echo -n "$N • "
-    ansible-vault --vault-password-file $vaultpipe decrypt $N
+    ansible-vault decrypt --vault-password-file $vaultpipe $N
   done
 fi
