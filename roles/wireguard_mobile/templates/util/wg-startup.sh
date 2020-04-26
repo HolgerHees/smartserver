@@ -1,19 +1,20 @@
 #!/bin/sh
-cd /etc/wireguard/config
+cd /etc/wireguard
 
+VPN_NETWORK="{{mobile_vpn_network}}"
 SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
 
 {% for username in vault_usernames %}
 CLIENT_{{username}}_ADDRESS="${VPN_NETWORK%.*}.{{loop.index+10}}"
 {% endfor %}
     
-if [ ! -f ./keys/server_privatekey || ! -f ./keys/server_publickey ]
+if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
 then
     wg genkey | tee ./keys/server_privatekey | wg pubkey > ./keys/server_publickey
 fi
 
 {% for username in vault_usernames %}
-if [ ! -f ./keys/client_{{username}}_privatekey || ! -f ./keys/client_{{username}}_publickey ]
+if [ ! -f ./keys/client_{{username}}_privatekey ] || [ ! -f ./keys/client_{{username}}_publickey ]
 then
     wg genkey | tee ./keys/client_{{username}}_privatekey | wg pubkey > ./keys/client_{{username}}_publickey
 fi
@@ -27,8 +28,7 @@ then
     echo -n "Address = " >> wg0.conf
     echo -n $SERVER_ADDRESS >> wg0.conf
     echo "/24" >> wg0.conf
-    echo -n "ListenPort = " >> wg0.conf
-    echo $EXPOSED_PORT >> wg0.conf
+    echo "ListenPort = {{exposed_port}}" >> wg0.conf
     echo "SaveConfig = true" >> wg0.conf
 
 {% for username in vault_usernames %}
@@ -53,28 +53,21 @@ then
     echo "/24" >> ./clients/wg_{{username}}.conf
     echo -n "PrivateKey = " >> ./clients/wg_{{username}}.conf
     cat ./keys/client_{{username}}_privatekey >> ./clients/wg_{{username}}.conf
-    echo -n "ListenPort = " >> ./clients/wg_{{username}}.conf
-    echo $PUBLIC_PORT >> ./clients/wg_{{username}}.conf
-    echo -n "DNS = " >> ./clients/wg_{{username}}.conf
-    echo $DNS_SERVER >> ./clients/wg_{{username}}.conf
+    echo "ListenPort = {{vault_wireguard_mobile_public_port}}" >> ./clients/wg_{{username}}.conf
+    echo "DNS = {{server_ip}}" >> ./clients/wg_{{username}}.conf
     
     echo "[Peer]" >> ./clients/wg_{{username}}.conf
     echo -n "PublicKey = " >> ./clients/wg_{{username}}.conf
     cat ./keys/server_publickey >> ./clients/wg_{{username}}.conf
-    echo -n "AllowedIPs = " >> ./clients/wg_{{username}}.conf
-    echo -n $SERVER_NETWORK >> ./clients/wg_{{username}}.conf
-    echo "/24" >> ./clients/wg_{{username}}.conf
-    echo -n "Endpoint = " >> ./clients/wg_{{username}}.conf
-    echo -n $ENDPOINT >> ./clients/wg_{{username}}.conf
-    echo -n ":" >> ./clients/wg_{{username}}.conf
-    echo $PUBLIC_PORT >> ./clients/wg_{{username}}.conf
+    echo "AllowedIPs = {{server_network}}/24" >> ./clients/wg_{{username}}.conf
+    echo "Endpoint = {{public_server_domain}}:{{vault_wireguard_mobile_public_port}}" >> ./clients/wg_{{username}}.conf
     #echo "PersistentKeepalive = 25" >> ./clients/wg_{{username}}.conf
 
     chmod 600 ./clients/wg_{{username}}.conf
 fi
 {% endfor %}
 
-wg-quick up /etc/wireguard/config/wg0.conf
+wg-quick up /etc/wireguard/wg0.conf
 
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 iptables -A FORWARD -i wg0 -j ACCEPT

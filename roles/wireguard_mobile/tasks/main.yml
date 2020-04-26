@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
     alpine_version: "3.11.6"
+    exposed_port: "51820"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare config folder
@@ -12,6 +13,7 @@
     mode: 700
   with_items:
     - "{{global_etc}}wireguard_mobile"
+    - "{{global_etc}}wireguard_mobile/util"
     - "{{global_etc}}wireguard_mobile/keys"
     - "{{global_etc}}wireguard_mobile/clients"
     
@@ -26,6 +28,17 @@
   with_fileglob: "{{config_path}}vault/wireguard_mobile/*"
   when: is_production
   
+- name: copy util
+  template:
+    src: "roles/wireguard_mobile/templates/util/{{item}}"
+    dest: "{{global_etc}}wireguard_mobile/util/{{item}}"
+    owner: root
+    group: root
+    mode: 0700
+  with_items:
+    - wg-startup.sh
+  notify: "restart wireguard_mobile"
+
 - name: check started docker
   systemd:
     name: docker
@@ -51,14 +64,14 @@
     dest: "{{global_build}}wireguard_mobile/{{item}}"
     owner: root
     group: root
+    mode: 0750
   with_items:
     - Dockerfile
-    - wg-startup.sh
   when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_wireguard_mobile:{{alpine_version}} {{global_build}}wireguard_mobile/ --build-arg VERSION={{alpine_version}} --build-arg PORT=51820"
+  shell: "docker build -t custom_wireguard_mobile:{{alpine_version}} {{global_build}}wireguard_mobile/"
   async: 600
   poll: 0
   register: docker_build
@@ -81,12 +94,6 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-      DNS_SERVER: "{{server_ip}}"
-      SERVER_NETWORK: "{{server_network}}"
-      VPN_NETWORK: "{{mobile_vpn_network}}"
-      ENDPOINT: "{{public_server_domain}}"
-      EXPOSED_PORT: "51820"
-      PUBLIC_PORT: "{{vault_wireguard_mobile_public_port}}"
     log_driver: journald
     log_options:
       tag: custom_wireguard_mobile
@@ -97,9 +104,9 @@
       - name: "hostaccess"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}wireguard_mobile:/etc/wireguard/config:z'
+      - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
     ports:
-     - "{{vault_wireguard_mobile_internal_port}}:51820/udp"
+     - "{{vault_wireguard_mobile_internal_port}}:{{exposed_port}}/udp"
   notify: "restart wireguard_mobile"
 
 #- name: clean old docker images => image does not exists

@@ -1,15 +1,30 @@
 - name: set version
   set_fact:
     alpine_version: "3.11.6"
+    exposed_port: "51820"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare config folder
   file:
-    path: "{{global_etc}}wireguard_cloud"
+    path: "{{item}}"
     state: directory
     owner: "root"
     group: "root"
-    mode: 750
+    mode: 700
+  with_items:
+    - "{{global_etc}}wireguard_cloud"
+    - "{{global_etc}}wireguard_cloud/util"
+
+- name: copy util
+  template:
+    src: "roles/wireguard_cloud/templates/util/{{item}}"
+    dest: "{{global_etc}}wireguard_cloud/util/{{item}}"
+    owner: root
+    group: root
+    mode: 0700
+  with_items:
+    - wg-startup.sh
+  notify: "restart wireguard_cloud"
 
 - name: check started docker
   systemd:
@@ -36,14 +51,14 @@
     dest: "{{global_build}}wireguard_cloud/{{item}}"
     owner: root
     group: root
+    mode: 0750
   with_items:
     - Dockerfile
-    - wg-startup.sh
   when: "'custom_wireguard_cloud' not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_wireguard_cloud:{{alpine_version}} {{global_build}}wireguard_cloud/ --build-arg VERSION={{alpine_version}} --build-arg PORT=51820"
+  shell: "docker build -t custom_wireguard_cloud:{{alpine_version}} {{global_build}}wireguard_cloud/"
   async: 600
   poll: 0
   register: docker_build
@@ -66,7 +81,6 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-      EXPOSED_PORT: "51820"
     log_driver: journald
     log_options:
       tag: custom_wireguard_cloud
@@ -74,9 +88,9 @@
       - NET_ADMIN
       - SYS_MODULE
     volumes:
-      - '{{global_etc}}wireguard_cloud:/etc/wireguard/config:z'
+      - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
     ports:
-     - "51838:51820/udp"
+     - "51838:{{exposed_port}}/udp"
   notify: "restart wireguard_cloud"
 
 #- name: clean old docker images => image does not exists
