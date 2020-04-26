@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    nextcloud_version: '18.0.2'
+    nextcloud_version: '18.0.4'
   tags: [ 'update_notifier_configs' ]
   
 # ***** PREPARE FOLDER *****

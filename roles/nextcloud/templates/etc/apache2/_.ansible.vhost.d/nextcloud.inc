@@ -32,6 +32,10 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
 #    Require all granted
 #</LocationMatch>
 
+<LocationMatch "^/index.php/apps/onlyoffice/.+">
+    Require all granted
+</LocationMatch>
+
 Header always unset X-Frame-Options
 Header always edit Content-Security-Policy "frame-ancestors 'self'" "frame-ancestors {{server_domain}} *.{{server_domain}}"
 
