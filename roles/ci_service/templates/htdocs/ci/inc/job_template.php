@@ -9,7 +9,8 @@ class JobTemplate
       '0;33' => "<span style='color:yellow'>",
       '0;35' => "<span style='color:magenta'>",
       '0;36' => "<span style='color:cyan'>",
-      '1;30' => "<span style='color:gray'>"
+      '1;30' => "<span style='color:gray'>",
+      '1;35' => "<span style='color:plum'>"
     );
     
     function getLogLine($line)
