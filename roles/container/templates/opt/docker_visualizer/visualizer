@@ -2,6 +2,7 @@
 
 import subprocess
 import json
+import socket
 
 class Network:
     def __init__(self,id,name,drive,scope):
@@ -9,7 +10,7 @@ class Network:
         self.name = name
         self.drive = drive
         self.scope = scope
-        self.client_r = {}
+        self.connection_r = {}
         self.subnet = ""
         self.gateway = ""
         
@@ -17,12 +18,23 @@ class Network:
         self.subnet = subnet
         self.gateway = gateway
 
-    def addContainer(self,container,ip):
-        self.client_r[ip] = container
+    def addConnection(self,connection):
+        key = connection.ip if connection.ip != "" else connection.container.name
+        self.connection_r[key] = connection
 
 class Container:
     def __init__(self,name):
         self.name = name
+        self.exposedPorts = []
+        
+    def addPort(self,hostIp,hostPort,exposedPort):
+        self.exposedPorts.append({"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort})
+
+class Connection:
+    def __init__(self,container,ip):
+        self.container = container
+        self.ip = ip;
+      
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
@@ -47,21 +59,61 @@ for line in lines[1:-1]:
     for container_id in network_json['Containers']:
       
         name = network_json['Containers'][container_id]['Name']
+
         if name in container_r:
             container = container_r[name]
         else:
             container = Container(name)
-            
-        network.addContainer(container,network_json['Containers'][container_id]['IPv4Address'])
+            container_r[name] = container
+
+            container_result = execCommand("docker inspect {}".format(name))
+            container_json = json.loads(container_result.stdout.decode("utf-8"))[0]
+
+            portBindings = container_json['HostConfig']['PortBindings']
+            if portBindings != None:
+                for exposedPort in portBindings:
+                  
+                    hostIp = container_json['HostConfig']['PortBindings'][exposedPort][0]['HostIp']
+                    hostPort = container_json['HostConfig']['PortBindings'][exposedPort][0]['HostPort']
+                  
+                    container.addPort(hostIp,hostPort,exposedPort)
+                                   
+        ip = network_json['Containers'][container_id]['IPv4Address']
+        connection = Connection(container,ip)
+        
+        network.addConnection(connection)
+
+print("Container")
+
+for container in container_r:
+    container = container_r[container]
+    
+    exposedPorts = []
+    for port in container.exposedPorts:
+        exposedPorts.append("{}:{}:{}".format(port["hostIp"],port["hostPort"],port["exposedPort"]))
+    
+    portStr = ", ".join(exposedPorts)
+    portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
+    
+    print("  {} {}".format(container.name.ljust(31), portStr ) )
+
+print("")
 
 for network in network_r:
     network = network_r[network]
 
     print("Network:     {} {} {}".format(network.name.ljust(20),network.subnet,network.gateway))
 
-    for container_ip in network.client_r:
-        container = network.client_r[container_ip]
+    ip_r = list(network.connection_r.keys())
+    ip_r.sort(key=lambda item: socket.inet_aton(item.split("/")[0]) if "." in item else item, reverse=False)
 
-        print("  Container: {} {}".format(container.name.ljust(20),container_ip))
-
+    for ip in ip_r:
+        connection = network.connection_r[ip]
+        container = connection.container
+        
+        name = container.name.ljust(20)
+        ip_str = (ip if ip != container.name else "").ljust(30)
+        
+        print("  Container: {} {}".format(name, ip_str ) )
+        
     print("")
