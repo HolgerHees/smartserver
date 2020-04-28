@@ -75,3 +75,10 @@
         src: "{{global_etc}}/wireguard_mobile/keys/"
         dest: "{{config_path}}vault_backup/wireguard_mobile/"
       tags: [vault_certificates]
+
+    #- name: backup wireguard mobile key
+    #  copy:
+    #    src: "{{global_etc}}/wireguard_mobile/keys/"
+    #    dest: "{{config_path}}vault_backup/{{item | regex_replace() }}"
+    #  with_fileglob: "{{global_etc}}wireguard_*/keys"
+    #  tags: [vault_certificates]

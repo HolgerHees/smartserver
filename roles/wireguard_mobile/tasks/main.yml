@@ -1,7 +1,6 @@
 - name: set version
   set_fact:
     alpine_version: "3.11.6"
-    exposed_port: "51820"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare config folder
@@ -90,7 +89,7 @@
     name: wireguard_mobile
     image: "custom_wireguard_mobile:{{alpine_version}}"
     state: present
-#    network_mode: "none"
+    network_mode: "host"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
@@ -100,13 +99,8 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
-    networks:
-      - name: "hostaccess"
-    networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
-    ports:
-     - "{{vault_wireguard_mobile_internal_port}}:{{exposed_port}}/udp"
   notify: "restart wireguard_mobile"
 
 #- name: clean old docker images => image does not exists

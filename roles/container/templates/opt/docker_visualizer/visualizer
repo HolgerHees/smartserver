@@ -1,0 +1,67 @@
+#!/usr/bin/python3
+
+import subprocess
+import json
+
+class Network:
+    def __init__(self,id,name,drive,scope):
+        self.id = id
+        self.name = name
+        self.drive = drive
+        self.scope = scope
+        self.client_r = {}
+        self.subnet = ""
+        self.gateway = ""
+        
+    def addDetails(self,subnet,gateway):
+        self.subnet = subnet
+        self.gateway = gateway
+
+    def addContainer(self,container,ip):
+        self.client_r[ip] = container
+
+class Container:
+    def __init__(self,name):
+        self.name = name
+
+def execCommand(cmd, cwd=None ):
+    return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
+  
+container_r = {}
+network_r = {}
+result = execCommand("docker network list")
+lines = result.stdout.decode("utf-8").split("\n")
+for line in lines[1:-1]:
+    columns = line.split()
+    network = Network(columns[0],columns[1],columns[2],columns[3])
+    network_r[network.name]=network
+
+    network_result = execCommand("docker network inspect {}".format(network.name))
+    network_json = json.loads(network_result.stdout.decode("utf-8"))[0]
+    
+    if len(network_json['IPAM']['Config']) > 0:
+        subnet = network_json['IPAM']['Config'][0]['Subnet']
+        gateway = network_json['IPAM']['Config'][0]['Gateway']
+        network.addDetails(subnet,gateway)
+    
+    for container_id in network_json['Containers']:
+      
+        name = network_json['Containers'][container_id]['Name']
+        if name in container_r:
+            container = container_r[name]
+        else:
+            container = Container(name)
+            
+        network.addContainer(container,network_json['Containers'][container_id]['IPv4Address'])
+
+for network in network_r:
+    network = network_r[network]
+
+    print("Network:     {} {} {}".format(network.name.ljust(20),network.subnet,network.gateway))
+
+    for container_ip in network.client_r:
+        container = network.client_r[container_ip]
+
+        print("  Container: {} {}".format(container.name.ljust(20),container_ip))
+
+    print("")

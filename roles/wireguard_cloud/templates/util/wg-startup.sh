@@ -1,32 +1,42 @@
 #!/bin/sh
 cd /etc/wireguard
 
-VPN_NETWORK="{{mobile_vpn_network}}"
-SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
-
 if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
 then
     wg genkey | tee ./keys/server_privatekey | wg pubkey > ./keys/server_publickey
 fi
 
-if [ ! -f wg0.conf ]
-then
-    echo "[Interface]" > wg0.conf
-    echo -n "PrivateKey = " >> wg0.conf
-    cat ./keys/server_privatekey >> wg0.conf
-    echo -n "Address = " >> wg0.conf
-    echo -n $SERVER_ADDRESS >> wg0.conf
-    echo "/24" >> wg0.conf
-    echo "ListenPort = {{exposed_port}}" >> wg0.conf
-    echo "SaveConfig = true" >> wg0.conf
+PRIVATE_KEY=$(cat ./keys/server_privatekey)
 
+NEW_CONFIG="[Interface]
+PrivateKey = ${PRIVATE_KEY}
+Address = {{cloud_network.interface.address}}
+ListenPort = {{cloud_network.interface.listenPort}}
+SaveConfig = true
+
+{% for peer_network in vault_cloud_vpn_networks %}
+{% if peer_network != main_network and vault_cloud_vpn_networks[peer_network].peer.publicKey != '' %}
+[Peer]
+PublicKey = {{vault_cloud_vpn_networks[peer_network].peer.publicKey}}
+AllowedIPs = {{vault_cloud_vpn_networks[peer_network].peer.allowedIPs}}
+Endpoint = {{vault_cloud_vpn_networks[peer_network].peer.endpoint}}
+{% endif %}
+{% endfor %}"
+
+#CONFIG="${CONFIG/PRIVATE_KEY/$PRIVATE_KEY}"
+
+OLD_CONFIG=$(cat wg0.conf)
+
+if [ ! -f wg0.conf ] || [ "$OLD_CONFIG" != "$NEW_CONFIG" ]
+then
+    echo "$NEW_CONFIG" > wg0.conf
     chmod 600 wg0.conf
 fi
 
 wg-quick up /etc/wireguard/wg0.conf
 
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-iptables -A FORWARD -i wg0 -j ACCEPT
+#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+#iptables -A FORWARD -i wg0 -j ACCEPT
 
 trap "echo TRAPed signal" HUP INT QUIT TERM
 

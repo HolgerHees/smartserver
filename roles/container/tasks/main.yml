@@ -86,6 +86,7 @@
   with_items:
     - "/etc/docker/"
     - "{{global_lib}}docker"
+    - "/opt/docker_visualizer"
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:
@@ -114,6 +115,14 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: copy docker_visualizer
+  copy:
+    src: "templates/opt/docker_visualizer/visualizer"
+    dest: "/opt/docker_visualizer/visualizer"
+    owner: root
+    group: root
+    mode: 0700
 
 #- name: copy fluentd config => is_suse
 #  vars:

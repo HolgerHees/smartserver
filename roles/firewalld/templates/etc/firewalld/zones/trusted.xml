@@ -4,7 +4,9 @@
   <description>All network connections are accepted.</description>
   <source address="{{server_network}}/24"/>
   <source address="{{docker_hostaccess_network}}/24"/>
-{% if mobile_vpn_network is defined %}  <source address="{{mobile_vpn_network}}/24"/>
+{% if vpn_mobile_network is defined %}  <source address="{{vpn_mobile_network}}/24"/>
+{% endif %}
+{% if openvpn_mobile_network is defined %}  <source address="{{openvpn_mobile_network}}/24"/>
 {% endif %}
 {% if not is_production %}  <source address="10.0.2.2"/>
 {% endif %}

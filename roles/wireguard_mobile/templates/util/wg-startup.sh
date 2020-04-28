@@ -1,7 +1,7 @@
 #!/bin/sh
 cd /etc/wireguard
 
-VPN_NETWORK="{{mobile_vpn_network}}"
+VPN_NETWORK="{{vpn_mobile_network}}"
 SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
 
 {% for username in vault_usernames %}
@@ -28,7 +28,7 @@ then
     echo -n "Address = " >> wg0.conf
     echo -n $SERVER_ADDRESS >> wg0.conf
     echo "/24" >> wg0.conf
-    echo "ListenPort = {{exposed_port}}" >> wg0.conf
+    echo "ListenPort = {{vault_wireguard_mobile_internal_port}}" >> wg0.conf
     echo "SaveConfig = true" >> wg0.conf
 
 {% for username in vault_usernames %}
@@ -67,10 +67,12 @@ then
 fi
 {% endfor %}
 
+ip link del dev wg0
+
 wg-quick up /etc/wireguard/wg0.conf
 
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-iptables -A FORWARD -i wg0 -j ACCEPT
+#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+#iptables -A FORWARD -i wg0 -j ACCEPT
 
 trap "echo TRAPed signal" HUP INT QUIT TERM
 

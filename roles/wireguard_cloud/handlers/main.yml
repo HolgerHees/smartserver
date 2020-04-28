@@ -1,6 +1,6 @@
-- name: restart wireguard_cloud
+- name: "restart wireguard_cloud"
   systemd:
-    name: wireguard_cloud
+    name: "wireguard_{{vault_cloud_vpn_networks[main_network].interface.name}}"
     state: restarted
     daemon_reload: yes
     enabled: yes

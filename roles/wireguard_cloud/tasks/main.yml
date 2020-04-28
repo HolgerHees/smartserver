@@ -1,7 +1,17 @@
 - name: set version
   set_fact:
-    alpine_version: "3.11.6"
+    cloud_network: "{{vault_cloud_vpn_networks[item]}}"
+    cloud_name: "{{vault_cloud_vpn_networks[item].interface.name}}"
+    container_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
+    image_name: "custom_wireguard_cloud"
+    dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
     exposed_port: "51820"
+  with_items: "{{vault_cloud_vpn_networks}}"
+  when: "item == main_network"
+    
+- name: set version
+  set_fact:
+    alpine_version: "3.11.6"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare config folder
@@ -12,13 +22,14 @@
     group: "root"
     mode: 700
   with_items:
-    - "{{global_etc}}wireguard_cloud"
-    - "{{global_etc}}wireguard_cloud/util"
+    - "{{global_etc}}{{dir_name}}"
+    - "{{global_etc}}{{dir_name}}/keys"
+    - "{{global_etc}}{{dir_name}}/util"
 
 - name: copy util
   template:
     src: "roles/wireguard_cloud/templates/util/{{item}}"
-    dest: "{{global_etc}}wireguard_cloud/util/{{item}}"
+    dest: "{{global_etc}}{{dir_name}}/util/{{item}}"
     owner: root
     group: root
     mode: 0700
@@ -32,37 +43,37 @@
     state: started
 
 - name: check docker image exists
-  shell: "docker images custom_wireguard_cloud:{{alpine_version}}"
+  shell: "docker images {{image_name}}:{{alpine_version}}"
   register: image_exists
-  changed_when: "'custom_wireguard_cloud' not in image_exists.stdout"
+  changed_when: "image_name not in image_exists.stdout"
   
 - name: prepare build folder
   file:
-    path: "{{global_build}}wireguard_cloud/"
+    path: "{{global_build}}{{dir_name}}/"
     state: directory
     owner: root
     group: root
     mode: 0750
-  when: "'custom_wireguard_cloud' not in image_exists.stdout"
+  when: "image_name not in image_exists.stdout"
   
 - name: copy dockerfiles
   template:
     src: "roles/wireguard_cloud/templates/container/{{item}}"
-    dest: "{{global_build}}wireguard_cloud/{{item}}"
+    dest: "{{global_build}}{{dir_name}}/{{item}}"
     owner: root
     group: root
     mode: 0750
   with_items:
     - Dockerfile
-  when: "'custom_wireguard_cloud' not in image_exists.stdout"
+  when: "image_name not in image_exists.stdout"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t custom_wireguard_cloud:{{alpine_version}} {{global_build}}wireguard_cloud/"
+  shell: "docker build -t {{image_name}}:{{alpine_version}} {{global_build}}{{dir_name}}/"
   async: 600
   poll: 0
   register: docker_build
-  when: "'custom_wireguard_cloud' not in image_exists.stdout"
+  when: "image_name not in image_exists.stdout"
 
 - name: wait for docker image => image does not exists
   async_status: jid={{ docker_build.ansible_job_id }}
@@ -70,12 +81,12 @@
   until: job_result.finished
   retries: 10
   delay: 60
-  when: "'custom_wireguard_cloud' not in image_exists.stdout"
+  when: "image_name not in image_exists.stdout"
   
 - name: create docker container
   docker_container:
-    name: wireguard_cloud
-    image: "custom_wireguard_cloud:{{alpine_version}}"
+    name: "{{container_name}}"
+    image: "{{image_name}}:{{alpine_version}}"
     state: present
 #    network_mode: "none"
 #    recreate: true
@@ -83,24 +94,24 @@
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
-      tag: custom_wireguard_cloud
+      tag: "{{container_name}}"
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
     volumes:
-      - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
+      - '{{global_etc}}{{dir_name}}:/etc/wireguard:z'
     ports:
-     - "51838:{{exposed_port}}/udp"
+     - "{{cloud_network.interface.listenPort}}:{{exposed_port}}/udp"
   notify: "restart wireguard_cloud"
 
 #- name: clean old docker images => image does not exists
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
-#  when: "'custom_wireguard_cloud' not in image_exists.stdout"
+#  when: "image_name not in image_exists.stdout"
   
 # ***** FINALIZE *****
 - name: create systemd service
   vars:
-    container_name: "wireguard_cloud"
+    image_name: "{{container_name}}"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier
@@ -113,9 +124,11 @@
       pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  when: "cloud_name == (vault_cloud_vpn_networks | first)"
 
 - name: trigger service check handler
   vars:
     notify: "restart wireguard_cloud"
-    service: "wireguard_cloud.service"
+    service: "{{container_name}}.service"
   import_tasks: roles/base/tasks/service_check.yml
+  #when: "cloud_name == (vault_cloud_vpn_networks | first)"
