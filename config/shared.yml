@@ -37,8 +37,6 @@ vpn_mobile_network:               "10.100.{{netgroup}}.0"
 docker_hostaccess_network:        "172.16.0.0"
 docker_hostaccess_gateway:        "172.16.0.1"
 
-docker_default_network:           "172.17.0.0"
-
 dns1:                             "8.8.8.8"
 dns2:                             "9.9.9.9"
 
