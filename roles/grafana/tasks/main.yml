@@ -47,6 +47,14 @@
     name: docker
     state: started
     
+- name: connect grafana with databases
+  docker_network:
+    name: grafana_databases
+    connected:
+      - influxdb
+    appends: yes
+  tags: ['influxdb']
+
 - name: create docker container
   docker_container:
     name: grafana
@@ -66,21 +74,16 @@
     log_driver: journald
     log_options:
       tag: grafana
+    networks:
+      - name: "grafana_databases"
+    networks_cli_compatible: yes
     volumes:
       - '{{global_lib}}grafana:/var/lib/grafana:z'
       - '{{global_lib}}grafana/provisioning:/etc/grafana/provisioning:z'
     ports:
      - "127.0.0.1:3000:3000"
   notify: "restart grafana"
-    
-- name: connect grafana with databases
-  docker_network:
-    name: grafana_databases
-    connected:
-      - grafana
-      - influxdb
-  tags: ['influxdb']
-  
+      
 # ***** FINALIZE *****
 - name: register webui
   vars:
