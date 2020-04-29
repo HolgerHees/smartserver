@@ -49,6 +49,14 @@
   delay: 60
   when: "'custom_kibana' not in image_exists.stdout"
   
+- name: connect elasticsearch and kibana
+  docker_network:
+    name: kibana_databases
+    connected:
+      - elasticsearch
+    appends: yes
+  tags: ['elasticsearch']
+
 - name: create docker container
   docker_container:
     name: kibana
@@ -63,17 +71,12 @@
     log_driver: journald
     log_options:
       tag: kibana
+    networks:
+      - name: kibana_databases
+    networks_cli_compatible: yes
     ports:
       - "127.0.0.1:5601:5601"
   notify: "restart kibana"
-
-- name: connect elasticsearch and kibana
-  docker_network:
-    name: kibana_databases
-    connected:
-      - kibana
-      - elasticsearch
-  tags: ['elasticsearch']
 
 #- name: create docker container
 #  docker_container:
