@@ -11,7 +11,7 @@ PRIVATE_KEY=$(cat ./keys/server_privatekey)
 NEW_CONFIG="[Interface]
 PrivateKey = ${PRIVATE_KEY}
 Address = {{cloud_network.interface.address}}
-ListenPort = {{cloud_network.interface.listenPort}}
+ListenPort = {{exposed_port}}
 SaveConfig = true
 
 {% for peer_network in vault_cloud_vpn_networks %}
@@ -20,6 +20,18 @@ SaveConfig = true
 PublicKey = {{vault_cloud_vpn_networks[peer_network].peer.publicKey}}
 AllowedIPs = {{vault_cloud_vpn_networks[peer_network].peer.allowedIPs}}
 Endpoint = {{vault_cloud_vpn_networks[peer_network].peer.endpoint}}
+{% endif %}
+{% endfor %}"
+
+NEW_EXPORTS="{% for peer_network in vault_cloud_vpn_networks %}
+{% if peer_network != main_network %}
+{{raid_path}}{{data_dir_name}}/local/{{peer_network}} {{vault_cloud_vpn_networks[peer_network].peer.allowedIPs}}(rw,async)
+{% endif %}
+{% endfor %}"
+
+NEW_MOUNTS="{% for peer_network in vault_cloud_vpn_networks %}
+{% if peer_network != main_network %}
+{{vault_cloud_vpn_networks[peer_network].peer.nfsServer}}:{{raid_path}}{{data_dir_name}}/local/{{peer_network}} {{raid_path}}{{data_dir_name}}/remote/{{peer_network}} nfs rw 0 0
 {% endif %}
 {% endfor %}"
 

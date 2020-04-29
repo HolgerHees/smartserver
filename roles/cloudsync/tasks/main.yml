@@ -48,7 +48,7 @@
     group: root
   with_items:
     - {name: 'archive', src: '{{local_backup_path}}archive'}
-    - {name: 'clouddata', src: '{{nextcloud_data_path}}'}
+    - {name: 'nextcloud', src: '{{nextcloud_data_path}}'}
     - {name: 'mysql', src: '{{local_backup_path}}mysql'}
     - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
     

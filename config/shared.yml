@@ -17,7 +17,7 @@ local_backup_path:                "/dataRaid/backups/"
 cloud_backup_source_path:         "/dataBackup/"
 cloud_backup_target_path:         "/mnt/dataCloud/"
 
-nextcloud_data_path:              "/dataRaid/clouddata/"
+nextcloud_data_path:              "/dataRaid/nextcloud/"
 
 samba_master:                     "{%if is_production%}yes{%else%}no{%endif%}"
 

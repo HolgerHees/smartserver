@@ -1,10 +1,13 @@
 - name: set version
   set_fact:
+    is_main_network: "{{main_network == (vault_cloud_vpn_networks | first)}}"
     cloud_network: "{{vault_cloud_vpn_networks[item]}}"
-    cloud_name: "{{vault_cloud_vpn_networks[item].interface.name}}"
+    dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
+    etc_dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
+    data_dir_name: "cloud{{ '' if main_network == (vault_cloud_vpn_networks | first) else '_' + item }}"
+    build_dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
     container_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
     image_name: "custom_wireguard_cloud"
-    dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
     exposed_port: "51820"
   with_items: "{{vault_cloud_vpn_networks}}"
   when: "item == main_network"
@@ -14,7 +17,7 @@
     alpine_version: "3.11.6"
   tags: [ 'update_notifier_configs' ]
   
-- name: prepare config folder
+- name: prepare needed folder
   file:
     path: "{{item}}"
     state: directory
@@ -22,14 +25,36 @@
     group: "root"
     mode: 700
   with_items:
-    - "{{global_etc}}{{dir_name}}"
-    - "{{global_etc}}{{dir_name}}/keys"
-    - "{{global_etc}}{{dir_name}}/util"
+    - "{{global_etc}}{{etc_dir_name}}"
+    - "{{global_etc}}{{etc_dir_name}}/keys"
+    - "{{global_etc}}{{etc_dir_name}}/util"
+    - "{{raid_path}}{{data_dir_name}}/local"
+    - "{{raid_path}}{{data_dir_name}}/remote"
+
+- name: prepare nfs exported folder
+  file:
+    path: "{{raid_path}}{{data_dir_name}}/local/{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 700
+  with_items: "{{vault_cloud_vpn_networks}}"
+  when: "item != main_network"
+
+- name: prepare nfs mount points
+  file:
+    path: "{{raid_path}}{{data_dir_name}}/remote/{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 700
+  with_items: "{{vault_cloud_vpn_networks}}"
+  when: "item != main_network"
 
 - name: copy util
   template:
     src: "roles/wireguard_cloud/templates/util/{{item}}"
-    dest: "{{global_etc}}{{dir_name}}/util/{{item}}"
+    dest: "{{global_etc}}{{etc_dir_name}}/util/{{item}}"
     owner: root
     group: root
     mode: 0700
@@ -49,7 +74,7 @@
   
 - name: prepare build folder
   file:
-    path: "{{global_build}}{{dir_name}}/"
+    path: "{{global_build}}{{build_dir_name}}/"
     state: directory
     owner: root
     group: root
@@ -59,7 +84,7 @@
 - name: copy dockerfiles
   template:
     src: "roles/wireguard_cloud/templates/container/{{item}}"
-    dest: "{{global_build}}{{dir_name}}/{{item}}"
+    dest: "{{global_build}}{{build_dir_name}}/{{item}}"
     owner: root
     group: root
     mode: 0750
@@ -69,7 +94,7 @@
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build -t {{image_name}}:{{alpine_version}} {{global_build}}{{dir_name}}/"
+  shell: "docker build -t {{image_name}}:{{alpine_version}} {{global_build}}{{build_dir_name}}/"
   async: 600
   poll: 0
   register: docker_build
@@ -83,6 +108,11 @@
   delay: 60
   when: "image_name not in image_exists.stdout"
   
+- name: connect cloud container
+  docker_network:
+    name: cloud
+    appends: yes
+
 - name: create docker container
   docker_container:
     name: "{{container_name}}"
@@ -98,8 +128,13 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
+    networks:
+      - name: "cloud"
+    networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}{{dir_name}}:/etc/wireguard:z'
+      - '{{global_etc}}{{etc_dir_name}}:/etc/wireguard:z'
+      - '{{raid_path}}{{data_dir_name}}/local:{{raid_path}}{{data_dir_name}}/local:z'
+      - '{{raid_path}}{{data_dir_name}}/remote:{{raid_path}}{{data_dir_name}}/remote:z,shared'
     ports:
      - "{{cloud_network.interface.listenPort}}:{{exposed_port}}/udp"
   notify: "restart wireguard_cloud"
@@ -124,11 +159,11 @@
       pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
-  when: "cloud_name == (vault_cloud_vpn_networks | first)"
+  when: "is_main_network"
 
 - name: trigger service check handler
   vars:
     notify: "restart wireguard_cloud"
     service: "{{container_name}}.service"
   import_tasks: roles/base/tasks/service_check.yml
-  #when: "cloud_name == (vault_cloud_vpn_networks | first)"
+  #when: "is_main_network"
