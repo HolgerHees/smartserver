@@ -1,6 +1,6 @@
 FROM alpine:{{alpine_version}}
 
-RUN apk add --no-cache --update wireguard-tools nfs-utils
+RUN apk add --no-cache --update wireguard-tools nfs-utils openrc
 
 VOLUME /etc/wireguard
 
