@@ -58,7 +58,7 @@ stop()
 
     wg-quick down wg0
   
-    echo "done."
+    echo "done"
     exit
 }
 

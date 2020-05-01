@@ -59,8 +59,9 @@ initFstab()
 
 stop()
 {
-    echo "SIGTERM caught, terminating NFS process(es) and shutting down wireguard interfaces..."
+    echo "SIGTERM caught, shutting down..."
 
+    echo "terminating NFS process(es)"
     /usr/sbin/exportfs -uav
     /usr/sbin/rpc.nfsd 0
     pid1=`pidof rpc.nfsd`
@@ -69,9 +70,10 @@ stop()
     pid3=`pidof rpcbind`
     kill -TERM $pid1 $pid2 $pid3 > /dev/null 2>&1
 
+    echo "shutting down wireguard interface"
     wg-quick down wg0
 
-    echo "done."
+    echo "done"
     exit
 }
 
@@ -79,12 +81,13 @@ start()
 {
     ip link del dev wg0 > /dev/null 2>&1
 
-    wg-quick up ./wg0.conf
-    
-    echo "Exports:"
+    echo "exported folder"
     cat /etc/exports
 
-    echo "Starting rpcbind..."
+    echo "setting up wireguard interface"
+    wg-quick up ./wg0.conf
+    
+    echo "starting rpcbind"
     /sbin/rpcbind -w
     #echo "Displaying rpcbind status..."
     #/sbin/rpcinfo
@@ -94,20 +97,20 @@ start()
     # /usr/sbin/rpc.gssd -v
     # /usr/sbin/rpc.statd
 
-    echo "Starting NFS in the background..."
+    echo "starting nfs"
     /usr/sbin/rpc.nfsd --debug 8 --no-udp --no-nfs-version 2 --no-nfs-version 3
     
-    echo "Exporting File System..."
+    echo "starting exportfs"
     /usr/sbin/exportfs
     
-    echo "Starting Mountd in the background..."These
+    echo "starting mountd"
     /usr/sbin/rpc.mountd --debug all --no-udp --no-nfs-version 2 --no-nfs-version 3
     # --exports-file /etc/exports
 
     # check if nfc is runnung
     pid=`pidof rpc.mountd`
     if [ -z "$pid" ]; then
-      echo "Startup of NFS failed, sleeping for 2s, then retrying..."
+      echo "startup of nfs failed"
       exit 1
     fi
 }
