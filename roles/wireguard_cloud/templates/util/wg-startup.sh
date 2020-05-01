@@ -86,7 +86,7 @@ start()
 
     echo "Starting rpcbind..."
     /sbin/rpcbind -w
-    echo "Displaying rpcbind status..."
+    #echo "Displaying rpcbind status..."
     #/sbin/rpcinfo
 
     # Only required if v3 will be used
