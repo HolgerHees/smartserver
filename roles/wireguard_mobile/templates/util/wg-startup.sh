@@ -1,5 +1,6 @@
 #!/bin/sh
-cd /etc/wireguard
+BASE_PATH="/etc/wireguard"
+cd $BASE_PATH
 
 VPN_NETWORK="{{vpn_mobile_network}}"
 SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
@@ -8,20 +9,10 @@ SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
 CLIENT_{{username}}_ADDRESS="${VPN_NETWORK%.*}.{{loop.index+10}}"
 {% endfor %}
     
-if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
-then
-    wg genkey | tee ./keys/server_privatekey | wg pubkey > ./keys/server_publickey
-fi
+createDeviceConfig()
+{
+    cd $BASE_PATH
 
-{% for username in vault_usernames %}
-if [ ! -f ./keys/client_{{username}}_privatekey ] || [ ! -f ./keys/client_{{username}}_publickey ]
-then
-    wg genkey | tee ./keys/client_{{username}}_privatekey | wg pubkey > ./keys/client_{{username}}_publickey
-fi
-{% endfor %}
-    
-if [ ! -f wg0.conf ]
-then
     echo "[Interface]" > wg0.conf
     echo -n "PrivateKey = " >> wg0.conf
     cat ./keys/server_privatekey >> wg0.conf
@@ -42,38 +33,79 @@ then
 {% endfor %}
 
     chmod 600 wg0.conf
+}
+
+createClientConfigs()
+{
+    cd $BASE_PATH
+
+    echo "[Interface]" > $1
+    echo -n "Address = " >> $1
+    echo -n $3 >> $1
+    echo "/24" >> $1
+    echo -n "PrivateKey = " >> $1
+    cat $2 >> $1
+    echo "ListenPort = {{vault_wireguard_mobile_public_port}}" >> $1
+    echo "DNS = {{server_ip}}" >> $1
+    
+    echo "[Peer]" >> $1
+    echo -n "PublicKey = " >> $1
+    cat ./keys/server_publickey >> $1
+    echo "AllowedIPs = {{server_network}}/24" >> $1
+    echo "Endpoint = {{public_server_domain}}:{{vault_wireguard_mobile_public_port}}" >> $1
+    #echo "PersistentKeepalive = 25" >> $1
+
+    chmod 600 $1
+}
+
+stop()
+{
+  echo "SIGTERM caught, shutting down wireguard interfaces..."
+
+  wg-quick down wg0
+  
+  echo "done."
+  exit
+}
+
+start()
+{
+  ip link del dev wg0 > /dev/null 2>&1
+
+  wg-quick up ./wg0.conf
+}
+
+if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
+then
+    wg genkey | tee ./keys/server_privatekey | wg pubkey > ./keys/server_publickey
+fi
+
+{% for username in vault_usernames %}
+if [ ! -f ./keys/client_{{username}}_privatekey ] || [ ! -f ./keys/client_{{username}}_publickey ]
+then
+    wg genkey | tee ./keys/client_{{username}}_privatekey | wg pubkey > ./keys/client_{{username}}_publickey
+fi
+{% endfor %}
+    
+if [ ! -f wg0.conf ]
+then
+    createDeviceConfig
 fi
 
 {% for username in vault_usernames %}
 if [ ! -f ./clients/wg_{{username}}.conf ]
 then
-    echo "[Interface]" > ./clients/wg_{{username}}.conf
-    echo -n "Address = " >> ./clients/wg_{{username}}.conf
-    echo -n $CLIENT_{{username}}_ADDRESS >> ./clients/wg_{{username}}.conf
-    echo "/24" >> ./clients/wg_{{username}}.conf
-    echo -n "PrivateKey = " >> ./clients/wg_{{username}}.conf
-    cat ./keys/client_{{username}}_privatekey >> ./clients/wg_{{username}}.conf
-    echo "ListenPort = {{vault_wireguard_mobile_public_port}}" >> ./clients/wg_{{username}}.conf
-    echo "DNS = {{server_ip}}" >> ./clients/wg_{{username}}.conf
-    
-    echo "[Peer]" >> ./clients/wg_{{username}}.conf
-    echo -n "PublicKey = " >> ./clients/wg_{{username}}.conf
-    cat ./keys/server_publickey >> ./clients/wg_{{username}}.conf
-    echo "AllowedIPs = {{server_network}}/24" >> ./clients/wg_{{username}}.conf
-    echo "Endpoint = {{public_server_domain}}:{{vault_wireguard_mobile_public_port}}" >> ./clients/wg_{{username}}.conf
-    #echo "PersistentKeepalive = 25" >> ./clients/wg_{{username}}.conf
-
-    chmod 600 ./clients/wg_{{username}}.conf
+    createClientConfigs './clients/wg_{{username}}.conf' './keys/client_{{username}}_privatekey' $CLIENT_{{username}}_ADDRESS
 fi
 {% endfor %}
 
-ip link del dev wg0
+start
 
-wg-quick up /etc/wireguard/wg0.conf
+trap "stop" SIGTERM SIGINT
 
-#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-#iptables -A FORWARD -i wg0 -j ACCEPT
+while true; do
+    #tail -f /dev/null
+    sleep 1
+done
 
-trap "echo TRAPed signal" HUP INT QUIT TERM
-
-tail -f /dev/null
+exit 1
