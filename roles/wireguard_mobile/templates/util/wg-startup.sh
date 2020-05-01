@@ -1,6 +1,5 @@
 #!/bin/sh
-BASE_PATH="/etc/wireguard"
-cd $BASE_PATH
+cd /etc/wireguard
 
 VPN_NETWORK="{{vpn_mobile_network}}"
 SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
@@ -9,10 +8,8 @@ SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
 CLIENT_{{username}}_ADDRESS="${VPN_NETWORK%.*}.{{loop.index+10}}"
 {% endfor %}
     
-createDeviceConfig()
+initDeviceConfig()
 {
-    cd $BASE_PATH
-
     echo "[Interface]" > wg0.conf
     echo -n "PrivateKey = " >> wg0.conf
     cat ./keys/server_privatekey >> wg0.conf
@@ -31,14 +28,11 @@ createDeviceConfig()
     cat ./keys/client_{{username}}_publickey >> wg0.conf
 
 {% endfor %}
-
     chmod 600 wg0.conf
 }
 
-createClientConfigs()
+initClientConfigs()
 {
-    cd $BASE_PATH
-
     echo "[Interface]" > $1
     echo -n "Address = " >> $1
     echo -n $3 >> $1
@@ -60,19 +54,19 @@ createClientConfigs()
 
 stop()
 {
-  echo "SIGTERM caught, shutting down wireguard interfaces..."
+    echo "SIGTERM caught, shutting down wireguard interfaces..."
 
-  wg-quick down wg0
+    wg-quick down wg0
   
-  echo "done."
-  exit
+    echo "done."
+    exit
 }
 
 start()
 {
-  ip link del dev wg0 > /dev/null 2>&1
+    ip link del dev wg0 > /dev/null 2>&1
 
-  wg-quick up ./wg0.conf
+    wg-quick up ./wg0.conf
 }
 
 if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
@@ -89,13 +83,13 @@ fi
     
 if [ ! -f wg0.conf ]
 then
-    createDeviceConfig
+    initDeviceConfig
 fi
 
 {% for username in vault_usernames %}
 if [ ! -f ./clients/wg_{{username}}.conf ]
 then
-    createClientConfigs './clients/wg_{{username}}.conf' './keys/client_{{username}}_privatekey' $CLIENT_{{username}}_ADDRESS
+    initClientConfigs './clients/wg_{{username}}.conf' './keys/client_{{username}}_privatekey' $CLIENT_{{username}}_ADDRESS
 fi
 {% endfor %}
 
@@ -104,7 +98,6 @@ start
 trap "stop" SIGTERM SIGINT
 
 while true; do
-    #tail -f /dev/null
     sleep 1
 done
 

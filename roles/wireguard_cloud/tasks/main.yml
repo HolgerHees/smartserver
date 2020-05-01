@@ -39,7 +39,7 @@
     group: "root"
     mode: 700
   with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item != main_network"
+  when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
 
 - name: prepare nfs mount points
   file:
@@ -49,7 +49,7 @@
     group: "root"
     mode: 700
   with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item != main_network"
+  when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
 
 - name: copy util
   template:
@@ -119,7 +119,7 @@
     image: "{{image_name}}:{{alpine_version}}"
     state: present
 #    network_mode: "none"
-#    recreate: true
+    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -128,13 +128,16 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
+    #  - SYS_ADMIN
+    #  - SETPCAP
+    privileged: yes
     networks:
       - name: "cloud"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}{{etc_dir_name}}:/etc/wireguard:z'
-      - '{{raid_path}}{{data_dir_name}}/local:{{raid_path}}{{data_dir_name}}/local:z'
-      - '{{raid_path}}{{data_dir_name}}/remote:{{raid_path}}{{data_dir_name}}/remote:z,shared'
+      - '{{raid_path}}{{data_dir_name}}/local:/cloud/local:z'
+      - '{{raid_path}}{{data_dir_name}}/remote:/cloud/remote:z,shared'
     ports:
      - "{{cloud_network.interface.listenPort}}:{{exposed_port}}/udp"
   notify: "restart wireguard_cloud"
