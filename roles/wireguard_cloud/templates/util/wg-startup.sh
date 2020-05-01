@@ -61,7 +61,7 @@ stop()
 {
     echo "SIGTERM caught, shutting down..."
 
-    echo "terminating NFS process(es)"
+    echo "terminating nfs process(es)"
     /usr/sbin/exportfs -uav
     /usr/sbin/rpc.nfsd 0
     pid1=`pidof rpc.nfsd`
@@ -80,6 +80,8 @@ stop()
 start()
 {
     ip link del dev wg0 > /dev/null 2>&1
+
+    echo "starting container..."
 
     echo "exported folder"
     cat /etc/exports
@@ -113,6 +115,8 @@ start()
       echo "startup of nfs failed"
       exit 1
     fi
+
+    echo "done"
 }
 
 if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
