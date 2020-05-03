@@ -9,9 +9,16 @@
     container_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
     image_name: "custom_wireguard_cloud"
     exposed_port: "51820"
+    vpn_peers: {}
   with_items: "{{vault_cloud_vpn_networks}}"
   when: "item == main_network"
     
+- name: filter vpn_peers
+  set_fact:
+    vpn_peers: "{{ vpn_peers | combine( { item: vault_cloud_vpn_networks[item].peer } ) }}"
+  with_items: "{{vault_cloud_vpn_networks}}"
+  when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
+
 - name: set version
   set_fact:
     alpine_version: "3.11.6"
@@ -38,8 +45,7 @@
     owner: "root"
     group: "root"
     mode: 700
-  with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
+  with_items: "{{vpn_peers}}"
 
 - name: prepare nfs mount points
   file:
@@ -48,8 +54,7 @@
     owner: "root"
     group: "root"
     mode: 700
-  with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
+  with_items: "{{vpn_peers}}"
 
 - name: copy util
   template:
@@ -119,7 +124,7 @@
     image: "{{image_name}}:{{alpine_version}}"
     state: present
 #    network_mode: "none"
-    recreate: true
+#    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
