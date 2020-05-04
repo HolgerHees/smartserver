@@ -10,9 +10,14 @@
     image_name: "custom_wireguard_cloud"
     exposed_port: "51820"
     vpn_peers: {}
+    os_name: "{{'opensuse/leap:' if is_suse else 'fedora:'}}{{ansible_distribution_version}}"
   with_items: "{{vault_cloud_vpn_networks}}"
   when: "item == main_network"
     
+- name: debug
+  debug:
+    msg: "{{os_name}}"
+
 - name: filter vpn_peers
   set_fact:
     vpn_peers: "{{ vpn_peers | combine( { item: vault_cloud_vpn_networks[item].peer } ) }}"
@@ -124,7 +129,7 @@
     image: "{{image_name}}:{{alpine_version}}"
     state: present
 #    network_mode: "none"
-#    recreate: true
+    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
