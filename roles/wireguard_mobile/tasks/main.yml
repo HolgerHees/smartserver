@@ -16,7 +16,14 @@
     - "{{global_etc}}wireguard_mobile/keys"
     - "{{global_etc}}wireguard_mobile/clients"
     
-- name: copy keys => is_production
+- name: check keys folder => is_production
+  stat:
+    path: "{{config_path}}vault/wireguard_mobile/"
+  register: keys_exists
+  changed_when: no
+  when: is_production
+  
+- name: copy keys => is_production and keys folder exists
   copy:
     src: "{{item}}"
     dest: "{{global_etc}}wireguard_mobile/keys/{{item|basename}}"
@@ -25,7 +32,7 @@
     group: root
     mode: 0600
   with_fileglob: "{{config_path}}vault/wireguard_mobile/*"
-  when: is_production
+  when: "is_production and keys_exists.stat.exists"
   
 - name: copy util
   template:
