@@ -5,6 +5,9 @@ cd /etc/wireguard
 
 #rpcdebug -m nfsd all
 
+#https://www.heise.de/ct/artikel/NFSv4-unter-Linux-221582.html?seite=all
+# check cat /proc/net/rpc/auth.unix.ip/content
+
 initDeviceConfig()
 {
     PRIVATE_KEY=$(cat ./keys/server_privatekey)
@@ -20,6 +23,7 @@ SaveConfig = true
 PublicKey = {{vpn_peers[peer_name].publicKey}}
 AllowedIPs = {{vpn_peers[peer_name].allowedIPs}}
 Endpoint = {{vpn_peers[peer_name].endpoint}}
+PersistentKeepalive = 25
 {% endfor %}"
 
     OLD_CONFIG=$(cat wg0.conf)
@@ -35,7 +39,7 @@ initExports()
 {
     NEW_EXPORTS="{% for peer_name in vpn_peers %}
 #/cloud/local/{{peer_name}} {{vpn_peers[peer_name].allowedIPs}}(rw,sync,no_root_squash,no_subtree_check)
-/cloud/local/{{peer_name}} *(rw,sync,no_root_squash,no_subtree_check)
+/cloud/local/{{peer_name}} *(rw,sync,no_root_squash,no_subtree_check,insecure)
 {% endfor %}"
 
     OLD_EXPORTS=$(cat /etc/exports)
@@ -131,7 +135,7 @@ start()
     ip link del dev wg0 > /dev/null 2>&1
 
     echo "starting container..."
-
+    
     #echo "exported folder"
     #cat /etc/exports
 
@@ -163,8 +167,10 @@ start()
     
     echo "starting nfs"
     /usr/sbin/rpc.nfsd --debug --no-udp --no-nfs-version 2 --no-nfs-version 3
-    /usr/sbin/rpc.nfsd 0
-    /usr/sbin/rpc.nfsd --debug --no-udp --no-nfs-version 2 --no-nfs-version 3
+    #sleep 1
+    #/usr/sbin/rpc.nfsd 0
+    #sleep 1
+    #/usr/sbin/rpc.nfsd --debug --no-udp --no-nfs-version 2 --no-nfs-version 3
     
     echo "starting exportfs"
     FS_RESULT=$(/usr/sbin/exportfs -arv)
@@ -203,14 +209,12 @@ initExports
 
 initFstab
 
-#start
+start
 
 #mountShares
 
-while true
-do
-    sleep 1
-done
+# wait forever or until we get SIGTERM or SIGINT
+while :; do sleep 360 & wait; done
 
 exit 1
 

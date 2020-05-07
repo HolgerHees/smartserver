@@ -10,20 +10,22 @@
     image_name: "custom_wireguard_cloud"
     exposed_port: "51820"
     vpn_peers: {}
-    os_name: "{{'opensuse/leap:' if is_suse else 'fedora:'}}{{ansible_distribution_version}}"
+    vpn_hosts: {}
   with_items: "{{vault_cloud_vpn_networks}}"
   when: "item == main_network"
     
-- name: debug
-  debug:
-    msg: "{{os_name}}"
-
 - name: filter vpn_peers
   set_fact:
     vpn_peers: "{{ vpn_peers | combine( { item: vault_cloud_vpn_networks[item].peer } ) }}"
   with_items: "{{vault_cloud_vpn_networks}}"
   when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
 
+- name: filter vpn_hosts
+  set_fact:
+    vpn_hosts: "{{ vpn_hosts | combine( { item + '.cloud ' + item: vault_cloud_vpn_networks[item].peer.nfsServer } ) }}"
+  with_items: "{{vault_cloud_vpn_networks}}"
+  when: "item == main_network or vault_cloud_vpn_networks[item].peer.publicKey != ''"
+  
 - name: set version
   set_fact:
     alpine_version: "3.11.6"
@@ -40,6 +42,16 @@
     - "{{global_etc}}{{etc_dir_name}}"
     - "{{global_etc}}{{etc_dir_name}}/keys"
     - "{{global_etc}}{{etc_dir_name}}/util"
+
+- name: prepare cloud folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items:
+    - "{{raid_path}}{{data_dir_name}}"
     - "{{raid_path}}{{data_dir_name}}/local"
     - "{{raid_path}}{{data_dir_name}}/remote"
 
@@ -49,7 +61,7 @@
     state: directory
     owner: "root"
     group: "root"
-    mode: 700
+    mode: 0750
   with_items: "{{vpn_peers}}"
 
 - name: prepare nfs mount points
@@ -58,7 +70,7 @@
     state: directory
     owner: "root"
     group: "root"
-    mode: 700
+    mode: 0750
   with_items: "{{vpn_peers}}"
 
 - name: copy util
@@ -141,14 +153,17 @@
     #  - SYS_ADMIN
     #  - SETPCAP
     privileged: yes
+    domainname : "cloud"
+    hostname: "nfsd"
+    etc_hosts: "{{vpn_hosts}}" 
     networks:
       - name: "cloud"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}{{etc_dir_name}}:/etc/wireguard:z'
-      - '{{raid_path}}{{data_dir_name}}/local:/cloud/local:z'
-      - '{{raid_path}}{{data_dir_name}}/remote:/cloud/remote:z,shared'
+      - '{{raid_path}}{{data_dir_name}}:/cloud:z,rshared'
     ports:
+    # - "2050:2049/tcp"
      - "{{cloud_network.interface.listenPort}}:{{exposed_port}}/udp"
   notify: "restart wireguard_cloud"
 

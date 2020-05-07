@@ -97,8 +97,7 @@ start
 
 trap "stop" SIGTERM SIGINT
 
-while true; do
-    sleep 1
-done
+# wait forever or until we get SIGTERM or SIGINT
+while :; do sleep 360 & wait; done
 
 exit 1
