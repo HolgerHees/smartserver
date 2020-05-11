@@ -1,6 +1,11 @@
 FROM alpine:{{alpine_version}}
 
 RUN apk add --no-cache --update wireguard-tools nfs-utils tzdata
+
+#RUN echo 'hosts: files dns' >> /etc/nsswitch.conf
+
+RUN mkdir /var/lib/nfs/v4recovery
+
 #openrc musl-nscd
 #openrc
 

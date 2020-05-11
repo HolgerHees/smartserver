@@ -52,12 +52,12 @@
     mode: 0750
   with_items:
     - "{{raid_path}}{{data_dir_name}}"
-    - "{{raid_path}}{{data_dir_name}}/local"
-    - "{{raid_path}}{{data_dir_name}}/remote"
+    - "{{raid_path}}{{data_dir_name}}/export"
+    - "{{raid_path}}{{data_dir_name}}/mount"
 
 - name: prepare nfs exported folder
   file:
-    path: "{{raid_path}}{{data_dir_name}}/local/{{item}}"
+    path: "{{raid_path}}{{data_dir_name}}/export/{{item}}"
     state: directory
     owner: "root"
     group: "root"
@@ -66,7 +66,7 @@
 
 - name: prepare nfs mount points
   file:
-    path: "{{raid_path}}{{data_dir_name}}/remote/{{item}}"
+    path: "{{raid_path}}{{data_dir_name}}/mount/{{item}}"
     state: directory
     owner: "root"
     group: "root"
@@ -175,6 +175,7 @@
 - name: create systemd service
   vars:
     image_name: "{{container_name}}"
+    trigger_name: "wireguard_cloud"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier

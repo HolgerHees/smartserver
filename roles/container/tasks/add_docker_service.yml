@@ -5,7 +5,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: "restart {{container_name}}"
+  notify: "restart {{trigger_name | default(container_name)}}"
  
 - name: register systemd service watcher
   vars:

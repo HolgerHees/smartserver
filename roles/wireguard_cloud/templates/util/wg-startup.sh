@@ -38,8 +38,7 @@ PersistentKeepalive = 25
 initExports()
 {
     NEW_EXPORTS="{% for peer_name in vpn_peers %}
-#/cloud/local/{{peer_name}} {{vpn_peers[peer_name].allowedIPs}}(rw,sync,no_root_squash,no_subtree_check)
-/cloud/local/{{peer_name}} *(rw,sync,no_root_squash,no_subtree_check,insecure)
+/cloud/export/{{peer_name}} {{vpn_peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
 {% endfor %}"
 
     OLD_EXPORTS=$(cat /etc/exports)
@@ -55,7 +54,8 @@ initFstab()
 {
 {% for peer_name in vpn_peers %}
     if ! grep -q '{{vpn_peers[peer_name].nfsServer}}' /etc/fstab ; then
-        echo '{{vpn_peers[peer_name].nfsServer}}:/cloud/local/{{main_network}} /cloud/remote/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
+        #echo '{{vpn_peers[peer_name].nfsServer}}:/cloud/export/{{main_network}} /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
+        echo '{{vpn_peers[peer_name].nfsServer}}:/ /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
     fi
 {% endfor %}
 }
@@ -65,7 +65,7 @@ mountShares()
 {% for peer_name in vpn_peers %}
     peer_ip_{{peer_name}}='{{vpn_peers[peer_name].nfsServer}}'
 {% endfor %}
-    peers={% for peer_name in vpn_peers %}{{peer_name}} {% endfor %}
+    peers="{% for peer_name in vpn_peers %}{{peer_name}} {% endfor %}"
 
     echo "mount nfs shares..."
     x=1
@@ -75,7 +75,7 @@ mountShares()
         
         for name in $peers
         do
-            if [ ! $(mountpoint -q /cloud/remote/$name) ]
+            if [ ! $(mountpoint -q /cloud/mount/$name) ]
             then
                 eval "peer_ip=\$peer_ip_$name"
                 echo "check reachability of $peer_ip"
@@ -83,8 +83,8 @@ mountShares()
                 STATUS=$( echo $? )
                 if [[ $STATUS == 0 ]]
                 then
-                    echo "mount /cloud/remote/$name"
-                    mount /cloud/remote/$name
+                    echo "mount /cloud/mount/$name"
+                    mount /cloud/mount/$name
                 else
                     mount_state=1
                 fi
@@ -108,20 +108,20 @@ stop()
     
     echo "unmount nfs shares"
 {% for peer_name in vpn_peers %}
-    echo "unmount /cloud/remote/{{peer_name}}"
-    umount -f -l /cloud/remote/{{peer_name}} > /dev/null 2>&1
+    echo "unmount /cloud/mount/{{peer_name}}"
+    umount -f -l /cloud/mount/{{peer_name}} > /dev/null 2>&1
 {% endfor %}
 
     echo "terminating nfs process(es)"
     /usr/sbin/exportfs -uav
     /usr/sbin/rpc.nfsd 0
     pid1=`pidof rpc.nfsd`
-    #pid2=`pidof rpc.mountd`
+    pid2=`pidof rpc.mountd`
     #pid3=`pidof rpc.statd`
     # For IPv6 bug:
-    #pid3=`pidof rpcbind`
-    kill -TERM $pid1 > /dev/null 2>&1
-    #kill -TERM $pid1 $pid2 $pid3 > /dev/null 2>&1
+    #pid4=`pidof rpcbind`
+    #kill -TERM $pid1 > /dev/null 2>&1
+    kill -TERM $pid1 $pid2 > /dev/null 2>&1
 
     echo "shutting down wireguard interface"
     wg-quick down wg0
@@ -152,25 +152,22 @@ start()
     # But currently enabled to overcome an NFS bug around opening an IPv6 socket
     #echo "starting rpcbind"
     #/sbin/rpcbind -w
-    #echo "Displaying rpcbind status..."
-    #/sbin/rpcinfo
-
+    #echo "starting idmapd"
+    #/usr/sbin/rpc.idmapd
+    #echo "starting statd"
+    #/sbin/rpc.statd
+    ##-p 32765 -o 32766
+    
     # Kerberos
     #/usr/sbin/rpc.svcgssd -v
     #/usr/sbin/rpc.gssd -v
     
-    #/usr/sbin/rpc.idmapd
-    
-    #echo "starting statd"
-    #/usr/sbin/rpc.statd
-    #-p 32765 -o 32766
-    
     echo "starting nfs"
-    /usr/sbin/rpc.nfsd --debug --no-udp --no-nfs-version 2 --no-nfs-version 3
+    /usr/sbin/rpc.nfsd --debug --no-nfs-version 2 --no-nfs-version 3
     #sleep 1
     #/usr/sbin/rpc.nfsd 0
     #sleep 1
-    #/usr/sbin/rpc.nfsd --debug --no-udp --no-nfs-version 2 --no-nfs-version 3
+    #/usr/sbin/rpc.nfsd --debug --no-nfs-version 2
     
     echo "starting exportfs"
     FS_RESULT=$(/usr/sbin/exportfs -arv)
@@ -183,15 +180,15 @@ start()
     fi
     
     #echo "starting mountd"
-    #/usr/sbin/rpc.mountd --debug all --no-udp --no-nfs-version 2 --no-nfs-version 3
+    /usr/sbin/rpc.mountd --debug all --no-nfs-version 2 --no-nfs-version 3
     # --exports-file /etc/exports
 
-    # check if nfc is runnung
-    #pid=`pidof rpc.mountd`
-    #if [ -z "$pid" ]; then
-    #  echo "startup of nfs failed"
-    #  exit 1
-    #fi
+    # check if nfc is running
+    pid=`pidof rpc.mountd`
+    if [ -z "$pid" ]; then
+      echo "startup of nfs failed"
+      exit 1
+    fi
     
     echo "...done"
 }
@@ -211,7 +208,7 @@ initFstab
 
 start
 
-#mountShares
+mountShares
 
 # wait forever or until we get SIGTERM or SIGINT
 while :; do sleep 360 & wait; done
