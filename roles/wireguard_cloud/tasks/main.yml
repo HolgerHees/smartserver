@@ -174,7 +174,7 @@
 # ***** FINALIZE *****
 - name: create systemd service
   vars:
-    image_name: "{{container_name}}"
+    container_name: "{{container_name}}"
     trigger_name: "wireguard_cloud"
   import_tasks: roles/container/tasks/add_docker_service.yml
 

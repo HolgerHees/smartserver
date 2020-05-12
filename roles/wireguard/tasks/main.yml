@@ -10,7 +10,7 @@
 
 - name: add zypper repository => is_suse
   zypper_repository:
-    name: Network (netdata)
+    name: VPN (wireguard)
     repo: "http://download.opensuse.org/repositories/network:/vpn:/wireguard/openSUSE_Leap_{{ansible_distribution_version}}/"
     auto_import_keys: yes
     priority: "100"
