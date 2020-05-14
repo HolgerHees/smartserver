@@ -147,9 +147,9 @@
     log_driver: journald
     log_options:
       tag: "{{container_name}}"
-    capabilities:
-      - NET_ADMIN
-      - SYS_MODULE
+    #capabilities:
+    #  - NET_ADMIN
+    #  - SYS_MODULE
     #  - SYS_ADMIN
     #  - SETPCAP
     privileged: yes
