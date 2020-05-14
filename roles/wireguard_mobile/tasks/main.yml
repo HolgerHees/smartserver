@@ -3,6 +3,15 @@
     alpine_version: "3.11.6"
   tags: [ 'update_notifier_configs' ]
   
+- name: prepare mobile settings
+  set_fact:
+    vpn_gates: []
+
+- name: filter vpn_gates
+  set_fact:
+    vpn_gates: "{{ vpn_gates + ( vault_userdata[item].vpn_gates | default(['']) | map('regex_replace', '(.*)', item + '_\\1') | map('regex_replace', '(.*)_$', '\\1') | list ) }}"
+  with_items: "{{vault_usernames}}"
+
 - name: prepare config folder
   file:
     path: "{{item}}"

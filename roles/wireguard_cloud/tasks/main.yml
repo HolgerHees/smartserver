@@ -1,5 +1,10 @@
 - name: set version
   set_fact:
+    alpine_version: "3.11.6"
+  tags: [ 'update_notifier_configs' ]
+  
+- name: prepare cloud settings
+  set_fact:
     is_main_network: "{{main_network == (vault_cloud_vpn_networks | first)}}"
     cloud_network: "{{vault_cloud_vpn_networks[item]}}"
     dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
@@ -25,11 +30,6 @@
     vpn_hosts: "{{ vpn_hosts | combine( { item + '.cloud ' + item: vault_cloud_vpn_networks[item].peer.nfsServer } ) }}"
   with_items: "{{vault_cloud_vpn_networks}}"
   when: "item == main_network or vault_cloud_vpn_networks[item].peer.publicKey != ''"
-  
-- name: set version
-  set_fact:
-    alpine_version: "3.11.6"
-  tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
   file:

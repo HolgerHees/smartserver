@@ -9,8 +9,9 @@ vault_usernames: [
     "testuser2"
 ]
 
+# the parameter vpn_gates is optional and only needed if you want to have more then one wireguard config per user
 vault_userdata: {
-    testuser: { name: "Test User 1", email: "test1@test.de", samba_password: "test", web_password: "test", webui: "admin" },
+    testuser: { name: "Test User 1", email: "test1@test.de", samba_password: "test", web_password: "test", webui: "admin", vpn_gates: [ "phone", "tablet" ] },
     testuser2: { name: "Test User 2", email: "test2@test.de", samba_password: "test", web_password: "test", webui: "user" }
 }
 

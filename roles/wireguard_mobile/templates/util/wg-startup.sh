@@ -4,8 +4,8 @@ cd /etc/wireguard
 VPN_NETWORK="{{vpn_mobile_network}}"
 SERVER_ADDRESS="${VPN_NETWORK%.*}.10"
 
-{% for username in vault_usernames %}
-CLIENT_{{username}}_ADDRESS="${VPN_NETWORK%.*}.{{loop.index+10}}"
+{% for name in vpn_gates %}
+CLIENT_{{name}}_ADDRESS="${VPN_NETWORK%.*}.{{loop.index+10}}"
 {% endfor %}
     
 initDeviceConfig()
@@ -19,13 +19,13 @@ initDeviceConfig()
     echo "ListenPort = {{vault_wireguard_mobile_internal_port}}" >> wg0.conf
     echo "SaveConfig = true" >> wg0.conf
 
-{% for username in vault_usernames %}
+{% for name in vpn_gates %}
     echo "[Peer]" >> wg0.conf
     echo -n "AllowedIPs = " >> wg0.conf
-    echo -n $CLIENT_{{username}}_ADDRESS >> wg0.conf
+    echo -n $CLIENT_{{name}}_ADDRESS >> wg0.conf
     echo "/32" >> wg0.conf
     echo -n "PublicKey = " >> wg0.conf
-    cat ./keys/client_{{username}}_publickey >> wg0.conf
+    cat ./keys/client_{{name}}_publickey >> wg0.conf
 
 {% endfor %}
     chmod 600 wg0.conf
@@ -74,10 +74,10 @@ then
     wg genkey | tee ./keys/server_privatekey | wg pubkey > ./keys/server_publickey
 fi
 
-{% for username in vault_usernames %}
-if [ ! -f ./keys/client_{{username}}_privatekey ] || [ ! -f ./keys/client_{{username}}_publickey ]
+{% for name in vpn_gates %}
+if [ ! -f ./keys/client_{{name}}_privatekey ] || [ ! -f ./keys/client_{{name}}_publickey ]
 then
-    wg genkey | tee ./keys/client_{{username}}_privatekey | wg pubkey > ./keys/client_{{username}}_publickey
+    wg genkey | tee ./keys/client_{{name}}_privatekey | wg pubkey > ./keys/client_{{name}}_publickey
 fi
 {% endfor %}
     
@@ -86,10 +86,10 @@ then
     initDeviceConfig
 fi
 
-{% for username in vault_usernames %}
-if [ ! -f ./clients/wg_{{username}}.conf ]
+{% for name in vpn_gates %}
+if [ ! -f ./clients/wg_{{name}}.conf ]
 then
-    initClientConfigs './clients/wg_{{username}}.conf' './keys/client_{{username}}_privatekey' $CLIENT_{{username}}_ADDRESS
+    initClientConfigs './clients/wg_{{name}}.conf' './keys/client_{{name}}_privatekey' $CLIENT_{{name}}_ADDRESS
 fi
 {% endfor %}
 
