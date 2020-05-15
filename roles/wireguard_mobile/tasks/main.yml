@@ -35,7 +35,7 @@
     group: root
     mode: 0600
   failed_when: no
-  when: "is_production"
+  when: "is_production|bool"
   
 - name: copy util
   template:
