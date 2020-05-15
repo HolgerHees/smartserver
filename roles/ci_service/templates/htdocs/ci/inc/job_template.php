@@ -6,10 +6,11 @@ class JobTemplate
       '1' => "<span style='font-weight:bold'>",
       '0;31' => "<span style='color:red'>",
       '0;32' => "<span style='color:green'>",
-      '0;33' => "<span style='color:yellow'>",
+      '0;33' => "<span style='color:#b04f0a'>",
       '0;35' => "<span style='color:magenta'>",
       '0;36' => "<span style='color:cyan'>",
       '1;30' => "<span style='color:gray'>",
+      '1;33' => "<span style='color:yellow'>",
       '1;35' => "<span style='color:plum'>"
     );
     
