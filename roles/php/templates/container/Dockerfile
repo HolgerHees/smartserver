@@ -55,6 +55,9 @@ RUN pecl install redis \
 RUN mv "/usr/local/etc/php/php.ini-production" "/usr/local/etc/php/php.ini" \
   && sed -i 's/memory_limit.*/memory_limit = 1024M/' /usr/local/etc/php/php.ini \
   && sed -i 's/pm.max_children.*/pm.max_children = 20/' /usr/local/etc/php-fpm.d/www.conf \
+  && sed -i 's/pm.start_servers.*/pm.start_servers = 3/' /usr/local/etc/php-fpm.d/www.conf \
+  && sed -i 's/pm.min_spare_servers.*/pm.min_spare_servers = 2/' /usr/local/etc/php-fpm.d/www.conf \
+  && sed -i 's/pm.max_spare_servers.*/pm.start_servers = 4/' /usr/local/etc/php-fpm.d/www.conf \
   && sed -i 's/access.log.*/access.log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf
 
 #TODO
