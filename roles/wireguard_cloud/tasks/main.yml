@@ -1,36 +1,21 @@
 - name: set version
   set_fact:
     alpine_version: "3.11.6"
+    active_network: "{{main_network | default(vault_cloud_vpn_networks | first)}}"
   tags: [ 'update_notifier_configs' ]
-  
+    
 - name: prepare cloud settings
   set_fact:
-    is_main_network: "{{main_network == (vault_cloud_vpn_networks | first)}}"
-    cloud_network: "{{vault_cloud_vpn_networks[item]}}"
-    dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
-    etc_dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
-    data_dir_name: "cloud{{ '' if main_network == (vault_cloud_vpn_networks | first) else '_' + item }}"
-    build_dir_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
-    container_name: "wireguard_{{vault_cloud_vpn_networks[item].interface.name}}"
+    is_main_network: "{{active_network == (vault_cloud_vpn_networks | first)}}"
+    cloud_network: "{{vault_cloud_vpn_networks[active_network]}}"
+    dir_name: "wireguard_{{active_network}}"
+    etc_dir_name: "wireguard_{{active_network}}"
+    data_dir_name: "cloud{{ '' if active_network == (vault_cloud_vpn_networks | first) else '_' + active_network }}"
+    build_dir_name: "wireguard_{{active_network}}"
+    container_name: "wireguard_{{active_network}}"
     image_name: "custom_wireguard_cloud"
     exposed_port: "51820"
-    vpn_peers: {}
-    vpn_hosts: {}
-  with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item == main_network"
     
-- name: filter vpn_peers
-  set_fact:
-    vpn_peers: "{{ vpn_peers | combine( { item: vault_cloud_vpn_networks[item].peer } ) }}"
-  with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item != main_network and vault_cloud_vpn_networks[item].peer.publicKey != ''"
-
-- name: filter vpn_hosts
-  set_fact:
-    vpn_hosts: "{{ vpn_hosts | combine( { item + '.cloud ' + item: vault_cloud_vpn_networks[item].peer.nfsServer } ) }}"
-  with_items: "{{vault_cloud_vpn_networks}}"
-  when: "item == main_network or vault_cloud_vpn_networks[item].peer.publicKey != ''"
-  
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -62,7 +47,7 @@
     owner: "root"
     group: "root"
     mode: 0750
-  with_items: "{{vpn_peers}}"
+  with_items: "{{cloud_network.peers}}"
 
 - name: prepare nfs mount points
   file:
@@ -71,7 +56,7 @@
     owner: "root"
     group: "root"
     mode: 0750
-  with_items: "{{vpn_peers}}"
+  with_items: "{{cloud_network.peers}}"
 
 - name: copy util
   template:
@@ -140,8 +125,8 @@
     name: "{{container_name}}"
     image: "{{image_name}}:{{alpine_version}}"
     state: present
-#    network_mode: "none"
-    recreate: true
+    network_mode: "none"
+#    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -153,9 +138,8 @@
     #  - SYS_ADMIN
     #  - SETPCAP
     privileged: yes
-    domainname : "cloud"
-    hostname: "nfsd"
-    etc_hosts: "{{vpn_hosts}}" 
+    #domainname : "cloud"
+    #hostname: "nfsd"
     networks:
       - name: "cloud"
     networks_cli_compatible: yes

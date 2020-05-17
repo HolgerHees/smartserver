@@ -67,7 +67,7 @@
     state: present
     network_mode: "host"
     #pid_mode: "host"
-    recreate: true
+#    recreate: true
     env:
       TZ: "{{timezone}}"
       PGID: "473"

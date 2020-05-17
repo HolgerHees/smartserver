@@ -72,6 +72,17 @@ vault_openhab_influxdb_password: "default123"
 # ****** OPTIONAL VARIABLES ******
 # variables are optional and only necessary if they are referenced in one of the optional roles or configurations
 
+# used in generic optional role 'wirguard_cloud'
+vault_cloud_vpn_networks: {
+    cloud: {
+        interface: { address: "10.1.0.1/16", listenPort: "50831" },
+        peers: {
+            peer1: { publicKey: "<public_key>", allowedIPs: "10.2.0.0/16", endpoint: "public.peer1.com:50831", nfsServer: "10.2.0.1" },
+            peer2: { publicKey: "<public_key>", allowedIPs: "10.3.0.0/16", endpoint: "public.peer2.com:50831", nfsServer: "10.3.0.1" }
+        }
+    }
+}
+
 # used in generic optional role 'openvpn_cloud'
 vault_vpn_cloud_type: "master" # master|slave
 vault_vpn_cloud_port: "1194"

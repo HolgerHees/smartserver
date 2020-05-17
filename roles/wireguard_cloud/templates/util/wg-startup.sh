@@ -18,11 +18,11 @@ Address = {{cloud_network.interface.address}}
 ListenPort = {{exposed_port}}
 SaveConfig = true
 
-{% for peer_name in vpn_peers %}
+{% for peer_name in cloud_network.peers %}
 [Peer]
-PublicKey = {{vpn_peers[peer_name].publicKey}}
-AllowedIPs = {{vpn_peers[peer_name].allowedIPs}}
-Endpoint = {{vpn_peers[peer_name].endpoint}}
+PublicKey = {{cloud_network.peers[peer_name].publicKey}}
+AllowedIPs = {{cloud_network.peers[peer_name].allowedIPs}}
+Endpoint = {{cloud_network.peers[peer_name].endpoint}}
 PersistentKeepalive = 25
 {% endfor %}"
 
@@ -37,8 +37,8 @@ PersistentKeepalive = 25
 
 initExports()
 {
-    NEW_EXPORTS="{% for peer_name in vpn_peers %}
-/cloud/export/{{peer_name}} {{vpn_peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
+    NEW_EXPORTS="{% for peer_name in cloud_network.peers %}
+/cloud/export/{{peer_name}} {{cloud_network.peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
 {% endfor %}"
 
     OLD_EXPORTS=$(cat /etc/exports)
@@ -52,24 +52,24 @@ initExports()
 
 initFstab()
 {
-{% for peer_name in vpn_peers %}
-    if ! grep -q '{{vpn_peers[peer_name].nfsServer}}' /etc/fstab ; then
-        #echo '{{vpn_peers[peer_name].nfsServer}}:/cloud/export/{{main_network}} /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
-        echo '{{vpn_peers[peer_name].nfsServer}}:/ /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
+{% for peer_name in cloud_network.peers %}
+    if ! grep -q '{{cloud_network.peers[peer_name].nfsServer}}' /etc/fstab ; then
+        #echo '{{cloud_network.peers[peer_name].nfsServer}}:/cloud/export/{{main_network}} /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
+        echo '{{cloud_network.peers[peer_name].nfsServer}}:/ /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
     fi
 {% endfor %}
 }
 
 mountShares()
 {
-{% for peer_name in vpn_peers %}
-    peer_ip_{{peer_name}}='{{vpn_peers[peer_name].nfsServer}}'
+{% for peer_name in cloud_network.peers %}
+    peer_ip_{{peer_name}}='{{cloud_network.peers[peer_name].nfsServer}}'
 {% endfor %}
-    peers="{% for peer_name in vpn_peers %}{{peer_name}} {% endfor %}"
+    peers="{% for peer_name in cloud_network.peers %}{{peer_name}} {% endfor %}"
 
     echo "mount nfs shares..."
     x=1
-    while [ $x -le 30 ]
+    while :
     do
         mount_state=0
         
@@ -98,6 +98,12 @@ mountShares()
         else
             sleep 1
             x=$(( $x + 1 ))
+            
+            if [ $x -gt 30 ]
+            then
+                echo "...giving up"
+                break
+            fi
         fi
     done
 }
@@ -107,7 +113,7 @@ stop()
     echo "SIGTERM caught, shutting down..."
     
     echo "unmount nfs shares"
-{% for peer_name in vpn_peers %}
+{% for peer_name in cloud_network.peers %}
     echo "unmount /cloud/mount/{{peer_name}}"
     umount -f -l /cloud/mount/{{peer_name}} > /dev/null 2>&1
 {% endfor %}

@@ -6,6 +6,8 @@
 - { import_role: { name: cloudsync }, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
 - { import_role: { name: cloudexport }, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (clouduser and nfs export)
 
+#- { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud' ] } 
+
 #- { import_role: { name: alexa }, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
 
 #- { import_role: { name: roomba }, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
