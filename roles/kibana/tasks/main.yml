@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    kibana_version: "1.6.0"
+    kibana_version: "1.7.0"
   tags: [ 'update_notifier_configs' ]
   
 - name: check started docker
