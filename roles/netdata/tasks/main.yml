@@ -206,7 +206,7 @@
   with_items:
     - "{{ global_lib }}netdata"
     - "{{ global_lib }}netdata/cache"
-    #- "/etc/netdata/custom-plugins.d"
+    - "/etc/netdata/custom-plugins.d"
     - "/etc/netdata/health.d"
     - "/opt/netdata_helper"
 
