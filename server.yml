@@ -106,8 +106,10 @@
     - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker,user:wwwrun|apache]
 
     - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE AFTER ELASTICSEARCH !!!
+                                                                                                 # => needs elasticsearch role
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server !!! MUST BE THE LAST ONE !!!                           [docker,user:root]
+                                                                                                 # => needs container role which needs fluentd role
     
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # Previous roles are independent from upcomming roles, But lot of upcomming roles are depending from previous roles
