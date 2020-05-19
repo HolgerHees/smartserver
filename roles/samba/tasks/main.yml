@@ -1,45 +1,99 @@
-- name: install required packages => is_fedora
-  yum:
-    name: "samba"
-    state: present
-  notify: "restart samba"
-  when: is_fedora|bool
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{ global_etc }}samba"
+    - "{{ global_lib }}samba"
+    - "{{ global_lib }}samba/private"
 
-- name: install required packages => is_suse
-  zypper:
-    name: "samba"
-    state: present
-  notify: "restart samba"
-  when: is_suse|bool
-  
 - name: copy config
   template:
-    src: roles/samba/templates/smb.conf
-    dest: /etc/samba/smb.conf
+    src: "templates/smb.conf"
+    dest: "{{ global_etc }}samba/smb.conf"
     owner: root
     group: root
     mode: 0640
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+    
+- name: check docker image exists
+  shell: "docker images custom_samba:{{alpine_version}}"
+  register: image_exists
+  changed_when: "'custom_samba' not in image_exists.stdout"
+ 
+- name: prepare build folder
+  file:
+    path: "{{global_build}}samba/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  when: "'custom_samba' not in image_exists.stdout"
+
+- name: copy dockerfiles
+  copy:
+    src: "roles/samba/templates/container/Dockerfile"
+    dest: "{{global_build}}samba/Dockerfile"
+    owner: root
+    group: root
+  when: "'custom_samba' not in image_exists.stdout"
+  
+# async docker build is used to show progress and prevent travisci killing our job because of inactivity
+- name: compose docker image => image does not exists
+  shell: "docker build -t custom_samba:{{alpine_version}} {{global_build}}samba/ --build-arg VERSION={{alpine_version}}"
+  async: 600
+  poll: 0
+  register: docker_build
+  when: "'custom_samba' not in image_exists.stdout"
+
+- name: wait for docker image => image does not exists
+  async_status: jid={{ docker_build.ansible_job_id }}
+  register: job_result
+  until: job_result.finished
+  retries: 10
+  delay: 60
+  when: "'custom_samba' not in image_exists.stdout"
+  
+- name: create docker container
+  docker_container:
+    name: samba
+    image: "custom_samba:{{alpine_version}}"
+    state: present
+    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: samba
+    volumes:
+      - '{{ global_etc }}samba:/etc/samba:z'
+      - '{{ global_lib }}samba:/var/lib/samba:z'
+      - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'
+      - '{{raid_path}}:{{raid_path}}:z'
+      - '{{data_path}}:{{data_path}}:z'
+      - '/etc/passwd:/etc/passwd:ro,z'
+      - '/etc/shadow:/etc/shadow:ro,z'
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
   notify: "restart samba"
 
-# ***** FINALIZE *****
-- name: register smb systemd service watcher
+- name: create systemd service
   vars:
-    name: "smb"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
-- name: register nmb systemd service watcher
-  vars:
-    name: "nmb"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+    container_name: "samba"
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger service check handler
   vars:
     notify: "restart samba"
-    service: "smb.service"
-  import_tasks: roles/base/tasks/service_check.yml
-
-- name: trigger service check handler
-  vars:
-    notify: "restart samba"
-    service: "nmb.service"
+    service: "samba.service"
   import_tasks: roles/base/tasks/service_check.yml

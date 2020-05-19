@@ -1,11 +1,8 @@
 - name: restart samba
   systemd:
-    name: "{{item}}"
+    name: "samba"
     state: restarted
     daemon_reload: yes
     enabled: yes
     masked: no
-  with_items:
-    - smb
-    - nmb
   listen: "restart samba"
