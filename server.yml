@@ -55,10 +55,8 @@
       
     - { import_role: { name: firewalld }, tags: [ 'firewalld' ] }                                # firewalld configuration
 
-    - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
-
     # ************ FLUSH HANDLER ***********    
-    - { meta: flush_handlers }                                                                   # activate network configs (network,firewall & dns). Otherwise docker related iptables rules are sometime lost and prevents to continue
+    - { meta: flush_handlers }                                                                   # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
     # **************************************
 
     - { import_role: { name: cron }, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
@@ -69,6 +67,8 @@
     - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # settup allowed ssh user
+
+    - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server to handle you server domain                            [docker,user:root]
     
