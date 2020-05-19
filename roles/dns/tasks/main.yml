@@ -137,8 +137,6 @@
   with_items:
     #- { field: "search", value: "{{server_domain}}"}
     - { field: "nameserver", value: "127.0.0.1"}
-  notify:
-    - "restart named"
 
 # ***** FINALIZE *****
 - name: create systemd service
