@@ -47,3 +47,5 @@ cloud_vpn_endpoint_slave:         "10.0.{{netgroup}}.2"
 
 openvpn_mobile_network:           "10.101.{{netgroup}}.0"
 
+# version of alpine linux used in several container based roles
+alpine_version:                   "3.11.6"

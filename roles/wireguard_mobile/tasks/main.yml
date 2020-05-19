@@ -1,8 +1,3 @@
-- name: set version
-  set_fact:
-    alpine_version: "3.11.6"
-  tags: [ 'update_notifier_configs' ]
-  
 - name: prepare mobile settings
   set_fact:
     vpn_gates: []
@@ -122,17 +117,6 @@
   vars:
     container_name: "wireguard_mobile"
   import_tasks: roles/container/tasks/add_docker_service.yml
-
-- name: register update notifier
-  vars:
-    name: "wireguard_mobile"
-    type: "docker"
-    url: "https://alpinelinux.org/"
-    config: {
-      repository: "alpine",
-      pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: trigger service check handler
   vars:

@@ -1,0 +1,10 @@
+- name: register update notifier
+  vars:
+    name: "alpine"
+    type: "docker"
+    url: "https://alpinelinux.org/"
+    config: {
+      repository: "alpine",
+      pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml

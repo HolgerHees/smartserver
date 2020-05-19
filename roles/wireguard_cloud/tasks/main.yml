@@ -1,6 +1,5 @@
-- name: set version
+- name: set active network
   set_fact:
-    alpine_version: "3.11.6"
     active_network: "{{main_network | default(vault_cloud_vpn_networks | first)}}"
   tags: [ 'update_notifier_configs' ]
     
@@ -161,18 +160,6 @@
     container_name: "{{container_name}}"
     trigger_name: "wireguard_cloud"
   import_tasks: roles/container/tasks/add_docker_service.yml
-
-- name: register update notifier
-  vars:
-    name: "wireguard_cloud"
-    type: "docker"
-    url: "https://alpinelinux.org/"
-    config: {
-      repository: "alpine",
-      pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-  when: "is_main_network"
 
 - name: trigger service check handler
   vars:
