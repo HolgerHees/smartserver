@@ -1,89 +1,93 @@
-- name: install required packages => is_fedora
-  yum:
-    name: [
-        bind
-    ]
-    state: present
-  notify: "restart named"
-  when: is_fedora|bool
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        bind
-      , yast2-dns-server
-    ]
-    state: present
-  notify: "restart named"
-  when: is_suse|bool
-  
-- name: copy config
-  template:
-    src: "templates/etc/named.conf"
-    dest: "/etc/named.conf"
-    owner: root
-    group: named
-    mode: 0640
-  notify: "restart named"
-  
-- name: create a symbolic link => is_fedora
-  file:
-    src: /var/named/
-    dest: /var/lib/named
-    state: link
-    follow: no
-    owner: named
-    group: named
-  when: is_fedora|bool
+- name: set version
+  set_fact:
+    alpine_version: "3.11.6"
+  tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
   file:
-    path: "/var/lib/{{item}}"
+    path: '{{item}}'
     state: directory
-    owner: named
-    group: named
-    mode: 0755
+    owner: root
+    group: root
+    mode: 0750
   with_items:
-    - named/
-    - named/master/ # is missing on fedora
-    - named/dyn/ # is missing on fedora
-  
-- name: copy var folder
+    - "{{ global_etc }}named"
+
+- name: copy config
   template:
-    src: "templates/var/lib/named/{{item}}"
-    dest: "/var/lib/named/{{item}}"
-    owner: named
-    group: named
-    mode: 0644
+    src: "templates/etc/{{item}}"
+    dest: "{{ global_etc }}named/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
   with_items:
-    - "master/server_reverse.in-addr.arpa"
-    - "master/server_forward"
-    - "127.0.0.zone"
-    - "localhost.zone"
-    - "root.hint"
-  notify: "restart named"
+    - "dnsmasq.conf"
+    - "dnsmasq-hosts"
+    - "resolv.dnsmasq.conf"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+    
+- name: check docker image exists
+  shell: "docker images custom_named:{{alpine_version}}"
+  register: image_exists
+  changed_when: "'custom_named' not in image_exists.stdout"
+ 
+- name: prepare build folder
+  file:
+    path: "{{global_build}}named/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  when: "'custom_named' not in image_exists.stdout"
+
+- name: copy dockerfiles
+  copy:
+    src: "roles/dns/templates/container/Dockerfile"
+    dest: "{{global_build}}named/Dockerfile"
+    owner: root
+    group: root
+  when: "'custom_named' not in image_exists.stdout"
   
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{item.target}}"
-    ftype: "{{item.ftype}}"
-    setype: "{{item.setype}}"
-    seuser: "system_u"
+# async docker build is used to show progress and prevent travisci killing our job because of inactivity
+- name: compose docker image => image does not exists
+  shell: "docker build -t custom_named:{{alpine_version}} {{global_build}}named/ --build-arg VERSION={{alpine_version}}"
+  async: 600
+  poll: 0
+  register: docker_build
+  when: "'custom_named' not in image_exists.stdout"
+
+- name: wait for docker image => image does not exists
+  async_status: jid={{ docker_build.ansible_job_id }}
+  register: job_result
+  until: job_result.finished
+  retries: 10
+  delay: 60
+  when: "'custom_named' not in image_exists.stdout"
+  
+- name: create docker container
+  docker_container:
+    name: named
+    image: "custom_named:{{alpine_version}}"
     state: present
-  register: sefcontext_result
-  with_items:
-    - { ftype: "l", setype: "named_zone_t", target: "/var/lib/named" }
-    - { ftype: "d", setype: "named_zone_t", target: "/var/named(/.*)?" }
-    - { ftype: "f", setype: "named_conf_t", target: "/var/named(/.*)?" }
-  when: is_fedora|bool
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: named
+    volumes:
+      - '{{ global_etc }}named/dnsmasq-hosts:/etc/dnsmasq-hosts:z'
+      - '{{ global_etc }}named/dnsmasq.conf:/etc/dnsmasq.conf:z'
+      - '{{ global_etc }}named/resolv.dnsmasq.conf:/etc/resolv.dnsmasq.conf:z'
+    ports:
+      - "53:53/udp"
+  notify: "restart named"
 
-- name: reload selinux configuration => is_fedora and sefcontext changed
-  shell: "restorecon {{item}}"
-  with_items:
-    - "/var/lib/named"
-    - "-irv /var/named"
-  when: is_fedora|bool and sefcontext_result.changed
-
+# ***** ENABLE USAGE OF LOCAL DNS *****
 - name: disable NetworkManager dns handling => is_fedora
   lineinfile:
     path: /etc/NetworkManager/NetworkManager.conf
@@ -142,10 +146,21 @@
     - "restart named"
 
 # ***** FINALIZE *****
-- name: register systemd service watcher
+- name: create systemd service
+  vars:
+    container_name: "named"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: register update notifier
   vars:
     name: "named"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+    type: "docker"
+    url: "https://alpinelinux.org/"
+    config: {
+      repository: "alpine",
+      pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: trigger service check handler
   vars:

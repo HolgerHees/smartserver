@@ -20,41 +20,6 @@
   notify: "restart postfix"
   when: is_suse|bool
   
-#- name: set config => is_suse
-#  lineinfile:
-#    path: /etc/sysconfig/postfix
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}} "{{item.value}}"'
-#  with_items:
-#    #- { field: 'POSTFIX_LISTEN', value: '' }
-#    - { field: 'POSTFIX_INET_PROTO', value: 'all' }
-#    - { field: 'POSTFIX_RELAYHOST', value: '[smtp.gmail.com]:587' }
-#    - { field: 'POSTFIX_SMTP_AUTH', value: 'yes' }
-#    - { field: 'POSTFIX_SMTP_AUTH_OPTIONS', value: 'noanonymous' }
-#    - { field: 'POSTFIX_SMTP_TLS_CLIENT', value: 'must' }
-##    - { field: 'POSTFIX_SMTP_TLS_SERVER', value: 'yes' } # needed to activate TLS engine
-##    - { field: 'POSTFIX_TLS_CAFILE', value: '/etc/ssl/certs/GlobalSign_Root_CA_-_R2.pem' }
-#    - { field: 'POSTFIX_TLS_CAFILE', value: '/etc/ssl/ca-bundle.pem' }
-#    - { field: 'POSTFIX_TLS_CERTFILE', value: '' }
-#    - { field: 'POSTFIX_TLS_KEYFILE', value: '' }
-
-#    - { field: 'POSTFIX_MYHOSTNAME', value: '{{server_name}}' }
-#    - { field: 'POSTFIX_LOCALDOMAINS', value: '{{server_name}}, {{server_domain}}, localhost' }
-#  register: config_status
-#  notify: "restart postfix"
-#  when: is_suse|bool
-
-#- name: check postfix is running => is_suse and config status changed
-#  systemd:
-#    name: postfix
-#    state: started
-#  when: is_suse|bool and config_status.changed
-
-#- name: refresh postfix => is_suse and config status changed
-#  command: "/usr/sbin/config.postfix"
-#  when: is_suse|bool and config_status.changed
-#  notify: "restart postfix"
-  
 # https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
 
 - name: set main.cf config

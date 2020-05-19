@@ -49,10 +49,15 @@
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
+    - { import_role: { name: alpine }, tags: [ 'alpine' ] }                                      # registers update notifier for alpine based container images
+
     - { import_role: { name: network }, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
       
     - { import_role: { name: firewalld }, tags: [ 'firewalld' ] }                                # firewalld configuration
-    - { import_role: { name: dns }, tags: [ 'dns' ] }                                            # dns server to handle you server domain properly together with a vpn
+
+    - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
+
+    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server to handle you server domain                            [docker,user:root]
     
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # activate network configs (network,firewall & dns). Otherwise docker related iptables rules are sometime lost and prevents to continue
@@ -65,15 +70,13 @@
     - { import_role: { name: mdadm }, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
     - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring
 
-    - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
-
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # settup allowed ssh user
 
     - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation
     - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
 
     - { import_role: { name: wireguard }, tags: [ 'wireguard' ] }                                # vpn kernel module installation
-    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile' ] }     # vpn configuration (roadwarrior access)                            [docker,user:root]
+    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (roadwarrior access)                      [docker,user:root]
 
     - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails
 
@@ -88,7 +91,7 @@
 
     - { import_role: { name: samba }, tags: [ 'samba' ] }                                        # smb file server
 
-    - { import_role: { name: ftp }, tags: [ 'ftp' ] }                                            # ftp file server for camera picture upload and cleanup             [docker,user:ftp]
+    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ] }                                  # ftp file server for camera picture upload and cleanup             [docker,user:ftp]
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
@@ -114,7 +117,7 @@
     
     - { import_role: { name: elastalert }, tags: [ 'elastalert' ] }                              # log alerting
 
-    #- { import_role: { name: clamav, tags: [ 'clamav' ] }                                      # antivirus
+    #- { import_role: { name: clamav, tags: [ 'clamav' ] }                                        # antivirus
 
     - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring
 
