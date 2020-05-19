@@ -129,8 +129,8 @@
   file:
     path: /etc/resolv.conf
     state: touch
-    owner: named
-    group: named
+    owner: root
+    group: root
     mode: 0755
   when: "is_suse|bool and netconfig_status.changed"
 
