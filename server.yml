@@ -105,10 +105,10 @@
     - { import_role: { name: apache_ssl }, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
     - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker,user:wwwrun|apache]
 
-    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server to handle you server domain                            [docker,user:root]
-    
-    - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE THE LAST ONE !!!
+    - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE AFTER ELASTICSEARCH !!!
 
+    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server !!! MUST BE THE LAST ONE !!!                           [docker,user:root]
+    
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # Previous roles are independent from upcomming roles, But lot of upcomming roles are depending from previous roles
     # **************************************
