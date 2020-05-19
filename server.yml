@@ -57,8 +57,6 @@
 
     - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
-    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server to handle you server domain                            [docker,user:root]
-    
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # activate network configs (network,firewall & dns). Otherwise docker related iptables rules are sometime lost and prevents to continue
     # **************************************
@@ -72,6 +70,8 @@
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # settup allowed ssh user
 
+    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server to handle you server domain                            [docker,user:root]
+    
     - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation
     - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
 
