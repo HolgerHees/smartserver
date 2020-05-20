@@ -9,6 +9,7 @@
     #update_password: on_create
     groups: users
     append: no
+  register: system_user_result
   with_items: "{{vault_usernames}}"
   
 - name: prepare user folder
@@ -19,19 +20,13 @@
     group: users
     mode: 0750
   with_items: "{{vault_usernames}}"
-    
-#- name: check samba users
-#  shell: "pdbedit -L"
-#  register: samba_user_result
-#  changed_when: false
 
-#- name: add user to samba
-#  shell: "(echo '{{vault_userdata[item].samba_password}}'; echo '{{vault_userdata[item].samba_password}}';) | smbpasswd -s -a {{item}}"
-#  #register: command_result
-#  #failed_when: "'command-not-found' in command_result.stderr"
-#  changed_when: "item not in samba_user_result.stdout"
-#  with_items: "{{vault_usernames}}"
-#  #notify: "restart samba"
+# refresh samba container, otherwise changes on /etc/passwd are not visible inside the container
+- name: refresh samba
+  systemd:
+    name: "samba"
+    state: restarted
+  when: "system_user_result.changed"
   
 - name: check samba users
   shell: "docker exec -i samba sh -c \"pdbedit -L\""
