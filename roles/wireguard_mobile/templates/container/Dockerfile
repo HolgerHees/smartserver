@@ -1,4 +1,4 @@
-FROM alpine:{{alpine_version}}
+FROM alpine:{{image_version}}
 
 RUN apk add --no-cache --update wireguard-tools
 

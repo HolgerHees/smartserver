@@ -68,52 +68,15 @@
     - wg-startup.sh
   notify: "restart wireguard_cloud"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: build docker image
+  vars:
+    name: "{{build_dir_name}}"
+    image_name: "{{image_name}}"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/wireguard_cloud/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: check docker image exists
-  shell: "docker images {{image_name}}:{{alpine_version}}"
-  register: image_exists
-  changed_when: "image_name not in image_exists.stdout"
-  
-- name: prepare build folder
-  file:
-    path: "{{global_build}}{{build_dir_name}}/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  when: "image_name not in image_exists.stdout"
-  
-- name: copy dockerfiles
-  template:
-    src: "roles/wireguard_cloud/templates/container/{{item}}"
-    dest: "{{global_build}}{{build_dir_name}}/{{item}}"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - Dockerfile
-  when: "image_name not in image_exists.stdout"
-  
-# async docker build is used to show progress and prevent travisci killing our job because of inactivity
-- name: compose docker image => image does not exists
-  shell: "docker build -t {{image_name}}:{{alpine_version}} {{global_build}}{{build_dir_name}}/"
-  async: 600
-  poll: 0
-  register: docker_build
-  when: "image_name not in image_exists.stdout"
-
-- name: wait for docker image => image does not exists
-  async_status: jid={{ docker_build.ansible_job_id }}
-  register: job_result
-  until: job_result.finished
-  retries: 10
-  delay: 60
-  when: "image_name not in image_exists.stdout"
-  
 - name: connect cloud container
   docker_network:
     name: cloud

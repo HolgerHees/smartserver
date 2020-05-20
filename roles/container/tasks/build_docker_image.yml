@@ -1,0 +1,43 @@
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+    
+- name: check docker image exists
+  shell: "docker images {{image_name}}:{{image_version}}"
+  register: image_exists
+  changed_when: "image_name not in image_exists.stdout"
+ 
+- name: prepare build folder
+  file:
+    path: "{{global_build}}{{name}}/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  when: "image_name not in image_exists.stdout"
+
+- name: copy dockerfiles
+  template:
+    src: "{{item}}"
+    dest: "{{global_build}}{{name}}/{{item | basename}}"
+    owner: root
+    group: root
+  with_items: "{{files}}"
+  when: "image_name not in image_exists.stdout"
+  
+# async docker build is used to show progress and prevent travisci killing our job because of inactivity
+- name: compose docker image => image does not exists
+  shell: "docker build -t {{image_name}}:{{image_version}} {{global_build}}{{name}}/"
+  async: 1800
+  poll: 0
+  register: docker_build
+  when: "image_name not in image_exists.stdout"
+
+- name: wait for docker image => image does not exists
+  async_status: jid={{ docker_build.ansible_job_id }}
+  register: job_result
+  until: job_result.finished
+  retries: 30
+  delay: 60
+  when: "image_name not in image_exists.stdout" 

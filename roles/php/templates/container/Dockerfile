@@ -1,14 +1,7 @@
-ARG VERSION
+FROM php:{{image_version}}-fpm
 
-FROM php:$VERSION-fpm
-
-ARG WWW_UID
-ARG WWW_USERNAME
-ARG WWW_GID
-ARG WWW_GROUPNAME
-
-RUN groupadd -g $WWW_GID $WWW_GROUPNAME \
-  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false $WWW_USERNAME \
+RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
+  && useradd -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -r -s /bin/false {{system_users['www'].name}} \
   && apt-get update \
   && apt-get install -y sudo
 

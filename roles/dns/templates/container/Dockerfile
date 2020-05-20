@@ -1,6 +1,4 @@
-ARG VERSION
-
-FROM alpine:$VERSION
+FROM alpine:{{image_version}}
 
 RUN apk --no-cache add dnsmasq
 

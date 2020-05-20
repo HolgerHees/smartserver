@@ -1,15 +1,7 @@
-ARG VERSION
+FROM httpd:{{image_version}}
 
-FROM httpd:$VERSION
-
-ARG GLOBAL_LOG
-ARG WWW_UID
-ARG WWW_USERNAME
-ARG WWW_GID
-ARG WWW_GROUPNAME
-
-RUN groupadd -g $WWW_GID $WWW_GROUPNAME \
-  && useradd -u $WWW_UID -g $WWW_GID -r -s /bin/false $WWW_USERNAME \
+RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
+  && useradd -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -r -s /bin/false {{system_users['www'].name}} \
   && mv /usr/local/apache2/conf/httpd.conf /usr/local/apache2/conf/httpd.conf.bak \
   && apt-get update \
   && apt-get install -y sudo
@@ -70,7 +62,7 @@ RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjanss
 #  && ln -s /etc/apache2/mods-available/ssl.load /etc/apache2/mods-enabled/ \
 #  && ln -s /etc/apache2/mods-available/substitute.load /etc/apache2/mods-enabled/ \
 #  && ln -s /etc/apache2/mods-available/xml2enc.load /etc/apache2/mods-enabled/ \
-#  && sed -i "s@ErrorLog.*@ErrorLog $GLOBAL_LOG/error.log@g" /etc/apache2/apache2.conf \
+#  && sed -i "s@ErrorLog.*@ErrorLog {{global_log}}apache2/error.log@g" /etc/apache2/apache2.conf \
 #  && sed -i "s/Include ports\.conf/#Include ports\.conf/g" /etc/apache2/apache2.conf \
 #  && echo 'Include /etc/apache2/_.ansible.server.conf' >> /etc/apache2/apache2.conf \
 #  && echo 'Include /etc/apache2/_.ansible.vhost.d/*.conf' >> /etc/apache2/apache2.conf

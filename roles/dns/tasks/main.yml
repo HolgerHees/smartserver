@@ -20,48 +20,14 @@
     - "dnsmasq-hosts"
     - "resolv.dnsmasq.conf"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
-    
-- name: check docker image exists
-  shell: "docker images custom_named:{{alpine_version}}"
-  register: image_exists
-  changed_when: "'custom_named' not in image_exists.stdout"
- 
-- name: prepare build folder
-  file:
-    path: "{{global_build}}named/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  when: "'custom_named' not in image_exists.stdout"
-
-- name: copy dockerfiles
-  copy:
-    src: "roles/dns/templates/container/Dockerfile"
-    dest: "{{global_build}}named/Dockerfile"
-    owner: root
-    group: root
-  when: "'custom_named' not in image_exists.stdout"
-  
-# async docker build is used to show progress and prevent travisci killing our job because of inactivity
-- name: compose docker image => image does not exists
-  shell: "docker build -t custom_named:{{alpine_version}} {{global_build}}named/ --build-arg VERSION={{alpine_version}}"
-  async: 600
-  poll: 0
-  register: docker_build
-  when: "'custom_named' not in image_exists.stdout"
-
-- name: wait for docker image => image does not exists
-  async_status: jid={{ docker_build.ansible_job_id }}
-  register: job_result
-  until: job_result.finished
-  retries: 10
-  delay: 60
-  when: "'custom_named' not in image_exists.stdout"
+- name: build docker image
+  vars:
+    name: "named"
+    image_name: "custom_named"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/dns/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
   
 - name: create docker container
   docker_container:
