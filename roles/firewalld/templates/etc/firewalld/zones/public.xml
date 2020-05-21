@@ -10,6 +10,8 @@
 {% endif %}
 {% if vault_wireguard_mobile_internal_port is defined %}  <port port="{{vault_wireguard_mobile_internal_port}}" protocol="udp"/>
 {% endif %}
+{% if vault_cloud_vpn_networks is defined %}{% for cloud_name in vault_cloud_vpn_networks %}  <port port="{{vault_cloud_vpn_networks[cloud_name].interface.listenPort}}" protocol="udp"/>
+{% endfor %}{% endif %}
 {% if vault_server_alexa_port is defined %}  <port port="{{vault_server_alexa_port}}" protocol="tcp"/>
 {% endif %}
 </zone>
