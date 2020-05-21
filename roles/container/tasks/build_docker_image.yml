@@ -31,7 +31,7 @@
   async: 1800
   poll: 0
   register: docker_build
-  when: "image_name not in image_exists.stdout"
+  when: "image_name not in image_exists.stdout or file_status.changed"
 
 - name: wait for docker image => image does not exists
   async_status: jid={{ docker_build.ansible_job_id }}
@@ -39,4 +39,4 @@
   until: job_result.finished
   retries: 30
   delay: 60
-  when: "image_name not in image_exists.stdout" 
+  when: "image_name not in image_exists.stdout or file_status.changed" 
