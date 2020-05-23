@@ -70,6 +70,8 @@
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # settup allowed ssh user
 
+    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
+
     - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation
     - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
 
@@ -105,14 +107,8 @@
     - { import_role: { name: apache_ssl }, tags: [ 'apache_ssl' ] }                              # ssl certificates used for apache https
     - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker,user:wwwrun|apache]
 
-    - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE SECOND LAST ONE !!!
-                                                                                                 # => needs elasticsearch role
-                                                                                                 # => and previous roles are triggering fluentd handler
-
-    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server !!! MUST BE THE LAST ONE !!!                           [docker,user:root]
-                                                                                                 # => needs container role which needs fluentd role
-                                                                                                 # => should be the last one, because is modifying the resolve.conf 
-                                                                                                 # => and must be started right after with flush handlers
+    - { import_role: { name: fluentd }, tags: [ 'fluentd' ] }                                    # log collector !!! MUST BE LAST ONE !!!
+                                                                                                 # => previous roles are triggering fluentd handler
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # Previous roles are independent from upcoming roles, But lot of upcoming roles are depending from previous roles
     # **************************************
@@ -150,6 +146,8 @@
     # **************************************
     
   post_tasks:
+    - { import_role: { name: dns, tasks_from: enable, handlers_from: empty }, tags: [ 'dns' ] }   # activate local named
+
     - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud', 'nextcloud_apps' ] }   # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 
     - { import_role: { name: kibana, tasks_from: import_dashboards, handlers_from: empty }, tags: [ 'kibana', 'kibana_dashboard' ] } # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
