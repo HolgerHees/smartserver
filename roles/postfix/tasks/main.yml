@@ -1,3 +1,85 @@
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{ global_etc }}postfix"
+
+- name: copy config
+  template:
+    src: "templates/etc/{{item}}"
+    dest: "{{ global_etc }}postfix/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "postfix-main.cf"
+
+- name: build docker image
+  vars:
+    name: "postfix"
+    image_name: "custom_postfix"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/postfix/templates/container/Dockerfile
+      - roles/postfix/templates/container/entrypoint.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: postfix
+    image: "custom_postfix:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: postfix
+    volumes:
+      - '{{ global_etc }}postfix/postfix-main.cf:/etc/postfix-main.cf:z'
+    ports:
+      - "50025:25/tcp"
+#  notify: "restart postfix"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - name: install required packages => is_fedora
   yum:
     name: [
