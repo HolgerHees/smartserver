@@ -10,13 +10,23 @@
 
 - name: copy config
   template:
-    src: "templates/etc/{{item}}"
+    src: "templates/etc/postfix/{{item}}"
     dest: "{{ global_etc }}postfix/{{item}}"
     owner: root
     group: root
     mode: 0640
   with_items:
-    - "postfix-main.cf"
+    - "main.cf"
+
+- name: copy config
+  template:
+    src: "templates/etc/postfix/{{item}}"
+    dest: "{{ global_etc }}postfix/{{item}}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "main.cf"
 
 - name: build docker image
   vars:
@@ -40,7 +50,7 @@
     log_options:
       tag: postfix
     volumes:
-      - '{{ global_etc }}postfix/postfix-main.cf:/etc/postfix-main.cf:z'
+      - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
     ports:
       - "50025:25/tcp"
 #  notify: "restart postfix"
@@ -164,6 +174,7 @@
   
 #mkfifo /var/spool/postfix/public/pickup
   
+# SET ALIASES  
 - name: set aliases
   lineinfile:
     path: /etc/aliases

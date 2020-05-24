@@ -1,0 +1,34 @@
+# network bindings
+inet_interfaces = all
+inet_protocols = ipv4
+
+# general params
+compatibility_level = 1
+myhostname = {{server_name}}
+mynetworks = 127.0.0.0/8 [::1]/128 {{host_ip}}
+mydestination = {{server_name}}, {{server_domain}}, localhost
+relayhost = [{{vault_root_mail_host}}]:{{vault_root_mail_port}}
+
+# smtp-out params
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = static:{{ vault_root_mail_username }}:{{ vault_root_mail_password }}
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+#smtp_tls_security_level = may
+smtp_enforce_tls = yes
+smtp_use_tls = yes
+
+# RCPT TO restrictions
+smtpd_recipient_restrictions = check_recipient_access {{vault_root_email}}, reject
+
+# some tweaks
+biff = no
+delay_warning_time = 1h
+mailbox_size_limit = 0
+readme_directory = no
+recipient_delimiter = +
+smtputf8_enable = no
+
+# logging
+maillog_file = /dev/stdout
+ 
