@@ -34,6 +34,8 @@ netgroup:                         "{{server_ip_r[2]}}"
 
 vpn_mobile_network:               "10.100.{{netgroup}}.0"
 
+docker_default_gateway:           "172.17.0.1"
+
 docker_hostaccess_network:        "172.16.0.0"
 docker_hostaccess_gateway:        "172.16.0.1"
 

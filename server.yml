@@ -72,13 +72,13 @@
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
-    - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation
-    - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)
+    - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation                                           [deprecated]
+    - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)                                 [deprecated]
 
     - { import_role: { name: wireguard }, tags: [ 'wireguard' ] }                                # vpn kernel module installation
-    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (roadwarrior access)                      [docker,user:root]
+    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (mobile access)                           [docker,user:root]
 
-    - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails
+    - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails                                 [docker,user:root]
 
     - { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli                                                           [docker,user:wwwrun|apache]
     
@@ -87,7 +87,7 @@
     - { import_role: { name: java_ant }, tags: [ 'java_ant' ] }                                  # apache ant
     - { import_role: { name: java_jython }, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
 
-    - { import_role: { name: nfs }, tags: [ 'nfs' ] }                                            # nfs file server
+    - { import_role: { name: nfs }, tags: [ 'nfs' ] }                                            # nfs file server                                                   [deprecated]
 
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 

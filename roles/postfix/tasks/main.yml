@@ -18,16 +18,6 @@
   with_items:
     - "main.cf"
 
-- name: copy config
-  template:
-    src: "templates/etc/postfix/{{item}}"
-    dest: "{{ global_etc }}postfix/{{item}}"
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - "main.cf"
-
 - name: build docker image
   vars:
     name: "postfix"
@@ -46,153 +36,56 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
+    etc_hosts: { "host": "{{docker_default_gateway}}" }
     log_driver: journald
     log_options:
       tag: postfix
     volumes:
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
     ports:
-      - "50025:25/tcp"
-#  notify: "restart postfix"
+      - "127.0.0.1:25:25/tcp"
+  notify: "restart postfix"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# SET LOCAL SMTP CLIENT
 - name: install required packages => is_fedora
   yum:
-    name: [
-        postfix
-      , cyrus-sasl
-      , cyrus-sasl-plain
-    ]
+    name: msmtp
     state: present
-  notify: "restart postfix"
   when: is_fedora|bool
 
 - name: install required packages => is_suse
   zypper:
-    name: [
-        postfix
-      , cyrus-sasl
-      , cyrus-sasl-plain
-    ]
+    name: msmtp
     state: present
-  notify: "restart postfix"
   when: is_suse|bool
   
-# https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
-
-- name: set main.cf config
-  lineinfile:
-    path: /etc/postfix/main.cf
-    regexp: '^{{item.field}}\s*='
-    line: '{{item.field}} = {{item.value}}'
-  with_items:
-    - { field: 'inet_protocols', value: 'all' }                                                      # POSTFIX_INET_PROTO = all
-    - { field: 'relayhost', value: '[{{vault_root_mail_host}}]:{{vault_root_mail_port}}' }           # POSTFIX_RELAYHOST
-
-    - { field: 'smtp_sasl_auth_enable', value: 'yes' }                                               # POSTFIX_SMTP_AUTH = yes
-    - { field: 'smtp_sasl_password_maps', value: 'hash:/etc/postfix/sasl_passwd' }                   # POSTFIX_SMTP_AUTH = yes
-    - { field: 'smtp_sasl_security_options', value: 'noanonymous' }                                  # POSTFIX_SMTP_AUTH = yes && POSTFIX_SMTP_AUTH_OPTIONS
-
-    - { field: 'smtp_use_tls', value: 'yes' }                                                        # POSTFIX_SMTP_TLS_CLIENT = yes
-    - { field: 'smtp_enforce_tls', value: 'yes' }                                                    # POSTFIX_SMTP_TLS_CLIENT = yes
-    - { field: 'smtp_tls_CAfile', value: "/etc/ssl/{{ 'ca-bundle.pem' if is_suse|bool else 'certs/ca-bundle.crt' }}" }
-
-    - { field: 'mydestination', value: '{{server_name}}, {{server_domain}}, localhost' }             # POSTFIX_LOCALDOMAINS
-    - { field: 'myhostname', value: '{{server_name}}' }                                              # POSTFIX_MYHOSTNAME
-  register: config_changed
-  notify: "restart postfix"
-
-- name: disable sysconfig based configuration => is_suse
-  shell: "if [ -f /etc/sysconfig/postfix ]; then mv /etc/sysconfig/postfix /etc/sysconfig/postfix.org; echo \"1\"; else echo \"0\"; fi"
-  register: sysconfig_change
-  changed_when: "'1' in sysconfig_change.stdout"
-  when: is_suse|bool
-
-- name: set master.cf config => is_suse
-  lineinfile:
-    path: /etc/postfix/master.cf
-    regexp: '^tlsmgr '
-    line: 'tlsmgr    unix  -       -       n       1000?   1       tlsmgr'
-  notify: "restart postfix"
-  when: is_suse|bool
-
-- name: set sasl_passwd
-  lineinfile:
-    path: /etc/postfix/sasl_passwd
-    regexp: '^\[{{vault_root_mail_host | regex_escape("posix_basic")}}\]:{{vault_root_mail_port}} '
-    line: '[{{vault_root_mail_host}}]:{{vault_root_mail_port}} {{ vault_root_mail_username }}:{{ vault_root_mail_password }}'
-    create: true # needed for fedora
+- name: set runtime link
+  file:
+    src: "/usr/bin/msmtp"
+    dest: "/usr/sbin/sendmail"
+    state: link
+    follow: no
     owner: root
     group: root
-    mode: 0600
-  register: password_changed
-  notify: "restart postfix"
   
-- name: rebuild sasl_passwd.db => config or password changed
-  shell: "if [ -f /etc/postfix/{{item}} ]; then postmap /etc/postfix/{{item}}; echo \"1\"; else echo \"0\"; fi"
+- name: copy config
+  template:
+    src: "templates/etc/{{item}}"
+    dest: "/etc/{{item}}"
+    owner: root
+    group: root
+    mode: 0644
   with_items:
-    - generic
-    - sasl_passwd
-    - relay
-  register: postmap_change
-  changed_when: "'1' in postmap_change.stdout"
-  when: config_changed.changed or password_changed.changed
-  
-#mkfifo /var/spool/postfix/public/pickup
-  
-# SET ALIASES  
-- name: set aliases
-  lineinfile:
-    path: /etc/aliases
-    regexp: '^{{item.name}}[\s:]{1}'
-    line: '{{item.name}}: {{item.alias}}'
-  with_items:
-    - { name: 'root', alias: '{{ vault_root_email }}' }
-    - { name: 'postmaster', alias: '{{ vault_root_email }}' }
-    - { name: 'default', alias: '{{ vault_root_email }}' }
-  register: aliases_status
-  notify: "restart postfix"
-
-- name: refresh aliases => aliases changed
-  command: "/usr/bin/newaliases"
-  when: aliases_status.changed
-  notify: "restart postfix"
+    - msmtprc
+    - aliases.msmtp
 
 # ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "postfix"
+    trigger_name: "postfix"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
 - name: register systemd service watcher
   vars:
     name: "postfix"

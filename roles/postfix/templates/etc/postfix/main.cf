@@ -5,9 +5,12 @@ inet_protocols = ipv4
 # general params
 compatibility_level = 1
 myhostname = {{server_name}}
-mynetworks = 127.0.0.0/8 [::1]/128 {{host_ip}}
+mynetworks = 127.0.0.0/8 [::1]/128 {{docker_default_gateway}}
 mydestination = {{server_name}}, {{server_domain}}, localhost
 relayhost = [{{vault_root_mail_host}}]:{{vault_root_mail_port}}
+
+# add message id
+always_add_missing_headers = yes
 
 # smtp-out params
 smtp_sasl_auth_enable = yes
@@ -17,9 +20,6 @@ smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 #smtp_tls_security_level = may
 smtp_enforce_tls = yes
 smtp_use_tls = yes
-
-# RCPT TO restrictions
-smtpd_recipient_restrictions = check_recipient_access {{vault_root_email}}, reject
 
 # some tweaks
 biff = no
