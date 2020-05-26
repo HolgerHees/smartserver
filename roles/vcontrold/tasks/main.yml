@@ -1,6 +1,7 @@
 - name: set vcontrold version
   set_fact:
     vcontrold_version: 'v0.98.9'
+    debian_version: 'buster-20200514-slim'
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
@@ -34,7 +35,7 @@
   vars:
     name: "vcontrold"
     image_name: "custom_vcontrold"
-    image_version: "{{alpine_version}}-{{vcontrold_version}}"
+    image_version: "{{debian_version}}-{{vcontrold_version}}"
     files:
       - roles/vcontrold/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
@@ -42,7 +43,7 @@
 - name: create docker container
   docker_container:
     name: vcontrold
-    image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
+    image: "custom_vcontrold:{{debian_version}}-{{vcontrold_version}}"
     state: present
 #    recreate: true
     env:
@@ -53,11 +54,11 @@
     volumes:
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
-      - '/dataDisk/build/vcontrold_container/:/vcontrold:z'
+    #  - '/dataDisk/build/vcontrold_container/:/vcontrold:z'
     devices:
       - "/dev/ttyOpenHabHeizung:/dev/ttyOpenHabHeizung:rwm"
     ports:
-      - "127.0.0.1:53002:3002/tcp"
+      - "127.0.0.1:3002:3002/tcp"
 
   
   
