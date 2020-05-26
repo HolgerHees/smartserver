@@ -2,7 +2,7 @@
   set_fact:
     vcontrold_version: 'v0.98.9'
   tags: [ 'update_notifier_configs' ]
-
+  
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -12,10 +12,97 @@
     mode: 0750
   with_items:
     - '/etc/vcontrold/'
+    - "{{global_etc}}vcontrold/"
     - "{{global_log}}vcontrold/"
     - "/opt/heating_control"
     - "/opt/heating_sensors"
-    
+
+- name: copy config and service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
+    - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
+    - { src: "/etc/udev/rules.d/10-vcontrold.rules", dest: "/etc/udev/rules.d/10-vcontrold.rules" }
+  notify: "restart vcontrold"
+
+- name: build docker image
+  vars:
+    name: "vcontrold"
+    image_name: "custom_vcontrold"
+    image_version: "{{alpine_version}}-{{vcontrold_version}}"
+    files:
+      - roles/vcontrold/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: vcontrold
+    image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: vcontrold
+    volumes:
+      - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
+      - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
+      - '/dataDisk/build/vcontrold_container/:/vcontrold:z'
+    devices:
+      - "/dev/ttyOpenHabHeizung:/dev/ttyOpenHabHeizung:rwm"
+    ports:
+      - "127.0.0.1:53002:3002/tcp"
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
 - name: install required packages => is_fedora
   yum:
     name: [
@@ -77,7 +164,7 @@
   args:
     chdir: '{{global_build}}vcontrold/build'
   with_items:
-    - 'cmake .. -DMANPAGES=OFF'
+    - 'cmake -DMANPAGES=OFF -DCMAKE_INSTALL_PREFIX=/usr/ ..'
     - 'make'
     - 'make install'
   notify: "restart vcontrold"
