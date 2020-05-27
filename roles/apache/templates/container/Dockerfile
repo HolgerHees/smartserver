@@ -4,7 +4,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
   && useradd -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -r -s /bin/false {{system_users['www'].name}} \
   && mv /usr/local/apache2/conf/httpd.conf /usr/local/apache2/conf/httpd.conf.bak \
   && apt-get update \
-  && apt-get install -y sudo \
+  && apt-get install -y sudo
 
   # OpenID Connect
   # - installation of openidc module first already enabled the needed apache configs
