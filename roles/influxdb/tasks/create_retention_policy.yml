@@ -7,6 +7,8 @@
     owner: root
     group: root
     mode: 0644
+  register: retention_policy
 
 - name: create retention policy
-  shell: "cat /tmp/retention_policy.sql | docker exec -i influxdb sh -c \"influx\""
+  shell: "cat /tmp/retention_policy.sql | docker exec -i influxdb sh -c \"influx -database '{{database}}'\""
+  when: "retention_policy.changed"
