@@ -12,24 +12,15 @@
     group: root
     mode: 0750
   with_items:
-    - '/etc/vcontrold/'
     - "{{global_etc}}vcontrold/"
     - "{{global_log}}vcontrold/"
     - "/opt/heating_control"
     - "/opt/heating_sensors"
 
-- name: copy config and service
-  template:
-    src: "templates{{item.src}}"
-    dest: "{{item.dest}}"
-    owner: root
-    group: root
-    mode: 0640
-  with_items:
-    - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
-    - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
-    - { src: "/etc/udev/rules.d/10-vcontrold.rules", dest: "/etc/udev/rules.d/10-vcontrold.rules" }
-  notify: "restart vcontrold"
+- name: get gid from "dialout"
+  shell: "getent group dialout | cut -d: -f3"
+  register: group_dialout_id
+  changed_when: no
 
 - name: build docker image
   vars:
@@ -54,122 +45,12 @@
     volumes:
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
+      - '/opt/heating_control/:/opt/heating_control:ro,z'
     #  - '/dataDisk/build/vcontrold_container/:/vcontrold:z'
     devices:
       - "/dev/ttyOpenHabHeizung:/dev/ttyOpenHabHeizung:rwm"
     ports:
       - "127.0.0.1:3002:3002/tcp"
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-- name: install required packages => is_fedora
-  yum:
-    name: [
-        cmake
-      , libudev-devel # needed to compile sensors
-    ]
-    state: present
-  when: is_fedora|bool
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        cmake
-      , libusb-compat-devel # needed to compile sensors
-      , libudev-devel # needed to compile sensors
-    ]
-    state: present
-  when: is_suse|bool
-
-- name: copy config and service
-  template:
-    src: "templates{{item.path}}"
-    dest: "{{item.path}}"
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rw,g=r,o=", path: "/etc/vcontrold/vcontrold.xml" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/vcontrold/vito.xml" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/udev/rules.d/10-vcontrold.rules" }
-    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/vcontrold.service" }
-  notify: "restart vcontrold"
-
-- name: "clone git"
-  git:
-#    accept_hostkey: yes
-    repo: 'https://github.com/openv/vcontrold.git'
-    dest: '{{global_build}}vcontrold'
-#    force: yes
-    version: '{{vcontrold_version}}'
-  register: clone_status
-#- debug: msg={{clone_status}}
-
-- name: check if vcontrold is installed
-  shell: command -v vcontrold >/dev/null 2>&1
-  register: is_vcontrold_exist
-  failed_when: no
-  changed_when: is_vcontrold_exist.rc == 1
-
-- name: "create build dir => clone status changed"
-  file: 
-    path: '{{global_build}}vcontrold/build'
-    state: directory
-  register: build_status
-  when: clone_status.changed or is_vcontrold_exist.rc == 1
-
-- name: "install => clone status changed"
-  shell: '{{ item }}'
-  args:
-    chdir: '{{global_build}}vcontrold/build'
-  with_items:
-    - 'cmake -DMANPAGES=OFF -DCMAKE_INSTALL_PREFIX=/usr/ ..'
-    - 'make'
-    - 'make install'
-  notify: "restart vcontrold"
-  when: clone_status.changed or is_vcontrold_exist.rc == 1 or build_status.changed
 
 - name: set logrotate job
   vars:
@@ -180,6 +61,19 @@
     owner: root
     group: root
     mode: 0640
+
+- name: copy config and service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
+    - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
+    - { src: "/etc/udev/rules.d/10-vcontrold.rules", dest: "/etc/udev/rules.d/10-vcontrold.rules" }
+  notify: "restart vcontrold"
 
 - name: copy cmd templates
   template:
@@ -242,6 +136,12 @@
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
 # ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "vcontrold"
+    trigger_name: "vcontrold"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
 - name: register service watcher
   vars:
     name: "vcontrold"
@@ -259,7 +159,18 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: register update notifier
+  vars:
+    name: "debian"
+    type: "docker"
+    url: "https://debian.org/"
+    config: {
+      repository: "debian",
+      pattern: "^buster-([0-9]+)-slim$" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: trigger vcontrold handler
   vars:
     notify: "restart vcontrold"
     service: "vcontrold.service"

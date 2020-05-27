@@ -2,15 +2,21 @@
 
 #RUN apk --no-cache add cmake eudev-dev libusb-compat-dev libxml2-dev linux-headers git make gcc musl-dev
 
+#https://medium.com/@gdiener/how-to-build-a-smaller-docker-image-76779e18d48a
+
 FROM debian:{{debian_version}}
 
-RUN apt-get update && \
-    apt-get upgrade && \
+RUN groupmod -g {{group_dialout_id.stdout}} dialout && \
+    apt-get update && \
     apt-get install -y libxml2-dev cmake git && \
     git clone --single-branch --branch {{vcontrold_version}} https://github.com/openv/vcontrold.git && \
     mkdir vcontrold/build && cd vcontrold/build && cmake -DMANPAGES=OFF -DCMAKE_INSTALL_PREFIX=/usr/ .. && make && make install && \
     cd / && \
     rm -rf /vcontrold && \
-    apt-get purge -y --auto-remove cmake git
+    apt-get purge -y cmake git && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
+#ENTRYPOINT ["/bin/sleep","3000000"]
 ENTRYPOINT ["/usr/sbin/vcontrold","-n"]

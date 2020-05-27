@@ -35,6 +35,6 @@ then
     usage
     exit 1
 fi
-CMD="/usr/bin/vclient -h 127.0.0.1 -p 3002 -c 'setBetriebsartTo"$TYPE"'"
 
+CMD="docker exec -i vcontrold sh -c \"/usr/bin/vclient -h 127.0.0.1 -p 3002 -c 'setBetriebsartTo"$TYPE"'\""
 eval $CMD

@@ -1,21 +1,23 @@
 <?xml version="1.0"?>
 <V-Control xmlns:vcontrol="http://www.openv.de/vcontrol">
   <unix>
-     <config>
-	<serial>
-		<tty>/dev/ttyOpenHabHeizung</tty>
-	</serial>
-	<net>
-		<port>3002</port>
-		<allow ip='127.0.0.1'/>
-	</net>
-	<logging>
-		<file>{{global_log}}vcontrold/vcontrold.log</file>
-		<syslog>n</syslog>
-		<debug>y</debug>
-	</logging>
-	<device ID="20CB"/>
-     </config>
+    <config>
+      <username>nobody</username>
+      <groupname>dialout</groupname>
+      <serial>
+            <tty>/dev/ttyOpenHabHeizung</tty>
+        </serial>
+        <net>
+            <port>3002</port>
+            <allow ip='127.0.0.1'/>
+        </net>
+        <logging>
+            <file>{{global_log}}vcontrold/vcontrold.log</file>
+            <syslog>n</syslog>
+            <debug>y</debug>
+        </logging>
+        <device ID="20CB"/>
+    </config>
   </unix>
   <units>
 	<unit name='Temperatur'>
