@@ -62,7 +62,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger elasticsearch handler
   vars:
     notify: "restart elasticsearch"
     service: "elasticsearch.service"

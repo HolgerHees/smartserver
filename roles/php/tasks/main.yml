@@ -63,7 +63,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger php handler
   vars:
     notify: "restart php"
     service: "php.service"

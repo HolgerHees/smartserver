@@ -2,7 +2,7 @@
 #  debug:
 #    msg: "{{ansible_facts.services[service]}}"
 
-- name: trigger service check handler
+- name: trigger service handler
   command: "/bin/true"
   changed_when: "service not in ansible_facts.services or ansible_facts.services[service].state != 'running' or ansible_facts.services[service].status == 'disabled'"
   notify: "{{notify}}"

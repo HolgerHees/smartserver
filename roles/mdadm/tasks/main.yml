@@ -81,7 +81,7 @@
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
   when: mdraid.stat.exists
 
-- name: trigger service check handler
+- name: trigger mdmonitor handler
   vars:
     notify: "restart mdmonitor"
     service: "mdmonitor.service"

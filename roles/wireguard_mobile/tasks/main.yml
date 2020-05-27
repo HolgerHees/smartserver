@@ -81,7 +81,7 @@
     container_name: "wireguard_mobile"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
-- name: trigger service check handler
+- name: trigger wireguard_mobile handler
   vars:
     notify: "restart wireguard_mobile"
     service: "wireguard_mobile.service"

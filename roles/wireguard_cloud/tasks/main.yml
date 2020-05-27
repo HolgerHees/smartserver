@@ -124,7 +124,7 @@
     trigger_name: "wireguard_cloud"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
-- name: trigger service check handler
+- name: trigger wireguard_cloud handler
   vars:
     notify: "restart wireguard_cloud"
     service: "{{container_name}}.service"

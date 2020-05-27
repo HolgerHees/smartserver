@@ -328,7 +328,6 @@
 #  vars:
 #    database: "openhab_db"
 #  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
-#  when: "not influxdb_data_exists.stat.exists"
 
 # ***** FINALIZE *****
 - name: create cron job
@@ -410,7 +409,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger openhab handler
   vars:
     notify: "restart openhab"
     service: "openhab.service"

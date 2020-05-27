@@ -98,7 +98,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger kibana handler
   vars:
     notify: "restart kibana"
     service: "kibana.service"

@@ -121,7 +121,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger elastalert handler
   vars:
     notify: "restart elastalert"
     service: "elastalert.service"

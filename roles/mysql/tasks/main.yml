@@ -80,7 +80,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger mysql handler
   vars:
     notify: "restart mysql"
     service: "mysql.service"

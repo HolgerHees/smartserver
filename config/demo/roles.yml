@@ -2,22 +2,22 @@
 # They can be removed in your individual setup if not needed
 # You can also add your own custom role as shown in the example "apache_proxy"
 
-- { import_role: { name: openvpn_cloud }, tags: [ 'openvpn' ] }                              # vpn configuration (cloud)
-- { import_role: { name: cloudsync }, tags: [ 'cloudsync' ] }                                # encrypted backup sync job to remote cloud endpoint
-- { import_role: { name: cloudexport }, tags: [ 'cloudexport' ] }                            # prepare local cloud endpoint (clouduser and nfs export)
+- { import_role: { name: openvpn_cloud }, tags: [ 'openvpn' ] }                          # vpn configuration (cloud)
+- { import_role: { name: cloudsync }, tags: [ 'cloudsync' ] }                            # encrypted backup sync job to remote cloud endpoint
+- { import_role: { name: cloudexport }, tags: [ 'cloudexport' ] }                        # prepare local cloud endpoint (clouduser and nfs export)
 
 #- { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] } 
 
-#- { import_role: { name: alexa }, tags: [ 'alexa' ] }                                        # deployable alexa skill project.
+#- { import_role: { name: alexa }, tags: [ 'alexa' ] }                                   # deployable alexa skill project.
 
-#- { import_role: { name: roomba }, tags: [ 'roomba' ] }                                      # roomba vacuum cleaner. is using mosquitto.
-#- { import_role: { name: vcontrold }, tags: [ 'vcontrold' ] }                                # heating control for viessmann vitodens
-#- { import_role: { name: electricmeter }, tags: [ 'electricmeter' ] }                        # electricity
+#- { import_role: { name: roomba }, tags: [ 'roomba' ] }                                 # roomba vacuum cleaner. is using mosquitto.
+#- { import_role: { name: vcontrold }, tags: [ 'vcontrold' ] }                           # heating control for viessmann vitodens            [docker,user:nobody|dialout]
+#- { import_role: { name: electricmeter }, tags: [ 'electricmeter' ] }                   # electricity
 
-- { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }      # proxy and redirect configs for custom devices
+- { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }  # proxy and redirect configs for custom devices
 
-#- { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # server agent for influxdb to collect various data
+#- { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                             # server agent for influxdb to collect various data
 
-#- { import_role: { name: ci_service }, tags: [ 'ci_service' ] }                              # continues integration test service
+#- { import_role: { name: ci_service }, tags: [ 'ci_service' ] }                         # continues integration test service
 
-#- { import_role: { name: update_notifier }, tags: [ 'update_notifier' ] }                    # update check for installed software
+#- { import_role: { name: update_notifier }, tags: [ 'update_notifier' ] }               # update check for installed software

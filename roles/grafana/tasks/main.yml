@@ -118,7 +118,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger grafana handler
   vars:
     notify: "restart grafana"
     service: "grafana.service"

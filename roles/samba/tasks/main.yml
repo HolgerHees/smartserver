@@ -60,7 +60,7 @@
     container_name: "samba"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
-- name: trigger service check handler
+- name: trigger samba handler
   vars:
     notify: "restart samba"
     service: "samba.service"

@@ -187,7 +187,7 @@
     name: "docker"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
-- name: trigger service check handler
+- name: trigger docker handler
   vars:
     notify: "restart docker"
     service: "docker.service"

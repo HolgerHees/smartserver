@@ -45,7 +45,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger redis handler
   vars:
     notify: "restart redis"
     service: "redis.service"

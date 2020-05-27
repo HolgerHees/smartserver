@@ -284,7 +284,6 @@
   vars:
     database: "opentsdb"
   import_tasks: roles/influxdb/tasks/create_retention_policy.yml
-  when: "not influxdb_data_exists.stat.exists"
 
 # ***** OTHER *****
 - name: register webui
@@ -335,7 +334,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger netdata handler
   vars:
     notify: "restart netdata"
     service: "netdata.service"

@@ -135,7 +135,7 @@
     container_name: "vsftpd"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
-- name: trigger service check handler
+- name: trigger vsftpd handler
   vars:
     notify: "restart vsftpd"
     service: "vsftpd.service"

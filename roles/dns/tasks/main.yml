@@ -54,7 +54,7 @@
     container_name: "named"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
-- name: trigger service check handler
+- name: trigger named handler
   vars:
     notify: "restart named"
     service: "named.service"

@@ -4,13 +4,12 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
   && useradd -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -r -s /bin/false {{system_users['www'].name}} \
   && mv /usr/local/apache2/conf/httpd.conf /usr/local/apache2/conf/httpd.conf.bak \
   && apt-get update \
-  && apt-get install -y sudo
+  && apt-get install -y sudo \
 
-
-# OpenID Connect
-# - installation of openidc module first already enabled the needed apache configs
-# - after, we just compile and overwrite the module
-#RUN apt-get install -y libapache2-mod-auth-openidc
+  # OpenID Connect
+  # - installation of openidc module first already enabled the needed apache configs
+  # - after, we just compile and overwrite the module
+  #RUN apt-get install -y libapache2-mod-auth-openidc
 
 RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjansson-dev libcjose-dev libpcre++-dev pkg-config \
     && mkdir /usr/lib/apache2/ \
@@ -23,7 +22,14 @@ RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjanss
     && ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" \
     && make clean && make test \
     && make install \
-    && cp /usr/lib/apache2/modules/mod_auth_openidc.so /usr/local/apache2/modules/
+    && cp /usr/lib/apache2/modules/mod_auth_openidc.so /usr/local/apache2/modules/ \
+    && cd / \
+    && rm -rf /mod_auth_openidc \
+    && apt-get purge -y git pkg-config \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 
 
 

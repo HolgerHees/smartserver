@@ -122,7 +122,7 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger service check handler
+- name: trigger onlyoffice handler
   vars:
     notify: "restart onlyoffice"
     service: "onlyoffice.service"
