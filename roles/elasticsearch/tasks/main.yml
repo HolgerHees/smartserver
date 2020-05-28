@@ -29,6 +29,7 @@
     env:
       discovery.type: "single-node"
       opendistro_security.disabled: "true"
+      ES_JAVA_OPTS: "-Xms750m -Xmx750m"
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
