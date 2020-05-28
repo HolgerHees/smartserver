@@ -29,11 +29,12 @@
     name: influxdb
     image: "influxdb:{{influxdb_version}}-alpine"
     state: present
-#    recreate: true
+    recreate: true
     entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
     env:
       INFLUXDB_OPENTSDB_0_ENABLED: "true"
       INFLUXDB_LOGGING_FORMAT: "json"
+      INFLUXDB_REPORTING_DISABLED: "true"
       INFLUXDB_DATA_WAL_FSYNC_DELAY: "1s"
 #      INFLUXDB_DATA_CACHE_SNAPSHOT_MEMORY_SIZE: "128MB"
     log_driver: journald
