@@ -23,6 +23,23 @@
       poll: 0
       ignore_errors: true
       when: cgroup_result is changed
+      
+    #- name: Reboot the server
+    #  tags: reboot
+    #  become: yes
+    #  become_user: root
+    #  shell: "sleep 5 && reboot"
+    #  async: 1
+    #  poll: 0
+  
+    #- name: Wait for the reboot and reconnect 
+    #  wait_for:
+    #    port: 22
+    #    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    #    search_regex: OpenSSH
+    #    delay: 10
+    #    timeout: 60
+    #  connection: local
 
     #    - name: reboot to activate cgroupsv1 => cgroup changed
     #      shell: nohup bash -c "sleep 2s && shutdown -r now" &

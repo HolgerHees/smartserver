@@ -15,6 +15,9 @@ vault_userdata: {
     testuser2: { name: "Test User 2", email: "test2@test.de", samba_password: "test", web_password: "test", webui: "user" }
 }
 
+# selfsigned, letsencrypt
+vault_ssl_certificate: "selfsigned"
+
 # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
 # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
 vault_openid_connect_url: ""

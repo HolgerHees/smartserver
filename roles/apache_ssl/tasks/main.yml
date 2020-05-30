@@ -26,20 +26,7 @@
   register: certificate_files
   changed_when: not certificate_files.stat.exists
 
-- name: check for vault certificate files => is_production and certificate_files does not exists
-  stat:
-    path: "{{config_path}}vault/letsencrypt"
-  register: certificate_files_from_vault
-  changed_when: certificate_files_from_vault.stat.exists
-  when: is_production and not certificate_files.stat.exists
-
-- name: decide to create or restore easy_rsa certificates
-  set_fact:
-    certificate_file_mode: "{% if certificate_files_from_vault.stat is defined and certificate_files_from_vault.stat.exists %}vault{% elif not certificate_files.stat.exists %}create{% endif %}"
-  changed_when: not certificate_files.stat.exists
-
-# **** CERTIFICATE - process ****
-- name: prepare needed folder => certificate_file_mode == 'create'
+- name: prepare needed folder => certificate_files not exists
   file:
     path: "/etc/{{item}}"
     state: directory
@@ -50,37 +37,28 @@
     - "letsencrypt/"
     - "letsencrypt/live"
     - "letsencrypt/live/{{server_domain}}"
-  when: "certificate_file_mode == 'create'"
+  when: not certificate_files.stat.exists
 
-- name: generate openssl privatekey => certificate_file_mode == 'create'
+- name: generate openssl privatekey => certificate_files not exists
   openssl_privatekey:
     path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-  when: "certificate_file_mode == 'create'"
+  when: not certificate_files.stat.exists
     
-- name: generate openssl csr => certificate_file_mode == 'create'
+- name: generate openssl csr => certificate_files not exists
   openssl_csr:
     path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "*.{{server_domain}}"
-  when: "certificate_file_mode == 'create'"
+  when: not certificate_files.stat.exists
     
-- name: generate openssl certificate => certificate_file_mode == 'create'
+- name: generate openssl certificate => certificate_files not exists
   openssl_certificate:
     path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
-  when: "certificate_file_mode == 'create'"
+  when: not certificate_files.stat.exists
   
-- name: install certificate => certificate_file_mode == 'vault'
-  unarchive:
-    src: "{{config_path}}vault/letsencrypt/letsencrypt.tgz"
-    dest: "/etc/"
-    creates: "/etc/letsencrypt/"
-    decrypt: yes
-  notify: "restart apache2"
-  when: "certificate_file_mode == 'vault'"
-
 - name: create certificate symlink
   file:
     src: "letsencrypt"
@@ -89,6 +67,3 @@
     follow: no
     owner: root
     group: root
-    
-# TODO add renew job
-#certbot certonly --manual --preferred-challenges=dns --email {{vault_root_email}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}

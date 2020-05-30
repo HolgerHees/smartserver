@@ -1,0 +1,119 @@
+- name: check letsencrypt certificate
+  stat:
+    path: /etc/letsencrypt/archive/{{server_domain}}
+  register: letsencrypt_archive
+
+- name: check for vault certificate files
+  stat:
+    path: "{{config_path}}vault/letsencrypt"
+  register: certificate_files_from_vault
+
+- name: decide to create or restore easy_rsa certificates
+  set_fact:
+    certificate_mode: "{% if letsencrypt_archive.stat.exists or vault_ssl_certificate != 'letsencrypt' %}{% elif certificate_files_from_vault.stat.exists %}vault{% else %}create{% endif %}"
+    changed_when: "certificate_mode != ''"
+  
+# BACKUP RESTORE #  
+- name: install certificate => certificate_mode = 'vault'
+  unarchive:
+    src: "{{config_path}}vault/letsencrypt/letsencrypt.tgz"
+    dest: "/etc/"
+    creates: "/etc/letsencrypt/"
+    decrypt: yes
+  notify: "restart apache2"
+  when: "certificate_mode == 'vault'"
+
+# CREATE #  
+- name: check for vault certificate files
+  stat:
+    path: "/etc/letsencrypt/live/{{server_domain}}"
+  register: certificate_files
+  when: "certificate_mode == 'create'"
+
+- name: backup selfsigned certificate
+  command: "mv /etc/letsencrypt/live/{{server_domain}} /etc/letsencrypt/live/{{server_domain}}.bak"
+  when: "certificate_mode == 'create' and certificate_files.stat.exists"
+
+- name: collect domain names => certificate_mode = 'create'
+  shell: "grep -ohP \"ServerName\\s*\\K(.*){{server_domain}}\" {{global_etc}}apache2/_.ansible.vhost.d/*.conf"
+  register: domain_result
+  when: "certificate_mode == 'create'"
+
+- name: create certificates => certificate_mode = 'create'
+  shell: "certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{vault_root_email}} -d {{ domain_result.stdout.splitlines() | unique | join(' -d ') }}"
+  when: "certificate_mode == 'create'"
+  
+- name: create cron job
+  vars:
+    name: "Letsencrypt renew job"
+    cmd: "certbot renew"
+    file: "ansible_letsencrypt"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: "certificate_mode == 'create'"
+
+# WILDCARD DNS CHALLENGE
+#- name: run certbot => certificate_mode = 'create_wildcard'
+#  shell: |
+#    log_file -noappend {{global_tmp}}letsencrypt
+#
+#    spawn certbot certonly --dry-run --manual --preferred-challenges=dns --email {{vault_root_email}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
+#    
+#    expect "(Y)es/(N)o:"
+#    send "Y\n"
+#    
+#    expect "Press Enter to Continue"
+#    send "\n"
+#    
+#    expect "Press Enter to Continue"
+#
+#    log_file
+#    sleep 15
+#    #send "\n"
+#    
+#    exit 0
+#  args:
+#    executable: /usr/bin/expect
+#  async: 120
+#  poll: 0
+#  register: result_async
+#  when: "certificate_mode == 'create_wildcard'"
+  
+#- name: wait until challenges are available => certificate_mode = 'create_wildcard'
+#  wait_for:
+#    path: "{{global_tmp}}letsencrypt"
+#    search_regex: "This must be set up in addition"
+#  when: "certificate_mode == 'create_wildcard'"
+
+#- name: collect challenges => certificate_mode = 'create_wildcard'
+#  shell: "cat {{global_tmp}}letsencrypt | sed 's/\\r$//' | grep -P '^[A-z0-9_-]+$'"
+#  register: challenge_result
+#  when: "certificate_mode == 'create_wildcard'"
+
+#- name:
+#  debug:
+#    msg: "{{challenge_result.stdout.splitlines()}}"
+#  when: "certificate_mode == 'create_wildcard'"
+
+#- name: wait until done => certificate_mode = 'create_wildcard'
+#  async_status:
+#    jid: "{{ result_async.ansible_job_id }}"
+#  register: result
+#  until: result.finished
+#  retries: 120
+#  when: "certificate_mode == 'create_wildcard'"
+  
+# ...
+
+#- name: create cron job
+#  vars:
+#    name: "Letsencrypt renew job"
+#    cmd: "certbot certonly --manual --preferred-challenges=dns --email {{vault_root_email}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}"
+#    file: "ansible_letsencrypt"
+#    hour: "1"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: "certificate_mode == 'create'"
+
+

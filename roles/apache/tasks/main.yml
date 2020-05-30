@@ -12,8 +12,10 @@
     mode: 0755
   with_items:
     - "{{htdocs_path}}"
-    - "{{htdocs_path}}/fallback"
-    - "{{htdocs_path}}/fallback/domain"
+    - "{{htdocs_path}}letsencrypt"
+    - "{{htdocs_path}}letsencrypt/.well-known"
+    - "{{htdocs_path}}fallback"
+    - "{{htdocs_path}}fallback/domain"
     - "{{global_log}}apache2/"
 
 - name: check owner and group
@@ -27,12 +29,6 @@
     - "{{htdocs_path}}"
     - "{{global_log}}apache2/"
 
-- name: check certificate chain file
-  stat:
-    path: /etc/letsencrypt/live/{{server_domain}}/chain.pem
-  register: chain_file
-  changed_when: no
-
 - name: copy config
   template:
     src: "templates/etc/apache2/{{item}}"
@@ -41,7 +37,7 @@
     group: "root"
     mode: 0644
   vars:
-    enable_stapeling: "{{chain_file.stat.exists}}"
+    enable_stapeling: "{{vault_ssl_certificate != 'selfsigned'}}"
   with_items:
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
@@ -62,7 +58,7 @@
     group: "root"
     mode: 0644
   vars:
-    enable_stapeling: "{{chain_file.stat.exists}}"
+    enable_stapeling: "{{vault_ssl_certificate != 'selfsigned'}}"
   with_items:
     - _.ansible.vhost.d/auth_openidc1.inc
     - _.ansible.vhost.d/auth_openidc2.inc
