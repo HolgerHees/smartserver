@@ -57,6 +57,18 @@
     mode: 0750
   with_items: "{{cloud_network.peers}}"
 
+# fault tolerant to avoid errors if key vault files does not exist
+- name: copy keys => is_production
+  copy:
+    src: "{{config_path}}vault/{{etc_dir_name}}"
+    dest: "{{global_etc}}{{etc_dir_name}}keys/"
+    decrypt: yes
+    owner: root
+    group: root
+    mode: 0600
+  failed_when: no
+  when: "is_production|bool"
+
 - name: copy util
   template:
     src: "roles/wireguard_cloud/templates/util/{{item}}"
