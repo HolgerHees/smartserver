@@ -47,7 +47,7 @@
 - name: create cron job
   vars:
     name: "Letsencrypt renew job"
-    cmd: "certbot renew"
+    cmd: "certbot renew > /dev/null"
     file: "ansible_letsencrypt"
     hour: "1"
     minute: "0"
