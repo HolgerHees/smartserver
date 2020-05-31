@@ -32,14 +32,6 @@
         - easy-rsa/private
         - easy-rsa/reqs
         - openvpn
-        - letsencrypt
-
-    - name: backup letsencrypt certificate
-      archive:
-        path: "/etc/letsencrypt/"
-        dest: "{{config_path}}vault_backup/letsencrypt/letsencrypt.tgz"
-        format: "gz"
-      tags: [vault_certificates]
 
     - name: backup easy-rsa certificates
       copy:
