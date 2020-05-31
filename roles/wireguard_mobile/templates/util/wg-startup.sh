@@ -46,7 +46,7 @@ initClientConfigs()
     echo -n "PublicKey = " >> $1
     cat ./keys/server_publickey >> $1
     echo "AllowedIPs = {{server_network}}/24" >> $1
-    echo "Endpoint = {{public_server_domain}}:{{vault_wireguard_mobile_public_port}}" >> $1
+    echo "Endpoint = {{server_domain}}:{{vault_wireguard_mobile_public_port}}" >> $1
     #echo "PersistentKeepalive = 25" >> $1
 
     chmod 600 $1

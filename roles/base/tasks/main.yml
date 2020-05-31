@@ -103,6 +103,7 @@
     mode: 0750
   with_items:
     - "{{local_backup_path}}archive"
+    - "{{local_backup_path}}config"
 
 - name: register update notifier => is_fedora
   vars:

@@ -93,7 +93,7 @@ vault_vpn_cloud_local_username: "clouduser"
 vault_vpn_cloud_local_export_path: "{{raid_path}}{{vault_vpn_cloud_local_username}}"
 vault_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
 vault_vpn_cloud_master_port: "3421"
-vault_vpn_cloud_master_domain: "{{public_server_domain}}"
+vault_vpn_cloud_master_domain: "{{server_domain}}"
 
 # used in generic optional role 'cloudsync'
 vault_cloudsync_password: "default123"
@@ -118,7 +118,7 @@ vault_camera_device_username: "admin"
 vault_camera_device_password: "default123"
 
 # used in generic optional role 'alexa'
-vault_server_alexa_port: "22432" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+vault_server_alexa_public_port: "22432" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
 vault_alexa_username: "alexa"
 vault_alexa_web_password: "default123"
 vault_alexa_deployment_access_key_id: "<access_key_id>"
