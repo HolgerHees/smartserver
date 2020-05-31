@@ -47,11 +47,23 @@
   notify: "restart postfix"
 
 # SET LOCAL SMTP CLIENT
+- name: install postfix packages => is_fedora
+  yum:
+    name: postfix
+    state: absent
+  when: is_fedora|bool
+
 - name: install required packages => is_fedora
   yum:
     name: msmtp
     state: present
   when: is_fedora|bool
+
+- name: remove postfix packages => is_suse
+  zypper:
+    name: postfix
+    state: absent
+  when: is_suse|bool
 
 - name: install required packages => is_suse
   zypper:
