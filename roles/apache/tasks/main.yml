@@ -3,6 +3,77 @@
     apache_version: '2.4.43'
   tags: [ 'update_notifier_configs' ]
   
+# SELFSIGNED CERTIFICATE
+- name: install required packages => is_fedora
+  yum:
+    name: [
+      #python2-setuptools      # needed by openssl ansible module
+      python3-setuptools
+      , certbot-apache
+    ]
+    state: present
+  when: is_fedora|bool
+  
+- name: install required packages => is_suse
+  zypper:
+    name: [
+      python2-setuptools      # needed by openssl ansible module
+      #python3-setuptools
+      , python2-certbot-apache # is installing right Python libraries cryptography needed by openssl ansible module and python2-setuptools
+      #, python3-certbot-apache
+    ]
+    state: present
+  when: is_suse|bool
+  
+- name: check certificate
+  stat:
+    path: /etc/letsencrypt/live/{{server_domain}}/
+  register: certificate_files
+  changed_when: not certificate_files.stat.exists
+
+- name: prepare needed folder => certificate_files not exists
+  file:
+    path: "/etc/{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "letsencrypt/"
+    - "letsencrypt/live"
+    - "letsencrypt/live/{{server_domain}}"
+  when: not certificate_files.stat.exists
+
+- name: generate openssl privatekey => certificate_files not exists
+  openssl_privatekey:
+    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+  when: not certificate_files.stat.exists
+    
+- name: generate openssl csr => certificate_files not exists
+  openssl_csr:
+    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    common_name: "*.{{server_domain}}"
+  when: not certificate_files.stat.exists
+    
+- name: generate openssl certificate => certificate_files not exists
+  openssl_certificate:
+    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
+    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    provider: selfsigned
+  when: not certificate_files.stat.exists
+  
+- name: create certificate symlink
+  file:
+    src: "letsencrypt"
+    dest: "/etc/certbot"
+    state: link
+    follow: no
+    owner: root
+    group: root
+    
+# APACHE
 - name: prepare needed folder
   file:
     path: "{{item}}"

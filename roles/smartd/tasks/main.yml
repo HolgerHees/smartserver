@@ -11,6 +11,10 @@
     state: present
   notify: "restart smartd"
   when: is_suse|bool
+  
+- name: collect devices
+  shell: "smartctl --scan | grep -oP \"^[A-z/]+\""
+  register: device_result
 
 - name: copy config
   template:
