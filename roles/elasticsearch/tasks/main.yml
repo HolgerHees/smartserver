@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    elasticsearch_version: '1.7.0'
+    elasticsearch_version: '1.8.0'
   tags: [ 'update_notifier_configs' ]    
 
 - name: install required python pip modules

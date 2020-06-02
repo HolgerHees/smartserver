@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    kibana_version: "1.7.0"
+    kibana_version: "1.8.0"
   tags: [ 'update_notifier_configs' ]
   
 - name: build docker image
