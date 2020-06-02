@@ -82,10 +82,7 @@
 
     - { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli                                                           [docker,user:wwwrun|apache]
     
-    - { import_role: { name: java }, tags: [ 'java' ] }                                          # jdk 1.8
-    - { import_role: { name: java_maven }, tags: [ 'java_maven' ] }                              # apache maven => needed to compile cloudsync
-    - { import_role: { name: java_ant }, tags: [ 'java_ant' ] }                                  # apache ant
-    - { import_role: { name: java_jython }, tags: [ 'java_jython' ] }                            # python for java => used by openhab's rule engine
+    - { import_role: { name: java }, tags: [ 'java' ] }                                          # jdk 1.8 (needed by openhab and cloudsync)
 
     - { import_role: { name: nfs }, tags: [ 'nfs' ] }                                            # nfs file server                                                   [deprecated]
 

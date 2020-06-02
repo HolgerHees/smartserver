@@ -8,17 +8,27 @@
 
 - name: prepare needed log folder
   file:
-    path: '{{global_log}}cloudsync/'
+    path: '{{item}}'
     state: directory
     owner: root
     group: root
     mode: 0750
+  with_items:
+    - '{{global_log}}cloudsync/'
+    - '{{global_build}}cloudsync/'
 
 # check early to give some time to be active and connected
 - name: check openvpn@cloud service
   import_tasks: roles/openvpn_cloud/tasks/wait_until_ready.yml
   when: "is_production|bool"
 
+- name: install maven
+  unarchive:
+    src: "http://apache.mirror.digionline.de/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz"
+    dest: "{{global_build}}/cloudsync"
+    remote_src: yes
+    creates: "{{global_build}}/cloudsync/apache-maven-3.5.4/"
+    
 - name: "clone git"
   git:
 #    accept_hostkey: yes
@@ -33,7 +43,7 @@
     dest: "{{projects_path}}cloudsync/config/cloudsync.config"
   
 - name: install => clone_status
-  shell: '/usr/bin/mvn clean install'
+  shell: '{{global_build}}/cloudsync/apache-maven-3.5.4/bin/mvn clean install'
   args:
     chdir: '{{projects_path}}cloudsync'
   when: clone_status.changed

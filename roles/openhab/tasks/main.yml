@@ -1,10 +1,7 @@
 - name: set openhab version
   set_fact:
     openhab_version: "2.5.5"
-  tags: [ 'update_notifier_configs' ]
-  
-- name: set jython script version
-  set_fact:
+    jython_version: "2.7.2"
     # stable version from 05.03.2020
     jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
   tags: [ 'update_notifier_configs' ]
@@ -46,6 +43,21 @@
   file:
     src: "openhab-runtime-{{openhab_version}}"
     dest: "{{data_path}}openhab-runtime"
+    state: link
+    follow: no
+    owner: root
+    group: root
+
+# **** JYTHON ****
+- name: install jython jar
+  get_url:
+    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
+    dest: "{{data_path}}openhab-runtime/runtime/lib/"
+
+- name: set jython link
+  file:
+    src: "{{data_path}}openhab-runtime/runtime/lib/jython-standalone-{{jython_version}}.jar"
+    dest: "{{data_path}}openhab-runtime/runtime/lib/jython.jar"
     state: link
     follow: no
     owner: root
@@ -395,6 +407,18 @@
       project: "openhab/openhab-distro", 
       pattern: "^([0-9\\.]+)$",
       version: "{{openhab_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: register jython update notifier
+  vars:
+    name: "jython"
+    type: "github"
+    url: "https://www.jython.org/news"
+    config: { 
+      project: "jythontools/jython",
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{jython_version}}" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 

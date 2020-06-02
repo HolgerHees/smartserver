@@ -6,7 +6,6 @@
 - name: install archive
   unarchive:
     src: "https://corretto.aws/downloads/resources/{{java_version}}/amazon-corretto-{{java_version}}-linux-x64.tar.gz"
-    #src: "https://d3pxv6yz143wms.cloudfront.net/8.212.04.2/amazon-corretto-8.212.04.2-linux-x64.tar.gz"
     dest: "/opt"
     remote_src: true
     creates: "/opt/amazon-corretto-{{java_version}}-linux-x64/"
@@ -18,7 +17,6 @@
   alternatives:
     name: java
     path: "/opt/amazon-corretto-{{java_version}}-linux-x64//bin/java"
-#    path: "/opt/amazon-corretto-8.212.04.2-linux-x64/bin/java"
     link: /usr/bin/java
   when: jdk_exists.changed
     
