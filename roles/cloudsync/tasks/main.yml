@@ -1,11 +1,67 @@
+- name: set version
+  set_fact:
+    rclone_version: "1.52.0"
+  tags: [ 'update_notifier_configs' ]
+  
+# check early to give some time to be active and connected
+- name: check openvpn@cloud service
+  import_tasks: roles/openvpn_cloud/tasks/wait_until_ready.yml
+  when: "is_production|bool"
+
+# FOLDER
 - name: prepare needed cloud folder
   file:
     path: '{{item}}'
     state: directory
   with_items:
     - "{{cloud_backup_source_path}}"
-    - "{{cloud_backup_target_path}}"
+    - "{{cloud_backup_target_path}}"  
+  
+- name: set backup links
+  file:
+    src: "{{item.src}}"
+    dest: "{{cloud_backup_source_path}}{{item.name}}"
+    state: link
+    follow: no
+    owner: root
+    group: root
+  with_items:
+    - {name: 'archive', src: '{{local_backup_path}}archive'}
+    - {name: 'nextcloud', src: '{{nextcloud_data_path}}'}
+    - {name: 'mysql', src: '{{local_backup_path}}mysql'}
+    - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
+    
+# RCLONE
+- name: install archive
+  unarchive:
+    src: "https://downloads.rclone.org/v{{rclone_version}}/rclone-v{{rclone_version}}-linux-amd64.zip"
+    dest: "/opt/"
+    creates: "/opt/rclone-v{{rclone_version}}-linux-amd64"
+    remote_src: yes
+    owner: "root"
+    group: "root"
+    mode: 0750
 
+- name: set symbolic link
+  file:
+    src: "/opt/rclone-v{{rclone_version}}-linux-amd64"
+    dest: "/opt/rclone"
+    state: link
+    follow: no
+    owner: "root"
+    group: "root"
+    
+#- name: create cron job => is_production
+#  vars:
+#    name: "RClone"
+#    cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
+#    file: "ansible_cloudsync"
+#    hour: "2"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: "is_production|bool"
+
+# CLOUDSYNC
 - name: prepare needed log folder
   file:
     path: '{{item}}'
@@ -16,11 +72,6 @@
   with_items:
     - '{{global_log}}cloudsync/'
     - '{{global_build}}cloudsync/'
-
-# check early to give some time to be active and connected
-- name: check openvpn@cloud service
-  import_tasks: roles/openvpn_cloud/tasks/wait_until_ready.yml
-  when: "is_production|bool"
 
 - name: install maven
   unarchive:
@@ -48,20 +99,6 @@
     chdir: '{{projects_path}}cloudsync'
   when: clone_status.changed
   
-- name: set backup links
-  file:
-    src: "{{item.src}}"
-    dest: "{{cloud_backup_source_path}}{{item.name}}"
-    state: link
-    follow: no
-    owner: root
-    group: root
-  with_items:
-    - {name: 'archive', src: '{{local_backup_path}}archive'}
-    - {name: 'nextcloud', src: '{{nextcloud_data_path}}'}
-    - {name: 'mysql', src: '{{local_backup_path}}mysql'}
-    - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
-    
 - name: create cron job => is_production
   vars:
     name: "Cloudsync"
@@ -71,6 +108,18 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 - name: test reachability of {{cloud_vpn_endpoint_slave}}
   wait_for: timeout=120 port=2049 host="{{cloud_vpn_endpoint_slave}}"
