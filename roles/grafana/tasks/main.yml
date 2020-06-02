@@ -18,7 +18,7 @@
     - "{{ global_lib }}grafana/provisioning/datasources/"
     - "{{ global_lib }}grafana/provisioning/notifiers/"
 
-- name: copy grafana dashboards
+- name: copy shared grafana dashboards
   copy:
     src: "{{item}}"
     dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
@@ -28,6 +28,23 @@
   notify: "restart grafana"
   with_fileglob:
     - "templates/dashboards/*"
+
+- name: check for individual grafana dashboards
+  stat:
+    path: "{{config_path}}roles/grafana/templates/dashboards/"
+  register: dashboard_directory
+    
+- name: copy individual grafana dashboards
+  copy:
+    src: "{{item}}"
+    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart grafana"
+  with_fileglob:
+    - "{{config_path}}roles/grafana/templates/dashboards1/*"
+  when: dashboard_directory.stat.exists
 
 - name: copy grafana provisioning
   template:

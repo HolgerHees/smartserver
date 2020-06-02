@@ -57,8 +57,12 @@
     mode: 0750
   with_items: "{{cloud_network.peers}}"
 
-# fault tolerant to avoid errors if key vault files does not exist
-- name: copy keys => is_production
+- name: check for vault keys
+  stat:
+    path: "{{config_path}}vault/{{etc_dir_name}}"
+  register: key_directory
+
+- name: copy keys => is_production and key_directory exists
   copy:
     src: "{{config_path}}vault/{{etc_dir_name}}"
     dest: "{{global_etc}}{{etc_dir_name}}keys/"
@@ -66,8 +70,7 @@
     owner: root
     group: root
     mode: 0600
-  failed_when: no
-  when: "is_production|bool"
+  when: "is_production|bool and key_directory.stat.exists"
 
 - name: copy util
   template:
