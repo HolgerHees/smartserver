@@ -43,7 +43,7 @@
     mode: 0640
   notify: "restart grafana"
   with_fileglob:
-    - "{{config_path}}roles/grafana/templates/dashboards1/*"
+    - "{{config_path}}roles/grafana/templates/dashboards/*"
   when: dashboard_directory.stat.exists
 
 - name: copy grafana provisioning
