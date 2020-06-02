@@ -51,75 +51,51 @@
     owner: "root"
     group: "root"
     
-#- name: create cron job => is_production
-#  vars:
-#    name: "RClone"
-#    cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
-#    file: "ansible_cloudsync"
-#    hour: "2"
-#    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
-#  when: "is_production|bool"
-
-# CLOUDSYNC
-- name: prepare needed log folder
-  file:
-    path: '{{item}}'
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - '{{global_log}}cloudsync/'
-    - '{{global_build}}cloudsync/'
-
-- name: install maven
-  unarchive:
-    src: "http://apache.mirror.digionline.de/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz"
-    dest: "{{global_build}}/cloudsync"
-    remote_src: yes
-    creates: "{{global_build}}/cloudsync/apache-maven-3.5.4/"
-    
-- name: "clone git"
-  git:
-#    accept_hostkey: yes
-    repo: 'https://github.com/HolgerHees/cloudsync.git'
-    dest: '{{projects_path}}cloudsync'
-    version: 'master'
-  register: clone_status
- 
+- name: check for vault keys
+  stat:
+    path: "/opt/rclone/rclone.config"
+  register: config_file
+  
 - name: copy config
   template:
-    src: "templates/cloudsync.config"
-    dest: "{{projects_path}}cloudsync/config/cloudsync.config"
-  
-- name: install => clone_status
-  shell: '{{global_build}}/cloudsync/apache-maven-3.5.4/bin/mvn clean install'
-  args:
-    chdir: '{{projects_path}}cloudsync'
-  when: clone_status.changed
-  
+    src: "templates/rclone.config"
+    dest: "/opt/rclone/rclone.config"
+  when: "not config_file.stat.exists"
+    
+- name: set password
+  shell: "/opt/rclone/rclone --obscure --config=/opt/rclone/rclone.config config update backup password \"{{vault_cloudsync_password}}\""
+  when: "not config_file.stat.exists"
+
+- name: prepare sync cmd
+  set_fact:
+    sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone -v --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_target_path}}backup sync {{cloud_backup_source_path}} backup:"
+    
+#- name: show sync_cmd
+#  debug:
+#    msg: "{{sync_cmd}}"
+    
+# FINALIZE  
 - name: create cron job => is_production
   vars:
-    name: "Cloudsync"
-    cmd: "( ( mountpoint -q {{cloud_backup_target_path}} && {{projects_path}}cloudsync/cloudsync.sh --backup {{cloud_backup_source_path}} --name {{server_name}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1) )"
-    file: "ansible_cloudsync"
+    name: "RClone"
+    cmd: "( mountpoint -q {{cloud_backup_target_path}} && {{sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1)"
+    file: "ansible_cloudbackup"
     hour: "2"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+- name: register update notifier
+  vars:
+    name: "rclone"
+    type: "github"
+    url: "https://rclone.org/changelog/"
+    config: { 
+      project: "rclone/rclone", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{rclone_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: test reachability of {{cloud_vpn_endpoint_slave}}
   wait_for: timeout=120 port=2049 host="{{cloud_vpn_endpoint_slave}}"
