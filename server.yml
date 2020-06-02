@@ -111,8 +111,6 @@
     
     - { import_role: { name: elastalert }, tags: [ 'elastalert' ] }                              # log alerting
 
-    #- { import_role: { name: clamav, tags: [ 'clamav' ] }                                        # antivirus
-
     - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring
 
     - { import_role: { name: grafana }, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker,user:root]
