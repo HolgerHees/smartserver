@@ -49,10 +49,17 @@
     group: root
 
 # **** JYTHON ****
+- name: check jython jar
+  stat:
+    path: "{{data_path}}openhab-runtime/runtime/lib/jython.jar"
+  register: jython_jar_exists
+  changed_when: "not jython_jar_exists.stat.exists"
+
 - name: install jython jar
   get_url:
     url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
     dest: "{{data_path}}openhab-runtime/runtime/lib/"
+  when: "not jython_jar_exists.stat.exists"
 
 - name: set jython link
   file:
@@ -62,6 +69,7 @@
     follow: no
     owner: root
     group: root
+  when: "not jython_jar_exists.stat.exists"
 
 # **** BACKUP ****
 - name: backup original conf and start.sh => openhab not exists
@@ -147,13 +155,13 @@
   notify: "restart openhab"
 
 # ****** GITHUB JYTHON PROJECT ******
-- name: "clone jython git"
+- name: "clone jython helper git"
   git:
     repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
     dest: '{{global_build}}openhab-jython'
     version: '{{jython_script_version}}'
 
-- name: copy jython classes
+- name: copy jython helper classes
   copy:
     src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
     dest: "{{data_path}}openhab-runtime/python/"
@@ -163,7 +171,7 @@
     mode: 0640
   notify: "restart openhab"
 
-- name: copy jython configuration
+- name: copy jython helper configuration
   copy:
     src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
     dest: "{{data_path}}openhab-runtime/python/configuration.py"
