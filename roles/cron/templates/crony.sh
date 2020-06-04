@@ -55,7 +55,9 @@ then
         MESSAGE+="\nTRACE-ERROR OUTPUT:\n$TRACE_VALUE"
     fi
     
-    JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "$ERR_VALUE" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
+    ERR_MSG=echo $ERR_VALUE | head -c 5000
+    
+    JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "$ERR_MSG" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
     echo "$JSON"  | systemd-cat -t crony -p 3
 
 elif [ -s "$OUT" ]
