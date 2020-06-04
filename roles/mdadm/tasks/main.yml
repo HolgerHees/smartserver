@@ -2,6 +2,7 @@
   stat:
     path: "/etc/mdadm.conf"
   register: mdraid
+  tags: cron
 
 - name: install required packages => is_fedora
   yum:
