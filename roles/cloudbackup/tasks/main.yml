@@ -16,6 +16,7 @@
   with_items:
     - "{{cloud_backup_source_path}}"
     - "{{cloud_backup_target_path}}"  
+    - "{{global_log}}cloudbackup"  
   
 - name: set backup links
   file:
@@ -68,7 +69,7 @@
 
 - name: prepare sync cmd
   set_fact:
-    sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone -v --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_target_path}}backup sync {{cloud_backup_source_path}} backup:"
+    sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone --log-file={{global_log}}cloudbackup/cloudbackup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_target_path}}backup sync {{cloud_backup_source_path}} backup:"
     
 #- name: show sync_cmd
 #  debug:
@@ -84,6 +85,16 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   when: "is_production|bool"
+  
+- name: set logrotate job
+  vars:
+    logrotate_path: "{{global_log}}cloudbackup/*.log"
+  copy:
+    content: "{{ lookup('template', 'templates/logrotate') }}"
+    dest: "/etc/logrotate.d/ansible_cloudbackup"
+    owner: root
+    group: root
+    mode: 0640
 
 - name: register update notifier
   vars:
