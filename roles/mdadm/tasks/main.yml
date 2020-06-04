@@ -2,7 +2,7 @@
   stat:
     path: "/etc/mdadm.conf"
   register: mdraid
-  tags: cron
+  tags: "cron_job"
 
 - name: install required packages => is_fedora
   yum:
@@ -50,7 +50,7 @@
     value: /sbin:/usr/sbin:/bin:/usr/bin
     cron_file: ansible_mdadm
     user: root
-  tags: cron
+  tags: "cron_job"
   when: mdraid.stat.exists
     
 - name: create cron 'start' job
