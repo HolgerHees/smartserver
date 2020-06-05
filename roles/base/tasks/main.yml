@@ -25,15 +25,16 @@
   yum:
     name: [
         mc
-      , subversion
-      , git
-      , make
-      , autoconf
-      , automake
-      , gcc
+      , hostname           # used by network role to change hostname
+      , subversion         # ???
+      , git                # ???
+      , make               # ???
+      , autoconf           # ???
+      , automake           # ???
+      , gcc                # ???
       , libxml2-devel
       , lm_sensors
-      , ImageMagick
+      , ImageMagick        # ???
       , htop
       , sysstat
       , iotop
@@ -58,15 +59,16 @@
   zypper:
     name: [  
         mc
-      , subversion
-      , git
-      , make
-      , autoconf
-      , automake
-      , gcc
+      , hostname           # used by network role to change hostname
+      , subversion         # ???
+      , git                # ???
+      , make               # ???
+      , autoconf           # ???
+      , automake           # ???
+      , gcc                # ???
       , libxml2-devel
       , sensors
-      , ImageMagick
+      , ImageMagick        # ???
       , htop
       , sysstat
       , iotop
