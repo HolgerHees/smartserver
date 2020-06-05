@@ -47,12 +47,12 @@
 - name: create cron job
   vars:
     name: "Letsencrypt renew job"
-    cmd: "certbot renew > /dev/null"
+    cmd: "certbot renew > /dev/null 2>&1"
     file: "ansible_letsencrypt"
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: "certificate_mode == 'create'"
+  when: "letsencrypt_archive.stat.exists and vault_ssl_certificate == 'letsencrypt'"
 
 # WILDCARD DNS CHALLENGE
 #- name: run certbot => certificate_mode = 'create_wildcard'
