@@ -25,28 +25,29 @@
   yum:
     name: [
         mc
-      , hostname           # used by network role to change hostname
-      , subversion         # ???
-      , git                # ???
-      , make               # ???
-      , autoconf           # ???
-      , automake           # ???
-      , gcc                # ???
-      , libxml2-devel
-      , lm_sensors
-      , ImageMagick        # ???
       , htop
       , sysstat
       , iotop
-      , zip
-      , curl
       , smem 
+
+#      , libxml2-devel
+
+#      , subversion         # ???
+#      , make               # ???
+#      , autoconf           # ???
+#      , automake           # ???
+#      , gcc                # ???
+#      , lm_sensors
+#      , ImageMagick        # ???
+      
+      , curl
+      , bzip2
+      , zip
+      , git
       #, python2-pip
       , python3-pip
-      , bzip2
       #, python2-passlib
       , python3-passlib
-      , mailx
       
       , python3-libselinux # used by ansible on fedora
       , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
@@ -59,29 +60,30 @@
   zypper:
     name: [  
         mc
-      , hostname           # used by network role to change hostname
-      , subversion         # ???
-      , git                # ???
-      , make               # ???
-      , autoconf           # ???
-      , automake           # ???
-      , gcc                # ???
-      , libxml2-devel
-      , sensors
-      , ImageMagick        # ???
       , htop
       , sysstat
       , iotop
-      , zip
-      , curl               # used to send multi part/formdata => kibana
       , smem               # useful tool to debug memory usage (including swap usage)
+
+#      , libxml2-devel
+
+#      , subversion         # ???
+#      , make               # ???
+#      , autoconf           # ???
+#      , automake           # ???
+#      , gcc                # ???
+#      , sensors
+#      , ImageMagick        # ???
+
+      , curl               # used to send multi part/formdata => kibana
+      , bzip2              # used to import databases with bzcat
+      , zip                # used for ansible unarchive mobule
+      , git                # used for ansible git module
       , python2-pip        # used for ansible pip module => python2 is used because it installes python2-setuptools and depends on it. python3-pip still needs python2-setuptools
       #, python3-pip
-      , bzip2              # used to import databases with bzcat
       , python2-passlib    # used by ansible htpasswd module (user role) => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/web_infrastructure/htpasswd.py" is using python2
       #, python3-passlib    # used by ansible htpasswd module (user role)
       , insserv-compat     # used by ansible systemd module
-      , mailx              # used by elastalert
     ]
     state: present
   when: is_suse|bool

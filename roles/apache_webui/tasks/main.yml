@@ -43,6 +43,19 @@
     config_file: "templates/etc/apache2/_.ansible.d/manifest.conf"
   import_tasks: roles/apache/tasks/add_config.yml
 
+# POTD FETCHER
+- name: install required packages for fetchPOTD => is_fedora
+  yum:
+    name: ImageMagick
+    state: present
+  when: is_fedora|bool
+
+- name: install required packages for fetchPOTD => is_suse
+  zypper:
+    name: ImageMagick
+    state: present
+  when: is_suse|bool
+  
 - name: copy fetchPOTD cmd
   template:
     src: "templates/fetchPOTD.sh"

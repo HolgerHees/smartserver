@@ -1,3 +1,15 @@
+- name: install required packages => is_fedora
+  yum:
+    name: hostname
+    state: present
+  when: is_fedora|bool
+
+- name: install required packages => is_suse
+  zypper:
+    name: hostname
+    state: present
+  when: is_suse|bool
+  
 - name: set hostname
   shell: 'hostname {{server_name}}'
   changed_when: "ansible_hostname != server_name"
