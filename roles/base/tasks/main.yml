@@ -33,16 +33,16 @@
 #      , libxml2-devel
 
 #      , subversion         # ???
-#      , make               # ???
 #      , autoconf           # ???
 #      , automake           # ???
-#      , gcc                # ???
 #      , lm_sensors
 #      , ImageMagick        # ???
       
       , curl
       , bzip2
       , zip
+      , gcc
+      , make
       , git
       #, python2-pip
       , python3-pip
@@ -78,6 +78,8 @@
       , curl               # used to send multi part/formdata => kibana
       , bzip2              # used to import databases with bzcat
       , zip                # used for ansible unarchive mobule
+      , gcc                # used for ansible gem module => to build native extension
+      , make               # used for ansible gem module => to build native extension
       , git                # used for ansible git module
       , python2-pip        # used for ansible pip module => python2 is used because it installes python2-setuptools and depends on it. python3-pip still needs python2-setuptools
       #, python3-pip
