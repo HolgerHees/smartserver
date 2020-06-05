@@ -24,50 +24,18 @@
       ignore_errors: true
       when: cgroup_result is changed
       
-    #- name: Reboot the server
-    #  tags: reboot
-    #  become: yes
-    #  become_user: root
-    #  shell: "sleep 5 && reboot"
-    #  async: 1
-    #  poll: 0
-  
-    #- name: Wait for the reboot and reconnect 
-    #  wait_for:
-    #    port: 22
-    #    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
-    #    search_regex: OpenSSH
-    #    delay: 10
-    #    timeout: 60
-    #  connection: local
+#    - name: reboot to activate changed config => cgroup changed
+#      shell: "sleep 3 && shutdown -r now"
+#      async: 1
+#      poll: 0
+#      ignore_errors: true
+#      when: cgroup_result is changed
 
-    #    - name: reboot to activate cgroupsv1 => cgroup changed
-    #      shell: nohup bash -c "sleep 2s && shutdown -r now" &
-    #      when: cgroup_result is changed
-
-    #    - name: wait for the reboot to complete => cgroup changed
-    #      wait_for_connection:
-    #        timeout: 240
-    #        sleep: 5
-    #        delay: 20
-    #      when: cgroup_result is changed
-      
-    #    - name: debug
-    #      debug:
-    #        var: cgroup_result
-    #        verbosity: 4
-
-    #    - name: reboot to activate cgroupsv1 => cgroup changed
-    #      shell: "sleep 2 && shutdown -r now && sleep 2"
-    #      async: 1
-    #      poll: 0
-    #      ignore_errors: true
-    #      when: cgroup_result is changed
-
-    #    - name: wait for the reboot to complete => cgroup changed
-    #      wait_for_connection:
-    #        connect_timeout: 20
-    #        sleep: 5
-    #        delay: 10
-    #        timeout: 300
-    #      when: cgroup_result is changed
+#    - name: wait for the reboot to complete => cgroup changed
+#      wait_for:
+#        port: 22
+#        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+#        search_regex: OpenSSH
+#        delay: 1
+#        timeout: 300
+#      connection: local
