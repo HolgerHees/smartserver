@@ -87,17 +87,6 @@
     - { src: "/etc/udev/rules.d/10-vcontrold.rules", dest: "/etc/udev/rules.d/10-vcontrold.rules" }
   notify: "restart vcontrold"
 
-- name: copy cmd templates
-  template:
-    src: "templates/opt/{{item}}"
-    dest: "/opt/{{item}}"
-    owner: root
-    group: root
-    mode: 0640
-  with_items:
-    - "heating_control/heizung.cmd"
-    - "heating_control/heizung.tpl"
-
 - name: copy cmd's
   template:
     src: "templates/opt/{{item}}"
@@ -106,8 +95,9 @@
     group: root
     mode: 0750
   with_items:
-    - "heating_control/heizung.bash"
     - "heating_control/heizungBetriebsart.bash"
+    - "heating_control/listenMQTT.py"
+    - "heating_control/publishMQTT.py"
     - "heating_sensors/sensoren.bash"
   
 - name: copy cmd binaries
@@ -123,7 +113,7 @@
 - name: create cron job => is_production
   vars:
     name: "Heating Control"
-    cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock /opt/heating_control/heizung.bash"
+    cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock docker exec -i vcontrold sh -c \"python3 /opt/heating_control/publishMQTT.py\""
     file: "ansible_vcontrold"
     minute: "*/1"
   import_tasks: roles/cron/tasks/add_cronjob.yml
@@ -153,11 +143,6 @@
     container_name: "vcontrold"
     trigger_name: "vcontrold"
   import_tasks: roles/container/tasks/add_docker_service.yml
-
-- name: register service watcher
-  vars:
-    name: "vcontrold"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
 - name: register update notifier
   vars:

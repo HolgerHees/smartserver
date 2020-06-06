@@ -14,6 +14,7 @@ RUN groupmod -g {{group_dialout_id.stdout}} dialout && \
     cd / && \
     rm -rf /vcontrold && \
     apt-get purge -y cmake git && \
+    apt-get install -y python3 python3-paho-mqtt && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
