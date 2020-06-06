@@ -37,23 +37,30 @@
   shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
   changed_when: no
+  failed_when: no
   
+#- name:
+#  debug:
+#    msg: "{{device_result}}"
+
 - name: prepare device javaopts
   set_fact:
-    device_java_opts: "/dev/{{device_result.stdout.splitlines() | join(':/dev/')}}"
+    device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
+  when: "device_result.rc == 0"
   
 - name: prepare device mounts
   set_fact:
     device_mounts: "{{device_mounts | default([]) + ['/dev/' + item + ':/dev/' + item + ':rwm']}}"
-  with_items: "{{device_result.stdout.splitlines()}}"
+  with_items: "{{device_result.stdout_lines}}"
+  when: "device_result.rc == 0"
   
-- name:
-  debug:
-    msg: "{{device_java_opts}}"
+#- name:
+#  debug:
+#    msg: "{{device_java_opts | default('')}}"
 
-- name:
-  debug:
-    msg: "{{device_mounts}}"
+#- name:
+#  debug:
+#    msg: "{{device_mounts | default([])}}"
 
 - name: build docker image
   vars:
@@ -80,7 +87,7 @@
       USER_ID: "{{openhab_user}}"
       GROUP_ID: "{{openhab_group}}"
       #CRYPTO_POLICY: "unlimited"
-      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} -Dgnu.io.rxtx.SerialPorts={{device_java_opts}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
+      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
     log_driver: journald
     log_options:
       tag: openhab
@@ -92,7 +99,7 @@
       - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
       - '{{global_lib}}openhab:/openhab/userdata/persistence:z'
-    devices: "{{device_mounts}}"
+    devices: "{{device_mounts | default([])}}"
 #    ports:
 #     - "59080:8080"  
 #     - "59443:8443"  
