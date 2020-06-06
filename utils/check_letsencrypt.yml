@@ -30,10 +30,11 @@
     - name: collect domain names
       shell: "grep -ohP \"ServerName\\s*\\K(.*){{server_domain}}\" {{global_etc}}apache2/_.ansible.vhost.d/*.conf"
       register: domain_result
+      changed_when: no
       
     - name: collected domains
       debug:
-        msg: "{{ domain_result.stdout.splitlines() | unique }}"
+        msg: "{{ domain_result.stdout_lines | unique }}"
 
     - name: test certificates
-      shell: "certbot certonly --webroot -w {{htdocs_path}}letsencrypt --dry-run --preferred-challenges http --agree-tos --email test@test.de -d {{ domain_result.stdout.splitlines() | unique | join(' -d ') }}"
+      shell: "certbot certonly --webroot -w {{htdocs_path}}letsencrypt --dry-run --preferred-challenges http --agree-tos --email test@test.de -d {{ domain_result.stdout_lines | unique | join(' -d ') }}"
