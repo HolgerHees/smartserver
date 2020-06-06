@@ -2,10 +2,280 @@
   set_fact:
     openhab_version: "2.5.5"
     jython_version: "2.7.2"
+#    openhab_user: "9001"
+#    openhab_group: "9001"
+    openhab_user: "root"
+    openhab_group: "root"
     # stable version from 05.03.2020
     jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
   tags: [ 'update_notifier_configs' ]
-    
+
+- name: get gid from "dialout"
+  shell: "getent group dialout | cut -d: -f3"
+  register: group_dialout_id
+  changed_when: no
+
+- name: prepare needed folder
+  file:
+    path:  "{{item}}"
+    state: directory
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0750
+  with_items:
+    - "{{global_etc}}openhab"
+    - "{{global_etc}}openhab/conf"
+    - "{{global_etc}}openhab/conf/scripts"
+    - "{{global_etc}}openhab/conf/services"
+    - "{{global_etc}}openhab/conf/things"
+    - "{{global_etc}}openhab/runtime/lib/python"
+    - "{{global_etc}}openhab/python"
+    - "{{global_log}}openhab"
+    - "{{global_lib}}openhab"
+
+- name: collect devices
+  shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
+  register: device_result
+  changed_when: no
+  
+- name: prepare device javaopts
+  set_fact:
+    device_java_opts: "/dev/{{device_result.stdout.splitlines() | join(':/dev/')}}"
+  
+- name: prepare device mounts
+  set_fact:
+    device_mounts: "{{device_mounts | default([]) + ['/dev/' + item + ':/dev/' + item + ':rwm']}}"
+  with_items: "{{device_result.stdout.splitlines()}}"
+  
+- name:
+  debug:
+    msg: "{{device_java_opts}}"
+
+- name:
+  debug:
+    msg: "{{device_mounts}}"
+
+- name: build docker image
+  vars:
+    name: "openhab"
+    image_name: "custom_openhab"
+    image_version: "{{openhab_version}}"
+    files:
+      - roles/openhab/templates/container/Dockerfile
+      - roles/openhab/templates/container/init.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: openhab
+    image: "custom_openhab:{{openhab_version}}"
+    state: present
+    network_mode: host
+#    capabilities:
+#      - NET_ADMIN
+#      - NET_RAW
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      USER_ID: "{{openhab_user}}"
+      GROUP_ID: "{{openhab_group}}"
+      #CRYPTO_POLICY: "unlimited"
+      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} -Dgnu.io.rxtx.SerialPorts={{device_java_opts}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
+    log_driver: journald
+    log_options:
+      tag: openhab
+    volumes:
+      - '{{projects_path}}openhab2:{{projects_path}}openhab2:z'
+      - '{{global_etc}}openhab/addons:/openhab/addons:z'
+      - '{{global_etc}}openhab/conf:/openhab/conf:z'
+      - '{{global_etc}}openhab/python:/openhab/python:z'
+      - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
+      - '{{global_log}}openhab:/openhab/userdata/logs:z'
+      - '{{global_lib}}openhab:/openhab/userdata/persistence:z'
+    devices: "{{device_mounts}}"
+#    ports:
+#     - "59080:8080"  
+#     - "59443:8443"  
+#     - "59007:5007"  
+#     - "59101:8101"  
+#  notify: "restart openhab"
+
+# ****** GITHUB CONFIG PROJECT ******
+- name: clone config git
+  git:
+    accept_hostkey: yes
+    repo: '{{vault_openhab_config_git}}'
+    dest: '{{projects_path}}openhab2'
+    version: "master"
+
+- name: link configs
+  file:
+    src: "{{projects_path}}openhab2/{{item}}"
+    dest: "{{global_etc}}openhab/{{item}}"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+  with_items:
+    #- start.sh
+    - addons
+    - conf/automation
+    - conf/html
+    - conf/icons
+    - conf/items
+    - conf/persistence
+    - conf/rules
+    - conf/sitemaps
+    - conf/transform
+    - python/custom
+#  notify: "restart openhab"
+
+- name: copy habpanel config
+  copy:
+    src: "{{projects_path}}openhab2/habpanel.config"
+    dest: "{{global_etc}}openhab/conf/habpanel.config"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+
+- name: copy service configs
+  template:
+    src: "{{item}}"
+    dest: "{{ global_etc }}openhab/conf/services/{{item|basename}}"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_fileglob: "{{projects_path}}openhab2/templates/services/*"
+#  notify: "restart openhab"
+
+- name: copy things configs
+  template:
+    src: "{{item}}"
+    dest: "{{ global_etc }}openhab/conf/things/{{item|basename}}"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_fileglob: "{{projects_path}}openhab2/templates/things/*"
+#  notify: "restart openhab"
+
+# JYTHON
+- name: check jython jar
+  stat:
+    path: "{{global_etc}}openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
+  register: jython_jar_exists
+  changed_when: "not jython_jar_exists.stat.exists"
+
+- name: install jython jar
+  get_url:
+    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
+    dest: "{{global_etc}}openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
+  when: "not jython_jar_exists.stat.exists"
+
+# JYTHON HELPER
+- name: "clone jython helper git"
+  git:
+    repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
+    dest: '{{global_build}}openhab-jython'
+    version: '{{jython_script_version}}'
+
+- name: copy jython helper classes
+  copy:
+    src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
+    dest: "{{global_etc}}openhab/python/"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0750
+#  notify: "restart openhab"
+
+- name: copy jython helper configuration
+  copy:
+    src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
+    dest: "{{global_etc}}openhab/python/configuration.py"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+#  notify: "restart openhab"
+ 
+- name: copy udev rules
+  template:
+    src: "{{item}}"
+    dest: "/etc/udev/rules.d/{{item|basename}}"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0644
+  register: udev_rules
+  with_fileglob: "{{projects_path}}openhab2/templates/udev/rules.d/*"
+#  notify: "restart openhab"
+
+- name: reload udev rules
+  shell: "udevadm control --reload-rules && udevadm trigger"
+  when: udev_rules.changed
+ 
+#- name: create systemd service
+#  vars:
+#    container_name: "openhab"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 - name: check openhab-runtime
   stat:
     path: "{{data_path}}openhab-runtime-{{openhab_version}}"
@@ -168,7 +438,7 @@
     remote_src: yes
     owner: root
     group: root
-    mode: 0640
+    mode: 0750
   notify: "restart openhab"
 
 - name: copy jython helper configuration
@@ -287,7 +557,41 @@
     - "-irv {{global_log}}openhab"
     - "-irv {{global_lib}}openhab"
 #    - "{{projects_path}}openhab2/start.sh"
-  when: is_fedora|bool and sefcontext_result.changed
+  when: is_fedora|bool and sefcontext_result.changed  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 # ***** DATABASE ****
 - name: check mysql service
@@ -441,8 +745,8 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: trigger openhab handler
-  vars:
-    notify: "restart openhab"
-    service: "openhab.service"
-  import_tasks: roles/base/tasks/service_check.yml
+#- name: trigger openhab handler
+#  vars:
+#    notify: "restart openhab"
+#    service: "openhab.service"
+#  import_tasks: roles/base/tasks/service_check.yml
