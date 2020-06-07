@@ -65,8 +65,8 @@
   zypper:
     name: [
         docker
-        , python2-docker  # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2
-        #, python3-docker  # used by ansible docker module
+        #, python2-docker  # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2
+        , python3-docker  # used by ansible docker module
 #        , podman
 #        , podman>=1.6.2
 #        , cni>=0.7.1
