@@ -14,8 +14,6 @@
   with_items:
     - "{{global_etc}}vcontrold/"
     - "{{global_log}}vcontrold/"
-    - "/opt/heating_control"
-    - "/opt/heating_sensors"
 
 - name: get gid from "dialout"
   shell: "getent group dialout | cut -d: -f3"
@@ -56,8 +54,6 @@
     volumes:
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
-      - '/opt/heating_control/:/opt/heating_control:ro,z'
-    #  - '/dataDisk/build/vcontrold_container/:/vcontrold:z'
     devices:
       - "/dev/ttyOpenHabHeizung:/dev/ttyOpenHabHeizung:rwm"
     ports:
@@ -82,60 +78,11 @@
     group: root
     mode: 0640
   with_items:
+    - { src: "/etc/vcontrold/mqtt.py", dest: "{{global_etc}}vcontrold/mqtt.py" }
     - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
     - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
     - { src: "/etc/udev/rules.d/10-vcontrold.rules", dest: "/etc/udev/rules.d/10-vcontrold.rules" }
   notify: "restart vcontrold"
-
-- name: copy cmd's
-  template:
-    src: "templates/opt/{{item}}"
-    dest: "/opt/{{item}}"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "heating_control/heizungBetriebsart.bash"
-    - "heating_control/listenMQTT.py"
-    - "heating_control/publishMQTT.py"
-    - "heating_sensors/sensoren.bash"
-  
-- name: copy cmd binaries
-  copy:
-    src: "templates/opt/{{item}}"
-    dest: "/opt/{{item}}"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "heating_sensors/TempCmd"
-
-- name: create cron job => is_production
-  vars:
-    name: "Heating Control"
-    cmd: "/usr/bin/flock -n {{global_tmp}}heizung.lock docker exec -i vcontrold sh -c \"python3 /opt/heating_control/publishMQTT.py\""
-    file: "ansible_vcontrold"
-    minute: "*/1"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: "is_production|bool"
-
-- name: create cron job => is_production
-  vars:
-    name: "Heating Sensors"
-    cmd: "/opt/heating_sensors/sensoren.bash"
-    file: "ansible_vcontrold"
-    minute: "*/1"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: "is_production|bool"
-
-- name: create cron job
-  vars:
-    name: "Heating Cleanup"
-    cmd: "find {{global_log}}heizung/ -mtime +14 -exec rm {} +"
-    file: "ansible_vcontrold"
-    hour: "0"
-    minute: "50"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 # ***** FINALIZE *****
 - name: create systemd service

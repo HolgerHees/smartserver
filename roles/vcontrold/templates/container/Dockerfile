@@ -20,4 +20,6 @@ RUN groupmod -g {{group_dialout_id.stdout}} dialout && \
     rm -rf /var/lib/apt/lists/*
 
 #ENTRYPOINT ["/bin/sleep","3000000"]
-ENTRYPOINT ["/usr/sbin/vcontrold","-n"]
+#ENTRYPOINT ["/usr/sbin/vcontrold","-n"]
+ENTRYPOINT ["/usr/bin/python3","/etc/vcontrold/mqtt.py"]
+
