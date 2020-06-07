@@ -260,6 +260,10 @@ class Job:
             helper.execCommand("VBoxManage setproperty machinefolder {}VirtualMachines".format(self.lib_dir))
             
             env = {"VAGRANT_HOME": self.lib_dir }
+
+            # Always test with the latest version
+            update_cmd = u"{} --config={} --os={} box update".format(vagrant_path,config_name,os_name)
+            (update_output,update_exit_status) = pexpect.run(update_cmd, cwd=self.repository_dir, env = env, withexitstatus=True)
             
             # Deployment start
             deploy_output = ""
