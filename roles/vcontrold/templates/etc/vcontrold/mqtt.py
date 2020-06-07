@@ -39,7 +39,7 @@ class vclient(object):
         print("Set '" + cmd + "' successful", flush=True)
         
     def publish(self):
-        print("Publish", flush=True)
+        print("Publish values to mqtt", flush=True)
         for cmd in self.cmds:
             '''Query & Publish'''
             if cmd == 'timestamp':
@@ -55,6 +55,7 @@ class vclient(object):
                     print(out.decode("ascii"), flush=True, file=sys.stderr)
                 else:
                     self.mqtt_client.publish('/vcontrol/' + cmd, payload=round(float(search.group(0)),2), qos=0, retain=False)
+        print("Publish successful", flush=True)
                 
     def terminate(self):
         self.mqtt_client.disconnect()
