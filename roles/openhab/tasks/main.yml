@@ -129,6 +129,7 @@
 - name: check config folder
   shell: "ls -1 {{projects_path}}openhab2/conf/"
   register: config_result
+  changed_when: no
 
 - name: link conf folder
   file:
