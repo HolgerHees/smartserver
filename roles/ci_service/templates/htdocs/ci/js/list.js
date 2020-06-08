@@ -54,7 +54,7 @@ mx.CIList = (function( ret ) {
                 var hash = job.getAttribute("id");
                 
                 var _state = job.querySelector(".state").innerHTML;
-                var _stateElementFormatted = job.querySelector(".stateFormatted");
+                var _stateElementFormatted = job.querySelector(".stateFormatted > *");
 
                 var _duration = job.querySelector(".duration").innerHTML;
                 var _durationFormatted = job.querySelector(".durationFormatted").innerHTML;

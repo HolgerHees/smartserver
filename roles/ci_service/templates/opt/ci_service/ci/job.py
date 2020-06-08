@@ -218,7 +218,8 @@ class Job:
             if len(diff) > 0:
                 self.active_machine = diff.pop()
                 status.setVID(self.status_file,self.active_machine)
-            elif duration > 60:
+            # max 3 min. Long startup time is possible after an image upgrade.
+            elif duration > 180:
                 self.cancel_reason = "max_starttime"
                 d["child"].close()
                 
@@ -244,7 +245,7 @@ class Job:
 
         i = 0
         while True:
-            self.registered_machines = virtualbox.getRegisteredMachines()
+            self.registered_machines = {}
             self.active_machine = None
             self.cancel_reason = None
             self.deploy_exit_status = 1
@@ -268,8 +269,12 @@ class Job:
                     update_cmd = u"{} --config={} --os={} box update".format(vagrant_path,config_name,os_name)
                     (update_output,update_exit_status) = pexpect.run(update_cmd, timeout=1800, logfile=LogFile(f), cwd=self.repository_dir, env = env, withexitstatus=True)
                 except ValueError:
+                    #helper.log( update_output )
+                    #helper.log( traceback.format_exc(), "err" )
                     pass
             
+            self.registered_machines = virtualbox.getRegisteredMachines()
+
             #helper.log( u"{}".format("VAGRANT_HOME={}".format(self.lib_dir)))
             #helper.log( u"{}".format(update_exit_status) )
             #helper.log( u"{}".format(update_output) )
@@ -283,6 +288,8 @@ class Job:
                 try:
                     (deploy_output,self.deploy_exit_status) = pexpect.run(cmd, timeout=1, logfile=LogFile(f), cwd=self.repository_dir, env = env, withexitstatus=True, events={pexpect.TIMEOUT:self.searchMachineVID})
                 except ValueError:
+                    #helper.log( deploy_output )
+                    #helper.log( traceback.format_exc(), "err" )
                     pass
                     
             # Deployment done
@@ -291,25 +298,21 @@ class Job:
                 helper.log( u"Deployment for commit '{}' successful".format(self.git_hash) )
                 self.cancel_reason = None
             else:
-                try:
-                    deploy_output = deploy_output.decode("utf-8")
-                except AttributeError:
-                    pass
-                log_lines = deploy_output.split("\n")
-                log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
-                i = i + 1
-                # Check if retry is possible
-                if self.checkForRetry(log_lines_to_check):
-                    if i < max_retries:
-                        self.cancel_reason = "retry"
-                        retry = True
-                    else:
-                        self.cancel_reason = "max_retries"
-                else:
-                    self.cancel_reason = None
+                if self.cancel_reason == None:
+                    log_lines = deploy_output.split(b"\n")
+                    
+                    log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
+                    i = i + 1
+                    # Check if retry is possible
+                    if self.checkForRetry(log_lines_to_check):
+                        if i < max_retries:
+                            self.cancel_reason = "retry"
+                            retry = True
+                        else:
+                            self.cancel_reason = "max_retries"
 
                 reason = u" ({})".format( self.cancel_reason ) if self.cancel_reason != None else ""
-                helper.log( u"Deployment for commit '{}' unsuccessful {}".format(self.git_hash, reason ) )
+                helper.log( u"Deployment for commit '{}' unsuccessful {}".format(self.git_hash, reason ) )                    
 
             # Final logfile preperation
             duration = int(round(datetime.now().timestamp() - self.start_time.timestamp()))

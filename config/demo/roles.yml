@@ -18,6 +18,7 @@
 
 #- { import_role: { name: clamav, tags: [ 'clamav' ] }                                   # file antivirus
 
+#- { import_role: { name: java }, tags: [ 'java' ] }                                     # jdk 1.8 (amazon corretto)
 #- { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                             # server agent for influxdb to collect various data
 
 #- { import_role: { name: ci_service }, tags: [ 'ci_service' ] }                         # continues integration test service
