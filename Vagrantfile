@@ -48,8 +48,8 @@ Example: vagrant --config=demo --os=suse up
             setup_image = "bento/opensuse-leap-15.1"
         else
             setup_os = "fedora"
-            setup_image = "bento/fedora-31"
-            #setup_image = "fedora/31-cloud-base"
+            #setup_image = "bento/fedora-31"
+            setup_image = "fedora/31-cloud-base"
         end
       when '--ansible'
         setup_ansible=arg
@@ -118,9 +118,11 @@ Vagrant.configure(2) do |config|
             ansible.inventory_path = "config/#{setup_config}/server.ini"
             ansible.compatibility_mode = "2.0"
             ansible.provisioning_path = "/vagrant/"
-            #ansible.become = true
-            #ansible.become_user = "root"
             
+            if setup_image.end_with?('cloud-base') then
+                ansible.become = true
+                ansible.become_user = "root"
+            end
             #ansible.raw_arguments = "--ask-vault-pass"
             #ansible.ask_vault_pass = true
         end
@@ -131,7 +133,7 @@ Vagrant.configure(2) do |config|
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
 
-    if $is_reboot_possible then
+    if $is_reboot_possible and (setup_os != 'fedora' or !setup_image.end_with?('cloud-base')) then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo mount -t vboxsf -o uid=$UID,gid=$(id -g) vagrant /vagrant
         SHELL
@@ -159,10 +161,10 @@ Vagrant.configure(2) do |config|
         ansible.vault_password_file = "/tmp/vault_pass"
       end
 
-      #if setup_os == 'fedora' then
-      #  ansible.become = true
-      #  ansible.become_user = "root"
-      #end
+      if setup_os == 'fedora' and setup_image.end_with?('cloud-base') then
+        ansible.become = true
+        ansible.become_user = "root"
+      end
     end  
     
     # Delete temp vault password file
