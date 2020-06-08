@@ -291,7 +291,11 @@ class Job:
                 helper.log( u"Deployment for commit '{}' successful".format(self.git_hash) )
                 self.cancel_reason = None
             else:
-                log_lines = deploy_output.split(b"\n")
+                try:
+                    deploy_output = deploy_output.decode("utf-8")
+                except AttributeError:
+                    pass
+                log_lines = deploy_output.split("\n")
                 log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
                 i = i + 1
                 # Check if retry is possible
