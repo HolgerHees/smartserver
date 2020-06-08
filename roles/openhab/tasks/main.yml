@@ -118,12 +118,12 @@
   notify: "restart openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
-#- name: clone config git
-#  git:
-#    accept_hostkey: yes
-#    repo: '{{vault_openhab_config_git}}'
-#    dest: '{{projects_path}}openhab2'
-#    version: "master"
+- name: clone config git
+  git:
+    accept_hostkey: yes
+    repo: '{{vault_openhab_config_git}}'
+    dest: '{{projects_path}}openhab2'
+    version: "master"
 
 - name: link configs
   file:
