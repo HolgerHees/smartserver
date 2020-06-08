@@ -27,6 +27,9 @@ vagrant [OPTION] ... CMD
 
 --os <suse|fedora>:
   Used linux distribution. 
+  
+  <suse>   : openSUSE Leap 15.1 Minimal (bento/opensuse-leap-15.1)
+  <fedora> : Fedora 31 Server (bento/fedora-31)
 
 --ansible [-vvv]:
   Optional argument to provide additional parameters for ansible. 
@@ -42,10 +45,11 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse" then
             setup_os = "suse"
-            setup_image = "generic/opensuse15"
+            setup_image = "bento/opensuse-leap-15.1"
         else
             setup_os = "fedora"
-            setup_image = "fedora/31-cloud-base"
+            setup_image = "bento/fedora-31"
+            #setup_image = "fedora/31-cloud-base"
         end
       when '--ansible'
         setup_ansible=arg
@@ -89,6 +93,7 @@ Vagrant.configure(2) do |config|
     setup.vm.network "private_network", ip: $env_ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
+    #, automount: true
     setup.vm.provider :virtualbox do |vb|
         vb.name = $image_name
         vb.customize ["modifyvm", :id, "--memory", "6144"]
@@ -113,8 +118,9 @@ Vagrant.configure(2) do |config|
             ansible.inventory_path = "config/#{setup_config}/server.ini"
             ansible.compatibility_mode = "2.0"
             ansible.provisioning_path = "/vagrant/"
-            ansible.become = true
-            ansible.become_user = "root"
+            #ansible.become = true
+            #ansible.become_user = "root"
+            
             #ansible.raw_arguments = "--ask-vault-pass"
             #ansible.ask_vault_pass = true
         end
@@ -124,6 +130,12 @@ Vagrant.configure(2) do |config|
     setup.vm.provision "shell", env: {"VAULT_PASS" => Environment.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
+
+    if $is_reboot_possible then
+        setup.vm.provision "shell", inline: <<-SHELL
+        sudo mount -t vboxsf -o uid=$UID,gid=$(id -g) vagrant /vagrant
+        SHELL
+    end
 
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
@@ -147,10 +159,10 @@ Vagrant.configure(2) do |config|
         ansible.vault_password_file = "/tmp/vault_pass"
       end
 
-      if setup_os == 'fedora' then
-        ansible.become = true
-        ansible.become_user = "root"
-      end
+      #if setup_os == 'fedora' then
+      #  ansible.become = true
+      #  ansible.become_user = "root"
+      #end
     end  
     
     # Delete temp vault password file
