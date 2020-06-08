@@ -2,10 +2,10 @@
   set_fact:
     openhab_version: "2.5.5"
     jython_version: "2.7.2"
-#    openhab_user: "9001"
-#    openhab_group: "9001"
-    openhab_user: "root"
-    openhab_group: "root"
+    openhab_user: "9001"
+    openhab_group: "9001"
+#    openhab_user: "root"
+#    openhab_group: "root"
     # stable version from 05.03.2020
     jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
   tags: [ 'update_notifier_configs' ]
@@ -59,6 +59,16 @@
 #  debug:
 #    msg: "{{device_mounts | default([])}}"
 
+#- name: connect openhab with databases
+#  docker_network:
+#    name: openhab_databases
+#    connected:
+#      - mosquitto
+#      - influxdb
+#      - mysql
+#    appends: yes
+#  tags: ['mosquitto','influxdb','mysql']
+
 - name: build docker image
   vars:
     name: "openhab"
@@ -74,7 +84,6 @@
     name: openhab
     image: "custom_openhab:{{openhab_version}}"
     state: present
-    network_mode: host
 #    capabilities:
 #      - NET_ADMIN
 #      - NET_RAW
@@ -85,6 +94,10 @@
       GROUP_ID: "{{openhab_group}}"
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
+    network_mode: host
+#    networks:
+#      - name: "openhab_databases"
+#    networks_cli_compatible: yes
     log_driver: journald
     log_options:
       tag: openhab
@@ -102,15 +115,15 @@
 #     - "59443:8443"  
 #     - "59007:5007"  
 #     - "59101:8101"  
-#  notify: "restart openhab"
+  notify: "restart openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
-- name: clone config git
-  git:
-    accept_hostkey: yes
-    repo: '{{vault_openhab_config_git}}'
-    dest: '{{projects_path}}openhab2'
-    version: "master"
+#- name: clone config git
+#  git:
+#    accept_hostkey: yes
+#    repo: '{{vault_openhab_config_git}}'
+#    dest: '{{projects_path}}openhab2'
+#    version: "master"
 
 - name: link configs
   file:
@@ -124,7 +137,7 @@
     #- start.sh
     - addons
     - python/custom
-#  notify: "restart openhab"
+  notify: "restart openhab"
 
 - name: check config folder
   shell: "ls -1 {{projects_path}}openhab2/conf/"
@@ -140,7 +153,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
   with_items: "{{config_result.stdout_lines}}"
-#  notify: "restart openhab"
+  notify: "restart openhab"
 
 - name: prepare missing config folder
   file:
@@ -161,7 +174,7 @@
     - sitemaps
     - transform
     - things
-#  notify: "restart openhab"
+  notify: "restart openhab"
     
 - name: copy habpanel config
   copy:
@@ -181,7 +194,7 @@
     group: "{{openhab_group}}"
     mode: 0640
   with_fileglob: "{{projects_path}}openhab2/templates/services/*"
-#  notify: "restart openhab"
+  notify: "restart openhab"
 
 - name: copy things configs
   template:
@@ -192,7 +205,7 @@
     group: "{{openhab_group}}"
     mode: 0640
   with_fileglob: "{{projects_path}}openhab2/templates/things/*"
-#  notify: "restart openhab"
+  notify: "restart openhab"
 
 # JYTHON
 - name: check jython jar
@@ -222,7 +235,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0750
-#  notify: "restart openhab"
+  notify: "restart openhab"
 
 - name: copy jython helper configuration
   copy:
@@ -232,319 +245,8 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
-#  notify: "restart openhab"
+  notify: "restart openhab"
  
-- name: copy udev rules
-  template:
-    src: "{{item}}"
-    dest: "/etc/udev/rules.d/{{item|basename}}"
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0644
-  register: udev_rules
-  with_fileglob: "{{projects_path}}openhab2/templates/udev/rules.d/*"
-#  notify: "restart openhab"
-
-- name: reload udev rules
-  shell: "udevadm control --reload-rules && udevadm trigger"
-  when: udev_rules.changed
- 
-#- name: create systemd service
-#  vars:
-#    container_name: "openhab"
-#  import_tasks: roles/container/tasks/add_docker_service.yml
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-- name: check openhab-runtime
-  stat:
-    path: "{{data_path}}openhab-runtime-{{openhab_version}}"
-  register: openhab_exists
-  changed_when: not openhab_exists.stat.exists
-  
-# **** PREPARATION ****
-- name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{data_path}}openhab-runtime-{{openhab_version}}/"
-    - "{{global_log}}openhab"
-    - "{{global_lib}}openhab"
-
-# **** INSTALL ****
-- name: install archive => openhab not exists
-  unarchive:
-    src: "https://bintray.com/openhab/mvn/download_file?file_path=org%2Fopenhab%2Fdistro%2Fopenhab%2F{{openhab_version}}%2Fopenhab-{{openhab_version}}.zip"
-    dest: "{{data_path}}openhab-runtime-{{openhab_version}}/"
-    remote_src: yes
-  when: not openhab_exists.stat.exists
-
-#- name: clean old symlink => openhab not exists
-#  file:
-#    dest: "{{data_path}}openhab-runtime"
-#    state: absent
-#  when: not openhab_exists.stat.exists
-
-- name: set runtime link
-  file:
-    src: "openhab-runtime-{{openhab_version}}"
-    dest: "{{data_path}}openhab-runtime"
-    state: link
-    follow: no
-    owner: root
-    group: root
-
-# **** JYTHON ****
-- name: check jython jar
-  stat:
-    path: "{{data_path}}openhab-runtime/runtime/lib/jython.jar"
-  register: jython_jar_exists
-  changed_when: "not jython_jar_exists.stat.exists"
-
-- name: install jython jar
-  get_url:
-    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
-    dest: "{{data_path}}openhab-runtime/runtime/lib/"
-  when: "not jython_jar_exists.stat.exists"
-
-- name: set jython link
-  file:
-    src: "{{data_path}}openhab-runtime/runtime/lib/jython-standalone-{{jython_version}}.jar"
-    dest: "{{data_path}}openhab-runtime/runtime/lib/jython.jar"
-    state: link
-    follow: no
-    owner: root
-    group: root
-  when: "not jython_jar_exists.stat.exists"
-
-# **** BACKUP ****
-- name: backup original conf and start.sh => openhab not exists
-  command: "mv {{data_path}}openhab-runtime/{{item}} {{data_path}}openhab-runtime/{{item}}.bak"
-  with_items:
-    - "conf"
-    - "addons"
-    - "start.sh"
-  when: not openhab_exists.stat.exists
-
-# **** PREPARE FOLDER ****
-- name: prepare needed runtime folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{data_path}}openhab-runtime/conf"
-    - "{{data_path}}openhab-runtime/conf/things"
-    - "{{data_path}}openhab-runtime/conf/scripts"
-    - "{{data_path}}openhab-runtime/conf/services"
-    - "{{data_path}}openhab-runtime/conf/sounds"
-    - "{{data_path}}openhab-runtime/python"
-    - "{{data_path}}openhab-runtime/userdata/config"
-    - "{{data_path}}openhab-runtime/userdata/config/org"
-    - "{{data_path}}openhab-runtime/userdata/config/org/openhab"
-  notify: "restart openhab"
-
-# **** SET BASE LINKS ****
-- name: link base folder
-  file:
-    src: "{{item.src}}"
-    dest: "{{item.dest}}"
-    state: link
-    follow: no
-    owner: root
-    group: root
-  with_items:
-    - { src: "{{global_log}}openhab", dest: "{{data_path}}openhab-runtime/userdata/logs" }
-    - { src: "{{global_lib}}openhab", dest: "{{data_path}}openhab-runtime/userdata/persistence" }
-  notify: "restart openhab"
-    
-# ***** CONFIGS *****
-- name: set log config
-  lineinfile:
-    path: "{{data_path}}openhab-runtime/userdata/etc/org.ops4j.pax.logging.cfg"
-    regexp: '^{{item.field}}\s*='
-    line: '{{item.field}} = {{item.value}}'
-  with_items:
-    - { field: 'log4j2.logger.jsr223Script.name', value: 'jsr223.jython' }
-    - { field: 'log4j2.logger.jsr223Script.level', value: 'DEBUG' }
-    - { field: 'log4j2.logger.jsr223Default.name', value: 'org.openhab.core.automation' }
-    - { field: 'log4j2.logger.jsr223Default.level', value: 'DEBUG' }
-    - { field: 'log4j2.logger.jsr223Trigger.name', value: 'org.openhab.core.automation.internal.RuleEngineImpl' }
-    - { field: 'log4j2.logger.jsr223Trigger.level', value: 'ERROR' }
-    # hide warning like this
-    # > 2018-12-20 14:38:30.140 [WARN ] [calimero.link.192.168.0.51:3671     ] - negative confirmation of 1/7/11: 2e009de0fffa0f0b010000
-    # temperature sensor is working fine
-    #- { field: 'log4j2.logger.jsr223Binding.name', value: 'calimero.link.192.168.0.51:3671' }
-    #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
-    #- { field: 'log4j2.logger.jsr223Binding.name', value: 'org.openhab.binding.knx.internal.bus.KNXBinding' }
-    #- { field: 'log4j2.logger.jsr223Binding.level', value: 'OFF' } # just temporary until upgrade to KNX2
-  notify: "restart openhab"
-
-- name: set web config
-  lineinfile:
-    path: "{{data_path}}openhab-runtime/userdata/etc/org.ops4j.pax.web.cfg"
-    regexp: '^{{item.field}}\s*='
-    line: '{{item.field}} = {{item.value}}'
-  with_items:
-    - { field: 'org.ops4j.pax.web.listening.addresses', value: '127.0.0.1' }
-  notify: "restart openhab"
-
-- name: copy systemd service
-  template:
-    src: "templates/etc/systemd/system/openhab.service"
-    dest: "/etc/systemd/system/openhab.service"
-    owner: root
-    group: root
-    mode: 0644
-  notify: "restart openhab"
-
-# ****** GITHUB JYTHON PROJECT ******
-- name: "clone jython helper git"
-  git:
-    repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
-    dest: '{{global_build}}openhab-jython'
-    version: '{{jython_script_version}}'
-
-- name: copy jython helper classes
-  copy:
-    src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
-    dest: "{{data_path}}openhab-runtime/python/"
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0750
-  notify: "restart openhab"
-
-- name: copy jython helper configuration
-  copy:
-    src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
-    dest: "{{data_path}}openhab-runtime/python/configuration.py"
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart openhab"
-
-# ****** GITHUB CONFIG PROJECT ******
-- name: clone config git
-  git:
-    accept_hostkey: yes
-    repo: '{{vault_openhab_config_git}}'
-    dest: '{{projects_path}}openhab2'
-    version: "master"
-
-- name: link configs
-  file:
-    src: "{{projects_path}}openhab2/{{item}}"
-    dest: "{{data_path}}openhab-runtime/{{item}}"
-    state: link
-    follow: no
-    owner: root
-    group: root
-  with_items:
-    - start.sh
-    - addons
-    - conf/automation
-    - conf/html
-    - conf/icons
-    - conf/items
-    - conf/persistence
-    - conf/rules
-    - conf/sitemaps
-    - conf/transform
-    - python/custom
-  notify: "restart openhab"
-
-- name: copy habpanel config
-  copy:
-    src: "{{projects_path}}openhab2/habpanel.config"
-    dest: "{{data_path}}openhab-runtime/userdata/config/org/openhab/habpanel.config"
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0640
-
-- name: copy service configs
-  template:
-    src: "{{item}}"
-    dest: "{{data_path}}openhab-runtime/conf/services/{{item|basename}}"
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0640
-  with_fileglob: "{{projects_path}}openhab2/templates/services/*"
-  notify: "restart openhab"
-
-- name: copy things configs
-  template:
-    src: "{{item}}"
-    dest: "{{data_path}}openhab-runtime/conf/things/{{item|basename}}"
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0640
-  with_fileglob: "{{projects_path}}openhab2/templates/things/*"
-  notify: "restart openhab"
-
 - name: copy udev rules
   template:
     src: "{{item}}"
@@ -560,72 +262,12 @@
 - name: reload udev rules
   shell: "udevadm control --reload-rules && udevadm trigger"
   when: udev_rules.changed
-# *******************
-
-# ***** SELINUX ****
-- name: set selinux configuration => is_fedora
-  sefcontext:
-    target: "{{item.target}}"
-    ftype: "{{item.ftype}}"
-    setype: "{{item.setype}}"
-    seuser: "system_u"
-    state: present
-  register: sefcontext_result
-  with_items:
-    - { ftype: "l", setype: "lib_t", target: "{{data_path}}openhab-runtime" }
-    - { ftype: "a", setype: "lib_t", target: "{{data_path}}openhab-runtime-{{openhab_version}}(/.*)?" }
-    - { ftype: "d", setype: "var_log_t", target: "{{global_log}}openhab(/.*)?" }
-    - { ftype: "d", setype: "usr_t", target: "{{global_lib}}openhab(/.*)?" }
-    - { ftype: "a", setype: "lib_t", target: "{{projects_path}}openhab2(/.*)?" }
-    - { ftype: "f", setype: "shell_exec_t", target: "{{projects_path}}openhab2/start.sh" }
-#    - { ftype: "l", setype: "shell_exec_t", target: "{{data_path}}openhab-runtime/start.sh" }
-  when: is_fedora|bool
-    
-- name: reload selinux configuration => is_fedora and sefcontext changed
-  shell: "restorecon {{item}}"
-  with_items:
-    - "{{data_path}}openhab-runtime"
-    - "-irv {{data_path}}openhab-runtime-{{openhab_version}}"
-    - "-irv {{projects_path}}openhab2"
-    - "-irv {{global_log}}openhab"
-    - "-irv {{global_lib}}openhab"
-#    - "{{projects_path}}openhab2/start.sh"
-  when: is_fedora|bool and sefcontext_result.changed  
+ 
+- name: create systemd service
+  vars:
+    container_name: "openhab"
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
 # ***** DATABASE ****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
@@ -746,12 +388,11 @@
 - name: register openhab update notifier
   vars:
     name: "openhab"
-    type: "github"
-    url: "https://github.com/openhab/openhab-distro/releases"
-    config: { 
-      project: "openhab/openhab-distro", 
-      pattern: "^([0-9\\.]+)$",
-      version: "{{openhab_version}}" 
+    type: "docker"
+    url: "https://github.com/openhab/openhab-distro/release"
+    config: {
+      repository: "openhab/openhab",
+      pattern: "^([0-9\\.]+)-debian$"
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
@@ -778,8 +419,8 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-#- name: trigger openhab handler
-#  vars:
-#    notify: "restart openhab"
-#    service: "openhab.service"
-#  import_tasks: roles/base/tasks/service_check.yml
+- name: trigger openhab handler
+  vars:
+    notify: "restart openhab"
+    service: "openhab.service"
+  import_tasks: roles/base/tasks/service_check.yml
