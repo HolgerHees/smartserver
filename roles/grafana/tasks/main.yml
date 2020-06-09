@@ -64,13 +64,24 @@
     name: docker
     state: started
     
-- name: connect grafana with databases
+- name: connect grafana with databases (without loki)
   docker_network:
     name: grafana_databases
     connected:
       - influxdb
     appends: yes
-  tags: ['influxdb']
+  when: "not loki_enabled | default(False)"
+  tags: ['influxdb', 'loki']
+
+- name: connect grafana with databases (with loki)
+  docker_network:
+    name: grafana_databases
+    connected:
+      - influxdb
+      - loki
+    appends: yes
+  when: "loki_enabled | default(False)"
+  tags: [ 'influxdb', 'loki' ]
 
 - name: create docker container
   docker_container:

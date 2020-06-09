@@ -32,6 +32,17 @@
     - oj
   notify: "restart fluentd"
 
+- name: install loki
+  gem:
+    name: '{{ item }}'
+    state: present
+    user_install: no
+  with_items:
+    - fluent-plugin-grafana-loki
+  when: "loki_enabled | default(False)"
+  tags: [ 'loki' ]
+  notify: "restart fluentd"
+
 - name: copy config and service
   template:
     src: "templates{{item.path}}"
@@ -43,6 +54,7 @@
     - { mode: "u=rw,g=r,o=", path: "/etc/fluent/fluent.conf" }
     - { mode: "u=rw,g=r,o=", path: "/etc/fluent/_.ansible.d/systemd.conf" }
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/fluentd.service" }
+  tags: [ 'loki' ]
   notify: "restart fluentd"
 
 # first test run

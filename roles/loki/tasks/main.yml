@@ -1,0 +1,60 @@
+- name: set version
+  set_fact:
+    loki_version: '1.5.0'
+  tags: [ 'update_notifier_configs' ]    
+
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: "10001"
+    group: "10001"
+    mode: 0750
+  with_items:
+    - "{{ global_lib }}loki/"
+  
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+    
+- name: create docker container
+  docker_container:
+    name: loki
+    image: "grafana/loki:{{loki_version}}"
+    state: present
+#    network_mode: "host"
+#    user: "root:root"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: loki
+    volumes:
+      - '{{global_lib}}loki:/loki:z'
+    ports:
+     - "127.0.0.1:3100:3100"
+#  notify: "restart loki"
+      
+#- name: create systemd service
+#  vars:
+#    container_name: "loki"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+#- name: register update notifier
+#  vars:
+#    name: "loki"
+#    type: "docker"
+#    url: "https://github.com/grafana/loki/releases"
+#    config: {
+#      repository: "grafana/loki",
+#      pattern: "^([0-9\\.]+)$"
+#    }
+#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+#- name: trigger loki handler
+#  vars:
+#    notify: "restart loki"
+#    service: "loki.service"
+#  import_tasks: roles/base/tasks/service_check.yml

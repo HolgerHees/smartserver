@@ -78,7 +78,7 @@
     - { import_role: { name: wireguard }, tags: [ 'wireguard' ] }                                # vpn kernel module installation
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (mobile access)                           [docker,user:root]
 
-    - { import_role: { name: postfix }, tags: [ 'postfix' ] }                                    # mail server to forward root mails                                 [docker,user:root]
+    - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
 
     - { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli                                                           [docker,user:wwwrun|apache]
     
@@ -92,6 +92,8 @@
 
     - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata                         [docker,user:root]
     
+    - { import_role: { name: loki }, tags: [ 'loki' ], when: "loki_enabled | default(False)" }   # grafana logstore                                                  [docker,user:10001|10001]
+
     - { import_role: { name: elasticsearch }, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker,user:1000]
     - { import_role: { name: kibana }, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker,user:1000]
     
