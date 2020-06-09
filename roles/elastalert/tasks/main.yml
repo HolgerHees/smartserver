@@ -6,99 +6,62 @@
 
 - name: prepare needed folder
   file:
-    path: '/etc/elastalert/'
+    path: '{{global_etc}}elastalert/'
     state: directory
     owner: root
     group: root
     mode: 0750
 
-- name: install required packages => is_fedora
-  yum:
-    name: [
-      python3-boto3
-      , python-dateutil 
-      , python3-devel
-      , mailx
-    ]
-    state: present
-  notify: "restart elastalert"
-  when: is_fedora|bool
+- name: build docker image
+  vars:
+    name: "elastalert"
+    image_name: "custom_elastalert"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/elastalert/templates/container/Dockerfile
+      - roles/elastalert/templates/container/entrypoint.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      python3-boto3
-      , python3-python-dateutil 
-      , python3-devel
-      , mailx
-    ]
-    state: present
-  notify: "restart elastalert"
-  when: is_suse|bool
+- name: connect elastalert with elasticsearch and postfix
+  docker_network:
+    name: elastalert_databases
+    connected:
+      - elasticsearch
+      - postfix
+    appends: yes
+  tags: ['elasticsearch','postfix']
   
-#- name: install required python pip modules
-#  pip: 
-#    name: [
-#      #- aws-requests-auth
-#      PyYAML
-#    ]
-#    extra_args: "--ignore-installed"
-#    executable: pip3 
-#  with_items:
-#  notify: "restart elastalert"
+- name: create docker container
+  docker_container:
+    name: elastalert
+    image: "custom_elastalert:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: elastalert
+    networks:
+      - name: elastalert_databases
+    networks_cli_compatible: yes
+    volumes:
+      - '{{ global_etc }}elastalert:/etc/elastalert:z'
+#    ports:
+#      - "127.0.0.1:5601:5601"
+  notify: "restart elastalert"
   
 - name: copy config and service
   template:
-    src: "templates{{item.path}}"
-    dest: "{{item.path}}"
+    src: "templates/etc/elastalert/{{item}}"
+    dest: "{{global_etc}}elastalert/{{item}}"
     owner: root
     group: root
-    mode: "{{item.mode}}"
+    mode: 0640
   with_items:
-    - { mode: "u=rw,g=r,o=", path: "/etc/elastalert/config.yaml" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/elastalert/rule.yaml" }
-    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/elastalert.service" }
+    - "config.yaml"
+    - "rule.yaml"
   notify: "restart elastalert"
-
-- name: "clone git"
-  git:
-#    accept_hostkey: yes
-    repo: 'https://github.com/Yelp/elastalert.git'
-    dest: '{{global_build}}elastalert'
-#    force: yes
-    version: '{{elastalert_version}}'
-  register: clone_status
-  #changed_when: yes
-#- debug: msg={{clone_status}}
-
-- name: check if elastalert is installed
-  shell: command -v elastalert >/dev/null 2>&1
-  register: is_elastalert_exist
-  failed_when: no
-  changed_when: is_elastalert_exist.rc == 1
-
-- name: "install => clone status changed"
-  shell: '{{ item }}'
-  args:
-    chdir: '{{global_build}}elastalert'
-  with_items:
-    - 'pip3 install aws-requests-auth'
-    - 'pip3 install --ignore-installed PyYAML'
-    - 'pip3 install --upgrade cryptography==2.3.1'
-    - 'python3 setup.py install --prefix=/usr'
-  when: clone_status.changed or is_elastalert_exist.rc == 1
-
-- name: check elasticsearch service => clone status changed
-  import_tasks: roles/elasticsearch/tasks/wait_until_ready.yml
-  when: clone_status.changed or is_elastalert_exist.rc == 1
-  
-- name: create search index => clone status changed
-  shell: 'elastalert-create-index --config /etc/elastalert/config.yaml'
-  notify: "restart elastalert"
-  when: clone_status.changed or is_elastalert_exist.rc == 1
-  
-# first test run
-#elastalert --debug --verbose --rule /etc/elastalert/rule.yaml --config /etc/elastalert/config.yaml
 
 # ***** FINALIZE *****
 - name: copy fluentd config
@@ -106,10 +69,10 @@
     config_file: "templates/etc/fluent/_.ansible.d/elastalert.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
-- name: register systemd service watcher
+- name: create systemd service
   vars:
-    name: "elastalert"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+    container_name: "elastalert"
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier
   vars:

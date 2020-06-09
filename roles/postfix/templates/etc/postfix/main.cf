@@ -5,9 +5,11 @@ inet_protocols = ipv4
 # general params
 compatibility_level = 1
 myhostname = {{server_name}}
-mynetworks = 127.0.0.0/8 [::1]/128 {{docker_default_gateway}}
-mydestination = {{server_name}}, {{server_domain}}, localhost
+mynetworks = 127.0.0.0/8 [::1]/128 172.0.0.0/8
+mydestination = localhost
 relayhost = [{{vault_root_mail_host}}]:{{vault_root_mail_port}}
+alias_database = hash:/etc/postfix/aliases
+alias_maps = hash:/etc/postfix/aliases
 
 # add message id
 always_add_missing_headers = yes

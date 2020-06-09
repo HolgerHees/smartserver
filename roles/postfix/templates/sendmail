@@ -1,8 +1,0 @@
-#!/usr/bin/python3
-
-import subprocess
-import sys
-
-out = subprocess.run(["docker", "exec", "-i", "postfix", "sendmail"] + sys.argv, stdin=sys.stdin)
-
-print(out) 

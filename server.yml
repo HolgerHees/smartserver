@@ -111,7 +111,7 @@
 
     - { import_role: { name: user }, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
-    - { import_role: { name: elastalert }, tags: [ 'elastalert' ] }                              # log alerting
+    - { import_role: { name: elastalert }, tags: [ 'elastalert' ] }                              # log alerting                                                      [docker,user:root]
 
     - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring
 
@@ -124,7 +124,7 @@
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
     - { import_role: { name: nextcloud_onlyoffice }, tags: [ 'nextcloud_onlyoffice' ] }          # private cloud office editor                                       [docker,user:106|108]
      
-    - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server
+    - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:9001|9001]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
 
     - { import_role: { name: cron_backup_rsync }, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/

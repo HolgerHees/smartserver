@@ -17,6 +17,8 @@
     mode: 0640
   with_items:
     - "main.cf"
+    - "aliases"
+  notify: "restart postfix"
 
 - name: build docker image
   vars:
@@ -36,12 +38,12 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-    etc_hosts: { "host": "{{docker_default_gateway}}" }
     log_driver: journald
     log_options:
       tag: postfix
     volumes:
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
+      - '{{ global_etc }}postfix/aliases:/etc/postfix/aliases:z'
     ports:
       - "127.0.0.1:25:25/tcp"
   notify: "restart postfix"
