@@ -1,7 +1,6 @@
 - name: set vcontrold version
   set_fact:
     vcontrold_version: 'v0.98.9'
-    debian_version: 'buster-20200514-slim'
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
