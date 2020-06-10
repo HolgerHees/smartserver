@@ -7,6 +7,8 @@ import sys
 
 import importlib
 
+import traceback
+
 from datetime import datetime
 
 import subprocess
@@ -62,37 +64,47 @@ for config_file in files:
         
         last_state = last_states.get(config['name'], None)
 
-        last_updates = last_state['updates'] if last_state != None else None
+        try:
+            last_updates = last_state['updates'] if last_state != None else None
 
-        current_version = last_state['current'] if last_state != None else None
-        if current_version == None or current_version['version'] != repo.getCurrentVersionString():
-            current_version = repo.getCurrentVersion()
+            current_version = last_state['current'] if last_state != None else None
+            if current_version == None or current_version['version'] != repo.getCurrentVersionString():
+                current_version = repo.getCurrentVersion()
 
-        current_state = { 'name': config['name'], 'type': config['type'], 'url': config['url'], 'current': current_version, 'updates': [] }
-        
-        new_versions = repo.getUpdates(last_updates)
-        for branch in new_versions:
-            current_state['updates'].append(new_versions[branch])
+            current_state = { 'name': config['name'], 'type': config['type'], 'url': config['url'], 'current': current_version, 'updates': [] }
             
-        new_updates = []
-        if last_updates != None:
-            
-            for current_update in current_state['updates']:
-                found = False
-                for last_update in last_updates:
-                    if last_update['version'] == current_update['version']:
-                        found = True
+            new_versions = repo.getUpdates(last_updates)
+            for branch in new_versions:
+                current_state['updates'].append(new_versions[branch])
                 
-                if not found:
-                    new_updates.append(current_update['version'])
+            new_updates = []
+            if last_updates != None:
+                
+                for current_update in current_state['updates']:
+                    found = False
+                    for last_update in last_updates:
+                        if last_update['version'] == current_update['version']:
+                            found = True
+                    
+                    if not found:
+                        new_updates.append(current_update['version'])
 
-        if len(new_updates) > 0:
-            print( " \033[0;31mhas new updates {}\033[0m".format(new_updates))
-            update_message_r.append("{}: versions {} are available".format(current_state['name'], new_updates))
-        elif len(current_state['updates']) > 0:
-            print( " \033[1;33mhas updates\033[0m")
-        else:
-            print( " \033[0;32mis updatet\033[0m")
+            if len(new_updates) > 0:
+                print( " \033[0;31mhas new updates {}\033[0m".format(new_updates))
+                update_message_r.append("{}: versions {} are available".format(current_state['name'], new_updates))
+            elif len(current_state['updates']) > 0:
+                print( " \033[1;33mhas updates\033[0m")
+            else:
+                print( " \033[0;32mis updatet\033[0m")
+        except Exception as e:
+            print( " \033[0;31mhas failed\033[0m")
+            
+            print("Traceback (most recent call last):",file=sys.stderr)
+            traceback.print_tb(e.__traceback__)
+            print("Exception:  {}".format(e),file=sys.stderr)
+            print("----",file=sys.stderr)
+
+            current_state = last_state
             
         current_states['states'].append(current_state)
             
