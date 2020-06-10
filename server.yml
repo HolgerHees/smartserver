@@ -111,7 +111,7 @@
 
     - { import_role: { name: user }, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
-    - { import_role: { name: elastalert }, tags: [ 'elastalert' ] }                              # log alerting                                                      [docker,user:root]
+    - { import_role: { name: elastalert }, tags: [ 'elastalert', 'alpine' ] }                    # log alerting                                                      [docker,user:root]
 
     - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring
 
