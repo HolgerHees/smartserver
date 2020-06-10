@@ -94,6 +94,7 @@
     
     - { import_role: { name: loki }, tags: [ 'loki' ], when: "loki_enabled | default(False)" }   # grafana logstore                                                  [docker,user:10001|10001]
 
+    #- { import_role: { name: curator }, tags: [ 'curator' ] }                                    # elasticsearch curator (cli)                                       [docker,nobody:nobody]
     - { import_role: { name: elasticsearch }, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker,user:1000]
     - { import_role: { name: kibana }, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker,user:1000]
     

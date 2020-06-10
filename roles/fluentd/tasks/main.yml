@@ -69,6 +69,15 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
+#- name: create cron job
+#  vars:
+#    name: "Fluentd elasticsearch index cleanup docker"
+#    cmd: "docker exec -i curator sh -c \"/usr/bin/curator_cli --host elasticsearch delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"
+#    file: "ansible_fluentd"
+#    hour: "1"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
