@@ -29,7 +29,7 @@
     name: influxdb
     image: "influxdb:{{influxdb_version}}-alpine"
     state: present
-    recreate: true
+#    recreate: true
     entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
     env:
       INFLUXDB_OPENTSDB_0_ENABLED: "true"
