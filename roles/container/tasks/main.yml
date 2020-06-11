@@ -65,6 +65,15 @@
   zypper:
     name: [
         docker
+    ]
+    state: present
+  notify: "restart docker"
+  when: is_suse|bool
+
+- name: install required packages => is_suse
+  zypper:
+    name: [
+        docker
         , python2-docker  # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2 (vagrant suse version is using it)
         , python3-docker  # used by ansible docker module
 #        , podman
@@ -73,7 +82,6 @@
 #        , cni-plugins>=0.8.3
     ]
     state: present
-  notify: "restart docker"
   when: is_suse|bool
 
 - name: prepare needed folder
