@@ -1,0 +1,280 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 20,
+  "iteration": 1591889461729,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 21,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{env=\"fluentd\",level=~\"$level\",group=~\"$group\"} |~ \".*$search.*\"",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Panel Title",
+      "type": "logs"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 25,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "tags": [],
+          "text": "ERROR + WARN",
+          "value": [
+            "ERROR",
+            "WARN"
+          ]
+        },
+        "datasource": "Loki",
+        "definition": "label_values(level)",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "level",
+        "options": [
+          {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "DEBUG",
+            "value": "DEBUG"
+          },
+          {
+            "selected": true,
+            "text": "ERROR",
+            "value": "ERROR"
+          },
+          {
+            "selected": false,
+            "text": "INFO",
+            "value": "INFO"
+          },
+          {
+            "selected": true,
+            "text": "WARN",
+            "value": "WARN"
+          }
+        ],
+        "query": "label_values(level)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "tags": [],
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Loki",
+        "definition": "label_values(group)",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "group",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "CRON",
+            "value": "CRON"
+          },
+          {
+            "selected": false,
+            "text": "ansible-docker_network",
+            "value": "ansible-docker_network"
+          },
+          {
+            "selected": false,
+            "text": "apache",
+            "value": "apache"
+          },
+          {
+            "selected": false,
+            "text": "elastalert",
+            "value": "elastalert"
+          },
+          {
+            "selected": false,
+            "text": "elasticsearch",
+            "value": "elasticsearch"
+          },
+          {
+            "selected": false,
+            "text": "fluentd",
+            "value": "fluentd"
+          },
+          {
+            "selected": false,
+            "text": "influxdb",
+            "value": "influxdb"
+          },
+          {
+            "selected": false,
+            "text": "kernel",
+            "value": "kernel"
+          },
+          {
+            "selected": false,
+            "text": "loki",
+            "value": "loki"
+          },
+          {
+            "selected": false,
+            "text": "netdata",
+            "value": "netdata"
+          },
+          {
+            "selected": false,
+            "text": "openhab",
+            "value": "openhab"
+          },
+          {
+            "selected": false,
+            "text": "postfix",
+            "value": "postfix"
+          },
+          {
+            "selected": false,
+            "text": "samba",
+            "value": "samba"
+          },
+          {
+            "selected": false,
+            "text": "smartd",
+            "value": "smartd"
+          },
+          {
+            "selected": false,
+            "text": "systemd",
+            "value": "systemd"
+          },
+          {
+            "selected": false,
+            "text": "systemd-udevd",
+            "value": "systemd-udevd"
+          },
+          {
+            "selected": false,
+            "text": "vcontrold",
+            "value": "vcontrold"
+          }
+        ],
+        "query": "label_values(group)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "label": null,
+        "name": "search",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "Logs",
+  "uid": "hiAzxTmGk",
+  "version": 7
+}

@@ -94,7 +94,6 @@
     
     - { import_role: { name: loki }, tags: [ 'loki' ], when: "loki_enabled | default(False)" }   # grafana logstore                                                  [docker,user:10001|10001]
 
-    #- { import_role: { name: curator }, tags: [ 'curator' ] }                                    # elasticsearch curator (cli)                                       [docker,nobody:nobody]
     - { import_role: { name: elasticsearch }, tags: [ 'elasticsearch' ] }                        # elasticsearch db => needed by elastalert and fluentd              [docker,user:1000]
     - { import_role: { name: kibana }, tags: [ 'kibana' ] }                                      # elasticsearch management ui kibana                                [docker,user:1000]
     
@@ -148,5 +147,7 @@
     - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud', 'nextcloud_apps' ] }   # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 
     - { import_role: { name: kibana, tasks_from: import_dashboards, handlers_from: empty }, tags: [ 'kibana', 'kibana_dashboard' ] } # IMPORT KIBANA DASHBOARDS needs a running system (elasticsearch & kibana)
+
+    #- { import_role: { name: fluentd, tasks_from: import_policy, handlers_from: empty }, tags: [ 'fluentd', 'fluentd_policy' ] }
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running

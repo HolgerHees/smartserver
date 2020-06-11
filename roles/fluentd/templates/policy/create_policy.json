@@ -1,0 +1,29 @@
+{
+    "policy": {
+        "description": "Default policy for fluentd.",
+        "default_state": "hot",
+        "states": [
+            {
+                "name": "hot",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "cold",
+                        "conditions": {
+                            "min_index_age": "7d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "cold",
+                "actions": [
+                    {
+                        "delete": {}
+                    }
+                ],
+                "transitions": []
+            }
+        ]
+    }
+}

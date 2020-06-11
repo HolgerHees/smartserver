@@ -37,6 +37,11 @@
      - "127.0.0.1:3100:3100"
 #  notify: "restart loki"
       
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/loki.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
 #- name: create systemd service
 #  vars:
 #    container_name: "loki"

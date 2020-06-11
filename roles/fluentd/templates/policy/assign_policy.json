@@ -1,0 +1,7 @@
+{
+  "index_patterns": ["fluentd*"],
+  "settings": {
+    "opendistro.index_state_management.policy_id": "fluentd_policy",
+    "opendistro.index_state_management.rollover_alias": "some_alias"
+  }
+}

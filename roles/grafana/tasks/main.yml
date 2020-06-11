@@ -26,8 +26,21 @@
     group: root
     mode: 0640
   notify: "restart grafana"
-  with_fileglob:
-    - "templates/dashboards/*"
+  with_items:
+    - "templates/dashboards/Server Health.json"
+
+- name: copy shared grafana / loki dashboards
+  copy:
+    src: "{{item}}"
+    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart grafana"
+  with_items:
+    - "templates/dashboards/Logs.json"
+  when: "loki_enabled | default(False)"
+  tags: [ 'loki' ]
 
 - name: check for individual grafana dashboards
   stat:
@@ -59,6 +72,19 @@
     - "provisioning/datasources/openhab.yaml"
     - "provisioning/datasources/opentsdb.yaml"
   
+- name: copy loki provisioning
+  template:
+    src: "templates/{{item}}"
+    dest: "{{ global_lib }}grafana/{{item}}"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart grafana"
+  with_items:
+    - "provisioning/datasources/loki.yaml"
+  when: "loki_enabled | default(False)"
+  tags: [ 'loki' ]
+
 - name: check started docker
   systemd:
     name: docker
