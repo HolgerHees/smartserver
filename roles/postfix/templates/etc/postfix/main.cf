@@ -8,8 +8,9 @@ myhostname = {{server_name}}
 mynetworks = 127.0.0.0/8 [::1]/128 172.0.0.0/8
 mydestination = localhost
 relayhost = [{{vault_root_mail_host}}]:{{vault_root_mail_port}}
-alias_database = hash:/etc/postfix/aliases
-alias_maps = hash:/etc/postfix/aliases
+#alias_database = hash:/etc/postfix/aliases
+#alias_maps = hash:/etc/postfix/aliases
+recipient_canonical_maps = regexp:/etc/postfix/canonical_maps_recipient
 
 # add message id
 always_add_missing_headers = yes

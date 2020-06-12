@@ -17,7 +17,8 @@
     mode: 0640
   with_items:
     - "main.cf"
-    - "aliases"
+#    - "aliases"
+    - "canonical_maps_recipient"
   notify: "restart postfix"
 
 - name: build docker image
@@ -43,7 +44,8 @@
       tag: postfix
     volumes:
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
-      - '{{ global_etc }}postfix/aliases:/etc/postfix/aliases:z'
+#      - '{{ global_etc }}postfix/aliases:/etc/postfix/aliases:z'
+      - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:z'
     ports:
       - "127.0.0.1:25:25/tcp"
   notify: "restart postfix"
