@@ -18,9 +18,9 @@
   zypper:
     name: [
       python2-setuptools      # needed by openssl ansible module
-      #python3-setuptools
+      python3-setuptools
       , python2-certbot-apache # is installing right Python libraries cryptography needed by openssl ansible module and python2-setuptools
-      #, python3-certbot-apache
+      , python3-certbot-apache
     ]
     state: present
   when: is_suse|bool
