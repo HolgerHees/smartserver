@@ -21,7 +21,8 @@ max_retries = 2
 retry_reasons = [
     b"Network is unreachable",
     b"Failed to download packages: Curl error (7): Couldn't connect to server",
-    b"Failed to download packages: Curl error (16): Error in the HTTP2 framing layer"
+    b"Failed to download packages: Curl error (16): Error in the HTTP2 framing layer",
+    b"Failed to download packages: Status code: 503"
 ]
 retry_messages = {
     "max_runtime": "Max runtime exceeded",
