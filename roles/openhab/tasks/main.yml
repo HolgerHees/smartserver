@@ -143,7 +143,7 @@
   shell: "ls -1 {{projects_path}}openhab2/conf/"
   register: config_result
   changed_when: no
-
+  
 - name: link conf folder
   file:
     src: "{{projects_path}}openhab2/conf/{{item}}"
@@ -185,26 +185,41 @@
     group: "{{openhab_group}}"
     mode: 0640
 
+#- name: Get files on remote machine
+#  find:
+#    paths: /path/on/remote
+#  register: my_find
+  
+- name: check service folder
+  shell: "ls -1 {{projects_path}}openhab2/templates/services/"
+  register: services_result
+  changed_when: no
+
 - name: copy service configs
   template:
-    src: "{{item}}"
-    dest: "{{ global_etc }}openhab/conf/services/{{item|basename}}"
+    src: "{{projects_path}}openhab2/templates/services/{{item}}"
+    dest: "{{ global_etc }}openhab/conf/services/{{item}}"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
-  with_fileglob: "{{projects_path}}openhab2/templates/services/*"
+  with_items: "{{services_result.stdout_lines}}"
   notify: "restart openhab"
+
+- name: check things folder
+  shell: "ls -1 {{projects_path}}openhab2/templates/things/"
+  register: things_result
+  changed_when: no
 
 - name: copy things configs
   template:
-    src: "{{item}}"
-    dest: "{{ global_etc }}openhab/conf/things/{{item|basename}}"
+    src: "{{projects_path}}openhab2/templates/things/{{item}}"
+    dest: "{{ global_etc }}openhab/conf/things/{{item}}"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
-  with_fileglob: "{{projects_path}}openhab2/templates/things/*"
+  with_items: "{{things_result.stdout_lines}}"
   notify: "restart openhab"
 
 # JYTHON
@@ -247,16 +262,21 @@
     mode: 0640
   notify: "restart openhab"
  
+- name: check udev folder
+  shell: "ls -1 {{projects_path}}openhab2/templates/udev/rules.d/"
+  register: udev_result
+  changed_when: no
+
 - name: copy udev rules
   template:
-    src: "{{item}}"
-    dest: "/etc/udev/rules.d/{{item|basename}}"
+    src: "{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
+    dest: "/etc/udev/rules.d/{{item}}"
     remote_src: yes
     owner: root
     group: root
     mode: 0644
   register: udev_rules
-  with_fileglob: "{{projects_path}}openhab2/templates/udev/rules.d/*"
+  with_items: "{{udev_result.stdout_lines}}"
   notify: "restart openhab"
 
 - name: reload udev rules
