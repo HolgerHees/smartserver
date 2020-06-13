@@ -17,7 +17,6 @@
     mode: 0640
   with_items:
     - "main.cf"
-#    - "aliases"
     - "canonical_maps_recipient"
   notify: "restart postfix"
 
@@ -86,14 +85,11 @@
   
 - name: copy config
   template:
-    src: "templates/etc/{{item}}"
-    dest: "/etc/{{item}}"
+    src: "templates/etc/msmtprc"
+    dest: "/etc/msmtprc"
     owner: root
     group: root
     mode: 0644
-  with_items:
-    - msmtprc
-    - aliases.msmtp
 
 # ***** FINALIZE *****
 - name: create systemd service
