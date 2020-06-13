@@ -195,15 +195,23 @@
   register: services_result
   changed_when: no
 
+# have to fetch files before, because ansible template module works only with local files
+- name: prepare service configs
+  fetch:
+    src: "{{projects_path}}openhab2/templates/services/{{item}}"
+    dest: "/tmp/ansible"
+  register: services_state
+  with_items: "{{services_result.stdout_lines}}"
+    
 - name: copy service configs
   template:
-    src: "{{projects_path}}openhab2/templates/services/{{item}}"
+    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/services/{{item}}"
     dest: "{{ global_etc }}openhab/conf/services/{{item}}"
-    remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
   with_items: "{{services_result.stdout_lines}}"
+  when: services_state.changed
   notify: "restart openhab"
 
 - name: check things folder
@@ -211,15 +219,23 @@
   register: things_result
   changed_when: no
 
+# have to fetch files before, because ansible template module works only with local files
+- name: prepare things config
+  fetch:
+    src: "{{projects_path}}openhab2/templates/things/{{item}}"
+    dest: "/tmp/ansible"
+  register: things_state
+  with_items: "{{things_result.stdout_lines}}"
+
 - name: copy things configs
   template:
-    src: "{{projects_path}}openhab2/templates/things/{{item}}"
+    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/things/{{item}}"
     dest: "{{ global_etc }}openhab/conf/things/{{item}}"
-    remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
   with_items: "{{things_result.stdout_lines}}"
+  when: things_state.changed
   notify: "restart openhab"
 
 # JYTHON
@@ -267,16 +283,24 @@
   register: udev_result
   changed_when: no
 
+# have to fetch files before, because ansible template module works only with local files
+- name: prepare udev rules
+  fetch:
+    src: "{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
+    dest: "/tmp/ansible"
+  register: udev_state
+  with_items: "{{udev_result.stdout_lines}}"
+
 - name: copy udev rules
   template:
-    src: "{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
+    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
     dest: "/etc/udev/rules.d/{{item}}"
-    remote_src: yes
     owner: root
     group: root
     mode: 0644
   register: udev_rules
   with_items: "{{udev_result.stdout_lines}}"
+  when: udev_state.changed
   notify: "restart openhab"
 
 - name: reload udev rules

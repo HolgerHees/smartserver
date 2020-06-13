@@ -44,6 +44,9 @@
       , gcc
       , make
       , git
+      
+      #, python2-setuptools
+      , python3-setuptools
       #, python2-pip
       , python3-pip
       #, python2-passlib
@@ -81,10 +84,14 @@
       , gcc                # used for ansible gem module => to build native extension
       , make               # used for ansible gem module => to build native extension
       , git                # used for ansible git module
-      , python2-pip        # used for ansible pip module => python2 is used because it installes python2-setuptools and depends on it. python3-pip still needs python2-setuptools (vagrant suse version is using it)
+
+#     , python2-setuptools      # needed by openssl ansible module
+      , python3-setuptools
+#      , python2-pip        # used for ansible pip module => python2 is used because it installes python2-setuptools and depends on it. python3-pip still needs python2-setuptools (vagrant suse version is using it)
       , python3-pip
-      , python2-passlib    # used by ansible htpasswd module (user role) => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/web_infrastructure/htpasswd.py" is using python2 (vagrant suse version is using it)
-      , python3-passlib    # used by ansible htpasswd module (user role)
+#      , python2-passlib    # used by ansible htpasswd module (user role) => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/web_infrastructure/htpasswd.py" is using python2 (vagrant suse version is using it)
+      , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task
+      
       , insserv-compat     # used by ansible systemd module
     ]
     state: present
@@ -93,12 +100,6 @@
 - name: install pexpect
   pip:
     name: pexpect          # needed for ansible expect module (openvpn)
-  
-#- name: change vagrant user
-#  user:
-#    name: vagrant
-#    uid: 2000
-#  when: not is_production
   
 - name: prepare shared backup folder
   file:

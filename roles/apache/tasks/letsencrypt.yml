@@ -1,3 +1,20 @@
+- name: install required packages => is_fedora
+  yum:
+    name: [
+      certbot-apache
+    ]
+    state: present
+  when: is_fedora|bool
+  
+- name: install required packages => is_suse
+  zypper:
+    name: [
+#      , python2-certbot-apache # is installing right Python libraries cryptography needed by openssl ansible module and python2-setuptools
+      python3-certbot-apache
+    ]
+    state: present
+  when: is_suse|bool
+
 - name: check letsencrypt certificate
   stat:
     path: /etc/letsencrypt/archive/{{server_domain}}

@@ -35,31 +35,31 @@
       - '{{global_lib}}loki:/loki:z'
     ports:
      - "127.0.0.1:3100:3100"
-#  notify: "restart loki"
+  notify: "restart loki"
       
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/loki.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-#- name: create systemd service
-#  vars:
-#    container_name: "loki"
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "loki"
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
-#- name: register update notifier
-#  vars:
-#    name: "loki"
-#    type: "docker"
-#    url: "https://github.com/grafana/loki/releases"
-#    config: {
-#      repository: "grafana/loki",
-#      pattern: "^([0-9\\.]+)$"
-#    }
-#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+- name: register update notifier
+  vars:
+    name: "loki"
+    type: "docker"
+    url: "https://github.com/grafana/loki/releases"
+    config: {
+      repository: "grafana/loki",
+      pattern: "^([0-9\\.]+)$"
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-#- name: trigger loki handler
-#  vars:
-#    notify: "restart loki"
-#    service: "loki.service"
-#  import_tasks: roles/base/tasks/service_check.yml
+- name: trigger loki handler
+  vars:
+    notify: "restart loki"
+    service: "loki.service"
+  import_tasks: roles/base/tasks/service_check.yml

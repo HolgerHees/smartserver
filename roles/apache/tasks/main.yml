@@ -7,9 +7,7 @@
 - name: install required packages => is_fedora
   yum:
     name: [
-      #python2-setuptools      # needed by openssl ansible module
-      python3-setuptools
-      , certbot-apache
+      python3-cryptography
     ]
     state: present
   when: is_fedora|bool
@@ -17,10 +15,8 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-      python2-setuptools      # needed by openssl ansible module
-      , python3-setuptools
-      , python2-certbot-apache # is installing right Python libraries cryptography needed by openssl ansible module and python2-setuptools
-      , python3-certbot-apache
+#      , python2-cryptography
+      python3-cryptography # needed for ansible openssl
     ]
     state: present
   when: is_suse|bool
