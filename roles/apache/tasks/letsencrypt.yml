@@ -1,19 +1,19 @@
 - name: install required packages => is_fedora
   yum:
     name: [
-      certbot-apache
+      python3-certbot
     ]
     state: present
-  when: "is_fedora|bool and vault_ssl_certificate == 'letsencrypt'"
+  when: "is_fedora|bool"
   
 - name: install required packages => is_suse
   zypper:
     name: [
 #      , python2-certbot-apache # is installing right Python libraries cryptography needed by openssl ansible module and python2-setuptools
-      python3-certbot-apache
+      python3-certbot
     ]
     state: present
-  when: "is_suse|bool and vault_ssl_certificate == 'letsencrypt'"
+  when: "is_suse|bool"
 
 - name: check letsencrypt certificate
   stat:
@@ -27,7 +27,7 @@
 
 - name: decide to create or restore easy_rsa certificates
   set_fact:
-    certificate_mode: "{% if letsencrypt_archive.stat.exists or vault_ssl_certificate != 'letsencrypt' %}{% elif certificate_files_from_vault.stat.exists %}vault{% else %}create{% endif %}"
+    certificate_mode: "{% if letsencrypt_archive.stat.exists %}{% elif certificate_files_from_vault.stat.exists %}vault{% else %}create{% endif %}"
     changed_when: "certificate_mode != ''"
   
 # BACKUP RESTORE #  
@@ -69,7 +69,7 @@
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: "letsencrypt_archive.stat.exists and vault_ssl_certificate == 'letsencrypt'"
+  when: "letsencrypt_archive.stat.exists"
 
 # WILDCARD DNS CHALLENGE
 #- name: run certbot => certificate_mode = 'create_wildcard'
