@@ -4,7 +4,7 @@
       certbot-apache
     ]
     state: present
-  when: is_fedora|bool
+  when: "is_fedora|bool and vault_ssl_certificate == 'letsencrypt'"
   
 - name: install required packages => is_suse
   zypper:
@@ -13,7 +13,7 @@
       python3-certbot-apache
     ]
     state: present
-  when: is_suse|bool
+  when: "is_suse|bool and vault_ssl_certificate == 'letsencrypt'"
 
 - name: check letsencrypt certificate
   stat:
