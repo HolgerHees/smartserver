@@ -38,6 +38,9 @@
     state: present
     user_install: no
   with_items:
+    - fluent-plugin-mail
+    - fluent-plugin-grep
+    - fluent-plugin-grepcounter
     - fluent-plugin-grafana-loki
   when: "loki_enabled | default(False)"
   tags: [ 'loki' ]

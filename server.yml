@@ -2,6 +2,8 @@
 - hosts: all
   become: yes
   become_user: root
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   pre_tasks:
     # ************ INIT CONFIG ***********   
     - { import_role: { name: _init }, tags: [ 'always' ] }                                       # detect environment and load configs

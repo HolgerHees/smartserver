@@ -15,10 +15,121 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 20,
-  "iteration": 1591889461729,
+  "iteration": 1591975943309,
   "links": [],
   "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:72",
+          "alias": "group=\"[^\"]*"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "count_over_time( ( {env=\"fluentd\",level=~\"$level\",group=~\"$group\"} )[1m] )",
+          "refId": "A"
+        },
+        {
+          "expr": "count_over_time( ( {level=~\"ERROR|ALARM\",group!~\"netdata|openhab|crony\"} )[1m] )",
+          "hide": true,
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        }
+      ],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:98",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:99",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
     {
       "datasource": "Loki",
       "fieldConfig": {
@@ -28,10 +139,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 21,
+        "h": 17,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 4
       },
       "id": 2,
       "options": {
@@ -48,7 +159,8 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Panel Title",
+      "title": "",
+      "transformations": [],
       "type": "logs"
     }
   ],
@@ -62,11 +174,10 @@
         "allValue": ".*",
         "current": {
           "selected": true,
-          "tags": [],
-          "text": "ERROR + WARN",
+          "text": "ALERT + ERROR",
           "value": [
-            "ERROR",
-            "WARN"
+            "ALERT",
+            "ERROR"
           ]
         },
         "datasource": "Loki",
@@ -76,35 +187,9 @@
         "label": null,
         "multi": true,
         "name": "level",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "DEBUG",
-            "value": "DEBUG"
-          },
-          {
-            "selected": true,
-            "text": "ERROR",
-            "value": "ERROR"
-          },
-          {
-            "selected": false,
-            "text": "INFO",
-            "value": "INFO"
-          },
-          {
-            "selected": true,
-            "text": "WARN",
-            "value": "WARN"
-          }
-        ],
+        "options": [],
         "query": "label_values(level)",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -118,7 +203,6 @@
         "allValue": ".*",
         "current": {
           "selected": true,
-          "tags": [],
           "text": "All",
           "value": [
             "$__all"
@@ -131,100 +215,9 @@
         "label": null,
         "multi": true,
         "name": "group",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "CRON",
-            "value": "CRON"
-          },
-          {
-            "selected": false,
-            "text": "ansible-docker_network",
-            "value": "ansible-docker_network"
-          },
-          {
-            "selected": false,
-            "text": "apache",
-            "value": "apache"
-          },
-          {
-            "selected": false,
-            "text": "elastalert",
-            "value": "elastalert"
-          },
-          {
-            "selected": false,
-            "text": "elasticsearch",
-            "value": "elasticsearch"
-          },
-          {
-            "selected": false,
-            "text": "fluentd",
-            "value": "fluentd"
-          },
-          {
-            "selected": false,
-            "text": "influxdb",
-            "value": "influxdb"
-          },
-          {
-            "selected": false,
-            "text": "kernel",
-            "value": "kernel"
-          },
-          {
-            "selected": false,
-            "text": "loki",
-            "value": "loki"
-          },
-          {
-            "selected": false,
-            "text": "netdata",
-            "value": "netdata"
-          },
-          {
-            "selected": false,
-            "text": "openhab",
-            "value": "openhab"
-          },
-          {
-            "selected": false,
-            "text": "postfix",
-            "value": "postfix"
-          },
-          {
-            "selected": false,
-            "text": "samba",
-            "value": "samba"
-          },
-          {
-            "selected": false,
-            "text": "smartd",
-            "value": "smartd"
-          },
-          {
-            "selected": false,
-            "text": "systemd",
-            "value": "systemd"
-          },
-          {
-            "selected": false,
-            "text": "systemd-udevd",
-            "value": "systemd-udevd"
-          },
-          {
-            "selected": false,
-            "text": "vcontrold",
-            "value": "vcontrold"
-          }
-        ],
+        "options": [],
         "query": "label_values(group)",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -257,7 +250,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -276,5 +269,5 @@
   "timezone": "",
   "title": "Logs",
   "uid": "hiAzxTmGk",
-  "version": 7
+  "version": 6
 }
