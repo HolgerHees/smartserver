@@ -202,6 +202,7 @@
     dest: "/tmp/ansible"
   register: services_state
   with_items: "{{services_result.stdout_lines}}"
+  changed_when: no
     
 - name: copy service configs
   template:
@@ -211,7 +212,6 @@
     group: "{{openhab_group}}"
     mode: 0640
   with_items: "{{services_result.stdout_lines}}"
-  when: services_state.changed
   notify: "restart openhab"
 
 - name: check things folder
@@ -226,6 +226,7 @@
     dest: "/tmp/ansible"
   register: things_state
   with_items: "{{things_result.stdout_lines}}"
+  changed_when: no
 
 - name: copy things configs
   template:
@@ -235,8 +236,13 @@
     group: "{{openhab_group}}"
     mode: 0640
   with_items: "{{things_result.stdout_lines}}"
-  when: things_state.changed
   notify: "restart openhab"
+  
+- name: clean configs
+  file:
+    path: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/"
+    state: absent
+  changed_when: no
 
 # JYTHON
 - name: check jython jar
@@ -290,6 +296,7 @@
     dest: "/tmp/ansible"
   register: udev_state
   with_items: "{{udev_result.stdout_lines}}"
+  changed_when: no
 
 - name: copy udev rules
   template:
@@ -300,7 +307,6 @@
     mode: 0644
   register: udev_rules
   with_items: "{{udev_result.stdout_lines}}"
-  when: udev_state.changed
   notify: "restart openhab"
 
 - name: reload udev rules

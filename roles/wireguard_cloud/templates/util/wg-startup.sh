@@ -14,15 +14,15 @@ initDeviceConfig()
 
     NEW_CONFIG="[Interface]
 PrivateKey = ${PRIVATE_KEY}
-Address = {{cloud_network.interface.address}}
-ListenPort = {{exposed_port}}
+Address = {{wg_cloud_network.interface.address}}
+ListenPort = {{wg_exposed_port}}
 SaveConfig = true
 
-{% for peer_name in cloud_network.peers %}
+{% for peer_name in wg_cloud_network.peers %}
 [Peer]
-PublicKey = {{cloud_network.peers[peer_name].publicKey}}
-AllowedIPs = {{cloud_network.peers[peer_name].allowedIPs}}
-Endpoint = {{cloud_network.peers[peer_name].endpoint}}
+PublicKey = {{wg_cloud_network.peers[peer_name].publicKey}}
+AllowedIPs = {{wg_cloud_network.peers[peer_name].allowedIPs}}
+Endpoint = {{wg_cloud_network.peers[peer_name].endpoint}}
 PersistentKeepalive = 25
 {% endfor %}"
 
@@ -37,8 +37,8 @@ PersistentKeepalive = 25
 
 initExports()
 {
-    NEW_EXPORTS="{% for peer_name in cloud_network.peers %}
-/cloud/export/{{peer_name}} {{cloud_network.peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
+    NEW_EXPORTS="{% for peer_name in wg_cloud_network.peers %}
+/cloud/export/{{peer_name}} {{wg_cloud_network.peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
 {% endfor %}"
 
     OLD_EXPORTS=$(cat /etc/exports)
@@ -52,20 +52,20 @@ initExports()
 
 initFstab()
 {
-{% for peer_name in cloud_network.peers %}
-    if ! grep -q '{{cloud_network.peers[peer_name].nfsServer}}' /etc/fstab ; then
-        #echo '{{cloud_network.peers[peer_name].nfsServer}}:/cloud/export/{{main_network}} /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
-        echo '{{cloud_network.peers[peer_name].nfsServer}}:/ /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
+{% for peer_name in wg_cloud_network.peers %}
+    if ! grep -q '{{wg_cloud_network.peers[peer_name].nfsServer}}' /etc/fstab ; then
+        #echo '{{wg_cloud_network.peers[peer_name].nfsServer}}:/cloud/export/{{main_network}} /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
+        echo '{{wg_cloud_network.peers[peer_name].nfsServer}}:/ /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
     fi
 {% endfor %}
 }
 
 mountShares()
 {
-{% for peer_name in cloud_network.peers %}
-    peer_ip_{{peer_name}}='{{cloud_network.peers[peer_name].nfsServer}}'
+{% for peer_name in wg_cloud_network.peers %}
+    peer_ip_{{peer_name}}='{{wg_cloud_network.peers[peer_name].nfsServer}}'
 {% endfor %}
-    peers="{% for peer_name in cloud_network.peers %}{{peer_name}} {% endfor %}"
+    peers="{% for peer_name in wg_cloud_network.peers %}{{peer_name}} {% endfor %}"
 
     echo "mount nfs shares..."
     x=1
@@ -113,7 +113,7 @@ stop()
     echo "SIGTERM caught, shutting down..."
     
     echo "unmount nfs shares"
-{% for peer_name in cloud_network.peers %}
+{% for peer_name in wg_cloud_network.peers %}
     echo "unmount /cloud/mount/{{peer_name}}"
     umount -f -l /cloud/mount/{{peer_name}} > /dev/null 2>&1
 {% endfor %}
