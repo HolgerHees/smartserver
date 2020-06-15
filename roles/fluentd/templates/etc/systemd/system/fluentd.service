@@ -1,7 +1,7 @@
 [Unit]
 Description=Fluentd
 Documentation=http://www.fluentd.org/
-Requires=elasticsearch.service
+Requires=loki.service
 
 [Service]
 LimitNOFILE=65536

@@ -57,7 +57,5 @@
 - name: register user_id map
   set_fact:
     system_users: {}
-
-- name: register group_id map
-  set_fact:
     system_groups: {}
+    vault_ssl_certificate: { vault_ssl_certificate | default('selfsigned') }    # selfsigned | letsencrypt

@@ -28,19 +28,7 @@
   notify: "restart grafana"
   with_items:
     - "templates/dashboards/Server Health.json"
-
-- name: copy shared grafana / loki dashboards
-  copy:
-    src: "{{item}}"
-    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart grafana"
-  with_items:
     - "templates/dashboards/Logs.json"
-  when: "loki_enabled | default(False)"
-  tags: [ 'loki' ]
 
 - name: check individual grafana dashboard folder
   shell: "ls -1 {{config_path}}roles/grafana/templates/dashboards/"
@@ -70,42 +58,20 @@
     - "provisioning/dashboards/provider.yaml"
     - "provisioning/datasources/openhab.yaml"
     - "provisioning/datasources/opentsdb.yaml"
-  
-- name: copy loki provisioning
-  template:
-    src: "templates/{{item}}"
-    dest: "{{ global_lib }}grafana/{{item}}"
-    owner: root
-    group: root
-    mode: 0640
-  notify: "restart grafana"
-  with_items:
     - "provisioning/datasources/loki.yaml"
-  when: "loki_enabled | default(False)"
-  tags: [ 'loki' ]
-
+  
 - name: check started docker
   systemd:
     name: docker
     state: started
     
-- name: connect grafana with databases (without loki)
-  docker_network:
-    name: grafana_databases
-    connected:
-      - influxdb
-    appends: yes
-  when: "not loki_enabled | default(False)"
-  tags: ['influxdb', 'loki']
-
-- name: connect grafana with databases (with loki)
+- name: connect grafana with databases
   docker_network:
     name: grafana_databases
     connected:
       - influxdb
       - loki
     appends: yes
-  when: "loki_enabled | default(False)"
   tags: [ 'influxdb', 'loki' ]
 
 - name: create docker container

@@ -8,18 +8,10 @@
 
 #- { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] } 
 
-#- { import_role: { name: alexa }, tags: [ 'alexa' ] }                                   # deployable alexa skill project.
-
-#- { import_role: { name: roomba }, tags: [ 'roomba' ] }                                 # roomba vacuum cleaner. is using mosquitto.
-#- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'debian' ] }                           # heating control for viessmann vitodens            [docker,user:nobody|dialout]
+#- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'debian' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]
 #- { import_role: { name: electricmeter }, tags: [ 'electricmeter' ] }                   # electricity
 
 - { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }  # proxy and redirect configs for custom devices
-
-#- { import_role: { name: clamav, tags: [ 'clamav' ] }                                   # file antivirus
-
-#- { import_role: { name: java }, tags: [ 'java' ] }                                     # jdk 1.8 (amazon corretto)
-#- { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                             # server agent for influxdb to collect various data
 
 #- { import_role: { name: ci_service }, tags: [ 'ci_service' ] }                         # continues integration test service
 

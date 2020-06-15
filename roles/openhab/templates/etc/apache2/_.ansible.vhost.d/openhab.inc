@@ -23,10 +23,10 @@ ProtocolsHonorOrder Off
   ProxyPass !
 </Location>
 
-<Location /elasticsearch>
+<Location /loki>
   ProxyPreserveHost On
-  ProxyPass http://127.0.0.1:9200 retry=0
-  ProxyPassReverse http://127.0.0.1:9200
+  ProxyPass http://127.0.0.1:3100 retry=0
+  ProxyPassReverse http://127.0.0.1:3100
 </Location>
 
 <Location /grafana>

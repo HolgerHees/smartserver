@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1591975943309,
+  "iteration": 1592229062927,
   "links": [],
   "panels": [
     {
@@ -72,11 +72,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "count_over_time( ( {env=\"fluentd\",level=~\"$level\",group=~\"$group\"} )[1m] )",
+          "expr": "count_over_time( ( {env=\"fluentd\",level=~\"$level\",group=~\"$group\"} |~ \".*$search.*\" )[1m] )",
           "refId": "A"
         },
         {
-          "expr": "count_over_time( ( {level=~\"ERROR|ALARM\",group!~\"netdata|openhab|crony\"} )[1m] )",
+          "expr": "count_over_time( ( {level=~\"ERROR|ALARM\",group!~\"netdata|openhab|crony\"} |~ \".*$search.*\" )[1m] )",
           "hide": true,
           "refId": "B"
         }
@@ -268,6 +268,6 @@
   },
   "timezone": "",
   "title": "Logs",
-  "uid": "hiAzxTmGk",
-  "version": 6
+  "uid": "logs",
+  "version": 9
 }
