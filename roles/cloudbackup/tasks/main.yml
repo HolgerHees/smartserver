@@ -69,17 +69,17 @@
 
 - name: prepare sync cmd
   set_fact:
-    sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone --log-file={{global_log}}cloudbackup/cloudbackup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_target_path}}backup sync {{cloud_backup_source_path}} backup:"
+    cloudback_sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone --log-file={{global_log}}cloudbackup/cloudbackup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_target_path}}backup sync {{cloud_backup_source_path}} backup:"
     
 #- name: show sync_cmd
 #  debug:
-#    msg: "{{sync_cmd}}"
+#    msg: "{{cloudback_sync_cmd}}"
     
 # FINALIZE  
 - name: create cron job => is_production
   vars:
     name: "RClone"
-    cmd: "( mountpoint -q {{cloud_backup_target_path}} && {{sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1)"
+    cmd: "( mountpoint -q {{cloud_backup_target_path}} && {{cloudback_sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1)"
     file: "ansible_cloudbackup"
     hour: "2"
     minute: "0"
