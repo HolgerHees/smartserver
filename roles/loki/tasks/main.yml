@@ -11,7 +11,19 @@
     group: "10001"
     mode: 0750
   with_items:
+    - "{{ global_etc }}loki/"
     - "{{ global_lib }}loki/"
+  
+- name: copy config
+  template:
+    src: "templates{{item}}"
+    dest: "{{ global_etc }}loki/{{item | basename}}"
+    owner: "10001"
+    group: "10001"
+    mode: 0640
+  with_items:
+    - "/etc/loki/local-config.yaml"
+  notify: "restart loki"
   
 - name: check started docker
   systemd:
@@ -28,10 +40,15 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+      - "\"/usr/bin/loki -config.file=/etc/loki/local-config.yaml 2>&1\""
     log_driver: journald
     log_options:
       tag: loki
     volumes:
+      - '{{global_etc}}loki:/etc/loki:z'
       - '{{global_lib}}loki:/loki:z'
     ports:
      - "127.0.0.1:3100:3100"
