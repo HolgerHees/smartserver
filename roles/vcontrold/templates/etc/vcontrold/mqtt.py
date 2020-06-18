@@ -67,6 +67,7 @@ print("Wait for vcontrold to become ready", flush=True)
 i = 0
 while i < 10:
     try:
+        print("Init mqtt client", flush=True)
         vc = vclient()
         
         def cleanup(signum, frame):
@@ -83,7 +84,7 @@ while i < 10:
         signal.signal(signal.SIGTERM, cleanup)
         signal.signal(signal.SIGINT, cleanup)
         
-        print("Start mqtt", flush=True)
+        print("Start event loop", flush=True)
         run = True
         lastPublishTime = datetime.now()
         while run:
