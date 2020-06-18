@@ -30,22 +30,12 @@
   changed_when: no
   when: is_fedora|bool
 
-- name: install docker => is_fedora
-  dnf:
-    name: [
-      docker-ce
-      #,docker-ce-cli 
-      #,containerd.io
-    ]
-    state: present
-  notify: "restart docker"
-  when: is_fedora|bool
-    
 - name: install required packages => is_fedora
   yum:
     name: [
+        docker-ce
 #        docker
-        python3-docker  # used by ansible docker module
+        , python3-docker  # used by ansible docker module
 #        , golang-github-docker-libnetwork-devel # needed to make docker running together with firewalld
 #        , podman
     ]
@@ -60,15 +50,6 @@
 #    priority: "100"
 #    state: present
 #  when: is_suse|bool
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        docker
-    ]
-    state: present
-  notify: "restart docker"
-  when: is_suse|bool
 
 - name: install required packages => is_suse
   zypper:
