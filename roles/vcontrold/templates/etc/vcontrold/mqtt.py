@@ -103,6 +103,7 @@ while i < 10:
         #print("closed", flush=True)
         break
     except:
+        print("Retry", flush=True)
         time.sleep(1)
         i = i + 1      
 
