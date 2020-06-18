@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1592229062927,
+  "iteration": 1592468784604,
   "links": [],
   "panels": [
     {
@@ -44,6 +44,7 @@
         "alignAsTable": false,
         "avg": false,
         "current": false,
+        "hideEmpty": false,
         "max": false,
         "min": false,
         "rightSide": false,
@@ -68,7 +69,7 @@
         }
       ],
       "spaceLength": 10,
-      "stack": false,
+      "stack": true,
       "steppedLine": false,
       "targets": [
         {
@@ -91,12 +92,7 @@
         "sort": 0,
         "value_type": "individual"
       },
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {}
-        }
-      ],
+      "transformations": [],
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -269,5 +265,5 @@
   "timezone": "",
   "title": "Logs",
   "uid": "logs",
-  "version": 9
+  "version": 11
 }
