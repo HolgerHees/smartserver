@@ -63,7 +63,6 @@ class vclient(object):
 print("Start vcontrold", flush=True)
 process = subprocess.Popen(['/usr/sbin/vcontrold', '-n'], stdout=subprocess.PIPE, universal_newlines=True)
 
-print("Wait for vcontrold to become ready", flush=True)
 i = 0
 while i < 10:
     try:
@@ -83,6 +82,8 @@ while i < 10:
 
         signal.signal(signal.SIGTERM, cleanup)
         signal.signal(signal.SIGINT, cleanup)
+        
+        i = 0
         
         print("Start event loop", flush=True)
         run = True
