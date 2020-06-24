@@ -80,7 +80,7 @@
     - { src: "/etc/vcontrold/mqtt.py", dest: "{{global_etc}}vcontrold/mqtt.py" }
     - { src: "/etc/vcontrold/vcontrold.xml", dest: "{{global_etc}}vcontrold/vcontrold.xml" }
     - { src: "/etc/vcontrold/vito.xml", dest: "{{global_etc}}vcontrold/vito.xml" }
-    - { src: "/etc/udev/rules.d/10-vcontrold.rules", dest: "/etc/udev/rules.d/10-vcontrold.rules" }
+    - { src: "/etc/udev/rules.d/99-vcontrold.rules", dest: "/etc/udev/rules.d/99-vcontrold.rules" }
   notify: "restart vcontrold"
 
 # ***** FINALIZE *****

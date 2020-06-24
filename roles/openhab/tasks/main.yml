@@ -1,19 +1,27 @@
+- name: ensure user and group exists
+  vars:
+    user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
+    group: { name: "openhab", system: true }
+  import_tasks: roles/user/tasks/add_system_user.yml
+
 - name: set openhab version
   set_fact:
     openhab_version: "2.5.5"
     jython_version: "2.7.2"
-    openhab_user: "9001"
-    openhab_group: "9001"
+    openhab_uid: "{{system_users['openhab'].id}}"
+    openhab_user: "{{system_users['openhab'].name}}"
+    openhab_gid: "{{system_groups['openhab'].id}}"
+    openhab_group: "{{system_groups['openhab'].name}}"
 #    openhab_user: "root"
 #    openhab_group: "root"
     # stable version from 05.03.2020
     jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
   tags: [ 'update_notifier_configs' ]
 
-- name: get gid from "dialout"
-  shell: "getent group dialout | cut -d: -f3"
-  register: group_dialout_id
-  changed_when: no
+#- name: get gid from "dialout"
+#  shell: "getent group dialout | cut -d: -f3"
+#  register: group_dialout_id
+#  changed_when: no
 
 - name: prepare needed folder
   file:
@@ -90,8 +98,8 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-      USER_ID: "{{openhab_user}}"
-      GROUP_ID: "{{openhab_group}}"
+      USER_ID: "{{openhab_uid}}"
+      GROUP_ID: "{{openhab_gid}}"
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
     network_mode: host
@@ -124,6 +132,15 @@
     repo: '{{vault_openhab_config_git}}'
     dest: '{{projects_path}}openhab2'
     version: "master"
+  register: openhab_config_git
+  
+- name: ensure that right owner is assigned => openhab_config_git changed
+  file:
+    path: "{{projects_path}}openhab2"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    recurse: yes
+  when: "openhab_config_git.changed"
 
 - name: link configs
   file:
