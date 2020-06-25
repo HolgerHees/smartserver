@@ -41,6 +41,7 @@
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
     is_fedora: "{{ansible_distribution == 'Fedora'}}"
     is_production: "{{host_ip == production_ip}}"
+    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
   tags: always
   
 # load shared variables
