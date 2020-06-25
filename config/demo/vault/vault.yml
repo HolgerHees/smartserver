@@ -108,6 +108,7 @@ vault_fritzbox_password: "default123"
 vault_telegram_chat_id: "<chat_id>"
 vault_telegram_chat_token: "<chat_token>"
 vault_hue_user_id: "<userid>"
+vault_zwave_key: "<zwave_key>"
 
 # used in custom external openhab config repository and custom role 'apache_proxy'
 vault_automower_device_username: "automower"
