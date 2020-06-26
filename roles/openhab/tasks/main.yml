@@ -152,7 +152,7 @@
     group: "{{openhab_group}}"
   with_items:
     #- start.sh
-    - addons
+    #- addons
     - python/custom
   notify: "restart openhab"
 
@@ -174,23 +174,24 @@
 
 - name: prepare missing config folder
   file:
-    path:  "{{global_etc}}openhab/conf/{{item}}"
+    path:  "{{global_etc}}openhab{{item}}"
     state: directory
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0750
   with_items:
-    - automation
-    - html
-    - icons
-    - items
-    - persistence
-    - rules
-    - scripts
-    - services
-    - sitemaps
-    - transform
-    - things
+    - /conf/automation
+    - /conf/html
+    - /conf/icons
+    - /conf/items
+    - /conf/persistence
+    - /conf/rules
+    - /conf/scripts
+    - /conf/services
+    - /conf/sitemaps
+    - /conf/transform
+    - /conf/things
+    - /addons
   notify: "restart openhab"
     
 - name: copy habpanel config
@@ -201,6 +202,21 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
+
+- name: check addons folder
+  shell: "ls -1 {{projects_path}}openhab2/addons/"
+  register: addons_result
+  changed_when: no
+
+- name: copy addons folder
+  copy:
+    src: "{{projects_path}}openhab2/addons/{{item}}"
+    dest: "{{global_etc}}openhab/addons/{{item}}"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_items: "{{addons_result.stdout_lines}}"
 
 #- name: Get files on remote machine
 #  find:
