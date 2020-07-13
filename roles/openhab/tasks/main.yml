@@ -38,6 +38,23 @@
     - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
 
+# ****** GITHUB CONFIG PROJECT ******
+- name: clone config git
+  git:
+    accept_hostkey: yes
+    repo: '{{vault_openhab_config_git}}'
+    dest: '{{projects_path}}openhab2'
+    version: "master"
+  register: openhab_config_git
+  
+- name: ensure that right owner is assigned => openhab_config_git changed
+  file:
+    path: "{{projects_path}}openhab2"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    recurse: yes
+  when: "openhab_config_git.changed"
+
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
@@ -53,12 +70,24 @@
     openhab_device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
   when: "device_result.rc == 0"
   
-- name: prepare device mounts
-  set_fact:
-    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item + ':/dev/' + item + ':rwm']}}"
+- name: check if devices exists
+  shell: "ls -al /dev/{{item}}"
+  register: symlink_result
+  changed_when: no
+  failed_when: no
   with_items: "{{device_result.stdout_lines}}"
   when: "device_result.rc == 0"
   
+- name: prepare device mounts
+  set_fact:
+    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item.1 + ':/dev/' + item.1 + ':rwm']}}"
+  with_indexed_items: "{{device_result.stdout_lines}}"
+  when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
+  
+#- name:
+#  debug:
+#    msg: "{{openhab_device_mounts}}"
+
 #- name:
 #  debug:
 #    msg: "{{openhab_device_java_opts | default('')}}"
@@ -126,22 +155,6 @@
   notify: "restart openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
-- name: clone config git
-  git:
-    accept_hostkey: yes
-    repo: '{{vault_openhab_config_git}}'
-    dest: '{{projects_path}}openhab2'
-    version: "master"
-  register: openhab_config_git
-  
-- name: ensure that right owner is assigned => openhab_config_git changed
-  file:
-    path: "{{projects_path}}openhab2"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    recurse: yes
-  when: "openhab_config_git.changed"
-
 - name: link configs
   file:
     src: "{{projects_path}}openhab2/{{item}}"
