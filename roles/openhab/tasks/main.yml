@@ -485,7 +485,7 @@
   vars:
     name: "openhab"
     type: "docker"
-    url: "https://github.com/openhab/openhab-distro/release"
+    url: "https://github.com/openhab/openhab-distro/releases"
     config: {
       repository: "openhab/openhab",
       pattern: "^([0-9\\.]+)-debian$"
