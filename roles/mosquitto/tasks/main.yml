@@ -20,8 +20,8 @@
     log_options:
       tag: mosquitto
     ports:
-     - "127.0.0.1:1883:1883"  
-     - "127.0.0.1:9001:9001"  
+     - "1883:1883"  
+     - "9001:9001"  
   notify: "restart mosquitto"
     
 # ***** FINALIZE *****
