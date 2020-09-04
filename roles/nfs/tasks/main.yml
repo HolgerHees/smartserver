@@ -1,3 +1,16 @@
+- name: check if nfs-utils is installed
+  yum:
+    list: nfs-utils
+    state: present
+  register: nfsutilsresult
+  when: is_fedora|bool
+  
+- name: upgrade libnfsidmap => is_fedora
+  yum:
+    name: libnfsidmap
+    state: latest
+  when: "is_fedora|bool and nfsutilsresult.results|selectattr('yumstate', 'match', 'installed')|list|length == 0"
+
 - name: install required packages => is_fedora
   yum:
     name: [
