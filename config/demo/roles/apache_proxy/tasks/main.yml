@@ -27,6 +27,7 @@
     dest: "{{htdocs_path}}fallback/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+    mode: 0644
   with_items:
     - cam.jpg # automower
     - cam.mjpg # automower

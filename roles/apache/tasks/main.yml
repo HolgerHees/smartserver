@@ -43,6 +43,7 @@
 - name: generate openssl privatekey => certificate_files not exists
   openssl_privatekey:
     path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    mode: 0600
   when: not certificate_files.stat.exists
     
 - name: generate openssl csr => certificate_files not exists
@@ -50,6 +51,7 @@
     path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "*.{{server_domain}}"
+    mode: 0600
   when: not certificate_files.stat.exists
     
 - name: generate openssl certificate => certificate_files not exists
@@ -58,6 +60,7 @@
     privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
     csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
+    mode: 0640
   when: not certificate_files.stat.exists
   
 - name: create certificate symlink
@@ -146,6 +149,7 @@
     dest: "{{htdocs_path}}fallback/domain/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+    mode: 0644
   with_items:
     - index.html
     - style.css
