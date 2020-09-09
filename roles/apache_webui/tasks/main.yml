@@ -16,6 +16,7 @@
     dest: "{{htdocs_path}}{{item|dirname}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+    mode: "u=rwX,g=rX,o=rX"
   with_items:
     - main/components
     - main/css
@@ -35,6 +36,7 @@
     dest: "{{htdocs_path}}/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+    mode: "u=rwX,g=rX,o="
   with_items:
     - main/manifest.json
 

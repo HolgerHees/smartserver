@@ -301,6 +301,7 @@
   get_url:
     url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
     dest: "{{global_etc}}openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
+    mode: 0640
   when: "not jython_jar_exists.stat.exists"
 
 # JYTHON HELPER

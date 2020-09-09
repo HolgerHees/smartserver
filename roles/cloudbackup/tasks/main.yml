@@ -61,6 +61,7 @@
   template:
     src: "templates/rclone.config"
     dest: "/opt/rclone/rclone.config"
+    mode: 0600
   when: "not rclone_config_file.stat.exists"
     
 - name: set password
