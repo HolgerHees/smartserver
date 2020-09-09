@@ -234,6 +234,7 @@
     mode: 0640
   with_items:
     - "/etc/netdata/netdata.conf"
+    - "/etc/netdata/exporting.conf"
     - "/etc/netdata/python.d.conf"
     - "/etc/netdata/health_alarm_notify.conf"
     - "/etc/netdata/fping.conf"
