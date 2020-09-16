@@ -69,10 +69,11 @@
   docker_network:
     name: grafana_databases
     connected:
+      - mysql
       - influxdb
       - loki
     appends: yes
-  tags: [ 'influxdb', 'loki' ]
+  tags: [ 'influxdb', 'loki', 'mysql' ]
 
 - name: create docker container
   docker_container:
