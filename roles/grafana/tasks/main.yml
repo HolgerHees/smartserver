@@ -56,7 +56,8 @@
   notify: "restart grafana"
   with_items:
     - "provisioning/dashboards/provider.yaml"
-    - "provisioning/datasources/openhab.yaml"
+    - "provisioning/datasources/openhab_influxdb.yaml"
+    - "provisioning/datasources/openhab_mysql.yaml"
     - "provisioning/datasources/opentsdb.yaml"
     - "provisioning/datasources/loki.yaml"
   

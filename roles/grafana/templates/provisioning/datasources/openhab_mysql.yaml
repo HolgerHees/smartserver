@@ -3,27 +3,27 @@ apiVersion: 1
 
 # list of datasources that should be deleted from the database
 deleteDatasources:
-  - name: InfluxDB
+  - name: MySQL
     orgId: 1
-
+ 
 # list of datasources to insert/update depending what's available in the database
 datasources:
   # <string, required> name of the datasource. Required
-  - name: InfluxDB
+  - name: MySQL
     # <string, required> datasource type. Required
-    type: influxdb
+    type: mysql
     # <string, required> access mode. proxy or direct (Server or Browser in the UI). Required
     access: proxy
     # <int> org id. will default to orgId 1 if not specified
     orgId: 1
     # <string> url
-    url: http://influxdb:8086
+    url: mysql:3306
     # <string> database password, if used
-    password: {{vault_grafana_influxdb_password}}
+    password: 
     # <string> database user, if used
-    user: {{vault_grafana_influxdb_username}}
+    user: root
     # <string> database name, if used
-    database: openhab_db
+    database: openhab
     # <bool> enable/disable basic auth
     basicAuth:
     # <string> basic auth username
@@ -33,7 +33,7 @@ datasources:
     # <bool> enable/disable with credentials headers
     withCredentials:
     # <bool> mark as default datasource. Max one per org
-    isDefault:
+    #isDefault:
     # <map> fields that will be converted to json and stored in json_data
     #jsonData:
     #  graphiteVersion: "1.1"
