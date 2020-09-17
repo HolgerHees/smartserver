@@ -105,8 +105,16 @@ vault_roomba_blid: "<blid>"
 # used in custom external openhab config repository
 vault_fritzbox_username: "openhab"
 vault_fritzbox_password: "default123"
-vault_telegram_chat_id: "<chat_id>"
-vault_telegram_chat_token: "<chat_token>"
+vault_telegram_bots: {
+    bot1: { # for user1
+        chat_id: "<chat_id>",
+        chat_token: "<chat_token>"
+    },
+    bot2: { # for user2
+        chat_id: "<chat_id>",
+        chat_token: "<chat_token>"
+    }
+}
 vault_hue_user_id: "<userid>"
 vault_zwave_key: "<zwave_key>"
 vault_zwave_weatherstation_id: "<vault_zwave_weatherstation_id>"
