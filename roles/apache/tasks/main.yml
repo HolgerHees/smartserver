@@ -1,6 +1,8 @@
 - name: set version
   set_fact:
-    apache_version: '2.4.43'
+    apache_version: '2.4.46'
+#    openidc_version: '2.4.1'
+    openidc_version: '2.4.4.1'
   tags: [ 'update_notifier_configs' ]
   
 # SELFSIGNED CERTIFICATE
@@ -250,7 +252,7 @@
     container_name: "apache2"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
-- name: register update notifier
+- name: register apache update notifier
   vars:
     name: "apache"
     type: "docker"
@@ -261,6 +263,18 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
+- name: register openidc update notifier
+  vars:
+    name: "apache - openidc"
+    type: "github"
+    url: "https://github.com/zmartzone/mod_auth_openidc"
+    config: { 
+      project: "zmartzone/mod_auth_openidc", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{openidc_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  
 - name: trigger apache2 handler
   vars:
     notify: "restart apache2"

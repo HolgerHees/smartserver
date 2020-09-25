@@ -38,7 +38,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
 
 # GD Image library with freetype support
   apt-get install -y libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev libfreetype6-dev && \
-  docker-php-ext-configure gd --with-gd --with-webp-dir --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir && \
+  docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype && \
   docker-php-ext-install gd && \
 
 # Redis
@@ -58,6 +58,10 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   sed -i 's/pm.process_idle_timeout.*/pm.process_idle_timeout = 15s/' /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/pm.max_requests.*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/access.log.*/access.log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf
+
+
+
+
 
 #TODO
 #      , systemd-devel         # php-systemd => nextcloud

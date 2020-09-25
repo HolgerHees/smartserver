@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mosquitto_version: "1.6.10"
+    mosquitto_version: "1.6.12"
   tags: [ 'update_notifier_configs' ]
   
 - name: check started docker

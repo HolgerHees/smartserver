@@ -86,7 +86,7 @@
 # ***** INSTALL NEWS *****
 - name: install news app
   unarchive:
-    src: "https://github.com/nextcloud/news/releases/download/14.1.11/news.tar.gz"
+    src: "https://github.com/nextcloud/news/releases/download/14.2.2/news.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"

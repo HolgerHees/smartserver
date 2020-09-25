@@ -16,7 +16,7 @@ RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjanss
     && mkdir /usr/lib/apache2/modules \
     && git clone https://github.com/zmartzone/mod_auth_openidc.git \
     && cd mod_auth_openidc/ \
-    && git checkout v2.4.1 \
+    && git checkout v{{openidc_version}} \
     && ./autogen.sh \
     && autoreconf -fi \
     && ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" \

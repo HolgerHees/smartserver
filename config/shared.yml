@@ -51,4 +51,4 @@ openvpn_mobile_network:           "10.101.{{netgroup}}.0"
 
 # version of alpine linux used in several container based roles
 alpine_version:                   "3.12.0"
-debian_version:                   "buster-20200607-slim"
+debian_version:                   "buster-20200908-slim"

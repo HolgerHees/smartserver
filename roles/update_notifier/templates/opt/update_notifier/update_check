@@ -104,7 +104,10 @@ for config_file in files:
             print("Exception:  {}".format(e),file=sys.stderr)
             print("----",file=sys.stderr)
 
-            current_state = last_state
+            if  last_state == None:
+                current_state = { 'name': config['name'], 'type': config['type'], 'url': config['url'], 'current': 0, 'updates': [] }
+            else:
+                current_state = last_state
             
         current_states['states'].append(current_state)
             
