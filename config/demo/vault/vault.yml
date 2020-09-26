@@ -118,6 +118,9 @@ vault_telegram_bots: {
 vault_hue_user_id: "<userid>"
 vault_zwave_key: "<zwave_key>"
 vault_zwave_weatherstation_id: "<vault_zwave_weatherstation_id>"
+vault_homecontrol_client_id: "<vault_homecontrol_client_id>"
+vault_homecontrol_client_secret: "<vault_homecontrol_client_secret>"
+vault_homecontrol_washer: "<vault_homecontrol_washer>"
 
 # used in custom external openhab config repository and custom role 'apache_proxy'
 vault_automower_device_username: "automower"
