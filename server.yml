@@ -75,10 +75,10 @@
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
     - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation                                           [deprecated]
-    - { import_role: { name: openvpn_mobile }, tags: [ 'openvpn' ] }                             # vpn configuration (mobile access)                                 [deprecated]
 
     - { import_role: { name: wireguard }, tags: [ 'wireguard' ] }                                # vpn kernel module installation
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (mobile access)                           [docker,user:root]
+    - { import_role: { name: ssh_vpn }, tags: [ 'ssh_vpn', 'alpine' ] }                          # vpn configuration (ssh access)                           [docker,user:10002:10002]
 
     - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
 

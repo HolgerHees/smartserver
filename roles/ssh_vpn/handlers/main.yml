@@ -1,0 +1,8 @@
+- name: restart ssh_vpn
+  systemd:
+    name: ssh_vpn
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart ssh_vpn"

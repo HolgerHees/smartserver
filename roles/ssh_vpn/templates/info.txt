@@ -1,0 +1,1 @@
+docker run --name ssh_vpn -v /home/hhees/workspace/ssh_vpn/templates/etc/ssh/sshd_config:/etc/ssh/sshd_config -v /home/hhees/workspace/ssh_vpn/templates/etc/ssh/util:/etc/ssh/util --env SSH_USER=vpn --env SSH_PASSWORD=vpn --env SSH_GROUP=vpn --env SSH_UID=10010 --env SSH_GID=10010 -p 50900:50900 298a0eb8f30e

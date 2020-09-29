@@ -57,10 +57,10 @@ vault_wireguard_mobile_internal_port: "51820" # the port, used on your server
 vault_wireguard_mobile_public_port: "51820" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
 # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
 
-# used in generic optional role 'openvpn_mobile'
-vault_vpn_mobile_pass: "default123"
-vault_vpn_mobile_port: "1195"
-vault_vpn_mobile_public_port: "277"
+# used in generic optional role 'ssh_vpn'
+vault_ssh_vpn_username: "<username>"
+vault_ssh_vpn_password: "<password>"
+vault_ssh_vpn_internal_port: "2222" # the port, used on your server
 # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
 
 vault_deployment_config_git: "https://github.com/HolgerHees/smartserver.git"

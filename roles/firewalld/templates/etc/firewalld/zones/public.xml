@@ -5,9 +5,9 @@
   <interface name="eth0"/>
   <service name="openvpn"/>
   <port port="80" protocol="tcp"/>
-{% if vault_vpn_mobile_port is defined %}  <port port="{{vault_vpn_mobile_port}}" protocol="tcp"/>
-{% endif %}
 {% if vault_vpn_cloud_port is defined %}  <port port="{{vault_vpn_cloud_port}}" protocol="tcp"/>
+{% endif %}
+{% if vault_ssh_vpn_internal_port is defined %}  <port port="{{vault_ssh_vpn_internal_port}}" protocol="tcp"/>
 {% endif %}
 {% if vault_wireguard_mobile_internal_port is defined %}  <port port="{{vault_wireguard_mobile_internal_port}}" protocol="udp"/>
 {% endif %}
