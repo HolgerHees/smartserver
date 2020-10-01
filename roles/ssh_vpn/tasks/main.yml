@@ -35,6 +35,7 @@
     name: mobile_vpn
 #    driver: bridge
 #    driver_options:
+#       com.docker.network.bridge.name: mobile_vpn
 #      com.docker.network.bridge.enable_ip_masquerade: 'false'
 #      com.docker.network.bridge.host_binding_ipv4: ""
     ipam_config:
