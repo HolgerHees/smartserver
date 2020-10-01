@@ -18,7 +18,6 @@
     group: root
     mode: 0640
   with_items:
-    - cloud.xml
     - public.xml
     - trusted.xml
   notify: "restart firewalld"

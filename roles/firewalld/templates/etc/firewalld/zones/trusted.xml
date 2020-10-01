@@ -2,13 +2,11 @@
 <zone target="ACCEPT">
   <short>Trusted</short>
   <description>All network connections are accepted.</description>
-  <source address="{{server_network}}/24"/>
-  <source address="{{docker_hostaccess_network}}/24"/>
-{% if not ansible_remote_ip.startswith(server_subnet) %}  <source address="{{ansible_remote_ip}}"/>
+  <source address="{{server_network}}/24"/> <!-- internal -->
+  <source address="{{docker_hostaccess_network}}/24"/> <!-- docker host access -->
+{% if not ansible_remote_ip.startswith(server_subnet) %}  <source address="{{ansible_remote_ip}}"/> <!-- ansible -->
 {% endif %}
-{% if vpn_mobile_network is defined %}  <source address="{{vpn_mobile_network}}/24"/>
-{% endif %}
-{% if openvpn_mobile_network is defined %}  <source address="{{openvpn_mobile_network}}/24"/>
+{% if vpn_mobile_network is defined %}  <source address="{{vpn_mobile_network}}/24"/> <!-- mobile vpn -->
 {% endif %}
   <masquerade/>
 </zone>

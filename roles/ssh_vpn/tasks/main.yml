@@ -29,13 +29,25 @@
     - sshd_config
     - util/entrypoint.sh
   notify: "restart ssh_vpn"
+  
+- name: create mobile_vpn network
+  docker_network:
+    name: mobile_vpn
+#    driver: bridge
+#    driver_options:
+#      com.docker.network.bridge.enable_ip_masquerade: 'false'
+#      com.docker.network.bridge.host_binding_ipv4: ""
+    ipam_config:
+      - subnet: "{{vpn_mobile_subnet}}.200/29"
+        gateway: "{{vpn_mobile_subnet}}.201"
     
 - name: create docker container
   docker_container:
     name: "ssh_vpn"
     image: "custom_ssh_vpn:{{alpine_version}}"
     state: present
-    network_mode: "none"
+#    network_mode: "host"
+#    network_mode: "none"
 #    recreate: true
     env:
       SSH_GID: "10002"
@@ -47,7 +59,7 @@
     log_options:
       tag: "ssh_vpn"
     networks:
-      - name: "hostaccess"
+      - name: "mobile_vpn"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z'

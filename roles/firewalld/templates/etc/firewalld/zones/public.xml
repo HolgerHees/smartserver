@@ -3,16 +3,27 @@
   <short>Public</short>
   <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
   <interface name="eth0"/>
-  <service name="openvpn"/>
-  <port port="80" protocol="tcp"/>
-{% if vault_vpn_cloud_port is defined %}  <port port="{{vault_vpn_cloud_port}}" protocol="tcp"/>
+
+  <port port="80" protocol="tcp"/> <!-- letsencrypt endpoint -->
+{% if vault_server_alexa_public_port is defined %}  <port port="{{vault_server_alexa_public_port}}" protocol="tcp"/> <!-- alexa rest endpoint -->
 {% endif %}
-{% if vault_ssh_vpn_internal_port is defined %}  <port port="{{vault_ssh_vpn_internal_port}}" protocol="tcp"/>
-{% endif %}
-{% if vault_wireguard_mobile_internal_port is defined %}  <port port="{{vault_wireguard_mobile_internal_port}}" protocol="udp"/>
-{% endif %}
-{% if vault_cloud_vpn_networks is defined %}{% for cloud_name in vault_cloud_vpn_networks %}  <port port="{{vault_cloud_vpn_networks[cloud_name].interface.listenPort}}" protocol="udp"/>
+
+{% if vault_ssh_vpn_allowed_ips is defined %}  <!-- currently ssh vpn rules have no effect, because it is overwriten by dockers network rules. 'networkmode: "host"' would work -->
+  <port port="{{vault_ssh_vpn_internal_port}}" protocol="tcp"/> <!-- ssh vpn => port is deprecated -->
+{% for network_name in vault_ssh_vpn_allowed_ips %}  <rule family="ipv4"> <!-- ssh vpn '{{network_name}}' -->
+    <source address="{{vault_ssh_vpn_allowed_ips[network_name]}}"/>
+    <port port="{{vault_ssh_vpn_internal_port}}" protocol="tcp"/>
+    <accept/>
+  </rule>
 {% endfor %}{% endif %}
-{% if vault_server_alexa_public_port is defined %}  <port port="{{vault_server_alexa_public_port}}" protocol="tcp"/>
+
+{% if vault_wireguard_mobile_internal_port is defined %}  <port port="{{vault_wireguard_mobile_internal_port}}" protocol="udp"/> <!-- mobile vpn -->
+{% endif %}
+
+{% if vault_cloud_vpn_networks is defined %}  <!-- currently cloud vpn rules have no effect, because it is overwriten by dockers network rules. 'networkmode: "host"' would work -->
+{% for cloud_name in vault_cloud_vpn_networks %}  <port port="{{vault_cloud_vpn_networks[cloud_name].interface.listenPort}}" protocol="udp"/> <!-- cloud vpn -->
+{% endfor %}{% endif %}
+
+{% if vault_vpn_cloud_port is defined %}  <port port="{{vault_vpn_cloud_port}}" protocol="tcp"/> <!-- cloud vpn (openvpn) deprecated-->
 {% endif %}
 </zone>

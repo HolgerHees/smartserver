@@ -61,6 +61,9 @@ vault_wireguard_mobile_public_port: "51820" # the public port, reachable from ou
 vault_ssh_vpn_username: "<username>"
 vault_ssh_vpn_password: "<password>"
 vault_ssh_vpn_internal_port: "2222" # the port, used on your server
+vault_ssh_vpn_allowed_ips: {
+  client1: "1.2.3.4/32"
+}
 # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
 
 vault_deployment_config_git: "https://github.com/HolgerHees/smartserver.git"
