@@ -45,7 +45,7 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse" then
             setup_os = "suse"
-            setup_image = "bento/opensuse-leap-15.1"
+            setup_image = "bento/opensuse-leap-15.2"
         else
             setup_os = "fedora"
             #setup_image = "bento/fedora-31"
