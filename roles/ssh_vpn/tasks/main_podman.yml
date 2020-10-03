@@ -38,16 +38,17 @@
   with_items:
     - sshd_config
     - util/entrypoint.sh
-  notify: "restart ssh_vpn"
+#  notify: "restart ssh_vpn"
   
 - name: check podman network exists
   shell: "podman network inspect mobile_vpn"
   register: network_exists
+  failed_when: no
   changed_when: network_exists.rc != 0
   
 - name: create mobile_vpn network => podman not network exists
-  shell: "podman network rm mobile_vpn && podman network create mobile_vpn --subnet {{vpn_mobile_subnet}}.200/29 --gateway {{vpn_mobile_subnet}}.201"
-  when: network_exists.rc != 0 or vpn_mobile_subnet + '.200/29' not in network_exists.stdout or vpn_mobile_subnet + '.201' not in network_exists.stdout
+  shell: "(podman network rm -f mobile_vpn || true ) && podman network create mobile_vpn --subnet {{vpn_mobile_subnet}}.208/29 --gateway {{vpn_mobile_subnet}}.209"
+  when: network_exists.rc != 0 or vpn_mobile_subnet + '.208/29' not in network_exists.stdout or vpn_mobile_subnet + '.209' not in network_exists.stdout
     
 - name: check podman container exists
   shell: "podman ps -a --filter \"name=ssh_vpn\""
@@ -58,34 +59,33 @@
   shell: >
     podman create \
     --name ssh_vpn \
-    --env SSH_GID: "10002" \
-    --env SSH_UID: "10002" \
-    --env SSH_USERNAME: "{{vault_ssh_vpn_username}}" \
-    --env SSH_PASSWORD: "{{vault_ssh_vpn_password}}" \
-    --env TZ: "{{timezone}}" \
+    --env SSH_GID="10002" \
+    --env SSH_UID="10002" \
+    --env SSH_USERNAME="{{vault_ssh_vpn_username}}" \
+    --env SSH_PASSWORD="{{vault_ssh_vpn_password}}" \
+    --env TZ="{{timezone}}" \
     --log-driver journald \
     --log-opt tag="ssh_vpn" \
     --network "mobile_vpn" \
     --volume "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z" \
     --volume "{{global_etc}}ssh_vpn/util:/etc/ssh/util:z" \
-    -p {{vault_ssh_vpn_internal_port}}:{{vault_ssh_vpn_internal_port}}/tcp \
-    --pull never \
+    -p 4444:{{vault_ssh_vpn_internal_port}}/tcp \
     custom_ssh_vpn:{{alpine_version}}
   register: output
-  notify: "restart ssh_vpn"
+#  notify: "restart ssh_vpn"
 #  when: "'ssh_vpn' not in container_exists.stdout"
 
 # ***** FINALIZE *****
-- name: create systemd service
-  vars:
-    container_name: "ssh_vpn"
-  import_tasks: roles/container/tasks/add_podman_service.yml
+#- name: create systemd service
+#  vars:
+#    container_name: "ssh_vpn"
+#  import_tasks: roles/container/tasks/add_podman_service.yml
   
-- name: trigger ssh_vpn handler
-  vars:
-    notify: "restart ssh_vpn"
-    service: "ssh_vpn.service"
-  import_tasks: roles/base/tasks/service_check.yml
+#- name: trigger ssh_vpn handler
+#  vars:
+#    notify: "restart ssh_vpn"
+#    service: "ssh_vpn.service"
+#  import_tasks: roles/base/tasks/service_check.yml
           
     
     

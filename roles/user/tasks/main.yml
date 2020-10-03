@@ -31,7 +31,7 @@
 - name: check samba users
   shell: "docker exec -i samba sh -c \"pdbedit -L\""
   register: samba_user_result
-  changed_when: false
+  changed_when: no
   
 - name: add user to samba
   shell: "(echo '{{vault_userdata[item].samba_password}}'; echo '{{vault_userdata[item].samba_password}}';) | docker exec -i samba sh -c \"smbpasswd -s -a {{item}}\""

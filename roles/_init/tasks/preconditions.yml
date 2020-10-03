@@ -1,7 +1,7 @@
 - name: read grub configuration => is_fedora
   shell: "cat /etc/default/grub"
   register: result
-  changed_when: False
+  changed_when: no
   when: is_fedora|bool
 
 - name: validate grub configuration => is_fedora

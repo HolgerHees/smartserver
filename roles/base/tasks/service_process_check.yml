@@ -11,7 +11,7 @@
   shell: "{{process}}"
   register: result
   changed_when: "result.rc == 1"
-  failed_when: False
+  failed_when: no
   notify: "{{notify}}"
 
 #- name: test
