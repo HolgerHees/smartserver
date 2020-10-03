@@ -8,19 +8,19 @@
 #    state: present
 #  when: is_fedora|bool
 
-- name: add zypper repository => is_suse
-  zypper_repository:
-    name: VPN (wireguard)
-    repo: "http://download.opensuse.org/repositories/network:/vpn:/wireguard/openSUSE_Leap_{{ansible_distribution_version}}/"
-    auto_import_keys: yes
-    priority: "100"
-    state: present
-  when: is_suse|bool
+#- name: add zypper repository => is_suse
+#  zypper_repository:
+#    name: VPN (wireguard)
+#    repo: "http://download.opensuse.org/repositories/network:/vpn:/wireguard/openSUSE_Leap_{{ansible_distribution_version}}/"
+#    auto_import_keys: yes
+#    priority: "100"
+#    state: present
+#  when: is_suse|bool
 
-- name: install required packages => is_suse
-  zypper:
-    name: [
-        wireguard-kmp-default
-    ]
-    state: present
-  when: is_suse|bool
+#- name: install required packages => is_suse
+#  zypper:
+#    name: [
+#        wireguard-kmp-default
+#    ]
+#    state: present
+#  when: is_suse|bool
