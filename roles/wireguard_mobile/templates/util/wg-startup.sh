@@ -15,7 +15,7 @@ initDeviceConfig()
     cat ./keys/server_privatekey >> wg0.conf
     echo -n "Address = " >> wg0.conf
     echo -n $SERVER_ADDRESS >> wg0.conf
-    echo "/24" >> wg0.conf
+    echo "/25" >> wg0.conf
     echo "ListenPort = {{vault_wireguard_mobile_internal_port}}" >> wg0.conf
     echo "SaveConfig = true" >> wg0.conf
 
@@ -36,7 +36,7 @@ initClientConfigs()
     echo "[Interface]" > $1
     echo -n "Address = " >> $1
     echo -n $3 >> $1
-    echo "/24" >> $1
+    echo "/25" >> $1
     echo -n "PrivateKey = " >> $1
     cat $2 >> $1
     echo "ListenPort = {{vault_wireguard_mobile_public_port}}" >> $1

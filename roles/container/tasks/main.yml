@@ -37,7 +37,7 @@
 #        docker
         , python3-docker  # used by ansible docker module
 #        , golang-github-docker-libnetwork-devel # needed to make docker running together with firewalld
-#        , podman
+        , podman
     ]
     state: present
   when: is_fedora|bool
@@ -57,7 +57,8 @@
         docker
 #        , python2-docker  # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2 (vagrant suse version is using it)
         , python3-docker  # used by ansible docker module
-#        , podman
+        , podman
+        , cni
 #        , podman>=1.6.2
 #        , cni>=0.7.1
 #        , cni-plugins>=0.8.3
@@ -65,6 +66,7 @@
     state: present
   when: is_suse|bool
 
+##### DOCKER #####
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -113,28 +115,43 @@
     group: root
     mode: 0700
 
-#- name: copy fluentd config => is_suse
-#  vars:
-#    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
-#  import_tasks: roles/fluentd/tasks/add_config.yml
-#  when: is_suse|bool
+#### PODMAN ####
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{global_lib}}libpod/storage/"
+    - "{{global_tmp}}libpod/"
+    - "{{global_tmp}}containers/storage/"
+    - "{{global_lib}}containers/storage/"
   
-#- name: set podman config
-#  lineinfile:
-#    path: /etc/containers/{{item.file}}
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}}="{{item.value}}"'
-#    create: true
-#    owner: root
-#    group: root
-#    mode: 0640
-#  with_items:
-#    - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
-#    - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
-#    - { file: 'libpod.conf', field: 'cgroup_manager', value: "{{ 'systemd' if is_suse|bool else 'systemd' }}" }
-#    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
-#    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
+- name: set podman config
+  lineinfile:
+    path: /etc/containers/{{item.file}}
+    regexp: '^{{item.field}}\s*='
+    line: '{{item.field}}="{{item.value}}"'
+    create: true
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
+    - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
+    - { file: 'libpod.conf', field: 'cgroup_manager', value: "systemd" }
+    - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
+    - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
 
+- name: copy fluentd config => is_suse
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+  
+#### OTHER ####
+    
 # https://success.docker.com/article/node-using-swap-memory-instead-of-host-memory
 # vm.swappiness = 0   # Swap is disabled. In earlier versions, this meant that the kernel would swap only to avoid an out of memory condition, but in later versions this is achieved by setting to 1.
 # vm.swappiness = 1   # Kernel version 3.5 and over, as well as kernel version 2.6.32-303 and over: Minimum amount of swapping without disabling it entirely.
