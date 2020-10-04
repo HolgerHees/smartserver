@@ -38,7 +38,7 @@
   with_items:
     - sshd_config
     - util/entrypoint.sh
-#  notify: "restart ssh_vpn"
+#  notify: "restart ssh_vpn_podman"
   
 - name: check podman network exists
   shell: "podman network inspect mobile_vpn"
@@ -51,14 +51,14 @@
   when: network_exists.rc != 0 or vpn_mobile_subnet + '.208/29' not in network_exists.stdout or vpn_mobile_subnet + '.209' not in network_exists.stdout
     
 - name: check podman container exists
-  shell: "podman ps -a --filter \"name=ssh_vpn\""
+  shell: "podman ps -a --filter \"name=ssh_vpn_podman\""
   register: container_exists
-  changed_when: "'ssh_vpn' not in container_exists.stdout"
+  changed_when: "'ssh_vpn_podman' not in container_exists.stdout"
 
-- name: compose podman image => 'ssh_vpn' not in container_exists.stdout
+- name: compose podman image => 'ssh_vpn_podman' not in container_exists.stdout
   shell: >
-    (podman rm ssh_vpn || true) && podman create \
-    --name ssh_vpn \
+    (podman rm ssh_vpn_podman || true) && podman create \
+    --name ssh_vpn_podman \
     --env SSH_GID="10002" \
     --env SSH_UID="10002" \
     --env SSH_USERNAME="{{vault_ssh_vpn_username}}" \
@@ -70,26 +70,26 @@
     -p 4444:{{vault_ssh_vpn_internal_port}}/tcp \
     custom_ssh_vpn:{{alpine_version}}
   register: output
-#  notify: "restart ssh_vpn"
-#  when: "'ssh_vpn' not in container_exists.stdout"
+  notify: "restart ssh_vpn_podman"
+#  when: "'ssh_vpn_podman' not in container_exists.stdout"
 #    --log-driver="journald" \
-#    --log-opt tag="ssh_vpn" \
-#    --label logName="ssh_vpn" \
+#    --log-opt tag="ssh_vpn_podman" \
+#    --label logName="ssh_vpn_podman" \
 #
 
 # ***** FINALIZE *****
 - name: create systemd service
   vars:
-    container_name: "ssh_vpn"
+    container_name: "ssh_vpn_podman"
     service_name: "ssh_vpn_podman"
     trigger_name: "ssh_vpn_podman"
   import_tasks: roles/container/tasks/add_podman_service.yml
   
-#- name: trigger ssh_vpn handler
-#  vars:
-#    notify: "restart ssh_vpn"
-#    service: "ssh_vpn.service"
-#  import_tasks: roles/base/tasks/service_check.yml
+- name: trigger ssh_vpn_podman handler
+  vars:
+    notify: "restart ssh_vpn_podman"
+    service: "ssh_vpn_podman.service"
+  import_tasks: roles/base/tasks/service_check.yml
           
     
     
