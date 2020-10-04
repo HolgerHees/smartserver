@@ -199,14 +199,13 @@
     service: "docker.service"
   import_tasks: roles/base/tasks/service_check.yml
 
-# should listen on podman.socket
-#- name: register systemd service watcher
-#  vars:
-#    name: "podman"
-#  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+- name: register systemd service watcher
+  vars:
+    name: "podman.socket"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
 - name: trigger podman handler
   vars:
     notify: "restart podman"
-    service: "podman.service"
+    service: "podman.socket"
   import_tasks: roles/base/tasks/service_check.yml

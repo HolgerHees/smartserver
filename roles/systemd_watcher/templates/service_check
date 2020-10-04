@@ -34,7 +34,7 @@ for config_file in files:
         config = f.readline().strip().split(":")
         
         systemd_service = config[0]
-        role_name = config[0]
+        role_name = config[1]
         
         result = subprocess.run([ "/usr/bin/systemctl status {}".format(systemd_service) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         status = result.stdout.decode("utf-8")
