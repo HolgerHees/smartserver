@@ -87,7 +87,7 @@
 - name: create systemd service
   vars:
     container_name: "vcontrold"
-    trigger_name: "vcontrold"
+    container_after: [ "mosquitto" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier

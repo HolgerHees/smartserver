@@ -94,7 +94,6 @@
 - name: create systemd service
   vars:
     container_name: "postfix"
-    trigger_name: "postfix"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register systemd service watcher

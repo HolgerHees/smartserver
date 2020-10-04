@@ -1,7 +1,7 @@
 [Unit]
 Description={{container_name}}
 Requires=docker.service
-After=docker.service
+After=docker.service{% if container_after is defined %}{% for dependency_name in container_after %} {{dependency_name}}.service{% endfor %}{% endif %}
 
 [Service]
 TimeoutStartSec=0

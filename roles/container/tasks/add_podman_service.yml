@@ -1,7 +1,7 @@
 - name: "create systemd service for '{{container_name}}'"
   copy:
     content: "{{ lookup('template', 'roles/container/templates/podman_service') }}"
-    dest: "/etc/systemd/system/{{container_name}}.service"
+    dest: "/etc/systemd/system/{{service_name | default(container_name)}}.service"
     owner: root
     group: root
     mode: 0644

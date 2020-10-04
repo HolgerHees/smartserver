@@ -363,6 +363,7 @@
 - name: create systemd service
   vars:
     container_name: "openhab"
+    container_after: [ "mysql", "influxdb", "mosquitto" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 # ***** DATABASE ****
