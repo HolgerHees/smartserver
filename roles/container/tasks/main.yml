@@ -199,6 +199,7 @@
     service: "docker.service"
   import_tasks: roles/base/tasks/service_check.yml
 
+# should listen on podman.socket
 #- name: register systemd service watcher
 #  vars:
 #    name: "podman"
