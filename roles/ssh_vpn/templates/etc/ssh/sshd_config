@@ -44,7 +44,6 @@ LogLevel INFO
 #IgnoreRhosts yes
 
 # To disable tunneled clear text passwords, change to no here!
-#PasswordAuthentication yes
 #PermitEmptyPasswords no
 
 # Change to no to disable s/key passwords
@@ -73,8 +72,6 @@ GatewayPorts no
 #TCPKeepAlive yes
 #PermitUserEnvironment no
 #Compression delayed
-#ClientAliveInterval 0
-#ClientAliveCountMax 3
 #UseDNS no
 #MaxStartups 10:30:100
 #PermitTunnel no
@@ -88,6 +85,8 @@ Port 2222
 #Port 50900
 AllowTcpForwarding yes
 X11Forwarding no
+ClientAliveInterval 60
+ClientAliveCountMax 600
 
 ## both should be enabled to allow ssh-copy-id and sshuttle
 #PermitTTY no

@@ -1,23 +1,14 @@
-#- name: Install roles from Ansible Galaxy
-#  command: ansible-galaxy install {{ item.item }}
-#  with_items:
-#    - "containers.podman"    
-
-#- name: Install roles from Ansible Galaxy
-#  local_action: ansible.builtin.command ansible-galaxy install {{ item.item }}
-#  with_items:
-#    - "containers.podman"    
-    
 - name: prepare needed folder
   file:
-    path:  "{{item}}"
+    path:  "{{item.path}}"
     state: directory
-    owner: "root"
-    group: "root"
-    mode: 0777
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
+    mode: "{{item.mode}}"
   with_items:
-    - "{{global_etc}}ssh_vpn"
-    - "{{global_etc}}ssh_vpn/util"
+    - { mode: "u=rwx,g=rx,o=rx", owner: "root", group: "root", path: "{{global_etc}}ssh_vpn" }
+    - { mode: "u=rwx,g=rx,o=rx", owner: "root", group: "root", path: "{{global_etc}}ssh_vpn/util" }
+    - { mode: "u=rwx,g=,o=", owner: "10002", group: "10002", path: "{{global_etc}}ssh_vpn/run" }
 
 - name: build podman image
   vars:
@@ -38,44 +29,35 @@
   with_items:
     - sshd_config
     - util/entrypoint.sh
-#  notify: "restart ssh_vpn_podman"
-  
-- name: check podman network exists
-  shell: "podman network inspect mobile_vpn"
-  register: network_exists
-  failed_when: no
-  changed_when: network_exists.rc != 0
-  
-- name: create mobile_vpn network => podman not network exists
-  shell: "(podman network rm -f mobile_vpn || true) && podman network create mobile_vpn --subnet {{vpn_mobile_subnet}}.208/29 --gateway {{vpn_mobile_subnet}}.209"
-  when: network_exists.rc != 0 or vpn_mobile_subnet + '.208/29' not in network_exists.stdout or vpn_mobile_subnet + '.209' not in network_exists.stdout
-    
-- name: check podman container exists
-  shell: "podman ps -a --filter \"name=ssh_vpn_podman\""
-  register: container_exists
-  changed_when: "'ssh_vpn_podman' not in container_exists.stdout"
-
-- name: compose podman image => 'ssh_vpn_podman' not in container_exists.stdout
-  shell: >
-    (podman rm ssh_vpn_podman || true) && podman create \
-    --name ssh_vpn_podman \
-    --env SSH_GID="10002" \
-    --env SSH_UID="10002" \
-    --env SSH_USERNAME="{{vault_ssh_vpn_username}}" \
-    --env SSH_PASSWORD="{{vault_ssh_vpn_password}}" \
-    --env TZ="{{timezone}}" \
-    --network "mobile_vpn" \
-    --volume "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z" \
-    --volume "{{global_etc}}ssh_vpn/util:/etc/ssh/util:z" \
-    -p 4444:{{vault_ssh_vpn_internal_port}}/tcp \
-    custom_ssh_vpn:{{alpine_version}}
-  register: output
   notify: "restart ssh_vpn_podman"
-#  when: "'ssh_vpn_podman' not in container_exists.stdout"
-#    --log-driver="journald" \
-#    --log-opt tag="ssh_vpn_podman" \
-#    --label logName="ssh_vpn_podman" \
-#
+  
+- name: create mobile_vpn network
+  containers.podman.podman_network:
+    name: "mobile_vpn"
+    subnet: "{{vpn_mobile_subnet}}.208/29"
+    gateway: "{{vpn_mobile_subnet}}.209"
+  notify: "restart ssh_vpn_podman"
+
+- name: create podman image
+  containers.podman.podman_container:
+    name: "ssh_vpn_podman"
+    image: "custom_ssh_vpn:{{alpine_version}}"
+    state: present
+#    recreate: yes
+    env:
+      SSH_GID: "10002"
+      SSH_UID: "10002"
+      SSH_USERNAME: "{{vault_ssh_vpn_username}}"
+      SSH_PASSWORD: "{{vault_ssh_vpn_password}}"
+      TZ: "{{timezone}}"
+    network: "mobile_vpn"
+    ports:
+      - "4444:{{vault_ssh_vpn_internal_port}}/tcp"
+    volumes:
+      - "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z"
+      - "{{global_etc}}ssh_vpn/util:/etc/ssh/util:z"
+      - '{{global_etc}}ssh_vpn/run:/home/vpn/.ssh:z'
+  notify: "restart ssh_vpn_podman"
 
 # ***** FINALIZE *****
 - name: create systemd service

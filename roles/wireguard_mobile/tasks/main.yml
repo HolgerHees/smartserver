@@ -66,7 +66,7 @@
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
-      tag: custom_wireguard_mobile
+      tag: wireguard_mobile
     capabilities:
       - NET_ADMIN
       - SYS_MODULE

@@ -116,6 +116,11 @@
     mode: 0700
 
 #### PODMAN ####
+- name: install roles from ansible galaxy
+  local_action: command ansible-galaxy collection install containers.podman
+  register: ag_result
+  changed_when: "'Installing' in ag_result.stdout"
+    
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -124,6 +129,7 @@
     group: root
     mode: 0750
   with_items:
+#    - "{{global_build}}podman_dnsname/"
     - "{{global_lib}}libpod/storage/"
     - "{{global_tmp}}libpod/"
     - "{{global_tmp}}containers/storage/"
@@ -150,6 +156,18 @@
     config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
+#http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Tumbleweed/x86_64/
+#- name: clone dnsname git
+#  git:
+#    accept_hostkey: yes
+#    repo: 'https://github.com/containers/dnsname/'
+#    dest: '{{global_build}}podman_dnsname/'
+#    version: "master"
+#  register: dnsname_git
+  
+#- name: compile and install dnsname
+#  shell: "cd {{global_build}}podman_dnsname/ && make install PREFIX=/usr"
+#  when: dnsname_git.changed
 #### OTHER ####
     
 # https://success.docker.com/article/node-using-swap-memory-instead-of-host-memory
