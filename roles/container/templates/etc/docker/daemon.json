@@ -1,4 +1,4 @@
 {
-    "graph": "{{global_lib}}docker"
+    "data-root": "{{global_lib}}docker"
 }
   
