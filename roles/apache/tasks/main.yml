@@ -247,6 +247,13 @@
     config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
   
+- name: allow letsencrypt service
+  vars:
+    name: "http.letsencrypt"
+    port: "80"
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+  
 - name: create systemd service
   vars:
     container_name: "apache2"

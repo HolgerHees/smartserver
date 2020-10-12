@@ -1,7 +1,7 @@
 - name: set active network
   set_fact:
     wg_active_network: "{{main_network | default(vault_cloud_vpn_networks | first)}}"
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_configs', 'firewall_config' ]
     
 - name: prepare cloud settings
   set_fact:
@@ -13,7 +13,8 @@
     wg_container_name: "wireguard_{{wg_active_network}}"
     wg_image_name: "custom_wireguard_cloud"
     wg_exposed_port: "51820"
-    
+  tags: [ 'firewall_config' ]
+  
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -132,6 +133,15 @@
 #  when: "wg_image_name not in image_exists.stdout"
   
 # ***** FINALIZE *****
+- name: allow cloud service
+  vars:
+    name: "wireguard.cloud_{{wg_active_network}}"
+    port: "{{wg_cloud_network.interface.listenPort}}"
+    is_udp: True
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: create systemd service
   vars:
     container_name: "{{wg_container_name}}"

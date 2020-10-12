@@ -1,0 +1,20 @@
+domain (ip ip6) {
+    table filter {
+        chain INPUT {
+            saddr {{server_network}}/24 ACCEPT; # internal
+            saddr {{docker_hostaccess_network}}/24 ACCEPT; # docker host access
+{% if not ansible_remote_ip.startswith(server_subnet) %}            saddr {{ansible_remote_ip}} ACCEPT; # ansible
+{% endif %}
+{% if vpn_mobile_network is defined %}            saddr {{vpn_mobile_network}}/24 ACCEPT; # mobile vpn
+{% endif %}
+        }
+        chain DOCKER-USER {
+            saddr {{server_network}}/24 ACCEPT; # internal
+            saddr {{docker_hostaccess_network}}/24 ACCEPT; # docker host access
+{% if not ansible_remote_ip.startswith(server_subnet) %}            saddr {{ansible_remote_ip}} ACCEPT; # ansible
+{% endif %}
+{% if vpn_mobile_network is defined %}            saddr {{vpn_mobile_network}}/24 ACCEPT; # mobile vpn
+{% endif %}
+        }
+    }
+} 

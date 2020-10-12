@@ -62,11 +62,24 @@
   notify: "restart openvpn@cloud"
   when: is_fedora|bool
 
+- name: allow openvpn.cloud service
+  vars:
+    name: "openvpn.cloud"
+    port: "{{vault_vpn_cloud_port}}"
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+# needs to be restarted to activate new firewalld rule
+- name: restarting ferm
+  systemd:
+    name: ferm
+    state: restarted
+
 - name: register service watcher
   vars:
     name: "openvpn@cloud"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
+  
 - name: trigger openvpn@cloud handler
   vars:
     notify: "restart openvpn@cloud"

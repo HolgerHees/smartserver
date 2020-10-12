@@ -79,6 +79,14 @@
 #  when: "'custom_wireguard_mobile' not in image_exists.stdout"
   
 # ***** FINALIZE *****
+- name: allow mobile vpn service
+  vars:
+    name: "wireguard.mobile_vpn"
+    port: "{{vault_wireguard_mobile_internal_port}}"
+    is_udp: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: create systemd service
   vars:
     container_name: "wireguard_mobile"

@@ -1,0 +1,9 @@
+- name: "allow service '{{name}}'"
+  copy:
+    content: "{{ lookup('template', 'roles/firewall/templates/ferm.template') }}"
+    dest: "/etc/ferm/ferm.d/30-{{name}}.ferm"
+    owner: root
+    group: root
+    mode: 0644
+  tags: [ 'firewall_config' ]
+  notify: "restart ferm"

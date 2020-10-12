@@ -55,7 +55,7 @@
 
     - { import_role: { name: network }, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
       
-    - { import_role: { name: firewalld }, tags: [ 'firewalld' ] }                                # firewalld configuration
+    - { import_role: { name: firewall }, tags: [ 'firewall' ] }                                  # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
