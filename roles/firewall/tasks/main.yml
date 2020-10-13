@@ -16,8 +16,11 @@
 
 - name: install required packages => is_fedora
   yum:
-    name: "perl-Pod-Html"
+    name: "{{item}}"
     state: present
+  with_items:
+    - "perl-Pod-Html"
+    - "iptables"
   when: is_fedora|bool
 
 - name: disable firewalld
