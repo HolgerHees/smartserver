@@ -79,7 +79,7 @@
     source: "{{item}}"
     is_docker: True
   include_tasks: roles/firewall/tasks/allow_service.yml
-  with_items: "{{vault_ssh_vpn_allowed_ips}}"
+  with_items: "{{vault_ssh_vpn_allowed_ips | default(['']) }}"
   tags: [ 'firewall_config' ]
 
 - name: allow ssh_vpn_fallback service

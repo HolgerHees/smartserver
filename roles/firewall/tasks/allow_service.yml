@@ -1,4 +1,4 @@
-- name: "allow service '{{name}}'"
+- name: "allow service '{{name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
   copy:
     content: "{{ lookup('template', 'roles/firewall/templates/ferm.template') }}"
     dest: "/etc/ferm/ferm.d/30-{{name}}.ferm"
