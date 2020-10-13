@@ -21,6 +21,7 @@
     daemon_reload: no
     enabled: no
     masked: no
+  when: "'firewalld.service' in ansible_facts.services"
 
 - name: "clone ferm git"
   git:
