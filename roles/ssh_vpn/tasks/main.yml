@@ -82,13 +82,13 @@
   with_items: "{{vault_ssh_vpn_allowed_ips | default(['']) }}"
   tags: [ 'firewall_config' ]
 
-- name: allow ssh_vpn_fallback service
-  vars:
-    name: "ssh_vpn_fallback"
-    port: "{{vault_ssh_vpn_internal_port}}"
-    is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
+#- name: allow ssh_vpn_fallback service
+#  vars:
+#    name: "ssh_vpn_fallback"
+#    port: "{{vault_ssh_vpn_internal_port}}"
+#    is_docker: True
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
