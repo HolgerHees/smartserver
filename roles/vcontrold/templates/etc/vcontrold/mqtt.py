@@ -58,27 +58,31 @@ class vclient(object):
             print("Set '" + cmd + "' successful", flush=True)
         
     def publish(self):
-        print("Publish values to mqtt", flush=True)
-        for cmd in self.cmds:
-            '''Query & Publish'''
-            if cmd == 'timestamp':
-                timestamp = int(time.mktime(datetime.now().timetuple())) #unix time
-                self.mqtt_client.publish('/vcontrol/' + cmd, payload=timestamp, qos=0, retain=False)	    
-            else:
-                self.telnet_client.write(cmd.encode('ascii') + b"\n")
-                out = self.telnet_client.read_until(b"vctrld>",10)
-                if len(out) == 0:
-                    print("Publish not successful", flush=True)
-                    return
+        print("Publish values to mqtt ...", end='', flush=True)
+        try:
+            for cmd in self.cmds:
+                '''Query & Publish'''
+                if cmd == 'timestamp':
+                    timestamp = int(time.mktime(datetime.now().timetuple())) #unix time
+                    self.mqtt_client.publish('/vcontrol/' + cmd, payload=timestamp, qos=0, retain=False)	    
                 else:
-                    search = re.search(r'[0-9]*\.?[0-9]+', out.decode("ascii"))
-                    if search == None:
-                        self.mqtt_client.publish('/vcontrol/getSammelstoerung', payload=999, qos=0, retain=False)
-                        print(out.decode("ascii"), flush=True, file=sys.stderr)
+                    self.telnet_client.write(cmd.encode('ascii') + b"\n")
+                    out = self.telnet_client.read_until(b"vctrld>",10)
+                    if len(out) == 0:
+                        print(" failed with empty result", flush=True)
+                        return
                     else:
-                        self.mqtt_client.publish('/vcontrol/' + cmd, payload=round(float(search.group(0)),2), qos=0, retain=False)
-        print("Publish successful", flush=True)
-                
+                        search = re.search(r'[0-9]*\.?[0-9]+', out.decode("ascii"))
+                        if search == None:
+                            self.mqtt_client.publish('/vcontrol/getSammelstoerung', payload=999, qos=0, retain=False)
+                            print(out.decode("ascii"), flush=True, file=sys.stderr)
+                        else:
+                            self.mqtt_client.publish('/vcontrol/' + cmd, payload=round(float(search.group(0)),2), qos=0, retain=False)
+                            
+            print(" successful", flush=True)
+        except:
+            print(" failed", flush=True)
+          
     def terminate(self):
         if self.telnet_client != None:
             self.telnet_client.close()
@@ -130,9 +134,9 @@ while i < 10:
         #print("closed", flush=True)
         break
     except:
-        print("Retry", flush=True)
-        time.sleep(1)
         i = i + 1      
+        print("Retry {}".format(i), flush=True)
+        time.sleep(1)
 
 #print("finish", flush=True)
 
