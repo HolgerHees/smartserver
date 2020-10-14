@@ -12,14 +12,31 @@ class vclient(object):
     def __init__(self):
         self.cmds = ['timestamp', 'getTempAussen', 'getTempAussenGedaempft', 'getTempVorlaufSoll','getTempVorlauf','getTempKesselSoll','getTempKessel','getHeizkreisPumpeDrehzahl','getBrennerStarts','getBrennerStunden','getTempWasserSpeicher','getTempSolarKollektor','getSolarStunden','getTempSolarSpeicher','getSolarLeistung','getSammelstoerung','getLeistungIst','getBetriebsart','getTempRaumSoll','getSolarPumpeStatus','getNachladeunterdrueckungStatus']
         
-        self.telnet_client = telnetlib.Telnet("localhost", "3002")
-        self.telnet_client.read_until(b"vctrld>")
-        
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
-        self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
-        self.mqtt_client.connect("mosquitto", 1883, 60)
-        
+        try:
+            print("Connect to vcontrold ...", end='', flush=True)
+            self.telnet_client = telnetlib.Telnet("localhost", "3002")
+            out = self.telnet_client.read_until(b"vctrld>",10)
+            if len(out) == 0:
+                print(" failed", flush=True)
+                self.telnet_client.close()
+                raise Exception("Vcontrold not readable") 
+            print(" connected", flush=True)
+        except:
+            print(" failed", flush=True)
+            raise Exception("Vcontrold not running") 
+
+        try:
+            print("Connect to mqtt ...", end='', flush=True)
+            self.mqtt_client = mqtt.Client()
+            self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
+            self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
+            self.mqtt_client.connect("mosquitto", 1883, 60)
+            print(" connected", flush=True)
+        except:
+            print(" failed", flush=True)
+            self.telnet_client.close()
+            raise Exception("Mqtt not running") 
+
     def loop(self):
         #print("Loop", flush=True)
         self.mqtt_client.loop()
@@ -34,9 +51,11 @@ class vclient(object):
         
         cmd = "setBetriebsartTo{}".format(int(float(msg.payload.decode("ascii"))))
         self.telnet_client.write(cmd.encode('ascii') + b"\n")
-        out = self.telnet_client.read_until(b"vctrld>")
-        
-        print("Set '" + cmd + "' successful", flush=True)
+        out = self.telnet_client.read_until(b"vctrld>",10)
+        if len(out) == 0:
+            print("Set '" + cmd + "' not successful", flush=True)
+        else:
+            print("Set '" + cmd + "' successful", flush=True)
         
     def publish(self):
         print("Publish values to mqtt", flush=True)
@@ -47,26 +66,33 @@ class vclient(object):
                 self.mqtt_client.publish('/vcontrol/' + cmd, payload=timestamp, qos=0, retain=False)	    
             else:
                 self.telnet_client.write(cmd.encode('ascii') + b"\n")
-                out = self.telnet_client.read_until(b"vctrld>")
-
-                search = re.search(r'[0-9]*\.?[0-9]+', out.decode("ascii"))
-                if search == None:
-                    self.mqtt_client.publish('/vcontrol/getSammelstoerung', payload=999, qos=0, retain=False)
-                    print(out.decode("ascii"), flush=True, file=sys.stderr)
+                out = self.telnet_client.read_until(b"vctrld>",10)
+                if len(out) == 0:
+                    print("Publish not successful", flush=True)
+                    return
                 else:
-                    self.mqtt_client.publish('/vcontrol/' + cmd, payload=round(float(search.group(0)),2), qos=0, retain=False)
+                    search = re.search(r'[0-9]*\.?[0-9]+', out.decode("ascii"))
+                    if search == None:
+                        self.mqtt_client.publish('/vcontrol/getSammelstoerung', payload=999, qos=0, retain=False)
+                        print(out.decode("ascii"), flush=True, file=sys.stderr)
+                    else:
+                        self.mqtt_client.publish('/vcontrol/' + cmd, payload=round(float(search.group(0)),2), qos=0, retain=False)
         print("Publish successful", flush=True)
                 
     def terminate(self):
-        self.mqtt_client.disconnect()
+        if self.telnet_client != None:
+            self.telnet_client.close()
+        if self.mqtt_client != None:
+            self.mqtt_client.disconnect()
     
 print("Start vcontrold", flush=True)
 process = subprocess.Popen(['/usr/sbin/vcontrold', '-n'], stdout=subprocess.PIPE, universal_newlines=True)
+time.sleep(1)
 
 i = 0
 while i < 10:
     try:
-        print("Init mqtt client", flush=True)
+        print("Init vclient client", flush=True)
         vc = vclient()
         
         def cleanup(signum, frame):
@@ -75,7 +101,7 @@ while i < 10:
             print("Shutdown vcontrold", flush=True)
             process.terminate()
 
-            print("Shutdown mqtt", flush=True)
+            print("Shutdown vclient", flush=True)
             vc.terminate()
             
             exit(0)
