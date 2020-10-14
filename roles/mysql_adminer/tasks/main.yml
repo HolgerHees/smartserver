@@ -1,0 +1,74 @@
+- name: set version
+  set_fact:
+    adminer_version: '4.7.7'
+  tags: [ 'update_notifier_configs' ]
+  
+- name: check installation
+  stat:
+    path: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}"
+  register: adminer_exists
+  changed_when: not adminer_exists.stat.exists
+  
+- name: prepare needed folder => adminer does not exists
+  file:
+    path: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0755
+  when: not adminer_exists.stat.exists
+    
+- name: install archive => adminer does not exists
+  get_url:
+    url: "https://github.com/vrana/adminer/releases/download/v{{adminer_version}}/adminer-{{adminer_version}}.php"
+    dest: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}/adminer.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0755
+  when: not adminer_exists.stat.exists
+
+- name: set symbolic link
+  file:
+    src: "{{htdocs_path}}/mysql-adminer-{{adminer_version}}/"
+    dest: "{{htdocs_path}}mysql-adminer"
+    state: link
+    follow: no
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    
+- name: copy config
+  template:
+    src: "templates/index.php"
+    dest: "{{htdocs_path}}/mysql-adminer/index.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+
+#- name: register webui
+#  vars:
+#    name: "phpmyadmin"
+#    js_file: "templates/webui/phpmyadmin.js"
+#    i18n_files: [ { language: "de", file: "templates/webui/phpmyadmin.de.json" } ]
+#    listener: { "prefix": "mysql", "js_file": "templates/webui/phpmyadmin.listener.js" }
+#  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+#- name: prepare config folder
+#  file:
+#    path: "{{htdocs_path}}mysql/tmp"
+#    state: directory
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#    mode: 0750
+    
+# ***** FINALIZE *****
+#- name: register update notifier
+#  vars:
+#    name: "phpmyadmin"
+#    type: "github"
+#    url: "https://www.phpmyadmin.net/news/"
+#    config: { 
+#      project: "phpmyadmin/phpmyadmin", 
+#      pattern: "^RELEASE_([0-9_]+)$",
+#      version: "RELEASE_{{phpmyadmin_version | regex_replace('\\.','_')}}" 
+#    }
+#  import_tasks: roles/update_notifier/tasks/add_notifier.yml

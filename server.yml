@@ -113,6 +113,7 @@
     - { import_role: { name: grafana }, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker,user:root]
 
     - { import_role: { name: mysql_phpmyadmin }, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
+    - { import_role: { name: mysql_adminer }, tags: [ 'mysql_adminer' ] }                        # Adminer
 
     - { import_role: { name: apache_webui }, tags: [ 'apache_webui' ] }                          # responsive web ui
 
