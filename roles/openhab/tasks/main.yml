@@ -15,7 +15,9 @@
 #    openhab_user: "root"
 #    openhab_group: "root"
     # stable version from 05.03.2020
-    jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
+    #jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
+    # stable version from 15.10.2020
+    jython_script_version: "5e6bee796f5ffcc60d277619965e621a9ba652b2"
   tags: [ 'update_notifier_configs' ]
 
 #- name: get gid from "dialout"

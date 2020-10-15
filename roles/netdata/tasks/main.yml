@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.22.1"
+    netdata_version: "1.25.0"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
@@ -154,7 +154,7 @@
 
 - name: set version
   set_fact:
-    netdata_version: '1.22.1'
+    netdata_version: '1.25.0'
   tags: [ 'update_notifier_configs' ]
 
 - name: install required packages => is_fedora
