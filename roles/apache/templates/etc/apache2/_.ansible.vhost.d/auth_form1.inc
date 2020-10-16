@@ -18,7 +18,6 @@
 
     <RequireAny>
         Require group USER
-        #Require ip {{ authenticated_ip_addresses | join(' ') }} {{docker_hostaccess_network}}/24 {{server_ip}} 127.0.0.1
         Require ip {{ authenticated_ip_addresses | join(' ') }}
         Require local
     </RequireAny>

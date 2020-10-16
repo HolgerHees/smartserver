@@ -197,14 +197,6 @@
     name: docker
     state: started
     
-# bridge network to allow containers host access without beeing in networkmode "host"
-- name: create host accessible network
-  docker_network:
-    name: hostaccess
-    ipam_config:
-      - subnet: "{{docker_hostaccess_network}}/24"
-        gateway: "{{docker_hostaccess_gateway}}"
-          
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:

@@ -52,9 +52,9 @@
     volumes:
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
-    networks:
-      - name: "hostaccess"
-    networks_cli_compatible: yes
+#    networks:
+#      - name: "hostaccess"
+#    networks_cli_compatible: yes
     ports:
      - "127.0.0.1:8090:80"  
      - "127.0.0.1:8453:443"  
@@ -99,6 +99,20 @@
 #  vars:
 #    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
 #  import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: get container ip
+  shell: "docker inspect --format '{''{ .NetworkSettings.IPAddress }''}' onlyoffice"
+  register: onlyoffice_ip
+  changed_when: no
+
+- name: allow onlyoffice service
+  vars:
+    name: "https.onlyoffice"
+    port: "443"
+    source: "{{onlyoffice_ip.stdout}}"
+  #  is_docker: True
+  include_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: copy apache vhost
   vars:
