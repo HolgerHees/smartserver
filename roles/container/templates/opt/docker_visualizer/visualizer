@@ -3,6 +3,7 @@
 import subprocess
 import json
 import socket
+import re
 
 class Network:
     def __init__(self,id,name,drive,scope):
@@ -13,32 +14,37 @@ class Network:
         self.connection_r = {}
         self.subnet = ""
         self.gateway = ""
+        self.bridge = ""
         
-    def addDetails(self,subnet,gateway):
+    def addDetails(self,subnet,gateway,bridge):
         self.subnet = subnet
         self.gateway = gateway
+        self.bridge = bridge
 
     def addConnection(self,connection):
         key = connection.ip if connection.ip != "" else connection.container.name
         self.connection_r[key] = connection
 
 class Container:
-    def __init__(self,name):
+    def __init__(self,name,sandboxKey):
         self.name = name
+        self.sandboxKey = sandboxKey
         self.exposedPorts = []
         
     def addPort(self,hostIp,hostPort,exposedPort):
         self.exposedPorts.append({"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort})
 
 class Connection:
-    def __init__(self,container,ip):
+    def __init__(self,container,ip, veth):
         self.container = container
-        self.ip = ip;
+        self.ip = ip
+        self.veth = veth
       
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
-  
+ 
+# Collect networks
 container_r = {}
 network_r = {}
 result = execCommand("docker network list")
@@ -47,14 +53,51 @@ for line in lines[1:-1]:
     columns = line.split()
     network = Network(columns[0],columns[1],columns[2],columns[3])
     network_r[network.name]=network
-
-    network_result = execCommand("docker network inspect {}".format(network.name))
-    network_json = json.loads(network_result.stdout.decode("utf-8"))[0]
     
-    if len(network_json['IPAM']['Config']) > 0:
-        subnet = network_json['IPAM']['Config'][0]['Subnet']
-        gateway = network_json['IPAM']['Config'][0]['Gateway']
-        network.addDetails(subnet,gateway)
+# Collect network details
+container_json_dict = {}
+networks_json_dict = {}
+networks_result = execCommand("docker network inspect {}".format(" ".join(list(network_r.keys()))))
+networks_json = json.loads(networks_result.stdout.decode("utf-8"))
+for network_json in networks_json:
+    networks_json_dict[network_json["Name"]] = network_json
+    
+    for container_id in network_json['Containers']:
+        name = network_json['Containers'][container_id]['Name']
+        container_json_dict[name]= None
+
+# Collect container details
+containers_result = execCommand("docker inspect {}".format(" ".join(list(container_json_dict.keys()))))
+containers_json = json.loads(containers_result.stdout.decode("utf-8"))
+for container_json in containers_json:
+    container_json_dict[container_json["Name"][1:]] = container_json
+    
+# Collect ip addresses
+ip_list = execCommand("ip a").stdout.decode("utf-8")
+
+# Collect network links
+link_list = execCommand("ip link").stdout.decode("utf-8")
+
+# Collect host data
+host_ip = execCommand("hostname -I").stdout.decode("utf-8").split()[0]
+host_bridge_info = re.findall("^.*{}.*".format(host_ip), ip_list, flags=re.MULTILINE)[0].split()
+
+# Process collected data
+for name in network_r:
+    network = network_r[name]
+    network_json = networks_json_dict[network.name]
+    
+    if network.name == 'host':
+        main_ip = host_ip
+        bridge_info = host_bridge_info
+        network.addDetails(bridge_info[1],main_ip,bridge_info[-1])
+    else:
+        if len(network_json['IPAM']['Config']) > 0:
+            subnet = network_json['IPAM']['Config'][0]['Subnet']
+            gateway = network_json['IPAM']['Config'][0]['Gateway']
+            
+            bridge_info = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()
+            network.addDetails(subnet,gateway,bridge_info[-1])
     
     for container_id in network_json['Containers']:
       
@@ -63,12 +106,13 @@ for line in lines[1:-1]:
         if name in container_r:
             container = container_r[name]
         else:
-            container = Container(name)
+            container_json = container_json_dict[name]
+            
+            sandboxKey = container_json['NetworkSettings']['SandboxKey']
+            
+            container = Container(name,sandboxKey)
             container_r[name] = container
-
-            container_result = execCommand("docker inspect {}".format(name))
-            container_json = json.loads(container_result.stdout.decode("utf-8"))[0]
-
+            
             portBindings = container_json['HostConfig']['PortBindings']
             if portBindings != None:
                 for exposedPort in portBindings:
@@ -78,14 +122,30 @@ for line in lines[1:-1]:
                   
                     container.addPort(hostIp,hostPort,exposedPort)
                                    
+        container_ns_result = execCommand("nsenter --net={} ethtool -S eth0 | grep peer_ifindex".format(container.sandboxKey))
+        peer_ifindex_r = container_ns_result.stdout.decode("utf-8").split()
+        if len(peer_ifindex_r) > 0:
+            veth_info = re.findall("^{}: veth.*".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)[0].split()
+            veth = veth_info[1][:-1]
+        else:
+            veth = ""
+        
         ip = network_json['Containers'][container_id]['IPv4Address']
-        connection = Connection(container,ip)
+        
+        connection = Connection(container,ip.split("/")[0],veth)
         
         network.addConnection(connection)
 
-print("Container")
-
+# Show container list
+maxNameLength = 0
 for container in container_r:
+    container = container_r[container]
+    if len(container.name) > maxNameLength:
+        maxNameLength = len(container.name)
+        
+print("\033[1;37m {} {}\033[0m".format("Container name".ljust(maxNameLength), "Ports" ) )
+print("")
+for container in sorted(container_r):
     container = container_r[container]
     
     exposedPorts = []
@@ -95,25 +155,48 @@ for container in container_r:
     portStr = ", ".join(exposedPorts)
     portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
     
-    print("  {} {}".format(container.name.ljust(31), portStr ) )
+    print(" \033[0;33m{}\033[0m {}".format(container.name.ljust(maxNameLength), portStr ) )
 
-print("")
-
-for network in network_r:
+# Prepare column values
+rows = [[0,"Type","Name","Network","","Interface"]]
+for network in sorted(network_r):
     network = network_r[network]
+    
+    rows.append([1,"Network",network.name,network.gateway,network.subnet,network.bridge])
 
-    print("Network:     {} {} {}".format(network.name.ljust(20),network.subnet,network.gateway))
-
-    ip_r = list(network.connection_r.keys())
-    ip_r.sort(key=lambda item: socket.inet_aton(item.split("/")[0]) if "." in item else item, reverse=False)
-
-    for ip in ip_r:
-        connection = network.connection_r[ip]
+    key_r = list(network.connection_r.keys())
+    key_r.sort(key=lambda item: socket.inet_aton(item.split("/")[0]) if "." in item else item, reverse=False)
+    for key in key_r:
+        connection = network.connection_r[key]
         container = connection.container
+
+        rows.append([2,"Container",container.name,connection.ip,"",connection.veth])
         
-        name = container.name.ljust(20)
-        ip_str = (ip if ip != container.name else "").ljust(30)
-        
-        print("  Container: {} {}".format(name, ip_str ) )
-        
+# Calculate column sizes
+columnLength = [0] * (len(rows[0]) + 1)
+for row in rows:
+    for i in range(1,len(row)):
+        if len(row[i]) > columnLength[i]:
+            columnLength[i] = len(row[i])
+
+for i in range(1,len(columnLength)):
+    columnLength[i] = columnLength[i] + 1
+    
+colors = [
+    [0,"1;37m","1;37m","1;37m","1;37m","1;37m"],
+    [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;30;46m"],
+    [0,"0;37m","0;33m","1;35m","1;35m","0;36m"]
+]
+    
+# Visualize
+for row in rows:
+    if row[0] == 0:
+        print("")
+    elif row[0] == 1:
+        print("")
+    print("\033[{} {}\033[0m".format(colors[row[0]][1],row[1].ljust(columnLength[1])),end="")
+    print("\033[{} {}\033[0m".format(colors[row[0]][2],row[2].ljust(columnLength[2])),end="")
+    print("\033[{} {} {}\033[0m".format(colors[row[0]][3],row[3].ljust(columnLength[3]),row[4].ljust(columnLength[4])),end="")
+    print("\033[{} {}\033[0m".format(colors[row[0]][5],row[5].ljust(columnLength[5])),end="")
     print("")
+print("")
