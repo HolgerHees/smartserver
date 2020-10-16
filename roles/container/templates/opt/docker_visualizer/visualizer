@@ -82,6 +82,22 @@ link_list = execCommand("ip link").stdout.decode("utf-8")
 host_ip = execCommand("hostname -I").stdout.decode("utf-8").split()[0]
 host_bridge_info = re.findall("^.*{}.*".format(host_ip), ip_list, flags=re.MULTILINE)[0].split()
 
+# Collect iptables chains
+#iptables_rules = execCommand("iptables -nL").stdout.decode("utf-8").split("\n")
+#current_chain = None
+#chain_r = {}
+#for rule in iptables_rules:
+#    if len(rule) == 0:
+#        continue
+#    rule_r = rule.split(" ")
+#    rule_r = list(filter(lambda item: item.strip(), rule_r))
+#    if rule_r[0].lower() == "chain":
+#        current_chain = rule_r[1]
+#        chain_r[current_chain] = []
+#    else:
+#        chain_r[current_chain].append()
+#target     prot opt source               destination
+
 # Process collected data
 for name in network_r:
     network = network_r[name]
