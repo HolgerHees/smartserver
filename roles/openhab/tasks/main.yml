@@ -464,14 +464,11 @@
 
 - name: copy special vhosts
   template:
-    src: "templates/etc/apache2/_.ansible.vhost.d/{{item}}"
-    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{item}}"
+    src: "templates/etc/apache2/_.ansible.vhost.d/default-127.0.0.0-80-openhab.conf"
+    dest: "{{global_etc}}apache2/_.ansible.vhost.d/default-127.0.0.0-80-openhab.conf"
     owner: root
     group: root
     mode: 0644
-  with_items:
-    - default-openhab.conf
-    - default-openhab-ssl.conf
   notify: "restart apache2"
   tags: ['apache_conf']
 
