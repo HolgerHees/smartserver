@@ -1,17 +1,27 @@
 domain (ip ip6) {
     table filter {
         chain INPUT {
-            saddr {{server_network}}/24 ACCEPT; # internal ip's can connect to host
-{% if not ansible_remote_ip.startswith(server_subnet) %}            saddr {{ansible_remote_ip}} ACCEPT; # ansible ip can connect to host
+            # internal ip's can connect to host
+            saddr {{server_network}}/24 ACCEPT;
+{% if not ansible_remote_ip.startswith(server_subnet) %}            
+            # ansible ip can connect to host
+            saddr {{ansible_remote_ip}} ACCEPT;
 {% endif %}
-{% if vpn_mobile_network is defined %}            saddr {{vpn_mobile_network}}/24 ACCEPT; # mobile vpn ip's can connect to host
+{% if vpn_mobile_network is defined %}
+            # mobile vpn ip's can connect to host
+            saddr {{vpn_mobile_network}}/24 ACCEPT;
 {% endif %}
         }
         chain DOCKER-USER {
-            saddr {{server_network}}/24 ACCEPT; # internal ip's can connect to containers
-{% if not ansible_remote_ip.startswith(server_subnet) %}            saddr {{ansible_remote_ip}} ACCEPT; # ansible ip can connect to containers
+            # internal ip's can connect to containers
+            saddr {{server_network}}/24 ACCEPT;
+{% if not ansible_remote_ip.startswith(server_subnet) %}
+            # ansible ip can connect to containers
+            saddr {{ansible_remote_ip}} ACCEPT;
 {% endif %}
-{% if vpn_mobile_network is defined %}            saddr {{vpn_mobile_network}}/24 ACCEPT; # mobile vpn ip's can connect to containers
+{% if vpn_mobile_network is defined %}
+            # mobile vpn ip's can connect to containers
+            saddr {{vpn_mobile_network}}/24 ACCEPT;
 {% endif %}
         }
     }

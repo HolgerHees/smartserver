@@ -4,10 +4,17 @@ domain (ip ip6) table filter chain DOCKER-USER {
         DROP;
     }
     outerface eth0 {
-        daddr {{server_network}}/24 DROP; # container ip's are not allowed to access internal ip's
-{% if not ansible_remote_ip.startswith(server_subnet) %}        daddr {{ansible_remote_ip}} DROP; # container ip's are not allowed to access ansible ip
+        mod conntrack ctstate (RELATED ESTABLISHED) ACCEPT;
+
+        # container ip's are not allowed to access internal ip's
+        daddr {{server_network}}/24 DROP;
+{% if not ansible_remote_ip.startswith(server_subnet) %}
+        # container ip's are not allowed to access ansible ip
+        daddr {{ansible_remote_ip}} DROP;
 {% endif %}
-{% if vpn_mobile_network is defined %}        daddr {{vpn_mobile_network}}/24 DROP; # container ip's are not allowed to access mobile vpn ip's
+{% if vpn_mobile_network is defined %}
+        # container ip's are not allowed to access mobile vpn ip's
+        daddr {{vpn_mobile_network}}/24 DROP;
 {% endif %}
     }
     RETURN;
