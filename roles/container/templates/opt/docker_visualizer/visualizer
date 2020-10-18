@@ -83,7 +83,7 @@ host_ip = execCommand("hostname -I").stdout.decode("utf-8").split()[0]
 host_bridge_info = re.findall("^.*{}.*".format(host_ip), ip_list, flags=re.MULTILINE)[0].split()
 
 # Collect iptables chains
-#iptables_rules = execCommand("iptables -nL").stdout.decode("utf-8").split("\n")
+#iptables_rules = execCommand("iptables -nvL").stdout.decode("utf-8").split("\n")
 #current_chain = None
 #chain_r = {}
 #for rule in iptables_rules:
@@ -132,11 +132,14 @@ for name in network_r:
             portBindings = container_json['HostConfig']['PortBindings']
             if portBindings != None:
                 for exposedPort in portBindings:
-                  
                     hostIp = container_json['HostConfig']['PortBindings'][exposedPort][0]['HostIp']
                     hostPort = container_json['HostConfig']['PortBindings'][exposedPort][0]['HostPort']
-                  
                     container.addPort(hostIp,hostPort,exposedPort)
+            else:
+                portBindings = container_json['Config']['ExposedPorts']
+                if portBindings != None:
+                    for exposedPort in portBindings:
+                        container.addPort("0.0.0.0",exposedPort,exposedPort)
                                    
         container_ns_result = execCommand("nsenter --net={} ethtool -S eth0 | grep peer_ifindex".format(container.sandboxKey))
         peer_ifindex_r = container_ns_result.stdout.decode("utf-8").split()
@@ -152,33 +155,12 @@ for name in network_r:
         
         network.addConnection(connection)
 
-# Show container list
-maxNameLength = 0
-for container in container_r:
-    container = container_r[container]
-    if len(container.name) > maxNameLength:
-        maxNameLength = len(container.name)
-        
-print("\033[1;37m {} {}\033[0m".format("Container name".ljust(maxNameLength), "Ports" ) )
-print("")
-for container in sorted(container_r):
-    container = container_r[container]
-    
-    exposedPorts = []
-    for port in container.exposedPorts:
-        exposedPorts.append("{}:{}:{}".format(port["hostIp"],port["hostPort"],port["exposedPort"]))
-    
-    portStr = ", ".join(exposedPorts)
-    portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
-    
-    print(" \033[0;33m{}\033[0m {}".format(container.name.ljust(maxNameLength), portStr ) )
-
 # Prepare column values
-rows = [[0,"Type","Name","Network","","Interface"]]
+rows = [[0,"Type","Name","Network","","Interface","Port \033[0;32mLocal\033[0m \033[0;31mPublic\033[0m"]]
 for network in sorted(network_r):
     network = network_r[network]
     
-    rows.append([1,"Network",network.name,network.gateway,network.subnet,network.bridge])
+    rows.append([1,"Network",network.name,network.gateway,network.subnet,network.bridge,""])
 
     key_r = list(network.connection_r.keys())
     key_r.sort(key=lambda item: socket.inet_aton(item.split("/")[0]) if "." in item else item, reverse=False)
@@ -186,22 +168,35 @@ for network in sorted(network_r):
         connection = network.connection_r[key]
         container = connection.container
 
-        rows.append([2,"Container",container.name,connection.ip,"",connection.veth])
+        exposedPorts = []
+        isLocal = False
+        for port in container.exposedPorts:
+            isLocal = port["hostIp"] == "127.0.0.1"
+            #host = "{}:".format(port["hostIp"]) if port["hostIp"] != "0.0.0.0" else ""
+            if port["hostPort"] != port["exposedPort"]:
+                exposedPorts.append("{}:{}".format(port["hostPort"],port["exposedPort"]))
+            else:
+                exposedPorts.append(port["exposedPort"])
+              
+        portStr = ", ".join(exposedPorts)
+        portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
+
+        rows.append([2,"Container",container.name,connection.ip,"",connection.veth,portStr,isLocal])
         
 # Calculate column sizes
 columnLength = [0] * (len(rows[0]) + 1)
 for row in rows:
     for i in range(1,len(row)):
-        if len(row[i]) > columnLength[i]:
+        if isinstance(row[i], str) and len(row[i]) > columnLength[i]:
             columnLength[i] = len(row[i])
 
 for i in range(1,len(columnLength)):
     columnLength[i] = columnLength[i] + 1
     
 colors = [
-    [0,"1;37m","1;37m","1;37m","1;37m","1;37m"],
-    [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;30;46m"],
-    [0,"0;37m","0;33m","1;35m","1;35m","0;36m"]
+    [0,"1;37m","1;37m","1;37m","1;37m","1;37m","1;37m"],
+    [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;30;46m","0;100m"],
+    [0,"0;37m","0;33m","1;35m","1;35m","0;36m","0;39m"]
 ]
     
 # Visualize
@@ -214,5 +209,11 @@ for row in rows:
     print("\033[{} {}\033[0m".format(colors[row[0]][2],row[2].ljust(columnLength[2])),end="")
     print("\033[{} {} {}\033[0m".format(colors[row[0]][3],row[3].ljust(columnLength[3]),row[4].ljust(columnLength[4])),end="")
     print("\033[{} {}\033[0m".format(colors[row[0]][5],row[5].ljust(columnLength[5])),end="")
+    
+    if row[0] == 2:
+        color = "0;32m" if row[7] else "0;31m"
+    else:
+        color = colors[row[0]][6]
+    print("\033[{} {}\033[0m".format(color,row[6].ljust(columnLength[6])),end="")
     print("")
 print("")
