@@ -111,6 +111,9 @@
       tag: vsftpd
     volumes:
       - '{{ftp_path}}:/home/uploads:z'
+    networks:
+      - name: "base"
+    networks_cli_compatible: yes
     ports:
       - "21:21"
       - "30000-30100:30000-30100"

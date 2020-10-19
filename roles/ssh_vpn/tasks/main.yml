@@ -72,20 +72,24 @@
   notify: "restart ssh_vpn"
   
 # ***** FINALIZE *****
+- name: prepare iptables rules
+  set_fact:
+    ssh_vpn_rules: "{{ (ssh_vpn_rules | default([])) + [ 'proto tcp saddr ' + item + ' dport ' + vault_ssh_vpn_internal_port ] }}"
+  with_items: "{{ vault_ssh_vpn_allowed_ips }}"
+  tags: [ 'firewall_config' ]
+        
 - name: allow ssh_vpn service
   vars:
     name: "ssh_vpn"
-    port: "{{vault_ssh_vpn_internal_port}}"
-    source: "{{item}}"
+    rules: "{{ssh_vpn_rules}}"
     is_docker: True
-  include_tasks: roles/firewall/tasks/allow_service.yml
-  with_items: "{{vault_ssh_vpn_allowed_ips | default(['']) }}"
+  import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
 #- name: allow ssh_vpn_fallback service
 #  vars:
 #    name: "ssh_vpn_fallback"
-#    port: "{{vault_ssh_vpn_internal_port}}"
+#    rule: "proto tcp port {{vault_ssh_vpn_internal_port}}"
 #    is_docker: True
 #  import_tasks: roles/firewall/tasks/allow_service.yml
 #  tags: [ 'firewall_config' ]

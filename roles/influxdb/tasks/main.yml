@@ -44,6 +44,9 @@
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb:z'
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup:z'
+    networks:
+      - name: "base"
+    networks_cli_compatible: yes
     ports:
      - "127.0.0.1:8086:8086"  
      - "127.0.0.1:4242:4242"  

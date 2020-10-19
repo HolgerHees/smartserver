@@ -50,6 +50,9 @@
     volumes:
       - '{{global_etc}}loki:/etc/loki:z'
       - '{{global_lib}}loki:/loki:z'
+    networks:
+      - name: "base"
+    networks_cli_compatible: yes
     ports:
      - "127.0.0.1:3100:3100"
   notify: "restart loki"

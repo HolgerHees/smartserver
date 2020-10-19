@@ -56,6 +56,7 @@
     - { src: "/etc/systemd/ferm.service", dest: "/usr/lib/systemd/system/ferm.service" }
     - { src: "/etc/ferm/ferm.conf", dest: "/etc/ferm/ferm.conf" }
     - { src: "/etc/ferm/ferm.d/00-docker.ferm", dest: "/etc/ferm/ferm.d/00-docker.ferm" }
+    - { src: "/etc/ferm/ferm.d/10-docker.ferm", dest: "/etc/ferm/ferm.d/10-docker.ferm" }
     - { src: "/etc/ferm/ferm.d/20-in.trusted.ferm", dest: "/etc/ferm/ferm.d/20-in.trusted.ferm" }
     - { src: "/etc/ferm/ferm.d/99-docker.ferm", dest: "/etc/ferm/ferm.d/99-docker.ferm" }
   notify: "restart ferm"

@@ -1,5 +1,6 @@
 domain (ip ip6) {
-    table filter chain {% if is_docker is defined and is_docker %}DOCKER-USER{% else %}INPUT{% endif %} proto {% if is_udp is defined and is_udp %}udp{% else %}tcp{% endif %}{% if source is defined and source != '' %} saddr {{source}}{% endif %} dport {{port}} ACCEPT;
+{% for ferm_rule in ferm_rules %}    table filter chain {{ferm_chain}} {{ferm_rule}} ACCEPT;
+{% endfor %}
 } 
 
 

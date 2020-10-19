@@ -65,7 +65,7 @@
 - name: allow openvpn.cloud service
   vars:
     name: "openvpn.cloud"
-    port: "{{vault_vpn_cloud_port}}"
+    rule: "proto tcp dport {{vault_vpn_cloud_port}}"
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 

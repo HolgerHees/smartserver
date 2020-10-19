@@ -48,6 +48,9 @@
       - '/etc/group:/etc/group:ro,z'
       - '/etc/passwd:/etc/passwd:ro,z'
       - '/etc/shadow:/etc/shadow:ro,z'
+    networks:
+      - name: "base"
+    networks_cli_compatible: yes
     ports:
       - "137:137/udp"
       - "138:138/udp"

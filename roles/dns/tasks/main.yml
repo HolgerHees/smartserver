@@ -40,6 +40,10 @@
     log_driver: journald
     log_options:
       tag: named
+    networks:
+      - name: "base"
+        ipv4_address: "{{docker_dns_ip}}"
+    networks_cli_compatible: yes
     volumes:
       - '{{ global_etc }}named/dnsmasq-hosts:/etc/dnsmasq-hosts:z'
       - '{{ global_etc }}named/dnsmasq.conf:/etc/dnsmasq.conf:z'
@@ -49,6 +53,17 @@
   notify: "restart named"
 
 # ***** FINALIZE *****
+- name: allow dns service
+  vars:
+    name: "dns"
+    rules: [
+      "saddr {{docker_dns_ip}} daddr {{dns1}}",
+      "saddr {{docker_dns_ip}} daddr {{dns2}}"
+    ]
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: create systemd service
   vars:
     container_name: "named"

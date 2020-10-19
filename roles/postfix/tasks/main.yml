@@ -44,6 +44,10 @@
     volumes:
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
       - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:z'
+    networks:
+      - name: "base"
+        ipv4_address: "{{docker_postfix_ip}}"
+    networks_cli_compatible: yes
     ports:
       - "127.0.0.1:25:25/tcp"
   notify: "restart postfix"
@@ -91,6 +95,14 @@
     mode: 0644
 
 # ***** FINALIZE *****
+- name: allow postfix service
+  vars:
+    name: "postfix"
+    rule: "saddr {{docker_postfix_ip}} daddr !{{server_network}}/24"
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: create systemd service
   vars:
     container_name: "postfix"

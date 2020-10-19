@@ -102,7 +102,7 @@
     name: "{{wg_container_name}}"
     image: "{{wg_image_name}}:{{alpine_version}}"
     state: present
-    network_mode: "none"
+#    network_mode: "none"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
@@ -136,8 +136,7 @@
 - name: allow cloud service
   vars:
     name: "wireguard.cloud_{{wg_active_network}}"
-    port: "{{wg_cloud_network.interface.listenPort}}"
-    is_udp: True
+    rule: "proto udp dport {{wg_cloud_network.interface.listenPort}}"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]

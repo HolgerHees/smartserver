@@ -5,7 +5,7 @@ $i = 0;
 /* Server: openhab [1] */
 $i++;
 //$cfg['Servers'][$i]['verbose'] = 'openhab';
-$cfg['Servers'][$i]['host'] = '127.0.0.1';
+$cfg['Servers'][$i]['host'] = 'mysql';
 $cfg['Servers'][$i]['port'] = '';
 $cfg['Servers'][$i]['socket'] = '';
 $cfg['Servers'][$i]['connect_type'] = 'tcp';

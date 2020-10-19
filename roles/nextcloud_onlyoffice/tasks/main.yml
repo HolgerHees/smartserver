@@ -20,6 +20,17 @@
     name: docker
     state: started
 
+- name: connect onlyoffice with databases
+  docker_network:
+    name: onlyoffice_databases
+    ipam_config:
+      - subnet: "{{docker_onlyoffice_network}}/24"
+        gateway: "{{docker_onlyoffice_gateway}}"
+    connected:
+      - mysql
+      - redis
+  tags: ['mysql','redis']
+  
 - name: create docker container
   docker_container:
     name: onlyoffice
@@ -52,23 +63,15 @@
     volumes:
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
-#    networks:
-#      - name: "hostaccess"
-#    networks_cli_compatible: yes
+    networks:
+      - name: "onlyoffice_databases"
+        ipv4_address: "{{docker_onlyoffice_ip}}"
+    networks_cli_compatible: yes
     ports:
      - "127.0.0.1:8090:80"  
      - "127.0.0.1:8453:443"  
   notify: "restart onlyoffice"
     
-- name: connect onlyoffice with databases
-  docker_network:
-    name: onlyoffice_databases
-    connected:
-      - onlyoffice
-      - mysql
-      - redis
-  tags: ['mysql','redis']
-  
 # ***** DATABASE *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
@@ -100,18 +103,11 @@
 #    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
 #  import_tasks: roles/fluentd/tasks/add_config.yml
 
-- name: get container ip
-  shell: "docker inspect --format '{''{ .NetworkSettings.IPAddress }''}' onlyoffice"
-  register: onlyoffice_ip
-  changed_when: no
-
 - name: allow onlyoffice service
   vars:
     name: "https.onlyoffice"
-    port: "443"
-    source: "{{onlyoffice_ip.stdout}}"
-  #  is_docker: True
-  include_tasks: roles/firewall/tasks/allow_service.yml
+    rule: "proto tcp dport 443 saddr {{docker_onlyoffice_ip}}"
+  import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: copy apache vhost

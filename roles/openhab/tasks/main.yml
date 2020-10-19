@@ -118,6 +118,19 @@
       - roles/openhab/templates/container/init.sh
   import_tasks: roles/container/tasks/build_docker_image.yml
 
+- name: connect openhab databases
+  docker_network:
+    name: openhab_databases
+    ipam_config:
+      - subnet: "{{docker_openhab_network}}/24"
+        gateway: "{{docker_openhab_gateway}}"
+    connected:
+      - mysql
+      - influxdb
+      - mosquitto
+    appends: yes
+  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
+
 - name: create docker container
   docker_container:
     name: openhab
@@ -126,17 +139,14 @@
 #    capabilities:
 #      - NET_ADMIN
 #      - NET_RAW
-#    recreate: true
+    recreate: true
     env:
       TZ: "{{timezone}}"
       USER_ID: "{{openhab_uid}}"
       GROUP_ID: "{{openhab_gid}}"
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
-    network_mode: host
-#    networks:
-#      - name: "openhab_databases"
-#    networks_cli_compatible: yes
+#    network_mode: host
     log_driver: journald
     log_options:
       tag: openhab
@@ -149,12 +159,27 @@
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
       - '{{global_lib}}openhab:/openhab/userdata/persistence:z'
     devices: "{{openhab_device_mounts | default([])}}"
-#    ports:
-#     - "59080:8080"  
-#     - "59443:8443"  
-#     - "59007:5007"  
-#     - "59101:8101"  
+    networks:
+      - name: "openhab_databases"
+        ipv4_address: "{{docker_openhab_ip}}"
+    networks_cli_compatible: yes
+    ports:
+     - "8080:8080"  
+     - "8443:8443"  
+     - "5007:5007"  
+     - "8101:8101"  
   notify: "restart openhab"
+
+- name: connect php databases
+  docker_network:
+    name: php_databases
+    ipam_config:
+      - subnet: "{{docker_php_network}}/24"
+        gateway: "{{docker_php_gateway}}"
+    connected:
+      - openhab
+    appends: yes
+  tags: [ 'php' ]
 
 # ****** GITHUB CONFIG PROJECT ******
 - name: link configs
@@ -476,6 +501,21 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: allow http openhab service
+  vars:
+    name: "https.openhab"
+    rule: "proto tcp dport 443 saddr {{docker_openhab_ip}}"
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+- name: allow openhab service
+  vars:
+    name: "openhab"
+    rule: "saddr {{docker_openhab_ip}}"
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: register service watcher
   vars:

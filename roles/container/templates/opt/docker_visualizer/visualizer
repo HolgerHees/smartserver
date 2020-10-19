@@ -4,6 +4,7 @@ import subprocess
 import json
 import socket
 import re
+from netaddr import *
 
 class Network:
     def __init__(self,id,name,drive,scope):
@@ -26,13 +27,14 @@ class Network:
         self.connection_r[key] = connection
 
 class Container:
-    def __init__(self,name,sandboxKey):
+    def __init__(self,name,sandboxKey,interfaceResult):
         self.name = name
         self.sandboxKey = sandboxKey
+        self.interfaceResult = interfaceResult
         self.exposedPorts = []
         
-    def addPort(self,hostIp,hostPort,exposedPort):
-        self.exposedPorts.append({"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort})
+    def addPort(self,hostIp,hostPort,exposedPort,protocol):
+        self.exposedPorts.append({"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort, 'protocol': protocol})
 
 class Connection:
     def __init__(self,container,ip, veth):
@@ -125,29 +127,44 @@ for name in network_r:
             container_json = container_json_dict[name]
             
             sandboxKey = container_json['NetworkSettings']['SandboxKey']
+            interfaceResult = execCommand("nsenter --net={} ip a".format(sandboxKey))
             
-            container = Container(name,sandboxKey)
+            container = Container(name,sandboxKey,interfaceResult.stdout.decode("utf-8").strip())
             container_r[name] = container
             
             portBindings = container_json['HostConfig']['PortBindings']
             if portBindings != None:
-                for exposedPort in portBindings:
-                    hostIp = container_json['HostConfig']['PortBindings'][exposedPort][0]['HostIp']
-                    hostPort = container_json['HostConfig']['PortBindings'][exposedPort][0]['HostPort']
-                    container.addPort(hostIp,hostPort,exposedPort)
+                for exposedPortKey in portBindings:
+                    exposedPort,protocol = exposedPortKey.split("/")
+                    hostIp = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostIp']
+                    hostPort = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostPort']
+                    container.addPort(hostIp,hostPort,exposedPort,protocol)
             else:
                 portBindings = container_json['Config']['ExposedPorts']
+                print(portBindings)
                 if portBindings != None:
-                    for exposedPort in portBindings:
-                        container.addPort("0.0.0.0",exposedPort,exposedPort)
-                                   
-        container_ns_result = execCommand("nsenter --net={} ethtool -S eth0 | grep peer_ifindex".format(container.sandboxKey))
-        peer_ifindex_r = container_ns_result.stdout.decode("utf-8").split()
-        if len(peer_ifindex_r) > 0:
-            veth_info = re.findall("^{}: veth.*".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)[0].split()
-            veth = veth_info[1][:-1]
-        else:
-            veth = ""
+                    for exposedPortKey in portBindings:
+                        exposedPort,protocol = exposedPortKey.split("/")
+                        container.addPort("0.0.0.0",exposedPort,exposedPort,protocol)
+        
+        veth = ""
+        if network.name != 'host':
+            #print("#######")
+            #print(container.name)
+            interfaceList = re.findall("inet.*", container.interfaceResult, flags=re.MULTILINE)
+            ip = IPNetwork(network.subnet)
+            for interface in interfaceList:
+                columns = interface.split(" ")
+                cip = IPNetwork(columns[1])
+                if ip.subnet == cip.subnet:
+                    container_ns_result = execCommand("nsenter --net={} ethtool -S {} | grep peer_ifindex".format(container.sandboxKey,columns[6]))
+                    peer_ifindex_r = container_ns_result.stdout.decode("utf-8").split()
+                    if len(peer_ifindex_r) > 0:
+                        veth_info = re.findall("^{}: veth.*".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)[0].split()
+                        veth = veth_info[1][:-1]
+                    #print(columns[6])
+                    #print(veth)
+                    break
         
         ip = network_json['Containers'][container_id]['IPv4Address']
         
@@ -156,7 +173,7 @@ for name in network_r:
         network.addConnection(connection)
 
 # Prepare column values
-rows = [[0,"Type","Name","Network","","Interface","Port \033[0;32mLocal\033[0m \033[0;31mPublic\033[0m"]]
+rows = [[0,"Type","Name","Network","","Interface","Port \033[0;32mLocal\033[0m \033[0;91mPublic\033[0m"]]
 for network in sorted(network_r):
     network = network_r[network]
     
@@ -172,11 +189,7 @@ for network in sorted(network_r):
         isLocal = False
         for port in container.exposedPorts:
             isLocal = port["hostIp"] == "127.0.0.1"
-            #host = "{}:".format(port["hostIp"]) if port["hostIp"] != "0.0.0.0" else ""
-            if port["hostPort"] != port["exposedPort"]:
-                exposedPorts.append("{}:{}".format(port["hostPort"],port["exposedPort"]))
-            else:
-                exposedPorts.append(port["exposedPort"])
+            exposedPorts.append(port["hostPort"]+"/"+port["protocol"])
               
         portStr = ", ".join(exposedPorts)
         portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
@@ -211,7 +224,7 @@ for row in rows:
     print("\033[{} {}\033[0m".format(colors[row[0]][5],row[5].ljust(columnLength[5])),end="")
     
     if row[0] == 2:
-        color = "0;32m" if row[7] else "0;31m"
+        color = "0;32m" if row[7] else "0;91m"
     else:
         color = colors[row[0]][6]
     print("\033[{} {}\033[0m".format(color,row[6].ljust(columnLength[6])),end="")
