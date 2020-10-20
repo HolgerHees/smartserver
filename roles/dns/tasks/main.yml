@@ -50,6 +50,7 @@
       - '{{ global_etc }}named/resolv.dnsmasq.conf:/etc/resolv.dnsmasq.conf:z'
     ports:
       - "53:53/udp"
+      - "53:53/tcp"
   notify: "restart named"
 
 # ***** FINALIZE *****
