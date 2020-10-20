@@ -117,7 +117,7 @@
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: initialise nextcloud => database does not exists
-  shell: "docker exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host '127.0.0.1' --database-name 'nextcloud'  --database-user '{{vault_nextcloud_mysql_username}}' --database-pass '{{vault_nextcloud_mysql_password}}' --admin-user '{{vault_nextcloud_admin_username}}' --admin-pass '{{vault_nextcloud_admin_password}}'\""
+  shell: "docker exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{vault_nextcloud_mysql_username}}' --database-pass '{{vault_nextcloud_mysql_password}}' --admin-user '{{vault_nextcloud_admin_username}}' --admin-pass '{{vault_nextcloud_admin_password}}'\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: disable password policy => database does not exists
