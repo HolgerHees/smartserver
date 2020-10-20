@@ -1,0 +1,79 @@
+- name: set version
+  set_fact:
+    pihole_version: '5.1.2'
+  tags: [ 'update_notifier_configs' ]
+  
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{ global_etc }}pihole"
+    - "{{ global_etc }}pihole/dnsmasq.d/"
+    
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: pihole
+    image: "pihole/pihole:v{{pihole_version}}"
+    state: present
+#    network_mode: "none"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      WEBPASSWORD: "pihole"
+    log_driver: journald
+    log_options:
+      tag: pihole
+    volumes:
+      - '{{ global_etc }}pihole/:/etc/pihole/:z'
+      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
+    networks:
+      - name: "base"
+        ipv4_address: "{{docker_pihole_ip}}"
+    networks_cli_compatible: yes
+    ports:
+      - "9953:53/tcp"
+      - "9953:53/udp"
+      - "9967:67/udp"
+      - "9980:80/tcp"
+      - "9443:443/tcp"
+  notify: "restart pihole"
+
+# ***** FINALIZE *****
+- name: allow dns service
+  vars:
+    name: "pihole"
+    rule: "saddr {{docker_pihole_ip}} daddr !{{server_network}}/24"
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+- name: create systemd service
+  vars:
+    container_name: "pihole"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: register update notifier
+  vars:
+    name: "pihole"
+    type: "docker"
+    url: "https://github.com/pi-hole/docker-pi-hole/releases"
+    config: {
+      repository: "pihole/pihole",
+      pattern: "^v([0-9\\.]+)$"
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: trigger pihole handler
+  vars:
+    notify: "restart pihole"
+    service: "pihole.service"
+  import_tasks: roles/base/tasks/service_check.yml

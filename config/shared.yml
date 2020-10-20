@@ -33,6 +33,7 @@ docker_base_network:              "172.16.0.0"
 docker_base_gateway:              "172.16.0.1"
 docker_dns_ip:                    "172.16.0.200"
 docker_postfix_ip:                "172.16.0.201"
+docker_pihole_ip:                 "172.16.0.202"
 
 docker_default_network:           "172.17.0.0"
 
