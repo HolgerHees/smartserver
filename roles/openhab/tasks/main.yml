@@ -122,8 +122,8 @@
   docker_network:
     name: openhab_databases
     ipam_config:
-      - subnet: "{{docker_openhab_network}}/24"
-        gateway: "{{docker_openhab_gateway}}"
+      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
     connected:
       - mysql
       - influxdb
@@ -164,18 +164,18 @@
         ipv4_address: "{{docker_openhab_ip}}"
     networks_cli_compatible: yes
     ports:
-     - "8080:8080"  
-     - "8443:8443"  
-     - "5007:5007"  
-     - "8101:8101"  
+     - "127.0.0.1:8080:8080"  
+     - "127.0.0.1:8443:8443"  
+     - "127.0.0.1:5007:5007"  
+     - "127.0.0.1:8101:8101"  
   notify: "restart openhab"
 
 - name: connect php databases
   docker_network:
     name: php_databases
     ipam_config:
-      - subnet: "{{docker_php_network}}/24"
-        gateway: "{{docker_php_gateway}}"
+      - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
     connected:
       - openhab
     appends: yes

@@ -17,8 +17,8 @@
   docker_network:
     name: php_databases
     ipam_config:
-      - subnet: "{{docker_php_network}}/24"
-        gateway: "{{docker_php_gateway}}"
+      - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
     connected:
       - mysql
       - influxdb

@@ -28,7 +28,7 @@
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
-  shell: "docker build --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{name}}/"
+  shell: "docker build --network host --no-cache -t {{image_name}}:{{image_version}} {{global_build}}{{name}}/"
   async: 1800
   poll: 0
   register: docker_build

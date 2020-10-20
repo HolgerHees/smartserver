@@ -24,8 +24,8 @@
   docker_network:
     name: onlyoffice_databases
     ipam_config:
-      - subnet: "{{docker_onlyoffice_network}}/24"
-        gateway: "{{docker_onlyoffice_gateway}}"
+      - subnet: "{{docker_onlyoffice_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_onlyoffice_ip.split('.')[:3] | join('.')}}.1"
     connected:
       - mysql
       - redis
