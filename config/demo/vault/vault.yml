@@ -27,6 +27,8 @@ vault_openid_connect_passphrase: ""
 
 vault_form_auth_passphrase: "8924jkhf2/8?23"
 
+vault_pihole_password: "<password>"
+
 vault_ftp_username: "ftp"
 vault_ftp_password: "default123"
 

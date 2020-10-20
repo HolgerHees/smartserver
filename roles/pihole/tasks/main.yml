@@ -7,8 +7,8 @@
   file:
     path: '{{item}}'
     state: directory
-    owner: root
-    group: root
+    owner: "999"
+    group: "999"
     mode: 0750
   with_items:
     - "{{ global_etc }}pihole"
@@ -19,6 +19,16 @@
     name: docker
     state: started
 
+- name: create macvlan networks
+  docker_network:
+    name: 'pihole'
+    driver: macvlan
+    driver_options:
+      parent: 'eth0'
+    ipam_config:
+      - subnet: '{{server_network}}/24'
+        gateway: '{{server_gateway}}'
+  
 - name: create docker container
   docker_container:
     name: pihole
@@ -28,7 +38,9 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-      WEBPASSWORD: "pihole"
+      WEBPASSWORD: "{{vault_pihole_password}}"
+      DNS1: "127.0.0.11"
+      DNS2: "no"
     log_driver: journald
     log_options:
       tag: pihole
@@ -36,18 +48,25 @@
       - '{{ global_etc }}pihole/:/etc/pihole/:z'
       - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
     networks:
-      - name: "base"
-        ipv4_address: "{{docker_pihole_ip}}"
+      - name: "pihole"
+        ipv4_address: "{{pihole_ip}}"
     networks_cli_compatible: yes
     ports:
-      - "9953:53/tcp"
-      - "9953:53/udp"
-      - "9967:67/udp"
-      - "9980:80/tcp"
-      - "9443:443/tcp"
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
   notify: "restart pihole"
 
 # ***** FINALIZE *****
+- name: register webui
+  vars:
+    name: "pihole"
+    js_file: "templates/webui/proxy.js"
+    i18n_files: [ { language: "de", file: "templates/webui/proxy.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: allow dns service
   vars:
     name: "pihole"
