@@ -16,7 +16,6 @@ initDeviceConfig()
 PrivateKey = ${PRIVATE_KEY}
 Address = {{wg_cloud_network.interface.address}}
 ListenPort = {{wg_exposed_port}}
-SaveConfig = true
 
 {% for peer_name in wg_cloud_network.peers %}
 [Peer]

@@ -17,7 +17,6 @@ initDeviceConfig()
     echo -n $SERVER_ADDRESS >> wg0.conf
     echo "/25" >> wg0.conf
     echo "ListenPort = {{vault_wireguard_mobile_internal_port}}" >> wg0.conf
-    echo "SaveConfig = true" >> wg0.conf
 
 {% for name in vpn_gates %}
     echo "[Peer]" >> wg0.conf
