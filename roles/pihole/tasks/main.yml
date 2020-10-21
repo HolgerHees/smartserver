@@ -63,8 +63,8 @@
 - name: register webui
   vars:
     name: "pihole"
-    js_file: "templates/webui/proxy.js"
-    i18n_files: [ { language: "de", file: "templates/webui/proxy.de.json" } ]
+    js_file: "templates/webui/pihole.js"
+    i18n_files: [ { language: "de", file: "templates/webui/pihole.de.json" } ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: create cron job

@@ -2,6 +2,7 @@
   "other_states": {
     "Grafana": "Grafana",
     "Server Logs": "Server Logs",
-    "Server Health": "Server Health"
+    "Server Health": "Server Health",
+    "Dashboards": "Dashboards"
   }
 }
