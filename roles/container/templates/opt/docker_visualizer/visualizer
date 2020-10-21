@@ -4,7 +4,7 @@ import subprocess
 import json
 import socket
 import re
-from netaddr import *
+import ipaddress
 
 class Network:
     def __init__(self,id,name,drive,scope):
@@ -140,6 +140,8 @@ for additional_port in additional_port_list:
         listen_ports[port] = {'port':port,'protocol':protocol.lower()}
 #print(listen_port_map)
 
+print(ip_list)
+
 # Process collected data
 for name in network_r:
     network = network_r[name]
@@ -153,9 +155,12 @@ for name in network_r:
         if len(network_json['IPAM']['Config']) > 0:
             subnet = network_json['IPAM']['Config'][0]['Subnet']
             gateway = network_json['IPAM']['Config'][0]['Gateway']
-            
-            bridge_info = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()
-            network.addDetails(subnet,gateway,bridge_info[-1])
+            result = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)
+            if len(result)>0:
+                bridge_info = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()[-1]
+            else:
+                bridge_info = ""
+            network.addDetails(subnet,gateway,bridge_info)
     
     for container_id in network_json['Containers']:
       
@@ -192,16 +197,18 @@ for name in network_r:
             #print("#######")
             #print(container.name)
             interfaceList = re.findall("inet.*", container.interfaceResult, flags=re.MULTILINE)
-            ip = IPNetwork(network.subnet)
+            network_subnet = ipaddress.ip_network(network.subnet, strict=False)
             for interface in interfaceList:
                 columns = interface.split(" ")
-                cip = IPNetwork(columns[1])
-                if ip.subnet == cip.subnet:
+                interface_subnet = ipaddress.ip_network(columns[1], strict=False)
+                if network_subnet == interface_subnet:
                     container_ns_result = execCommand("nsenter --net={} ethtool -S {} | grep peer_ifindex".format(container.sandboxKey,columns[6]))
                     peer_ifindex_r = container_ns_result.stdout.decode("utf-8").split()
                     if len(peer_ifindex_r) > 0:
-                        veth_info = re.findall("^{}: veth.*".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)[0].split()
-                        veth = veth_info[1][:-1]
+                        result = re.findall("^{}: veth.*".format(peer_ifindex_r[-1]), link_list, flags=re.MULTILINE)
+                        if len(result)>0:
+                            veth_info = result[0].split()
+                            veth = veth_info[1][:-1]
                     #print(columns[6])
                     #print(veth)
                     break
