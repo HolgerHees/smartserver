@@ -140,8 +140,6 @@ for additional_port in additional_port_list:
         listen_ports[port] = {'port':port,'protocol':protocol.lower()}
 #print(listen_port_map)
 
-print(ip_list)
-
 # Process collected data
 for name in network_r:
     network = network_r[name]
