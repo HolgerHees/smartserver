@@ -54,7 +54,7 @@
     ports:
       - "53:53/tcp"
       - "53:53/udp"
-      - "67:67/udp"
+    # - "67:67/udp"
       - "80:80/tcp"
       - "443:443/tcp"
   notify: "restart pihole"
@@ -67,7 +67,16 @@
     i18n_files: [ { language: "de", file: "templates/webui/proxy.de.json" } ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
-- name: allow dns service
+- name: create cron job
+  vars:
+    name: "Pihole update"
+    cmd: "docker exec pihole pihole updateGravity > /dev/null"
+    file: "ansible_pihole"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: allow pihole service
   vars:
     name: "pihole"
     rule: "saddr {{docker_pihole_ip}} daddr !{{server_network}}/24"
