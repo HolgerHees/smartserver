@@ -13,10 +13,11 @@
   with_items:
     - "{{ global_lib }}grafana/"
     - "{{ global_lib }}grafana/dashboards/"
-    - "{{ global_lib }}grafana/provisioning"
-    - "{{ global_lib }}grafana/provisioning/dashboards/"
-    - "{{ global_lib }}grafana/provisioning/datasources/"
-    - "{{ global_lib }}grafana/provisioning/notifiers/"
+    - "{{ global_etc }}grafana/"
+    - "{{ global_etc }}grafana/provisioning"
+    - "{{ global_etc }}grafana/provisioning/dashboards/"
+    - "{{ global_etc }}grafana/provisioning/datasources/"
+    - "{{ global_etc }}grafana/provisioning/notifiers/"
 
 - name: copy shared grafana dashboards
   copy:
@@ -49,7 +50,7 @@
 - name: copy grafana provisioning
   template:
     src: "templates/{{item}}"
-    dest: "{{ global_lib }}grafana/{{item}}"
+    dest: "{{ global_etc }}grafana/{{item}}"
     owner: root
     group: root
     mode: 0640
@@ -61,10 +62,14 @@
     - "provisioning/datasources/opentsdb.yaml"
     - "provisioning/datasources/loki.yaml"
   
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: build docker image
+  vars:
+    name: "grafana"
+    image_name: "custom_grafana"
+    image_version: "{{grafana_version}}"
+    files:
+      - roles/grafana/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
     
 - name: connect grafana with databases
   docker_network:
@@ -79,7 +84,7 @@
 - name: create docker container
   docker_container:
     name: grafana
-    image: "grafana/grafana:{{grafana_version}}"
+    image: "custom_grafana:{{grafana_version}}"
     state: present
 #    network_mode: "host"
     user: "root:root"
@@ -100,7 +105,7 @@
     networks_cli_compatible: yes
     volumes:
       - '{{global_lib}}grafana:/var/lib/grafana:z'
-      - '{{global_lib}}grafana/provisioning:/etc/grafana/provisioning:z'
+      - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning:z'
     ports:
      - "127.0.0.1:3000:3000"
   notify: "restart grafana"
