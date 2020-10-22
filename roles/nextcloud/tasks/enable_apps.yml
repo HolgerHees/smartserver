@@ -8,6 +8,15 @@
 - name: check apache service
   import_tasks: roles/apache/tasks/wait_until_ready.yml
 
+# ***** DISABLE APPS *****
+- name: disable apps
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:disable {{item}}\""
+  register: command_result
+  changed_when: "'disabled' in command_result.stdout"
+#  failed_when: "'disabled' not in command_result.stdout and 'such app enabled' not in command_result.stdout"
+  with_items:
+    - dashboard
+
 # ***** INSTALL APPS *****
 - name: install apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
