@@ -88,7 +88,7 @@
     state: present
 #    network_mode: "host"
     user: "root:root"
-    recreate: true
+#    recreate: true
     env:
       GF_SERVER_DOMAIN: "{{server_domain}}"
 #      GF_SERVER_HTTP_ADDR: "127.0.0.1"
