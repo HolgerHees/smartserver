@@ -36,7 +36,9 @@ class Container:
         
     def addPort(self,hostIp,hostPort,exposedPort,protocol):
         key = hostIp + ':' + hostPort + ':' + exposedPort + ':' + protocol
-        self.exposedPorts[key] = {"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort, 'protocol': protocol}
+        
+        access = "local" if hostIp == "127.0.0.1" else "public"
+        self.exposedPorts[key] = {"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort, 'protocol': protocol, 'access': access}
 
 class Connection:
     def __init__(self,container,ip, veth):
@@ -241,29 +243,16 @@ for name in listen_port_map:
         
         connection = Connection(container,"","")
         network.addConnection(connection)
-        
-        #port = listen_port_map['httpd'][key]
-        #http_container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
-
-        #exposedPorts = []
-        #for key in listen_port_map[service]:
-        #    port = listen_port_map[service][key]
-        #    exposedPorts.append(port["port"]+"/"+port["protocol"])
-              
-        #portStr = ", ".join(exposedPorts)
-        #portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
-
-        #rows.append([2,"Service",service,"","","","","",portStr,False])
 
 # Prepare column values
-rows = [[0,"Type","Name","Network","","Interface","O","I","Port \033[0;32mLocal\033[0m \033[0;91mPublic\033[0m"]]
+rows = [[0,"Type","Name","Network","","Local \033[0;32mIntern\033[0m \033[0;91mExtern\033[0m","Interface"]]
 for network in sorted(network_r):
     network = network_r[network]
     
     #if len(network.connection_r) == 0:
     #    continue
     
-    rows.append([1,"Network",network.name,network.gateway,network.subnet,network.bridge,"O","I","\033[0;32;100mLocal \033[0m\033[0;91;100mPublic"])
+    rows.append([1,"Network",network.name,network.gateway,network.subnet,"Local \033[0;32;100mIntern \033[0m\033[0;91;100mExtern",network.bridge])
 
     key_r = list(network.connection_r.keys())
     key_r.sort(key=lambda item: socket.inet_aton(item.split("/")[0]) if re.match("[0-9]*\\.",item) else item, reverse=False)
@@ -271,44 +260,38 @@ for network in sorted(network_r):
         connection = network.connection_r[key]
         container = connection.container
 
-        exposedPorts = []
-        isLocal = False
+        exposedPorts = {}
         for key in container.exposedPorts:
             port = container.exposedPorts[key]
-            isLocal = port["hostIp"] == "127.0.0.1"
-            exposedPorts.append(port["hostPort"]+"/"+port["protocol"])
+            exposedPorts[port["hostPort"]] = {
+              "port": port["hostPort"]+"/"+port["protocol"],
+              "access": port["access"]
+            }
               
-        portStr = ", ".join(exposedPorts)
-        portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
+        #portStr = ", ".join(exposedPorts)
+        #portStr = (portStr[:75] + '..') if len(portStr) > 75 else portStr
         
-        sourceFW = []
-        targetFW = []
+        outgoingAllowed = False
         if network.name != 'host':
             for rule in chain_r['docker-user'].rule_r:
                 if rule['sourceIp'] == connection.ip:
-                    sourceFW.append("X")
-                if rule['targetIp'] == connection.ip:
-                    targetFW.append("X")
-                for key in container.exposedPorts:
-                    port = container.exposedPorts[key]
-                    if rule['targetPort'] == port["hostPort"]:
-                        targetFW.append("X")
+                    outgoingAllowed = True
+                allOpen = rule['targetIp'] == connection.ip
+                for key in exposedPorts:
+                    data = exposedPorts[key]
+                    if allOpen or rule['targetPort'] == port["hostPort"]:
+                        data["access"] = "extern"
         else:
             for rule in chain_r['input'].rule_r:
                 if rule['sourceIp'] == connection.ip:
-                    sourceFW.append("X")
-                if rule['targetIp'] == connection.ip:
-                    targetFW.append("X")
-                for key in container.exposedPorts:
-                    port = container.exposedPorts[key]
-                    if rule['targetPort'] == port["hostPort"]:
-                        targetFW.append("X")
+                    outgoingAllowed = True
+                allOpen = rule['targetIp'] == connection.ip
+                for key in exposedPorts:
+                    data = exposedPorts[key]
+                    if allOpen or rule['targetPort'] == port["hostPort"]:
+                        data["access"] = "extern"
 
-        sourceFW = ",".join(set(sourceFW))
-        targetFW = ",".join(set(targetFW))
-            #print(rule)
-
-        rows.append([2,container.type,container.name,connection.ip if connection.ip != "" else host_ip,"",connection.veth,sourceFW,targetFW,portStr,isLocal])
+        rows.append([2,container.type,container.name,connection.ip if connection.ip != "" else host_ip,"",exposedPorts,connection.veth,outgoingAllowed])
                 
 # Calculate column sizes
 columnLength = [0] * (len(rows[0]) + 1)
@@ -321,9 +304,9 @@ for i in range(1,len(columnLength)):
     columnLength[i] = columnLength[i] + 1
     
 colors = [
-    [0,"1;37m","1;37m","1;37m","1;37m","1;37m","1;37m","1;37m","1;37m"],
-    [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;30;46m","0;100m","0;100m","0;100m"],
-    [0,"0;37m","0;33m","1;35m","1;35m","0;36m","0;39m","0;39m","0;39m"]
+    [0,"1;37m","1;37m","1;37m","1;37m","1;37m","1;37m"],
+    [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;100m","0;30;46m"],
+    [0,"0;37m","0;33m","1;35m","1;35m","0;39m","0;36m"]
 ]
     
 # Visualize
@@ -334,15 +317,46 @@ for row in rows:
         print("")
     print("\033[{} {}\033[0m".format(colors[row[0]][1],row[1].ljust(columnLength[1])),end="")
     print("\033[{} {}\033[0m".format(colors[row[0]][2],row[2].ljust(columnLength[2])),end="")
-    print("\033[{} {} {}\033[0m".format(colors[row[0]][3],row[3].ljust(columnLength[3]),row[4].ljust(columnLength[4])),end="")
-    print("\033[{} {}\033[0m".format(colors[row[0]][5],row[5].ljust(columnLength[5])),end="")
-    print("\033[{} {}\033[0m".format(colors[row[0]][6],row[6].ljust(columnLength[6])),end="")
-    print("\033[{} {}\033[0m".format(colors[row[0]][7],row[7].ljust(columnLength[7])),end="")
+    print("\033[{} {}\033[0m".format(colors[row[0]][3],row[3].ljust(columnLength[3])),end="")
     
-    if row[0] == 2:
-        color = "0;32m" if row[9] else "0;91m"
+    if row[0] != 2:
+        print("\033[{} {}\033[0m".format(colors[row[0]][4],row[4].ljust(columnLength[4])),end="")
+    elif row[7]:
+        print("\033[0;91m {}\033[0m".format("OUTGOING".ljust(columnLength[4])),end="")
     else:
-        color = colors[row[0]][8]
-    print("\033[{} {}\033[0m".format(color,row[8].ljust(columnLength[8])),end="")
+        print("".ljust(columnLength[4]+1),end="")
+      
+    if row[0] == 0:
+        print("\033[{} {}\033[0m".format(colors[row[0]][5],row[5].ljust(50)),end="")
+    elif row[0] == 1:
+        print("\033[{} {}\033[0m".format(colors[row[0]][5],row[5].ljust(90)),end="")
+    else:
+        length = 0
+        port_str = []
+        cutted = False
+        for key in row[5]:
+            port = row[5][key]
+            if port["access"] == "local":
+                color = "0;37m"
+            elif port["access"] == "public":
+                color = "0;32m"
+            else:
+                color = "0;91m"
+            if len(port_str) > 4:
+                cutted = True
+                break
+            length += len(port["port"])
+            port_str.append("\033[{}{}\033[0m".format(color,port["port"]))
+            
+        length += (len(port_str) - 1) * 2
+        print(" " + (", ".join(port_str)),end="")
+        if cutted:
+            length += 4
+            print(" ...", end="")
+            
+        print(" ".ljust(64-length),end="")
+        
+    print("\033[{} {}\033[0m".format(colors[row[0]][6],row[6].ljust(columnLength[6])),end="")
+
     print("")
 print("")
