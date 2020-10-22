@@ -22,7 +22,6 @@
     - calendar
     - notes
     - tasks
-    - cookbook
     
 # ***** CONFIGURE user_saml *****
 - name: enable environment based authentication through user_saml app
