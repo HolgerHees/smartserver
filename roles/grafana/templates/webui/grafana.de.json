@@ -1,8 +1,10 @@
 {
+  "other_tools": {
+    "Grafana": "Grafana",
+    "Dashboards": "Dashboards"
+  },
   "other_states": {
     "Grafana": "Grafana",
-    "Server Logs": "Server Logs",
-    "Server Health": "Server Health",
-    "Dashboards": "Dashboards"
+    "Server Logs": "Server Logs"
   }
 }
