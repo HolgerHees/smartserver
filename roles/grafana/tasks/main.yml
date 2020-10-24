@@ -18,6 +18,7 @@
     - "{{ global_etc }}grafana/provisioning/dashboards/"
     - "{{ global_etc }}grafana/provisioning/datasources/"
     - "{{ global_etc }}grafana/provisioning/notifiers/"
+    - "{{ global_etc }}grafana/provisioning/plugins/"
 
 - name: copy shared grafana dashboards
   copy:

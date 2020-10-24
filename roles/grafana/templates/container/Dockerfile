@@ -1,7 +1,8 @@
 FROM grafana/grafana:{{image_version}}
 
 USER root
-RUN sed -i 's/;disable_total_stats.*/disable_total_stats = true/' /etc/grafana/grafana.ini
+RUN sed -i 's/;reporting_enabled.*/reporting_enabled = false/' /etc/grafana/grafana.ini && \
+    sed -i 's/;check_for_updates.*/check_for_updates = false/' /etc/grafana/grafana.ini
 
 USER grafana
 ENTRYPOINT [ "/run.sh" ]
