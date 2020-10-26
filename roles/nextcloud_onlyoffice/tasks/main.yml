@@ -15,10 +15,14 @@
     - "{{global_lib}}onlyoffice"
     - "{{global_etc}}onlyoffice"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: build docker image
+  vars:
+    name: "onlyoffice"
+    image_name: "custom_onlyoffice"
+    image_version: "{{onlyoffice_version}}"
+    files:
+      - roles/nextcloud_onlyoffice/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: connect onlyoffice with databases
   docker_network:
@@ -34,7 +38,7 @@
 - name: create docker container
   docker_container:
     name: onlyoffice
-    image: "onlyoffice/documentserver:{{onlyoffice_version}}"
+    image: "custom_onlyoffice:{{onlyoffice_version}}"
     state: present
 #    network_mode: "host"
 #    recreate: true
