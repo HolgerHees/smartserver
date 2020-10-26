@@ -56,5 +56,5 @@ cloud_vpn_endpoint_master:        "10.0.{{netgroup}}.1"
 cloud_vpn_endpoint_slave:         "10.0.{{netgroup}}.2"
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.12.0"
+alpine_version:                   "3.12.1"
 debian_version:                   "buster-20201012-slim"

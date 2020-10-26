@@ -9,7 +9,6 @@
         </serial>
         <net>
             <port>3002</port>
-            <allow ip='127.0.0.1'/>
         </net>
         <logging>
             <file>{{global_log}}vcontrold/vcontrold.log</file>
