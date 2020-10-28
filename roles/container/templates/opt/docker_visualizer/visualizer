@@ -274,13 +274,14 @@ for network in sorted(network_r):
         else:
             outgoing = []
             rule_r = chain_r['docker-user'].rule_r if network.name != 'host' else chain_r['input'].rule_r
+            
             for rule in rule_r:
                 if rule['sourceIp'] == connection.ip:
                     outgoing.append(rule)
                 allOpen = rule['targetIp'] == connection.ip
                 for key in exposedPorts:
                     data = exposedPorts[key]
-                    if allOpen or rule['targetPort'] == port["hostPort"]:
+                    if allOpen or rule['targetPort'] == key:
                         data["access"] = "extern"
 
         values = []

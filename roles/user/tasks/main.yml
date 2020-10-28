@@ -10,7 +10,7 @@
     groups: users
     append: no
   register: system_user_result
-  with_items: "{{vault_usernames}}"
+  with_items: "{{userdata}}"
   
 - name: prepare user folder
   file:
@@ -19,7 +19,7 @@
     owner: "{{item}}"
     group: users
     mode: 0750
-  with_items: "{{vault_usernames}}"
+  with_items: "{{userdata}}"
 
 # refresh samba container, otherwise changes on /etc/passwd are not visible inside the container
 - name: refresh samba
@@ -34,25 +34,25 @@
   changed_when: no
   
 - name: add user to samba
-  shell: "(echo '{{vault_userdata[item].samba_password}}'; echo '{{vault_userdata[item].samba_password}}';) | docker exec -i samba sh -c \"smbpasswd -s -a {{item}}\""
+  shell: "(echo '{{vault_userpasswords[item].samba_password}}'; echo '{{vault_userpasswords[item].samba_password}}';) | docker exec -i samba sh -c \"smbpasswd -s -a {{item}}\""
   #register: command_result
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "item not in samba_user_result.stdout"
-  with_items: "{{vault_usernames}}"
+  with_items: "{{userdata}}"
   #notify: "restart samba"
   
 - name: add user to apache .htpasswd
   vars:
     username: "{{item}}"
-    password: "{{vault_userdata[item].web_password}}"
+    password: "{{vault_userpasswords[item].web_password}}"
     group: "USER"
   include_tasks: roles/user/tasks/add_web_user.yml
-  with_items: "{{vault_usernames}}"
+  with_items: "{{userdata}}"
 
 - name: add user name to .htdata
   lineinfile:
     path: "{{htdocs_path}}.htdata"
-    regexp: '^{{item}}:{{vault_userdata[item].name}}'
-    line: '{{item}}:{{vault_userdata[item].name}}:{{vault_userdata[item].webui}}'
-  with_items: "{{vault_usernames}}"
+    regexp: '^{{item}}:{{userdata[item].name}}'
+    line: '{{item}}:{{userdata[item].name}}:{{userdata[item].webui}}'
+  with_items: "{{userdata}}"
 

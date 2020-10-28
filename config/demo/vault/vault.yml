@@ -4,15 +4,9 @@ vault_root_mail_password: "default123"
 vault_root_mail_host: "smtp.gmail.com"
 vault_root_mail_port: "587"
 
-vault_usernames: [
-    "testuser",
-    "testuser2"
-]
-
-# the parameter vpn_gates is optional and only needed if you want to have more then one wireguard config per user
-vault_userdata: {
-    testuser: { name: "Test User 1", email: "test1@test.de", samba_password: "test", web_password: "test", webui: "admin", vpn_gates: [ "phone", "tablet" ] },
-    testuser2: { name: "Test User 2", email: "test2@test.de", samba_password: "test", web_password: "test", webui: "user" }
+vault_userpasswords: {
+    testuser: { samba_password: "test", web_password: "test" },
+    testuser2: { samba_password: "test", web_password: "test" }
 }
 
 # selfsigned, letsencrypt
@@ -121,8 +115,6 @@ vault_telegram_bots: {
     }
 }
 vault_hue_user_id: "<userid>"
-vault_zwave_key: "<zwave_key>"
-vault_zwave_weatherstation_id: "<vault_zwave_weatherstation_id>"
 vault_homecontrol_client_id: "<vault_homecontrol_client_id>"
 vault_homecontrol_client_secret: "<vault_homecontrol_client_secret>"
 vault_homecontrol_washer: "<vault_homecontrol_washer>"

@@ -139,7 +139,7 @@
 #    capabilities:
 #      - NET_ADMIN
 #      - NET_RAW
-    recreate: true
+#    recreate: true
     env:
       TZ: "{{timezone}}"
       USER_ID: "{{openhab_uid}}"
@@ -317,6 +317,30 @@
     state: absent
   changed_when: no
 
+- name: prepare things config
+  fetch:
+    src: "{{projects_path}}openhab2/templates/things/{{item}}"
+    dest: "/tmp/ansible"
+  register: things_state
+  with_items: "{{things_result.stdout_lines}}"
+  changed_when: no
+
+- name: copy things configs
+  template:
+    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/things/{{item}}"
+    dest: "{{ global_etc }}openhab/conf/things/{{item}}"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_items: "{{things_result.stdout_lines}}"
+  notify: "restart openhab"
+  
+- name: clean configs
+  file:
+    path: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/"
+    state: absent
+  changed_when: no
+
 # JYTHON
 - name: check jython jar
   stat:
@@ -349,14 +373,24 @@
   notify: "restart openhab"
 
 - name: copy jython helper configuration
-  copy:
-    src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
+  template:
+    src: "templates/configuration.py"
     dest: "{{global_etc}}openhab/python/configuration.py"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
-  notify: "restart openhab"
+#  notify: "restart openhab"
+
+#- name: copy jython helper configuration
+#  copy:
+#    src: "{{global_build}}openhab-jython/Core/automation/lib/python/configuration.py.example"
+#    dest: "{{global_etc}}openhab/python/configuration.py"
+#    remote_src: yes
+#    owner: "{{openhab_user}}"
+#    group: "{{openhab_group}}"
+#    mode: 0640
+#  notify: "restart openhab"
  
 - name: check udev folder
   shell: "ls -1 {{projects_path}}openhab2/templates/udev/rules.d/"

@@ -126,16 +126,16 @@
 
 - name: backup old user folder => database does not exists
   command: "mv {{nextcloud_data_path}}{{item}}/ {{nextcloud_data_path}}{{item}}-{{lookup('pipe', 'date +%Y%m%d-%H%M')}}/"
-  with_items: "{{vault_usernames}}"
+  with_items: "{{userdata}}"
   failed_when: no
   changed_when: no
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: add user => database does not exists
-  shell: "docker exec php sh -c \"export OC_PASS={{vault_userdata[item].web_password}}; php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
-  with_items: "{{vault_usernames}}"
+  with_items: "{{userdata}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
