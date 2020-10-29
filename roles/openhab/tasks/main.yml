@@ -41,21 +41,21 @@
     - "{{global_lib}}openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
-#- name: clone config git
-#  git:
-#    accept_hostkey: yes
-#    repo: '{{vault_openhab_config_git}}'
-#    dest: '{{projects_path}}openhab2'
-#    version: "master"
-#  register: openhab_config_git
+- name: clone config git
+  git:
+    accept_hostkey: yes
+    repo: '{{vault_openhab_config_git}}'
+    dest: '{{projects_path}}openhab2'
+    version: "master"
+  register: openhab_config_git
   
-#- name: ensure that right owner is assigned => openhab_config_git changed
-#  file:
-#    path: "{{projects_path}}openhab2"
-#    owner: "{{openhab_user}}"
-#    group: "{{openhab_group}}"
-#    recurse: yes
-#  when: "openhab_config_git.changed"
+- name: ensure that right owner is assigned => openhab_config_git changed
+  file:
+    path: "{{projects_path}}openhab2"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    recurse: yes
+  when: "openhab_config_git.changed"
 
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
@@ -362,7 +362,7 @@
     dest: '{{global_build}}openhab-jython'
     version: '{{jython_script_version}}'
 
-- name: copy jython helper classes
+- name: copy jython core classes
   copy:
     src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
     dest: "{{global_etc}}openhab/python/"
@@ -372,15 +372,23 @@
     mode: 0750
   notify: "restart openhab"
 
-- name: copy jython helper configuration
-  template:
-    src: "templates/configuration.py"
-    dest: "{{global_etc}}openhab/python/configuration.py"
-    remote_src: yes
+- name: copy jython shared classes
+  copy:
+    src: "templates/helper"
+    dest: "{{global_etc}}openhab/python"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
-#  notify: "restart openhab"
+  notify: "restart openhab"
+
+- name: copy jython configuration
+  template:
+    src: "templates/configuration.py"
+    dest: "{{global_etc}}openhab/python/configuration.py"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  notify: "restart openhab"
 
 #- name: copy jython helper configuration
 #  copy:
