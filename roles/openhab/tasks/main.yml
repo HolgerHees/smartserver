@@ -374,7 +374,7 @@
 
 - name: copy jython shared classes
   copy:
-    src: "templates/helper"
+    src: "templates/shared"
     dest: "{{global_etc}}openhab/python"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
