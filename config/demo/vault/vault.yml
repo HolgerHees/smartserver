@@ -5,7 +5,7 @@ vault_root_mail_host: "smtp.gmail.com"
 vault_root_mail_port: "587"
 
 vault_userpasswords: {
-    testuser: { samba_password: "test", web_password: "test" },
+    testuser1: { samba_password: "test", web_password: "test" },
     testuser2: { samba_password: "test", web_password: "test" }
 }
 
