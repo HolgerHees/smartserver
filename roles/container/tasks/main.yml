@@ -206,6 +206,7 @@
         gateway: "{{docker_base_gateway}}"
     ipam_driver_options:
       "com.docker.network.bridge.enable_icc": "false"
+#    appends: yes
 
 # ***** FINALIZE *****
 - name: register systemd service watcher

@@ -8,6 +8,7 @@
     owner: root
     group: root
     mode: 0644
+  register: "firewall_allow_service_result"
   tags: [ 'firewall_config' ]
   notify: "restart ferm"
 

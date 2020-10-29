@@ -74,6 +74,7 @@
   systemd:
     name: ferm
     state: restarted
+  when: "firewall_allow_service_result.changed"
 
 - name: register service watcher
   vars:

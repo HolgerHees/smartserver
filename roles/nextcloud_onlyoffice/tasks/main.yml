@@ -33,6 +33,7 @@
     connected:
       - mysql
       - redis
+    appends: yes
   tags: ['mysql','redis']
   
 - name: create docker container
