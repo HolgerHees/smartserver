@@ -105,11 +105,11 @@ vault_roomba_blid: "<blid>"
 vault_fritzbox_username: "openhab"
 vault_fritzbox_password: "default123"
 vault_telegram_bots: {
-    bot1: { # for user1
+    bot_testuser1: { # for user1
         chat_id: "<chat_id>",
         chat_token: "<chat_token>"
     },
-    bot2: { # for user2
+    bot_testuser2: { # for user2
         chat_id: "<chat_id>",
         chat_token: "<chat_token>"
     }

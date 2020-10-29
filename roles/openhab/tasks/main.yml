@@ -41,21 +41,21 @@
     - "{{global_lib}}openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
-- name: clone config git
-  git:
-    accept_hostkey: yes
-    repo: '{{vault_openhab_config_git}}'
-    dest: '{{projects_path}}openhab2'
-    version: "master"
-  register: openhab_config_git
+#- name: clone config git
+#  git:
+#    accept_hostkey: yes
+#    repo: '{{vault_openhab_config_git}}'
+#    dest: '{{projects_path}}openhab2'
+#    version: "master"
+#  register: openhab_config_git
   
-- name: ensure that right owner is assigned => openhab_config_git changed
-  file:
-    path: "{{projects_path}}openhab2"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    recurse: yes
-  when: "openhab_config_git.changed"
+#- name: ensure that right owner is assigned => openhab_config_git changed
+#  file:
+#    path: "{{projects_path}}openhab2"
+#    owner: "{{openhab_user}}"
+#    group: "{{openhab_group}}"
+#    recurse: yes
+#  when: "openhab_config_git.changed"
 
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
