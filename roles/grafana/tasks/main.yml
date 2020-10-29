@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    grafana_version: '7.2.2'
+    grafana_version: '7.3.0'
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder
@@ -139,7 +139,7 @@
   vars:
     name: "grafana"
     type: "docker"
-    url: "https://grafana.com/docs/grafana/latest/guides/whats-new-in-v6-6/"
+    url: "https://grafana.com/docs/grafana/latest/whatsnew/"
     config: {
       repository: "grafana/grafana",
       pattern: "^([0-9\\.]+)$"

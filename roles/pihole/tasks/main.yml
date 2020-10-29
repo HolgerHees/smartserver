@@ -19,7 +19,7 @@
     name: docker
     state: started
 
-- name: create macvlan networks
+- name: create pihole network
   docker_network:
     name: 'pihole'
     driver: macvlan
