@@ -19,12 +19,17 @@
     name: docker
     state: started
 
+- name: detect main network device
+  shell: "ip a | grep -P \"inet {{server_ip}}\" | grep -Po \"[a-z0-9]*$\""
+  register: "main_device_result"
+  changed_when: False
+  
 - name: create macvlan networks
   docker_network:
     name: 'pihole'
     driver: macvlan
     driver_options:
-      parent: 'eth0'
+      parent: '{{main_device_result.stdout}}'
     ipam_config:
       - subnet: '{{server_network}}/24'
         gateway: '{{server_gateway}}'
