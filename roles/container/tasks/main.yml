@@ -116,10 +116,11 @@
     mode: 0700
 
 #### PODMAN ####
-- name: install roles from ansible galaxy
-  local_action: command ansible-galaxy collection install containers.podman
-  register: ag_result
-  changed_when: "'Installing' in ag_result.stdout"
+# !!!!remote deployment does not work
+#- name: install roles from ansible galaxy
+#  local_action: command ansible-galaxy collection install containers.podman
+#  register: ag_result
+#  changed_when: "'Installing' in ag_result.stdout"
     
 - name: prepare needed folder
   file:
