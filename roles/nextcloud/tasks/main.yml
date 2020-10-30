@@ -162,12 +162,6 @@
   changed_when: False
   when: "'nextcloud' in mysql_data_exists.stdout"
   
-  #export OC_PASS=newpassword
-#su -s /bin/sh www-data -c 'php occ user:resetpassword --password-from-env
-#layla'
-#Successfully reset password for layla
-
-  
 - name: enable cron as background job handler => database does not exists
   shell: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
