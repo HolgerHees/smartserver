@@ -2,8 +2,8 @@
 - name: set version
   set_fact:
     nextcloud_version: '20.0.1'
-  tags: [ 'update_notifier_configs' ]
-  
+  tags: [ 'update_notifier_configs', 'user' ]
+
 # ***** PREPARE FOLDER *****
 - name: prepare needed folder
   file:
@@ -73,7 +73,8 @@
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
   register: mysql_data_exists
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
-
+  tags: [ 'user' ]
+  
 - name: create missing mysql databases => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
@@ -131,13 +132,42 @@
   changed_when: no
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
-- name: add user => database does not exists
+- name: check for existing users
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:list\" | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
+  register: nextcloud_user_result
+  changed_when: False
+  #when: "'nextcloud' not in mysql_data_exists.stdout"
+  tags: [ 'user' ]
+  
+- name: add new user
   shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
-  with_items: "{{userdata}}"
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  with_items: "{{userdata | difference(nextcloud_user_result.stdout_lines)}}"
+  tags: [ 'user' ]
 
+- name: update existing user
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:resetpassword --password-from-env {{item}}\""
+  register: result
+  failed_when: "'Successfully reset password for' not in result.stdout"
+  changed_when: False
+  with_items: "{{userdata | intersect(nextcloud_user_result.stdout_lines)}}"
+  #when: "'nextcloud' not in mysql_data_exists.stdout"
+  tags: [ 'user' ]
+
+- name: update admin user
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_nextcloud_admin_password}}; php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:resetpassword --password-from-env {{vault_nextcloud_admin_username}}\""
+  register: result
+  failed_when: "'Successfully reset password for' not in result.stdout"
+  changed_when: False
+  when: "'nextcloud' in mysql_data_exists.stdout"
+  
+  #export OC_PASS=newpassword
+#su -s /bin/sh www-data -c 'php occ user:resetpassword --password-from-env
+#layla'
+#Successfully reset password for layla
+
+  
 - name: enable cron as background job handler => database does not exists
   shell: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
