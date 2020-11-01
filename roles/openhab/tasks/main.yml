@@ -191,8 +191,6 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
   with_items:
-    #- start.sh
-    #- addons
     - python/custom
   notify: "restart openhab"
 
