@@ -35,27 +35,28 @@
   with_items:
     - "{{global_etc}}openhab"
     - "{{global_etc}}openhab/conf"
+    - "{{global_etc}}openhab/conf/html"
     - "{{global_etc}}openhab/runtime/lib/python"
     - "{{global_etc}}openhab/python"
     - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
 
 # ****** GITHUB CONFIG PROJECT ******
-- name: clone config git
-  git:
-    accept_hostkey: yes
-    repo: '{{vault_openhab_config_git}}'
-    dest: '{{projects_path}}openhab2'
-    version: "master"
-  register: openhab_config_git
-  
-- name: ensure that right owner is assigned => openhab_config_git changed
-  file:
-    path: "{{projects_path}}openhab2"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    recurse: yes
-  when: "openhab_config_git.changed"
+#- name: clone config git
+#  git:
+#    accept_hostkey: yes
+#    repo: '{{vault_openhab_config_git}}'
+#    dest: '{{projects_path}}openhab2'
+#    version: "master"
+#  register: openhab_config_git
+#  
+#- name: ensure that right owner is assigned => openhab_config_git changed
+#  file:
+#    path: "{{projects_path}}openhab2"
+#    owner: "{{openhab_user}}"
+#    group: "{{openhab_group}}"
+#    recurse: yes
+#  when: "openhab_config_git.changed"
 
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
@@ -194,7 +195,7 @@
     - python/custom
   notify: "restart openhab"
 
-- name: check config folder
+- name: check conf folder
   shell: "ls -1 {{projects_path}}openhab2/conf/"
   register: config_result
   changed_when: no
@@ -207,8 +208,33 @@
     follow: no
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
-  with_items: "{{config_result.stdout_lines}}"
+  with_items: "{{config_result.stdout_lines | difference(['html'])}}"
   notify: "restart openhab"
+
+- name: check custom html conf folder
+  shell: "ls -1 {{projects_path}}openhab2/conf/html/"
+  register: config_html_result
+  changed_when: no
+  when: "'html' in config_result.stdout_lines"
+
+- name: link custom html conf folder
+  file:
+    src: "{{projects_path}}openhab2/conf/html/{{item}}"
+    dest: "{{global_etc}}openhab/conf/html/{{item}}"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+  with_items: "{{config_html_result.stdout_lines}}"
+  notify: "restart openhab"
+
+- name: copy shared html config
+  copy:
+    src: "templates/conf/html/shared"
+    dest: "{{global_etc}}openhab/conf/html/"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
 
 - name: prepare missing config folder
   file:
@@ -372,7 +398,7 @@
 
 - name: copy jython shared classes
   copy:
-    src: "templates/shared"
+    src: "templates/python/shared"
     dest: "{{global_etc}}openhab/python"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
@@ -381,7 +407,7 @@
 
 - name: copy jython configuration
   template:
-    src: "templates/configuration.py"
+    src: "templates/python/configuration.py"
     dest: "{{global_etc}}openhab/python/configuration.py"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
