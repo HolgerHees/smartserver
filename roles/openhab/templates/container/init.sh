@@ -9,8 +9,10 @@ if ! grep -q "log4j2.logger.jsr223Script" /openhab/userdata/etc/org.ops4j.pax.lo
     echo "log4j2.logger.jsr223Trigger.level = ERROR" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
 fi 
 
-mkdir -p /openhab/userdata/config/org/openhab/
+if test -f "/openhab/conf/habpanel.config"; then
+    mkdir -p /openhab/userdata/config/org/openhab/
 
-ln -sf /openhab/conf/habpanel.config /openhab/userdata/config/org/openhab/habpanel.config
+    ln -sf /openhab/conf/habpanel.config /openhab/userdata/config/org/openhab/habpanel.config
 
-chown -R openhab:openhab /openhab/userdata/
+    chown -R openhab:openhab /openhab/userdata/
+fi
