@@ -241,9 +241,10 @@
     
 # habpanel if exists
 - name: check habpanel config
-  shell: "ls -1 {{projects_path}}openhab2/habpanel.config"
+  shell: "ls {{projects_path}}openhab2/habpanel.config"
   register: habpanel_result
   changed_when: no
+  failed_when: no
    
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
