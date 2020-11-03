@@ -17,7 +17,7 @@
     SessionMaxAge 0
 
     <RequireAny>
-        Require group USER
+        Require group user
         Require ip {{ authenticated_ip_addresses | join(' ') }}
         Require ip 172.0.0.0/8
         Require local

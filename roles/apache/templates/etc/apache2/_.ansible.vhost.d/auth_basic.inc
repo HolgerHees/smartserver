@@ -4,7 +4,7 @@
     AuthUserFile    {{htdocs_path}}.htpasswd
     AuthGroupFile   {{htdocs_path}}.htgroups
 
-    Require group USER
+    Require group user
 
     RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_USER}]
 </Location>
