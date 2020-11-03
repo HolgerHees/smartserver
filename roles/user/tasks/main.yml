@@ -53,6 +53,6 @@
   lineinfile:
     path: "{{htdocs_path}}.htdata"
     regexp: '^{{item}}:{{userdata[item].name}}'
-    line: '{{item}}:{{userdata[item].name}}:{{userdata[item].webui}}'
+    line: '{{item}}:{{userdata[item].name}}:{{userdata[item].groups | join(",")}}'
   with_items: "{{userdata}}"
 

@@ -25,7 +25,7 @@
                 if( trim($_username) == $name )
                 {
                     $name = trim($_name);
-                    $uilevel = trim($_uilevel);
+                    $uilevel = strpos($_uilevel,"admin") !== -1 ? "admin" : "user";
                     break;
                 }
             }

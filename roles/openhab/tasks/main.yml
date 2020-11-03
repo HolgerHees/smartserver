@@ -486,7 +486,7 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
-- name: register webui
+- name: register default webui
   vars:
     name: "openhab"
     js_file: "templates/webui/openhab.js"
@@ -494,6 +494,14 @@
     listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
     icons: [ 'templates/webui/icons/openhab_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: register habpanel webui
+  vars:
+    name: "openhab_habpanel"
+    js_file: "templates/webui/openhab_habpanel.js"
+    i18n_files: [ { language: "de", file: "templates/webui/openhab_habpanel.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  when: "habpanel_result.rc == 0"
 
 - name: copy apache vhost
   vars:
