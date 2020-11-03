@@ -59,7 +59,7 @@
   when: "openhab_config_git.changed"
 
 - name: collect devices
-  shell: "grep -P  \"^[^#]+$\" /dataRaid/projects/openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
+  shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
   changed_when: no
   failed_when: no
