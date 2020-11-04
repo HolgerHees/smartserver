@@ -7,7 +7,7 @@
     AuthName "Authentication required"
 
     AuthFormProvider file
-    AuthUserFile    {{htdocs_path}}.htpasswd
+    AuthUserFile    {{htdocs_path}}secret/.htpasswd
 
     Session On
     SessionCryptoPassphrase {{vault_form_auth_passphrase}}

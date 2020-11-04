@@ -90,6 +90,14 @@
     - "{{htdocs_path}}fallback/domain"
     - "{{global_log}}apache2/"
 
+- name: prepare secret folder
+  file:
+    path: "{{htdocs_path}}secret"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+
 - name: check owner and group
   file:
     path: "{{item}}"
@@ -207,7 +215,7 @@
 - name: prepare .htpasswd file
   copy:
     content: ""
-    dest: "{{htdocs_path}}.htpasswd"
+    dest: "{{htdocs_path}}secret/.htpasswd"
     force: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
@@ -216,7 +224,7 @@
 - name: prepare .htdata file
   copy:
     content: ""
-    dest: "{{htdocs_path}}.htdata"
+    dest: "{{htdocs_path}}secret/.htdata"
     force: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"

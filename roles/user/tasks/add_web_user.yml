@@ -1,12 +1,12 @@
 - name: add user "{{username}}" to apache .htpasswd
   htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
+    path: "{{htdocs_path}}secret/.htpasswd"
     name: "{{username}}"
     password: "{{password}}"
 
 - name: add user "{{username}}" to apache .htdata
   lineinfile:
-    path: "{{htdocs_path}}.htdata"
+    path: "{{htdocs_path}}secret/.htdata"
     regexp: '^{{username}}:'
     line: '{{username}}:{{fullname | default(username)}}:{{usergroups | join(",")}}'
   when: "usergroups is defined"
