@@ -18,7 +18,7 @@
 <?php
         $name = $_SERVER['REMOTE_USERNAME'];
         $groups = [];
-        $handle = fopen(".htdata", "r");
+        $handle = fopen("./secret/.htdata", "r");
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
                 list($_username,$_name,$_groups) = explode(":", $line);
