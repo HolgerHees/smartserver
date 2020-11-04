@@ -56,15 +56,6 @@
   command: "mv {{global_tmp}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: not nextcloud_version_exists.stat.exists
 
-- name: copy patch
-  template:
-    src: "templates/patches_19.x/Internal.php"
-    dest: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/lib/private/Session/Internal.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  when: "nextcloud_version == '19.0.0'"
-
 # ***** DATABASE *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
