@@ -114,9 +114,8 @@
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
     - _.ansible.conf.d/ssl.conf
-    - _.ansible.vhost.d/auth_basic.inc
-    - _.ansible.vhost.d/auth_form1.inc
     - _.ansible.vhost.d/auth_form2.inc
+    - _.ansible.vhost.d/auth_openidc2.inc
     - _.ansible.vhost.d/default-ssl.conf
     - _.ansible.server.conf
     - _.ansible.httpd.conf
@@ -132,8 +131,9 @@
   vars:
     enable_stapeling: "{{vault_ssl_certificate != 'selfsigned'}}"
   with_items:
+    - _.ansible.vhost.d/auth_basic.inc
+    - _.ansible.vhost.d/auth_form1.inc
     - _.ansible.vhost.d/auth_openidc1.inc
-    - _.ansible.vhost.d/auth_openidc2.inc
     - _.ansible.vhost.d/auth_openidc_users.txt
   notify: "restart apache2"
   tags: ['user']
@@ -208,15 +208,6 @@
   copy:
     content: ""
     dest: "{{htdocs_path}}.htpasswd"
-    force: no
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-
-- name: prepare .htgroups file
-  copy:
-    content: ""
-    dest: "{{htdocs_path}}.htgroups"
     force: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"

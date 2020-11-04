@@ -8,7 +8,6 @@
 
     AuthFormProvider file
     AuthUserFile    {{htdocs_path}}.htpasswd
-    AuthGroupFile   {{htdocs_path}}.htgroups
 
     Session On
     SessionCryptoPassphrase {{vault_form_auth_passphrase}}
@@ -17,7 +16,10 @@
     SessionMaxAge 0
 
     <RequireAny>
-        Require group user
+        Require user {{vault_nextcloud_admin_username}}
+{% for username in userdata %}
+        Require user {{username}}
+{% endfor %}
         Require ip {{ authenticated_ip_addresses | join(' ') }}
         Require ip 172.0.0.0/8
         Require local

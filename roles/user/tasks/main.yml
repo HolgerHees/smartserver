@@ -41,18 +41,12 @@
   with_items: "{{userdata}}"
   #notify: "restart samba"
   
-- name: add user to apache .htpasswd
+- name: add user to apache
   vars:
     username: "{{item}}"
     password: "{{vault_userpasswords[item].web_password}}"
+    fullname: "{{userdata[item].name}}"
     usergroups: "{{userdata[item].groups}}"
   include_tasks: roles/user/tasks/add_web_user.yml
-  with_items: "{{userdata}}"
-
-- name: add user name to .htdata
-  lineinfile:
-    path: "{{htdocs_path}}.htdata"
-    regexp: '^{{item}}:{{userdata[item].name}}'
-    line: '{{item}}:{{userdata[item].name}}:{{userdata[item].groups | join(",")}}'
   with_items: "{{userdata}}"
 
