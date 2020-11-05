@@ -47,7 +47,7 @@
     networks:
       - name: "base"
     networks_cli_compatible: yes
-    ports:
+    published_ports: # needed for netdata
      - "127.0.0.1:8086:8086"  
      - "127.0.0.1:4242:4242"  
   notify: "restart influxdb"

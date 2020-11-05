@@ -53,7 +53,7 @@
     networks:
       - name: "base"
     networks_cli_compatible: yes
-    ports:
+    published_ports: # needed for fluentd
      - "127.0.0.1:3100:3100"
   notify: "restart loki"
       

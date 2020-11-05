@@ -25,6 +25,7 @@ class Network:
     def addConnection(self,connection):
         key = connection.ip if connection.ip != "" else connection.container.type + ' ' + connection.container.name
         self.connection_r[key] = connection
+        connection.container.networks[self.id] = network
 
 class Container:
     def __init__(self,type,name,sandboxKey,interfaceResult):
@@ -33,12 +34,19 @@ class Container:
         self.sandboxKey = sandboxKey
         self.interfaceResult = interfaceResult
         self.exposedPorts = {}
+        self.publishedPorts = {}
+        self.networks = {}
         
-    def addPort(self,hostIp,hostPort,exposedPort,protocol):
+    def addExposedPort(self,exposedPort,protocol):
+        key = exposedPort + ':' + protocol
+        
+        self.exposedPorts[key] = {"port": exposedPort, 'protocol': protocol}
+
+    def addPublishedPort(self,hostIp,hostPort,exposedPort,protocol):
         key = hostIp + ':' + hostPort + ':' + exposedPort + ':' + protocol
         
         access = "local" if hostIp == "127.0.0.1" else "intern"
-        self.exposedPorts[key] = {"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort, 'protocol': protocol, 'access': access}
+        self.publishedPorts[key] = {"hostIp": hostIp, "hostPort": hostPort, "exposedPort": exposedPort, 'protocol': protocol, 'access': access}
 
 class Connection:
     def __init__(self,container,ip, veth):
@@ -51,8 +59,8 @@ class Chain:
         self.name = name
         self.rule_r = []
 
-    def addRule(self,sourceIp,targetIp,targetPort):
-        self.rule_r.append({"sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort})
+    def addRule(self,sourceIp,targetIp,targetPort,raw):
+        self.rule_r.append({"sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort, "raw": raw })
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
@@ -112,13 +120,19 @@ for rule in iptables_rules:
         current_chain = Chain(rule_r[1].lower())
         chain_r[current_chain.name] = current_chain
     else:
+        if rule_r[2] != "ACCEPT" or rule_r[5] == "lo":
+            continue
+        #print(rule_r)
         source_ip = rule_r[7]
         target_ip = rule_r[8]
         target_port = ""
-        if len(rule_r) > 10 and rule_r[10].startswith("dpt:"):
-            target_port = rule_r[10][4:]
+        if len(rule_r) > 10:
+            if rule_r[10].startswith("dpt:"):
+                target_port = rule_r[10][4:]
+            else:
+                continue
         
-        current_chain.addRule(source_ip,target_ip,target_port)
+        current_chain.addRule(source_ip,target_ip,target_port,rule_r)
         #print(source_ip + ' => ' + target_ip + ' ' + target_port)
             
         #chain_r[current_chain].append()
@@ -181,20 +195,36 @@ for name in network_r:
             container = Container("Container",name,sandboxKey,interfaceResult.stdout.decode("utf-8").strip())
             container_r[name] = container
             
+            portBindings = container_json['Config']['ExposedPorts']
+            if portBindings != None:
+                for exposedPortKey in portBindings:
+                    exposedPort,protocol = exposedPortKey.split("/")
+                    container.addExposedPort(exposedPort,protocol)
+                    #if network.name == 'host':
+                    #    container.addPublishedPort("0.0.0.0",exposedPort,exposedPort,protocol)
+            
             portBindings = container_json['HostConfig']['PortBindings']
             if portBindings != None:
                 for exposedPortKey in portBindings:
                     exposedPort,protocol = exposedPortKey.split("/")
-                    hostIp = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostIp']
-                    hostPort = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostPort']
-                    container.addPort(hostIp,hostPort,exposedPort,protocol)
-            else:
-                portBindings = container_json['Config']['ExposedPorts']
-                #print(portBindings)
-                if portBindings != None:
-                    for exposedPortKey in portBindings:
-                        exposedPort,protocol = exposedPortKey.split("/")
-                        container.addPort("0.0.0.0",exposedPort,exposedPort,protocol)
+                    hostIp = portBindings[exposedPortKey][0]['HostIp']
+                    hostPort = portBindings[exposedPortKey][0]['HostPort']
+                    container.addPublishedPort(hostIp,hostPort,exposedPort,protocol)
+
+            #portBindings = container_json['HostConfig']['PortBindings']
+            #if portBindings != None:
+            #    for exposedPortKey in portBindings:
+            #        exposedPort,protocol = exposedPortKey.split("/")
+            #        hostIp = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostIp']
+            #        hostPort = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostPort']
+            #        container.addPort(hostIp,hostPort,exposedPort,protocol)
+            #else:
+            #    portBindings = container_json['Config']['ExposedPorts']
+            #    #print(portBindings)
+            #    if portBindings != None:
+            #        for exposedPortKey in portBindings:
+            #            exposedPort,protocol = exposedPortKey.split("/")
+            #            container.addPort("0.0.0.0",exposedPort,exposedPort,protocol)
         
         veth = ""
         if network.name != 'host':
@@ -222,31 +252,53 @@ for name in network_r:
         
         network.addConnection(connection)
         
+for name in container_r:
+    container = container_r[name]
+    if len(container.publishedPorts)==0:
+        continue
+      
+    if len(container.networks) == 1 and list(container.networks.values())[0].driver == "macvlan":
+        continue
+
+    network = network_r['host']
+        
+    #container = Container("Published",name,"","")
+    #container_r[name] = container
+    
+    #for key in container.publishedPorts:
+    #    port = container.publishedPorts[key]
+    #    container.addPort(port['hostIp'],port['port'],port['port'],port['protocol'])
+    
+    connection = Connection(container,"","forwarded")
+    network.addConnection(connection)
+
+
 # Add missing dynamic (not exposed) ports
 http_container = container_r['apache2']
 for key in listen_port_map['httpd']:
     port = listen_port_map['httpd'][key]
-    http_container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+    http_container.addExposedPort(port['port'],port['protocol'])
+    #http_container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
 
 # Add Services
-for name in listen_port_map:
-    ports = listen_port_map[name]
-    if name == 'httpd':
-        for key in ports:
-            port = ports[key]
-            http_container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
-    else:
-        network = network_r['host']
+#for name in listen_port_map:
+#    ports = listen_port_map[name]
+#    if name == 'httpd':
+#        for key in ports:
+#            port = ports[key]
+#            http_container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+#    else:
+#        network = network_r['host']
         
-        container = Container("Service",name,"","")
-        container_r[name] = container
+#        container = Container("Service",name,"","")
+#        container_r[name] = container
         
-        for key in ports:
-            port = ports[key]
-            container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+#        for key in ports:
+#            port = ports[key]
+#            container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
         
-        connection = Connection(container,"","")
-        network.addConnection(connection)
+#        connection = Connection(container,"","")
+#        network.addConnection(connection)
 
 # Prepare column values
 rows = [[0,"Type","Name","Network","Subnet / Outgoing allowed","\033[1;37mPorts / Incomming (\033[0;37mlocal\033[0m\033[1;37m, \033[0;32mintern\033[0m\033[1;37m, \033[0;91mextern\033[0m\033[1;37m) traffic allowed\033[0m","Interface"]]
@@ -261,26 +313,40 @@ for network in sorted(network_r):
         connection = network.connection_r[key]
         container = connection.container
 
+        publishedPorts = {}
         exposedPorts = {}
-        for key in container.exposedPorts:
-            port = container.exposedPorts[key]
-            exposedPorts[port["hostPort"]] = {
-              "port": port["hostPort"]+"/"+port["protocol"],
-              "access": port["access"]
-            }
+        if network.name == 'host' and len(container.publishedPorts) > 0:
+            for key in container.publishedPorts:
+                port = container.publishedPorts[key]
+                publishedPorts[port["hostPort"]] = {
+                  "port": port["hostPort"]+"/"+port["protocol"],
+                  "access": port["access"]
+                }
+        else:
+            for key in container.exposedPorts:
+                port = container.exposedPorts[key]
+                exposedPorts[port["port"]] = {
+                  "port": port["port"]+"/"+port["protocol"],
+                  "access": "intern" if network.driver == "macvlan" else "local"
+                }
+            
               
         if network.driver == "macvlan":
             outgoing = [{"sourceIp": connection.ip, "targetIp": "0.0.0.0/0", "targetPort": ""}]
         else:
             outgoing = []
-            rule_r = chain_r['docker-user'].rule_r if network.name != 'host' else chain_r['input'].rule_r
-            
+            isHostOnly = network.name == 'host' and connection.veth != "forwarded"
+            rule_r = chain_r['input'].rule_r if isHostOnly else chain_r['docker-user'].rule_r
             for rule in rule_r:
                 if rule['sourceIp'] == connection.ip:
                     outgoing.append(rule)
                 allOpen = rule['targetIp'] == connection.ip
-                for key in exposedPorts:
-                    data = exposedPorts[key]
+                #print(chain_r['input'].rule_r)
+                #or rule['targetIp'] == "0.0.0.0/0" or (rule['targetIp'] == hostIp and connection.ip == ""))
+                #if allOpen:
+                relevantPorts = (exposedPorts if isHostOnly else publishedPorts)
+                for key in relevantPorts:
+                    data = relevantPorts[key]
                     if allOpen or rule['targetPort'] == key:
                         data["access"] = "extern"
 
@@ -289,7 +355,8 @@ for network in sorted(network_r):
             values.append(rule['targetIp'])
         outgoingValue = ", ".join(values)
 
-        rows.append([2,container.type,container.name,connection.ip if connection.ip != "" else host_ip,"",exposedPorts,connection.veth,outgoingValue])
+        ports = publishedPorts if len(publishedPorts)>0 else exposedPorts
+        rows.append([2,container.type,container.name,connection.ip if connection.ip != "" else host_ip,"",ports,connection.veth,outgoingValue])
                 
 # Calculate column sizes
 columnLength = [0] * (len(rows[0]) + 1)
@@ -342,13 +409,14 @@ for row in rows:
                 break
             length += _length
             values.append(value)
-        value = " " + ", ".join(values) + " "
         
+        value = " " + ", ".join(values) + " "
         if len(row[5]) > len(values):
             value += "... "
             length += 4
             
         print(value + "".ljust(65-length),end="")
+        #print(value,end="")
         
     print("\033[{} {}\033[0m".format(colors[row[0]][6],row[6].ljust(columnLength[6])),end="")
 

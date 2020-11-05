@@ -23,8 +23,8 @@
     networks:
       - name: "base"
     networks_cli_compatible: yes
-    ports:
-     - "127.0.0.1:6379:6379"
+    exposed_ports:
+     - "6379"
   notify: "restart redis"
 
 #- name: clean old docker images => image does not exists

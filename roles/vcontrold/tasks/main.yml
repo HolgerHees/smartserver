@@ -55,8 +55,8 @@
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
     devices:
       - "/dev/ttyOpenHabHeizung:/dev/ttyOpenHabHeizung:rwm"
-    ports:
-      - "127.0.0.1:3002:3002/tcp"
+    exposed_ports:
+      - "3002"
   notify: "restart vcontrold"
 
 - name: set logrotate job
