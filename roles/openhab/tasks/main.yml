@@ -551,28 +551,28 @@
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
-- name: prepare needed opt folder
-  file:
-    path:  "/opt/openhab"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 0750
+#- name: prepare needed opt folder
+#  file:
+#    path:  "/opt/openhab"
+#    state: directory
+#    owner: "root"
+#    group: "root"
+#    mode: 0750
 
 # needed to allow arping from inside container
-- name: copy systemd container_pre_init binary
-  copy:
-    src: "templates/opt/container_pre_init"
-    dest: "/opt/openhab/"
-    owner: "root"
-    group: "root"
-    mode: 0750
+#- name: copy systemd container_pre_init binary
+#  copy:
+#    src: "templates/opt/container_pre_init"
+#    dest: "/opt/openhab/"
+#    owner: "root"
+#    group: "root"
+#    mode: 0750
     
 - name: create systemd service
   vars:
     container_name: "openhab"
     container_after: [ "mysql", "influxdb", "mosquitto" ]
-    container_exec_start_pre: "/opt/openhab/container_pre_init"
+#    container_exec_start_pre: "/opt/openhab/container_pre_init"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register service watcher
