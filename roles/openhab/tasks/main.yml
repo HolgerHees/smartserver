@@ -25,7 +25,7 @@
 #  register: group_dialout_id
 #  changed_when: no
 
-- name: prepare needed folder
+- name: prepare needed config folder
   file:
     path:  "{{item}}"
     state: directory
@@ -40,6 +40,8 @@
     - "{{global_etc}}openhab/python"
     - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
+    - "{{global_lib}}openhab/persistance"
+    - "{{global_lib}}openhab/config"
 
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
@@ -135,8 +137,9 @@
       - '{{global_etc}}openhab/conf:/openhab/conf:z'
       - '{{global_etc}}openhab/python:/openhab/python:z'
       - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
+      - "{{global_lib}}openhab/config:/openhab/userdata/config/org/openhab/:z"
+      - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
-      - '{{global_lib}}openhab:/openhab/userdata/persistence:z'
     devices: "{{openhab_device_mounts | default([])}}"
     networks:
       - name: "openhab_databases"
@@ -249,7 +252,7 @@
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
     src: "{{projects_path}}openhab2/habpanel.config"
-    dest: "{{global_etc}}openhab/conf/habpanel.config"
+    dest: "{{global_lib}}openhab/config/habpanel.config"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
