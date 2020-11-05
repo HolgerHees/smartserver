@@ -7,6 +7,9 @@ After=docker.service{% if container_after is defined %}{% for dependency_name in
 TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
 Restart=always
+{% if container_exec_start_pre is defined %}
+ExecStartPre={{container_exec_start_pre}}
+{% endif %}
 ExecStart=/usr/bin/docker start -a {{container_name}}
 ExecStop=/usr/bin/docker stop {{container_name}}
 #ExecStop=/usr/bin/docker stop -t {{container_stop_timeout | default('300')}} {{container_name}}
