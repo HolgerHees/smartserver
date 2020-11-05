@@ -41,6 +41,8 @@
     - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
     - "{{global_lib}}openhab/persistance"
+#    - "{{global_lib}}openhab/jsondb" # => for homeconnect oauth => 
+# userdata/config/SymmetricKeyCipher.config
     - "{{global_lib}}openhab/config"
 
 # ****** GITHUB CONFIG PROJECT ******
@@ -138,6 +140,7 @@
       - '{{global_etc}}openhab/python:/openhab/python:z'
       - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
       - "{{global_lib}}openhab/config:/openhab/userdata/config/org/openhab/:z"
+#      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
       - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
     devices: "{{openhab_device_mounts | default([])}}"
