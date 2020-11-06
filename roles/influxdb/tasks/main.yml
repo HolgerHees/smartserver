@@ -46,10 +46,11 @@
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup:z'
     networks:
       - name: "base"
+        ipv4_address: "{{docker_influxdb_ip}}"
     networks_cli_compatible: yes
-    published_ports: # needed for netdata
-     - "127.0.0.1:8086:8086"  
-     - "127.0.0.1:4242:4242"  
+    exposed_ports:
+     - "8086"  
+     - "4242"  
   notify: "restart influxdb"
     
 # ***** FINALIZE *****

@@ -52,9 +52,10 @@
       - '{{global_lib}}loki:/loki:z'
     networks:
       - name: "base"
+        ipv4_address: "{{docker_loki_ip}}"
     networks_cli_compatible: yes
-    published_ports: # needed for fluentd
-     - "127.0.0.1:3100:3100"
+    exposed_ports:
+     - "3100"
   notify: "restart loki"
       
 - name: copy fluentd config

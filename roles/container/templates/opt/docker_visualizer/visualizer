@@ -302,7 +302,11 @@ for key in listen_port_map['httpd']:
 
 # Prepare column values
 rows = [[0,"Type","Name","Network","Subnet / Outgoing allowed","\033[1;37mPorts / Incomming (\033[0;37mlocal\033[0m\033[1;37m, \033[0;32mintern\033[0m\033[1;37m, \033[0;91mextern\033[0m\033[1;37m) traffic allowed\033[0m","Interface"]]
-for network in sorted(network_r):
+
+sorted_network_r = list(network_r)
+sorted_network_r.sort(key=lambda item: socket.inet_aton(network_r[item].gateway) if network_r[item].gateway else socket.inet_aton("0.0.0.0"), reverse=False)
+
+for network in sorted_network_r:
     network = network_r[network]
     
     rows.append([1,"Network",network.name,network.gateway,network.subnet,"",network.bridge])
