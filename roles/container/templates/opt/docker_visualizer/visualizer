@@ -274,11 +274,11 @@ for name in container_r:
 
 
 # Add missing dynamic (not exposed) ports
-http_container = container_r['apache2']
-for key in listen_port_map['httpd']:
-    port = listen_port_map['httpd'][key]
-    http_container.addExposedPort(port['port'],port['protocol'])
-    #http_container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+#http_container = container_r['apache2']
+#for key in listen_port_map['httpd']:
+#    port = listen_port_map['httpd'][key]
+#    http_container.addExposedPort(port['port'],port['protocol'])
+#    #http_container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
 
 # Add Services
 #for name in listen_port_map:
