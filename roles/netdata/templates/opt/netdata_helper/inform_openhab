@@ -29,7 +29,7 @@ try:
         'Accept': 'application/json',
         'Content-Type': 'text/plain'
     }
-    response = requests.put( "http://127.0.0.1:8080/rest/items/State_Server/state", headers = headers, data = u"{}".format(level) )
+    response = requests.put( "http://{{docker_openhab_ip}}:8080/rest/items/State_Server/state", headers = headers, data = u"{}".format(level) )
     if not (200 <= response.status_code < 300):
       response.raise_for_status()
 except Exception as err:
