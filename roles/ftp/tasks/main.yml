@@ -114,7 +114,7 @@
     networks:
       - name: "base"
     networks_cli_compatible: yes
-    ports:
+    published_ports:
       - "21:21"
       - "30000-30100:30000-30100"
   notify: "restart vsftpd"

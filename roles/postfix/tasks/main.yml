@@ -48,7 +48,7 @@
       - name: "base"
         ipv4_address: "{{docker_postfix_ip}}"
     networks_cli_compatible: yes
-    ports:
+    published_ports:
       - "127.0.0.1:25:25/tcp"
   notify: "restart postfix"
 

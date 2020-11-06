@@ -197,10 +197,10 @@
       - '/etc/certbot:/etc/certbot:z'
 
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
-#    ports:
-#      - "81:80"
-#      - "444:443"
-#      - "10115:10114"
+#    published_ports:
+#      - "80:80"
+#      - "443:443"
+#      - "10114:10114"
   notify: "restart apache2"
 
 #- name: clean old docker images

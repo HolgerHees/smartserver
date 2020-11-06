@@ -75,6 +75,9 @@
 - name: connect grafana with databases
   docker_network:
     name: grafana_databases
+    ipam_config:
+      - subnet: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.1"
     connected:
       - mysql
       - influxdb
@@ -103,12 +106,13 @@
       tag: grafana
     networks:
       - name: "grafana_databases"
+        ipv4_address: "{{docker_grafana_ip}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_lib}}grafana:/var/lib/grafana:z'
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning:z'
-    ports:
-     - "127.0.0.1:3000:3000"
+    exposed_ports:
+     - "3000"
   notify: "restart grafana"
       
 # ***** FINALIZE *****

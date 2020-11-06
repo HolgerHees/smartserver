@@ -72,9 +72,9 @@
       - name: "onlyoffice_databases"
         ipv4_address: "{{docker_onlyoffice_ip}}"
     networks_cli_compatible: yes
-    ports:
-     - "127.0.0.1:8090:80"  
-     - "127.0.0.1:8453:443"  
+    exposed_ports:
+     - "80"  
+     - "443"  
   notify: "restart onlyoffice"
     
 # ***** DATABASE *****

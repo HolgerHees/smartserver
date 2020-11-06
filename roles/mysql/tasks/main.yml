@@ -39,8 +39,8 @@
     networks:
       - name: "base"
     networks_cli_compatible: yes
-    ports:
-      - "127.0.0.1:3306:3306"  
+    exposed_ports:
+      - "3306"  
   notify: "restart mysql"
 
 # ***** FINALIZE *****

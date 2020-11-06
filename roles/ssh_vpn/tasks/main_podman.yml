@@ -51,7 +51,7 @@
       SSH_PASSWORD: "{{vault_ssh_vpn_password}}"
       TZ: "{{timezone}}"
     network: "mobile_vpn"
-    ports:
+    published_ports:
       - "4444:{{vault_ssh_vpn_internal_port}}/tcp"
     volumes:
       - "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z"

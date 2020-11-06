@@ -123,7 +123,7 @@
     volumes:
       - '{{global_etc}}{{wg_etc_dir_name}}:/etc/wireguard:z'
       - '{{raid_path}}{{wg_data_dir_name}}:/cloud:z,rshared'
-    ports:
+    published_ports:
     # - "2050:2049/tcp"
      - "{{wg_cloud_network.interface.listenPort}}:{{wg_exposed_port}}/udp"
   notify: "restart wireguard_cloud"

@@ -60,12 +60,12 @@
       - name: "pihole"
         ipv4_address: "{{pihole_ip}}"
     networks_cli_compatible: yes
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
+    exposed_ports:
+      - "53/tcp"
+      - "53/udp"
     # - "67:67/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
+      - "80/tcp"
+      - "443/tcp"
   notify: "restart pihole"
 
 # ***** FINALIZE *****
