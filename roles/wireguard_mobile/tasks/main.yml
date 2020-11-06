@@ -70,8 +70,13 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
+#    networks:
+#      - name: "mobile_vpn"
+#    networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
+#    published_ports:
+#      - "{{vault_wireguard_mobile_internal_port}}:{{vault_wireguard_mobile_internal_port}}/udp"
   notify: "restart wireguard_mobile"
 
 #- name: clean old docker images => image does not exists
@@ -83,6 +88,7 @@
   vars:
     name: "wireguard.mobile_vpn"
     rule: "proto udp dport {{vault_wireguard_mobile_internal_port}}"
+#    is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
