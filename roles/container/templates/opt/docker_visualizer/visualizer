@@ -140,7 +140,7 @@ for rule in iptables_rules:
 
 # Collect additional ports
 listen_port_map = {}
-additional_port_list = execCommand("lsof -i -P -n | grep -v \"docker\" | grep -v 127.0.0.1").stdout.decode("utf-8").strip().split("\n")
+additional_port_list = execCommand("lsof -i -P -n | grep -v \"docker\" | grep -v 127.0.0.1 | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
 for additional_port in additional_port_list:
     additional_port = additional_port.split(" ")
     additional_port = list(filter(lambda item: item.strip(), additional_port))
