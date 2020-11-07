@@ -199,7 +199,7 @@
     state: started
     
 # bridge network to allow containers host access without beeing in networkmode "host"
-- name: create base network
+- name: create isolated network
   docker_network:
     name: "isolated"
     ipam_config:
