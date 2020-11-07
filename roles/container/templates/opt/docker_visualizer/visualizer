@@ -309,6 +309,9 @@ sorted_network_r.sort(key=lambda item: socket.inet_aton(network_r[item].gateway)
 for network in sorted_network_r:
     network = network_r[network]
     
+    if len(network.connection_r) == 0:
+        continue
+    
     rows.append([1,"Network",network.name,network.gateway,network.subnet,"",network.bridge])
 
     key_r = list(network.connection_r.keys())
