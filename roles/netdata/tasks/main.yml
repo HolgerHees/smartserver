@@ -54,7 +54,7 @@
 
 #- name: connect netdata with databases
 #  docker_network:
-#    name: netdata_databases
+#    name: netdata
 #    connected:
 #      - influxdb
 #    appends: yes
@@ -85,7 +85,7 @@
       - "apparmor:unconfined"
     #privileged: yes
 #    networks:
-#      - name: "netdata_databases"
+#      - name: "netdata"
 #    networks_cli_compatible: yes
     volumes:
       - '{{ global_lib }}netdata_test:/var/lib/netdata:z'

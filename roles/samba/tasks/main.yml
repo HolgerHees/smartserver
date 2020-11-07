@@ -49,7 +49,7 @@
       - '/etc/passwd:/etc/passwd:ro,z'
       - '/etc/shadow:/etc/shadow:ro,z'
     networks:
-      - name: "base"
+      - name: "isolated"
     networks_cli_compatible: yes
     published_ports:
       - "137:137/udp"

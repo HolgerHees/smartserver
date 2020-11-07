@@ -45,7 +45,7 @@
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
       - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:z'
     networks:
-      - name: "base"
+      - name: "isolated"
         ipv4_address: "{{docker_postfix_ip}}"
     networks_cli_compatible: yes
     exposed_ports:

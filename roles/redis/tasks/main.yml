@@ -21,7 +21,7 @@
     log_options:
       tag: redis
     networks:
-      - name: "base"
+      - name: "isolated"
     networks_cli_compatible: yes
     exposed_ports:
      - "6379"

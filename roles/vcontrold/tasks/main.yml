@@ -30,7 +30,7 @@
 
 - name: connect vcontrold with mosquitto
   docker_network:
-    name: vcontrold_databases
+    name: vcontrold
     connected:
       - mosquitto
     appends: yes
@@ -48,7 +48,7 @@
     log_options:
       tag: vcontrold
     networks:
-      - name: "vcontrold_databases"
+      - name: "vcontrold"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'

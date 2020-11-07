@@ -112,7 +112,7 @@
     volumes:
       - '{{ftp_path}}:/home/uploads:z'
     networks:
-      - name: "base"
+      - name: "isolated"
     networks_cli_compatible: yes
     published_ports:
       - "21:21"

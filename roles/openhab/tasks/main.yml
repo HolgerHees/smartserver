@@ -103,7 +103,7 @@
 
 - name: connect openhab databases
   docker_network:
-    name: openhab_databases
+    name: openhab
     ipam_config:
       - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
@@ -147,7 +147,7 @@
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
     devices: "{{openhab_device_mounts | default([])}}"
     networks:
-      - name: "openhab_databases"
+      - name: "openhab"
         ipv4_address: "{{docker_openhab_ip}}"
     networks_cli_compatible: yes
 #    sysctls:
@@ -162,7 +162,7 @@
 
 - name: connect php databases
   docker_network:
-    name: php_databases
+    name: php
     ipam_config:
       - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"

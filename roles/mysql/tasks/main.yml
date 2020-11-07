@@ -37,7 +37,7 @@
       - '{{ global_lib }}mysql:/var/lib/mysql:z'
       - '{{local_backup_path}}mysql:/var/lib/mysql_backup:z'
     networks:
-      - name: "base"
+      - name: "isolated"
     networks_cli_compatible: yes
     exposed_ports:
       - "3306"  

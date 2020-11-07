@@ -26,7 +26,7 @@
 
 - name: connect onlyoffice with databases
   docker_network:
-    name: onlyoffice_databases
+    name: onlyoffice
     ipam_config:
       - subnet: "{{docker_onlyoffice_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_onlyoffice_ip.split('.')[:3] | join('.')}}.1"
@@ -69,7 +69,7 @@
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
     networks:
-      - name: "onlyoffice_databases"
+      - name: "onlyoffice"
         ipv4_address: "{{docker_onlyoffice_ip}}"
     networks_cli_compatible: yes
     exposed_ports:

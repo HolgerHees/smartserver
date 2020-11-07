@@ -201,7 +201,7 @@
 # bridge network to allow containers host access without beeing in networkmode "host"
 - name: create base network
   docker_network:
-    name: "base"
+    name: "isolated"
     ipam_config:
       - subnet: "{{docker_base_network}}/24"
         gateway: "{{docker_base_gateway}}"

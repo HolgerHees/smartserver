@@ -74,7 +74,7 @@
     
 - name: connect grafana with databases
   docker_network:
-    name: grafana_databases
+    name: grafana
     ipam_config:
       - subnet: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.1"
@@ -105,7 +105,7 @@
     log_options:
       tag: grafana
     networks:
-      - name: "grafana_databases"
+      - name: "grafana"
         ipv4_address: "{{docker_grafana_ip}}"
     networks_cli_compatible: yes
     volumes:

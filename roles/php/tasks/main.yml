@@ -15,7 +15,7 @@
 
 - name: connect php databases
   docker_network:
-    name: php_databases
+    name: php
     ipam_config:
       - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
@@ -42,7 +42,7 @@
     log_options:
       tag: php
     networks: 
-      - name: "php_databases"
+      - name: "php"
         ipv4_address: "{{docker_php_ip}}"
     networks_cli_compatible: yes
     volumes:
@@ -56,7 +56,7 @@
 
 #- name: connect php with databases
 #  docker_network:
-#    name: php_databases
+#    name: php
 #    connected:
 #      - php
 #      - mysql

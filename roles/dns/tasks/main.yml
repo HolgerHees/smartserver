@@ -41,7 +41,7 @@
     log_options:
       tag: named
     networks:
-      - name: "base"
+      - name: "isolated"
         ipv4_address: "{{docker_dns_ip}}"
     networks_cli_compatible: yes
     volumes:

@@ -51,7 +51,7 @@
       - '{{global_etc}}loki:/etc/loki:z'
       - '{{global_lib}}loki:/loki:z'
     networks:
-      - name: "base"
+      - name: "isolated"
         ipv4_address: "{{docker_loki_ip}}"
     networks_cli_compatible: yes
     exposed_ports:

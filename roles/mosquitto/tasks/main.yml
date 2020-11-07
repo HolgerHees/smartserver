@@ -20,7 +20,7 @@
     log_options:
       tag: mosquitto
     networks:
-      - name: "base"
+      - name: "isolated"
     networks_cli_compatible: yes
     published_ports:
      - "1883:1883"  
