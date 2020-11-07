@@ -24,7 +24,7 @@
   register: "main_device_result"
   changed_when: False
   
-- name: create pihole network
+- name: create docker network
   docker_network:
     name: 'pihole'
     driver: macvlan

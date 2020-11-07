@@ -92,7 +92,7 @@
       - roles/wireguard_cloud/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect cloud container
+- name: create docker network
   docker_network:
     name: cloud
     appends: yes
