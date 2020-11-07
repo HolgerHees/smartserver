@@ -23,9 +23,8 @@ class Network:
         self.bridge = bridge
 
     def addConnection(self,connection):
-        key = connection.ip if connection.ip != "" else connection.container.type + ' ' + connection.container.name
+        key = connection.ip + " " + connection.container.type + ' ' + connection.container.name
         self.connection_r[key] = connection
-        connection.container.networks[self.id] = network
 
 class Container:
     def __init__(self,type,name,sandboxKey,interfaceResult):
@@ -35,7 +34,6 @@ class Container:
         self.interfaceResult = interfaceResult
         self.exposedPorts = {}
         self.publishedPorts = {}
-        self.networks = {}
         
     def addExposedPort(self,exposedPort,protocol):
         key = exposedPort + ':' + protocol
@@ -105,7 +103,10 @@ link_list = execCommand("ip link").stdout.decode("utf-8")
 # Collect host data
 host_ip = execCommand("hostname -I").stdout.decode("utf-8").split()[0]
 host_gateway = execCommand("ip route | grep default").stdout.decode("utf-8").split()[2]
-host_bridge_info = re.findall("^.*{}.*".format(host_ip), ip_list, flags=re.MULTILINE)[0].split()
+host_device = re.findall("^.*{}.*".format(host_ip), ip_list, flags=re.MULTILINE)[0].split()[-1]
+host_subnet = execCommand("ip route | grep 'src {}'".format(host_ip)).stdout.decode("utf-8").split()[0]
+
+#192.168.0.0/24 dev eth0 proto kernel scope link src 192.168.0.50
 
 # Collect iptables chains
 iptables_rules = execCommand("iptables -nvL").stdout.decode("utf-8").split("\n")
@@ -166,19 +167,17 @@ for name in network_r:
     network_json = networks_json_dict[network.name]
     
     if network.name == 'host':
-        main_ip = host_gateway
-        bridge_info = host_bridge_info
-        network.addDetails(bridge_info[1],host_gateway,bridge_info[-1])
+        network.addDetails(host_subnet,host_gateway,host_device)
     else:
         if len(network_json['IPAM']['Config']) > 0:
             subnet = network_json['IPAM']['Config'][0]['Subnet']
             gateway = network_json['IPAM']['Config'][0]['Gateway']
             result = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)
             if len(result)>0:
-                bridge_info = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()[-1]
+                bridge_device = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()[-1]
             else:
-                bridge_info = host_bridge_info[-1]
-            network.addDetails(subnet,gateway,bridge_info)
+                bridge_device = host_device
+            network.addDetails(subnet,gateway,bridge_device)
     
     for container_id in network_json['Containers']:
       
@@ -210,21 +209,6 @@ for name in network_r:
                     hostIp = portBindings[exposedPortKey][0]['HostIp']
                     hostPort = portBindings[exposedPortKey][0]['HostPort']
                     container.addPublishedPort(hostIp,hostPort,exposedPort,protocol)
-
-            #portBindings = container_json['HostConfig']['PortBindings']
-            #if portBindings != None:
-            #    for exposedPortKey in portBindings:
-            #        exposedPort,protocol = exposedPortKey.split("/")
-            #        hostIp = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostIp']
-            #        hostPort = container_json['HostConfig']['PortBindings'][exposedPortKey][0]['HostPort']
-            #        container.addPort(hostIp,hostPort,exposedPort,protocol)
-            #else:
-            #    portBindings = container_json['Config']['ExposedPorts']
-            #    #print(portBindings)
-            #    if portBindings != None:
-            #        for exposedPortKey in portBindings:
-            #            exposedPort,protocol = exposedPortKey.split("/")
-            #            container.addPort("0.0.0.0",exposedPort,exposedPort,protocol)
         
         veth = ""
         if network.name != 'host':
@@ -232,6 +216,7 @@ for name in network_r:
             #print(container.name)
             interfaceList = re.findall("inet.*", container.interfaceResult, flags=re.MULTILINE)
             network_subnet = ipaddress.ip_network(network.subnet, strict=False)
+                
             for interface in interfaceList:
                 columns = interface.split(" ")
                 interface_subnet = ipaddress.ip_network(columns[1], strict=False)
@@ -246,9 +231,12 @@ for name in network_r:
                     #print(columns[6])
                     #print(veth)
                     break
-        
-        ip = network_json['Containers'][container_id]['IPv4Address']
-        connection = Connection(container,ip.split("/")[0],veth)
+            ip = network_json['Containers'][container_id]['IPv4Address'].split("/")[0]
+        else:
+            ip = host_ip
+            veth = "host"
+            
+        connection = Connection(container,ip,veth)
         
         network.addConnection(connection)
         
@@ -257,20 +245,24 @@ for name in container_r:
     if len(container.publishedPorts)==0:
         continue
       
-    if len(container.networks) == 1 and list(container.networks.values())[0].driver == "macvlan":
-        continue
-
     network = network_r['host']
         
-    #container = Container("Published",name,"","")
-    #container_r[name] = container
-    
-    #for key in container.publishedPorts:
-    #    port = container.publishedPorts[key]
-    #    container.addPort(port['hostIp'],port['port'],port['port'],port['protocol'])
-    
-    connection = Connection(container,"","forwarded")
+    connection = Connection(container,host_ip,"forwarded")
     network.addConnection(connection)
+    
+for name in list(network_r.keys()):
+    network = network_r[name]
+    if network.driver != "macvlan":
+        continue
+    
+    host_network = network_r['host']
+    
+    for key in network.connection_r:
+        connection = network.connection_r[key]
+        connection.veth = "macvlan"
+        host_network.addConnection(connection)
+    
+    del network_r[name]
 
 
 # Add missing dynamic (not exposed) ports
@@ -315,7 +307,7 @@ for network in sorted_network_r:
     rows.append([1,"Network",network.name,network.gateway,network.subnet,"",network.bridge])
 
     key_r = list(network.connection_r.keys())
-    key_r.sort(key=lambda item: socket.inet_aton(item.split("/")[0]) if re.match("[0-9]*\\.",item) else item, reverse=False)
+    key_r.sort(key=lambda item: socket.inet_aton(network.connection_r[item].ip), reverse=False)
     for key in key_r:
         connection = network.connection_r[key]
         container = connection.container
@@ -334,11 +326,11 @@ for network in sorted_network_r:
                 port = container.exposedPorts[key]
                 exposedPorts[port["port"]] = {
                   "port": port["port"]+"/"+port["protocol"],
-                  "access": "intern" if network.driver == "macvlan" else "local"
+                  "access": "intern" if network.driver == "host" and connection.veth == "macvlan" else "local"
                 }
             
               
-        if network.driver == "macvlan":
+        if network.driver == "host" and connection.veth == "macvlan":
             outgoing = [{"sourceIp": connection.ip, "targetIp": "0.0.0.0/0", "targetPort": ""}]
         else:
             outgoing = []
@@ -363,7 +355,7 @@ for network in sorted_network_r:
         outgoingValue = ", ".join(values)
 
         ports = publishedPorts if len(publishedPorts)>0 else exposedPorts
-        rows.append([2,container.type,container.name,connection.ip if connection.ip != "" else host_ip,"",ports,connection.veth,outgoingValue])
+        rows.append([2,container.type,container.name,connection.ip,"",ports,connection.veth,outgoingValue])
                 
 # Calculate column sizes
 columnLength = [0] * (len(rows[0]) + 1)
