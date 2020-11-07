@@ -54,7 +54,7 @@
       - "9000"
   notify: "restart php"
 
-#- name: connect php with databases
+#- name: create docker network
 #  docker_network:
 #    name: php
 #    connected:
