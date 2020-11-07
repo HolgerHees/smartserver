@@ -28,7 +28,7 @@
       - roles/vcontrold/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect vcontrold with mosquitto
+- name: create docker network
   docker_network:
     name: vcontrold
     connected:

@@ -72,7 +72,7 @@
       - roles/grafana/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
     
-- name: connect grafana with databases
+- name: create docker network
   docker_network:
     name: grafana
     ipam_config:

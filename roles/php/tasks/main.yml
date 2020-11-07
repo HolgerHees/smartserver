@@ -13,7 +13,7 @@
       - roles/php/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect php databases
+- name: create docker network
   docker_network:
     name: php
     ipam_config:

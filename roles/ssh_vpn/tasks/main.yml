@@ -31,7 +31,7 @@
     - util/entrypoint.sh
   notify: "restart ssh_vpn"
   
-- name: create mobile_vpn network
+- name: create docker network
   docker_network:
     name: mobile_vpn
 #    driver: bridge

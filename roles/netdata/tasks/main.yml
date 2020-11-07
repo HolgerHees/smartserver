@@ -52,7 +52,7 @@
     name: docker
     state: started
 
-#- name: connect netdata with databases
+#- name: create docker network
 #  docker_network:
 #    name: netdata
 #    connected:

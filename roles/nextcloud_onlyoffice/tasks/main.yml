@@ -24,7 +24,7 @@
       - roles/nextcloud_onlyoffice/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect onlyoffice with databases
+- name: create docker network
   docker_network:
     name: onlyoffice
     ipam_config:
