@@ -10,6 +10,7 @@
     groups: users
     append: no
   register: system_user_result
+  when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
   
 - name: prepare user folder
@@ -19,6 +20,7 @@
     owner: "{{item}}"
     group: users
     mode: 0750
+  when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
 
 # refresh samba container, otherwise changes on /etc/passwd are not visible inside the container
@@ -38,6 +40,7 @@
   #register: command_result
   #failed_when: "'command-not-found' in command_result.stderr"
   changed_when: "item not in samba_user_result.stdout"
+  when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
   #notify: "restart samba"
   
@@ -48,5 +51,6 @@
     fullname: "{{userdata[item].name}}"
     usergroups: "{{userdata[item].groups}}"
   include_tasks: roles/user/tasks/add_web_user.yml
+  when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
 

@@ -17,9 +17,9 @@
 
     <RequireAny>
         Require user {{vault_nextcloud_admin_username}}
-{% for username in userdata %}
+{% for username in userdata %}{% if 'user' in userdata[username].groups %}
         Require user {{username}}
-{% endfor %}
+{% endif %}{% endfor %}
         Require ip {{ authenticated_ip_addresses | join(' ') }}
         Require ip 172.0.0.0/8
         Require local

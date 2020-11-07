@@ -4,9 +4,9 @@
     AuthUserFile    {{htdocs_path}}secret/.htpasswd
 
     <RequireAny>
-{% for username in userdata %}
+{% for username in userdata %}{% if 'user' in userdata[username].groups %}
         Require user {{username}}
-{% endfor %}
+{% endif %}{% endfor %}
     </RequireAny>
 
     RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_USER}]
