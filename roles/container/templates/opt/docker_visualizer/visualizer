@@ -335,7 +335,8 @@ for network in sorted_network_r:
         else:
             outgoing = []
             isHostOnly = network.name == 'host' and connection.veth != "forwarded"
-            rule_r = chain_r['input'].rule_r if isHostOnly else chain_r['docker-user'].rule_r
+            #rule_r = chain_r['input'].rule_r if isHostOnly else chain_r['docker-user'].rule_r
+            rule_r = chain_r['input'].rule_r + chain_r['docker-user'].rule_r
             for rule in rule_r:
                 if rule['sourceIp'] == connection.ip:
                     outgoing.append(rule)
@@ -351,7 +352,7 @@ for network in sorted_network_r:
 
         values = []
         for rule in outgoing:
-            values.append(rule['targetIp'])
+            values.append(rule['targetPort'] if rule['targetPort'] != '' else rule['targetIp'] )
         outgoingValue = ", ".join(values)
 
         ports = publishedPorts if len(publishedPorts)>0 else exposedPorts
