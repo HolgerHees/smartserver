@@ -4,6 +4,6 @@ RequestHeader setifempty X-Forwarded-Proto https
 #X-Forwarded-For $proxy_add_x_forwarded_for;
 #ProxyAddHeaders Off
 
-ProxyPassMatch (.*)(\/websocket)$ "ws://{{docker_onlyoffice_ip}}/$1$2"
-ProxyPass / "http://{{docker_onlyoffice_ip}}/"
-ProxyPassReverse / "http://{{docker_onlyoffice_ip}}/"
+ProxyPassMatch (.*)(\/websocket)$ "ws://onlyoffice/$1$2"
+ProxyPass / "http://onlyoffice/"
+ProxyPassReverse / "http://onlyoffice/"

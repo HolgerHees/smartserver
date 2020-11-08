@@ -115,6 +115,12 @@
      - "3000"
   notify: "restart grafana"
       
+- name: add container name
+  vars:
+    host_name: "grafana"
+    host_ip_address: "{{docker_grafana_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 # ***** FINALIZE *****
 - name: register webui
   vars:

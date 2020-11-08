@@ -53,6 +53,12 @@
      - "4242"  
   notify: "restart influxdb"
     
+- name: add container name
+  vars:
+    host_name: "influxdb"
+    host_ip_address: "{{docker_influxdb_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 # ***** FINALIZE *****
 - name: create cron job
   vars:

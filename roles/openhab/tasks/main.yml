@@ -160,6 +160,12 @@
       - "8101"  
   notify: "restart openhab"
 
+- name: add container name
+  vars:
+    host_name: "openhab"
+    host_ip_address: "{{docker_openhab_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 - name: connect php databases
   docker_network:
     name: php

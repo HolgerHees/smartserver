@@ -54,6 +54,12 @@
       - "9000"
   notify: "restart php"
 
+- name: add container name
+  vars:
+    host_name: "php"
+    host_ip_address: "{{docker_php_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 #- name: create docker network
 #  docker_network:
 #    name: php

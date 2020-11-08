@@ -8,9 +8,9 @@ ProtocolsHonorOrder Off
   # When Upgrade:websocket header is present, redirect to ws
   # Using NC flag (case-insensitive) as some browsers will pass Websocket
   RewriteCond %{HTTP:Upgrade} =websocket [NC]
-  RewriteRule ^/rest/(.*) ws://{{docker_openhab_ip}}:8080/rest/$1 [P,L]
+  RewriteRule ^/rest/(.*) ws://openhab:8080/rest/$1 [P,L]
 
-  ProxyPass http://{{docker_openhab_ip}}:8080/
+  ProxyPass http://openhab:8080/
   ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
 </Location>
@@ -25,14 +25,14 @@ ProtocolsHonorOrder Off
 
 <Location /loki>
   ProxyPreserveHost On
-  ProxyPass http://127.0.0.1:3100 retry=0
-  ProxyPassReverse http://127.0.0.1:3100
+  ProxyPass http://loki:3100 retry=0
+  ProxyPassReverse http://loki:3100
 </Location>
 
 <Location /grafana>
   ProxyPreserveHost On
-  ProxyPass http://{{docker_grafana_ip}}:3000
-  ProxyPassReverse http://{{docker_grafana_ip}}:3000
+  ProxyPass http://grafana:3000
+  ProxyPassReverse http://grafana:3000
   RequestHeader set Authorization "Basic YWRtaW46YWRtaW4="
 </Location>
 
