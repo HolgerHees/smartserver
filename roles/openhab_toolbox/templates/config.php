@@ -18,7 +18,7 @@ class Setup
 	
 	public static function getOpenHabRest()
 	{
-		return new RestConnectorOpenhab( "openhab", "8080" );
+		return new RestConnectorOpenhab( "openhab.smartmarvin.de", "443", "https" );
 	}
 	
 	public static function getWeatherAuth()

@@ -45,6 +45,9 @@
       - name: "php"
         ipv4_address: "{{docker_php_ip}}"
     networks_cli_compatible: yes
+    etc_hosts:
+      openhab: "{{server_ip}}" # fix to make openhab reachable
+      netdata: "{{server_ip}}" # fix to make netdata reachable
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'

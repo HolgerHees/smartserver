@@ -58,7 +58,7 @@ class Chain:
         self.rule_r = []
 
     def addRule(self,sourceIp,targetIp,targetPort,raw):
-        self.rule_r.append({"sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort, "raw": raw })
+        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort, "raw": raw })
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
@@ -141,7 +141,7 @@ for rule in iptables_rules:
 
 # Collect additional ports
 listen_port_map = {}
-additional_port_list = execCommand("lsof -i -P -n | grep -v \"docker\" | grep -v 127.0.0.1 | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
+additional_port_list = execCommand("lsof -i -P -n | grep -v \"docker\" | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
 for additional_port in additional_port_list:
     additional_port = additional_port.split(" ")
     additional_port = list(filter(lambda item: item.strip(), additional_port))
@@ -156,9 +156,32 @@ for additional_port in additional_port_list:
         else:
             listen_ports = {}
             listen_port_map[additional_port[0]] = listen_ports
-        protocol = additional_port[7]
+        protocol = additional_port[7].lower()
         port = columns[1].split("->")[0]
-        listen_ports[port] = {'port':port,'protocol':protocol.lower()}
+        #print(columns)
+        listen_ports[port] = {'access': 'intern' if columns[0] == '*' else 'local', 'port':port,'protocol':protocol}
+   
+# Collect additional kernel ports
+additional_port_list = execCommand("ss -lun").stdout.decode("utf-8").strip().split("\n")
+for additional_port in additional_port_list:
+    additional_port = additional_port.split(" ")
+    additional_port = list(filter(lambda item: item.strip(), additional_port))
+    columns = additional_port[-2:-1][0].split(":")
+    if len(columns)!=2:
+        continue
+
+    if columns[1] in listen_port_map:
+        listen_ports = listen_port_map[columns[1]]
+    else:
+        listen_ports = {}
+        listen_port_map[columns[1]] = listen_ports
+    protocol = '*'
+    port = columns[1]
+    if port not in listen_ports:
+        access = 'intern' if columns[0] == '*' or columns[0] == '0.0.0.0' else 'local'
+        #print(columns)
+        listen_ports[port] = {'access': access, 'port':port,'protocol':protocol}
+
 #print(listen_port_map)
 
 # Process collected data
@@ -312,51 +335,65 @@ for network in sorted_network_r:
         connection = network.connection_r[key]
         container = connection.container
 
-        publishedPorts = {}
-        exposedPorts = {}
+        openPorts = {}
         if network.name == 'host' and len(container.publishedPorts) > 0:
             for key in container.publishedPorts:
                 port = container.publishedPorts[key]
-                publishedPorts[port["hostPort"]] = {
+                openPorts[port["hostPort"]] = {
                   "port": port["hostPort"]+"/"+port["protocol"],
                   "access": port["access"]
                 }
         else:
             for key in container.exposedPorts:
+                access = "local"
                 port = container.exposedPorts[key]
-                exposedPorts[port["port"]] = {
+
+                if network.name == "host":
+                    if connection.veth == "macvlan":
+                        access = "intern"
+                    else:
+                        for name in listen_port_map:
+                            for listen_port in listen_port_map[name]:
+                                listen_port = listen_port_map[name][listen_port]
+                                if listen_port['port'] == port["port"]:
+                                    access = listen_port['access']
+                                    break
+                        
+                openPorts[port["port"]] = {
                   "port": port["port"]+"/"+port["protocol"],
-                  "access": "intern" if network.driver == "host" and connection.veth == "macvlan" else "local"
+                  "access": access
                 }
-            
               
+        outgoingValue = []
         if network.driver == "host" and connection.veth == "macvlan":
-            outgoing = [{"sourceIp": connection.ip, "targetIp": "0.0.0.0/0", "targetPort": ""}]
+            outgoingValue.append("*")
         else:
-            outgoing = []
             isHostOnly = network.name == 'host' and connection.veth != "forwarded"
-            #rule_r = chain_r['input'].rule_r if isHostOnly else chain_r['docker-user'].rule_r
-            rule_r = chain_r['input'].rule_r + chain_r['docker-user'].rule_r
-            for rule in rule_r:
-                if rule['sourceIp'] == connection.ip:
-                    outgoing.append(rule)
-                allOpen = rule['targetIp'] == connection.ip
-                #print(chain_r['input'].rule_r)
-                #or rule['targetIp'] == "0.0.0.0/0" or (rule['targetIp'] == hostIp and connection.ip == ""))
-                #if allOpen:
-                relevantPorts = (exposedPorts if isHostOnly else publishedPorts)
-                for key in relevantPorts:
-                    data = relevantPorts[key]
-                    if allOpen or rule['targetPort'] == key:
-                        data["access"] = "extern"
+            for chain in chain_r:
+                rule_r = chain_r[chain].rule_r
+                if chain != 'input' and chain != 'docker-user':
+                    continue
+                  
+                for rule in rule_r:
+                    if rule['sourceIp'] == connection.ip:
+                        if rule['targetPort'] != '':
+                            value = rule['targetPort']
+                            if rule['chain'] == 'input':
+                                value = host_ip + ":" + value
+                        else:
+                            value = '*' if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp']
+                        outgoingValue.append(value)
+                    
+                    activeChain = 'input' if network.name == 'host' and connection.veth != "forwarded" else 'docker-user'
+                    
+                    if chain == activeChain:
+                        hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
+                        for key in openPorts:
+                            data = openPorts[key]
+                            if hostMatch or rule['targetPort'] == key:
+                                data["access"] = "extern"
 
-        values = []
-        for rule in outgoing:
-            values.append(rule['targetPort'] if rule['targetPort'] != '' else rule['targetIp'] )
-        outgoingValue = ", ".join(values)
-
-        ports = publishedPorts if len(publishedPorts)>0 else exposedPorts
-        rows.append([2,container.type,container.name,connection.ip,"",ports,connection.veth,outgoingValue])
+        rows.append([2,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
                 
 # Calculate column sizes
 columnLength = [0] * (len(rows[0]) + 1)
