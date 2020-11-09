@@ -72,8 +72,8 @@
     env:
       TZ: "{{timezone}}"
       PGID: "473"
-      NETDATA_PORT: "29999"
-    #  NETDATA_PORT: "19999"
+    #  NETDATA_PORT: "29999"
+      NETDATA_PORT: "19999"
     #  DOCKER_USR: "root"
     #  VIRTUALIZATION: "kvm"
     log_driver: journald
@@ -84,7 +84,8 @@
     #  - SYS_ADMIN
     security_opts:
       - "apparmor:unconfined"
-    #privileged: yes
+    pid_mode: "host"
+    privileged: yes
 #    networks:
 #      - name: "netdata"
 #    networks_cli_compatible: yes
@@ -100,15 +101,15 @@
       - "{{ global_etc }}netdata/health.d/softnet.conf:/etc/netdata/health.d/softnet.conf:ro,z"
       - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro,z"
       - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro,z"
-      #- '/opt/netdata_helper/:/opt/netdata_helper/:ro'
+      - '/opt/netdata_helper/:/opt/netdata_helper/:ro'
       - '/etc/os-release:/host/etc/os-release:ro'
       - '/etc/passwd:/host/etc/passwd:ro'
       - '/etc/group:/host/etc/group:ro'
       - '/proc:/host/proc:ro'
       - '/sys:/host/sys:ro'
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-#    published_ports:
-#     - "29999:19999"  
+    exposed_ports:
+     - "19999"  
     # - "127.0.0.1:19999:19999"  
 #  notify: "restart netdata"
 

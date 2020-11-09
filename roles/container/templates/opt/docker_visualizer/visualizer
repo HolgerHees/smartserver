@@ -368,7 +368,6 @@ for network in sorted_network_r:
         if network.driver == "host" and connection.veth == "macvlan":
             outgoingValue.append("*")
         else:
-            isHostOnly = network.name == 'host' and connection.veth != "forwarded"
             for chain in chain_r:
                 rule_r = chain_r[chain].rule_r
                 if chain != 'input' and chain != 'docker-user':
