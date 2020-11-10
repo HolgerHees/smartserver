@@ -148,8 +148,6 @@
     networks:
       - name: "openhab"
         ipv4_address: "{{docker_openhab_ip}}"
-      - name: "macvlan"
-        ipv4_address: "{{openhab_ip}}"
     networks_cli_compatible: yes
 #    sysctls:
 #      "net.ipv4.conf.all.arp_accept": "1"
