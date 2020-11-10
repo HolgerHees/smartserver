@@ -209,6 +209,21 @@
       "com.docker.network.bridge.enable_icc": "false"
 #    appends: yes
 
+- name: detect main network device
+  shell: "ip a | grep -P \"inet {{server_ip}}\" | grep -Po \"[a-z0-9]*$\""
+  register: "main_device_result"
+  changed_when: False
+  
+- name: create macvlan network
+  docker_network:
+    name: 'macvlan'
+    driver: macvlan
+    driver_options:
+      parent: '{{main_device_result.stdout}}'
+    ipam_config:
+      - subnet: '{{server_network}}/24'
+        gateway: '{{server_gateway}}'
+        
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
