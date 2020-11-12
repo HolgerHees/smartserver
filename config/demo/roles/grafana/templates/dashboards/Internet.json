@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 12,
+  "id": 38,
   "links": [],
   "panels": [
     {
@@ -24,39 +24,51 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
-        "h": 19,
+        "h": 13,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 2,
+      "hiddenSeries": false,
+      "id": 4,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": false,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
-      "links": [],
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
-      "pointradius": 5,
+      "pluginVersion": "7.3.0",
+      "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-        {}
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
+          "alias": "Downstream Gemessen",
           "groupBy": [
             {
               "params": [
@@ -71,81 +83,11 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Pipe_In",
+          "measurement": "Speedtest_DownstreamRate",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Temperature_Pipe_Out",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "WeatherStation_Temperature",
-          "orderByTime": "ASC",
-          "policy": "default",
+          "query": "SELECT mean(\"value\")*1024 FROM \"Speedtest_DownstreamRate\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -165,6 +107,7 @@
           "tags": []
         },
         {
+          "alias": "Upstream Gemessen",
           "groupBy": [
             {
               "params": [
@@ -179,10 +122,87 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Circuit_Pump_Speed",
+          "measurement": "Speedtest_UpstreamRate",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "SELECT mean(\"value\")*1024 FROM \"Speedtest_UpstreamRate\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": true,
           "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Downstream Gebucht",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "FritzboxDslDownstreamCurrRate",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "queryType": "randomWalk",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Upstream Gebucht",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "FritzboxDslUpstreamCurrRate",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
@@ -205,7 +225,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Heating",
+      "title": "DSL Speed",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -221,7 +241,8 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "$$hashKey": "object:118",
+          "format": "Kbits",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -229,7 +250,8 @@
           "show": true
         },
         {
-          "format": "short",
+          "$$hashKey": "object:119",
+          "format": "Mbits",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -243,43 +265,19 @@
       }
     }
   ],
-  "schemaVersion": 18,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-6h",
     "to": "now"
   },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
-  },
+  "timepicker": {},
   "timezone": "",
-  "title": "HeatingDebugger",
-  "uid": "k7sgJ4Emk",
-  "version": 2
+  "title": "Internet",
+  "uid": "internet",
+  "version": 1
 }

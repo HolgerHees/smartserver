@@ -58,7 +58,7 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "alias": "Temperature_Garden.mean"
+          "alias": "WeatherStation_Temperature.mean"
         },
         {
           "alias": "Aussentemperatur",
@@ -193,7 +193,7 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "alias": "Temperature_Garden.mean"
+          "alias": "WeatherStation_Temperature.mean"
         },
         {
           "alias": "Aussentemperatur",
@@ -449,7 +449,7 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "alias": "Temperature_Garden.mean"
+          "alias": "WeatherStation_Temperature.mean"
         },
         {
           "alias": "Aussentemperatur",
@@ -586,7 +586,7 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "alias": "Temperature_Garden.mean"
+          "alias": "WeatherStation_Temperature.mean"
         },
         {
           "alias": "Aussentemperatur",

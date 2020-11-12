@@ -35,12 +35,12 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 0
       },
       "hiddenSeries": false,
-      "id": 2,
+      "id": 4,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -69,45 +69,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Heizung",
+          "alias": "Garten",
           "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Temperature_Outdoor",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Wetterstation",
           "groupBy": [
             {
               "params": [
@@ -125,7 +88,7 @@
           "measurement": "WeatherStation_Temperature",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "B",
+          "refId": "F",
           "resultFormat": "time_series",
           "select": [
             [
@@ -148,7 +111,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Aussentemperatur",
+      "title": "Temperatur",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -164,7 +127,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:168",
+          "$$hashKey": "object:1572",
           "format": "celsius",
           "label": null,
           "logBase": 1,
@@ -173,7 +136,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:169",
+          "$$hashKey": "object:1573",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -205,12 +168,12 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 7
+        "w": 12,
+        "x": 12,
+        "y": 0
       },
       "hiddenSeries": false,
-      "id": 3,
+      "id": 12,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -239,7 +202,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Wohnzimmer",
+          "alias": "Garten",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -255,48 +218,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Livingroom",
+          "measurement": "WeatherStation_Temperature",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Schlafzimmer",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Temperature_SF_Bedroom",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
+          "refId": "F",
           "resultFormat": "time_series",
           "select": [
             [
@@ -318,8 +243,8 @@
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
-      "title": "Innentemperatur",
+      "timeShift": "364d",
+      "title": "Temperatur (Letztes Jahr)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -335,7 +260,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:803",
+          "$$hashKey": "object:1713",
           "format": "celsius",
           "label": null,
           "logBase": 1,
@@ -344,7 +269,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:804",
+          "$$hashKey": "object:1714",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -375,20 +300,21 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 14
+        "y": 7
       },
       "hiddenSeries": false,
-      "id": 5,
+      "id": 7,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -408,7 +334,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "",
+          "alias": "Garten",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -424,10 +350,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Power",
+          "measurement": "WeatherStation_Humidity",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "A",
+          "refId": "F",
           "resultFormat": "time_series",
           "select": [
             [
@@ -450,7 +376,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Leistung",
+      "title": "Feuchtigkeit",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -466,14 +392,149 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:2024",
           "format": "percent",
           "label": null,
           "logBase": 1,
           "max": null,
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
+          "$$hashKey": "object:2025",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
+      "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "hiddenSeries": false,
+      "id": 14,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.0",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "UV Index",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_UV_Index",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "F",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "UV Index",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:362",
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:363",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -504,20 +565,21 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 21
+        "y": 14
       },
       "hiddenSeries": false,
-      "id": 6,
+      "id": 13,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -537,7 +599,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Aussen (Ist)",
+          "alias": "Luftdruck",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -553,10 +615,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Outdoor",
+          "measurement": "WeatherStation_Pressure",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "A",
+          "refId": "F",
           "resultFormat": "time_series",
           "select": [
             [
@@ -573,9 +635,103 @@
             ]
           ],
           "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Luftdruck",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:482",
+          "format": "pressurehpa",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
         },
         {
-          "alias": "Aussen (ged.)",
+          "$$hashKey": "object:483",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.0",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Current",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -591,159 +747,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Outdoor_Subdued",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Vorlauf (Soll)",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Temperature_Offset_Target",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Vorlauf (Ist)",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Temperature_Offset",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Wasser",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Temperature_Wather_Storage",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Vorlauf",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Temperature_Pipe_Out",
+          "measurement": "WeatherStation_Solar_Power",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "F",
@@ -765,8 +769,7 @@
           "tags": []
         },
         {
-          "alias": "Rücklauf",
-          "dsType": "influxdb",
+          "alias": "Max",
           "groupBy": [
             {
               "params": [
@@ -781,138 +784,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Pipe_In",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Temperaturen",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1105",
-          "format": "celsius",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1106",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "InfluxDB",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 28
-      },
-      "hiddenSeries": false,
-      "id": 7,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.2.0",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Heating_Circuit_Pump_Speed",
+          "measurement": "WeatherStation_Solar_Power_Max",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -938,7 +810,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Umwälzpumpe",
+      "title": "Sonnenkraft",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -954,15 +826,16 @@
       },
       "yaxes": [
         {
-          "decimals": null,
-          "format": "percent",
-          "label": null,
+          "$$hashKey": "object:362",
+          "format": "watt",
+          "label": "",
           "logBase": 1,
-          "max": "110",
-          "min": "0",
+          "max": null,
+          "min": null,
           "show": true
         },
         {
+          "$$hashKey": "object:363",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -982,7 +855,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "decimals": 0,
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -996,7 +868,139 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 21
+      },
+      "hiddenSeries": false,
+      "id": 15,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.0",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Helligkeit",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_Light_Level",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "F",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Helligkeit",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:362",
+          "format": "lux",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:363",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 21
       },
       "hiddenSeries": false,
       "id": 8,
@@ -1028,27 +1032,25 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Brennerstarts",
+          "alias": "Regen",
           "dsType": "influxdb",
           "groupBy": [
             {
               "params": [
-                "1d"
+                "$__interval"
               ],
               "type": "time"
             },
             {
               "params": [
-                "none"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Starts_Current_Daily",
+          "measurement": "WeatherStation_Rain_Current",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Starts_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1061,7 +1063,7 @@
               },
               {
                 "params": [],
-                "type": "last"
+                "type": "mean"
               }
             ]
           ],
@@ -1072,7 +1074,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Brennerstarts",
+      "title": "Regen (Aktuell pro Stunde)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1088,8 +1090,8 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:703",
-          "format": "short",
+          "$$hashKey": "object:2593",
+          "format": "mlitre",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1097,7 +1099,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:704",
+          "$$hashKey": "object:2594",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1117,7 +1119,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "decimals": 0,
+      "decimals": 1,
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1130,8 +1132,8 @@
       "gridPos": {
         "h": 7,
         "w": 12,
-        "x": 12,
-        "y": 35
+        "x": 0,
+        "y": 28
       },
       "hiddenSeries": false,
       "id": 10,
@@ -1163,7 +1165,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Brennerstarts",
+          "alias": "Regen",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -1179,10 +1181,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Starts_Current_Daily",
+          "measurement": "Rain_Garden_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Starts_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"WeatherStation_Rain_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1207,7 +1209,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Brennerstarts",
+      "title": "Regen",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1223,8 +1225,8 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:518",
-          "format": "short",
+          "$$hashKey": "object:266",
+          "format": "mlitre",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1232,7 +1234,7 @@
           "show": true
         },
         {
-          "$$hashKey": "object:519",
+          "$$hashKey": "object:267",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1252,7 +1254,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "decimals": 0,
+      "decimals": 1,
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1265,8 +1267,8 @@
       "gridPos": {
         "h": 7,
         "w": 12,
-        "x": 0,
-        "y": 42
+        "x": 12,
+        "y": 28
       },
       "hiddenSeries": false,
       "id": 9,
@@ -1298,27 +1300,25 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Brennerlaufzeit",
+          "alias": "Wind",
           "dsType": "influxdb",
           "groupBy": [
             {
               "params": [
-                "1d"
+                "$__interval"
               ],
               "type": "time"
             },
             {
               "params": [
-                "none"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Hours_Current_Daily",
+          "measurement": "WeatherStation_Wind_Current",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Hours_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1331,7 +1331,7 @@
               },
               {
                 "params": [],
-                "type": "last"
+                "type": "mean"
               }
             ]
           ],
@@ -1342,7 +1342,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Brennerlaufzeit",
+      "title": "Wind",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1358,16 +1358,17 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:889",
-          "format": "h",
-          "label": null,
+          "$$hashKey": "object:648",
+          "decimals": 1,
+          "format": "velocitykmh",
+          "label": "",
           "logBase": 1,
           "max": null,
-          "min": "0",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:890",
+          "$$hashKey": "object:649",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1383,11 +1384,188 @@
     },
     {
       "aliasColors": {},
-      "bars": true,
+      "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "hiddenSeries": false,
+      "id": 20,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.0",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:521",
+          "alias": "Luftfeuchtigkeit",
+          "yaxis": 2
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Regen",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_Rain_Rate",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"value\") FROM \"WeatherStation_Rain_Rate\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Luftfeuchtigkeit",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_Humidity",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Regen (Rate)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:149",
+          "format": "ohm",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:150",
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1401,10 +1579,10 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 35
       },
       "hiddenSeries": false,
-      "id": 11,
+      "id": 18,
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -1415,7 +1593,184 @@
         "total": false,
         "values": true
       },
-      "lines": false,
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.0",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:1106",
+          "alias": "Strom",
+          "yaxis": 2
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Spannung",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_Battery_Voltage",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "F",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Strom",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_Battery_Current",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Battery Spannung/Strom",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:362",
+          "decimals": null,
+          "format": "mvolt",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:363",
+          "format": "mamp",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
+      "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 42
+      },
+      "hiddenSeries": false,
+      "id": 17,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
@@ -1433,28 +1788,26 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Brennerlaufzeit",
+          "alias": "Battery Level",
           "dsType": "influxdb",
           "groupBy": [
             {
               "params": [
-                "1d"
+                "$__interval"
               ],
               "type": "time"
             },
             {
               "params": [
-                "none"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Hours_Current_Daily",
+          "measurement": "WeatherStation_Battery_Level",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Hours_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
-          "rawQuery": true,
-          "refId": "A",
+          "refId": "F",
           "resultFormat": "time_series",
           "select": [
             [
@@ -1466,7 +1819,7 @@
               },
               {
                 "params": [],
-                "type": "last"
+                "type": "mean"
               }
             ]
           ],
@@ -1477,7 +1830,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Brennerlaufzeit",
+      "title": "Battery Level",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1493,16 +1846,17 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:609",
-          "format": "h",
-          "label": null,
+          "$$hashKey": "object:362",
+          "decimals": null,
+          "format": "percent",
+          "label": "",
           "logBase": 1,
-          "max": null,
-          "min": "0",
+          "max": "100",
+          "min": null,
           "show": true
         },
         {
-          "$$hashKey": "object:610",
+          "$$hashKey": "object:363",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1517,6 +1871,7 @@
       }
     }
   ],
+  "refresh": false,
   "schemaVersion": 26,
   "style": "dark",
   "tags": [],
@@ -1529,7 +1884,6 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
       "10s",
       "30s",
       "1m",
@@ -1553,7 +1907,7 @@
     ]
   },
   "timezone": "",
-  "title": "Heating",
-  "uid": "heating",
-  "version": 109
+  "title": "Wetterstation",
+  "uid": "weatherstation",
+  "version": 13
 }
