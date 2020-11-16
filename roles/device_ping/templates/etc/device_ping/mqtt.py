@@ -50,12 +50,14 @@ class Device(Thread):
         self.address_family = Helper.getAddressFamily(self.ip_address)
         self.interface = interface
 
-        #if self.type == "android":
-        #    self.onlineArpRetries =  1
-        #    self.offlineArpRetries =  1
-        #else:
+        if self.type == "android":
+            self.offlineArpRetries =  1
+        else:
+            # needed for multiple calls of 'knock' during offline check time
+            self.offlineArpRetries =  int( math.floor( (self.timeout / 4) * 1 / 10 ) )
+          
+        # needed for multiple calls of 'ping' and 'knock' during online check time
         self.onlineArpRetries =  int( math.floor( (self.timeout / 4) * 3 / 10 ) )
-        self.offlineArpRetries =  int( math.floor( (self.timeout / 4) * 1 / 10 ) )
 
         self.onlineArpCheckTime = int( math.floor( (self.timeout / 4) * 3 / self.onlineArpRetries ) )
         self.offlineArpCheckTime = int( math.floor( (self.timeout / 4) * 1 / self.offlineArpRetries ) )
@@ -93,7 +95,7 @@ class Device(Thread):
                 cmd = ("/usr/sbin/arping -w {} -C 1 -i {} {}".format(arpTime,self.interface,self.ip_address)).split()
                 process = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
                 
-                if process.returncode != 0:
+                if process.returncode != 0 and self.isOnline:
                     print("Arping for {} was unsuccessful. Fallback to normal ping".format(self.ip_address), flush=True)
                     cmd = ("/bin/ping -c 1 {}".format(self.ip_address)).split()
                     process = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
