@@ -11,12 +11,10 @@ class Handler(object):
     '''Handler client'''
     def __init__(self):
         self.terminated = False
-        self.connected = False
         self.process = None
         self.telnet_client = None
         self.mqtt_client = None
         self.lastPublishTime = datetime.now()
-        self.retryCount = 0
 
         self.cmds = ['getTempAussen', 'getTempAussenGedaempft', 'getTempVorlaufSoll','getTempVorlauf','getTempKesselSoll','getTempKessel','getHeizkreisPumpeDrehzahl','getBrennerStarts','getBrennerStunden','getTempWasserSpeicher','getTempSolarKollektor','getSolarStunden','getTempSolarSpeicher','getSolarLeistung','getSammelstoerung','getLeistungIst','getBetriebsart','getTempRaumSoll','getSolarPumpeStatus','getNachladeunterdrueckungStatus']
 
@@ -31,80 +29,54 @@ class Handler(object):
             raise Exception("Vcontrold not started") 
           
     def connectDaemon(self):
-        try:
-            print("Connect to vcontrold ...", end='', flush=True)
-            if self.telnet_client is not None:
-                self.telnet_client.close()
-            self.telnet_client = telnetlib.Telnet("localhost", "3002")
-            out = self.telnet_client.read_until(b"vctrld>",10)
-            if len(out) == 0:
-                print(" failed", flush=True)
-                self.telnet_client.close()
-                raise Exception("Vcontrold not readable") 
-            print(" connected", flush=True)
-        except:
-            print(" failed", flush=True)
-            raise Exception("Vcontrold not running") 
+        retryCount = 0
+        while retryCount <= 5:
+            try:
+                print("Connection to vcontrold ...", end='', flush=True)
+                self.telnet_client = telnetlib.Telnet("localhost", "3002")
+                print(" initialized", flush=True)
+
+                out = self.telnet_client.read_until(b"vctrld>",10)
+                if len(out) == 0:
+                    raise Exception("Vcontrold not readable") 
+                  
+                print("Connection to vcontrold successful", flush=True)
+                break
+            except:
+                if self.telnet_client != None:
+                    self.telnet_client.close()
+
+                print("Connection to vcontrold failed", flush=True)
+
+                retryCount = retryCount + 1
+                time.sleep(1)
+                #raise Exception("Vcontrold not running") 
           
     def connectMqtt(self):
-        try:
-            print("Connect to mqtt ...", end='', flush=True)
-            if self.mqtt_client is not None:
-                self.mqtt_client.disconnect()
-            self.mqtt_client = mqtt.Client()
-            self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
-            self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
-            self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
-            self.mqtt_client.connect("mosquitto", 1883, 60)
-            print(" connected", flush=True)
-            startTime = datetime.now()
-            while (datetime.now() - startTime).total_seconds() < 10:
-                self.mqtt_client.loop()
-                if self.terminated or self.connected:
-                    break
-            if not self.terminated and not self.connected:
-                raise Exception("Mqtt connection not acknowledged") 
-        except:
-            print(" failed", flush=True)
-            self.telnet_client.close()
-            raise Exception("Mqtt not running") 
+        print("Connection to mqtt ...", end='', flush=True)
+        self.mqtt_client = mqtt.Client()
+        self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
+        self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
+        self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
+        self.mqtt_client.connect("mosquitto", 1883, 60)
+        print(" initialized", flush=True)
+        
+        self.mqtt_client.loop_start()
           
     def loop(self):
-        #print("Loop", flush=True)
-        self.mqtt_client.loop()
-        
-        while not self.terminated and not self.connected:
-            print("Try reconnect to mqtt", flush=True)
-            try:
-                self.mqtt_client.reconnect()
-                startTime = datetime.now()
-                while (datetime.now() - startTime).total_seconds() < 10:
-                    self.mqtt_client.loop()
-                    if self.terminated or self.connected:
-                        break
-                if not self.terminated and not self.connected:
-                    raise Exception("Mqtt connection not acknowledged") 
-            except:
-                time.sleep(5)
-        
-        if not self.terminated:
-            dateTime = datetime.now()
-            if dateTime.second == 0 or (dateTime - self.lastPublishTime).total_seconds() >= 60 :
-                self.lastPublishTime = dateTime
-                self.publish()
-                
-        self.retryCount = 0
+        dateTime = datetime.now()
+        if dateTime.second == 0 or (dateTime - self.lastPublishTime).total_seconds() >= 60 :
+            self.lastPublishTime = dateTime
+            self.publish()
 
     def on_connect(self,client,userdata,flags,rc):
         print("Connected to mqtt with result code:"+str(rc), flush=True)
         if rc == 0:
-            self.connected = True
             # subscribe for all devices of user
             client.subscribe('+/vcontrol/setBetriebsartTo')
         
     def on_disconnect(self,client, userdata, rc):
         print("Disconnect from mqtt with result code:"+str(rc), flush=True)
-        self.connected = False
 
     def on_message(self,client,userdata,msg):
         if not self.damonIsAlive():
@@ -156,8 +128,8 @@ class Handler(object):
             self.telnet_client.close()
             self.telnet_client = None
             
-        if self.mqtt_client != None:
             print("Close connection to mqtt", flush=True)
+            self.mqtt_client.loop_stop()
             self.mqtt_client.disconnect()
             self.mqtt_client = None
             
@@ -179,7 +151,6 @@ class Handler(object):
             return True
       
 handler = Handler()
-
 def cleanup(signum, frame):
     #print(signum)
     #print(frame)
@@ -192,24 +163,18 @@ signal.signal(signal.SIGINT, cleanup)
 
 try:
     handler.startDaemon()
+
+    handler.connectMqtt()
+
+    handler.connectDaemon()
 except Exception as e:
     print(str(e), flush=True, file=sys.stderr)
     exit(1)
-    
-while True:
-    try:
-        handler.connectDaemon()
-        handler.connectMqtt()
-                
-        print("Start event loop", flush=True)
-        while not handler.isTerminated():          
-            handler.loop()   
-        print("End event loop", flush=True)
-        break
-    except Exception as e:
-        if not handler.canRetry(e):
-            break
-        time.sleep(1)
+        
+print("Start event loop", flush=True)
+while not handler.isTerminated():          
+    handler.loop()   
+print("End event loop", flush=True)
 
 if not handler.isTerminated():
     print("Shutdown handler", flush=True)

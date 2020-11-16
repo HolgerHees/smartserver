@@ -217,21 +217,23 @@ for name in network_r:
             container = Container("Container",name,sandboxKey,interfaceResult.stdout.decode("utf-8").strip())
             container_r[name] = container
             
-            portBindings = container_json['Config']['ExposedPorts']
-            if portBindings != None:
-                for exposedPortKey in portBindings:
-                    exposedPort,protocol = exposedPortKey.split("/")
-                    container.addExposedPort(exposedPort,protocol)
-                    #if network.name == 'host':
-                    #    container.addPublishedPort("0.0.0.0",exposedPort,exposedPort,protocol)
+            if 'ExposedPorts' in container_json['Config'].keys():
+                portBindings = container_json['Config']['ExposedPorts']
+                if portBindings != None:
+                    for exposedPortKey in portBindings:
+                        exposedPort,protocol = exposedPortKey.split("/")
+                        container.addExposedPort(exposedPort,protocol)
+                        #if network.name == 'host':
+                        #    container.addPublishedPort("0.0.0.0",exposedPort,exposedPort,protocol)
             
-            portBindings = container_json['HostConfig']['PortBindings']
-            if portBindings != None:
-                for exposedPortKey in portBindings:
-                    exposedPort,protocol = exposedPortKey.split("/")
-                    hostIp = portBindings[exposedPortKey][0]['HostIp']
-                    hostPort = portBindings[exposedPortKey][0]['HostPort']
-                    container.addPublishedPort(hostIp,hostPort,exposedPort,protocol)
+            if 'PortBindings' in container_json['HostConfig'].keys():
+                portBindings = container_json['HostConfig']['PortBindings']
+                if portBindings != None:
+                    for exposedPortKey in portBindings:
+                        exposedPort,protocol = exposedPortKey.split("/")
+                        hostIp = portBindings[exposedPortKey][0]['HostIp']
+                        hostPort = portBindings[exposedPortKey][0]['HostPort']
+                        container.addPublishedPort(hostIp,hostPort,exposedPort,protocol)
         
         veth = ""
         if network.name != 'host':
@@ -446,10 +448,13 @@ for row in rows:
             length += _length
             values.append(value)
         
-        value = " " + ", ".join(values) + " "
-        if len(row[5]) > len(values):
-            value += "... "
-            length += 4
+        if len(values)>0:
+            value = " " + ", ".join(values) + " "
+            if len(row[5]) > len(values):
+                value += "... "
+                length += 4
+        else:
+            value = ""
             
         print(value + "".ljust(65-length),end="")
         #print(value,end="")
