@@ -68,6 +68,8 @@ class Handler(object):
         if dateTime.second == 0 or (dateTime - self.lastPublishTime).total_seconds() >= 60 :
             self.lastPublishTime = dateTime
             self.publish()
+        else:
+            time.sleep(60-(dateTime - self.lastPublishTime).total_seconds())
 
     def on_connect(self,client,userdata,flags,rc):
         print("Connected to mqtt with result code:"+str(rc), flush=True)
