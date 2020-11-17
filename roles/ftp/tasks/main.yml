@@ -103,7 +103,7 @@
       PASV_ENABLE: "YES"
       PASV_ADDRESS: "127.0.0.1"
       PASV_MIN: "30000"
-      PASV_MAX: "30100"
+      PASV_MAX: "30005"
       UMASK: "027"
       TZ: "{{timezone}}"
     log_driver: journald
@@ -116,7 +116,7 @@
     networks_cli_compatible: yes
     published_ports:
       - "21:21"
-      - "30000-30100:30000-30100"
+      - "30000-30005:30000-30005"
   notify: "restart vsftpd"
 
 #- name: clean old docker images => image does not exists
