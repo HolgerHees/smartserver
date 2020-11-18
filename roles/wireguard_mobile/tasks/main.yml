@@ -1,11 +1,56 @@
 - name: prepare mobile settings
   set_fact:
     vpn_gates: []
-
-- name: filter vpn_gates
+    vpn_gate_server_privatekey: ""
+    vpn_gate_server_publickey: ""
+    vpn_gate_client_privatekeys: []
+    vpn_gate_client_publickeys: []
+  
+- name: generate server keys
+  shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
+  register: stat_server_key_result
+  changed_when: "stat_server_key_result.rc==0"
+  failed_when: False
+  
+- name: collect vpn gates and server keys
   set_fact:
-    vpn_gates: "{{ vpn_gates + ( userdata[item].vpn_gates | default(['']) | map('regex_replace', '(.*)', item + '_\\1') | map('regex_replace', '(.*)_$', '\\1') | list ) }}"
-  with_items: "{{userdata}}"
+    vpn_gates: |
+      {
+      {% for username in userdata %}
+      {% for vpn_name in userdata[username].vpn_gates %}
+      "{{username}}_{{vpn_name}}": "{{userdata[username].vpn_gates[vpn_name]}}",
+      {% endfor %}
+      {% endfor %}
+      }
+    vpn_gate_server_privatekey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_privatekey')}}"
+    vpn_gate_server_publickey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_publickey')}}"
+        
+- name: generate client keys
+  shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./client_{{item}}_privatekey ] || [ ! -f ./client_{{item}}_publickey ]) && wg genkey | tee ./client_{{item}}_privatekey | wg pubkey > ./client_{{item}}_publickey"
+  register: stat_client_key_result
+  changed_when: "stat_client_key_result.rc==0"
+  failed_when: False
+  with_items: "{{vpn_gates}}"
+
+- name: collect vpn gate client keys
+  set_fact:
+    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_privatekey')})  }}"
+    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_publickey')}) }}"
+  with_items: "{{vpn_gates}}"
+
+- name: copy server config
+  template:
+    src: "templates/wg0.conf"
+    dest: "{{ global_etc }}wireguard_mobile/wg0.conf"
+    mode: 0600
+  notify: "restart wireguard_mobile"
+  
+- name: copy client config
+  template:
+    src: "templates/wg_client.conf"
+    dest: "{{ global_etc }}wireguard_mobile/clients/wg_{{item}}.conf"
+    mode: 0600
+  with_items: "{{vpn_gates}}"
 
 - name: prepare config folder
   file:

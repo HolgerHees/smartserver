@@ -37,6 +37,8 @@
 #      , automake           # ???
 #      , lm_sensors
 #      , ImageMagick        # ???
+
+      , wireguard-tools
       
       , curl
       , bzip2
@@ -77,6 +79,8 @@
 #      , gcc                # ???
 #      , sensors
 #      , ImageMagick        # ???
+
+      , wireguard-tools
 
       , curl               # used to send multi part/formdata => kibana
       , bzip2              # used to import databases with bzcat

@@ -12,8 +12,10 @@ import os
 import socket
 
 devices = {
-{% for phone_name in phone_ips %}
-    {% if loop.index > 1 %},{% endif %}"{{phone_name}}": { "ip": "{{phone_ips[phone_name]['ip']}}", "type": "{{phone_ips[phone_name]['type'] | default('android')}}",  "timeout": {{phone_ips[phone_name]['timeout'] | default(90)}} }
+{% for username in userdata %}
+{% if userdata[username].phone_device is defined %}
+    {% if loop.index > 1 %},{% endif %}"phone_{{username}}": { "ip": "{{userdata[username].phone_device['ip']}}", "type": "{{userdata[username].phone_device['type'] | default('android')}}",  "timeout": {{userdata[username].phone_device['timeout'] | default(90)}} }
+{% endif %}
 {% endfor %}
 }
 
