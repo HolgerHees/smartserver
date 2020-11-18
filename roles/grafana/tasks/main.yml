@@ -32,20 +32,14 @@
     - "templates/dashboards/Server Health.json"
     - "templates/dashboards/Logs.json"
 
-- name: check individual grafana dashboard folder
-  shell: "ls -1 {{config_path}}roles/grafana/templates/dashboards/"
-  register: dashboard_result
-  changed_when: no
-  failed_when: no
-  
 - name: copy individual grafana dashboards
   copy:
-    src: "{{config_path}}roles/grafana/templates/dashboards/{{item}}"
-    dest: "{{ global_lib }}grafana/dashboards/{{item}}"
+    src: "{{config_path}}roles/grafana/templates/dashboards/{{item|basename}}"
+    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
     owner: root
     group: root
     mode: 0640
-  with_items: "{{dashboard_result.stdout_lines}}"
+  with_fileglob: "{{config_path}}roles/grafana/templates/dashboards/*"
   notify: "restart grafana"
 
 - name: copy grafana provisioning
