@@ -53,31 +53,36 @@
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
 
-# have to fetch files before, because ansible template module works only with local files
+# have to fetch files before, because ansible lookup module works only with local files
+- name: check keys folder
+  shell: "ls -1 {{global_etc}}wireguard_mobile/keys/"
+  register: vpn_key_result
+  changed_when: no
+
 - name: fetch keys
   fetch:
     src: "{{global_etc}}wireguard_mobile/keys/{{item}}"
-    dest: "/tmp/ansible"
-  with_fileglob: "{{global_etc}}wireguard_mobile/keys/*"
+    dest: "/tmp/ansible/wireguard_mobile/{{item}}"
+    flat: yes
+  with_items: "{{vpn_key_result.stdout_lines}}"
   changed_when: no
 
 - name: collect server keys
   set_fact:
-    vpn_gate_server_privatekey: "{{lookup('file', '/tmp/ansible/server_privatekey')}}"
-    vpn_gate_server_publickey: "{{lookup('file', '/tmp/ansible/server_publickey')}}"
+    vpn_gate_server_privatekey: "{{lookup('file', '/tmp/ansible/wireguard_mobile/server_privatekey')}}"
+    vpn_gate_server_publickey: "{{lookup('file', '/tmp/ansible/wireguard_mobile/server_publickey')}}"
 
 - name: collect client keys
   set_fact:
-    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | default([]) | combine({ item : lookup('file', '/tmp/ansible/client_' + item + '_privatekey')})  }}"
-    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | default([]) | combine({ item : lookup('file', '/tmp/ansible/client_' + item + '_publickey')}) }}"
+    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | default([]) | combine({ item : lookup('file', '/tmp/ansible/wireguard_mobile/client_' + item + '_privatekey')})  }}"
+    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | default([]) | combine({ item : lookup('file', '/tmp/ansible/wireguard_mobile/client_' + item + '_publickey')}) }}"
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
 
 - name: clean keys
   file:
-    path: "/tmp/ansible/{{item}}"
+    path: "/tmp/ansible/wireguard_mobile/"
     state: absent
-  with_fileglob: "/tmp/ansible/*"
   changed_when: no
   
 - name: copy server config

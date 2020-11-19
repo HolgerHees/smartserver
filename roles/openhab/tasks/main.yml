@@ -298,14 +298,15 @@
 - name: prepare service configs
   fetch:
     src: "{{projects_path}}openhab2/templates/services/{{item}}"
-    dest: "/tmp/ansible"
+    dest: "/tmp/ansible/openhab2/services/{{item}}"
+    flat: yes
   register: services_state
   with_items: "{{services_result.stdout_lines}}"
   changed_when: no
     
 - name: copy service configs
   template:
-    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/services/{{item}}"
+    src: "/tmp/ansible/openhab2/services/{{item}}"
     dest: "{{ global_etc }}openhab/conf/services/{{item}}"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
@@ -323,14 +324,15 @@
 - name: prepare things config
   fetch:
     src: "{{projects_path}}openhab2/templates/things/{{item}}"
-    dest: "/tmp/ansible"
+    dest: "/tmp/ansible/openhab2/things/{{item}}"
+    flat: yes
   register: things_state
   with_items: "{{things_result.stdout_lines}}"
   changed_when: no
 
 - name: copy things configs
   template:
-    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/things/{{item}}"
+    src: "/tmp/ansible/openhab2/things/{{item}}"
     dest: "{{ global_etc }}openhab/conf/things/{{item}}"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
@@ -348,14 +350,15 @@
 - name: prepare udev rules
   fetch:
     src: "{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
-    dest: "/tmp/ansible"
+    dest: "/tmp/ansible/openhab2/udev/{{item}}"
+    flat: yes
   register: udev_state
   with_items: "{{udev_result.stdout_lines}}"
   changed_when: no
 
 - name: copy udev rules
   template:
-    src: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
+    src: "/tmp/ansible/openhab2/udev/{{item}}"
     dest: "/etc/udev/rules.d/{{item}}"
     owner: root
     group: root
@@ -371,7 +374,7 @@
 # CLEANUP  
 - name: clean configs
   file:
-    path: "/tmp/ansible/{{ inventory_hostname }}{{projects_path}}openhab2/"
+    path: "/tmp/ansible/openhab2/"
     state: absent
   changed_when: no
   
