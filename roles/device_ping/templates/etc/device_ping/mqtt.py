@@ -19,7 +19,7 @@ devices = {
 {% endfor %}
 }
 
-interface = "{{main_device_result.stdout}}"
+interface = "{{main_network_interface}}"
 
 class Helper():
     def knock(address_family,ip_address):

@@ -104,7 +104,7 @@
 - name: allow postfix service
   vars:
     name: "postfix"
-    rule: "saddr {{docker_postfix_ip}} daddr !{{server_network}}/24"
+    rule: "outerface {{main_network_interface}} saddr {{docker_postfix_ip}} daddr !{{server_network}}/24"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]

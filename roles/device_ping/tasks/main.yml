@@ -33,11 +33,6 @@
       - '{{global_etc}}device_ping/:/etc/device_ping:ro,z'
 #  notify: "restart device_ping"
 
-- name: detect main network device
-  shell: "ip a | grep -P \"inet {{server_ip}}\" | grep -Po \"[a-z0-9]*$\""
-  register: "main_device_result"
-  changed_when: False
-
 - name: copy config and service
   template:
     src: "templates{{item.src}}"

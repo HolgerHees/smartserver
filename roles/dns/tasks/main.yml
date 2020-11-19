@@ -58,8 +58,8 @@
   vars:
     name: "dns"
     rules: [
-      "saddr {{docker_dns_ip}} daddr {{dns1}}",
-      "saddr {{docker_dns_ip}} daddr {{dns2}}"
+      "outerface {{main_network_interface}} saddr {{docker_dns_ip}} daddr {{dns1}}",
+      "outerface {{main_network_interface}} saddr {{docker_dns_ip}} daddr {{dns2}}"
     ]
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml

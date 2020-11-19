@@ -20,6 +20,7 @@
           - "network:    {{server_network}}"
           - "arpha:      {{server_arpa}}"
           - "os-name:    {{ansible_distribution}}"
+          - "net:        {{main_network_interface}}"
       tags: always
 
     - name: dynamic values from init role

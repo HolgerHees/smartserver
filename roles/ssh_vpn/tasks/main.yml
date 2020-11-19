@@ -74,7 +74,7 @@
 # ***** FINALIZE *****
 - name: prepare iptables rules
   set_fact:
-    ssh_vpn_rules: "{{ (ssh_vpn_rules | default([])) + [ 'proto tcp saddr ' + item + ' dport ' + vault_ssh_vpn_internal_port ] }}"
+    ssh_vpn_rules: "{{ (ssh_vpn_rules | default([])) + [ 'interface ' + main_network_interface + ' proto tcp saddr ' + item + ' dport ' + vault_ssh_vpn_internal_port ] }}"
   with_items: "{{ vault_ssh_vpn_allowed_ips }}"
   tags: [ 'firewall_config' ]
         

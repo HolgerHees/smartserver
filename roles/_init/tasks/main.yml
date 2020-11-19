@@ -49,10 +49,16 @@
   include_vars: "config/shared.yml"
   tags: always
   
+- name: detect main network device
+  shell: "ip a | grep -P \"inet {{server_ip}}\" | grep -Po \"[a-z0-9]*$\""
+  register: "main_device_result"
+  changed_when: False
+
 # set environment specific variables [post]
 - name: set post state vars
   set_fact:
     local_import_path: "{{playbook_dir}}/{{config_path}}backup/"
+    main_network_interface: "{{main_device_result.stdout}}"
   tags: always
 
 - name: register user_id map
@@ -60,3 +66,4 @@
     system_users: {}
     system_groups: {}
     vault_ssl_certificate: "{{ vault_ssl_certificate | default('selfsigned') }}"    # selfsigned | letsencrypt
+  
