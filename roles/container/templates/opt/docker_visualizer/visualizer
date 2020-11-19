@@ -347,7 +347,6 @@ for network in sorted_network_r:
                     for listen_port in listen_port_map[name]:
                         listen_port = listen_port_map[name][listen_port]
                         if listen_port['port'] == port["port"]:
-                            print(port)
                             access = listen_port['access']
                             break
                             
