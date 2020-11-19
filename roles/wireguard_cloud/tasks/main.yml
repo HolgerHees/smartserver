@@ -141,13 +141,32 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "wg_image_name not in image_exists.stdout"
   
+- name: prepare used ports
+  set_fact:
+    wireguard_cloud_ports: |
+      {
+      {% for peer in vault_cloud_vpn_network.peers %}
+      "{{vault_cloud_vpn_network.peers[peer].port}}": "{{vault_cloud_vpn_network.peers[peer].port}}",
+      {% endfor %}
+      }
+  tags: [ 'firewall_config' ]
+  
+- name: prepare ferm rules
+  set_fact:
+    wireguard_cloud_ferm_rules: |
+      [
+      {% for port in wireguard_cloud_ports %}
+      "outerface {{main_network_interface}} saddr {{docker_cloud_ip}} daddr !{{server_network}}/24 proto udp dport {{port}}",
+      {% endfor %}
+      "daddr {{docker_cloud_ip}} proto udp dport {{vault_cloud_vpn_network.interface.port}}"
+      ]
+  tags: [ 'firewall_config' ]
+
 # ***** FINALIZE *****
 - name: allow cloud service
   vars:
     name: "wireguard.cloud_vpn"
-    rules: 
-      - "outerface {{main_network_interface}} saddr {{docker_cloud_ip}} daddr !{{server_network}}/24"
-      - "daddr {{docker_cloud_ip}} proto udp dport {{vault_cloud_vpn_network.interface.port}}"
+    rules: "{{wireguard_cloud_ferm_rules}}"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
