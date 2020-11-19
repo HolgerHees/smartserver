@@ -1,6 +1,8 @@
 #!/bin/sh
 cd /etc/wireguard
 
+source ./peers
+
 #https://wiki.archlinux.org/index.php/NFS/Troubleshooting
 
 #rpcdebug -m nfsd all
@@ -8,103 +10,45 @@ cd /etc/wireguard
 #https://www.heise.de/ct/artikel/NFSv4-unter-Linux-221582.html?seite=all
 # check cat /proc/net/rpc/auth.unix.ip/content
 
-initDeviceConfig()
-{
-    PRIVATE_KEY=$(cat ./keys/server_privatekey)
-
-    NEW_CONFIG="[Interface]
-PrivateKey = ${PRIVATE_KEY}
-Address = {{wg_cloud_network.interface.address}}
-ListenPort = {{wg_exposed_port}}
-
-{% for peer_name in wg_cloud_network.peers %}
-[Peer]
-PublicKey = {{wg_cloud_network.peers[peer_name].publicKey}}
-AllowedIPs = {{wg_cloud_network.peers[peer_name].allowedIPs}}
-Endpoint = {{wg_cloud_network.peers[peer_name].endpoint}}
-PersistentKeepalive = 25
-{% endfor %}"
-
-    OLD_CONFIG=$(cat wg0.conf)
-
-    if [ ! -f wg0.conf ] || [ "$OLD_CONFIG" != "$NEW_CONFIG" ]
-    then
-        echo "$NEW_CONFIG" > wg0.conf
-        chmod 600 wg0.conf
-    fi
-}
-
-initExports()
-{
-    NEW_EXPORTS="{% for peer_name in wg_cloud_network.peers %}
-/cloud/export/{{peer_name}} {{wg_cloud_network.peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
-{% endfor %}"
-
-    OLD_EXPORTS=$(cat /etc/exports)
-
-    if [ ! -f /etc/export ] || [ "$OLD_EXPORTS" != "$NEW_EXPORTS" ]
-    then
-        echo "$NEW_EXPORTS" > /etc/exports
-        chmod 640 /etc/exports
-    fi
-}
-
-initFstab()
-{
-{% for peer_name in wg_cloud_network.peers %}
-    if ! grep -q '{{wg_cloud_network.peers[peer_name].nfsServer}}' /etc/fstab ; then
-        #echo '{{wg_cloud_network.peers[peer_name].nfsServer}}:/cloud/export/{{main_network}} /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
-        echo '{{wg_cloud_network.peers[peer_name].nfsServer}}:/ /cloud/mount/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0' >> /etc/fstab
-    fi
-{% endfor %}
-}
-
 mountShares()
 {
-{% for peer_name in wg_cloud_network.peers %}
-    peer_ip_{{peer_name}}='{{wg_cloud_network.peers[peer_name].nfsServer}}'
-{% endfor %}
-    peers="{% for peer_name in wg_cloud_network.peers %}{{peer_name}} {% endfor %}"
-
-    echo "mount nfs shares..."
-    x=1
-    while :
-    do
-        mount_state=0
-        
-        for name in $peers
+    if [ -n "$peers" ]
+    then
+        echo "mount nfs shares..."
+        x=1
+        while :
         do
-            if [ ! $(mountpoint -q /cloud/mount/$name) ]
-            then
-                eval "peer_ip=\$peer_ip_$name"
-                echo "check reachability of $peer_ip"
-                nc -w 1 -z $peer_ip 2049
-                STATUS=$( echo $? )
-                if [[ $STATUS == 0 ]]
+            mount_state=0
+            
+            for name in $peers
+            do
+                if [ ! $(mountpoint -q /cloud/mount/$name) ]
                 then
-                    echo "mount /cloud/mount/$name"
-                    mount /cloud/mount/$name
-                else
-                    mount_state=1
+                    eval "nfs_server_ip=\$nfs_server_ip_$name"
+                    echo "check reachability of $nfs_server_ip"
+                    nc -w 1 -z $nfs_server_ip 2049
+                    STATUS=$( echo $? )
+                    if [[ $STATUS == 0 ]]
+                    then
+                        echo "mount /cloud/mount/$name"
+                        mount /cloud/mount/$name
+                    else
+                        mount_state=1
+                    fi
                 fi
+            done
+            
+            if [ $mount_state == 0 ]
+            then
+                echo "...done"
+                break
+            else
+                sleep 15
             fi
         done
-        
-        if [ $mount_state == 0 ]
-        then
-            echo "...done"
-            break
-        else
-            sleep 1
-            x=$(( $x + 1 ))
-            
-            if [ $x -gt 30 ]
-            then
-                echo "...giving up"
-                break
-            fi
-        fi
-    done
+    else
+        echo "skipped nfs mounts"
+    fi
 }
 
 stop()
@@ -112,10 +56,11 @@ stop()
     echo "SIGTERM caught, shutting down..."
     
     echo "unmount nfs shares"
-{% for peer_name in wg_cloud_network.peers %}
-    echo "unmount /cloud/mount/{{peer_name}}"
-    umount -f -l /cloud/mount/{{peer_name}} > /dev/null 2>&1
-{% endfor %}
+    for name in $peers
+    do
+        echo "unmount /cloud/mount/$name"
+        umount -f -l /cloud/mount/$name > /dev/null 2>&1
+    done
 
     echo "terminating nfs process(es)"
     /usr/sbin/exportfs -uav
@@ -198,18 +143,7 @@ start()
     echo "...done"
 }
 
-if [ ! -f ./keys/server_privatekey ] || [ ! -f ./keys/server_publickey ]
-then
-    wg genkey | tee ./keys/server_privatekey | wg pubkey > ./keys/server_publickey
-fi
-
 trap "stop" SIGTERM SIGINT
-
-initDeviceConfig
-
-initExports
-
-initFstab
 
 start
 

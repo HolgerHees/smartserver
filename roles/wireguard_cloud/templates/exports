@@ -1,0 +1,3 @@
+{% for peer_name in vault_cloud_vpn_network.peers %}
+/cloud/export/{{peer_name}} {{vault_cloud_vpn_network.peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
+{% endfor %} 
