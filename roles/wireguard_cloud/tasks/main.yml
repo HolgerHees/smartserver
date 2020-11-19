@@ -19,12 +19,12 @@
     mode: 0750
   with_items:
     - "{{raid_path}}cloud"
-    - "{{raid_path}}cloud/export"
-    - "{{raid_path}}cloud/mount"
+    - "{{raid_path}}cloud/local"
+    - "{{raid_path}}cloud/remote"
 
 - name: prepare nfs exported folder
   file:
-    path: "{{raid_path}}cloud/export/{{item}}"
+    path: "{{raid_path}}cloud/local/{{item}}"
     state: directory
     owner: "root"
     group: "root"
@@ -33,7 +33,7 @@
 
 - name: prepare nfs mount points
   file:
-    path: "{{raid_path}}cloud/mount/{{item}}"
+    path: "{{raid_path}}cloud/remote/{{item}}"
     state: directory
     owner: "root"
     group: "root"
@@ -72,31 +72,11 @@
   changed_when: "stat_server_key_result.rc==0"
   failed_when: False
   
-# have to fetch files before, because ansible lookup module works only with local files
-- name: check keys folder
-  shell: "ls -1 {{global_etc}}wireguard_cloud/keys/"
-  register: vpn_key_result
-  changed_when: no
-
-- name: fetch keys
-  fetch:
-    src: "{{global_etc}}wireguard_cloud/keys/{{item}}"
-    dest: "/tmp/ansible/wireguard_cloud/{{item}}"
-    flat: yes
-  with_items: "{{vpn_key_result.stdout_lines}}"
-  changed_when: no
-  
 - name: collect server keys
   set_fact:
-    wg_cloud_server_privatekey: "{{lookup('file', '/tmp/ansible/wireguard_cloud/server_privatekey')}}"
-    wg_cloud_server_publickey: "{{lookup('file', '/tmp/ansible/wireguard_cloud/server_publickey')}}"
+    wg_cloud_server_privatekey: "{{lookup('file', global_etc + 'wireguard_cloud/keys/server_privatekey')}}"
+    wg_cloud_server_publickey: "{{lookup('file', global_etc + 'wireguard_cloud/keys/server_publickey')}}"
 
-- name: clean keys
-  file:
-    path: "/tmp/ansible/wireguard_cloud/"
-    state: absent
-  changed_when: no
-  
 - name: copy server config
   template:
     src: "templates/{{item}}"

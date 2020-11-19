@@ -30,8 +30,8 @@ mountShares()
                     STATUS=$( echo $? )
                     if [[ $STATUS == 0 ]]
                     then
-                        echo "mount /cloud/mount/$name"
-                        mount /cloud/mount/$name
+                        echo "mount /cloud/remote/$name"
+                        mount /cloud/remote/$name
                     else
                         mount_state=1
                     fi
@@ -58,8 +58,8 @@ stop()
     echo "unmount nfs shares"
     for name in $peers
     do
-        echo "unmount /cloud/mount/$name"
-        umount -f -l /cloud/mount/$name > /dev/null 2>&1
+        echo "unmount /cloud/remote/$name"
+        umount -f -l /cloud/remote/$name > /dev/null 2>&1
     done
 
     echo "terminating nfs process(es)"
