@@ -390,6 +390,8 @@ for network in sorted_network_r:
                             value = rule['targetPort']
                             if rule['chain'] == 'input':
                                 value = host_ip + ":" + value
+                            else:
+                                value = rule['targetIp'] + ":" + value
                         else:
                             value = '*' if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp']
                         outgoingValue.append(value)
