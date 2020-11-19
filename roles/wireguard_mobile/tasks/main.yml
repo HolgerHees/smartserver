@@ -36,9 +36,11 @@
     vpn_gates: |
       {
       {% for username in userdata %}
+      {% if userdata[username].vpn_gates is defined %}
       {% for vpn_name in userdata[username].vpn_gates %}
       "{{username}}_{{vpn_name}}": "{{userdata[username].vpn_gates[vpn_name]}}",
       {% endfor %}
+      {% endif %}
       {% endfor %}
       }
     vpn_gate_server_privatekey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_privatekey')}}"
