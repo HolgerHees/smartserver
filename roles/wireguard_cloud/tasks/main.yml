@@ -130,6 +130,7 @@
     #hostname: "nfsd"
     networks:
       - name: "isolated"
+        ipv4_address: "{{docker_cloud_ip}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
@@ -149,7 +150,9 @@
 - name: allow cloud service
   vars:
     name: "wireguard.cloud_vpn"
-    rule: "proto udp dport {{vault_cloud_vpn_network.interface.listenPort}}"
+    rules: 
+      - "saddr {{docker_cloud_ip}} daddr !{{server_network}}/24"
+      - "proto udp dport {{vault_cloud_vpn_network.interface.listenPort}}"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
