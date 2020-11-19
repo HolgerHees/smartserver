@@ -1,8 +1,3 @@
-- name: prepare cloud settings
-  set_fact:
-    wg_exposed_port: "51820"
-  tags: [ 'firewall_config' ]
-  
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -139,7 +134,7 @@
       - '{{raid_path}}cloud:/cloud:z,rshared'
     published_ports:
     # - "2050:2049/tcp"
-     - "{{vault_cloud_vpn_network.interface.listenPort}}:{{wg_exposed_port}}/udp"
+     - "{{vault_cloud_vpn_network.interface.listenPort}}:{{vault_cloud_vpn_network.interface.listenPort}}/udp"
   notify: "restart wireguard_cloud"
 
 #- name: clean old docker images => image does not exists
@@ -152,7 +147,7 @@
     name: "wireguard.cloud_vpn"
     rules: 
       - "saddr {{docker_cloud_ip}} daddr !{{server_network}}/24"
-      - "proto udp dport {{vault_cloud_vpn_network.interface.listenPort}}"
+      - "daddr {{docker_cloud_ip}} proto udp dport {{vault_cloud_vpn_network.interface.listenPort}}"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]

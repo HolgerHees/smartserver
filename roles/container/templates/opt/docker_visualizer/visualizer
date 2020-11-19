@@ -141,7 +141,7 @@ for rule in iptables_rules:
 
 # Collect additional ports
 listen_port_map = {}
-additional_port_list = execCommand("lsof -i -P -n | grep -v \"docker\" | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
+additional_port_list = execCommand("lsof -i -P -n | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
 for additional_port in additional_port_list:
     additional_port = additional_port.split(" ")
     additional_port = list(filter(lambda item: item.strip(), additional_port))
@@ -340,10 +340,20 @@ for network in sorted_network_r:
         openPorts = {}
         if network.name == 'host' and len(container.publishedPorts) > 0:
             for key in container.publishedPorts:
-                port = container.publishedPorts[key]
-                openPorts[port["hostPort"]] = {
-                  "port": port["hostPort"]+"/"+port["protocol"],
-                  "access": port["access"]
+                parts = key.split(":")
+                port = container.exposedPorts[parts[2] + ":" + parts[3]]
+                access = "local"
+                for name in listen_port_map:
+                    for listen_port in listen_port_map[name]:
+                        listen_port = listen_port_map[name][listen_port]
+                        if listen_port['port'] == port["port"]:
+                            print(port)
+                            access = listen_port['access']
+                            break
+                            
+                openPorts[port["port"]] = {
+                  "port": port["port"]+"/"+port["protocol"],
+                  "access": access
                 }
         else:
             for key in container.exposedPorts:
@@ -385,14 +395,15 @@ for network in sorted_network_r:
                             value = '*' if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp']
                         outgoingValue.append(value)
                     
-                    activeChain = 'input' if network.name == 'host' and connection.veth != "forwarded" else 'docker-user'
-                    
-                    if chain == activeChain:
-                        hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
-                        for key in openPorts:
-                            data = openPorts[key]
-                            if hostMatch or rule['targetPort'] == key:
-                                data["access"] = "extern"
+                    if network.driver == "host":
+                        activeChain = 'input' if network.name == 'host' and connection.veth != "forwarded" else 'docker-user'
+                        
+                        if chain == activeChain:
+                            hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
+                            for key in openPorts:
+                                data = openPorts[key]
+                                if hostMatch or rule['targetPort'] == key:
+                                    data["access"] = "extern"
 
         rows.append([2,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
                 
