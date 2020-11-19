@@ -47,17 +47,17 @@
     mode: 0640
   with_items:
     - { src: "/etc/device_ping/mqtt.py", dest: "{{global_etc}}device_ping/mqtt.py" }
-#  notify: "restart device_ping"
+  notify: "restart device_ping"
 
 # ***** FINALIZE *****
-#- name: create systemd service
-#  vars:
-#    container_name: "device_ping"
-#    container_after: [ "mosquitto" ]
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "device_ping"
+    container_after: [ "mosquitto" ]
+  import_tasks: roles/container/tasks/add_docker_service.yml
 
-#- name: trigger device_ping handler
-#  vars:
-#    notify: "restart device_ping"
-#    service: "device_ping.service"
-#  import_tasks: roles/base/tasks/service_check.yml
+- name: trigger device_ping handler
+  vars:
+    notify: "restart device_ping"
+    service: "device_ping.service"
+  import_tasks: roles/base/tasks/service_check.yml
