@@ -43,8 +43,6 @@
       {% endif %}
       {% endfor %}
       }
-    vpn_gate_server_privatekey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_privatekey')}}"
-    vpn_gate_server_publickey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_publickey')}}"
   tags: [ 'user' ]
       
 - name: generate client keys
@@ -55,13 +53,33 @@
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
 
-- name: collect vpn gate client keys
+# have to fetch files before, because ansible template module works only with local files
+- name: fetch keys
+  fetch:
+    src: "{{global_etc}}wireguard_mobile/keys/{{item}}"
+    dest: "/tmp/ansible"
+  with_fileglob: "{{global_etc}}wireguard_mobile/keys/*"
+  changed_when: no
+
+- name: collect server keys
   set_fact:
-    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | default([]) | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_privatekey')})  }}"
-    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | default([]) | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_publickey')}) }}"
+    vpn_gate_server_privatekey: "{{lookup('file', '/tmp/ansible/server_privatekey')}}"
+    vpn_gate_server_publickey: "{{lookup('file', '/tmp/ansible/server_publickey')}}"
+
+- name: collect client keys
+  set_fact:
+    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | default([]) | combine({ item : lookup('file', '/tmp/ansible/client_' + item + '_privatekey')})  }}"
+    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | default([]) | combine({ item : lookup('file', '/tmp/ansible/client_' + item + '_publickey')}) }}"
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
 
+- name: clean keys
+  file:
+    path: "/tmp/ansible/{{item}}"
+    state: absent
+  with_fileglob: "/tmp/ansible/*"
+  changed_when: no
+  
 - name: copy server config
   template:
     src: "templates/wg0.conf"
