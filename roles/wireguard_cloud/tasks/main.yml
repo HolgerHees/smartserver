@@ -91,17 +91,17 @@
   with_items: "{{vpn_key_result.stdout_lines}}"
   changed_when: no
   
+- name: collect server keys
+  set_fact:
+    wg_cloud_server_privatekey: "{{lookup('file', '/tmp/ansible/wireguard_cloud/server_privatekey')}}"
+    wg_cloud_server_publickey: "{{lookup('file', '/tmp/ansible/wireguard_cloud/server_publickey')}}"
+
 - name: clean keys
   file:
     path: "/tmp/ansible/wireguard_cloud/"
     state: absent
   changed_when: no
   
-- name: collect server keys
-  set_fact:
-    wg_cloud_server_privatekey: "{{lookup('file', global_etc + 'wireguard_cloud/keys/server_privatekey')}}"
-    wg_cloud_server_publickey: "{{lookup('file', global_etc + 'wireguard_cloud/keys/server_publickey')}}"
-
 - name: copy server config
   template:
     src: "templates/{{item}}"
