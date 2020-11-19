@@ -15,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
@@ -24,13 +23,21 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 7,
         "w": 24,
         "x": 0,
         "y": 0
       },
+      "hiddenSeries": false,
       "id": 1,
       "legend": {
         "avg": false,
@@ -45,7 +52,11 @@
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
+      "pluginVersion": "7.2.1",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -255,13 +266,21 @@
       "dashes": false,
       "datasource": "InfluxDB",
       "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 7,
         "w": 24,
         "x": 0,
         "y": 7
       },
+      "hiddenSeries": false,
       "id": 2,
       "legend": {
         "alignAsTable": true,
@@ -277,7 +296,11 @@
       "linewidth": 1,
       "links": [],
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
+      "pluginVersion": "7.2.1",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -323,44 +346,6 @@
             ]
           ],
           "tags": []
-        },
-        {
-          "alias": "Innen",
-          "dsType": "influxdb",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Temperature_Wireless",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
         }
       ],
       "thresholds": [],
@@ -383,6 +368,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:162",
           "format": "celsius",
           "label": null,
           "logBase": 1,
@@ -391,6 +377,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:163",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -405,7 +392,7 @@
       }
     }
   ],
-  "schemaVersion": 18,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -443,5 +430,5 @@
   "timezone": "",
   "title": "Pflanzen",
   "uid": "plants",
-  "version": 2
+  "version": 1
 }

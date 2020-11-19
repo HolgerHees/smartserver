@@ -1,17 +1,5 @@
-- name: set active network
-  set_fact:
-    wg_active_network: "{{main_network | default(vault_cloud_vpn_networks | first)}}"
-  tags: [ 'update_notifier_configs', 'firewall_config' ]
-    
 - name: prepare cloud settings
   set_fact:
-    wg_is_main_network: "{{wg_active_network == (vault_cloud_vpn_networks | first)}}"
-    wg_cloud_network: "{{vault_cloud_vpn_networks[wg_active_network]}}"
-    wg_etc_dir_name: "wireguard_{{wg_active_network}}"
-    wg_data_dir_name: "cloud{{ '' if wg_active_network == (vault_cloud_vpn_networks | first) else '_' + wg_active_network }}"
-    wg_build_dir_name: "wireguard_{{wg_active_network}}"
-    wg_container_name: "wireguard_{{wg_active_network}}"
-    wg_image_name: "custom_wireguard_cloud"
     wg_exposed_port: "51820"
   tags: [ 'firewall_config' ]
   
@@ -23,9 +11,9 @@
     group: "root"
     mode: 700
   with_items:
-    - "{{global_etc}}{{wg_etc_dir_name}}"
-    - "{{global_etc}}{{wg_etc_dir_name}}/keys"
-    - "{{global_etc}}{{wg_etc_dir_name}}/util"
+    - "{{global_etc}}wireguard_cloud"
+    - "{{global_etc}}wireguard_cloud/keys"
+    - "{{global_etc}}wireguard_cloud/util"
 
 - name: prepare cloud folder
   file:
@@ -35,37 +23,37 @@
     group: "root"
     mode: 0750
   with_items:
-    - "{{raid_path}}{{wg_data_dir_name}}"
-    - "{{raid_path}}{{wg_data_dir_name}}/export"
-    - "{{raid_path}}{{wg_data_dir_name}}/mount"
+    - "{{raid_path}}cloud"
+    - "{{raid_path}}cloud/export"
+    - "{{raid_path}}cloud/mount"
 
 - name: prepare nfs exported folder
   file:
-    path: "{{raid_path}}{{wg_data_dir_name}}/export/{{item}}"
+    path: "{{raid_path}}cloud/export/{{item}}"
     state: directory
     owner: "root"
     group: "root"
     mode: 0750
-  with_items: "{{wg_cloud_network.peers}}"
+  with_items: "{{vault_cloud_vpn_network.peers}}"
 
 - name: prepare nfs mount points
   file:
-    path: "{{raid_path}}{{wg_data_dir_name}}/mount/{{item}}"
+    path: "{{raid_path}}cloud/mount/{{item}}"
     state: directory
     owner: "root"
     group: "root"
     mode: 0750
-  with_items: "{{wg_cloud_network.peers}}"
+  with_items: "{{vault_cloud_vpn_network.peers}}"
 
 - name: check for vault keys
   stat:
-    path: "{{config_path}}vault/{{wg_etc_dir_name}}"
+    path: "{{config_path}}vault/wireguard_cloud"
   register: key_directory
 
 - name: copy keys => is_production and key_directory exists
   copy:
-    src: "{{config_path}}vault/{{wg_etc_dir_name}}"
-    dest: "{{global_etc}}{{wg_etc_dir_name}}keys/"
+    src: "{{config_path}}vault/wireguard_cloud/"
+    dest: "{{global_etc}}wireguard_cloud/keys/"
     decrypt: yes
     owner: root
     group: root
@@ -75,32 +63,55 @@
 - name: copy util
   template:
     src: "roles/wireguard_cloud/templates/util/{{item}}"
-    dest: "{{global_etc}}{{wg_etc_dir_name}}/util/{{item}}"
+    dest: "{{global_etc}}wireguard_cloud/util/{{item}}"
     owner: root
     group: root
     mode: 0700
   with_items:
     - wg-startup.sh
   notify: "restart wireguard_cloud"
+  
+- name: generate server keys
+  shell: "cd {{global_etc}}wireguard_cloud/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
+  register: stat_server_key_result
+  changed_when: "stat_server_key_result.rc==0"
+  failed_when: False
+  
+- name: collect server keys
+  set_fact:
+    wg_cloud_server_privatekey: "{{lookup('file', global_etc + 'wireguard_cloud/keys/server_privatekey')}}"
+    wg_cloud_server_publickey: "{{lookup('file', global_etc + 'wireguard_cloud/keys/server_publickey')}}"
+
+- name: copy server config
+  template:
+    src: "templates/{{item}}"
+    dest: "{{ global_etc }}wireguard_cloud/{{item}}"
+    mode: 0600
+  notify: "restart wireguard_cloud"
+  with_items:
+    - "wg0.conf"
+    - "peers"
+    - "exports"
+    - "fstab"
 
 - name: build docker image
   vars:
-    name: "{{wg_build_dir_name}}"
-    image_name: "{{wg_image_name}}"
+    name: "wireguard_cloud"
+    image_name: "custom_wireguard_cloud"
     image_version: "{{alpine_version}}"
     files:
       - roles/wireguard_cloud/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect cloud container
-  docker_network:
-    name: cloud
-    appends: yes
+#- name: create docker network
+#  docker_network:
+#    name: cloud
+#    appends: yes
 
 - name: create docker container
   docker_container:
-    name: "{{wg_container_name}}"
-    image: "{{wg_image_name}}:{{alpine_version}}"
+    name: "wireguard_cloud"
+    image: "custom_wireguard_cloud:{{alpine_version}}"
     state: present
 #    network_mode: "none"
 #    recreate: true
@@ -108,7 +119,7 @@
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
-      tag: "{{wg_container_name}}"
+      tag: "wireguard_cloud"
     #capabilities:
     #  - NET_ADMIN
     #  - SYS_MODULE
@@ -118,14 +129,17 @@
     #domainname : "cloud"
     #hostname: "nfsd"
     networks:
-      - name: "cloud"
+      - name: "isolated"
+        ipv4_address: "{{docker_cloud_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}{{wg_etc_dir_name}}:/etc/wireguard:z'
-      - '{{raid_path}}{{wg_data_dir_name}}:/cloud:z,rshared'
-    ports:
+      - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
+      - '{{global_etc}}wireguard_cloud/exports:/etc/exports:z'
+      - '{{global_etc}}wireguard_cloud/fstab:/etc/fstab:z'
+      - '{{raid_path}}cloud:/cloud:z,rshared'
+    published_ports:
     # - "2050:2049/tcp"
-     - "{{wg_cloud_network.interface.listenPort}}:{{wg_exposed_port}}/udp"
+     - "{{vault_cloud_vpn_network.interface.listenPort}}:{{wg_exposed_port}}/udp"
   notify: "restart wireguard_cloud"
 
 #- name: clean old docker images => image does not exists
@@ -135,21 +149,22 @@
 # ***** FINALIZE *****
 - name: allow cloud service
   vars:
-    name: "wireguard.cloud_{{wg_active_network}}"
-    rule: "proto udp dport {{wg_cloud_network.interface.listenPort}}"
+    name: "wireguard.cloud_vpn"
+    rules: 
+      - "saddr {{docker_cloud_ip}} daddr !{{server_network}}/24"
+      - "proto udp dport {{vault_cloud_vpn_network.interface.listenPort}}"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
-    container_name: "{{wg_container_name}}"
+    container_name: "wireguard_cloud"
     trigger_name: "wireguard_cloud"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger wireguard_cloud handler
   vars:
     notify: "restart wireguard_cloud"
-    service: "{{wg_container_name}}.service"
+    service: "wireguard_cloud.service"
   import_tasks: roles/base/tasks/service_check.yml
-  #when: "wg_is_main_network"

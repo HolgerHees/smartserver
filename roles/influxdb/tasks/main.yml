@@ -45,13 +45,20 @@
       - '{{ global_lib }}influxdb:/var/lib/influxdb:z'
       - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup:z'
     networks:
-      - name: "base"
+      - name: "isolated"
+        ipv4_address: "{{docker_influxdb_ip}}"
     networks_cli_compatible: yes
-    ports:
-     - "127.0.0.1:8086:8086"  
-     - "127.0.0.1:4242:4242"  
+    exposed_ports:
+     - "8086"  
+     - "4242"  
   notify: "restart influxdb"
     
+- name: add container name
+  vars:
+    host_name: "influxdb"
+    host_ip_address: "{{docker_influxdb_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 # ***** FINALIZE *****
 - name: create cron job
   vars:

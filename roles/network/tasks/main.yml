@@ -23,12 +23,12 @@
     group: root
     mode: 0644
 
-- name: set hosts config
-  lineinfile:
-    path: /etc/hosts
-    regexp: '^{{server_ip}} '
-    line: '{{server_ip}} {{server_name}}'
-    
+- name: add container name
+  vars:
+    host_name: "{{server_name}}"
+    host_ip_address: "{{server_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 - name: set sysctl network related values
   lineinfile:
     path: /etc/sysctl.conf

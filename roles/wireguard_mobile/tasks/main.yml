@@ -1,12 +1,3 @@
-- name: prepare mobile settings
-  set_fact:
-    vpn_gates: []
-
-- name: filter vpn_gates
-  set_fact:
-    vpn_gates: "{{ vpn_gates + ( userdata[item].vpn_gates | default(['']) | map('regex_replace', '(.*)', item + '_\\1') | map('regex_replace', '(.*)_$', '\\1') | list ) }}"
-  with_items: "{{userdata}}"
-
 - name: prepare config folder
   file:
     path: "{{item}}"
@@ -16,7 +7,6 @@
     mode: 700
   with_items:
     - "{{global_etc}}wireguard_mobile"
-    - "{{global_etc}}wireguard_mobile/util"
     - "{{global_etc}}wireguard_mobile/keys"
     - "{{global_etc}}wireguard_mobile/clients"
     
@@ -35,17 +25,58 @@
     mode: 0600
   when: "is_production|bool and key_directory.stat.exists"
   
-- name: copy util
-  template:
-    src: "roles/wireguard_mobile/templates/util/{{item}}"
-    dest: "{{global_etc}}wireguard_mobile/util/{{item}}"
-    owner: root
-    group: root
-    mode: 0700
-  with_items:
-    - wg-startup.sh
-  notify: "restart wireguard_mobile"
+- name: generate server keys
+  shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
+  register: stat_server_key_result
+  changed_when: "stat_server_key_result.rc==0"
+  failed_when: False
+  
+- name: collect vpn gates and server keys
+  set_fact:
+    vpn_gates: |
+      {
+      {% for username in userdata %}
+      {% if userdata[username].vpn_gates is defined %}
+      {% for vpn_name in userdata[username].vpn_gates %}
+      "{{username}}_{{vpn_name}}": "{{userdata[username].vpn_gates[vpn_name]}}",
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      }
+    vpn_gate_server_privatekey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_privatekey')}}"
+    vpn_gate_server_publickey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_publickey')}}"
+  tags: [ 'user' ]
+      
+- name: generate client keys
+  shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./client_{{item}}_privatekey ] || [ ! -f ./client_{{item}}_publickey ]) && wg genkey | tee ./client_{{item}}_privatekey | wg pubkey > ./client_{{item}}_publickey"
+  register: stat_client_key_result
+  changed_when: "stat_client_key_result.rc==0"
+  failed_when: False
+  with_items: "{{vpn_gates}}"
+  tags: [ 'user' ]
 
+- name: collect vpn gate client keys
+  set_fact:
+    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | default([]) | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_privatekey')})  }}"
+    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | default([]) | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_publickey')}) }}"
+  with_items: "{{vpn_gates}}"
+  tags: [ 'user' ]
+
+- name: copy server config
+  template:
+    src: "templates/wg0.conf"
+    dest: "{{ global_etc }}wireguard_mobile/wg0.conf"
+    mode: 0600
+  notify: "restart wireguard_mobile"
+  
+- name: copy client config
+  template:
+    src: "templates/wg_client.conf"
+    dest: "{{ global_etc }}wireguard_mobile/clients/wg_{{item}}.conf"
+    mode: 0600
+  with_items: "{{vpn_gates}}"
+  tags: [ 'user' ]  
+  
 - name: build docker image
   vars:
     name: "wireguard_mobile"
@@ -53,6 +84,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/wireguard_mobile/templates/container/Dockerfile
+      - roles/wireguard_mobile/templates/container/entrypoint.sh
   import_tasks: roles/container/tasks/build_docker_image.yml
   
 - name: create docker container
@@ -70,8 +102,13 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
+#    networks:
+#      - name: "mobile_vpn"
+#    networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
+#    published_ports:
+#      - "{{vault_wireguard_mobile_internal_port}}:{{vault_wireguard_mobile_internal_port}}/udp"
   notify: "restart wireguard_mobile"
 
 #- name: clean old docker images => image does not exists
@@ -83,6 +120,7 @@
   vars:
     name: "wireguard.mobile_vpn"
     rule: "proto udp dport {{vault_wireguard_mobile_internal_port}}"
+#    is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 

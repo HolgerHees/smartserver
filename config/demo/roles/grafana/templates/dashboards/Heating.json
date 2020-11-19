@@ -15,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 6,
   "links": [],
   "panels": [
     {
@@ -25,6 +24,13 @@
       "dashes": false,
       "datasource": "InfluxDB",
       "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -33,6 +39,7 @@
         "x": 0,
         "y": 0
       },
+      "hiddenSeries": false,
       "id": 2,
       "legend": {
         "alignAsTable": true,
@@ -49,9 +56,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -61,7 +69,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "Aussentemperatur",
+          "alias": "Heizung",
           "dsType": "influxdb",
           "groupBy": [
             {
@@ -77,10 +85,47 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_Garden",
+          "measurement": "Heating_Temperature_Outdoor",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "Wetterstation",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "WeatherStation_Temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
@@ -119,6 +164,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:168",
           "format": "celsius",
           "label": null,
           "logBase": 1,
@@ -127,6 +173,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:169",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -147,7 +194,14 @@
       "dashes": false,
       "datasource": "InfluxDB",
       "decimals": 1,
-      "fill": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
@@ -155,6 +209,7 @@
         "x": 0,
         "y": 7
       },
+      "hiddenSeries": false,
       "id": 3,
       "legend": {
         "alignAsTable": true,
@@ -171,9 +226,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -279,6 +335,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:803",
           "format": "celsius",
           "label": null,
           "logBase": 1,
@@ -287,6 +344,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:804",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -306,6 +364,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -314,6 +379,7 @@
         "x": 0,
         "y": 14
       },
+      "hiddenSeries": false,
       "id": 5,
       "legend": {
         "avg": false,
@@ -329,9 +395,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -426,7 +493,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
-      "fill": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 7,
@@ -434,6 +508,7 @@
         "x": 0,
         "y": 21
       },
+      "hiddenSeries": false,
       "id": 6,
       "legend": {
         "avg": false,
@@ -449,9 +524,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -747,6 +823,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1105",
           "format": "celsius",
           "label": null,
           "logBase": 1,
@@ -755,6 +832,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1106",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -774,6 +852,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -782,6 +867,7 @@
         "x": 0,
         "y": 28
       },
+      "hiddenSeries": false,
       "id": 7,
       "legend": {
         "avg": false,
@@ -797,9 +883,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -895,6 +982,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -903,6 +998,7 @@
         "x": 0,
         "y": 35
       },
+      "hiddenSeries": false,
       "id": 8,
       "legend": {
         "alignAsTable": true,
@@ -919,9 +1015,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -991,6 +1088,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:703",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -999,6 +1097,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:704",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1018,6 +1117,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1026,6 +1133,7 @@
         "x": 12,
         "y": 35
       },
+      "hiddenSeries": false,
       "id": 10,
       "legend": {
         "alignAsTable": true,
@@ -1042,9 +1150,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1114,6 +1223,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:518",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1122,6 +1232,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:519",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1141,6 +1252,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1149,6 +1268,7 @@
         "x": 0,
         "y": 42
       },
+      "hiddenSeries": false,
       "id": 9,
       "legend": {
         "alignAsTable": true,
@@ -1165,9 +1285,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1237,6 +1358,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:889",
           "format": "h",
           "label": null,
           "logBase": 1,
@@ -1245,6 +1367,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:890",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1264,6 +1387,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "decimals": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1272,6 +1403,7 @@
         "x": 12,
         "y": 42
       },
+      "hiddenSeries": false,
       "id": 11,
       "legend": {
         "alignAsTable": true,
@@ -1288,9 +1420,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.0",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1360,6 +1493,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:609",
           "format": "h",
           "label": null,
           "logBase": 1,
@@ -1368,6 +1502,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:610",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1382,7 +1517,7 @@
       }
     }
   ],
-  "schemaVersion": 20,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -1420,5 +1555,5 @@
   "timezone": "",
   "title": "Heating",
   "uid": "heating",
-  "version": 1
+  "version": 109
 }

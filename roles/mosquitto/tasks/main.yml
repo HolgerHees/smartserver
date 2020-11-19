@@ -20,13 +20,20 @@
     log_options:
       tag: mosquitto
     networks:
-      - name: "base"
+      - name: "isolated"
+        ipv4_address: "{{docker_mosquitto_ip}}"
     networks_cli_compatible: yes
-    ports:
+    published_ports:
      - "1883:1883"  
      - "9001:9001"  
   notify: "restart mosquitto"
     
+- name: add container name
+  vars:
+    host_name: "mosquitto"
+    host_ip_address: "{{docker_mosquitto_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 # ***** FINALIZE *****
 - name: copy fluentd config
   vars:

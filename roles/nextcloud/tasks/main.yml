@@ -2,8 +2,8 @@
 - name: set version
   set_fact:
     nextcloud_version: '20.0.1'
-  tags: [ 'update_notifier_configs' ]
-  
+  tags: [ 'update_notifier_configs', 'user' ]
+
 # ***** PREPARE FOLDER *****
 - name: prepare needed folder
   file:
@@ -56,15 +56,6 @@
   command: "mv {{global_tmp}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: not nextcloud_version_exists.stat.exists
 
-- name: copy patch
-  template:
-    src: "templates/patches_19.x/Internal.php"
-    dest: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/lib/private/Session/Internal.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  when: "nextcloud_version == '19.0.0'"
-
 # ***** DATABASE *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
@@ -73,7 +64,8 @@
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
   register: mysql_data_exists
   changed_when: "'nextcloud' not in mysql_data_exists.stdout"
-
+  tags: [ 'user' ]
+  
 - name: create missing mysql databases => database does not exists
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
   when: "'nextcloud' not in mysql_data_exists.stdout"
@@ -129,13 +121,6 @@
   with_items: "{{userdata}}"
   failed_when: no
   changed_when: no
-  when: "'nextcloud' not in mysql_data_exists.stdout"
-
-- name: add user => database does not exists
-  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
-  register: result
-  failed_when: "'was created successfully' not in result.stdout"
-  with_items: "{{userdata}}"
   when: "'nextcloud' not in mysql_data_exists.stdout"
 
 - name: enable cron as background job handler => database does not exists
@@ -226,6 +211,41 @@
 
   
   
+  
+# ***** UPDATE USERS *****
+- name: check for existing users
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ user:list\" | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
+  register: nextcloud_user_result
+  changed_when: False
+  #when: "'nextcloud' not in mysql_data_exists.stdout"
+  tags: [ 'user' ]
+  
+- name: add new user
+  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  register: result
+  failed_when: "'was created successfully' not in result.stdout"
+  when: "'user' in userdata[item].groups"
+  with_items: "{{userdata | difference(nextcloud_user_result.stdout_lines)}}"
+  tags: [ 'user' ]
+
+# password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
+#- name: update existing user
+#  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}\""
+#  register: result
+#  failed_when: "'Successfully reset password for' not in result.stdout"
+#  changed_when: False
+#  with_items: "{{userdata | intersect(nextcloud_user_result.stdout_lines)}}"
+#  #when: "'nextcloud' not in mysql_data_exists.stdout"
+#  tags: [ 'user' ]
+
+# password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
+#- name: update admin user
+#  shell: "docker exec php sh -c \"export OC_PASS={{vault_nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{vault_nextcloud_admin_username}}\""
+#  register: result
+#  failed_when: "'Successfully reset password for' not in result.stdout"
+#  changed_when: False
+#  when: "'nextcloud' in mysql_data_exists.stdout"
+  
 # ***** FINALIZE *****
 - name: create cron job
   vars:
@@ -257,8 +277,10 @@
   vars:
     username: "{{vault_nextcloud_admin_username}}"
     password: "{{vault_nextcloud_admin_password}}"
-    group: "USER"
+    fullname: "Nextcloud System User"
+    usergroups: ["nextcloudadmin"]
   import_tasks: roles/user/tasks/add_web_user.yml
+  tags: [ 'user' ]
 
 - name: register webui
   vars:

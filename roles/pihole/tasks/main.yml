@@ -19,20 +19,9 @@
     name: docker
     state: started
 
-- name: detect main network device
-  shell: "ip a | grep -P \"inet {{server_ip}}\" | grep -Po \"[a-z0-9]*$\""
-  register: "main_device_result"
-  changed_when: False
-  
-- name: create pihole network
-  docker_network:
-    name: 'pihole'
-    driver: macvlan
-    driver_options:
-      parent: '{{main_device_result.stdout}}'
-    ipam_config:
-      - subnet: '{{server_network}}/24'
-        gateway: '{{server_gateway}}'
+#ip link add mac0 link {{main_device_result.stdout}} type macvlan mode bridge
+#ip addr add {{pihole_ip + 1 ???}}/24 dev mac0
+#ifconfig mac0 up
   
 - name: create docker container
   docker_container:
@@ -53,15 +42,15 @@
       - '{{ global_etc }}pihole/:/etc/pihole/:z'
       - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
     networks:
-      - name: "pihole"
+      - name: "macvlan"
         ipv4_address: "{{pihole_ip}}"
     networks_cli_compatible: yes
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
+    exposed_ports:
+      - "53/tcp"
+      - "53/udp"
     # - "67:67/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
+      - "80/tcp"
+      - "443/tcp"
   notify: "restart pihole"
 
 # ***** FINALIZE *****

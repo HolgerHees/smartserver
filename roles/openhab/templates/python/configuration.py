@@ -13,7 +13,7 @@ allTelegramBots = [
 ]
 
 allTelegramAdminBots = [
-{% for username in userdata %}{% if userdata[username].webui == 'admin' and userdata[username].telegram_bot is defined %}
+{% for username in userdata %}{% if 'admin' in userdata[username].groups and userdata[username].telegram_bot is defined %}
   {% if loop.index > 1 %},{% endif %}"{{userdata[username].telegram_bot}}"
 {% endif %}{% endfor %}
 ]

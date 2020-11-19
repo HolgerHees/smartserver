@@ -18,7 +18,7 @@ class Setup
 	
 	public static function getOpenHabRest()
 	{
-		return new RestConnectorOpenhab( "openhab", "8080" );
+		return new RestConnectorOpenhab( "openhab", "8080", "http" );
 	}
 	
 	public static function getWeatherAuth()

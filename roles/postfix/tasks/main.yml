@@ -45,12 +45,18 @@
       - '{{ global_etc }}postfix/main.cf:/etc/postfix/main.cf:z'
       - '{{ global_etc }}postfix/canonical_maps_recipient:/etc/postfix/canonical_maps_recipient:z'
     networks:
-      - name: "base"
+      - name: "isolated"
         ipv4_address: "{{docker_postfix_ip}}"
     networks_cli_compatible: yes
-    ports:
-      - "127.0.0.1:25:25/tcp"
+    exposed_ports:
+      - "25/tcp"
   notify: "restart postfix"
+
+- name: add container name
+  vars:
+    host_name: "postfix"
+    host_ip_address: "{{docker_postfix_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
 
 # SET LOCAL SMTP CLIENT
 - name: install postfix packages => is_fedora

@@ -24,9 +24,9 @@
       - roles/nextcloud_onlyoffice/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect onlyoffice with databases
+- name: create docker network
   docker_network:
-    name: onlyoffice_databases
+    name: onlyoffice
     ipam_config:
       - subnet: "{{docker_onlyoffice_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_onlyoffice_ip.split('.')[:3] | join('.')}}.1"
@@ -69,14 +69,20 @@
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
     networks:
-      - name: "onlyoffice_databases"
+      - name: "onlyoffice"
         ipv4_address: "{{docker_onlyoffice_ip}}"
     networks_cli_compatible: yes
-    ports:
-     - "127.0.0.1:8090:80"  
-     - "127.0.0.1:8453:443"  
+    exposed_ports:
+     - "80"  
+     - "443"  
   notify: "restart onlyoffice"
     
+- name: add container name
+  vars:
+    host_name: "onlyoffice"
+    host_ip_address: "{{docker_onlyoffice_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 # ***** DATABASE *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml

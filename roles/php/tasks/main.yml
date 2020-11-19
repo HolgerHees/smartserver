@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
 #    php_version: "7.3.18"
-    php_version: "7.4.11"
+    php_version: "7.4.12"
   tags: [ 'update_notifier_configs' ]
   
 - name: build docker image
@@ -13,9 +13,9 @@
       - roles/php/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: connect php databases
+- name: create docker network
   docker_network:
-    name: php_databases
+    name: php
     ipam_config:
       - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
@@ -42,21 +42,30 @@
     log_options:
       tag: php
     networks: 
-      - name: "php_databases"
+      - name: "php"
         ipv4_address: "{{docker_php_ip}}"
     networks_cli_compatible: yes
+    etc_hosts:
+      openhab: "{{server_ip}}" # fix to make openhab reachable
+      netdata: "{{server_ip}}" # fix to make netdata reachable
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
-    ports:
-      - "127.0.0.1:9000:9000"
+    exposed_ports:
+      - "9000"
   notify: "restart php"
 
-#- name: connect php with databases
+- name: add container name
+  vars:
+    host_name: "php"
+    host_ip_address: "{{docker_php_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+#- name: create docker network
 #  docker_network:
-#    name: php_databases
+#    name: php
 #    connected:
 #      - php
 #      - mysql

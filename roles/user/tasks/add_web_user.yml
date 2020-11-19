@@ -1,27 +1,13 @@
-- name: check if '{{group}}' group exists in apache
-  shell: "grep \"^{{group}}\" {{htdocs_path}}.htgroups"
-  register: group_check
-  changed_when: group_check.stdout == ""
-  failed_when: no
-  when: "group is defined"
-    
-- name: add '{{group}}' group to apache
-  lineinfile:
-    path: "{{htdocs_path}}.htgroups"
-    regexp: '^{{group}}[\s:]{1}.*'
-    line: '{{group}}:'
-  when: "group is defined and group_check.stdout == ''"
-
 - name: add user "{{username}}" to apache .htpasswd
   htpasswd:
-    path: "{{htdocs_path}}.htpasswd"
+    path: "{{htdocs_path}}secret/.htpasswd"
     name: "{{username}}"
     password: "{{password}}"
- 
-- name: add user "{{username}}" to apache groups
+
+- name: add user "{{username}}" to apache .htdata
   lineinfile:
-    path: "{{htdocs_path}}.htgroups"
-    backrefs: yes
-    regexp: '^({{group}}:(?!.*{{username}}).*)'
-    line: '\1 {{username}}'
-  when: "group is defined"
+    path: "{{htdocs_path}}secret/.htdata"
+    regexp: '^{{username}}:'
+    line: '{{username}}:{{fullname | default(username)}}:{{usergroups | join(",")}}'
+  when: "usergroups is defined"
+  

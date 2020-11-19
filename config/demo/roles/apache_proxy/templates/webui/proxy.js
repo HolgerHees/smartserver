@@ -1,5 +1,5 @@
 var html = '<div class="service imageWatcher">';
-if( mx.User.hasAdminUi() )
+if( mx.User.memberOf("admin") )
 {
     html += '<div><a href="/cameraStrasseDevice/" target="_blank"><img src="/main/img/loading.png" data-name="{i18n_Street}" data-src="/cameraStrasseImage" data-interval="3000"></a></div>';
     html += '<div><a href="/automowerDevice/" target="_blank"><img src="/main/img/loading.png" data-name="{i18n_Automower}" data-src="/cameraAutomowerImage" data-interval="3000"></a></div>';
@@ -9,7 +9,6 @@ else
     html += '<div><img src="/main/img/loading.png" data-name="{i18n_Street}" data-src="/cameraStrasseImage" data-interval="3000"></div>';
     html += '<div><img src="/main/img/loading.png" data-name="{i18n_Automower}" data-src="/cameraAutomowerImage" data-interval="3000"></div>';
 }
-html += '</div>';
 html += '</div>';
 
 var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}', 'proxy_camera.svg');

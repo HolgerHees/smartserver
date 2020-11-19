@@ -1,0 +1,63 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{global_etc}}device_ping/"
+
+- name: build docker image
+  vars:
+    name: "device_ping"
+    image_name: "custom_device_ping"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/device_ping/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: device_ping
+    image: "custom_device_ping:{{alpine_version}}"
+    state: present
+    network_mode: "host"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: device_ping
+    volumes:
+      - '{{global_etc}}device_ping/:/etc/device_ping:ro,z'
+#  notify: "restart device_ping"
+
+- name: detect main network device
+  shell: "ip a | grep -P \"inet {{server_ip}}\" | grep -Po \"[a-z0-9]*$\""
+  register: "main_device_result"
+  changed_when: False
+
+- name: copy config and service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/etc/device_ping/mqtt.py", dest: "{{global_etc}}device_ping/mqtt.py" }
+  notify: "restart device_ping"
+
+# ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "device_ping"
+    container_after: [ "mosquitto" ]
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: trigger device_ping handler
+  vars:
+    notify: "restart device_ping"
+    service: "device_ping.service"
+  import_tasks: roles/base/tasks/service_check.yml

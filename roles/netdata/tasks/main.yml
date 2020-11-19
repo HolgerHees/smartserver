@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.25.0"
+    netdata_version: "1.26.0"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
@@ -16,7 +16,7 @@
     - "{{ global_etc }}netdata"
     - "{{ global_etc }}netdata/health.d"
 #    - "/opt/netdata_helper"
-    
+
 - name: copy config
   template:
     src: "templates{{item.src}}"
@@ -26,6 +26,7 @@
     mode: 0640
   with_items:
     - { src: "/etc/netdata_test/netdata.conf", dest: "{{ global_etc }}netdata/netdata.conf" }
+    - { src: "/etc/netdata_test/exporting.conf", dest: "{{ global_etc }}netdata/exporting.conf" }
     - { src: "/etc/netdata_test/python.d.conf", dest: "{{ global_etc }}netdata/python.d.conf" }
     - { src: "/etc/netdata_test/health_alarm_notify.conf", dest: "{{ global_etc }}netdata/health_alarm_notify.conf" }
     - { src: "/etc/netdata_test/fping.conf", dest: "{{ global_etc }}netdata/fping.conf" }
@@ -52,9 +53,9 @@
     name: docker
     state: started
 
-#- name: connect netdata with databases
+#- name: create docker network
 #  docker_network:
-#    name: netdata_databases
+#    name: netdata
 #    connected:
 #      - influxdb
 #    appends: yes
@@ -71,8 +72,8 @@
     env:
       TZ: "{{timezone}}"
       PGID: "473"
-      NETDATA_PORT: "29999"
-    #  NETDATA_PORT: "19999"
+    #  NETDATA_PORT: "29999"
+      NETDATA_PORT: "19999"
     #  DOCKER_USR: "root"
     #  VIRTUALIZATION: "kvm"
     log_driver: journald
@@ -83,9 +84,10 @@
     #  - SYS_ADMIN
     security_opts:
       - "apparmor:unconfined"
-    #privileged: yes
+    pid_mode: "host"
+    privileged: yes
 #    networks:
-#      - name: "netdata_databases"
+#      - name: "netdata"
 #    networks_cli_compatible: yes
     volumes:
       - '{{ global_lib }}netdata_test:/var/lib/netdata:z'
@@ -99,15 +101,15 @@
       - "{{ global_etc }}netdata/health.d/softnet.conf:/etc/netdata/health.d/softnet.conf:ro,z"
       - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro,z"
       - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro,z"
-      #- '/opt/netdata_helper/:/opt/netdata_helper/:ro'
+      - '/opt/netdata_helper/:/opt/netdata_helper/:ro'
       - '/etc/os-release:/host/etc/os-release:ro'
       - '/etc/passwd:/host/etc/passwd:ro'
       - '/etc/group:/host/etc/group:ro'
       - '/proc:/host/proc:ro'
       - '/sys:/host/sys:ro'
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-    #ports:
-    # - "29999:29999"  
+    exposed_ports:
+     - "19999"  
     # - "127.0.0.1:19999:19999"  
 #  notify: "restart netdata"
 

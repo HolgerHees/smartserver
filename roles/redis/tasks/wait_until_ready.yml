@@ -9,6 +9,9 @@
   changed_when: "'redis.service' not in ansible_facts.services or ansible_facts.services['redis.service'].state != 'running'"
 
 - name: wait for redis to become ready
-  wait_for:
-    port: 6379
+  shell: "docker exec redis sh -c 'redis-cli'"
+  register: cmd_res
+  retries: 12
+  delay: 5
+  until: "cmd_res.rc == 0 and cmd_res.stdout == ''"
   changed_when: "'redis.service' not in ansible_facts.services or ansible_facts.services['redis.service'].state != 'running'"

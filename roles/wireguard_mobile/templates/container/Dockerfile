@@ -1,7 +1,10 @@
 FROM alpine:{{image_version}}
 
-RUN apk add --no-cache --update wireguard-tools
+COPY entrypoint.sh /usr/sbin/
 
-ENTRYPOINT [ "/etc/wireguard/util/wg-startup.sh" ]
+RUN apk add --no-cache --update wireguard-tools \
+    && chmod +x /usr/sbin/entrypoint.sh
+
+CMD /usr/sbin/entrypoint.sh
 
 EXPOSE {{vault_wireguard_mobile_internal_port}}/udp

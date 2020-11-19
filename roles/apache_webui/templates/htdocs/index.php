@@ -10,31 +10,31 @@
 
     <link href="ressources?type=css" rel="stylesheet">
     
-    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], UILevel: { 'admin': 1, 'user': 0 }, User: { 'name': '', 'uilevel': 0, 'hasAdminUi': function(){ return mx.User.uilevel == mx.UILevel.admin; }  } };</script>
+    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };</script>
     
     <script src="ressources?type=js"></script>
     
     <script>
-    <?php
+<?php
         $name = $_SERVER['REMOTE_USERNAME'];
-        $uilevel = "user";
-        $handle = fopen(".htdata", "r");
+        $groups = [];
+        $handle = fopen("./secret/.htdata", "r");
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
-                list($_username,$_name,$_uilevel) = explode(":", $line);
+                list($_username,$_name,$_groups) = explode(":", $line);
                 if( trim($_username) == $name )
                 {
                     $name = trim($_name);
-                    $uilevel = trim($_uilevel);
+                    $groups = explode(",",trim($_groups));
                     break;
                 }
             }
 
             fclose($handle);
         }
-        echo "mx.User.name = " . json_encode($name) . ";\n";
-        echo "mx.User.uilevel = mx.UILevel[" . json_encode($uilevel) . "];\n";
-    ?>
+        echo "        mx.User.name = " . json_encode($name) . ";\n";
+        echo "        mx.User.groups = " . json_encode($groups) . ";\n";
+?>
 
         // mx.Menu needs to be defined in the beginning, because it is used during component initialisation
         mx.Menu = (function( ret ) {
@@ -110,15 +110,16 @@
                                     getMainGroup: function(){ return mainGroup['_']; },
                                     getEntry: function(entryId){ return subGroup['menuEntries'][entryId]['_']; },
                                     getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
-                                    addUrl: function(entryId,order,uilevel,url,title,info,newWindow,iconUrl){
+                                    addUrl: function(entryId,order,usergroups,url,title,info,newWindow,iconUrl){
+                                        if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {
-                                            id: entryId, order:order,uilevel:mx.UILevel[uilevel],type:'url',url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
+                                            id: entryId, order:order,usergroups:usergroups,type:'url',url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
                                                 //getOrder: function(){ return entry['order']; },
-                                                getUiLevel: function(){ return entry['uilevel']; },
+                                                getUserGroups: function(){ return entry['usergroups']; },
                                                 getType: function(){ return entry['type']; },
                                                 getSubGroup: function(){ return subGroup['_']; },
                                                 getTitle: function(){ return entry['title']; },
@@ -129,15 +130,16 @@
                                             }
                                         };
                                     },
-                                    addHtml: function(entryId,order,uilevel,html,callback){
+                                    addHtml: function(entryId,order,usergroups,html,callback){
+                                        if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {
-                                            id: entryId, order:order,uilevel:mx.UILevel[uilevel],type:'html',html:html,callback:callback,
+                                            id: entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
                                                 //getOrder: function(){ return entry['order']; },
-                                                getUiLevel: function(){ return entry['uilevel']; },
+                                                getUserGroups: function(){ return entry['usergroups']; },
                                                 getType: function(){ return entry['type']; },
                                                 getSubGroup: function(){ return subGroup['_']; },
                                                 getHtml: function(){ return entry['html']; },
@@ -165,7 +167,7 @@
                 {
                     var entry = menuEntries[i];
                     
-                    if( entry.getUiLevel() > mx.User.uilevel )
+                    if( !mx.User.memberOf( entry.getUserGroups() ) )
                     {
                         continue;
                     }
@@ -229,9 +231,10 @@
                     
                     if( mainGroup['id'] == 'home' ) continue;
                     
+                    var subGroupStates = {}
+                    
                     var _subGroups = sortMenu( mainGroup['subGroups'] );
 
-                    var entryStates = {}
                     for( index in _subGroups )
                     {
                         var subGroup = _subGroups[index];
@@ -241,15 +244,17 @@
                         {
                             var entry = subGroup['menuEntries'][entryKey];
                             
-                            if( entry['uilevel'] <= mx.User.uilevel )
+                            if( mx.User.memberOf( entry['usergroups'] ) )
                             {
                                 hasEntries = true;
                                 break;
                             }
                         }
                         
-                        entryStates[subGroup['id']] = hasEntries
+                        subGroupStates[subGroup['id']] = hasEntries
                     }
+                    
+                    if( Object.values(subGroupStates).filter(value => value).length == 0 ) continue;
                     
                     var menuDiv = template.cloneNode(true);
                     menuDiv.setAttribute('id',mainGroup['id']);
@@ -264,7 +269,7 @@
                     {
                         var subGroup = _subGroups[index];
                         
-                        if( !entryStates[subGroup['id']] ) continue;
+                        if( !subGroupStates[subGroup['id']] ) continue;
 
                         var button = buttonTemplate.cloneNode(true);
                         button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
@@ -283,7 +288,7 @@
             var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
             mainGroup = ret.addMainGroup('other', 3000, '{i18n_Other}');
-            mainGroup.addSubGroup('states', 100, mx.User.uilevel == 1 ? '{i18n_Logs & States}' : '{i18n_States}', 'core_stats.svg');
+            mainGroup.addSubGroup('states', 100, mx.User.memberOf('admin') ? '{i18n_Logs & States}' : '{i18n_States}', 'core_stats.svg');
             mainGroup.addSubGroup('tools', 200, '{i18n_Tools}', 'core_tools.svg');
             mainGroup.addSubGroup('devices', 300, '{i18n_Devices}', 'core_devices.svg');
 
@@ -841,7 +846,7 @@
         
             initContent();
 
-            if( mx.User.hasAdminUi() )
+            if( mx.User.memberOf("admin") )
             {
                 // defined in netdata.js (/components/)
                 mx.Alarms.init('.alarm.button','.alarm.button .badge');

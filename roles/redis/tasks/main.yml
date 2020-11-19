@@ -21,10 +21,10 @@
     log_options:
       tag: redis
     networks:
-      - name: "base"
+      - name: "isolated"
     networks_cli_compatible: yes
-    ports:
-     - "127.0.0.1:6379:6379"
+    exposed_ports:
+     - "6379"
   notify: "restart redis"
 
 #- name: clean old docker images => image does not exists
@@ -41,7 +41,7 @@
   vars:
     name: "redis"
     type: "docker"
-    url: "https://raw.githubusercontent.com/antirez/redis/5.0/00-RELEASENOTES"
+    url: "https://raw.githubusercontent.com/antirez/redis/6.0/00-RELEASENOTES"
     config: {
       repository: "redis",
       pattern: "^([0-9\\.]+)-alpine$"

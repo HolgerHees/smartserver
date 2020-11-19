@@ -51,12 +51,19 @@
       - '{{global_etc}}loki:/etc/loki:z'
       - '{{global_lib}}loki:/loki:z'
     networks:
-      - name: "base"
+      - name: "isolated"
+        ipv4_address: "{{docker_loki_ip}}"
     networks_cli_compatible: yes
-    ports:
-     - "127.0.0.1:3100:3100"
+    exposed_ports:
+     - "3100"
   notify: "restart loki"
       
+- name: add container name
+  vars:
+    host_name: "loki"
+    host_ip_address: "{{docker_loki_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/loki.conf"

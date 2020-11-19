@@ -7,8 +7,7 @@
     AuthName "Authentication required"
 
     AuthFormProvider file
-    AuthUserFile    {{htdocs_path}}.htpasswd
-    AuthGroupFile   {{htdocs_path}}.htgroups
+    AuthUserFile    {{htdocs_path}}secret/.htpasswd
 
     Session On
     SessionCryptoPassphrase {{vault_form_auth_passphrase}}
@@ -17,7 +16,10 @@
     SessionMaxAge 0
 
     <RequireAny>
-        Require group USER
+        Require user {{vault_nextcloud_admin_username}}
+{% for username in userdata %}{% if 'user' in userdata[username].groups %}
+        Require user {{username}}
+{% endif %}{% endfor %}
         Require ip {{ authenticated_ip_addresses | join(' ') }}
         Require ip 172.0.0.0/8
         Require local

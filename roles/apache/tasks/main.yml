@@ -90,6 +90,14 @@
     - "{{htdocs_path}}fallback/domain"
     - "{{global_log}}apache2/"
 
+- name: prepare secret folder
+  file:
+    path: "{{htdocs_path}}secret"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+
 - name: check owner and group
   file:
     path: "{{item}}"
@@ -114,9 +122,8 @@
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
     - _.ansible.conf.d/ssl.conf
-    - _.ansible.vhost.d/auth_basic.inc
-    - _.ansible.vhost.d/auth_form1.inc
     - _.ansible.vhost.d/auth_form2.inc
+    - _.ansible.vhost.d/auth_openidc2.inc
     - _.ansible.vhost.d/default-ssl.conf
     - _.ansible.server.conf
     - _.ansible.httpd.conf
@@ -132,8 +139,9 @@
   vars:
     enable_stapeling: "{{vault_ssl_certificate != 'selfsigned'}}"
   with_items:
+    - _.ansible.vhost.d/auth_basic.inc
+    - _.ansible.vhost.d/auth_form1.inc
     - _.ansible.vhost.d/auth_openidc1.inc
-    - _.ansible.vhost.d/auth_openidc2.inc
     - _.ansible.vhost.d/auth_openidc_users.txt
   notify: "restart apache2"
   tags: ['user']
@@ -189,10 +197,10 @@
       - '/etc/certbot:/etc/certbot:z'
 
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
-#    ports:
-#      - "81:80"
-#      - "444:443"
-#      - "10115:10114"
+#    published_ports:
+#      - "80:80"
+#      - "443:443"
+#      - "10114:10114"
   notify: "restart apache2"
 
 #- name: clean old docker images
@@ -207,16 +215,7 @@
 - name: prepare .htpasswd file
   copy:
     content: ""
-    dest: "{{htdocs_path}}.htpasswd"
-    force: no
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-
-- name: prepare .htgroups file
-  copy:
-    content: ""
-    dest: "{{htdocs_path}}.htgroups"
+    dest: "{{htdocs_path}}secret/.htpasswd"
     force: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
@@ -225,7 +224,7 @@
 - name: prepare .htdata file
   copy:
     content: ""
-    dest: "{{htdocs_path}}.htdata"
+    dest: "{{htdocs_path}}secret/.htdata"
     force: no
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
