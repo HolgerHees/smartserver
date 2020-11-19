@@ -1,10 +1,29 @@
-- name: prepare mobile settings
-  set_fact:
-    vpn_gates: []
-    vpn_gate_server_privatekey: ""
-    vpn_gate_server_publickey: ""
-    vpn_gate_client_privatekeys: []
-    vpn_gate_client_publickeys: []
+- name: prepare config folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 700
+  with_items:
+    - "{{global_etc}}wireguard_mobile"
+    - "{{global_etc}}wireguard_mobile/keys"
+    - "{{global_etc}}wireguard_mobile/clients"
+    
+- name: check for vault keys
+  stat:
+    path: "{{config_path}}vault/wireguard_mobile/"
+  register: key_directory
+
+- name: copy keys => is_production and key_directory exists
+  copy:
+    src: "{{config_path}}vault/wireguard_mobile/"
+    dest: "{{global_etc}}wireguard_mobile/keys/"
+    decrypt: yes
+    owner: root
+    group: root
+    mode: 0600
+  when: "is_production|bool and key_directory.stat.exists"
   
 - name: generate server keys
   shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
@@ -24,19 +43,22 @@
       }
     vpn_gate_server_privatekey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_privatekey')}}"
     vpn_gate_server_publickey: "{{lookup('file', global_etc + 'wireguard_mobile/keys/server_publickey')}}"
-        
+  tags: [ 'user' ]
+      
 - name: generate client keys
   shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./client_{{item}}_privatekey ] || [ ! -f ./client_{{item}}_publickey ]) && wg genkey | tee ./client_{{item}}_privatekey | wg pubkey > ./client_{{item}}_publickey"
   register: stat_client_key_result
   changed_when: "stat_client_key_result.rc==0"
   failed_when: False
   with_items: "{{vpn_gates}}"
+  tags: [ 'user' ]
 
 - name: collect vpn gate client keys
   set_fact:
-    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_privatekey')})  }}"
-    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_publickey')}) }}"
+    vpn_gate_client_privatekeys: "{{vpn_gate_client_privatekeys | default([]) | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_privatekey')})  }}"
+    vpn_gate_client_publickeys: "{{vpn_gate_client_publickeys | default([]) | combine({ item : lookup('file', global_etc + 'wireguard_mobile/keys/client_' + item + '_publickey')}) }}"
   with_items: "{{vpn_gates}}"
+  tags: [ 'user' ]
 
 - name: copy server config
   template:
@@ -51,46 +73,8 @@
     dest: "{{ global_etc }}wireguard_mobile/clients/wg_{{item}}.conf"
     mode: 0600
   with_items: "{{vpn_gates}}"
-
-- name: prepare config folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 700
-  with_items:
-    - "{{global_etc}}wireguard_mobile"
-    - "{{global_etc}}wireguard_mobile/util"
-    - "{{global_etc}}wireguard_mobile/keys"
-    - "{{global_etc}}wireguard_mobile/clients"
-    
-- name: check for vault keys
-  stat:
-    path: "{{config_path}}vault/wireguard_mobile/"
-  register: key_directory
-
-- name: copy keys => is_production and key_directory exists
-  copy:
-    src: "{{config_path}}vault/wireguard_mobile/"
-    dest: "{{global_etc}}wireguard_mobile/keys/"
-    decrypt: yes
-    owner: root
-    group: root
-    mode: 0600
-  when: "is_production|bool and key_directory.stat.exists"
+  tags: [ 'user' ]  
   
-- name: copy util
-  template:
-    src: "roles/wireguard_mobile/templates/util/{{item}}"
-    dest: "{{global_etc}}wireguard_mobile/util/{{item}}"
-    owner: root
-    group: root
-    mode: 0700
-  with_items:
-    - wg-startup.sh
-  notify: "restart wireguard_mobile"
-
 - name: build docker image
   vars:
     name: "wireguard_mobile"
@@ -98,6 +82,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/wireguard_mobile/templates/container/Dockerfile
+      - roles/wireguard_mobile/templates/container/entrypoint.sh
   import_tasks: roles/container/tasks/build_docker_image.yml
   
 - name: create docker container

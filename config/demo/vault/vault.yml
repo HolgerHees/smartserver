@@ -6,7 +6,8 @@ vault_root_mail_port: "587"
 
 vault_userpasswords: {
     testuser1: { samba_password: "test", web_password: "test" },
-    testuser2: { samba_password: "test", web_password: "test" }
+    testuser2: { samba_password: "test", web_password: "test" },
+    testuser3: { samba_password: "test", web_password: "test" }
 }
 
 # selfsigned, letsencrypt
