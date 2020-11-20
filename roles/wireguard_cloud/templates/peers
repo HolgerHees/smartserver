@@ -1,4 +1,4 @@
-peers="{% for peer_name in vault_cloud_vpn_network.peers %}{{peer_name}} {% endfor %}" 
-{% for peer_name in vault_cloud_vpn_network.peers %}
-nfs_server_ip_{{peer_name}}='{{vault_cloud_vpn_network.peers[peer_name].nfsServer}}'
+peers="{% for peer_name in cloud_vpn.peers %}{{peer_name}} {% endfor %}" 
+{% for peer_name in cloud_vpn.peers %}
+nfs_server_ip_{{peer_name}}='{{cloud_vpn.peers[peer_name].nfsServer}}'
 {% endfor %}
