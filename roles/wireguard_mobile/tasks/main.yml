@@ -31,7 +31,7 @@
   changed_when: "stat_server_key_result.rc==0"
   failed_when: False
   
-- name: collect vpn gates and server keys
+- name: collect vpn gates
   set_fact:
     vpn_gates: |
       {
