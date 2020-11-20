@@ -25,13 +25,22 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
 #    Require all granted
 #</LocationMatch>
 
-<LocationMatch "^/status\.php|^/index.php/login/flow|^/index.php/apps/theming/|^\/(?!remote).*\.css?|^\/(?!remote).*\.js?|^\/(?!remote).*\.svg|/js/accessibility">
+# theme files
+<LocationMatch "^/index.php/apps/theming/|^\/(?!remote).*\.css?|^\/(?!remote).*\.js?|^\/(?!remote).*\.svg|/js/accessibility">
     Require all granted
 </LocationMatch>
-#<LocationMatch "^/status.php|^/index.php/login/flow|^/index.php/apps/theming/manifest">
-#    Require all granted
-#</LocationMatch>
 
+# needed to login with apps
+<LocationMatch "^/status\.php|^/index.php/login/flow">
+    Require all granted
+</LocationMatch>
+
+# needed for android app file upload
+<Location "/index.php/204">
+    Require all granted
+</Location>
+
+# needed for onlyoffice
 <LocationMatch "^/index.php/apps/onlyoffice/.+">
     Require all granted
 </LocationMatch>
