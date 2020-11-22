@@ -57,7 +57,7 @@
 # set environment specific variables [post]
 - name: set post state vars
   set_fact:
-    local_import_path: "{{playbook_dir}}/{{config_path}}backup/"
+    deployment_backup_path: "{{projects_path}}{{ansible_project_name}}/{{config_path}}backup/"
     main_network_interface: "{{main_device_result.stdout}}"
   tags: always
 

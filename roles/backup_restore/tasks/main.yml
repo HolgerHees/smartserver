@@ -1,7 +1,7 @@
 # **** MYSQL ****
 - name: check mysql backup import folder
   stat:
-    path: "{{local_import_path}}mysql/"
+    path: "{{deployment_backup_path}}mysql/"
   register: mysql_backup_exists
   changed_when: mysql_backup_exists.stat.exists
 
@@ -10,7 +10,7 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import nextcloud database => mysql_backup_exists
-  shell: "bzcat {{local_import_path}}mysql/nextcloud* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\""
+  shell: "bzcat {{deployment_backup_path}}mysql/nextcloud* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud\""
   when: mysql_backup_exists.stat.exists
 
 # force a rebuild of cached files like merged js and css files
@@ -19,20 +19,20 @@
   when: mysql_backup_exists.stat.exists
 
 - name: import openhab database => mysql_backup_exists
-  shell: "bzcat {{local_import_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
+  shell: "bzcat {{deployment_backup_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: mysql_backup_exists.stat.exists
   
 # **** INFLUXDB ****     
 - name: check influxdb backup import folder
-  shell: "ls {{local_import_path}}influxdb/"
+  shell: "ls {{deployment_backup_path}}influxdb/"
   register: influxdb_backup_exists
   failed_when: no
   changed_when: influxdb_backup_exists.rc == 0
 
 - name: mount influxdb backup import folder => influxdb_backup_exists
   mount:
-    path: "{{local_backup_path}}influxdb/import"
-    src: "{{local_import_path}}influxdb/"
+    path: "{{backup_path}}influxdb/import"
+    src: "{{deployment_backup_path}}influxdb/"
     opts: bind
     state: mounted
     fstype: none
@@ -63,7 +63,7 @@
   
 - name: unmount influxdb backup import folder => influxdb_backup_exists
   mount:
-    path: "{{local_backup_path}}influxdb/import"
+    path: "{{backup_path}}influxdb/import"
     state: unmounted
   when: influxdb_backup_exists.rc == 0
   
@@ -76,7 +76,7 @@
 # **** OPENHAB MAPDB ****
 - name: check openhab mapdb backup folder
   stat:
-    path: "{{local_import_path}}openhab/mapdb"
+    path: "{{deployment_backup_path}}openhab/mapdb"
   register: mapdb_backup_exists
   changed_when: mapdb_backup_exists.stat.exists
 
@@ -88,7 +88,7 @@
   
 - name: import openhab mapdb backup => mapdb_backup_exists
   copy:
-    src: "{{local_import_path}}openhab/mapdb"
+    src: "{{deployment_backup_path}}openhab/mapdb"
     dest: "{{global_lib}}openhab/"
     owner: root
     group: root

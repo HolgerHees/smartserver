@@ -77,8 +77,6 @@
 
     - { import_role: { name: pihole }, tags: [ 'pihole' ] }                                      # adblock server                                                        [docker,user:root]
 
-    - { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                                    # vpn server installation                                           [deprecated]
-
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (mobile access)                           [docker,user:root]
 
     - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
@@ -127,7 +125,7 @@
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
     - { import_role: { name: device_ping }, tags: [ 'device_ping' ] }                            # ping mobile device service
 
-    - { import_role: { name: cron_backup_rsync }, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{local_backup_path}}dataDisk/
+    - { import_role: { name: cron_backup_rsync }, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 

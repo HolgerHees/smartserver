@@ -3,33 +3,27 @@
     rclone_version: "1.53.2"
   tags: [ 'update_notifier_configs' ]
   
-# check early to give some time to be active and connected
-- name: check openvpn@cloud service
-  import_tasks: roles/openvpn_cloud/tasks/wait_until_ready.yml
-  when: "is_production|bool"
-
 # FOLDER
 - name: prepare needed cloud folder
   file:
     path: '{{item}}'
     state: directory
   with_items:
-    - "{{cloud_backup_source_path}}"
-    - "{{cloud_backup_target_path}}"  
+    - "{{global_lib}}cloudbackup"
     - "{{global_log}}cloudbackup"  
   
 - name: set backup links
   file:
     src: "{{item.src}}"
-    dest: "{{cloud_backup_source_path}}{{item.name}}"
+    dest: "{{global_lib}}cloudbackup/{{item.name}}"
     state: link
     follow: no
     owner: root
     group: root
   with_items:
-    - {name: 'archive', src: '{{local_backup_path}}archive'}
+    - {name: 'archive', src: '{{backup_path}}archive'}
     - {name: 'nextcloud', src: '{{nextcloud_data_path}}'}
-    - {name: 'mysql', src: '{{local_backup_path}}mysql'}
+    - {name: 'mysql', src: '{{backup_path}}mysql'}
     - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
     
 # RCLONE
@@ -70,7 +64,7 @@
 
 - name: prepare sync cmd
   set_fact:
-    cloudback_sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone --log-file={{global_log}}cloudbackup/cloudbackup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_target_path}}backup sync {{cloud_backup_source_path}} backup:"
+    cloudback_sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone --log-file={{global_log}}cloudbackup/cloudbackup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_sync_target_path}}backup sync {{global_lib}}cloudbackup backup:"
     
 #- name: show sync_cmd
 #  debug:
@@ -80,7 +74,7 @@
 - name: create cron job => is_production
   vars:
     name: "RClone"
-    cmd: "( mountpoint -q {{cloud_backup_target_path}} && {{cloudback_sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_target_path}} not mounted\"); exit 1)"
+    cmd: "( mountpoint -q {{cloud_backup_sync_target_path}} && {{cloudback_sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_sync_target_path}} not mounted\"); exit 1)"
     file: "ansible_cloudbackup"
     hour: "2"
     minute: "0"
@@ -108,19 +102,3 @@
       version: "v{{rclone_version}}" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
-
-- name: test reachability of {{cloud_vpn_endpoint_slave}}
-  wait_for: timeout=120 port=2049 host="{{cloud_vpn_endpoint_slave}}"
-  register: server_reachability
-  failed_when: no
-  when: "is_production|bool"
-
-- name: mount cloud data folder => is_production
-  mount:
-    name: "{{cloud_backup_target_path}}"
-    src: "{{cloud_vpn_endpoint_slave}}:{{vault_vpn_cloud_remote_export_path}}"
-    fstype: nfs
-    opts: "rw,noauto,rsize=8192,wsize=8192"
-    state: mounted
-  when: "is_production|bool and server_reachability.state is not undefined and server_reachability.state == 'started'"
-

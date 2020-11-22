@@ -2,13 +2,19 @@
 # They can be removed in your individual setup if not needed
 # You can also add your own custom role as shown in the example "apache_proxy"
 
-#- { import_role: { name: openvpn_cloud }, tags: [ 'openvpn' ] }                          # vpn configuration (cloud)
-#- { import_role: { name: cloudbackup }, tags: [ 'cloudbackup' ] }                        # encrypted backup sync job to remote cloud endpoint
-#- { import_role: { name: cloudexport }, tags: [ 'cloudexport' ] }                        # prepare local cloud endpoint (clouduser and nfs export)
-
-- { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] } 
 - { import_role: { name: ssh_vpn }, tags: [ 'ssh_vpn', 'alpine' ] }                      # vpn configuration (ssh based vpn)                 [docker,user:10002:10002]
 
+# *** OPTIONAL CLOUD ***
+- { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] } 
+
+#- { import_role: { name: openvpn }, tags: [ 'openvpn' ] }                               # vpn server installation
+#- { import_role: { name: openvpn_cloud }, tags: [ 'openvpn' ], vars: { cloud_mount_path: "/mnt/dataCloud/" } }                # vpn configuration (cloud)
+#- { import_role: { name: cloudexport }, tags: [ 'cloudexport' ] }                       # prepare local cloud endpoint (clouduser and nfs export)
+
+#- { import_role: { name: cloudbackup }, tags: [ 'cloudbackup' ], vars: { cloud_backup_sync_target_path: "/mnt/dataCloud/" } } # encrypted backup sync job to remote cloud endpoint
+#- { import_role: { name: cloudbackup }, tags: [ 'cloudbackup' ], vars: { cloud_backup_sync_target_path: "{{cloud_path}}remote/<client1>/" } }
+
+# *** OPTIONAL OTHERS ***
 #- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'debian' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]
 #- { import_role: { name: electricmeter }, tags: [ 'electricmeter' ] }                   # electricity
 

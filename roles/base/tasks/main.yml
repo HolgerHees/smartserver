@@ -19,7 +19,7 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{raid_path}}" }
 
     - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
-    - { mode: "u=rwx,g=rx,o=", path: "{{local_backup_path}}" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}" }
 
 - name: install required packages => is_fedora
   yum:
@@ -113,7 +113,7 @@
     group: root
     mode: 0750
   with_items:
-    - "{{local_backup_path}}archive"
+    - "{{backup_path}}archive"
 
 - name: register update notifier => is_fedora
   vars:

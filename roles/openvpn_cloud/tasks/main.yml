@@ -86,3 +86,37 @@
     notify: "restart openvpn@cloud"
     service: "openvpn@cloud.service"
   import_tasks: roles/base/tasks/service_check.yml
+  
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+- name: prepare needed cloud folder
+  file:
+    path: '{{item}}'
+    state: directory
+  with_items:
+    - "{{cloud_mount_path}}"  
+
+- name: test reachability of {{cloud_vpn_endpoint_slave}}
+  wait_for: timeout=120 port=2049 host="{{cloud_vpn_endpoint_slave}}"
+  register: server_reachability
+  failed_when: no
+  when: "is_production|bool"
+
+- name: mount cloud data folder => is_production
+  mount:
+    name: "{{cloud_mount_path}}"
+    src: "{{cloud_vpn_endpoint_slave}}:{{vault_vpn_cloud_remote_export_path}}"
+    fstype: nfs
+    opts: "rw,noauto,rsize=8192,wsize=8192"
+    state: mounted
+  when: "is_production|bool and server_reachability.state is not undefined and server_reachability.state == 'started'"
+
+

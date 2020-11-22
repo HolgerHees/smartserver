@@ -18,13 +18,13 @@
     group: "root"
     mode: 0750
   with_items:
-    - "{{raid_path}}cloud"
-    - "{{raid_path}}cloud/local"
-    - "{{raid_path}}cloud/remote"
+    - "{{cloud_path}}"
+    - "{{cloud_path}}/local"
+    - "{{cloud_path}}/remote"
     
 - name: prepare nfs exported folder
   file:
-    path: "{{raid_path}}cloud/local/{{item}}"
+    path: "{{cloud_path}}/local/{{item}}"
     state: directory
     owner: "root"
     group: "root"
@@ -33,7 +33,7 @@
 
 - name: prepare nfs mount points
   file:
-    path: "{{raid_path}}cloud/remote/{{item}}"
+    path: "{{cloud_path}}/remote/{{item}}"
     state: directory
     owner: "root"
     group: "root"
@@ -147,7 +147,7 @@
       - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
       - '{{global_etc}}wireguard_cloud/exports:/etc/exports:z'
       - '{{global_etc}}wireguard_cloud/fstab:/etc/fstab:z'
-      - '{{raid_path}}cloud:/cloud:z,rshared'
+      - '{{cloud_path}}:/cloud:z,rshared'
     published_ports:
     # - "2050:2049/tcp"
      - "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp"

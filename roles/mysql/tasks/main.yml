@@ -12,7 +12,7 @@
     mode: 0750
   with_items:
     - '{{ global_lib }}mysql'
-    - '{{local_backup_path}}mysql'
+    - '{{backup_path}}mysql'
 
 - name: check started docker
   systemd:
@@ -35,7 +35,7 @@
       tag: mysql
     volumes:
       - '{{ global_lib }}mysql:/var/lib/mysql:z'
-      - '{{local_backup_path}}mysql:/var/lib/mysql_backup:z'
+      - '{{backup_path}}mysql:/var/lib/mysql_backup:z'
     networks:
       - name: "isolated"
         ipv4_address: "{{docker_mysql_ip}}"
@@ -63,7 +63,7 @@
 - name: create cron job
   vars:
     name: "MySQL Clean Backup"
-    cmd: "find {{local_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
+    cmd: "find {{backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
     file: "ansible_mysql"
     hour: "0"
     minute: "45"

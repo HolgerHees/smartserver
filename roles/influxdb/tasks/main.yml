@@ -17,7 +17,7 @@
     - '{{ global_lib }}influxdb/meta'
     - '{{ global_lib }}influxdb/data'
     - '{{ global_lib }}influxdb/wal'  
-    - '{{local_backup_path}}influxdb'
+    - '{{backup_path}}influxdb'
 
 - name: check started docker
   systemd:
@@ -43,7 +43,7 @@
       tag: influxdb
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb:z'
-      - '{{local_backup_path}}influxdb:/var/lib/influxdb_backup:z'
+      - '{{backup_path}}influxdb:/var/lib/influxdb_backup:z'
     networks:
       - name: "isolated"
         ipv4_address: "{{docker_influxdb_ip}}"
@@ -63,7 +63,7 @@
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"
-    cmd: "find {{local_backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
+    cmd: "find {{backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
     file: "ansible_influxdb"
     hour: "0"
     minute: "45"
