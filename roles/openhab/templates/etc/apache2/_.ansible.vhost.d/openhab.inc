@@ -11,6 +11,7 @@ ProtocolsHonorOrder Off
   RewriteRule ^/rest/(.*) ws://openhab:8080/rest/$1 [P,L]
 
   ProxyPass http://openhab:8080/
+  ProxyPassReverse http://openhab:8080/
   ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
 </Location>
