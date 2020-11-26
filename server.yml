@@ -45,6 +45,8 @@
     # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones
     - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui' ] }    # creates {{htdocs_path}}main/components
 
+    - { import_role: { name: nextcloud, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'nextcloud', 'php' ] }
+
     - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher' ] }
     
     - { import_role: { name: update_notifier, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_notifier' ] }  # prototype

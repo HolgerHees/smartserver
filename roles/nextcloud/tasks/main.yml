@@ -13,7 +13,6 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   with_items:
-    - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
 
 - name: check owner and group
