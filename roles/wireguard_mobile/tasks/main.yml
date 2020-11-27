@@ -58,6 +58,7 @@
   shell: "ls -1 {{global_etc}}wireguard_mobile/keys/"
   register: vpn_key_result
   changed_when: no
+  tags: [ 'user' ]
 
 - name: fetch keys
   fetch:
@@ -66,11 +67,13 @@
     flat: yes
   with_items: "{{vpn_key_result.stdout_lines}}"
   changed_when: no
+  tags: [ 'user' ]
 
 - name: collect server keys
   set_fact:
     vpn_gate_server_privatekey: "{{lookup('file', '/tmp/ansible/wireguard_mobile/server_privatekey')}}"
     vpn_gate_server_publickey: "{{lookup('file', '/tmp/ansible/wireguard_mobile/server_publickey')}}"
+  tags: [ 'user' ]
 
 - name: collect client keys
   set_fact:
