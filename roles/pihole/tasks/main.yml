@@ -9,7 +9,7 @@
     state: directory
     owner: "999"
     group: "999"
-    mode: 0750
+    mode: 0770
   with_items:
     - "{{ global_etc }}pihole"
     - "{{ global_etc }}pihole/dnsmasq.d/"
