@@ -47,8 +47,8 @@
 # userdata/config/SymmetricKeyCipher.config
 
 # ****** GITHUB CONFIG PROJECT ******
-- name: check if config git is updateable => ! (directory exists and contains not commited or pushed changes)
-  shell: "[[ -d {{projects_path}}openhab2 ]] && cd {{projects_path}}openhab2 && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
+- name: check if config git is updateable => ! (directory exists, is not empty and contains not commited or not pushed changes)
+  shell: "[[ -d {{projects_path}}openhab2 ]] && cd {{projects_path}}openhab2 && [ `ls -1A .  | wc -l` -gt 0 ] && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
   register: openhab_config_git_check_result
   changed_when: "openhab_config_git_check_result.rc == 0"
   failed_when: no
