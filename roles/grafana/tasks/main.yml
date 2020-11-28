@@ -154,4 +154,4 @@
   vars:
     notify: "restart grafana"
     service: "grafana.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

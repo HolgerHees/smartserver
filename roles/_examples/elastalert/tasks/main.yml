@@ -90,4 +90,4 @@
   vars:
     notify: "restart elastalert"
     service: "elastalert.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

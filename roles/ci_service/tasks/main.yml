@@ -108,5 +108,5 @@
     notify: "restart virtualbox"
     service: "vboxdrv.service"
     process: "lsmod | grep vbox"
-  import_tasks: roles/base/tasks/service_process_check.yml
+  import_tasks: roles/_shared/tasks/service_process_check.yml
   
