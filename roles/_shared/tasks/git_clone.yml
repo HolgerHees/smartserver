@@ -1,0 +1,19 @@
+- name: check if git is updateable => ! (directory exists, is not empty and contains not commited or not pushed changes)
+  shell: "[[ -d {{git_clone_path}} ]] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
+  register: "_git_clone_result"
+  changed_when: "_git_clone_result.rc == 0"
+  failed_when: no
+
+# no folder => 1
+# no uncommited changes => 1
+# no unpushed changes => 1
+
+- name: clone {{git_clone_name}} git
+  git:
+#    accept_hostkey: yes
+    repo: '{{git_clone_url}}'
+    dest: '{{git_clone_path}}'
+    version: 'master'
+  register: "git_clone_result"
+  when: "_git_clone_result.rc == 1"
+ 

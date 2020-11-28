@@ -1,17 +1,9 @@
-- name: check if git is updateable => ! (directory exists, is not empty and contains not commited or not pushed changes)
-  shell: "[[ -d {{projects_path}}{{ansible_project_name}} ]] && cd {{projects_path}}{{ansible_project_name}} && [ `ls -1A .  | wc -l` -gt 0 ] && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
-  register: deployment_git_check_result
-  changed_when: "deployment_git_check_result.rc == 0"
-  failed_when: no
-
-- name: clone git
-  git:
-#    accept_hostkey: yes
-    repo: '{{vault_deployment_config_git}}'
-    dest: '{{projects_path}}{{ansible_project_name}}'
-#    force: yes
-    version: 'master'
-  when: "deployment_git_check_result.rc == 1"
+- name: clone deployment git
+  vars:
+    git_clone_name: "deployment"
+    git_clone_path: "{{projects_path}}{{ansible_project_name}}"
+    git_clone_url: "{{vault_deployment_config_git}}"
+  import_tasks: roles/_shared/tasks/git_clone.yml
   
 - name: prepare needed folder
   file:

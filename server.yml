@@ -6,10 +6,10 @@
     ansible_python_interpreter: /usr/bin/python3
   pre_tasks:
     # ************ INIT CONFIG ***********   
-    - { import_role: { name: _init }, tags: [ 'always' ] }                                       # detect environment and load configs
+    - { import_role: { name: _shared, tasks_from: init }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************   
 
-    - { import_role: { name: _init, tasks_from: preconditions } }
+    - { import_role: { name: _shared, tasks_from: preconditions } }
   
     - name: loaded values from config files
       debug:
