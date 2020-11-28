@@ -1,19 +1,18 @@
-- name: install ansible deployment project
+- name: check if git is updateable => ! (directory exists and contains not commited or pushed changes)
+  shell: "[[ -d {{projects_path}}{{ansible_project_name}} ]] && cd {{projects_path}}{{ansible_project_name}} && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
+  register: deployment_git_check_result
+  changed_when: "deployment_git_check_result.rc == 0"
+  failed_when: no
+
+- name: clone git
   git:
 #    accept_hostkey: yes
     repo: '{{vault_deployment_config_git}}'
     dest: '{{projects_path}}{{ansible_project_name}}'
 #    force: yes
     version: 'master'
+  when: "deployment_git_check_result.rc == 1"
   
-- name: prepare ansible deployment data folder
-  file:
-    path: "{{projects_path}}{{ansible_project_name}}/{{config_path}}backup/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-
 - name: prepare needed folder
   file:
     path: "{{item}}"
@@ -22,6 +21,7 @@
     group: root
     mode: 0750
   with_items:
+    - "{{projects_path}}{{ansible_project_name}}/{{config_path}}backup/"
     - "/opt/backup_collector"
     
 - name: copy cmd

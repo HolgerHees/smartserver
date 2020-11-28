@@ -1,3 +1,10 @@
+- name: check if git is updateable => ! (directory exists and contains not commited or pushed changes)
+  shell: "[[ -d {{projects_path}}toolbox ]] && cd {{projects_path}}toolbox && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
+  register: openhab_toolbox_git_check_result
+  changed_when: "openhab_toolbox_git_check_result.rc == 0"
+  failed_when: no
+  tags: ['apache_webui_page']
+
 - name: clone git
   git:
 #    accept_hostkey: yes
@@ -5,6 +12,7 @@
     dest: '{{projects_path}}toolbox'
     version: 'master'
   tags: ['apache_webui_page']
+  when: "openhab_toolbox_git_check_result.rc == 1"
 
 - name: copy config
   template:

@@ -47,6 +47,16 @@
 # userdata/config/SymmetricKeyCipher.config
 
 # ****** GITHUB CONFIG PROJECT ******
+- name: check if config git is updateable => ! (directory exists and contains not commited or pushed changes)
+  shell: "[[ -d {{projects_path}}openhab2 ]] && cd {{projects_path}}openhab2 && ( ! git diff-index --quiet HEAD || git status | grep -q 'git push' )"
+  register: openhab_config_git_check_result
+  changed_when: "openhab_config_git_check_result.rc == 0"
+  failed_when: no
+  
+# no folder => 1
+# no uncommited changes => 1
+# no unpushed changes => 1
+
 - name: clone config git
   git:
     accept_hostkey: yes
@@ -54,6 +64,7 @@
     dest: '{{projects_path}}openhab2'
     version: "master"
   register: openhab_config_git
+  when: "openhab_config_git_check_result.rc == 1"
   
 - name: ensure that right owner is assigned => openhab_config_git changed
   file:
