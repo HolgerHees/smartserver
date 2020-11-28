@@ -50,7 +50,7 @@
 - name: clone config git
   vars:
     git_clone_name: "config"
-    git_clone_path: "{{projects_path}}toolbox"
+    git_clone_path: "{{projects_path}}openhab2"
     git_clone_url: "{{vault_openhab_config_git}}"
   import_tasks: roles/_shared/tasks/git_clone.yml
 
