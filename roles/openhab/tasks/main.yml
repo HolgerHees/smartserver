@@ -101,18 +101,18 @@
       - roles/openhab/templates/container/init.sh
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-- name: create docker network
-  docker_network:
-    name: openhab
-    ipam_config:
-      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
-    connected:
-      - mysql
-      - influxdb
-      - mosquitto
-    appends: yes
-  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
+#- name: create docker network
+#  docker_network:
+#    name: openhab
+#    ipam_config:
+#      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
+#        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
+#    connected:
+#      - mysql
+#      - influxdb
+#      - mosquitto
+#    appends: yes
+#  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
 
 - name: create docker container
   docker_container:
@@ -129,8 +129,8 @@
       GROUP_ID: "{{openhab_gid}}"
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
-      OPENHAB_HTTP_ADDRESS: "{{docker_openhab_ip}}"
-#    network_mode: host
+      OPENHAB_HTTP_ADDRESS: "127.0.0.1"
+    network_mode: host
     log_driver: journald
     log_options:
       tag: openhab
@@ -145,10 +145,10 @@
       - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
     devices: "{{openhab_device_mounts | default([])}}"
-    networks:
-      - name: "openhab"
-        ipv4_address: "{{docker_openhab_ip}}"
-    networks_cli_compatible: yes
+#    networks:
+#      - name: "openhab"
+#        ipv4_address: "{{docker_openhab_ip}}"
+#    networks_cli_compatible: yes
 #    sysctls:
 #      "net.ipv4.conf.all.arp_accept": "1"
 #      "net.ipv4.conf.all.proxy_arp": "1"
@@ -162,19 +162,16 @@
 - name: add container name
   vars:
     host_name: "openhab"
-    host_ip_address: "{{docker_openhab_ip}}"
+    host_ip_address: "127.0.0.1"
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
-- name: connect php network
-  docker_network:
-    name: php
-#    ipam_config:
-#      - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
-#        gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
-    connected:
-      - openhab
-    appends: yes
-  tags: [ 'php' ]
+#- name: connect php network
+#  docker_network:
+#    name: php
+#    connected:
+#      - openhab
+#    appends: yes
+#  tags: [ 'php' ]
 
 # ****** GITHUB CONFIG PROJECT ******
 # => custom python
@@ -544,20 +541,20 @@
     config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-- name: allow http openhab service
-  vars:
-    name: "https.openhab"
-    rule: "proto tcp dport 443 saddr {{docker_openhab_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
+#- name: allow http openhab service
+#  vars:
+#    name: "https.openhab"
+#    rule: "proto tcp dport 443 saddr {{docker_openhab_ip}}"
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
 
-- name: allow openhab service
-  vars:
-    name: "openhab"
-    rule: "saddr {{docker_openhab_ip}}"
-    is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
+#- name: allow openhab service
+#  vars:
+#    name: "openhab"
+#    rule: "saddr {{docker_openhab_ip}}"
+#    is_docker: True
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
 
 #- name: prepare needed opt folder
 #  file:
