@@ -7,4 +7,4 @@ RUN apk add --no-cache --update wireguard-tools \
 
 CMD /usr/sbin/entrypoint.sh
 
-EXPOSE {{mobile_vpn_port_internal_port}}/udp
+EXPOSE {{mobile_vpn_internal_port}}/udp
