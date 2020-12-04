@@ -37,4 +37,4 @@
         msg: "{{ domain_result.stdout_lines | unique }}"
 
     - name: test certificates
-      shell: "certbot certonly --webroot -w {{htdocs_path}}letsencrypt --dry-run --preferred-challenges http --agree-tos --email test@test.de -d {{ domain_result.stdout_lines | unique | join(' -d ') }}"
+      shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --dry-run --preferred-challenges http --agree-tos --email test@test.de -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""

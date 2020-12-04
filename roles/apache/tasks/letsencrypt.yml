@@ -1,24 +1,7 @@
-- name: install required packages => is_fedora
-  yum:
-    name: [
-      python3-certbot
-    ]
-    state: present
-  when: "is_fedora|bool"
-  
-- name: install required packages => is_suse
-  zypper:
-    name: [
-#      , python2-certbot-apache # is installing right Python libraries cryptography needed by openssl ansible module and python2-setuptools
-      python3-certbot
-    ]
-    state: present
-  when: "is_suse|bool"
-
 - name: check letsencrypt certificate
   stat:
-    path: /etc/letsencrypt/archive/{{server_domain}}
-  register: letsencrypt_archive
+    path: "{{global_etc}}letsencrypt/archive/{{server_domain}}"
+  register: certificate_files_from_etc
 
 - name: check for vault certificate files
   stat:
@@ -27,8 +10,8 @@
 
 - name: decide to create or restore easy_rsa certificates
   set_fact:
-    certificate_mode: "{% if letsencrypt_archive.stat.exists %}{% elif certificate_files_from_vault.stat.exists %}vault{% else %}create{% endif %}"
-    changed_when: "certificate_mode != ''"
+    certificate_mode: "{% if certificate_files_from_etc.stat.exists %}exists{% elif certificate_files_from_vault.stat.exists %}vault{% else %}create{% endif %}"
+    changed_when: "certificate_mode != 'exists'"
   
 # BACKUP RESTORE #  
 - name: install certificate => certificate_mode = 'vault'
@@ -57,81 +40,17 @@
   when: "certificate_mode == 'create'"
 
 - name: create certificates => certificate_mode = 'create'
-  shell: "certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{vault_root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}"
+  shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{vault_root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
   notify: "restart apache2"
   when: "certificate_mode == 'create'"
   
 - name: create cron job
   vars:
     name: "Letsencrypt renew job"
-    cmd: "certbot renew > /dev/null 2>&1"
+    cmd: "docker exec apache2 sh -c \"certbot renew > /dev/null 2>&1\""
     file: "ansible_letsencrypt"
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: "letsencrypt_archive.stat.exists"
-
-# WILDCARD DNS CHALLENGE
-#- name: run certbot => certificate_mode = 'create_wildcard'
-#  shell: |
-#    log_file -noappend {{global_tmp}}letsencrypt
-#
-#    spawn certbot certonly --dry-run --manual --preferred-challenges=dns --email {{vault_root_email}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}
-#    
-#    expect "(Y)es/(N)o:"
-#    send "Y\n"
-#    
-#    expect "Press Enter to Continue"
-#    send "\n"
-#    
-#    expect "Press Enter to Continue"
-#
-#    log_file
-#    sleep 15
-#    #send "\n"
-#    
-#    exit 0
-#  args:
-#    executable: /usr/bin/expect
-#  async: 120
-#  poll: 0
-#  register: result_async
-#  when: "certificate_mode == 'create_wildcard'"
   
-#- name: wait until challenges are available => certificate_mode = 'create_wildcard'
-#  wait_for:
-#    path: "{{global_tmp}}letsencrypt"
-#    search_regex: "This must be set up in addition"
-#  when: "certificate_mode == 'create_wildcard'"
-
-#- name: collect challenges => certificate_mode = 'create_wildcard'
-#  shell: "cat {{global_tmp}}letsencrypt | sed 's/\\r$//' | grep -P '^[A-z0-9_-]+$'"
-#  register: challenge_result
-#  when: "certificate_mode == 'create_wildcard'"
-
-#- name:
-#  debug:
-#    msg: "{{challenge_result.stdout_lines}}"
-#  when: "certificate_mode == 'create_wildcard'"
-
-#- name: wait until done => certificate_mode = 'create_wildcard'
-#  async_status:
-#    jid: "{{ result_async.ansible_job_id }}"
-#  register: result
-#  until: result.finished
-#  retries: 120
-#  when: "certificate_mode == 'create_wildcard'"
-  
-# ...
-
-#- name: create cron job
-#  vars:
-#    name: "Letsencrypt renew job"
-#    cmd: "certbot certonly --manual --preferred-challenges=dns --email {{vault_root_email}} --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.{{server_domain}} -d {{server_domain}}"
-#    file: "ansible_letsencrypt"
-#    hour: "1"
-#    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
-#  when: "certificate_mode == 'create'"
-
 

@@ -25,13 +25,13 @@
   
 - name: check certificate
   stat:
-    path: /etc/letsencrypt/live/{{server_domain}}/
+    path: "{{global_etc}}letsencrypt/live/{{server_domain}}/"
   register: certificate_files
   changed_when: not certificate_files.stat.exists
 
 - name: prepare needed folder => certificate_files not exists
   file:
-    path: "/etc/{{item}}"
+    path: "{{global_etc}}{{item}}"
     state: directory
     owner: root
     group: root
@@ -44,35 +44,35 @@
 
 - name: generate openssl privatekey => certificate_files not exists
   openssl_privatekey:
-    path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
     mode: 0600
   when: not certificate_files.stat.exists
     
 - name: generate openssl csr => certificate_files not exists
   openssl_csr:
-    path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
-    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
+    path: "{{global_etc}}letsencrypt/live/{{server_domain}}/cert.csr"
+    privatekey_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "*.{{server_domain}}"
     mode: 0600
   when: not certificate_files.stat.exists
     
 - name: generate openssl certificate => certificate_files not exists
   openssl_certificate:
-    path: "/etc/letsencrypt/live/{{server_domain}}/fullchain.pem"
-    privatekey_path: "/etc/letsencrypt/live/{{server_domain}}/privkey.pem"
-    csr_path: "/etc/letsencrypt/live/{{server_domain}}/cert.csr"
+    path: "{{global_etc}}letsencrypt/live/{{server_domain}}/fullchain.pem"
+    privatekey_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
+    csr_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/cert.csr"
     provider: selfsigned
     mode: 0640
   when: not certificate_files.stat.exists
   
-- name: create certificate symlink
-  file:
-    src: "letsencrypt"
-    dest: "/etc/certbot"
-    state: link
-    follow: no
-    owner: root
-    group: root
+#- name: create certificate symlink
+#  file:
+#    src: "letsencrypt"
+#    dest: "/etc/certbot"
+#    state: link
+#    follow: no
+#    owner: root
+#    group: root
     
 # APACHE
 - name: prepare needed folder
@@ -186,15 +186,15 @@
     log_options:
       tag: apache
     volumes:
-      #- '{{htdocs_path}}:/var/www/html:z'
-      - '{{htdocs_path}}:{{htdocs_path}}:z'
-      - '{{global_log}}:{{global_log}}:z'
       - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d:z'
       - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d:z'
       - '{{global_etc}}apache2/_.ansible.server.conf:/etc/apache2/_.ansible.server.conf:z'
       - '{{global_etc}}apache2/_.ansible.httpd.conf:/usr/local/apache2/conf/httpd.conf:z'
+      - '{{global_etc}}letsencrypt:/etc/letsencrypt:z'
 
-      - '/etc/certbot:/etc/certbot:z'
+      - '{{global_log}}:{{global_log}}:z'
+
+      - '{{htdocs_path}}:{{htdocs_path}}:z'
 
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
 #    published_ports:
