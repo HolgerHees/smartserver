@@ -56,7 +56,7 @@ vault_ssh_vpn_internal_port: "2222" # the port, used on your server
 vault_ssh_vpn_allowed_ips: {
   "1.2.3.4/32"
 }
-# to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
+# to complete the setup you have to configure port forwarding on your internet router to this internal port
 
 vault_deployment_config_git: "https://github.com/HolgerHees/smartserver.git"
 vault_deployment_token_git: ""
@@ -78,10 +78,6 @@ vault_cloud_vpn_keys: {
 
 # used in generic optional role 'cloudsync'
 vault_cloudsync_password: "default123"
-
-# used in generic optional role 'roomba'
-vault_roomba_password: "default123"
-vault_roomba_blid: "<blid>"
 
 # used in custom external openhab config repository
 vault_fritzbox_username: "openhab"
