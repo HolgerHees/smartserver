@@ -134,7 +134,7 @@
     volumes:
       - '{{global_etc}}wireguard_mobile:/etc/wireguard:z'
 #    published_ports:
-#      - "{{vault_wireguard_mobile_internal_port}}:{{vault_wireguard_mobile_internal_port}}/udp"
+#      - "{{mobile_vpn_port_internal_port}}:{{mobile_vpn_port_internal_port}}/udp"
   notify: "restart wireguard_mobile"
 
 #- name: clean old docker images => image does not exists
@@ -145,7 +145,7 @@
 - name: allow mobile vpn service
   vars:
     name: "wireguard.mobile_vpn"
-    rule: "proto udp dport {{vault_wireguard_mobile_internal_port}}"
+    rule: "proto udp dport {{mobile_vpn_port_internal_port}}"
 #    is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]

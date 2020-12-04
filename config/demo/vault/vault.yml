@@ -49,11 +49,6 @@ vault_grafana_influxdb_password: "default123"
 vault_grafana_app_username: "admin"
 vault_grafana_app_password: "admin"
 
-# used in generic optional role 'wireguard_mobile'
-vault_wireguard_mobile_internal_port: "51820" # the port, used on your server
-vault_wireguard_mobile_public_port: "51820" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
-# to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
-
 # used in generic optional role 'ssh_vpn'
 vault_ssh_vpn_username: "<username>"
 vault_ssh_vpn_password: "<password>"
@@ -80,15 +75,6 @@ vault_cloud_vpn_keys: {
     peer1: "<public_key>",
     peer2: "<public_key>"
 }
-
-# used in generic optional role 'openvpn_cloud'
-vault_vpn_cloud_type: "master" # master|slave
-vault_vpn_cloud_port: "1194"
-vault_vpn_cloud_local_username: "clouduser"
-vault_vpn_cloud_local_export_path: "{{raid_path}}{{vault_vpn_cloud_local_username}}"
-vault_vpn_cloud_remote_export_path: "/data/backup/{{server_domain}}"
-vault_vpn_cloud_master_port: "3421"
-vault_vpn_cloud_master_domain: "{{server_domain}}"
 
 # used in generic optional role 'cloudsync'
 vault_cloudsync_password: "default123"
@@ -122,22 +108,3 @@ vault_automower_device_password: "default123"
 # used in custom role 'apache_proxy'
 vault_camera_device_username: "admin"
 vault_camera_device_password: "default123"
-
-# used in generic optional role 'alexa'
-vault_server_alexa_public_port: "22432" # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
-vault_alexa_username: "alexa"
-vault_alexa_web_password: "default123"
-vault_alexa_deployment_access_key_id: "<access_key_id>"
-vault_alexa_deployment_secret_access_key: "<secret_access_key>"
-vault_alexa_deployment_role: "arn:aws:iam::<role_id>:role/AlexaTestSkill"
-vault_alexa_deployment_function_name: "test-custom-skill"
-vault_alexa_device_id1: "<alexa_device_id1>"
-vault_alexa_device_id2: "<alexa_device_id2>"
-vault_alexa_device_id3: "<alexa_device_id3>"
-vault_alexa_device_id4: "<alexa_device_id4>"
-vault_alexa_device_id5: "<alexa_device_id5>"
-vault_alexa_device_id6: "<alexa_device_id6>"
-vault_alexa_device_id7: "<alexa_device_id7>"
-
-
-
