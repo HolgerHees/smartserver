@@ -79,7 +79,7 @@
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
-    - { import_role: { name: pihole }, tags: [ 'pihole' ] }                                      # adblock server                                                        [docker,user:root]
+    - { import_role: { name: pihole }, tags: [ 'pihole' ] }                                      # adblock server                                                    [docker,user:root]
 
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (mobile access)                           [docker,user:root]
 
