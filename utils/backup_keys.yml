@@ -27,26 +27,27 @@
         path: "{{config_path}}vault_backup/{{item}}"
         state: directory
       with_items:
-        - easy-rsa
-        - easy-rsa/issued
-        - easy-rsa/private
-        - easy-rsa/reqs
+#        - easy-rsa
+#        - easy-rsa/issued
+#        - easy-rsa/private
+#        - easy-rsa/reqs
+        - letsencrypt
         - openvpn
 
-    - name: backup easy-rsa certificates
-      copy:
-        src: "/etc/easy-rsa/pki/{{item}}"
-        dest: "{{config_path}}vault_backup/easy-rsa/{{item}}"
-      with_items:
-        - "issued/server.crt"
-        - "issued/mobile.crt"
-        - "private/ca.key"
-        - "private/server.key"
-        - "private/mobile.key"
-        - "reqs/server.req"
-        - "reqs/mobile.req"
-        - "ca.crt"
-        - "dh.pem"
+#    - name: backup easy-rsa certificates
+#      copy:
+#        src: "/etc/easy-rsa/pki/{{item}}"
+#        dest: "{{config_path}}vault_backup/easy-rsa/{{item}}"
+#      with_items:
+#        - "issued/server.crt"
+#        - "issued/mobile.crt"
+#        - "private/ca.key"
+#        - "private/server.key"
+#        - "private/mobile.key"
+#        - "reqs/server.req"
+#        - "reqs/mobile.req"
+#        - "ca.crt"
+#        - "dh.pem"
     #    - "certs_by_serial/76C34AF12707764CFBBE86AA4BB64751.pem"  // server.crt
     #    - "certs_by_serial/B0C6214224191008AE8BF1D26F09D2B1.pem"  // mobile.crt
     #    - "private/server.pass"
@@ -60,6 +61,12 @@
         src: "/etc/openvpn/cloud_shared.key"
         dest: "{{config_path}}vault_backup/openvpn/cloud_shared.key"
       failed_when: no
+      tags: [vault_certificates]
+
+    - name: backup apache certificates
+      archive:
+        path: "{{global_etc}}/letsencrypt/"
+        dest: "{{config_path}}vault_backup/letsencrypt.tgz"
       tags: [vault_certificates]
 
     - name: backup wireguard mobile key

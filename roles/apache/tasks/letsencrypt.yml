@@ -17,8 +17,8 @@
 - name: install certificate => certificate_mode = 'vault'
   unarchive:
     src: "{{config_path}}vault/letsencrypt/letsencrypt.tgz"
-    dest: "/etc/"
-    creates: "/etc/letsencrypt/"
+    dest: "{{global_etc}}"
+    creates: "{{global_etc}}letsencrypt/"
     decrypt: yes
   notify: "restart apache2"
   when: "certificate_mode == 'vault'"
@@ -26,12 +26,12 @@
 # CREATE #  
 - name: check for vault certificate files
   stat:
-    path: "/etc/letsencrypt/live/{{server_domain}}"
+    path: "{{global_etc}}letsencrypt/live/{{server_domain}}"
   register: certificate_files
   when: "certificate_mode == 'create'"
 
 - name: backup selfsigned certificate
-  command: "mv /etc/letsencrypt/live/{{server_domain}} /etc/letsencrypt/live/{{server_domain}}.bak"
+  command: "mv {{global_etc}}letsencrypt/live/{{server_domain}} {{global_etc}}letsencrypt/live/{{server_domain}}.bak"
   when: "certificate_mode == 'create' and certificate_files.stat.exists"
 
 - name: collect domain names => certificate_mode = 'create'

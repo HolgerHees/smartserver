@@ -3,7 +3,7 @@
     name: [
         openvpn
       #, openvpn-auth-pam-plugin
-      , easy-rsa
+      #, easy-rsa
     ]
     state: present
   when: is_fedora|bool
@@ -13,38 +13,38 @@
     name: [
         openvpn
       #, openvpn-auth-pam-plugin
-      , easy-rsa
+      #, easy-rsa
     ]
     state: present
   when: is_suse|bool
   
-- name: prepare needed easyrsa folder
-  file:
-    path: '/etc/{{item}}'
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - easy-rsa
-    - easy-rsa/pki
-    - easy-rsa/issued
-    - easy-rsa/private
-    - easy-rsa/reqs
+#- name: prepare needed easyrsa folder
+#  file:
+#    path: '/etc/{{item}}'
+#    state: directory
+#    owner: root
+#    group: root
+#    mode: 0755
+#  with_items:
+#    - easy-rsa
+#    - easy-rsa/pki
+#    - easy-rsa/issued
+#    - easy-rsa/private
+#    - easy-rsa/reqs
 
-- name: copy files => is_fedora
-  copy:
-    src: "{{item.src}}"
-    dest: "{{item.target}}"
-    remote_src: true
-    owner: root
-    group: root
-    mode: "{{item.permissions}}"
-  with_items:
-    - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/openssl-easyrsa.cnf", target: "/etc/easy-rsa/" }
-    - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/x509-types", target: "/etc/easy-rsa/" }
-    - { permissions: "u=rwx,g=rx,o=rx", src: "/usr/share/easy-rsa/3/easyrsa", target: "/usr/bin/easyrsa" }
-  when: is_fedora|bool
+#- name: copy files => is_fedora
+#  copy:
+#    src: "{{item.src}}"
+#    dest: "{{item.target}}"
+#    remote_src: true
+#    owner: root
+#    group: root
+#    mode: "{{item.permissions}}"
+#  with_items:
+#    - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/openssl-easyrsa.cnf", target: "/etc/easy-rsa/" }
+#    - { permissions: "u=rw,g=r,o=r", src: "/usr/share/easy-rsa/3/x509-types", target: "/etc/easy-rsa/" }
+#    - { permissions: "u=rwx,g=rx,o=rx", src: "/usr/share/easy-rsa/3/easyrsa", target: "/usr/bin/easyrsa" }
+#  when: is_fedora|bool
   
 - name: copy config => is_fedora
   copy:
