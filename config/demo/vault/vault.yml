@@ -26,8 +26,8 @@ vault_ftp_password: "default123"
 
 # to enable obtain a login from https://api.weather.mg/
 # to disable, leave the username empty
-vault_weather_api_username: "<username>"
-vault_weather_api_password: "<password>"
+vault_weather_api_username: ""
+vault_weather_api_password: ""
 
 vault_nextcloud_instance_id: "234sdgzw87399443s"
 vault_nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
