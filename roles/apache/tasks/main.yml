@@ -117,7 +117,7 @@
     group: "root"
     mode: 0644
   vars:
-    enable_stapeling: "{{vault_ssl_certificate != 'selfsigned'}}"
+    enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
   with_items:
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
@@ -137,7 +137,7 @@
     group: "root"
     mode: 0644
   vars:
-    enable_stapeling: "{{vault_ssl_certificate != 'selfsigned'}}"
+    enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
   with_items:
     - _.ansible.vhost.d/auth_basic.inc
     - _.ansible.vhost.d/auth_form1.inc

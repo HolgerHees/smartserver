@@ -65,5 +65,5 @@
   set_fact:
     system_users: {}
     system_groups: {}
-    vault_ssl_certificate: "{{ vault_ssl_certificate | default('selfsigned') }}"    # selfsigned | letsencrypt
+    ssl_certificate: "{{ ssl_certificate | default('selfsigned') }}"    # selfsigned | letsencrypt
   

@@ -142,7 +142,7 @@
     # **************************************
     
   post_tasks:
-    - { import_role: { name: apache, tasks_from: letsencrypt, handlers_from: empty }, tags: [ 'apache_letsencrypt' ], when: "vault_ssl_certificate == 'letsencrypt'" }   # activate letsencrypt certificate
+    - { import_role: { name: apache, tasks_from: letsencrypt, handlers_from: empty }, tags: [ 'apache_letsencrypt' ], when: "ssl_certificate == 'letsencrypt'" }   # activate letsencrypt certificate
 
     - { import_role: { name: dns, tasks_from: enable, handlers_from: empty }, tags: [ 'dns' ] }   # activate local named
 
