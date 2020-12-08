@@ -19,6 +19,7 @@
     - "dnsmasq.conf"
     - "dnsmasq-hosts"
     - "resolv.dnsmasq.conf"
+  notify: "restart named"
 
 - name: build docker image
   vars:
