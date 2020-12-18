@@ -124,7 +124,10 @@ mx.OnDocReady.push( initPage );
                 #error_log($update->date);
 
                 $date = date_create($update->date);
-                
+                if( !$date )
+                {
+                    $date = date_create(explode(".",$update->date)[0]);
+                }
                 #error_log($date);
                 
                 if( $latest_date == null or $latest_date < $date ) $latest_date = $date;
