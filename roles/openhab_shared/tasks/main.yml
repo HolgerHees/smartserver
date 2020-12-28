@@ -7,7 +7,7 @@
 
 - name: set symbolic link to shared python scripts
   file:
-    src: "{{projects_path}}openhab_shared/python/shared/"
+    src: "{{projects_path}}openhab_shared/python/shared"
     dest: "{{global_etc}}/openhab/python/shared"
     state: link
     follow: no
@@ -16,7 +16,7 @@
 
 - name: set symbolic link to shared html files
   file:
-    src: "{{projects_path}}openhab_shared/conf/html/shared/"
+    src: "{{projects_path}}openhab_shared/conf/html/shared"
     dest: "{{global_etc}}/openhab/conf/html/shared"
     state: link
     follow: no

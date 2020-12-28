@@ -40,20 +40,20 @@
 - name: clone config git
   vars:
     git_clone_name: "config"
-    git_clone_path: "{{projects_path}}openhab2"
+    git_clone_path: "{{projects_path}}openhab_config"
     git_clone_url: "{{vault_openhab_config_git}}"
   import_tasks: roles/_shared/tasks/git_clone.yml
 
 - name: ensure that right owner is assigned => git_clone_result changed
   file:
-    path: "{{projects_path}}openhab2"
+    path: "{{projects_path}}openhab_config"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     recurse: yes
   when: "git_clone_result.changed"
 
 - name: collect devices
-  shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab2/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
+  shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
   changed_when: no
   failed_when: no
@@ -125,7 +125,7 @@
     log_options:
       tag: openhab
     volumes:
-      - '{{projects_path}}openhab2:{{projects_path}}openhab2:z'
+      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
       - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
       - '{{global_etc}}openhab/addons:/openhab/addons:z'
       - '{{global_etc}}openhab/conf:/openhab/conf:z'
@@ -168,7 +168,7 @@
 # => custom python
 - name: link custom python
   file:
-    src: "{{projects_path}}openhab2/python/custom"
+    src: "{{projects_path}}openhab_config/python/custom"
     dest: "{{global_etc}}openhab/python/custom"
     state: link
     follow: no
@@ -178,13 +178,13 @@
 
 # conf folder
 - name: check conf folder
-  shell: "ls -1 {{projects_path}}openhab2/conf/"
+  shell: "ls -1 {{projects_path}}openhab_config/conf/"
   register: config_result
   changed_when: no
   
 - name: link conf folder
   file:
-    src: "{{projects_path}}openhab2/conf/{{item}}"
+    src: "{{projects_path}}openhab_config/conf/{{item}}"
     dest: "{{global_etc}}openhab/conf/{{item}}"
     state: link
     follow: no
@@ -195,14 +195,14 @@
 
 # custom html conf folder
 - name: check custom html conf folder
-  shell: "ls -1 {{projects_path}}openhab2/conf/html/"
+  shell: "ls -1 {{projects_path}}openhab_config/conf/html/"
   register: config_html_result
   changed_when: no
   when: "'html' in config_result.stdout_lines"
 
 - name: link html conf folder
   file:
-    src: "{{projects_path}}openhab2/conf/html/{{item}}"
+    src: "{{projects_path}}openhab_config/conf/html/{{item}}"
     dest: "{{global_etc}}openhab/conf/html/{{item}}"
     state: link
     follow: no
@@ -236,14 +236,14 @@
     
 # habpanel if exists
 - name: check habpanel config
-  shell: "ls {{projects_path}}openhab2/habpanel.config"
+  shell: "ls {{projects_path}}openhab_config/habpanel.config"
   register: habpanel_result
   changed_when: no
   failed_when: no
    
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
-    src: "{{projects_path}}openhab2/habpanel.config"
+    src: "{{projects_path}}openhab_config/habpanel.config"
     dest: "{{global_etc}}openhab/userdata/config/habpanel.config"
     remote_src: yes
     owner: "{{openhab_user}}"
@@ -253,13 +253,13 @@
 
 # addons folder
 - name: check addons folder
-  shell: "ls -1 {{projects_path}}openhab2/addons/"
+  shell: "ls -1 {{projects_path}}openhab_config/addons/"
   register: addons_result
   changed_when: no
 
 - name: copy addons folder
   copy:
-    src: "{{projects_path}}openhab2/addons/{{item}}"
+    src: "{{projects_path}}openhab_config/addons/{{item}}"
     dest: "{{global_etc}}openhab/addons/{{item}}"
     remote_src: yes
     owner: "{{openhab_user}}"
@@ -269,14 +269,14 @@
   
 # SERVICES
 - name: check service folder
-  shell: "ls -1 {{projects_path}}openhab2/templates/services/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
   register: services_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare service configs
   fetch:
-    src: "{{projects_path}}openhab2/templates/services/{{item}}"
+    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
     dest: "/tmp/ansible/openhab2/services/{{item}}"
     flat: yes
   register: services_state
@@ -295,14 +295,14 @@
 
 # THINGS
 - name: check things folder
-  shell: "ls -1 {{projects_path}}openhab2/templates/things/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates/things/"
   register: things_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare things config
   fetch:
-    src: "{{projects_path}}openhab2/templates/things/{{item}}"
+    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
     dest: "/tmp/ansible/openhab2/things/{{item}}"
     flat: yes
   register: things_state
@@ -321,14 +321,14 @@
   
 # UDEV
 - name: check udev folder
-  shell: "ls -1 {{projects_path}}openhab2/templates/udev/rules.d/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates/udev/rules.d/"
   register: udev_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare udev rules
   fetch:
-    src: "{{projects_path}}openhab2/templates/udev/rules.d/{{item}}"
+    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
     dest: "/tmp/ansible/openhab2/udev/{{item}}"
     flat: yes
   register: udev_state
