@@ -1,0 +1,9 @@
+- name: prepare shared folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+    mode: 0750
+  with_items:
+    - "{{projects_path}}openhab_shared"

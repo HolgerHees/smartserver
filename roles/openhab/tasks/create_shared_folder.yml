@@ -1,0 +1,18 @@
+- name: ensure user and group exists
+  vars:
+    user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
+    group: { name: "openhab", system: true }
+  import_tasks: roles/user/tasks/add_system_user.yml
+
+- name: prepare shared folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"
+    mode: 0750
+  with_items:
+    - "{{global_etc}}openhab"
+    - "{{global_etc}}openhab/conf"
+    - "{{global_etc}}openhab/conf/html"
+    - "{{global_etc}}openhab/python"

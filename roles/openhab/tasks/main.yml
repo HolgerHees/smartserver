@@ -1,9 +1,3 @@
-- name: ensure user and group exists
-  vars:
-    user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
-    group: { name: "openhab", system: true }
-  import_tasks: roles/user/tasks/add_system_user.yml
-
 - name: set openhab version
   set_fact:
     openhab_version: "2.5.10"
@@ -33,11 +27,7 @@
     group: "{{openhab_group}}"
     mode: 0750
   with_items:
-    - "{{global_etc}}openhab"
-    - "{{global_etc}}openhab/conf"
-    - "{{global_etc}}openhab/conf/html"
     - "{{global_etc}}openhab/runtime/lib/python"
-    - "{{global_etc}}openhab/python"
     - "{{global_etc}}openhab/userdata"
     - "{{global_etc}}openhab/userdata/config"
     - "{{global_log}}openhab"
@@ -136,6 +126,7 @@
       tag: openhab
     volumes:
       - '{{projects_path}}openhab2:{{projects_path}}openhab2:z'
+      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
       - '{{global_etc}}openhab/addons:/openhab/addons:z'
       - '{{global_etc}}openhab/conf:/openhab/conf:z'
       - '{{global_etc}}openhab/python:/openhab/python:z'
@@ -219,15 +210,6 @@
     group: "{{openhab_group}}"
   with_items: "{{config_html_result.stdout_lines}}"
   notify: "restart openhab"
-
-# shared html conf folder
-- name: copy shared html conf folder
-  copy:
-    src: "templates/conf/html/shared"
-    dest: "{{global_etc}}openhab/conf/html/"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    mode: 0640
 
 # create missing folder
 - name: prepare missing config folder
@@ -404,15 +386,6 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0750
-  notify: "restart openhab"
-
-- name: copy jython shared classes
-  copy:
-    src: "templates/python/shared"
-    dest: "{{global_etc}}openhab/python"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    mode: 0640
   notify: "restart openhab"
 
 - name: copy jython configuration

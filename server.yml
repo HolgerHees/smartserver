@@ -47,6 +47,10 @@
 
     - { import_role: { name: nextcloud, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'nextcloud', 'php' ] }
 
+    - { import_role: { name: openhab, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_shared', 'openhab' ] }
+
+    - { import_role: { name: openhab_shared, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_shared', 'openhab' ] }
+
     - { import_role: { name: openhab_toolbox, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_toolbox', 'php', 'apache' ] }
 
     - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher' ] }
@@ -126,6 +130,7 @@
     - { import_role: { name: nextcloud_onlyoffice }, tags: [ 'nextcloud_onlyoffice' ] }          # private cloud office editor                                       [docker,user:106|108]
      
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
+    - { import_role: { name: openhab_shared }, tags: [ 'openhab_shared' ] }                      # shared openhab scripts
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
     - { import_role: { name: device_ping }, tags: [ 'device_ping' ] }                            # ping mobile device service
 
