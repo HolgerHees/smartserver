@@ -50,37 +50,31 @@
 # ****** GITHUB SHARED PROJECT ******
 - name: clone git
   vars:
-    git_clone_name: "openhab_shared"
+    git_clone_name: "shared"
     git_clone_path: "{{projects_path}}openhab_shared"
     git_clone_url: "https://github.com/HolgerHees/openhab_shared.git"
   import_tasks: roles/_shared/tasks/git_clone.yml
 
+- name: ensure that right owner is assigned => git_clone_result changed
+  file:
+    path: "{{projects_path}}openhab_shared"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    recurse: yes
+  when: "git_clone_result.changed"
+
 - name: set symbolic link to shared python scripts
   file:
-    src: "{{projects_path}}openhab_shared/python/shared"
-    dest: "{{global_etc}}/openhab/python/shared"
+    src: "{{projects_path}}openhab_shared/{{item}}"
+    dest: "{{global_etc}}/openhab/{{item}}"
     state: link
     follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"  
-
-- name: set symbolic link to shared html files
-  file:
-    src: "{{projects_path}}openhab_shared/conf/html/shared"
-    dest: "{{global_etc}}/openhab/conf/html/shared"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"  
-
-- name: set symbolic link to shared icon files
-  file:
-    src: "{{projects_path}}openhab_shared/conf/icons/classic"
-    dest: "{{global_etc}}/openhab/conf/icons/classic"
-    state: link
-    follow: no
-    owner: "{{system_users['openhab'].name}}"
-    group: "{{system_groups['openhab'].name}}"  
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"  
+  with_items:
+    - "python/shared"
+    - "conf/html/shared"
+    - "conf/icons/classic"
 
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
@@ -97,120 +91,7 @@
     group: "{{openhab_group}}"
     recurse: yes
   when: "git_clone_result.changed"
-
-- name: collect devices
-  shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
-  register: device_result
-  changed_when: no
-  failed_when: no
   
-#- name:
-#  debug:
-#    msg: "{{device_result}}"
-
-- name: prepare device javaopts
-  set_fact:
-    openhab_device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
-  when: "device_result.rc == 0"
-  
-- name: check if devices exists
-  shell: "ls -al /dev/{{item}}"
-  register: symlink_result
-  changed_when: no
-  failed_when: no
-  with_items: "{{device_result.stdout_lines}}"
-  when: "device_result.rc == 0"
-  
-- name: prepare device mounts
-  set_fact:
-    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item.1 + ':/dev/' + item.1 + ':rwm']}}"
-  with_indexed_items: "{{device_result.stdout_lines}}"
-  when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
-  
-- name: build docker image
-  vars:
-    name: "openhab"
-    image_name: "custom_openhab"
-    image_version: "{{openhab_version}}"
-    files:
-      - roles/openhab/templates/container/Dockerfile
-      - roles/openhab/templates/container/init.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
-
-#- name: create docker network
-#  docker_network:
-#    name: openhab
-#    ipam_config:
-#      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
-#        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
-#    connected:
-#      - mysql
-#      - influxdb
-#      - mosquitto
-#    appends: yes
-#  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
-
-- name: create docker container
-  docker_container:
-    name: openhab
-    image: "custom_openhab:{{openhab_version}}"
-    state: present
-#    capabilities:
-#      - NET_ADMIN
-#      - NET_RAW
-#    recreate: true
-    env:
-      TZ: "{{timezone}}"
-      USER_ID: "{{openhab_uid}}"
-      GROUP_ID: "{{openhab_gid}}"
-      #CRYPTO_POLICY: "unlimited"
-      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
-      OPENHAB_HTTP_ADDRESS: "127.0.0.1"
-    network_mode: host
-    log_driver: journald
-    log_options:
-      tag: openhab
-    volumes:
-      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
-      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
-      - '{{global_etc}}openhab/addons:/openhab/addons:z'
-      - '{{global_etc}}openhab/conf:/openhab/conf:z'
-      - '{{global_etc}}openhab/python:/openhab/python:z'
-      - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
-      - "{{global_etc}}openhab/userdata/config:/openhab/userdata/config/org/openhab/:z"
-#      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
-      - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
-      - '{{global_log}}openhab:/openhab/userdata/logs:z'
-    devices: "{{openhab_device_mounts | default([])}}"
-#    networks:
-#      - name: "openhab"
-#        ipv4_address: "{{docker_openhab_ip}}"
-#    networks_cli_compatible: yes
-#    sysctls:
-#      "net.ipv4.conf.all.arp_accept": "1"
-#      "net.ipv4.conf.all.proxy_arp": "1"
-    exposed_ports:
-      - "8080"  
-      - "8443"  
-      - "5007"  
-      - "8101"  
-  notify: "restart openhab"
-
-- name: add container name
-  vars:
-    host_name: "openhab"
-    host_ip_address: "127.0.0.1"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
-
-#- name: connect php network
-#  docker_network:
-#    name: php
-#    connected:
-#      - openhab
-#    appends: yes
-#  tags: [ 'php' ]
-
-# ****** GITHUB CONFIG PROJECT ******
 # => custom python
 - name: link custom python
   file:
@@ -458,6 +339,150 @@
     group: "{{openhab_group}}"
     mode: 0640
   notify: "restart openhab"
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+- name: collect devices
+  shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
+  register: device_result
+  changed_when: no
+  failed_when: no
+  
+#- name:
+#  debug:
+#    msg: "{{device_result}}"
+
+- name: prepare device javaopts
+  set_fact:
+    openhab_device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
+  when: "device_result.rc == 0"
+  
+- name: check if devices exists
+  shell: "ls -al /dev/{{item}}"
+  register: symlink_result
+  changed_when: no
+  failed_when: no
+  with_items: "{{device_result.stdout_lines}}"
+  when: "device_result.rc == 0"
+  
+- name: prepare device mounts
+  set_fact:
+    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item.1 + ':/dev/' + item.1 + ':rwm']}}"
+  with_indexed_items: "{{device_result.stdout_lines}}"
+  when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
+  
+- name: build docker image
+  vars:
+    name: "openhab"
+    image_name: "custom_openhab"
+    image_version: "{{openhab_version}}"
+    files:
+      - roles/openhab/templates/container/Dockerfile
+      - roles/openhab/templates/container/init.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+#- name: create docker network
+#  docker_network:
+#    name: openhab
+#    ipam_config:
+#      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
+#        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
+#    connected:
+#      - mysql
+#      - influxdb
+#      - mosquitto
+#    appends: yes
+#  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
+
+- name: create docker container
+  docker_container:
+    name: openhab
+    image: "custom_openhab:{{openhab_version}}"
+    state: present
+#    capabilities:
+#      - NET_ADMIN
+#      - NET_RAW
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      USER_ID: "{{openhab_uid}}"
+      GROUP_ID: "{{openhab_gid}}"
+      #CRYPTO_POLICY: "unlimited"
+      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
+      OPENHAB_HTTP_ADDRESS: "127.0.0.1"
+    network_mode: host
+    log_driver: journald
+    log_options:
+      tag: openhab
+    volumes:
+      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
+      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
+      - '{{global_etc}}openhab/addons:/openhab/addons:z'
+      - '{{global_etc}}openhab/conf:/openhab/conf:z'
+      - '{{global_etc}}openhab/python:/openhab/python:z'
+      - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
+      - "{{global_etc}}openhab/userdata/config:/openhab/userdata/config/org/openhab/:z"
+#      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
+      - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
+      - '{{global_log}}openhab:/openhab/userdata/logs:z'
+    devices: "{{openhab_device_mounts | default([])}}"
+#    networks:
+#      - name: "openhab"
+#        ipv4_address: "{{docker_openhab_ip}}"
+#    networks_cli_compatible: yes
+#    sysctls:
+#      "net.ipv4.conf.all.arp_accept": "1"
+#      "net.ipv4.conf.all.proxy_arp": "1"
+    exposed_ports:
+      - "8080"  
+      - "8443"  
+      - "5007"  
+      - "8101"  
+  notify: "restart openhab"
+
+- name: add container name
+  vars:
+    host_name: "openhab"
+    host_ip_address: "127.0.0.1"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+#- name: connect php network
+#  docker_network:
+#    name: php
+#    connected:
+#      - openhab
+#    appends: yes
+#  tags: [ 'php' ]
 
 # ***** DATABASE ****
 - name: check mysql service
