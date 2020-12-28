@@ -47,8 +47,6 @@
 
     - { import_role: { name: nextcloud, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'nextcloud', 'php' ] }
 
-    - { import_role: { name: openhab, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_shared', 'openhab' ] }
-
     - { import_role: { name: openhab_shared, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_shared', 'openhab' ] }
 
     - { import_role: { name: openhab_toolbox, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_toolbox', 'php', 'apache' ] }

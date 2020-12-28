@@ -1,3 +1,9 @@
+- name: ensure user and group exists
+  vars:
+    user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
+    group: { name: "openhab", system: true }
+  import_tasks: roles/user/tasks/add_system_user.yml
+
 - name: set openhab version
   set_fact:
     openhab_version: "2.5.10"
@@ -27,6 +33,10 @@
     group: "{{openhab_group}}"
     mode: 0750
   with_items:
+    - "{{global_etc}}openhab"
+    - "{{global_etc}}openhab/conf"
+    - "{{global_etc}}openhab/conf/html"
+    - "{{global_etc}}openhab/python"
     - "{{global_etc}}openhab/runtime/lib/python"
     - "{{global_etc}}openhab/userdata"
     - "{{global_etc}}openhab/userdata/config"
