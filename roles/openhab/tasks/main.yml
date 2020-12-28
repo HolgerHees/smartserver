@@ -36,6 +36,7 @@
     - "{{global_etc}}openhab"
     - "{{global_etc}}openhab/conf"
     - "{{global_etc}}openhab/conf/html"
+    - "{{global_etc}}openhab/conf/icons"
     - "{{global_etc}}openhab/python"
     - "{{global_etc}}openhab/runtime/lib/python"
     - "{{global_etc}}openhab/userdata"
@@ -45,6 +46,41 @@
     - "{{global_lib}}openhab/persistance"
 #    - "{{global_lib}}openhab/jsondb" # => for homeconnect oauth => 
 # userdata/config/SymmetricKeyCipher.config
+
+# ****** GITHUB SHARED PROJECT ******
+- name: clone git
+  vars:
+    git_clone_name: "openhab_shared"
+    git_clone_path: "{{projects_path}}openhab_shared"
+    git_clone_url: "https://github.com/HolgerHees/openhab_shared.git"
+  import_tasks: roles/_shared/tasks/git_clone.yml
+
+- name: set symbolic link to shared python scripts
+  file:
+    src: "{{projects_path}}openhab_shared/python/shared"
+    dest: "{{global_etc}}/openhab/python/shared"
+    state: link
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"  
+
+- name: set symbolic link to shared html files
+  file:
+    src: "{{projects_path}}openhab_shared/conf/html/shared"
+    dest: "{{global_etc}}/openhab/conf/html/shared"
+    state: link
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"  
+
+- name: set symbolic link to shared icon files
+  file:
+    src: "{{projects_path}}openhab_shared/conf/icons/classic"
+    dest: "{{global_etc}}/openhab/conf/icons/classic"
+    state: link
+    follow: no
+    owner: "{{system_users['openhab'].name}}"
+    group: "{{system_groups['openhab'].name}}"  
 
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
@@ -200,25 +236,41 @@
     follow: no
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
-  with_items: "{{config_result.stdout_lines | difference(['html'])}}"
+  with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
   notify: "restart openhab"
 
-# custom html conf folder
-- name: check custom html conf folder
-  shell: "ls -1 {{projects_path}}openhab_config/conf/html/"
-  register: config_html_result
+# custom conf sub folder (html & icons)
+- name: check custom html & icons conf folder
+  shell: "ls -1 {{projects_path}}openhab_config/conf/{{item}}/"
+  register: config_sub_folder_result
   changed_when: no
-  when: "'html' in config_result.stdout_lines"
-
-- name: link html conf folder
+  when: "item in config_result.stdout_lines"
+  with_items:
+    - html
+    - icons
+    
+- name: collect custom html & icons conf folder
+  set_fact:
+    config_sub_folders: |
+      [
+      {% for result in config_sub_folder_result.results %}
+      {% if result.stdout_lines is defined %}
+      {% for line in result.stdout_lines %}
+      "{{result.item}}/{{line}}",
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      ]
+    
+- name: link custom html & icons conf folder
   file:
-    src: "{{projects_path}}openhab_config/conf/html/{{item}}"
-    dest: "{{global_etc}}openhab/conf/html/{{item}}"
+    src: "{{projects_path}}openhab_config/conf/{{item}}"
+    dest: "{{global_etc}}openhab/conf/{{item}}"
     state: link
     follow: no
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
-  with_items: "{{config_html_result.stdout_lines}}"
+  with_items: "{{config_sub_folders}}"
   notify: "restart openhab"
 
 # create missing folder
