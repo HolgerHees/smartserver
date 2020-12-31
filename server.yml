@@ -85,8 +85,6 @@
 
     - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
 
-    - { import_role: { name: nfs }, tags: [ 'nfs' ] }                                            # nfs file server                                                   [deprecated]
-
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 
     - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ] }                                  # ftp file server for camera picture upload and cleanup             [docker,user:ftp]
