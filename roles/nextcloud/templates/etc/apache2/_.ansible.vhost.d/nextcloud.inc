@@ -20,30 +20,30 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
   Require all denied
 </Directory>
 
-#https://docs.nextcloud.com/server/11/admin_manual/configuration_server/sso_configuration.html#configuring-environment-based-authentication
-#<LocationMatch "^(?!/(?:redirect_uri|index\.php/login$)).+">
+#<LocationMatch "^/(?!(index\.php/login.*|index\.php/apps/user_saml/saml/login.*))">
+<LocationMatch "^/(?!(index\.php/apps/user_saml/saml/login.*))">
+    Require all granted
+</LocationMatch>
+
+# theme files
+#<LocationMatch "^/index.php/apps/theming/|^\/(?!remote).*\.css?|^\/(?!remote).*\.js?|^\/(?!remote).*\.svg|/js/accessibility">
 #    Require all granted
 #</LocationMatch>
 
-# theme files
-<LocationMatch "^/index.php/apps/theming/|^\/(?!remote).*\.css?|^\/(?!remote).*\.js?|^\/(?!remote).*\.svg|/js/accessibility">
-    Require all granted
-</LocationMatch>
-
 # needed to login with apps
-<LocationMatch "^/status\.php|^/index.php/login/flow">
-    Require all granted
-</LocationMatch>
+#<LocationMatch "^/status\.php|^/index\.php/login/flow.*|^/index\.php/login/v2.*">
+#    Require all granted
+#</LocationMatch>
 
 # needed for android app file upload
-<Location "/index.php/204">
-    Require all granted
-</Location>
+#<Location "/index.php/204">
+#    Require all granted
+#</Location>
 
 # needed for onlyoffice
-<LocationMatch "^/index.php/apps/onlyoffice/.+">
-    Require all granted
-</LocationMatch>
+#<LocationMatch "^/index.php/apps/onlyoffice/.+">
+#    Require all granted
+#</LocationMatch>
 
 Header always unset X-Frame-Options
 Header always edit Content-Security-Policy "frame-ancestors 'self'" "frame-ancestors {{server_domain}} *.{{server_domain}}"

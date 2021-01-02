@@ -219,8 +219,13 @@
   #when: "'nextcloud' not in mysql_data_exists.stdout"
   tags: [ 'user' ]
   
+#  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+
+# OC_PASS is never used, because authentification is done by apache.
+# the only reason why we set a dummy passwort is to avoid that nextcloud is using basic auth credentials (this will fail saml_user auth)
+# nextcloud should always be forced to use saml_auth using the env vars
 - name: add new user
-  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
+  shell: "docker exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
   failed_when: "'was created successfully' not in result.stdout"
   when: "'user' in userdata[item].groups"
@@ -229,7 +234,7 @@
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
 #- name: update existing user
-#  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}\""
+#  shell: "docker exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{item}}\""
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
