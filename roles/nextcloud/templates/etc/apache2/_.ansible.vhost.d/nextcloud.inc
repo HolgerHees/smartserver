@@ -22,7 +22,9 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
 
 #<LocationMatch "^/(?!(index\.php/login.*|index\.php/apps/user_saml/saml/login.*))">
 <LocationMatch "^/(?!(index\.php/apps/user_saml/saml/login.*))">
+    <If "%{HTTP_HOST} !~ /(ba-|ba\.).*/">
     Require all granted
+    </If>
 </LocationMatch>
 
 # theme files
