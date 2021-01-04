@@ -20,32 +20,15 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
   Require all denied
 </Directory>
 
-#<LocationMatch "^/(?!(index\.php/login.*|index\.php/apps/user_saml/saml/login.*))">
+<Location "/">
+    SetEnvIfNoCase Authorization "Basic.+" HTTP_AUTHORIZATION=
+</Location>
+
 <LocationMatch "^/(?!(index\.php/apps/user_saml/saml/login.*))">
     <If "%{SERVER_NAME} !~ /ba[-\.]{1}/">
     Require all granted
     </If>
 </LocationMatch>
-
-# theme files
-#<LocationMatch "^/index.php/apps/theming/|^\/(?!remote).*\.css?|^\/(?!remote).*\.js?|^\/(?!remote).*\.svg|/js/accessibility">
-#    Require all granted
-#</LocationMatch>
-
-# needed to login with apps
-#<LocationMatch "^/status\.php|^/index\.php/login/flow.*|^/index\.php/login/v2.*">
-#    Require all granted
-#</LocationMatch>
-
-# needed for android app file upload
-#<Location "/index.php/204">
-#    Require all granted
-#</Location>
-
-# needed for onlyoffice
-#<LocationMatch "^/index.php/apps/onlyoffice/.+">
-#    Require all granted
-#</LocationMatch>
 
 Header always unset X-Frame-Options
 Header always edit Content-Security-Policy "frame-ancestors 'self'" "frame-ancestors {{server_domain}} *.{{server_domain}}"

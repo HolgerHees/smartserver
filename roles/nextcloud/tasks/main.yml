@@ -222,8 +222,10 @@
 #  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
 
 # OC_PASS is never used, because authentification is done by apache.
-# the only reason why we set a dummy passwort is to avoid that nextcloud is using basic auth credentials (this will fail saml_user auth)
-# nextcloud should always be forced to use saml_auth using the env vars
+# 
+# one side effect is that basic auth works only for dav clients
+# basic auth for non dav requests does not work, because the saml code to handle REMOTE_USER needs cookies
+# one possible way to fix is changing "/apps/user_saml/lib/UserBackend.php->getCurrentUserId"
 - name: add new user
   shell: "docker exec php sh -c \"export OC_PASS=123+456*890; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
   register: result
