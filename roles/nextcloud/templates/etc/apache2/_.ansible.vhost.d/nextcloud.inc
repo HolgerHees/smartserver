@@ -20,6 +20,8 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
   Require all denied
 </Directory>
 
+# should only be filter out for basic auth (ba. || ba-) domains
+# for normal auth it is used by apps to submit corps token => /lib/private/AppFramework/Middleware/Security/CORSMiddleware.php
 <Location "/">
     <If "%{SERVER_NAME} =~ /ba[-\.]{1}/">
     SetEnvIfNoCase Authorization "Basic.+" HTTP_AUTHORIZATION=
