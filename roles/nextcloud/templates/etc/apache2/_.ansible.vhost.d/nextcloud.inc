@@ -21,7 +21,9 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
 </Directory>
 
 <Location "/">
+    <If "%{SERVER_NAME} =~ /ba[-\.]{1}/">
     SetEnvIfNoCase Authorization "Basic.+" HTTP_AUTHORIZATION=
+    </If>
 </Location>
 
 <LocationMatch "^/(?!(index\.php/apps/user_saml/saml/login.*))">
