@@ -1,5 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -431,6 +430,11 @@
                 }
             }
             
+            function isIFrameVisible()
+            {
+                return iframeElement.style.display == "";
+            }
+            
             function hideMenu()
             {
                 mx.Timer.clean();
@@ -516,6 +520,11 @@
                 }
             }
 
+            ret.openUrl = function(url)
+            {
+                setIFrameUrl(url);
+            }
+
             ret.openMenuById = function(mainGroupId,subGroupId)
             {
                 menu = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId);
@@ -524,7 +533,7 @@
             };
             ret.openMenu = function(subGroup)
             {
-                if( mx.History.getActiveNavigation() === subGroup ) return;
+                if( mx.History.getActiveNavigation() === subGroup && !isIFrameVisible() ) return;
                 
                 showMenu();
 

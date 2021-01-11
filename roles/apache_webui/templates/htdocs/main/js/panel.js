@@ -189,7 +189,7 @@ mx.Panel = (function( ret ) {
         });
         if( isTarget ) return;
 
-        var offsetX = e.detail.pageX;
+        var offsetX = e.detail.clientX;
 
         options._.isOpen = isOpen(options);
         
@@ -232,7 +232,7 @@ mx.Panel = (function( ret ) {
 
     function tapMove(options,e)
     {
-        var offsetX = e.detail.pageX;
+        var offsetX = e.detail.clientX;
 
         var diff = offsetX - options._.touchStartPosition + options._.referencePosition;
 

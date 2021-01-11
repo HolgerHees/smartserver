@@ -14,7 +14,7 @@
     state: directory
     owner: "{{system_users['ftp'].name}}"
     group: "{{system_groups['ftp'].name}}"
-    mode: 750
+    mode: 755
 
 - name: check owner and group
   file:
@@ -104,7 +104,7 @@
       PASV_ADDRESS: "127.0.0.1"
       PASV_MIN: "30000"
       PASV_MAX: "30005"
-      UMASK: "027"
+      UMASK: "022"
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:

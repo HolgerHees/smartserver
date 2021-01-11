@@ -11,6 +11,10 @@
 .icon-up:before { content: '\e809'; } /* '' */
 .icon-down-1:before { content: '\e80a'; } /* '' */
 .icon-inbox:before { content: '\e80b'; } /* '' */
+.icon-left:before { content: '\e80c'; } /* '' */
+.icon-right:before { content: '\e80d'; } /* '' */
+.icon-play:before { content: '\e80e'; } /* '' */
+.icon-stop:before { content: '\e80f'; } /* '' */
 .icon-spin2:before { content: '\e831'; } /* '' */
 .icon-desktop:before { content: '\f108'; } /* '' */
 .icon-calendar-empty:before { content: '\f133'; } /* '' */
