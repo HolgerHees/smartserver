@@ -314,7 +314,7 @@
             {
                 pos = 2;
                 var center = slotRect.left + slotRect.width / 2;
-                tooltipArrow.style.left = ( center - pos - tooltipArrowRect.width / 2 - 1) + "px";
+                tooltipArrow.style.left = ( center - pos - tooltipArrowRect.width / 2 + 1) + "px";
             }
             else if( pos + tooltipRect.width > slotOverviewRect.width )
             {
@@ -327,7 +327,7 @@
                 tooltipArrow.style.left = "calc(50% - " + (tooltipArrowRect.width / 2 - 1) + "px)";
             }
               
-            tooltip.style.cssText = "left: " + pos + "px; top: 2px;";
+            tooltip.style.cssText = "left: " + pos + "px; top: 0px;";
         }
     }
     

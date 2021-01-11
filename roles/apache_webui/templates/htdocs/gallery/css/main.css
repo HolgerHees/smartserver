@@ -11,7 +11,7 @@ body {
   position: fixed;
   top: 0px;
   left: 0px;
-  width: 100vw;
+  width: 100%;
   height: 100px;
   padding: 2px;
   padding-bottom: 20px;
@@ -22,7 +22,7 @@ body {
   align-items: baseline;
 }
 body.dark .stepline-scrollarea-wrapper {
-  background-color: black;
+  background-color: #202124;
 }
 .stepline-scrollarea-wrapper > div.slot {
   height: 100%;
@@ -42,10 +42,13 @@ body.dark .stepline-scrollarea-wrapper {
   width: 100%;
 }
 body.dark .stepline-scrollarea-wrapper > div.slot > div.bar {
-  background-color: #81a0af;
+  background-color: #718c99;
 }
 .stepline-scrollarea-wrapper > div.slot.active > div.bar {
-  background-color: #6287ff;
+  background-color: #1976D2;
+}
+body.dark .stepline-scrollarea-wrapper > div.slot.active > div.bar {
+  background-color: #1d3a58;
 }
 .stepline-scrollarea-wrapper > div.slot > div.time {
   position: absolute;
@@ -65,10 +68,11 @@ body.dark .stepline-scrollarea-wrapper > div.slot > div.bar {
   position: fixed;
   z-index: 300;
   width: 100px;
+  height: 56px;
+  box-sizing: border-box;
   transition: opacity 0.3s;
   white-space: nowrap;
-  border: 1px solid white;
-  background-color: rgba(98, 135, 255, 0.8);
+  background-color: #1976D2;
   pointer-events: none;
 }
 .tooltip > .arrow {
@@ -82,8 +86,12 @@ body.dark .stepline-scrollarea-wrapper > div.slot > div.bar {
   -webkit-transform: rotate(45deg);
   -moz-transform: rotate(45deg);
   transform: rotate(45deg);
-  background-color: rgba(98, 135, 255, 0.8);
+  background-color: #1976D2;
 }
+body.dark .tooltip, body.dark .tooltip > .arrow {
+  background-color: #1d3a58;
+}
+
 .tooltip.active {
   visibility: visible;
   opacity: 1;
