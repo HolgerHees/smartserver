@@ -166,7 +166,7 @@
                 {
                     var entry = menuEntries[i];
                     
-                    if( !mx.User.memberOf( entry.getUserGroups() ) )
+                    if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
                     {
                         continue;
                     }
@@ -207,8 +207,8 @@
 
                             if( entry['type'] === 'url' )
                             {
-                                entry['title'] = processI18N(entry['title'],mainKey+'_'+subKey);
-                                entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
+                                if( entry['title'] ) entry['title'] = processI18N(entry['title'],mainKey+'_'+subKey);
+                                if( entry['info'] ) entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
 
                                 match = entry['url'].match(/(\/\/)([^\.]*)\.({host})/);
                                 if( match !== null ) entry['url'] = entry['url'].replace('//' + match[2] + "." + match[3], "//" + mx.Host.getAuthPrefix() + match[2] + "." + mx.Host.getDomain() );
@@ -243,7 +243,7 @@
                         {
                             var entry = subGroup['menuEntries'][entryKey];
                             
-                            if( mx.User.memberOf( entry['usergroups'] ) )
+                            if( entry['usergroups'] && mx.User.memberOf( entry['usergroups'] ) )
                             {
                                 hasEntries = true;
                                 break;
