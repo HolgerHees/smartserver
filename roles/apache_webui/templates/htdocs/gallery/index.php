@@ -653,10 +653,11 @@
                     _containers.forEach(function(container,index){
                         _containerMap[container.dataset.src] = index;
 
-                        if( !containerMap[container.dataset.src] )
+                        if( typeof containerMap[container.dataset.src] == "undefined" )
                         {
                             gallery.insertBefore(container,containers[currentIndex]);
                             containerObserver.observe(container);
+                            //console.log("add image");
                         }
                         else
                         {
@@ -666,9 +667,10 @@
                     
                     var _activeItem = activeItem;
                     containers.forEach(function(container,index){
-                        if( !_containerMap[container.dataset.src] )
+                        if( typeof _containerMap[container.dataset.src] == "undefined" )
                         {
                             container.parentNode.removeChild(container);
+                            //console.log("remove image");
                             if( container.dataset.src == activeItem.dataset.src )
                             {
                                 _activeItem = null;

@@ -18,12 +18,7 @@ include "config.php";
 $folder = new Folder($ftp_folder,$data->sub);
 $count = $folder->getImageCount();
 
-if( $count == $data->count )
-{
-    echo '<div id="slots"></div>';
-    echo '<div id="gallery"></div>';
-}
-else
+if( $count != $data->count )
 {
     $folder = new Folder($ftp_folder,$data->sub);
     $images = $folder->getImages();
