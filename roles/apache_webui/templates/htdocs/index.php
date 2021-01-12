@@ -109,7 +109,7 @@
                                     getMainGroup: function(){ return mainGroup['_']; },
                                     getEntry: function(entryId){ return subGroup['menuEntries'][entryId]['_']; },
                                     getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
-                                    addUrl: function(entryId,order,usergroups,url,title,info,newWindow,iconUrl){
+                                    addUrl: function(entryId,url,usergroups,order,title,info,newWindow,iconUrl){
                                         if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {
@@ -129,7 +129,7 @@
                                             }
                                         };
                                     },
-                                    addHtml: function(entryId,order,usergroups,html,callback){
+                                    addHtml: function(entryId,html,callback,usergroups,order){
                                         if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                         var entries = subGroup['menuEntries'];
                                         var entry = entries[entryId] = {

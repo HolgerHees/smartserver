@@ -183,6 +183,7 @@
   register: habpanel_result
   changed_when: no
   failed_when: no
+  tags: [ 'apache_webui_configs' ]
    
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:

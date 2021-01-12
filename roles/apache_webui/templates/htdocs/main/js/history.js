@@ -128,7 +128,7 @@ mx.History = (function( ret ) {
             else
             {
                 console.log("mx.History blocked"); 
-                mx.History.addMenu();
+                //mx.History.addMenu();
             }
 
             event.preventDefault();
