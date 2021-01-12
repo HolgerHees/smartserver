@@ -30,183 +30,33 @@
     if( theme ) document.body.classList.add(theme);
 </script>
 <?php
+    include "inc/Image.php";
+    include "inc/Folder.php";
+    include "inc/Template.php";
+
     include "config.php";
     
-    if( empty($_GET["sub"]) )
-    {
-        exit;
-    }
+    if( empty($_GET["sub"]) ) exit;
     $sub_folder = $_GET['sub'];
     
-    class CameraImage {
-        private $ftp_folder = null;
-        private $sub_folder = null;
-        private $file = null;
-        private $time = null;
-        
-        function __construct($ftp_folder , $sub_folder, $file, $creation_time ) {
-            $this->ftp_folder = $ftp_folder;
-            $this->sub_folder = $sub_folder;
-            $this->file = $file;
-            
-            $this->time = $creation_time;
-        }
-        
-        function getFile()
-        {
-            return $this->file;
-        }
-        
-        function getPath()
-        {
-            return $this->ftp_folder . $this->sub_folder . "/" . $this->file;
-        }
-        
-        function getTime()
-        {
-            return $this->time;
-        }
-    }
-    
-    $file_times = array();
-    $list = shell_exec("stat -c \"%y %n\" " . $ftp_folder . $sub_folder . "/*");
-    foreach( explode("\n",$list) as $line )
-    {
-        if( empty($line) ) continue;
-        
-        $parts = explode(" ",$line);
-        
-        $time = strtotime($parts[0] . " " . $parts[1] . " " . $parts[2]);
-        $time = DateTime::createFromFormat('Y-m-d H:i:s O', $parts[0] . " " . explode(".",$parts[1])[0] . " " . $parts[2]);
-        $file_times[$parts[3]] = $time;
-    }
-    
-    $files = scandir($ftp_folder . $sub_folder);
-    $images = [];
-    foreach( $files as $file )
-    {
-        if( $file == '.' or $file == '..' || is_dir($sub_folder.$file) ) continue;
-        $images[] = new CameraImage($ftp_folder , $sub_folder, $file, $file_times[ $ftp_folder . $sub_folder . "/" . $file ] );;
-    }
-    usort($images,function($a,$b){ return $a->getTime()->getTimestamp() < $b->getTime()->getTimestamp(); });
+    $folder = new Folder($ftp_folder,$sub_folder);
+    $images = $folder->getImages();
     
     list($width, $height, $type, $attr) = getimagesize($images[0]->getPath());
     
-    $starttime = $images[0]->getTime();
-    $starttime->setTime($starttime->format('H'),0,0,0);
-    $starttime->add(new DateInterval('PT1H'));
-
-    $endtime = $images[count($images)-1]->getTime();
-    $endtime->setTime($endtime->format('H'),0,0,0);
-
-    $_diff = $starttime->diff($endtime);
-    $_hours = $_diff->h;
-    $_hours = $_hours + ($_diff->days*24);
-    $_max_steps = 100;
-    $stepDurationInHours = ceil($_hours / $_max_steps);
-    $stepSizeInPercent = $stepDurationInHours * $_max_steps / $_hours;
+    $starttime = Template::getStarttime($images);
+    $endtime = Template::getEndtime($images);
     
-    $grouped_images = array();
-    $currenttime = clone $starttime;
-    while( $currenttime->getTimestamp() >= $endtime->getTimestamp() )
-    {
-        $grouped_images[$currenttime->getTimestamp()] = array();
-        $currenttime->sub(new DateInterval('PT'.$stepDurationInHours.'H'));
-    }
-    
-    foreach( $images as $image ){
-        $current_step_time = clone $image->getTime();
-        $current_step_time->setTime($current_step_time->format('H'),0,0,0);
-        
-        //if( !isset($grouped_images[$current_step_time->getTimestamp()]) )
-        //{
-        //    echo "missing " . $current_step_time->format("d.m H:i:s") . "\n";
-        //}
-        
-        array_push($grouped_images[$current_step_time->getTimestamp()],$image);
-    }
+    list( $stepDurationInHours, $stepSizeInPercent ) = Template::getSlotConfig($starttime,$endtime);
 ?>
 <div class="tooltip"><span class="text"></span><span class="arrow"></span></div>
-<div class="stepline-scrollarea-wrapper">
-<?php
-    $max_count = 0;
-    foreach( $grouped_images as $key => $value )
-    {
-        if( $max_count < count($value) ) $max_count = count($value);
-    }
-    
-    $lastLabledDate = NULL;
-    $lastLabledTime = NULL;
-    foreach( $grouped_images as $key => $values )
-    {
-        $time = new DateTime();
-        $time->setTimestamp($key);
-            
-        echo "<div class='slot";
-        
-        if( count($values) > 0 )
-        {
-            echo " filled' onclick='jumpToSlot(" . $key . ")";
-        }
-        
-        if( count($values) > 0 )
-        {
-            echo "' data-formattedtime='" . $time->format('d.m. H:i') . "' data-count='" . count($values);
-        }
-        
-        echo "' data-timeslot='" . $key . "'>";
-        
-        if( $lastLabledDate == NULL || $lastLabledDate->format("d") != $time->format("d") )
-        {
-            echo "<div class='date'>" . $time->format('d.m.') . "</div>";
-            $lastLabledDate = $time;
-        }
-
-        if( $lastLabledTime == NULL || $lastLabledTime->getTimestamp() - $key > (60*60*12) )
-        {   
-            $time = new DateTime();
-            $time->setTimestamp($key);
-            
-            echo "<div class='time'>" . $time->format('H:i') . "</div>";
-            $lastLabledTime = $time;
-        }
-
-        if( count($values) > 0 )
-        {
-            echo "<div class='bar' style='height:" . ceil( count($values) * 100 / $max_count ) . "%'></div>";
-        }
-        else
-        {
-            echo "<div class='bar' style='height:0'></div>";
-        }
-        
-        //if( 
-        
-        echo "</div>";
-    }
-?>
-</div>
-
+<div class="slots"><?php echo Template::getSlots($starttime,$endtime,$stepDurationInHours,$images); ?></div>
 <div id="gallery">
   <div class="layer"></div>
   <span class="button previous icon-left" onclick="jumpToPreviousImage()"></span>
   <span class="button next icon-right" onclick="jumpToNextImage()"></span>
   <span class="button close icon-cancel" onclick="closeDetails()"></span>
-<?php
-    foreach( $images as $index => $image )
-    {
-        // add timeslot key
-        // add formatted time
-        
-        $date = clone $image->getTime();
-        $formattedTime = $date->format("d.m. H:i:s");
-        
-        $date->setTime( $date->format("H"), 0, 0, 0 );
-        
-        
-        echo "<div class='container' data-index='" . $index . "' onclick='openDetails(" . $index . ")' data-src='" . urlencode($image->getFile()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
-    }
-?>
+<?php echo Template::getImages($images); ?>
 </div>
 <script> 
     var isFullscreen = false;
@@ -218,7 +68,7 @@
     var requestedScrollPosition = null;
     var debug = true;
     
-    var slotOverview = document.querySelector(".stepline-scrollarea-wrapper");
+    var slotOverview = document.querySelector(".slots");
 
     var tooltip = document.querySelector(".tooltip");
     var tooltipArrow = tooltip.querySelector(".arrow");
@@ -234,7 +84,7 @@
     
     var style = document.createElement('style');
     style.type = 'text/css';
-    style.innerHTML = '.stepline-scrollarea-wrapper > div.slot { width: <?php echo $stepSizeInPercent; ?>%; }';
+    style.innerHTML = '.slots > div.slot { width: <?php echo $stepSizeInPercent; ?>%; }';
     document.getElementsByTagName('head')[0].appendChild(style);
 
     var galleryRect = gallery.getBoundingClientRect();

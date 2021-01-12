@@ -7,7 +7,7 @@ body {
                                   supported by Chrome, Edge, Opera and Firefox */
   -webkit-overflow-scrolling: touch;
 }
-.stepline-scrollarea-wrapper {
+.slots {
   position: fixed;
   top: 0px;
   left: 0px;
@@ -21,40 +21,40 @@ body {
   display: flex;
   align-items: baseline;
 }
-body.dark .stepline-scrollarea-wrapper {
+body.dark .slots {
   background-color: #202124;
 }
-.stepline-scrollarea-wrapper > div.slot {
+.slots > div.slot {
   height: 100%;
   position:relative;
   font-size: 12px;
   line-height: 16px;
   color: #919191;
 }
-.stepline-scrollarea-wrapper > div.slot.filled {
+.slots > div.slot.filled {
   cursor: pointer;
 }
-.stepline-scrollarea-wrapper > div.slot > div.bar {
+.slots > div.slot > div.bar {
   position:absolute;
   bottom:0;
   left:0;
   background-color: #d1f0ff;
   width: 100%;
 }
-body.dark .stepline-scrollarea-wrapper > div.slot > div.bar {
+body.dark .slots > div.slot > div.bar {
   background-color: #718c99;
 }
-.stepline-scrollarea-wrapper > div.slot.active > div.bar {
+.slots > div.slot.active > div.bar {
   background-color: #1976D2;
 }
-body.dark .stepline-scrollarea-wrapper > div.slot.active > div.bar {
+body.dark .slots > div.slot.active > div.bar {
   background-color: #1d3a58;
 }
-.stepline-scrollarea-wrapper > div.slot > div.time {
+.slots > div.slot > div.time {
   position: absolute;
   bottom: -16px;
 }
-.stepline-scrollarea-wrapper > div.slot > div.date {
+.slots > div.slot > div.date {
   position: absolute;
   top: 0;
 }
