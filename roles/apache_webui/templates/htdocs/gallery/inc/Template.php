@@ -3,7 +3,7 @@ class Template {
 
     public static function getStarttime($images)
     {
-        $starttime = $images[0]->getTime();
+        $starttime = clone $images[0]->getTime();
         $starttime->setTime($starttime->format('H'),0,0,0);
         $starttime->add(new DateInterval('PT1H'));
         return $starttime;
@@ -11,25 +11,19 @@ class Template {
     
     public static function getEndtime($images)
     {
-        $endtime = $images[count($images)-1]->getTime();
+        $endtime = clone $images[count($images)-1]->getTime();
         $endtime->setTime($endtime->format('H'),0,0,0);
         return $endtime;
     }
     
-    public static function getSlotConfig($starttime,$endtime)
+    public static function getSlots($starttime,$endtime,$images)
     {
         $_diff = $starttime->diff($endtime);
         $_hours = $_diff->h;
         $_hours = $_hours + ($_diff->days*24);
         $_max_steps = 100;
         $stepDurationInHours = ceil($_hours / $_max_steps);
-        $stepSizeInPercent = $stepDurationInHours * $_max_steps / $_hours;
-        
-        return array( $stepDurationInHours, $stepSizeInPercent );
-    }
 
-    public static function getSlots($starttime,$endtime,$stepDurationInHours,$images)
-    {
         $grouped_images = array();
         $currenttime = clone $starttime;
         while( $currenttime->getTimestamp() >= $endtime->getTimestamp() )
@@ -41,6 +35,7 @@ class Template {
         foreach( $images as $image ){
             $current_step_time = clone $image->getTime();
             $current_step_time->setTime($current_step_time->format('H'),0,0,0);
+            $current_step_time->add(new DateInterval('PT1H'));
             
             //if( !isset($grouped_images[$current_step_time->getTimestamp()]) )
             //{
@@ -122,7 +117,7 @@ class Template {
             $formattedTime = $date->format("d.m. H:i:s");
             
             $date->setTime( $date->format("H"), 0, 0, 0 );
-            
+            $date->add(new DateInterval('PT1H'));
             
             $html .= "<div class='container' data-index='" . $index . "' onclick='openDetails(" . $index . ")' data-src='" . urlencode($image->getFile()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
         }

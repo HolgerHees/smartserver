@@ -34,7 +34,7 @@ class Folder {
         foreach( $files as $file )
         {
             if( $file == '.' or $file == '..' || is_dir($this->sub_folder.$file) ) continue;
-            $images[] = new Image($this->main_folder , $this->sub_folder, $file, $file_times[ $this->main_folder . $this->sub_folder . "/" . $file ] );;
+            $images[] = new Image($this->main_folder , $this->sub_folder, $file, $file_times[ $this->main_folder . $this->sub_folder . "/" . $file ] );
         }
         usort($images,function($a,$b){ return $a->getTime()->getTimestamp() < $b->getTime()->getTimestamp(); });
         

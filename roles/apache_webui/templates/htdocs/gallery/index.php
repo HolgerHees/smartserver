@@ -46,11 +46,9 @@
     
     $starttime = Template::getStarttime($images);
     $endtime = Template::getEndtime($images);
-    
-    list( $stepDurationInHours, $stepSizeInPercent ) = Template::getSlotConfig($starttime,$endtime);
 ?>
 <div class="tooltip"><span class="text"></span><span class="arrow"></span></div>
-<div class="slots"><?php echo Template::getSlots($starttime,$endtime,$stepDurationInHours,$images); ?></div>
+<div class="slots"><?php echo Template::getSlots($starttime,$endtime,$images); ?></div>
 <div id="gallery">
   <div class="layer"></div>
   <span class="button previous icon-left" onclick="jumpToPreviousImage()"></span>
@@ -60,8 +58,11 @@
 </div>
 <script> 
     var isFullscreen = false;
+    
     var activeItem = null;
     var activeSlot = null;
+    var slotTooltipElement = null;
+
     var imageHeight = <?php echo $height; ?>;
     var imageWidth = <?php echo $width; ?>;
     var folder = '<?php echo $sub_folder; ?>';
@@ -82,13 +83,10 @@
     style.innerHTML = 'div.dummy { margin-top: ' + (imageHeight*100/imageWidth) + '%; }';
     document.getElementsByTagName('head')[0].appendChild(style);
     
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    style.innerHTML = '.slots > div.slot { width: <?php echo $stepSizeInPercent; ?>%; }';
-    document.getElementsByTagName('head')[0].appendChild(style);
-
     var galleryRect = gallery.getBoundingClientRect();
     
+    var containers = gallery.querySelectorAll(".container");
+
     var visibleContainer = [];
     var observerOptions = {
         rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px 0px 0px 0px"
@@ -120,7 +118,6 @@
         if( activeItemUpdateNeeded ) delayedPosition();
     },observerOptions);
 
-    var containers = document.querySelectorAll(".container");
     containers.forEach( function(container,index){
         containerObserver.observe(container);
     });
@@ -142,7 +139,6 @@
         return offset;
     }
 
-    var slotTooltipElement = null;
     function positionSlotTooltip()
     {
         if( !slotTooltipElement.dataset.count )
@@ -628,6 +624,105 @@
     });
 
     mx.Swipe.init();
+    
+    function updateList()
+    {
+        var url = mx.Host.getBase() + 'index_update.php';
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url );
+        xhr.onreadystatechange = function() {
+            if (this.readyState != 4) return;
+            
+            if( this.status == 200 ) 
+            {
+                var content = document.createElement("div");
+                content.innerHTML = this.response;
+                
+                if( content.querySelector("#gallery") )
+                {
+                    var _containers = content.querySelector("#gallery").childNodes;
+                    
+                    var containerMap = {};
+                    containers.forEach(function(container,index){
+                        containerMap[container.dataset.src] = index;
+                    });
+                    
+                    var currentIndex = 0;//containers[0];
+                    var _containerMap = {};
+                    _containers.forEach(function(container,index){
+                        _containerMap[container.dataset.src] = index;
+
+                        if( !containerMap[container.dataset.src] )
+                        {
+                            gallery.insertBefore(container,containers[currentIndex]);
+                            containerObserver.observe(container);
+                        }
+                        else
+                        {
+                            currentIndex = containerMap[container.dataset.src] + 1;
+                        }
+                    });
+                    
+                    var _activeItem = activeItem;
+                    containers.forEach(function(container,index){
+                        if( !_containerMap[container.dataset.src] )
+                        {
+                            container.parentNode.removeChild(container);
+                            if( container.dataset.src == activeItem.dataset.src )
+                            {
+                                _activeItem = null;
+                            }
+                        }
+                        else if(_activeItem == null)
+                        {
+                            _activeItem = container;
+                        }
+                    });
+                    
+                    // refresh containers
+                    containers = gallery.querySelectorAll(".container");
+                    
+                    slotOverview.innerHTML = content.querySelector("#slots").innerHTML;
+                    
+                    // reset active states
+                    activeItem = null;
+                    activeSlot = null;
+                    slotTooltipElement = null;
+                    
+                    if( ( isFullscreen ? window.scrollX : window.scrollY ) == 0 )
+                    {
+                        setActiveItem(containers[0]);
+                    }
+                    else
+                    {
+                        scrollToActiveItem(_activeItem,false);
+                    }
+                }
+        
+                updateTimer = window.setTimeout(updateList,15000);
+            }
+            else 
+            {
+                try 
+                {
+                    window.top.mx.State.handleRequestError(this.status,url,updateList);
+                }
+                catch
+                {
+                    updateTimer = window.setTimeout(updateList, 60000);
+                }
+            }
+        };
+        
+        var data = {};
+        data['count'] = containers.length;
+        data['sub'] = folder;
+        
+        xhr.send(JSON.stringify(data));
+    }
+    
+    updateList();
 </script>
 </body>
 </html>

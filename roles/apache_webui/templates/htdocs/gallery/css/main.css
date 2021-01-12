@@ -20,6 +20,7 @@ body {
   z-index: 100;
   display: flex;
   align-items: baseline;
+  flex-direction: row;
 }
 body.dark .slots {
   background-color: #202124;
@@ -30,6 +31,7 @@ body.dark .slots {
   font-size: 12px;
   line-height: 16px;
   color: #919191;
+  flex: 1;
 }
 .slots > div.slot.filled {
   cursor: pointer;
