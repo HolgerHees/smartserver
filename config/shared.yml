@@ -54,5 +54,5 @@ vpn_mobile_subnet:                "10.100.{{netgroup}}"
 pihole_whitelist_domains:          [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ]
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.12.1"
-debian_version:                   "buster-20201012-slim"
+alpine_version:                   "3.12.3"
+debian_version:                   "buster-20210111-slim"

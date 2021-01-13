@@ -3,6 +3,18 @@
     netdata_version: "1.28.0"
   tags: [ 'update_notifier_configs' ]
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 - name: prepare needed folder
   file:
     path: '{{item}}'
@@ -149,11 +161,6 @@
 
 
 
-
-- name: set version
-  set_fact:
-    netdata_version: '1.25.0'
-  tags: [ 'update_notifier_configs' ]
 
 - name: install required packages => is_fedora
   yum:
