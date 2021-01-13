@@ -63,7 +63,7 @@ class Template {
             
             if( count($values) > 0 )
             {
-                $html .= " filled' onclick='jumpToSlot(" . $key . ")";
+                $html .= " filled' onclick='mx.Gallery.jumpToSlot(" . $key . ")";
             }
             
             if( count($values) > 0 )
@@ -119,7 +119,7 @@ class Template {
             $date->setTime( $date->format("H"), 0, 0, 0 );
             $date->add(new DateInterval('PT1H'));
             
-            $html .= "<div class='container' data-index='" . $index . "' onclick='openDetails(" . $index . ")' data-src='" . urlencode($image->getFile()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
+            $html .= "<div class='container' data-index='" . $index . "' onclick='mx.Gallery.openDetails(" . $index . ")' data-src='" . urlencode($image->getFile()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
         }
         
         return $html;

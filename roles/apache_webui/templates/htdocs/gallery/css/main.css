@@ -150,9 +150,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
     position: absolute;
     height: calc(100% - 100px);
 }
-#gallery.fullscreen > span.button.icon-left,
-#gallery.fullscreen > span.button.icon-right,
-#gallery.fullscreen > span.button.icon-cancel {
+#gallery.fullscreen > span.button {
     display: inline;
     position: fixed;
     color: gray;
@@ -176,8 +174,17 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
 }
 #gallery.fullscreen > span.button.icon-cancel {
     right: 0;
-    top: 110px;
-    padding: 20px;
+    top: 100px;
+    padding: 10px 0 20px 20px;
+}
+#gallery.fullscreen > span.button.icon-play,
+#gallery.fullscreen > span.button.icon-stop {
+    left: 0;
+    top: 100px;
+    padding: 10px 20px 20px 0;
+}
+#gallery.fullscreen > span.button.icon-stop {
+    display: none;
 }
 #gallery.fullscreen > div.container {
     width: 100%;
@@ -207,7 +214,22 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
   height: 100%;
   width: 100%;
 }
-#gallery > div.container > span {
+#gallery > div.container > span:first-of-type {
+  display: none;
+}
+
+#gallery.fullscreen > div.container > span:first-of-type {
+  display: inline;
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  color: white;
+  text-shadow: 1px 1px 2px black;
+  font-size: 16px;
+  line-height: 16px;
+} 
+
+#gallery > div.container > span:last-of-type {
   position: absolute;
   bottom: 2px;
   right: 2px;
