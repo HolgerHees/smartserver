@@ -714,6 +714,7 @@ mx.Gallery = (function( ret ) {
         });
     }
 
+    ret.jumpToSlot = jumpToSlot;
     ret.jumpToPreviousImage = jumpToPreviousImage;
     ret.jumpToNextImage = jumpToNextImage;
     ret.openDetails = openDetails;
