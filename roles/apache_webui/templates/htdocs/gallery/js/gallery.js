@@ -655,7 +655,7 @@ mx.Gallery = (function( ret ) {
                     }
                 }
         
-                updateTimer = window.setTimeout(updateList,15000);
+                updateTimer = window.setTimeout(updateList,30000);
             }
             else 
             {
@@ -788,7 +788,7 @@ mx.Gallery = (function( ret ) {
         
         mx.Swipe.init();
     
-        updateList();
+        updateTimer = window.setTimeout(updateList,30000);
     }
     
     return ret;
