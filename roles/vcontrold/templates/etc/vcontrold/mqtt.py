@@ -107,7 +107,7 @@ class Handler(object):
                     print(" failed with empty result", flush=True, file=sys.stderr)
                     return
                 else:
-                    search = re.search(r'[0-9]*\.?[0-9]+', out.decode("ascii"))
+                    search = re.search(r'[-]?[0-9]*\.?[0-9]+', out.decode("ascii"))
                     if search == None:
                         self.mqtt_client.publish('/vcontrol/getSammelstoerung', payload=999, qos=0, retain=False)
                         print(out.decode("ascii"), flush=True, file=sys.stderr)
