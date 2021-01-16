@@ -7,8 +7,7 @@
 # *** OPTIONAL CLOUD ***
 - { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] } 
 
-#- { import_role: { name: cloudbackup }, tags: [ 'cloudbackup' ], vars: { cloud_backup_sync_target_path: "/mnt/dataCloud/" } } # encrypted backup sync job to remote cloud endpoint
-#- { import_role: { name: cloudbackup }, tags: [ 'cloudbackup' ], vars: { cloud_backup_sync_target_path: "{{cloud_path}}remote/<client1>/" } }
+#- { import_role: { name: cloud_backup }, tags: [ 'cloud_backup' ], vars: { cloud_backup_sync_target_path: "{{cloud_path}}remote/<client1>/" } }
 
 # *** OPTIONAL OTHERS ***
 #- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'debian' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]

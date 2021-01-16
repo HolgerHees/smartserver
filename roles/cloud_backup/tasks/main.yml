@@ -9,13 +9,13 @@
     path: '{{item}}'
     state: directory
   with_items:
-    - "{{global_lib}}cloudbackup"
-    - "{{global_log}}cloudbackup"  
+    - "{{global_lib}}cloud_backup"
+    - "{{global_log}}cloud_backup"  
   
 - name: set backup links
   file:
     src: "{{item.src}}"
-    dest: "{{global_lib}}cloudbackup/{{item.name}}"
+    dest: "{{global_lib}}cloud_backup/{{item.name}}"
     state: link
     follow: no
     owner: root
@@ -64,7 +64,7 @@
 
 - name: prepare sync cmd
   set_fact:
-    cloudback_sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloudbackup.lock /opt/rclone/rclone --log-file={{global_log}}cloudbackup/cloudbackup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_sync_target_path}}backup sync {{global_lib}}cloudbackup backup:"
+    cloudback_sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloud_backup.lock /opt/rclone/rclone --log-file={{global_log}}cloud_backup/cloud_backup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_sync_target_path}}backup sync {{global_lib}}cloud_backup backup:"
     
 #- name: show sync_cmd
 #  debug:
@@ -75,7 +75,7 @@
   vars:
     name: "RClone"
     cmd: "( mountpoint -q {{cloud_backup_sync_target_path}} && {{cloudback_sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_sync_target_path}} not mounted\"); exit 1)"
-    file: "ansible_cloudbackup"
+    file: "ansible_cloud_backup"
     hour: "2"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
@@ -83,10 +83,10 @@
   
 - name: set logrotate job
   vars:
-    logrotate_path: "{{global_log}}cloudbackup/*.log"
+    logrotate_path: "{{global_log}}cloud_backup/*.log"
   copy:
     content: "{{ lookup('template', 'templates/logrotate') }}"
-    dest: "/etc/logrotate.d/ansible_cloudbackup"
+    dest: "/etc/logrotate.d/ansible_cloud_backup"
     owner: root
     group: root
     mode: 0640
