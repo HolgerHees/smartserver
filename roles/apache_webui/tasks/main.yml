@@ -24,6 +24,7 @@
     - main/icons
     - main/img
     - main/js
+    - gallery/
     - favicon.ico
     - info.php
     - index.php
@@ -32,13 +33,14 @@
   
 - name: copy htdocs (template)
   template:
-    src: "templates/htdocs/{{item}}"
+    src: "templates/htdocs_templates/{{item}}"
     dest: "{{htdocs_path}}/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: "u=rwX,g=rX,o="
   with_items:
     - main/manifest.json
+    - gallery/config.php
 
 - name: copy proxy config
   vars:

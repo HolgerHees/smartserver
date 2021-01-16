@@ -2,7 +2,7 @@
   set_fact:
     apache_version: '2.4.46'
 #    openidc_version: '2.4.1'
-    openidc_version: '2.4.4.1'
+    openidc_version: '2.4.5'
   tags: [ 'update_notifier_configs' ]
   
 # SELFSIGNED CERTIFICATE
@@ -197,6 +197,7 @@
       - '{{htdocs_path}}:{{htdocs_path}}:z'
 
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
+      - '{{ftp_path}}:{{ftp_path}}:z'                             # needed by apache_gallery
 #    published_ports:
 #      - "80:80"
 #      - "443:443"

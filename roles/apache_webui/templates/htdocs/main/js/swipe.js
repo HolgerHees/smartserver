@@ -67,8 +67,8 @@ mx.Swipe = (function( ret ) {
 
         var posEntry = posHistory[ posHistory.length - 1 ];
         var lastTime = posEntry.time;
-        lastX = posEntry.pageX;
-        lastY = posEntry.pageY;
+        lastX = posEntry.clientX;
+        lastY = posEntry.clientY;
 
         var accelerationX = 0;
         var accelerationY = 0;
@@ -78,8 +78,8 @@ mx.Swipe = (function( ret ) {
             var accelerationTime = lastTime - posEntry.time;
             if( accelerationTime >= 100 || i === 0 )
             {
-                accelerationX = ( lastX - posEntry.pageX ) / accelerationTime;
-                accelerationY = ( lastY - posEntry.pageY ) / accelerationTime;
+                accelerationX = ( lastX - posEntry.clientX ) / accelerationTime;
+                accelerationY = ( lastY - posEntry.clientY ) / accelerationTime;
                 break;
             }
         }
@@ -91,8 +91,8 @@ mx.Swipe = (function( ret ) {
     {
         var touchEvent = mx.Core.getEvent(event);
 
-        var diffX = Math.abs( startX - touchEvent.pageX );
-        var diffY = Math.abs( startY - touchEvent.pageY );
+        var diffX = Math.abs( startX - touchEvent.clientX );
+        var diffY = Math.abs( startY - touchEvent.clientY );
 
         if( diffX < 10 && diffY < 10 ) return;
 
@@ -105,12 +105,12 @@ mx.Swipe = (function( ret ) {
             clickAttached = true;
         }
 
-        mx.Core.triggerEvent(currentTarget, 'tapmove', true, { pageX: touchEvent.pageX, pageY: touchEvent.pageY, diffX: lastX - touchEvent.pageX, diffY: lastY - touchEvent.pageY } );
+        mx.Core.triggerEvent(currentTarget, 'tapmove', true, { clientX: touchEvent.clientX, clientY: touchEvent.clientY, diffX: lastX - touchEvent.clientX, diffY: lastY - touchEvent.clientY } );
 
-        lastX = touchEvent.pageX;
-        lastY= touchEvent.pageY;
+        lastX = touchEvent.clientX;
+        lastY= touchEvent.clientY;
 
-        posHistory.push({pageX: lastX, pageY: lastY, time: Date.now()});
+        posHistory.push({clientX: lastX, clientY: lastY, time: Date.now()});
     };
 
     function touchStart(event)
@@ -129,10 +129,10 @@ mx.Swipe = (function( ret ) {
         var touchEvent = mx.Core.getEvent(event);
         currentTarget = touchEvent.target;
 
-        startX = lastX = touchEvent.pageX;
-        startY = lastY = touchEvent.pageY;
+        startX = lastX = touchEvent.clientX;
+        startY = lastY = touchEvent.clientY;
 
-        posHistory = [{pageX: startX, pageY: startY, time: Date.now()}];
+        posHistory = [{clientX: startX, clientY: startY, time: Date.now()}];
 
         window.addEventListener(touchMoveEvent,touchMove);
         window.addEventListener(touchEndEvent,touchEnd);
@@ -141,7 +141,7 @@ mx.Swipe = (function( ret ) {
         // IE does not handle window leave events. A workaround is to catch body leave events
         if( mx.Core.isIEorEdge() ) mx.$("body").addEventListener("mouseleave", touchEnd);
 
-        mx.Core.triggerEvent(currentTarget, 'tapstart', true, {pageX: startX, pageY: startY} );
+        mx.Core.triggerEvent(currentTarget, 'tapstart', true, {clientX: startX, clientY: startY} );
     };
 
     ret.init = function()

@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 8,
-  "iteration": 1590665078940,
+  "id": 32,
+  "iteration": 1610713779293,
   "links": [],
   "panels": [
     {
@@ -26,6 +26,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -50,9 +57,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -72,7 +80,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -110,7 +118,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -147,7 +155,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -185,7 +193,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -232,6 +240,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:221",
           "decimals": null,
           "format": "percent",
           "label": "",
@@ -241,6 +250,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:222",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -260,6 +270,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -284,9 +301,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -306,7 +324,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -343,7 +361,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -380,7 +398,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -427,6 +445,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:606",
           "decimals": null,
           "format": "none",
           "label": "",
@@ -436,6 +455,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:607",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -455,6 +475,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -479,9 +506,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -501,7 +529,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -538,7 +566,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -585,6 +613,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:753",
           "format": "kbytes",
           "label": null,
           "logBase": 1,
@@ -593,6 +622,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:754",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -612,6 +642,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -636,9 +673,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -658,7 +696,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -695,7 +733,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -742,6 +780,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:900",
           "format": "kbytes",
           "label": null,
           "logBase": 1,
@@ -750,6 +789,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:901",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -769,6 +809,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -793,9 +840,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -815,7 +863,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -852,7 +900,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -889,7 +937,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -926,7 +974,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -973,6 +1021,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1109",
           "decimals": null,
           "format": "decmbytes",
           "label": null,
@@ -982,6 +1031,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1110",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1001,6 +1051,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1025,9 +1082,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1047,7 +1105,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1084,7 +1142,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1121,7 +1179,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1168,6 +1226,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1287",
           "decimals": null,
           "format": "gbytes",
           "label": null,
@@ -1177,6 +1236,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1288",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1196,6 +1256,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1220,9 +1287,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1242,7 +1310,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1279,7 +1347,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1316,7 +1384,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1363,6 +1431,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1465",
           "decimals": null,
           "format": "gbytes",
           "label": null,
@@ -1372,6 +1441,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1466",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1391,6 +1461,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "OpenTSDB",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1415,9 +1492,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.6",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1437,7 +1515,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1474,7 +1552,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1511,7 +1589,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -1558,6 +1636,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:1643",
           "decimals": null,
           "format": "gbytes",
           "label": null,
@@ -1567,6 +1646,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:1644",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1582,7 +1662,7 @@
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 22,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -1590,14 +1670,15 @@
       {
         "allValue": null,
         "current": {
-          "text": "30s_for_90d",
-          "value": "30s_for_90d"
+          "selected": false,
+          "text": "autogen",
+          "value": "autogen"
         },
         "datasource": "OpenTSDB",
         "definition": "SELECT rp FROM config.rp_config WHERE $__to - $__from > \"start\" AND $__to - $__from <= \"end\"",
+        "error": null,
         "hide": 2,
         "includeAll": false,
-        "index": -1,
         "label": null,
         "multi": false,
         "name": "rp",
@@ -1616,7 +1697,7 @@
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1647,8 +1728,5 @@
   "timezone": "",
   "title": "Server Health",
   "uid": "server-health",
-  "variables": {
-    "list": []
-  },
-  "version": 4
+  "version": 1
 }

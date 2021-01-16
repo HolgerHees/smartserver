@@ -1,7 +1,6 @@
 - name: set version
   set_fact:
-#    php_version: "7.3.18"
-    php_version: "7.4.12"
+    php_version: "7.4.14"
   tags: [ 'update_notifier_configs' ]
   
 - name: build docker image
@@ -53,6 +52,7 @@
       - '{{global_log}}:{{global_log}}:z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
+      - '{{ftp_path}}:{{ftp_path}}:z'                             # needed by apache_gallery
     exposed_ports:
       - "9000"
   notify: "restart php"
