@@ -106,7 +106,7 @@ mountRemoteShares()
             
             for name in $peers
             do
-                if [ ! $(mountpoint -q /cloud/mount/$name) ]
+                if ! mountpoint -q /cloud/remote/$name
                 then
                     eval "nfs_server_ip=\$nfs_server_ip_$name"
                     echo "check reachability of $nfs_server_ip"
@@ -127,7 +127,7 @@ mountRemoteShares()
                 echo "...done"
                 break
             else
-                sleep 15
+                sleep 15 & wait
             fi
         done
     else
