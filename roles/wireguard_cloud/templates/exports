@@ -1,3 +1,0 @@
-{% for peer_name in cloud_vpn.peers %}
-/cloud/local/{{peer_name}} {{cloud_vpn.peers[peer_name].allowedIPs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
-{% endfor %}

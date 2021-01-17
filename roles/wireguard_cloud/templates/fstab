@@ -1,3 +1,0 @@
-{% for peer_name in cloud_vpn.peers %}
-{{cloud_vpn.peers[peer_name].nfsServer}}:/ /cloud/remote/{{peer_name}} nfs nfsvers=4.2,rw,noauto,rsize=8192,wsize=8192 0 0
-{% endfor %}

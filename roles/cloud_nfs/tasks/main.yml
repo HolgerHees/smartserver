@@ -1,0 +1,125 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 700
+  with_items:
+    - "{{global_etc}}cloud_nfs"
+    - "{{global_etc}}cloud_nfs/keys"
+    - "{{global_etc}}cloud_nfs/util"
+
+- name: prepare cloud folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items:
+    - "{{cloud_path}}"
+    - "{{cloud_path}}/local"
+    - "{{cloud_path}}/remote"
+    
+- name: prepare nfs exported folder
+  file:
+    path: "{{cloud_path}}/local/{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items: "{{cloud_vpn.peers}}"
+
+- name: prepare nfs mount points
+  file:
+    path: "{{cloud_path}}/remote/{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items: "{{cloud_vpn.peers}}"
+
+- name: copy util
+  template:
+    src: "roles/cloud_nfs/templates/util/{{item}}"
+    dest: "{{global_etc}}cloud_nfs/util/{{item}}"
+    owner: root
+    group: root
+    mode: 0700
+  with_items:
+    - startup.sh
+  notify: "restart cloud_nfs"
+  
+- name: copy server config
+  template:
+    src: "templates/{{item}}"
+    dest: "{{ global_etc }}cloud_nfs/{{item}}"
+    mode: 0600
+  notify: "restart cloud_nfs"
+  with_items:
+    - "peers"
+    - "exports"
+    - "fstab"
+
+- name: build docker image
+  vars:
+    name: "cloud_nfs"
+    image_name: "custom_cloud_nfs"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/cloud_nfs/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+#- name: create docker network
+#  docker_network:
+#    name: cloud
+#    appends: yes
+
+- name: create docker container
+  docker_container:
+    name: "cloud_nfs"
+    image: "custom_cloud_nfs:{{alpine_version}}"
+    state: present
+#    network_mode: "none"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: "cloud_nfs"
+    #capabilities:
+    #  - NET_ADMIN
+    #  - SYS_MODULE
+    #  - SYS_ADMIN
+    #  - SETPCAP
+    privileged: yes
+    #domainname : "cloud"
+    #hostname: "nfsd"
+    networks:
+      - name: "cloud_vpn"
+        ipv4_address: "{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.3"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}cloud_nfs:/etc/cloud_nfs:z'
+      - '{{global_etc}}cloud_nfs/exports:/etc/exports:z'
+      - '{{global_etc}}cloud_nfs/fstab:/etc/fstab:z'
+      - '{{cloud_path}}:/cloud:z,rshared'
+  notify: "restart cloud_nfs"
+
+#- name: clean old docker images => image does not exists
+#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
+#  when: "wg_image_name not in image_exists.stdout"
+  
+# ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "cloud_nfs"
+    trigger_name: "cloud_nfs"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: trigger cloud_nfs handler
+  vars:
+    notify: "restart cloud_nfs"
+    service: "cloud_nfs.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
