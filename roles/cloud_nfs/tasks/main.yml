@@ -42,15 +42,25 @@
 
 - name: copy util
   template:
-    src: "roles/cloud_nfs/templates/util/{{item}}"
-    dest: "{{global_etc}}cloud_nfs/util/{{item}}"
+    src: "roles/cloud_nfs/templates/util/startup.sh"
+    dest: "{{global_etc}}cloud_nfs/util/startup.sh"
     owner: root
     group: root
     mode: 0700
-  with_items:
-    - startup.sh
   notify: "restart cloud_nfs"
   
+- name: copy gateway config
+  vars:
+    container_name: "cloud_nfs"
+    gateway: "{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2"
+  template:
+    src: "roles/wireguard_cloud/templates/gateway_init.sh"
+    dest: "{{ global_etc }}cloud_nfs/util/gateway_init.sh"
+    owner: root
+    group: root
+    mode: 0700
+  notify: "restart cloud_nfs"
+
 - name: copy server config
   template:
     src: "templates/{{item}}"
@@ -116,6 +126,7 @@
   vars:
     container_name: "cloud_nfs"
     trigger_name: "cloud_nfs"
+    container_exec_start_post: "{{ global_etc }}cloud_nfs/util/gateway_init.sh"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger cloud_nfs handler

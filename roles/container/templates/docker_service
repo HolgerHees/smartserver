@@ -11,6 +11,9 @@ Restart=always
 ExecStartPre={{container_exec_start_pre}}
 {% endif %}
 ExecStart=/usr/bin/docker start -a {{container_name}}
+{% if container_exec_start_post is defined %}
+ExecStartPost={{container_exec_start_post}}
+{% endif %}
 ExecStop=/usr/bin/docker stop {{container_name}}
 #ExecStop=/usr/bin/docker stop -t {{container_stop_timeout | default('300')}} {{container_name}}
 #SyslogIdentifier={{container_name}}
