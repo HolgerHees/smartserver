@@ -7,7 +7,6 @@
     mode: 700
   with_items:
     - "{{global_etc}}cloud_nfs"
-    - "{{global_etc}}cloud_nfs/keys"
     - "{{global_etc}}cloud_nfs/util"
 
 - name: prepare cloud folder
