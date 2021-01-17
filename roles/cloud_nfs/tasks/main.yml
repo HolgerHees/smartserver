@@ -40,7 +40,7 @@
     mode: 0750
   with_items: "{{cloud_vpn.peers}}"
 
-- name: copy util
+- name: copy startup script
   template:
     src: "roles/cloud_nfs/templates/util/startup.sh"
     dest: "{{global_etc}}cloud_nfs/util/startup.sh"
@@ -49,17 +49,10 @@
     mode: 0700
   notify: "restart cloud_nfs"
   
-- name: copy gateway config
   vars:
-    container_name: "cloud_nfs"
-    gateway: "{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2"
-  template:
-    src: "roles/wireguard_cloud/templates/gateway_init.sh"
-    dest: "{{ global_etc }}cloud_nfs/util/gateway_init.sh"
-    owner: root
-    group: root
-    mode: 0700
-  notify: "restart cloud_nfs"
+    name: "wireguard.cloud_vpn"
+    rules: "{{wireguard_cloud_ferm_rules}}"
+    is_docker: True
 
 - name: copy server config
   template:
@@ -122,6 +115,13 @@
 #  when: "wg_image_name not in image_exists.stdout"
   
 # ***** FINALIZE *****
+- name: set cloud gateway
+  vars:
+    container_name: "cloud_nfs"
+    trigger_name: "cloud_nfs"
+    script_file: "{{ global_etc }}cloud_nfs/util/gateway_init.sh"
+  import_tasks: roles/wireguard_cloud/tasks/add_gateway.yml
+    
 - name: create systemd service
   vars:
     container_name: "cloud_nfs"

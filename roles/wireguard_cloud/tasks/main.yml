@@ -25,15 +25,13 @@
     mode: 0600
   when: "is_production|bool and key_directory.stat.exists"
 
-- name: copy util
+- name: copy startup script
   template:
-    src: "roles/wireguard_cloud/templates/util/{{item}}"
-    dest: "{{global_etc}}wireguard_cloud/util/{{item}}"
+    src: "roles/wireguard_cloud/templates/util/startup.sh"
+    dest: "{{global_etc}}wireguard_cloud/util/startup.sh"
     owner: root
     group: root
     mode: 0700
-  with_items:
-    - startup.sh
   notify: "restart wireguard_cloud"
   
 - name: generate server keys
