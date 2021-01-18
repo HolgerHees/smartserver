@@ -130,7 +130,7 @@ class Device(Thread):
         
     def publish(self):
         self.lastPublished = datetime.now()
-        self.mqtt_client.publish('/device_ping/{}'.format(self.name), payload=("ON" if self.isOnline else "OFF"), qos=0, retain=False)
+        self.mqtt_client.publish('device_ping/{}'.format(self.name), payload=("ON" if self.isOnline else "OFF"), qos=0, retain=False)
             
     def stop(self):
         if self.process != None:
