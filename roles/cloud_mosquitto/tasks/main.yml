@@ -1,0 +1,80 @@
+- name: set version
+  set_fact:
+    mosquitto_version: "2.0.5"
+  tags: [ 'update_notifier_configs' ]
+  
+- name: prepare config folder
+  file:
+    path: "{{global_etc}}cloud_mosquitto"
+    state: directory
+    owner: "1883"
+    group: "1883"
+    mode: 755
+
+- name: copy config
+  template:
+    src: "templates/mosquitto.conf"
+    dest: "{{global_etc}}cloud_mosquitto/mosquitto.conf"
+    owner: "1883"
+    group: "1883"
+    mode: 0755
+  notify: "restart cloud_mosquitto"
+  
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: cloud_mosquitto
+    image: "eclipse-mosquitto:{{mosquitto_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: cloud_mosquitto
+    networks:
+      - name: "cloud_vpn"
+        ipv4_address: "{{vpn_cloud_services.local.mosquitto}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}cloud_mosquitto:/mosquitto/config:z'
+  notify: "restart cloud_mosquitto"
+    
+- name: add container name
+  vars:
+    host_name: "mosquitto.cloud"
+    host_ip_address: "{{vpn_cloud_services.local.mosquitto}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
+#- name: copy fluentd config
+#  vars:
+#    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
+#  import_tasks: roles/fluentd/tasks/add_config.yml
+
+- name: create systemd service
+  vars:
+    container_name: "cloud_mosquitto"
+    container_exec_start_post: "/bin/bash -c \"sleep 1 && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} cloud_mosquitto) ip route add {{vpn_cloud_subnet}}.0.0/16 via {{vpn_cloud_services.local.gateway}}\""
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+#- name: register update notifier
+#  vars:
+#    name: "mosquitto"
+#    type: "docker"
+#    url: "https://mosquitto.org/blog/"
+#    config: { 
+#      repository: "eclipse-mosquitto", 
+#      pattern: "^([0-9\\.]+)$" 
+#    }
+#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: trigger cloud_mosquitto handler
+  vars:
+    notify: "restart cloud_mosquitto"
+    service: "cloud_mosquitto.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

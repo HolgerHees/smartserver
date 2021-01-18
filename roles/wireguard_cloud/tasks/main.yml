@@ -89,7 +89,7 @@
     name: cloud_vpn
     ipam_config:
       - subnet: "{{cloud_vpn.interface.network}}"
-        gateway: "{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.1"
+        gateway: "{{vpn_cloud_services.local.bridge}}"
 
 - name: create docker container
   docker_container:
@@ -113,7 +113,7 @@
     #hostname: "nfsd"
     networks:
       - name: "cloud_vpn"
-        ipv4_address: "{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2"
+        ipv4_address: "{{vpn_cloud_services.local.gateway}}"
 #      - name: "isolated"
 #        ipv4_address: "{{docker_wireguard_cloud_ip}}"
     networks_cli_compatible: yes
@@ -128,6 +128,12 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "wg_image_name not in image_exists.stdout"
   
+- name: add container name
+  vars:
+    host_name: "gateway.cloud"
+    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
 - name: prepare used ports
   set_fact:
     wireguard_cloud_ports: |
@@ -143,9 +149,9 @@
     wireguard_cloud_ferm_rules: |
       [
       {% for port in wireguard_cloud_ports %}
-      "outerface {{main_network_interface}} saddr {{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2 daddr !{{server_network}}/24 proto udp dport {{port}}",
+      "outerface {{main_network_interface}} saddr {{vpn_cloud_services.local.gateway}} daddr !{{server_network}}/24 proto udp dport {{port}}",
       {% endfor %}
-      "daddr {{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2 proto udp dport {{cloud_vpn.interface.port}}"
+      "daddr {{vpn_cloud_services.local.gateway}} proto udp dport {{cloud_vpn.interface.port}}"
       ]
   tags: [ 'firewall_config' ]
 

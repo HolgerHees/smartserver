@@ -41,18 +41,13 @@
 
 - name: copy startup script
   template:
-    src: "roles/cloud_nfs/templates/util/startup.sh"
+    src: "templates/util/startup.sh"
     dest: "{{global_etc}}cloud_nfs/util/startup.sh"
     owner: root
     group: root
     mode: 0700
   notify: "restart cloud_nfs"
   
-  vars:
-    name: "wireguard.cloud_vpn"
-    rules: "{{wireguard_cloud_ferm_rules}}"
-    is_docker: True
-
 - name: copy server config
   template:
     src: "templates/{{item}}"
@@ -100,7 +95,7 @@
     #hostname: "nfsd"
     networks:
       - name: "cloud_vpn"
-        ipv4_address: "{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.3"
+        ipv4_address: "{{vpn_cloud_services.local.nfs}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs:z'
@@ -113,19 +108,17 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "wg_image_name not in image_exists.stdout"
   
-# ***** FINALIZE *****
-- name: set cloud gateway
+- name: add container name
   vars:
-    container_name: "cloud_nfs"
-    trigger_name: "cloud_nfs"
-    script_file: "{{ global_etc }}cloud_nfs/util/gateway_init.sh"
-  import_tasks: roles/wireguard_cloud/tasks/add_gateway.yml
-    
+    host_name: "nfs.cloud"
+    host_ip_address: "{{vpn_cloud_services.local.nfs}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
 - name: create systemd service
   vars:
     container_name: "cloud_nfs"
-    trigger_name: "cloud_nfs"
-    container_exec_start_post: "{{ global_etc }}cloud_nfs/util/gateway_init.sh"
+    container_exec_start_post: "/bin/bash -c \"sleep 1 && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} cloud_nfs) ip route add {{vpn_cloud_subnet}}.0.0/16 via {{vpn_cloud_services.local.gateway}}\""
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger cloud_nfs handler

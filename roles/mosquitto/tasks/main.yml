@@ -1,8 +1,25 @@
 - name: set version
   set_fact:
-    mosquitto_version: "1.6.12"
+    mosquitto_version: "2.0.5"
   tags: [ 'update_notifier_configs' ]
   
+- name: prepare config folder
+  file:
+    path: "{{global_etc}}mosquitto"
+    state: directory
+    owner: "1883"
+    group: "1883"
+    mode: 755
+
+- name: copy config
+  template:
+    src: "templates/mosquitto.conf"
+    dest: "{{global_etc}}mosquitto/mosquitto.conf"
+    owner: "1883"
+    group: "1883"
+    mode: 0755
+  notify: "restart mosquitto"
+
 - name: check started docker
   systemd:
     name: docker
@@ -23,6 +40,8 @@
       - name: "isolated"
         ipv4_address: "{{docker_mosquitto_ip}}"
     networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}mosquitto:/mosquitto/config:z'
     published_ports:
      - "1883:1883"  
      - "9001:9001"  
@@ -35,11 +54,6 @@
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
-- name: copy fluentd config
-  vars:
-    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
-
 - name: create systemd service
   vars:
     container_name: "mosquitto"

@@ -1,4 +1,4 @@
 peers="{% for peer_name in cloud_vpn.peers %}{{peer_name}} {% endfor %}" 
 {% for peer_name in cloud_vpn.peers %}
-nfs_server_ip_{{peer_name}}='{{cloud_vpn.peers[peer_name].network.split('.')[:3] | join('.')}}.3'
+nfs_server_ip_{{peer_name}}='{{vpn_cloud_services.remote[peer_name].nfs}}'
 {% endfor %}
