@@ -10,6 +10,15 @@ source ./peers
 #https://www.heise.de/ct/artikel/NFSv4-unter-Linux-221582.html?seite=all
 # check cat /proc/net/rpc/auth.unix.ip/content
 
+isServerReachable()
+{
+    eval "nfs_server_ip=\$nfs_server_ip_$1"
+    echo "check reachability of $nfs_server_ip"
+    nc -w 1 -z $nfs_server_ip 2049
+    STATUS=$( echo $? )
+    return $STATUS
+}
+
 stop()
 {
     echo "SIGTERM caught, shutting down..."
@@ -17,8 +26,15 @@ stop()
     echo "unmount nfs shares"
     for name in $peers
     do
-        echo "unmount /cloud/remote/$name"
-        umount -f -l /cloud/remote/$name > /dev/null 2>&1
+        isServerReachable $name
+        if [[ $? == 0 ]]
+        then
+            echo "unmount /cloud/remote/$name"
+            umount -l /cloud/remote/$name > /dev/null 2>&1
+        else
+            echo "forced unmount /cloud/remote/$name"
+            umount -f -l /cloud/remote/$name > /dev/null 2>&1
+        fi
     done
 
     echo "terminating nfs process(es)"
@@ -108,11 +124,13 @@ mountRemoteShares()
             do
                 if ! mountpoint -q /cloud/remote/$name
                 then
-                    eval "nfs_server_ip=\$nfs_server_ip_$name"
-                    echo "check reachability of $nfs_server_ip"
-                    nc -w 1 -z $nfs_server_ip 2049
-                    STATUS=$( echo $? )
-                    if [[ $STATUS == 0 ]]
+                    isServerReachable $name
+                    #eval "nfs_server_ip=\$nfs_server_ip_$name"
+                    #echo "check reachability of $nfs_server_ip"
+                    #nc -w 1 -z $nfs_server_ip 2049
+                    #STATUS=$( echo $? )
+                    #if [[ $STATUS == 0 ]]
+                    if [[ $? == 0 ]]
                     then
                         echo "mount /cloud/remote/$name"
                         mount /cloud/remote/$name
