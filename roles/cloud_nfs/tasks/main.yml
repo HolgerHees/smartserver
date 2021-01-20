@@ -108,11 +108,11 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "wg_image_name not in image_exists.stdout"
   
-- name: add container name
-  vars:
-    host_name: "cloud_nfs"
-    host_ip_address: "{{vpn_cloud_services.local.nfs}}"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
+#- name: add container name
+#  vars:
+#    host_name: "cloud_nfs"
+#    host_ip_address: "{{vpn_cloud_services.local.nfs}}"
+#  import_tasks: roles/network/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create systemd service
