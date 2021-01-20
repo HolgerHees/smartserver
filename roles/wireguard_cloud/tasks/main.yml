@@ -128,11 +128,11 @@
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
 #  when: "wg_image_name not in image_exists.stdout"
   
-- name: add container name
-  vars:
-    host_name: "gateway.cloud"
-    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
+#- name: add container name
+#  vars:
+#    host_name: "wireguard_cloud"
+#    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
+#  import_tasks: roles/network/tasks/add_to_hosts.yml
 
 - name: prepare used ports
   set_fact:
