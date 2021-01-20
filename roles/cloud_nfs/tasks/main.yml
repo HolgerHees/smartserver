@@ -110,7 +110,7 @@
   
 - name: add container name
   vars:
-    host_name: "nfs.cloud"
+    host_name: "cloud_nfs"
     host_ip_address: "{{vpn_cloud_services.local.nfs}}"
   import_tasks: roles/network/tasks/add_to_hosts.yml
 

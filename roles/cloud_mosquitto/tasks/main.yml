@@ -46,7 +46,7 @@
     
 - name: add container name
   vars:
-    host_name: "mosquitto.cloud"
+    host_name: "cloud_mosquitto"
     host_ip_address: "{{vpn_cloud_services.local.mosquitto}}"
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
