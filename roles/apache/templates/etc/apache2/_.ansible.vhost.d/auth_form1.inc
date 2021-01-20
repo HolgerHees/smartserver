@@ -2,6 +2,7 @@
     AuthType form
     AuthFormUsername bw_username
     AuthFormPassword bw_password
+    AuthFormLocation bw_url
     ErrorDocument 401 /auth/login.html
 
     AuthName "Authentication required"

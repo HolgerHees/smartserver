@@ -42,12 +42,15 @@
 
         localStorage.removeItem("bw_username");
         localStorage.removeItem('bw_login');
+        
+        document.forms[0].bw_url.value = document.location.href;
       });
    </script>
 </head>
 <body>
     <div>
         <form class="box" method="post">
+          <input type="hidden" name="bw_url" value="" id="bw_url" />
           <h1>
             Login
           </h1>
