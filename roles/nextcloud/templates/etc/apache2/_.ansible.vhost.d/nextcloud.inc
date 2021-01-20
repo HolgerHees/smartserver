@@ -14,6 +14,11 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
     #Include {{htdocs_path}}nextcloud/.htaccess
 
     AllowOverride ALL
+
+    #RewriteEngine On
+    #RewriteCond %{REQUEST_METHOD} POST
+    #RewriteCond %{REQUEST_URI} ^/index\.php/apps/user_saml/saml/login.*
+    #RewriteRule ^(.*)$ $1 [QSA,L]
 </Directory>
 
 <Directory "{{htdocs_path}}nextcloud/config/">
@@ -33,6 +38,12 @@ DocumentRoot "{{htdocs_path}}nextcloud/"
     Require all granted
     </If>
 </LocationMatch>
+
+#<LocationMatch "^/index\.php/apps/user_saml/saml/login.*">
+#    <If "%{REQUEST_METHOD} =~ /^POST/">
+#    Redirect "%{REQUEST_URL}?%{QUERY_STRING}"
+#    </If>
+#</LocationMatch>
 
 Header always unset X-Frame-Options
 Header always edit Content-Security-Policy "frame-ancestors 'self'" "frame-ancestors {{server_domain}} *.{{server_domain}}"
