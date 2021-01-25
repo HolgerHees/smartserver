@@ -208,9 +208,10 @@
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
   when: "current_nextcloud_version != installed_nextcloud_version"
 
-
-  
-  
+#occ db:add-missing-indices
+#occ db:add-missing-primary-keys
+#occ db:convert-filecache-bigint
+#occ db:add-missing-columns
   
 # ***** UPDATE USERS *****
 - name: check for existing users

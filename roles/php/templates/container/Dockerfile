@@ -8,6 +8,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   docker-php-ext-enable opcache && \
   docker-php-ext-install pcntl && \
   docker-php-ext-install exif && \
+  docker-php-ext-install bcmath && \
   docker-php-ext-install mysqli pdo_mysql && \
 
 # GMP => needed by nextcloud bookmarks
