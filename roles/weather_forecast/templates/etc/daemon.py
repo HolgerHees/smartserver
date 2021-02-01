@@ -241,7 +241,7 @@ class Handler(object):
         #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
         
         while True:
-            if config.publish_topic:
+            if config.publish_topic and config.api_username and config.api_password:
                 fetcher = Fetcher()
                 authToken = fetcher.getAuth()
                 if authToken != None:
