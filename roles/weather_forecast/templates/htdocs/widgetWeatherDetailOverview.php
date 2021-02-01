@@ -110,7 +110,7 @@ else
             <?php /*echo time();*/ echo Weather::formatDay($activeDay); ?>
 		</div>
 		<div class="summary">
-			<div class="cell"><div class="txt">Bereich:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'self_temperature_grayscaled') . "</div><div class=\"value\">" . $minTemperature . " - " . $maxTemperature; ?> °C</div></div>
+			<div class="cell"><div class="txt">Bereich:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'self_temperature_grayscaled') . "</div><div class=\"value\">↑" . $maxTemperature . " ↓" . $minTemperature ; ?> °C</div></div>
 			<div class="bullet">•</div>
 			<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo Weather::getSVG('wind', 'self_wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeed; ?> km/h</div></div>
 			<div class="bullet">•</div>
@@ -163,7 +163,7 @@ else
             Woche
 		</div>
 		<div class="summary">
-			<div class="cell"><div class="txt">Bereich:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'self_temperature_grayscaled') . "</div><div class=\"value\">" . $minTemperatureWeekly . " - " . $maxTemperatureWeekly; ?> °C</div></div>
+			<div class="cell"><div class="txt">Bereich:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'self_temperature_grayscaled') . "</div><div class=\"value\">↑" . $maxTemperatureWeekly . " ↓" . $minTemperatureWeekly; ?> °C</div></div>
 			<div class="bullet">•</div>
 			<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo Weather::getSVG('wind', 'self_wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeedWeekly; ?> km/h</div></div>
 			<div class="bullet">•</div>
@@ -191,7 +191,8 @@ else
                 <div class="sun"><?php echo Weather::convertOctaToSVG($hourlyData['to'],$hourlyData,24,"light");?>
                 </div>
                 <div class="temperature">
-                    <div class="main"><?php echo $hourlyData['airTemperatureInCelsius']; ?></div><div class="sub">°C</div></div>
+                    <div class="pre">↑<br>↓</div><div class="main"><?php echo $hourlyData['maxAirTemperatureInCelsius'] . "<br/>" . $hourlyData['minAirTemperatureInCelsius'] ; ?></div><div class="sub">°C</div>
+                </div>
                 <div class="info">
                     <div class="sunshineDuration"><div class="sun"><?php echo Weather::getSVG('sun', 'self_sun_grayscaled') . "</div><div>" . Weather::formatDuration( $hourlyData['sunshineDurationInMinutesSum'] ); ?></div></div>
                     <div class="precipitationProbability"><?php echo Weather::getSVG('rain', 'self_rain_grayscaled') . " " . $hourlyData['precipitationProbabilityInPercent']; ?> %</div>

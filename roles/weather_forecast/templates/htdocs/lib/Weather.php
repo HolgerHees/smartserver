@@ -59,6 +59,16 @@ class Weather
         $current_value['sunshineDurationInMinutesSum'] += $hourlyData['sunshineDurationInMinutes'];
         $current_value['precipitationAmountInMillimeterSum'] += $hourlyData['precipitationAmountInMillimeter'];
 
+        if( !isset($current_value['minAirTemperatureInCelsius']) || $current_value['minAirTemperatureInCelsius'] > $hourlyData['airTemperatureInCelsius'] )
+        {
+            $current_value['minAirTemperatureInCelsius'] = $hourlyData['airTemperatureInCelsius'];
+        }
+        
+        if( !isset($current_value['maxAirTemperatureInCelsius']) || $current_value['maxAirTemperatureInCelsius'] < $hourlyData['airTemperatureInCelsius'] )
+        {
+            $current_value['maxAirTemperatureInCelsius'] = $hourlyData['airTemperatureInCelsius'];
+        }
+
         if( $current_value['sunshineDurationInMinutes'] < $hourlyData['sunshineDurationInMinutes'] )
         {
             $current_value['sunshineDurationInMinutes'] = $hourlyData['sunshineDurationInMinutes'];
