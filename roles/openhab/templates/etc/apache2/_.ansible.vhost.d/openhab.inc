@@ -1,4 +1,4 @@
-Alias /toolbox "{{htdocs_path}}toolbox"
+Alias /weather "{{htdocs_path}}weather"
 
 # forced http1 is needed for openhab app on android. Soemtimes is stucks with http2 enabled
 Protocols http/1.1
@@ -20,7 +20,7 @@ ProtocolsHonorOrder Off
   Require all granted
 </Location>
 
-<Location /toolbox>
+<Location /weather>
   ProxyPass !
 </Location>
 

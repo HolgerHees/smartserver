@@ -1,0 +1,100 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{global_etc}}weather_forecast/"
+
+- name: build docker image
+  vars:
+    name: "weather_forecast"
+    image_name: "custom_weather_forecast"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/weather_forecast/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: weather_forecast
+    image: "custom_weather_forecast:{{alpine_version}}"
+    state: present
+    network_mode: "host"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: weather_forecast
+    volumes:
+      - '{{global_etc}}weather_forecast/:/etc/weather_forecast:ro,z'
+#  notify: "restart weather_forecast"
+
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+
+- name: check mysql table
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
+  register: mysql_data_exists
+  changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
+  
+- name: create missing table 'weather_forecast' => does not exists in database
+  shell: "cat roles/weather_forecast/templates/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
+  when: "'weather_forecast' not in mysql_data_exists.stdout"
+  
+- name: copy service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/config.py", dest: "{{global_etc}}weather_forecast/config.py" }
+    - { src: "/etc/daemon.py", dest: "{{global_etc}}weather_forecast/daemon.py" }
+  notify: "restart weather_forecast"
+
+- name: copy htdocs
+  copy:
+    src: "templates/htdocs/"
+    dest: "{{htdocs_path}}weather"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: "u=rwX,g=rX,o=rX"
+  
+- name: copy htdocs (template)
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}weather/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: "u=rwX,g=rX,o="
+
+- name: register webui
+  vars:
+    name: "toolbox"
+    js_file: "templates/webui/toolbox.js"
+    i18n_files: [ { language: "de", file: "templates/webui/toolbox.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  
+
+  
+  
+  
+  
+  
+# ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "weather_forecast"
+    container_after: [ "mosquitto" ]
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: trigger weather_forecast handler
+  vars:
+    notify: "restart weather_forecast"
+    service: "weather_forecast.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

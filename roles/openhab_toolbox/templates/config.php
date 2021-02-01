@@ -21,16 +21,5 @@ class Setup
         // has do use the apache proxy, because openhab itself is locahost only and not reachable from inside a docker container
 		return new RestConnectorOpenhab( "openhab.{{server_domain}}", "443", "https" );
 	}
-	
-	public static function getWeatherAuth()
-	{
-        return new GenericAuth("{{vault_weather_api_username}}","{{vault_weather_api_password}}");
-	}
-
-	public static function getGeoLocation()
-	{
-        $pos = explode(",","{{location}}");
-        return new GeoLocation($pos[0],$pos[1]);
-	}
 }
  

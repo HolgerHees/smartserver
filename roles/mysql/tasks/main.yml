@@ -95,3 +95,32 @@
     notify: "restart mysql"
     service: "mysql.service"
   import_tasks: roles/_shared/tasks/service_check.yml
+
+  
+  
+  
+# ***** SHARED DATABASE ****
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  
+- name: check mysql databases
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
+  register: mysql_data_exists
+  changed_when: "'shared' not in mysql_data_exists.stdout"
+
+- name: create missing mysql databases => database does not exists
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create shared\""
+  when: "'shared' not in mysql_data_exists.stdout"
+
+- name: create missing mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{vault_shared_mysql_username}}'@'%' IDENTIFIED BY '{{vault_shared_mysql_password}}';\\\"\""
+  when: "'shared' not in mysql_data_exists.stdout"
+
+- name: grant permissions to mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON shared.* TO '{{vault_shared_mysql_username}}'@'%';\\\"\""
+  when: "'shared' not in mysql_data_exists.stdout"
+
+- name: refresh mysql privileges => database does not exists
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
+  when: "'shared' not in mysql_data_exists.stdout"
+  

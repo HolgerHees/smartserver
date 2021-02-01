@@ -24,6 +24,9 @@ vault_pihole_password: "<password>"
 vault_ftp_username: "ftp"
 vault_ftp_password: "default123"
 
+vault_shared_mysql_username: "shared"
+vault_shared_mysql_password: "default123"
+
 # to enable obtain a login from https://api.weather.mg/
 # to disable, leave the username empty
 vault_weather_api_username: ""
