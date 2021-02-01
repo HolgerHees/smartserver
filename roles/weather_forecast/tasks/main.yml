@@ -31,7 +31,7 @@
       tag: weather_forecast
     volumes:
       - '{{global_etc}}weather_forecast/:/etc/weather_forecast:ro,z'
-#  notify: "restart weather_forecast"
+  notify: "restart weather_forecast"
 
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
