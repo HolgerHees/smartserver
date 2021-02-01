@@ -249,7 +249,17 @@ class Handler(object):
                     fetcher.fetchForecast(authToken,self.mqtt_client)
                     fetcher.triggerSummerizedItems(self.mqtt_client)
             
-            time.sleep(3600)
+            date = datetime.now(timezone(config.timezone))
+            target = date.replace(minute=5,second=0)
+            
+            if target < date:
+                target = target + timedelta(hours=1)
+
+            diff = target - date
+
+            print("Sleep {} seconds".format(diff.total_seconds()),flush=True)
+            time.sleep(diff.total_seconds())
+            
 
     def on_connect(self,client,userdata,flags,rc):
         print("Connected to mqtt with result code:"+str(rc), flush=True)

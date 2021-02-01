@@ -8,7 +8,8 @@ db_username     = "{{vault_shared_mysql_username}}"
 db_password     = "{{vault_shared_mysql_password}}"
 
 mosquitto_host  = "cloud_mosquitto"
-publish_topic   = "{{publish_topic}}"
+publish_topic   = {% if publish_topic is defined and publish_topic %}"{{publish_topic}}"{% else %}False{% endif %}
+
 
 location        = "{{location}}"
 timezone        = "{{timezone}}"
