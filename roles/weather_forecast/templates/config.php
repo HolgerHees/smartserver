@@ -2,9 +2,9 @@
 define("DB_HOST","mysql");
 define("DB_NAME","shared");
 define("DB_TABLE","weather_forecast");
-define("DB_USERNAME","shared");
-define("DB_PASSWORD","dsuzewg35s/zq2)");
+define("DB_USERNAME","{{vault_shared_mysql_username}}");
+define("DB_PASSWORD","{{vault_shared_mysql_password}}");
 
-date_default_timezone_set('Europe/Berlin');
+date_default_timezone_set('{{timezone}}');
 
 $GLOBAL_TIMEZONE = new DateTimezone(date_default_timezone_get());
