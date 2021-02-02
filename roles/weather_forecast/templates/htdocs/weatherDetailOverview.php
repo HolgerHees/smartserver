@@ -35,7 +35,7 @@
     var basicui = false;
     try{
         var current = window;
-        while( current.parent && current.parent != window.top )
+        while( current )
         {
             if( current.location.pathname.includes("habpanel") )
             {   
