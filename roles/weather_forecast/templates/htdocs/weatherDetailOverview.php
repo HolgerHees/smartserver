@@ -70,8 +70,8 @@ include "widgetWeatherDetailOverview.php"
 ?>
 </div>
 <script>
-    var openButton = document.getElementById("openButton");
-    openButton.addEventListener("click",function(){
+  var openButton = document.getElementById("openButton");
+  openButton.addEventListener("click",function(){
     var weekList = document.querySelector(".mvWidget .weatherDetailForecast .week");
     if( weekList.classList.contains("open") )
     {
@@ -85,16 +85,41 @@ include "widgetWeatherDetailOverview.php"
     }
   });
   
+  function clickHandler()
+  {
+    var src = this.getAttribute("mv-url");
+    var parameter = src.split("?")[1];
+    
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function (e) { 
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        openButton.classList.remove("open");
+        
+        element = document.querySelector(".mvWidget");
+        element.innerHTML = xhr.responseText;
+        
+        var elements = element.querySelectorAll('div[mv-url]');
+        for( var i = 0; i < elements.length; i++)
+        { 
+          var element = elements[i];
+          element.addEventListener("click",clickHandler);
+        }
+      }
+    }
+    
+    xhr.open("GET", "<?php echo dirname($_SERVER['REQUEST_URI']); ?>/widgetWeatherDetailOverview.php?"+parameter, true);
+    xhr.setRequestHeader('Content-type', 'text/html');
+    xhr.send();
+
+
+    //document.location.href=document.location.pathname+"?"+parameter;
+  }
+  
   var elements = document.querySelectorAll('div[mv-url]');
   for( var i = 0; i < elements.length; i++)
   { 
     var element = elements[i];
-    element.addEventListener("click",function()
-    {
-      var src = this.getAttribute("mv-url");
-      var parameter = src.split("?")[1];
-      document.location.href=document.location.pathname+"?"+parameter;
-    });
+    element.addEventListener("click",clickHandler);
   }
 </script>
 </body>
