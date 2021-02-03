@@ -42,7 +42,7 @@
                 theme = 'black';
                 break;
             }
-            current = current.parent;
+            current = current != current.parent ? current.parent : null;
         }
         if( parent.location.pathname.indexOf("basicui")!==-1 )
         {   
