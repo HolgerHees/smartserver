@@ -24,9 +24,23 @@ else if( mxTheme == 'dark' )
       }
     `;
 }
-console.log(mxTheme);
 var element = document.createElement('style');
 element.type = 'text/css'; 
 element.innerHTML = css;
 
 document.getElementsByTagName("head")[0].appendChild(element); 
+
+const hideWebviewImages = function()
+{
+    var imgs = document.querySelectorAll('img[data-icon=webview]');
+    imgs.forEach(function(img, index) {
+        img.parentNode.parentNode.style.display="none";
+    });
+}
+
+const callback = function(mutationsList, observer) {
+    hideWebviewImages();
+}
+const config = { attributes: false, childList: true, subtree: true };
+const observer = new MutationObserver(callback);
+observer.observe(document, config);
