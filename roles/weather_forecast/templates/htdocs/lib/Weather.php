@@ -320,9 +320,9 @@ class Weather
 
     public static function formatDay($datetime)
     {
-        $str = $datetime->format("d.m.Y");
+        $str = $datetime->format("d.m");
         
-        if( $str == ( new DateTime() )->format("d.m.Y") ) return "Heute (" .Weather::formatWeekdayNameLong( $datetime ) . "), " . $str;
+        if( $str == ( new DateTime() )->format("d.m") ) return "Heute (" .Weather::formatWeekdayNameLong( $datetime ) . "), " . $str;
         
         return Weather::formatWeekdayNameLong( $datetime ) . ", " . $str;
     }

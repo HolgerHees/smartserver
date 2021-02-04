@@ -8,7 +8,6 @@
     box-sizing: border-box;
     background-color: red;
 }
-
 </style>
 </head>
 <body>
@@ -53,35 +52,81 @@
 
     document.querySelector("html").classList.add(theme);
     
-    if( !basicui )
-    {
-        document.body.style.maxWidth = "1024px";
-        document.body.style.margin = "10px auto";
-    }
-    else
+    if( basicui )
     {
         document.body.classList.add("basicui");
     }
 </script>
 <div id="openButton">Woche</div>
+<div id="rainButton">Radar</div>
 <div class="mvWidget">
 <?php
 include "widgetWeatherDetailOverview.php"
 ?>
 </div>
+<div id="rainFrame"><iframe src=""></iframe></div>
 <script>
   var openButton = document.getElementById("openButton");
   openButton.addEventListener("click",function(){
     var weekList = document.querySelector(".mvWidget .weatherDetailForecast .week");
     if( weekList.classList.contains("open") )
     {
-      weekList.classList.remove("open");
+      openButton.innerHTML = "Woche";
       openButton.classList.remove("open");
+      weekList.classList.remove("open");
+      window.setTimeout(function(){
+        if( !openButton.classList.contains("open") )
+        {
+          openButton.style.zIndex = "";
+          openButton.classList.remove("animated");
+        }
+      },300);
     }
     else
     {
-      weekList.classList.add("open");
-      openButton.classList.add("open");
+      openButton.classList.add("animated");
+      window.setTimeout(function(){
+        openButton.innerHTML = "Schliessen";
+        openButton.style.zIndex = "101";
+        openButton.classList.add("open");
+        weekList.classList.add("open");
+      },0);
+    }
+  });
+  
+  // LOCATION => 52.3476672,13.6215805 lat / long
+  // target => 1516323.13/6863234.61
+  
+  var rainButton = document.querySelector("#rainButton");
+  var rainFrame = document.querySelector("#rainFrame iframe");
+  rainFrame.src="about:blank";
+  rainButton.addEventListener("click",function(){
+    //var url = "https://meteocool.com/#widgetMap=10/<?php echo str_replace(",","/",LOCATION); ?>/1";
+    var url = "https://meteocool.com/#map=10/1516347.41/6863233.92/0";
+    if( rainFrame.parentNode.classList.contains("open") )
+    {
+      rainButton.classList.remove("open");
+      rainButton.innerHTML = "Radar";
+      rainFrame.parentNode.classList.remove("open");
+      rainFrame.src="";
+      window.setTimeout(function(){
+        if( !openButton.classList.contains("open") )
+        {
+          rainButton.style.zIndex = "";
+          rainButton.classList.remove("animated");
+        }
+      },300);
+    }
+    else
+    {
+      rainButton.classList.add("animated");
+      window.setTimeout(function(){
+        rainButton.innerHTML = "Schliessen";
+        rainButton.style.zIndex = "101";
+        rainButton.classList.add("open");
+        rainFrame.parentNode.classList.add("open");
+        rainFrame.src=url;
+      },0);
     }
   });
   
@@ -94,6 +139,7 @@ include "widgetWeatherDetailOverview.php"
     xhr.onreadystatechange = function (e) { 
       if (xhr.readyState == 4 && xhr.status == 200) {
         openButton.classList.remove("open");
+        openButton.innerHTML = "Woche";
         
         element = document.querySelector(".mvWidget");
         element.innerHTML = xhr.responseText;
