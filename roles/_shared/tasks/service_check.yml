@@ -11,6 +11,7 @@
   shell: "systemctl status {{service}}"
   register: service_result
   changed_when: "'active (running)' not in service_result.stdout or 'service; enabled' not in service_result.stdout"
+  failed_when: False
   notify: "{{notify}}"
 
 #enabled :: explicitly installed
