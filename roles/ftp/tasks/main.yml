@@ -14,7 +14,7 @@
     state: directory
     owner: "{{system_users['ftp'].name}}"
     group: "{{system_groups['ftp'].name}}"
-    mode: 755
+    mode: 0755
 
 - name: check owner and group
   file:
