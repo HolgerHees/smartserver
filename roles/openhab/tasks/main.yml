@@ -6,7 +6,7 @@
 
 - name: set openhab version
   set_fact:
-    openhab_version: "2.5.10"
+    openhab_version: "2.5.12"
     jython_version: "2.7.2"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"

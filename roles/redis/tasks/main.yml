@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    redis_version: '6.0.9'
+    redis_version: '6.2.1'
   tags: [ 'update_notifier_configs' ]
   
 - name: check started docker

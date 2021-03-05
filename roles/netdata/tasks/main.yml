@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.28.0"
+    netdata_version: "1.29.3"
   tags: [ 'update_notifier_configs' ]
   
   

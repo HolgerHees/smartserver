@@ -6,7 +6,7 @@ from helper.version import Version
 
 import re
 
-from plugins.plugin import Plugin
+from plugins.plugin import Plugin, SkipableVersionError
 
 class Repository(Plugin):
     API_BASE = "https://registry-1.docker.io/v2/"
@@ -108,9 +108,11 @@ class Repository(Plugin):
             self.updateCurrentUpdates(version=version,current_updates_r=current_updates_r,tag=tag)
             
             if self.isNewUpdate(version=version,current_updates_r=current_updates_r,current_version=current_version):
-                
-                update_time = self._getCreationDate(tag)
-                self.registerNewUpdate(current_updates_r=current_updates_r, version=version, date=update_time, tag=tag )
+                try:
+                    update_time = self._getCreationDate(tag)
+                    self.registerNewUpdate(current_updates_r=current_updates_r, version=version, date=update_time, tag=tag )
+                except SkipableVersionError as e:
+                    pass
 
         new_updates_r = self.convertUpdates(current_updates_r=current_updates_r,project=self.repository)
         return new_updates_r

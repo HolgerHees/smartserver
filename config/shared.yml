@@ -73,5 +73,5 @@ vpn_cloud_services:               "{
 pihole_whitelist_domains:          [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ]
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.12.3"
-debian_version:                   "buster-20210111-slim"
+alpine_version:                   "3.13.2"
+debian_version:                   "buster-20210208-slim"

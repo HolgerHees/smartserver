@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    grafana_version: '7.3.6'
+    grafana_version: '7.4.3'
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder

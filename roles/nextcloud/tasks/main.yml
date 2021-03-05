@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '20.0.4'
+    nextcloud_version: '21.0.0'
   tags: [ 'update_notifier_configs', 'user' ]
 
 # ***** PREPARE FOLDER *****
@@ -43,8 +43,8 @@
   
 - name: install archive => nextcloud does not exists
   unarchive:
-    src: "https://github.com/nextcloud/server/releases/download/v{{nextcloud_version}}/nextcloud-{{nextcloud_version}}.tar.bz2"
-    #https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
+    #src: "https://github.com/nextcloud/server/releases/download/v{{nextcloud_version}}/nextcloud-{{nextcloud_version}}.tar.bz2"
+    src: "https://download.nextcloud.com/server/releases/nextcloud-{{nextcloud_version}}.zip"
     dest: "{{global_tmp}}"
     remote_src: yes
     owner: "{{system_users['www'].name}}"

@@ -167,7 +167,7 @@ class Handler(object):
             
     def startDHCPListener(self):
         print("Start dhcp listener", flush=True)
-        cmd = ("/usr/bin/stdbuf -oL /usr/sbin/tcpdump -i {} -pvn port 67 or port 68".format(self.interface)).split()
+        cmd = ("/usr/bin/stdbuf -oL /usr/bin/tcpdump -i {} -pvn port 67 or port 68".format(self.interface)).split()
         self.dhcpListenerProcess = subprocess.Popen( cmd,
                                                      bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                                      universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
@@ -180,6 +180,7 @@ class Handler(object):
             output = self.dhcpListenerProcess.stdout.readline()
             self.dhcpListenerProcess.stdout.flush()
             if output == '' and self.dhcpListenerProcess.poll() is not None:
+                print("Stopped dhcp listener", flush=True)
                 break
             if output:
                 line = output.strip()

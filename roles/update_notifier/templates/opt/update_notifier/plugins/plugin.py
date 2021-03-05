@@ -10,6 +10,9 @@ import time
 
 from helper.version import Version
 
+class SkipableVersionError(Exception):
+    pass
+  
 class Plugin:
     def filterPossibleVersions(self,current_version,last_updates):
         current_updates_r = {}
@@ -62,6 +65,8 @@ class Plugin:
                     raw = None
                     exception = e
         except (urllib.error.URLError) as e:
+            if isinstance(e,urllib.error.HTTPError) and e.code == 404:
+                raise SkipableVersionError()
             raw = None
             exception = e
 

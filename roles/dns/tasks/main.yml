@@ -52,6 +52,7 @@
     published_ports:
       - "53:53/udp"
       - "53:53/tcp"
+  register: dns_result
   notify: "restart named"
 
 # ***** FINALIZE *****
@@ -73,6 +74,13 @@
   vars:
     container_name: "named"
   import_tasks: roles/container/tasks/add_docker_service.yml
+  
+- name: force dns restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: named
+  when: dns_result.changed
 
 - name: trigger named handler
   vars:
