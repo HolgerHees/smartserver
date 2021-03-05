@@ -96,6 +96,7 @@ vault_hue_user_id: "<userid>"
 vault_homecontrol_client_id: "<vault_homecontrol_client_id>"
 vault_homecontrol_client_secret: "<vault_homecontrol_client_secret>"
 vault_homecontrol_washer: "<vault_homecontrol_washer>"
+vault_homecontrol_dishwasher: "<vault_homecontrol_dishwasher>"
 vault_homecontrol_coffeemaker: "<vault_homecontrol_coffeemaker>"
 
 # used in custom external openhab config repository and custom role 'apache_proxy'
