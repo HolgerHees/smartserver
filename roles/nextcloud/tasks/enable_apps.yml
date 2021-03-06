@@ -67,7 +67,7 @@
 # ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists
   unarchive:
-    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v0.6.3/keeweb-0.6.3.tar.gz"
+    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v0.6.5/keeweb-0.6.5.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/keeweb/"
@@ -95,7 +95,7 @@
 # ***** INSTALL NEWS *****
 - name: install news app
   unarchive:
-    src: "https://github.com/nextcloud/news/releases/download/15.0.5/news.tar.gz"
+    src: "https://github.com/nextcloud/news/releases/download/15.3.2/news.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"
