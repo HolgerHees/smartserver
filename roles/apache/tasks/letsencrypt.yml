@@ -47,7 +47,7 @@
 - name: create cron job
   vars:
     name: "Letsencrypt renew job"
-    cmd: "docker exec apache2 sh -c \"certbot renew > /dev/null 2>&1\""
+    cmd: "docker exec apache2 sh -c \"certbot renew -q\""
     file: "ansible_letsencrypt"
     hour: "1"
     minute: "0"
