@@ -178,8 +178,10 @@ class Fetcher(object):
             for values in sets:
                 if field in values:
                     value = values[field]
-                else:
+                elif value != None:
                     values[field] = value
+                else:
+                    print("Missing PT3H value", flush=True, file=sys.stderr)
           
         sets = list(filter(lambda d: len(d) == 16, sets))
         
