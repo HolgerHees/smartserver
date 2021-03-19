@@ -48,21 +48,27 @@ else
 
 if( $content )
 {
-    $imagick = new Imagick;
+    try {
+        $imagick = new Imagick;
 
-    $imagick->readImageBlob( $content );
+        $imagick->readImageBlob( $content );
 
-    //$img->setImageCompression(imagick::COMPRESSION_JPEG);
-    $imagick->setImageCompressionQuality(50); 
-    
-    $orgWidth = $imagick->getImageWidth();
-    $orgHeight = $imagick->getImageHeight();
+        //$img->setImageCompression(imagick::COMPRESSION_JPEG);
+        $imagick->setImageCompressionQuality(50); 
+        
+        $orgWidth = $imagick->getImageWidth();
+        $orgHeight = $imagick->getImageHeight();
 
-    $imagick->scaleImage( $_GET['width'], $_GET['height'], true );
+        $imagick->scaleImage( $_GET['width'], $_GET['height'], true );
 
-    header("Content-Type: " . $imagick->getImageMimeType());
+        header("Content-Type: " . $imagick->getImageMimeType());
 
-    echo $imagick->getImageBlob();
+        echo $imagick->getImageBlob();
+    }
+    catch (ImagickException $e) 
+    {
+        http_response_code(503);
+    }
 }
 else
 {
