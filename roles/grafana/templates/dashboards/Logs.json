@@ -15,12 +15,13 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1603289809774,
+  "id": 36,
+  "iteration": 1617019654954,
   "links": [],
   "panels": [
     {
       "aliasColors": {},
-      "bars": false,
+      "bars": true,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Loki",
@@ -53,14 +54,14 @@
         "total": false,
         "values": false
       },
-      "lines": true,
+      "lines": false,
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.1",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -163,7 +164,7 @@
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 26,
+  "schemaVersion": 27,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -183,6 +184,8 @@
         },
         "datasource": "Loki",
         "definition": "label_values(level)",
+        "description": null,
+        "error": null,
         "hide": 0,
         "includeAll": true,
         "label": null,
@@ -213,6 +216,8 @@
         },
         "datasource": "Loki",
         "definition": "label_values(group)",
+        "description": null,
+        "error": null,
         "hide": 0,
         "includeAll": true,
         "label": null,
@@ -236,6 +241,8 @@
           "text": "",
           "value": ""
         },
+        "description": null,
+        "error": null,
         "hide": 0,
         "label": null,
         "name": "search",
@@ -272,5 +279,5 @@
   "timezone": "",
   "title": "Logs",
   "uid": "logs",
-  "version": 12
+  "version": 1
 }
