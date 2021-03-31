@@ -1,0 +1,8 @@
+- name: restart minidlna
+  systemd:
+    name: minidlna
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart minidlna"

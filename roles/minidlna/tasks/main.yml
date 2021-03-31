@@ -1,0 +1,75 @@
+- name: prepare config folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 755
+  with_items:
+    - "{{global_etc}}minidlna"
+    - "{{global_lib}}minidlna"
+
+- name: copy config
+  template:
+    src: "templates/minidlna.conf"
+    dest: "{{global_etc}}minidlna/minidlna.conf"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0755
+  notify: "restart minidlna"
+
+- name: build docker image
+  vars:
+    name: "minidlna"
+    image_name: "custom_minidlna"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/minidlna/templates/container/Dockerfile
+      - roles/minidlna/templates/container/entrypoint.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: prepare volumes
+  set_fact:
+    dlna_volumes: |
+      [
+      "{{global_etc}}minidlna:/etc/minidlna:z",
+      "{{global_lib}}minidlna:/minidlna:z",
+      {% for dir in dlna_dir %}
+      "{{dir}}:{{dir}}:z",
+      {% endfor %}
+      ]
+
+- name: create docker container
+  docker_container:
+    name: minidlna
+    image: "custom_minidlna:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      PGID: "{{system_groups['www'].id}}"
+      PUID: "{{system_users['www'].id}}"
+    log_driver: journald
+    log_options:
+      tag: minidlna
+    networks:
+      - name: "macvlan"
+        ipv4_address: "{{dlna_ip}}"
+    networks_cli_compatible: yes
+    volumes: "{{dlna_volumes}}"
+    exposed_ports:
+     - "8200/tcp"  
+     - "1900/udp"  
+  notify: "restart minidlna"
+    
+# ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "minidlna"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: trigger minidlna handler
+  vars:
+    notify: "restart minidlna"
+    service: "minidlna.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

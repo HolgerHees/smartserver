@@ -130,3 +130,20 @@
     url: "https://www.suse.com/support/update/"
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
   when: is_suse|bool
+  
+- name: set sysctl inotify related values
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^{{item.regex}}\s*='
+    line: '{{item.line}}'
+  with_items:
+    #Each inotify watch uses 540 bytes of kernel memory on 32-bit architectures, and 1080 bytes on 64-bit architectures. Kernel memory is unswappable. So there is a memory cost, certainly.
+    #- { regex: "fs\\.inotify\\.max_user_instances", line: "fs.inotify.max_user_instances = 256" }
+    #- { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 65536" }
+    - { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 262144" } # => max 270MB
+  register: sysctlchanged
+  
+- name: refresh sysctl to activate sysctl changes => sysctl changed
+  shell: sysctl -p
+  when: sysctlchanged.changed
+
