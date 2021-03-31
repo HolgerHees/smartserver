@@ -34,8 +34,8 @@
       [
       "{{global_etc}}minidlna:/etc/minidlna:z",
       "{{global_lib}}minidlna:/minidlna:z",
-      {% for dir in dlna_dir %}
-      "{{dir}}:{{dir}}:z",
+      {% for username in userdata %}
+      "{{nextcloud_data_path}}{{username}}/files/:/media/{{username}}/:z",
       {% endfor %}
       ]
 
