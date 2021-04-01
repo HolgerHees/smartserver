@@ -70,6 +70,16 @@ vpn_cloud_services:               "{
 {% endif %}
 }"  
 
+dlna_volumes:                    "{
+{% for username in userdata %}
+{% if userdata[username].media_dir is defined %}
+{% for media_name in userdata[username].media_dir %}
+  \"{{nextcloud_data_path}}{{username}}/files/{{userdata[username].media_dir[media_name]}}\": \"/media/{{media_name}}\",
+{% endfor %}
+{% endif %}
+{% endfor %}
+}"
+
 pihole_whitelist_domains:          [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ]
 
 # version of alpine linux used in several container based roles

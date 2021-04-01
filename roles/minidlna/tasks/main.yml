@@ -4,10 +4,19 @@
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 755
+    mode: 0755
   with_items:
     - "{{global_etc}}minidlna"
     - "{{global_lib}}minidlna"
+
+- name: prepare dlna folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0755
+  with_items: "{{dlna_volumes}}"
 
 - name: copy config
   template:
@@ -30,12 +39,12 @@
 
 - name: prepare volumes
   set_fact:
-    dlna_volumes: |
+    minidlna_volumes: |
       [
       "{{global_etc}}minidlna:/etc/minidlna:z",
       "{{global_lib}}minidlna:/minidlna:z",
-      {% for username in userdata %}
-      "{{nextcloud_data_path}}{{username}}/files/:/media/{{username}}/:z",
+      {% for dlna_volume in dlna_volumes %}
+      "{{dlna_volume}}:{{dlna_volumes[dlna_volume]}}/:z",
       {% endfor %}
       ]
 
@@ -56,7 +65,7 @@
       - name: "macvlan"
         ipv4_address: "{{dlna_ip}}"
     networks_cli_compatible: yes
-    volumes: "{{dlna_volumes}}"
+    volumes: "{{minidlna_volumes}}"
     exposed_ports:
      - "8200/tcp"  
      - "1900/udp"  
