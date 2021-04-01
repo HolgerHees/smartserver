@@ -9,7 +9,7 @@
     state: directory
     owner: "1883"
     group: "1883"
-    mode: 755
+    mode: 0755
 
 - name: copy config
   template:
