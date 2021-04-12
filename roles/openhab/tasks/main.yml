@@ -318,6 +318,8 @@
 # JYTHON HELPER
 - name: "clone jython helper git"
   git:
+    #https://community.openhab.org/t/ivan-s-helper-libraries-oh3-python-javascript/116458
+    #repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
     repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
     dest: '{{global_build}}openhab-jython'
     version: '{{jython_script_version}}'
@@ -673,6 +675,7 @@
   vars:
     name: "jsr223"
     type: "github"
+    #url: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
     url: "https://github.com/openhab-scripters/openhab-helper-libraries"
     config: { 
       project: "openhab-scripters/openhab-helper-libraries", 
