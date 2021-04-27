@@ -243,25 +243,32 @@ class Handler(object):
         #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
         
         while True:
-            if config.publish_topic and config.api_username and config.api_password:
-                fetcher = Fetcher()
-                authToken = fetcher.getAuth()
-                if authToken != None:
-                    fetcher.fetchCurrent(authToken,self.mqtt_client)
-                    fetcher.fetchForecast(authToken,self.mqtt_client)
-                    fetcher.triggerSummerizedItems(self.mqtt_client)
-            
-            date = datetime.now(timezone(config.timezone))
-            target = date.replace(minute=5,second=0)
-            
-            if target < date:
-                target = target + timedelta(hours=1)
+            try:
+                if config.publish_topic and config.api_username and config.api_password:
+                    fetcher = Fetcher()
+                    authToken = fetcher.getAuth()
+                    if authToken != None:
+                        fetcher.fetchCurrent(authToken,self.mqtt_client)
+                        fetcher.fetchForecast(authToken,self.mqtt_client)
+                        fetcher.triggerSummerizedItems(self.mqtt_client)
+                
+                date = datetime.now(timezone(config.timezone))
+                target = date.replace(minute=5,second=0)
+                
+                if target < date:
+                    target = target + timedelta(hours=1)
 
-            diff = target - date
+                diff = target - date
+                
+                sleepTime = diff.total_seconds()
+            except requests.exceptions.RequestException as e:
+                print("RequestException: {}".format(str(e)))
+                sleepTime = 600
 
-            print("Sleep {} seconds".format(diff.total_seconds()),flush=True)
-            time.sleep(diff.total_seconds())
-            
+            print("Sleep {} seconds".format(sleepTime),flush=True)
+            time.sleep(sleepTime)
+
+            #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
 
     def on_connect(self,client,userdata,flags,rc):
         print("Connected to mqtt with result code:"+str(rc), flush=True)
