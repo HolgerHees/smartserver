@@ -312,36 +312,39 @@ class Handler(object):
                     self.current_values[topic[3]] = msg.payload.decode("utf-8")
             elif topic[2] == u"forecast":
                 if topic[3] == u"refreshed":
-                    db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
-                    cursor = db.cursor()
-                    
-                    updateCount = 0
-                    insertCount = 0
-                    for datetime_str in self.forecast_values:
-                        validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
+                    if self.forecast_values is not None:
+                        db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
+                        cursor = db.cursor()
+                        
+                        updateCount = 0
+                        insertCount = 0
+                        for datetime_str in self.forecast_values:
+                            validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
 
-                        update_values = []
-                        for field in self.forecast_values[datetime_str]:
-                            update_values.append(u"`{}`='{}'".format(field,self.forecast_values[datetime_str][field]))
+                            update_values = []
+                            for field in self.forecast_values[datetime_str]:
+                                update_values.append(u"`{}`='{}'".format(field,self.forecast_values[datetime_str][field]))
+                                
+                            cursor.execute(MySQL.getEntrySQL(validFrom.timestamp()))
+                            isUpdate = True if cursor.rowcount == 1 else False
+                          
+                            cursor.execute(MySQL.getInsertUpdateSQL(validFrom.timestamp(),update_values))
                             
-                        cursor.execute(MySQL.getEntrySQL(validFrom.timestamp()))
-                        isUpdate = True if cursor.rowcount == 1 else False
-                      
-                        cursor.execute(MySQL.getInsertUpdateSQL(validFrom.timestamp(),update_values))
+                            if cursor.rowcount > 0:
+                                if isUpdate:
+                                    updateCount += 1
+                                else:
+                                    insertCount += 1
+                            db.commit()        
+                            
+                        print("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.forecast_values),updateCount,insertCount), flush=True)
                         
-                        if cursor.rowcount > 0:
-                            if isUpdate:
-                                updateCount += 1
-                            else:
-                                insertCount += 1
-                        db.commit()        
-                        
-                    print("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.forecast_values),updateCount,insertCount), flush=True)
-                    
-                    self.forecast_values = None
+                        self.forecast_values = None
 
-                    cursor.close()
-                    db.close()
+                        cursor.close()
+                        db.close()
+                    else:
+                        print("Forcecasts not processed", flush=True, file=sys.stderr)
                 else:
                     if self.forecast_values is None:
                         self.forecast_values = {}
