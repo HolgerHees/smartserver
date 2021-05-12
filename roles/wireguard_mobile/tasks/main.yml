@@ -43,6 +43,18 @@
       {% endif %}
       {% endfor %}
       }
+    vpn_nats: |
+      [
+      {% for username in userdata %}
+      {% if userdata[username].vpn_gates is defined %}
+      {% for vpn_name in userdata[username].vpn_gates %}
+      {% if 'nat' in userdata[username].groups %}
+      "{{userdata[username].vpn_gates[vpn_name]}}",
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      ]
   tags: [ 'user' ]
       
 - name: generate client keys
@@ -143,10 +155,13 @@
   
 # ***** FINALIZE *****
 # todo => enable forwarding if needed to allow vpn client to access complete network
-# https://gist.github.com/insdavm/b1034635ab23b8839bf957aa406b5e39
 
-# iptables -A FORWARD -i wg0 -j ACCEPT
-# iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+## iptables -A FORWARD -i wg0 -j ACCEPT # => not needed, because we trust this network always
+
+# https://gist.github.com/insdavm/b1034635ab23b8839bf957aa406b5e39
+# https://www.cyberciti.biz/faq/how-to-set-up-wireguard-firewall-rules-in-linux/
+# iptables -t nat -I POSTROUTING -s {{vpn_gate_client_privatekeys[item]}} -o {{main_network_interface}} -j MASQUERADE
+
 # sysctl net.ipv4.ip_forward=1
 
 - name: allow mobile vpn service
