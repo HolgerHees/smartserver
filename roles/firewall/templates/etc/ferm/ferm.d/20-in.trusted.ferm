@@ -20,7 +20,7 @@ domain (ip ip6) {
             saddr {{ansible_remote_ip}} ACCEPT;
 {% endif %}
 {% if vpn_mobile_network is defined %}
-            # mobile vpn ip's can connect to containers
+            # mobile vpn ip's can connect to server network and containers (a NAT entry is still needed as part of the mobile vpn deployment itself)
             saddr {{vpn_mobile_network}}/24 ACCEPT;
 {% endif %}
         }
