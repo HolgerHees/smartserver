@@ -54,10 +54,19 @@
   register: "main_device_result"
   changed_when: False
 
-#- name: detect macvlan subnet
-#  set_fact:
-#    macvlan_range: "{{[pihole_ip+'/32', dlna_ip+'/32'] | cidr_merge}}"
-    
+- name: detect macvlan ips
+  set_fact:
+    macvlan_ips: |
+      [
+      {% if pihole_ip is defined %}'{{pihole_ip}}',{% endif %}
+      {% if dlna_ip is defined %}'{{dlna_ip}}',{% endif %}
+      ]
+
+- name: detect macvlan range
+  set_fact:
+    macvlan_range: "{{macvlan_ips | cidr_merge('span')}}"
+  when: "macvlan_ips | length > 0"
+
 #- name: detect macvlan subnet
 #  debug:
 #    msg: "{{macvlan_range}}"
