@@ -53,7 +53,6 @@
       , python3-pip
       #, python2-passlib
       , python3-passlib
-      , python3-netaddr
       
       , python3-libselinux # used by ansible on fedora
       , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
@@ -96,7 +95,6 @@
       , python3-pip
 #      , python2-passlib    # used by ansible htpasswd module (user role) => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/web_infrastructure/htpasswd.py" is using python2 (vagrant suse version is using it)
       , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task
-      , python3-netaddr    # used by ansible cidr_merge filter
       
       , insserv-compat     # used by ansible systemd module
     ]

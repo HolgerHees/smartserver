@@ -141,11 +141,11 @@ Vagrant.configure(2) do |config|
 
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo zypper --non-interactive install ansible python-xml
+        sudo zypper --non-interactive install ansible python-xml python3-netaddr
         SHELL
     else
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo yum --assumeyes install ansible python
+        sudo yum --assumeyes install ansible python python3-netaddr
         SHELL
     end
     
