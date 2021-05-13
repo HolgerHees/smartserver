@@ -54,6 +54,14 @@
   register: "main_device_result"
   changed_when: False
 
+#- name: detect macvlan subnet
+#  set_fact:
+#    macvlan_range: "{{[pihole_ip+'/32', dlna_ip+'/32'] | cidr_merge}}"
+    
+#- name: detect macvlan subnet
+#  debug:
+#    msg: "{{macvlan_range}}"
+
 # set environment specific variables [post]
 - name: set post state vars
   set_fact:

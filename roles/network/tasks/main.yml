@@ -94,6 +94,7 @@
     owner: root
     group: root
     mode: 0750
+  notify: "restart macvlan_bridge"
   when: "macvlan_range is defined"
     
 - name: "create systemd service for 'macvlan_bridge'"
