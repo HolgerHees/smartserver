@@ -43,12 +43,12 @@
       {% endif %}
       {% endfor %}
       }
-    vpn_nats: |
+    vpn_admin_ips: |
       [
       {% for username in userdata %}
       {% if userdata[username].vpn_gates is defined %}
       {% for vpn_name in userdata[username].vpn_gates %}
-      {% if 'nat' in userdata[username].groups %}
+      {% if 'admin' in userdata[username].groups %}
       "{{userdata[username].vpn_gates[vpn_name]}}",
       {% endif %}
       {% endfor %}
@@ -115,6 +115,14 @@
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]  
   
+- name: copy client config
+  template:
+    src: "templates/wg_client_all_traffic.conf"
+    dest: "{{ global_etc }}wireguard_mobile/clients/wg_{{item}}_all_traffic.conf"
+    mode: 0600
+  with_items: "{{vpn_gates}}"
+  tags: [ 'user' ]
+  
 - name: build docker image
   vars:
     name: "wireguard_mobile"
@@ -171,6 +179,26 @@
 #    is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
+
+- name: prepare mobile vpn admin ip rules
+  set_fact:
+    vpn_admin_ip_rules: "{{ (vpn_admin_ip_rules | default([])) + [ 'saddr ' + item ] }}"
+  with_items: "{{ vpn_admin_ips }}"
+  tags: [ 'firewall_config' ]
+        
+- name: allow mobile vpn admin ips
+  vars:
+    name: "wireguard.mobile_vpn_internal"
+    rules: "{{vpn_admin_ip_rules}}"
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+  
+  
+  
+  
+  
+  
 
 - name: create systemd service
   vars:

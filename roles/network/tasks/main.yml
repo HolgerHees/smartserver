@@ -23,7 +23,7 @@
     group: root
     mode: 0644
 
-- name: add container name
+- name: add server name
   vars:
     host_name: "{{server_name}}"
     host_ip_address: "{{server_ip}}"
@@ -78,12 +78,39 @@
   shell: sysctl -p
   when: sysctlchanged.changed
   
-#- name: set network intferface eth0
-#  nmcli:
-#    conn_name: eth0
-#    ifname: eth0
-#    type: ethernet
-#    ip4: "{{server_ip}}/24"
-#    gw4: "{{server_gateway}}"
-#    dns4: "{{dns1}} {{dns2}}"
-#    state: present
+- name: prepare needed folder
+  file:
+    path: "/opt/macvlan_helper"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy macvlan_bridge cmd
+  template:
+    src: "templates/create_macvlan_bridge.sh"
+    dest: "/opt/macvlan_helper/create_macvlan_bridge.sh"
+    owner: root
+    group: root
+    mode: 0750
+    
+- name: "create systemd service for 'macvlan_bridge'"
+  template:
+    src: "templates/macvlan_bridge.service"
+    dest: "/etc/systemd/system/macvlan_bridge.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart macvlan_bridge"
+ 
+- name: register systemd service watcher
+  vars:
+    name: "macvlan_bridge"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  
+- name: trigger macvlan_bridge handler
+  vars:
+    notify: "restart macvlan_bridge"
+    service: "macvlan_bridge.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
+

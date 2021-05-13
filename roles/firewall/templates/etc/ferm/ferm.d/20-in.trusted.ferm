@@ -13,15 +13,19 @@ domain (ip ip6) {
 {% endif %}
         }
         chain DOCKER-USER {
-            # internal ip's can connect to containers
+            # internal ip's can forward to containers
             saddr {{server_network}}/24 ACCEPT;
 {% if not ansible_remote_ip.startswith(server_subnet) %}
-            # ansible ip can connect to containers
+            # ansible ip can forward to containers
             saddr {{ansible_remote_ip}} ACCEPT;
 {% endif %}
 {% if vpn_mobile_network is defined %}
-            # mobile vpn ip's can connect to server network and containers (a NAT entry is still needed as part of the mobile vpn deployment itself)
-            saddr {{vpn_mobile_network}}/24 ACCEPT;
+{% if macvlan_range is defined %}
+            # mobile vpn ip's can forward to pihole
+            saddr {{vpn_mobile_network}}/24 daddr {{macvlan_range}} ACCEPT;
+{% endif %}
+            # mobile vpn ip's can forward to internet
+            saddr {{vpn_mobile_network}}/24 daddr !{{server_network}}/24 ACCEPT;
 {% endif %}
         }
     }
