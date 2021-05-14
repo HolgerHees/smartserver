@@ -1,7 +1,3 @@
-system_users:                     {}
-system_groups:                    {}
-ssl_certificate:                  "{{ ssl_certificate | default('selfsigned') }}"    # selfsigned | letsencrypt
-
 global_log:                       "/dataDisk/var/log/"
 global_lib:                       "/dataDisk/var/lib/"
 global_tmp:                       "/dataDisk/tmp/"

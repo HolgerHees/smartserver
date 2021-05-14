@@ -45,11 +45,14 @@
 # set environment specific variables [pre]
 - name: set pre state vars
   set_fact:
+    system_users: {}
+    system_groups: {}
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
     is_fedora: "{{ansible_distribution == 'Fedora'}}"
     is_production: "{{host_ip == production_ip}}"
     ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
     main_network_interface: "{{main_device_result.stdout}}"
+    ssl_certificate: "{{ ssl_certificate | default('selfsigned') }}"    # selfsigned | letsencrypt
   tags: always
   
 # load shared variables
