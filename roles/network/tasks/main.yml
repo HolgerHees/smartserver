@@ -85,7 +85,7 @@
     owner: root
     group: root
     mode: 0750
-  when: "macvlan_range is defined"
+  when: "macvlan_range | length > 0"
 
 - name: copy macvlan_bridge cmd
   template:
@@ -95,7 +95,7 @@
     group: root
     mode: 0750
   notify: "restart macvlan_bridge"
-  when: "macvlan_range is defined"
+  when: "macvlan_range | length > 0"
     
 - name: "create systemd service for 'macvlan_bridge'"
   template:
@@ -105,18 +105,18 @@
     group: root
     mode: 0644
   notify: "restart macvlan_bridge"
-  when: "macvlan_range is defined"
+  when: "macvlan_range | length > 0"
  
 - name: register systemd service watcher
   vars:
     name: "macvlan_bridge"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-  when: "macvlan_range is defined"
+  when: "macvlan_range | length > 0"
   
 - name: trigger macvlan_bridge handler
   vars:
     notify: "restart macvlan_bridge"
     service: "macvlan_bridge.service"
   import_tasks: roles/_shared/tasks/service_check.yml
-  when: "macvlan_range is defined"
+  when: "macvlan_range | length > 0"
 

@@ -18,7 +18,7 @@
           - "server:     {{server_ip}}"
           - "gateway:    {{server_gateway}}"
           - "network:    {{server_network}}/24"
-          - "macvlan:    {{macvlan_range | default('none')}}"
+          - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'none'}}"
           - "arpha:      {{server_arpa}}"
           - "os-name:    {{ansible_distribution}}"
           - "net:        {{main_network_interface}}"
@@ -59,9 +59,9 @@
 
     - { import_role: { name: alpine }, tags: [ 'alpine' ] }                                      # registers update notifier for alpine based container images
 
-    - { import_role: { name: network }, tags: [ 'network' ] }                                    # basic network tweaks like enabled ipv6
+    - { import_role: { name: network }, tags: [ 'network', 'macvlan' ] }                         # basic network tweaks like enabled ipv6
       
-    - { import_role: { name: firewall }, tags: [ 'firewall' ] }                                  # firewall configuration
+    - { import_role: { name: firewall }, tags: [ 'firewall', 'macvlan' ] }                       # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
@@ -82,7 +82,7 @@
 
     - { import_role: { name: pihole }, tags: [ 'pihole' ] }                                      # adblock server                                                    [docker,user:root]
 
-    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'alpine' ] } # vpn configuration (mobile access)                           [docker,user:root]
+    - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 
     - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
 

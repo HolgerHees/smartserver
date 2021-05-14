@@ -20,7 +20,7 @@ domain (ip ip6) {
             saddr {{ansible_remote_ip}} ACCEPT;
 {% endif %}
 {% if vpn_mobile_network is defined %}
-{% if macvlan_range is defined %}
+{% if macvlan_range | length > 0 %}
             # mobile vpn ip's can forward to pihole
             saddr {{vpn_mobile_network}}/24 daddr {{macvlan_range}} ACCEPT;
 {% endif %}

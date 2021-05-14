@@ -20,15 +20,12 @@
   register: user_id
   changed_when: no
 
-- name: register uid
-  set_fact:
-    system_users: "{{ system_users | combine( { user.key | default(user.name): { 'name': user.name, 'id': user_id.stdout } } ) }}"
-
 - name: get gid from "{{group.name}}"
   shell: "id -g {{user.name}}"
   register: group_id
   changed_when: no
 
-- name: register gid
+- name: register uid & gid
   set_fact:
+    system_users: "{{ system_users | combine( { user.key | default(user.name): { 'name': user.name, 'id': user_id.stdout } } ) }}"
     system_groups: "{{ system_groups | combine( { group.key | default(group.name): { 'name': group.name, 'id': group_id.stdout } } ) }}"
