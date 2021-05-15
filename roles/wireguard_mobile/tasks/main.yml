@@ -107,7 +107,7 @@
     mode: 0600
   notify: "restart wireguard_mobile"
   
-- name: copy client config
+- name: copy client config (internal traffic)
   template:
     src: "templates/wg_client.conf"
     dest: "{{ global_etc }}wireguard_mobile/clients/wg_{{item}}.conf"
@@ -115,7 +115,7 @@
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]  
   
-- name: copy client config
+- name: copy client config (all traffic)
   template:
     src: "templates/wg_client_all_traffic.conf"
     dest: "{{ global_etc }}wireguard_mobile/clients/wg_{{item}}_all_traffic.conf"
