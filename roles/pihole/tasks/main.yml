@@ -19,10 +19,6 @@
     name: docker
     state: started
 
-#ip link add mac0 link {{main_device_result.stdout}} type macvlan mode bridge
-#ip addr add {{pihole_ip + 1 ???}}/24 dev mac0
-#ifconfig mac0 up
-  
 - name: create docker container
   docker_container:
     name: pihole
