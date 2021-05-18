@@ -47,6 +47,7 @@
     - { src: "/etc/netdata_test/health.d/softnet.conf", dest: "{{ global_etc }}netdata/health.d/softnet.conf" }
     - { src: "/etc/netdata_test/health.d/net.conf", dest: "{{ global_etc }}netdata/health.d/net.conf" }
     - { src: "/etc/netdata_test/health.d/fping.conf", dest: "{{ global_etc }}netdata/health.d/fping.conf" }
+    - { src: "/etc/netdata_test/health.d/udp_errors.conf", dest: "{{ global_etc }}netdata/health.d/udp_errors.conf" }
   notify: "restart netdata"
 
 #- name: copy helper
@@ -113,6 +114,7 @@
       - "{{ global_etc }}netdata/health.d/softnet.conf:/etc/netdata/health.d/softnet.conf:ro,z"
       - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro,z"
       - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro,z"
       - '/opt/netdata_helper/:/opt/netdata_helper/:ro'
       - '/etc/os-release:/host/etc/os-release:ro'
       - '/etc/passwd:/host/etc/passwd:ro'
@@ -252,6 +254,7 @@
     - "/etc/netdata/health.d/softnet.conf"
     - "/etc/netdata/health.d/net.conf"
     - "/etc/netdata/health.d/fping.conf"
+    - "/etc/netdata/health.d/udp_errors.conf"
   notify: "restart netdata"
 
 - name: copy helper
