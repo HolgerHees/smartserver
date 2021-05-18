@@ -56,6 +56,18 @@ forecast_config = {
 summeryOffsets = [0,4,8]
 summeryFields = ["airTemperatureInCelsius","effectiveCloudCoverInOcta"]
 
+class AuthException(Exception):
+    pass
+
+class RequestDataException(Exception):
+    pass
+
+class CurrentDataException(RequestDataException):
+    pass
+  
+class ForecastDataException(RequestDataException):
+    pass
+
 class MySQL(object):
     def getOffsetSQL(offset):
         return "SELECT * FROM {} WHERE `datetime` > DATE_ADD(NOW(), INTERVAL {} HOUR) ORDER BY `datetime` ASC LIMIT 1".format(config.db_table,offset-1)
@@ -78,23 +90,20 @@ class Fetcher(object):
       
         r = requests.post(token_url, data=fields, auth=(config.api_username, config.api_password))
         if r.status_code != 200:
-            print("Failed getting auth token. Code: {}, Raeson: {}".format(r.status_code, r.reason), flush=True, file=sys.stderr)
+            raise AuthException("Failed getting auth token. Code: {}, Raeson: {}".format(r.status_code, r.reason))
         else:
             data = json.loads(r.text)
             if "access_token" in data:
                 return data["access_token"]
             
-            print("Failed getting auth token. Content: {}".format(r.text), flush=True, file=sys.stderr)
-      
-        return None
+        raise AuthException("Failed getting auth token. Content: {}".format(r.text))
       
     def get(self, url, token):
       
         headers = {"Authorization": "Bearer {}".format(token)}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
-            print("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.reason), flush=True, file=sys.stderr)
-            return None
+            raise RequestDataException("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.reason))
         else:
             return json.loads(r.text)
       
@@ -114,8 +123,8 @@ class Fetcher(object):
         url = current_url.format(location=location, period="PT0S", fields=",".join(current_fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
         
         data = self.get(url,token)
-        if data == None or "observations" not in data:
-            print("Failed getting current data. Content: {}".format(data), flush=True, file=sys.stderr)
+        if "observations" not in data:
+            raise CurrentDataException("Failed getting current data. Content: {}".format(data))
         else:
             data["observations"].reverse()
             observedFrom = None
@@ -129,7 +138,7 @@ class Fetcher(object):
                 break
           
             if observedFrom is None:
-                print("Failed processing current data. Content: {}".format(data), flush=True, file=sys.stderr)
+                raise CurrentDataException("Failed processing current data. Content: {}".format(data))
             else:
                 mqtt_client.publish("{}/weather/current/refreshed".format(config.publish_topic), payload=observedFrom, qos=0, retain=False)            
 
@@ -154,8 +163,7 @@ class Fetcher(object):
                    
             data = self.get(url,token)
             if data == None or "forecasts" not in data:
-                print("Failed getting forecast data. Content: {}".format(data), flush=True, file=sys.stderr)
-                continue
+                raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
               
             for forecast in data["forecasts"]:
                 key = forecast["validFrom"]
@@ -181,12 +189,12 @@ class Fetcher(object):
                 elif value != None:
                     values[field] = value
                 else:
-                    print("Missing PT3H value", flush=True, file=sys.stderr)
+                    raise ForecastDataException("Missing PT3H value")
           
         sets = list(filter(lambda d: len(d) == 16, sets))
         
         if len(sets) < 168:
-            print("Not enough forecast data. Count: {}".format(len(sets)), flush=True, file=sys.stderr)
+            raise ForecastDataException("Not enough forecast data. Count: {}".format(len(sets)))
 
         for forecast in sets:
             date = forecast["validFrom"]
@@ -243,14 +251,17 @@ class Handler(object):
         #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
         
         while True:
+            error_count = 0
+          
             try:
                 if config.publish_topic and config.api_username and config.api_password:
                     fetcher = Fetcher()
+
                     authToken = fetcher.getAuth()
-                    if authToken != None:
-                        fetcher.fetchCurrent(authToken,self.mqtt_client)
-                        fetcher.fetchForecast(authToken,self.mqtt_client)
-                        fetcher.triggerSummerizedItems(self.mqtt_client)
+
+                    fetcher.fetchCurrent(authToken,self.mqtt_client)
+                    fetcher.fetchForecast(authToken,self.mqtt_client)
+                    fetcher.triggerSummerizedItems(self.mqtt_client)
                 
                 date = datetime.now(timezone(config.timezone))
                 target = date.replace(minute=5,second=0)
@@ -260,10 +271,18 @@ class Handler(object):
 
                 diff = target - date
                 
-                sleepTime = diff.total_seconds()
-            except requests.exceptions.RequestException as e:
-                print("RequestException: {}".format(str(e)))
-                sleepTime = 600
+                sleepTime = diff.total_seconds()  
+                
+                error_count = 0                
+            except Exception as e:
+                error_count += 1
+                sleepTime = 600 * error_count if error_count < 6 else 3600
+                try:
+                    raise e
+                except (CurrentDataException,ForecastDataException) as e:
+                    print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=(sys.stderr if error_count > 3 else sys.stdout))
+                except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
+                    print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=sys.stderr)
 
             print("Sleep {} seconds".format(sleepTime),flush=True)
             time.sleep(sleepTime)
