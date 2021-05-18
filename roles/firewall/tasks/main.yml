@@ -83,6 +83,17 @@
   command: "/bin/true"
   changed_when: "'ferm.service' not in ansible_facts.services or ansible_facts.services['ferm.service'].status == 'disabled'"
   notify: "restart ferm"
+ 
+# nftables rule to filter fritzbox homeplug broadcasts
+#table netdev filter {
+#    chain ingress {
+#        type filter hook ingress device eno1 priority 0; policy accept;
+#        meta protocol {0x8912, 0x88e1} drop
+#    }
+#}
+
+#/sbin/iptables -A INPUT -m mac --mac-source cc:ce:1e:ab:e8:44 -p all -j ACCEPT
+#/sbin/iptables -A INPUT -m mac --mac-source cc:ce:1e:ab:e8:44 -j DROP
 
 #- name: trigger ferm handler
 #  vars:

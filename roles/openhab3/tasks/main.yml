@@ -1,0 +1,475 @@
+- name: ensure user and group exists
+  vars:
+    user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
+    group: { name: "openhab", system: true }
+  import_tasks: roles/user/tasks/add_system_user.yml
+
+- name: set openhab version
+  set_fact:
+    openhab_version: "3.0.2"
+    jython_version: "2.7.2"
+    openhab_uid: "{{system_users['openhab'].id}}"
+    openhab_user: "{{system_users['openhab'].name}}"
+    openhab_gid: "{{system_groups['openhab'].id}}"
+    openhab_group: "{{system_groups['openhab'].name}}"
+#    openhab_user: "root"
+#    openhab_group: "root"
+    # stable version from 05.03.2020
+    #jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
+    # stable version from 15.10.2020
+    jython_script_version: "5e6bee796f5ffcc60d277619965e621a9ba652b2"
+  tags: [ 'update_notifier_configs' ]
+
+#- name: get gid from "dialout"
+#  shell: "getent group dialout | cut -d: -f3"
+#  register: group_dialout_id
+#  changed_when: no
+
+- name: prepare needed config folder
+  file:
+    path:  "{{item}}"
+    state: directory
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0750
+  with_items:
+    - "{{global_etc}}openhab3"
+    - "{{global_etc}}openhab3/conf"
+    - "{{global_etc}}openhab3/conf/html"
+    - "{{global_etc}}openhab3/conf/icons"
+    - "{{global_etc}}openhab3/python"
+    - "{{global_etc}}openhab3/runtime/lib/python"
+    - "{{global_etc}}openhab3/userdata"
+    - "{{global_etc}}openhab3/userdata/config"
+    - "{{global_log}}openhab3"
+    - "{{global_lib}}openhab3"
+    - "{{global_lib}}openhab3/persistance"
+#    - "{{global_lib}}openhab3/jsondb" # => for homeconnect oauth => 
+# userdata/config/SymmetricKeyCipher.config
+
+# ****** GITHUB SHARED PROJECT ******
+- name: clone git
+  vars:
+    git_clone_name: "shared"
+    git_clone_path: "{{projects_path}}openhab_shared"
+    git_clone_url: "https://github.com/HolgerHees/openhab_shared.git"
+  import_tasks: roles/_shared/tasks/git_clone.yml
+
+- name: ensure that right owner is assigned => git_clone_result changed
+  file:
+    path: "{{projects_path}}openhab_shared"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    recurse: yes
+  when: "git_clone_result.changed"
+
+- name: set symbolic link to shared python scripts
+  file:
+    src: "{{projects_path}}openhab_shared/{{item}}"
+    dest: "{{global_etc}}/openhab3/{{item}}"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"  
+  with_items:
+    - "python/shared"
+    - "conf/html/shared"
+    - "conf/icons/classic"
+
+# ****** GITHUB CONFIG PROJECT ******
+- name: clone config git
+  vars:
+    git_clone_name: "config"
+    git_clone_path: "{{projects_path}}openhab_config"
+    git_clone_url: "{{vault_openhab_config_git}}"
+  import_tasks: roles/_shared/tasks/git_clone.yml
+
+- name: ensure that right owner is assigned => git_clone_result changed
+  file:
+    path: "{{projects_path}}openhab_config"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    recurse: yes
+  when: "git_clone_result.changed"
+  
+# => custom python
+- name: link custom python
+  file:
+    src: "{{projects_path}}openhab_config/python/custom"
+    dest: "{{global_etc}}openhab3/python/custom"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+#  notify: "restart openhab"
+
+# conf folder
+- name: check conf folder
+  shell: "ls -1 {{projects_path}}openhab_config/conf/"
+  register: config_result
+  changed_when: no
+  
+- name: link conf folder
+  file:
+    src: "{{projects_path}}openhab_config/conf/{{item}}"
+    dest: "{{global_etc}}openhab3/conf/{{item}}"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+  with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
+#  notify: "restart openhab"
+
+# custom conf sub folder (html & icons)
+- name: check custom html & icons conf folder
+  shell: "ls -1 {{projects_path}}openhab_config/conf/{{item}}/"
+  register: config_sub_folder_result
+  changed_when: no
+  when: "item in config_result.stdout_lines"
+  with_items:
+    - html
+    - icons
+    
+- name: collect custom html & icons conf folder
+  set_fact:
+    config_sub_folders: |
+      [
+      {% for result in config_sub_folder_result.results %}
+      {% if result.stdout_lines is defined %}
+      {% for line in result.stdout_lines %}
+      "{{result.item}}/{{line}}",
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      ]
+    
+- name: link custom html & icons conf folder
+  file:
+    src: "{{projects_path}}openhab_config/conf/{{item}}"
+    dest: "{{global_etc}}openhab3/conf/{{item}}"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+  with_items: "{{config_sub_folders}}"
+#  notify: "restart openhab"
+
+# create missing folder
+- name: prepare missing config folder
+  file:
+    path:  "{{global_etc}}openhab3{{item}}"
+    state: directory
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0750
+  with_items:
+    - /conf/automation
+    - /conf/html
+    - /conf/icons
+    - /conf/items
+    - /conf/persistence
+    - /conf/rules
+    - /conf/scripts
+    - /conf/services
+    - /conf/sitemaps
+    - /conf/transform
+    - /conf/things
+    - /addons
+#  notify: "restart openhab"
+    
+# habpanel if exists
+- name: check habpanel config
+  shell: "ls {{projects_path}}openhab_config/habpanel.config"
+  register: habpanel_result
+  changed_when: no
+  failed_when: no
+  tags: [ 'apache_webui_configs' ]
+   
+- name: copy habpanel config => habpanel_result.rc == 0
+  copy:
+    src: "{{projects_path}}openhab_config/habpanel.config"
+    dest: "{{global_etc}}openhab3/userdata/config/habpanel.config"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  when: "habpanel_result.rc == 0"
+
+# addons folder
+- name: check addons folder
+  shell: "ls -1 {{projects_path}}openhab_config/addons/"
+  register: addons_result
+  changed_when: no
+
+- name: copy addons folder
+  copy:
+    src: "{{projects_path}}openhab_config/addons/{{item}}"
+    dest: "{{global_etc}}openhab3/addons/{{item}}"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_items: "{{addons_result.stdout_lines}}"
+  
+# SERVICES
+- name: check service folder
+  shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
+  register: services_result
+  changed_when: no
+
+# have to fetch files before, because ansible template module works only with local files
+- name: prepare service configs
+  fetch:
+    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
+    dest: "/tmp/ansible/openhab3/services/{{item}}"
+    flat: yes
+  register: services_state
+  with_items: "{{services_result.stdout_lines}}"
+  changed_when: no
+    
+- name: copy service configs
+  template:
+    src: "/tmp/ansible/openhab3/services/{{item}}"
+    dest: "{{ global_etc }}openhab/conf/services/{{item}}"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_items: "{{services_result.stdout_lines}}"
+#  notify: "restart openhab"
+
+# THINGS
+- name: check things folder
+  shell: "ls -1 {{projects_path}}openhab_config/templates/things/"
+  register: things_result
+  changed_when: no
+
+# have to fetch files before, because ansible template module works only with local files
+- name: prepare things config
+  fetch:
+    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
+    dest: "/tmp/ansible/openhab3/things/{{item}}"
+    flat: yes
+  register: things_state
+  with_items: "{{things_result.stdout_lines}}"
+  changed_when: no
+
+- name: copy things configs
+  template:
+    src: "/tmp/ansible/openhab3/things/{{item}}"
+    dest: "{{ global_etc }}openhab/conf/things/{{item}}"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_items: "{{things_result.stdout_lines}}"
+#  notify: "restart openhab"
+  
+# UDEV
+- name: check udev folder
+  shell: "ls -1 {{projects_path}}openhab_config/templates/udev/rules.d/"
+  register: udev_result
+  changed_when: no
+
+# have to fetch files before, because ansible template module works only with local files
+- name: prepare udev rules
+  fetch:
+    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
+    dest: "/tmp/ansible/openhab3/udev/{{item}}"
+    flat: yes
+  register: udev_state
+  with_items: "{{udev_result.stdout_lines}}"
+  changed_when: no
+
+- name: copy udev rules
+  template:
+    src: "/tmp/ansible/openhab3/udev/{{item}}"
+    dest: "/etc/udev/rules.d/{{item}}"
+    owner: root
+    group: root
+    mode: 0644
+  register: udev_rules
+  with_items: "{{udev_result.stdout_lines}}"
+#  notify: "restart openhab"
+
+- name: reload udev rules
+  shell: "udevadm control --reload-rules && udevadm trigger"
+  when: udev_rules.changed
+
+# CLEANUP  
+- name: clean configs
+  file:
+    path: "/tmp/ansible/openhab3/"
+    state: absent
+  changed_when: no
+  
+# JYTHON
+- name: check jython jar
+  stat:
+    path: "{{global_etc}}openhab3/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
+  register: jython_jar_exists
+  changed_when: "not jython_jar_exists.stat.exists"
+
+- name: install jython jar
+  get_url:
+    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
+    dest: "{{global_etc}}openhab3/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
+    mode: 0640
+  when: "not jython_jar_exists.stat.exists"
+
+# JYTHON HELPER
+- name: "clone jython helper git"
+  git:
+    #https://community.openhab.org/t/ivan-s-helper-libraries-oh3-python-javascript/116458
+    #repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
+    repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
+    dest: '{{global_build}}openhab-jython'
+    version: '{{jython_script_version}}'
+
+- name: copy jython core classes
+  copy:
+    src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
+    dest: "{{global_etc}}openhab3/python/"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0750
+#  notify: "restart openhab"
+
+- name: copy jython configuration
+  template:
+    src: "templates/python/configuration.py"
+    dest: "{{global_etc}}openhab3/python/configuration.py"
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+#  notify: "restart openhab"
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+- name: collect devices
+  shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
+  register: device_result
+  changed_when: no
+  failed_when: no
+  
+#- name:
+#  debug:
+#    msg: "{{device_result}}"
+
+- name: prepare device javaopts
+  set_fact:
+    openhab_device_java_opts: "-Dgnu.io.rxtx.SerialPorts=/dev/{{device_result.stdout_lines | join(':/dev/')}}"
+  when: "device_result.rc == 0"
+  
+- name: check if devices exists
+  shell: "ls -al /dev/{{item}}"
+  register: symlink_result
+  changed_when: no
+  failed_when: no
+  with_items: "{{device_result.stdout_lines}}"
+  when: "device_result.rc == 0"
+  
+- name: prepare device mounts
+  set_fact:
+    openhab_device_mounts: "{{openhab_device_mounts | default([]) + ['/dev/' + item.1 + ':/dev/' + item.1 + ':rwm']}}"
+  with_indexed_items: "{{device_result.stdout_lines}}"
+  when: "device_result.rc == 0 and symlink_result.results[item.0].rc == 0"
+  
+- name: build docker image
+  vars:
+    name: "openhab3"
+    image_name: "custom_openhab3"
+    image_version: "{{openhab_version}}"
+    files:
+      - roles/openhab3/templates/container/Dockerfile
+      - roles/openhab3/templates/container/init.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+#- name: create docker network
+#  docker_network:
+#    name: openhab
+#    ipam_config:
+#      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
+#        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
+#    connected:
+#      - mysql
+#      - influxdb
+#      - mosquitto
+#    appends: yes
+#  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
+
+- name: create docker container
+  docker_container:
+    name: openhab
+    image: "custom_openhab3:{{openhab_version}}"
+    state: present
+#    capabilities:
+#      - NET_ADMIN
+#      - NET_RAW
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      USER_ID: "{{openhab_uid}}"
+      GROUP_ID: "{{openhab_gid}}"
+      #CRYPTO_POLICY: "unlimited"
+      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
+      OPENHAB_HTTP_ADDRESS: "127.0.0.1"
+    network_mode: host
+    log_driver: journald
+    log_options:
+      tag: openhab
+    volumes:
+      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
+      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
+      - '{{global_etc}}openhab3/addons:/openhab/addons:z'
+      - '{{global_etc}}openhab3/conf:/openhab/conf:z'
+      - '{{global_etc}}openhab3/python:/openhab/python:z'
+      - '{{global_etc}}openhab3/runtime/lib/python:/openhab/runtime/lib/python:z'
+      - "{{global_etc}}openhab3/userdata/config:/openhab/userdata/config/org/openhab/:z"
+#      - '{{global_lib}}openhab3/jsondb:/openhab/userdata/jsondb:z'
+      - '{{global_lib}}openhab3/persistance:/openhab/userdata/persistence:z'
+      - '{{global_log}}openhab3:/openhab/userdata/logs:z'
+    devices: "{{openhab_device_mounts | default([])}}"
+#    networks:
+#      - name: "openhab"
+#        ipv4_address: "{{docker_openhab_ip}}"
+#    networks_cli_compatible: yes
+#    sysctls:
+#      "net.ipv4.conf.all.arp_accept": "1"
+#      "net.ipv4.conf.all.proxy_arp": "1"
+    exposed_ports:
+      - "8080"  
+      - "8443"  
+      - "5007"  
+      - "8101"  
+#  notify: "restart openhab"
+
