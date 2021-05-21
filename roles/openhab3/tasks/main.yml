@@ -319,14 +319,14 @@
 - name: "clone jython helper git"
   git:
     #https://community.openhab.org/t/ivan-s-helper-libraries-oh3-python-javascript/116458
-    #repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
-    repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
-    dest: '{{global_build}}openhab-jython'
+    repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
+    #repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
+    dest: '{{global_build}}openhab3-jython'
     version: '{{jython_script_version}}'
 
 - name: copy jython core classes
   copy:
-    src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
+    src: "{{global_build}}openhab3-jython/Core/automation/lib/python/core"
     dest: "{{global_etc}}openhab3/python/"
     remote_src: yes
     owner: "{{openhab_user}}"
@@ -429,7 +429,7 @@
 
 - name: create docker container
   docker_container:
-    name: openhab
+    name: openhab3
     image: "custom_openhab3:{{openhab_version}}"
     state: present
 #    capabilities:

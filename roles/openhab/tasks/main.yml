@@ -211,6 +211,12 @@
     mode: 0640
   with_items: "{{addons_result.stdout_lines}}"
   
+- name: copy bundle kar
+  get_url:
+    url: "https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab-addons/{{openhab_version}}/openhab-addons-{{openhab_version}}.kar"
+    dest: "{{global_etc}}openhab/addons/openhab-addons-{{openhab_version}}.kar"
+    mode: 0640
+  
 # SERVICES
 - name: check service folder
   shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
@@ -302,18 +308,11 @@
   changed_when: no
   
 # JYTHON
-- name: check jython jar
-  stat:
-    path: "{{global_etc}}openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
-  register: jython_jar_exists
-  changed_when: "not jython_jar_exists.stat.exists"
-
 - name: install jython jar
   get_url:
     url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
     dest: "{{global_etc}}openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
     mode: 0640
-  when: "not jython_jar_exists.stat.exists"
 
 # JYTHON HELPER
 - name: "clone jython helper git"
