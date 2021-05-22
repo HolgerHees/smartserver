@@ -145,7 +145,7 @@ mx.State = (function( ret ) {
     {
         if( debug ) console.log("mx.Status.handleRequestError: status => " + status + ", url => " + url);
         
-        if( status == 404 || status == 500 )
+        if( status == 404 || status >= 500 )
         {
             if( debug ) console.error("Skipped state check for 404 and 500");
         }
