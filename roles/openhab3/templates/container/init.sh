@@ -1,10 +1,13 @@
 #!/bin/sh
 
-if ! grep -q "log4j2.logger.jsr223Script" /openhab/userdata/etc/org.ops4j.pax.logging.cfg; then
-    echo "log4j2.logger.jsr223Script.name = jsr223.jython" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
-    echo "log4j2.logger.jsr223Script.level = DEBUG" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
-    echo "log4j2.logger.jsr223Default.name = org.openhab.core.automation" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
-    echo "log4j2.logger.jsr223Default.level = DEBUG" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
-    echo "log4j2.logger.jsr223Trigger.name = org.openhab.core.automation.internal.RuleEngineImpl" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
-    echo "log4j2.logger.jsr223Trigger.level = ERROR" >> /openhab/userdata/etc/org.ops4j.pax.logging.cfg
+if ! grep -q "name=\"org.openhab.core.automation.internal.RuleEngineImpl\"" /openhab/userdata/etc/log4j2.xml; then
+    sed -i 's/<\/Loggers>/\n\t\t<Logger level="ERROR" name="org.openhab.core.automation.internal.RuleEngineImpl"\/>\n\t<\/Loggers>/g' /openhab/userdata/etc/log4j2.xml
+fi 
+    
+if ! grep -q "name=\"org.openhab.core.automation\"" /openhab/userdata/etc/log4j2.xml; then
+    sed -i 's/<\/Loggers>/\n\t\t<Logger level="DEBUG" name="org.openhab.core.automation"\/>\n\t<\/Loggers>/g' /openhab/userdata/etc/log4j2.xml
+fi 
+
+if ! grep -q "name=\"jsr223.jython\"" /openhab/userdata/etc/log4j2.xml; then
+    sed -i 's/<\/Loggers>/\n\t\t<Logger level="DEBUG" name="jsr223.jython"\/>\n\t<\/Loggers>/g' /openhab/userdata/etc/log4j2.xml
 fi 
