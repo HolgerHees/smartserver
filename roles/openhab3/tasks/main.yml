@@ -14,10 +14,7 @@
     openhab_group: "{{system_groups['openhab'].name}}"
 #    openhab_user: "root"
 #    openhab_group: "root"
-    # stable version from 05.03.2020
-    #jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
-    # stable version from 15.10.2020
-    jython_script_version: "5e6bee796f5ffcc60d277619965e621a9ba652b2"
+    jython_script_version: "db88d897c962ea9328d0f685bc01f02af887e6b4"
   tags: [ 'update_notifier_configs' ]
 
 #- name: get gid from "dialout"
@@ -213,14 +210,14 @@
   
 # SERVICES
 - name: check service folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates3/services/"
   register: services_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare service configs
   fetch:
-    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
+    src: "{{projects_path}}openhab_config/templates3/services/{{item}}"
     dest: "/tmp/ansible/openhab3/services/{{item}}"
     flat: yes
   register: services_state
@@ -230,7 +227,7 @@
 - name: copy service configs
   template:
     src: "/tmp/ansible/openhab3/services/{{item}}"
-    dest: "{{ global_etc }}openhab/conf/services/{{item}}"
+    dest: "{{ global_etc }}openhab3/conf/services/{{item}}"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
@@ -239,14 +236,14 @@
 
 # THINGS
 - name: check things folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates/things/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates3/things/"
   register: things_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare things config
   fetch:
-    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
+    src: "{{projects_path}}openhab_config/templates3/things/{{item}}"
     dest: "/tmp/ansible/openhab3/things/{{item}}"
     flat: yes
   register: things_state
@@ -256,7 +253,7 @@
 - name: copy things configs
   template:
     src: "/tmp/ansible/openhab3/things/{{item}}"
-    dest: "{{ global_etc }}openhab/conf/things/{{item}}"
+    dest: "{{ global_etc }}openhab3/conf/things/{{item}}"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
@@ -265,14 +262,14 @@
   
 # UDEV
 - name: check udev folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates/udev/rules.d/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates3/udev/rules.d/"
   register: udev_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare udev rules
   fetch:
-    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
+    src: "{{projects_path}}openhab_config/templates3/udev/rules.d/{{item}}"
     dest: "/tmp/ansible/openhab3/udev/{{item}}"
     flat: yes
   register: udev_state
@@ -301,20 +298,6 @@
     state: absent
   changed_when: no
   
-# JYTHON
-- name: check jython jar
-  stat:
-    path: "{{global_etc}}openhab3/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
-  register: jython_jar_exists
-  changed_when: "not jython_jar_exists.stat.exists"
-
-- name: install jython jar
-  get_url:
-    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
-    dest: "{{global_etc}}openhab3/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
-    mode: 0640
-  when: "not jython_jar_exists.stat.exists"
-
 # JYTHON HELPER
 - name: "clone jython helper git"
   git:
@@ -446,7 +429,7 @@
     network_mode: host
     log_driver: journald
     log_options:
-      tag: openhab
+      tag: openhab3
     volumes:
       - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
       - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
