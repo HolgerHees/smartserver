@@ -38,6 +38,7 @@
     - "{{global_etc}}openhab3/runtime/lib/python"
     - "{{global_etc}}openhab3/userdata"
     - "{{global_etc}}openhab3/userdata/config"
+    - "{{global_etc}}openhab3/userdata/jsondb"
     - "{{global_log}}openhab3"
     - "{{global_lib}}openhab3"
     - "{{global_lib}}openhab3/persistance"
@@ -438,6 +439,7 @@
       - '{{global_etc}}openhab3/python:/openhab/python:z'
       - '{{global_etc}}openhab3/runtime/lib/python:/openhab/runtime/lib/python:z'
       - "{{global_etc}}openhab3/userdata/config:/openhab/userdata/config/org/openhab/:z"
+      - "{{global_etc}}openhab3/userdata/jsondb:/openhab/userdata/jsondb/:z"
 #      - '{{global_lib}}openhab3/jsondb:/openhab/userdata/jsondb:z'
       - '{{global_lib}}openhab3/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab3:/openhab/userdata/logs:z'
