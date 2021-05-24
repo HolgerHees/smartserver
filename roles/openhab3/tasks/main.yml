@@ -192,20 +192,20 @@
   when: "habpanel_result.rc == 0"
 
 # addons folder
-#- name: check addons folder
-#  shell: "ls -1 {{projects_path}}openhab_config/addons/"
-#  register: addons_result
-#  changed_when: no
+- name: check addons folder
+  shell: "ls -1 {{projects_path}}openhab_config/addons3/"
+  register: addons_result
+  changed_when: no
 
-#- name: copy addons folder
-#  copy:
-#    src: "{{projects_path}}openhab_config/addons/{{item}}"
-#    dest: "{{global_etc}}openhab3/addons/{{item}}"
-#    remote_src: yes
-#    owner: "{{openhab_user}}"
-#    group: "{{openhab_group}}"
-#    mode: 0640
-#  with_items: "{{addons_result.stdout_lines}}"
+- name: copy addons folder
+  copy:
+    src: "{{projects_path}}openhab_config/addons3/{{item}}"
+    dest: "{{global_etc}}openhab3/addons/{{item}}"
+    remote_src: yes
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
+  with_items: "{{addons_result.stdout_lines}}"
   
 # SERVICES
 - name: check service folder
