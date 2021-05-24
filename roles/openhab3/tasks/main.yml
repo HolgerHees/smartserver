@@ -16,11 +16,6 @@
     jython_script_version: "db88d897c962ea9328d0f685bc01f02af887e6b4"
   tags: [ 'update_notifier_configs' ]
 
-#- name: get gid from "dialout"
-#  shell: "getent group dialout | cut -d: -f3"
-#  register: group_dialout_id
-#  changed_when: no
-
 - name: prepare needed config folder
   file:
     path:  "{{item}}"
@@ -190,6 +185,16 @@
     group: "{{openhab_group}}"
     mode: 0640
   when: "habpanel_result.rc == 0"
+
+# user config
+- name: copy user config
+  copy:
+    src: "templates/users.json"
+    dest: "{{global_etc}}openhab3/userdata/jsondb/users.json"
+    force: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+    mode: 0640
 
 # addons folder
 - name: check addons folder
@@ -529,10 +534,10 @@
   notify: "restart apache2"
   tags: ['apache_conf']
 
-#- name: copy fluentd config
-#  vars:
-#    config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
-#  import_tasks: roles/fluentd/tasks/add_config.yml
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/openhab3.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
 
 #- name: create systemd service
 #  vars:
