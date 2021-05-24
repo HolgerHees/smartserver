@@ -14,6 +14,8 @@ ProtocolsHonorOrder Off
   ProxyPassReverse http://openhab:8080/
   ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
+  
+  RequestHeader set Authorization "Basic YWRtaW46YWRtaW4=
 </Location>
 
 <Location /basicui/manifest.json>

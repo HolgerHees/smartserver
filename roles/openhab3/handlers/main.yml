@@ -1,0 +1,8 @@
+- name: restart openhab
+  systemd:
+    name: openhab3
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart openhab3"

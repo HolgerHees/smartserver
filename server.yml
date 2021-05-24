@@ -126,7 +126,8 @@
 
     - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_volumes|length>0" } # dlna media server                                         [docker,user:wwwrun|apache]
      
-    - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
+    - { import_role: { name: openhab3 }, tags: [ 'openhab3' ], when: "openhab3_enabled is defined" }   # openhab iot server                                                [docker,user:openhab|openhab]
+    - { import_role: { name: openhab }, tags: [ 'openhab' ], when: "openhab3_enabled is not defined" } # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
     - { import_role: { name: device_ping }, tags: [ 'device_ping' ] }                            # ping mobile device service
 
