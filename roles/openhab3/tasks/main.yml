@@ -170,7 +170,7 @@
     
 # habpanel if exists
 - name: check habpanel config
-  shell: "ls {{projects_path}}openhab_config/habpanel.config"
+  shell: "ls {{projects_path}}openhab_config/habpanel_panelconfig.json"
   register: habpanel_result
   changed_when: no
   failed_when: no
@@ -178,23 +178,13 @@
    
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
-    src: "{{projects_path}}openhab_config/habpanel.config"
-    dest: "{{global_etc}}openhab3/userdata/config/habpanel.config"
+    src: "{{projects_path}}openhab_config/habpanel_panelconfig.json"
+    dest: "{{global_etc}}openhab3/userdata/jsondb/uicomponents_habpanel_panelconfig.json"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
-    mode: 0640
+    mode: 0644
   when: "habpanel_result.rc == 0"
-
-# user config
-- name: copy user config
-  copy:
-    src: "templates/users.json"
-    dest: "{{global_etc}}openhab3/userdata/jsondb/users.json"
-    force: no
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    mode: 0640
 
 # addons folder
 - name: check addons folder
@@ -413,8 +403,13 @@
       - "8080"  
       - "8443"  
       - "5007"  
-      - "8101"  
+      - "8101" 
+  register: openhab_container_result 
 #  notify: "restart openhab3"
+
+- name: clean ssh key
+  command: "ssh-keygen -R [openhab]:8101 -f /root/.ssh/known_hosts"
+  when: openhab_container_result.changed
 
 - name: add container name
   vars:
@@ -501,22 +496,22 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
-#- name: register default webui
-#  vars:
-#    name: "openhab"
-#    js_file: "templates/webui/openhab.js"
-#    i18n_files: [ { language: "de", file: "templates/webui/openhab.de.json" } ]
-#    listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
-#    icons: [ 'templates/webui/icons/openhab_logo.svg' ]
-#  import_tasks: roles/apache_webui/tasks/add_webui.yml
+- name: register default webui
+  vars:
+    name: "openhab"
+    js_file: "templates/webui/openhab.js"
+    i18n_files: [ { language: "de", file: "templates/webui/openhab.de.json" } ]
+    listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
+    icons: [ 'templates/webui/icons/openhab_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
 
-#- name: register habpanel webui
-#  vars:
-#    name: "openhab_habpanel"
-#    js_file: "templates/webui/openhab_habpanel.js"
-#    i18n_files: [ { language: "de", file: "templates/webui/openhab_habpanel.de.json" } ]
-#  import_tasks: roles/apache_webui/tasks/add_webui.yml
-#  when: "habpanel_result.rc == 0"
+- name: register habpanel webui
+  vars:
+    name: "openhab_habpanel"
+    js_file: "templates/webui/openhab_habpanel.js"
+    i18n_files: [ { language: "de", file: "templates/webui/openhab_habpanel.de.json" } ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  when: "habpanel_result.rc == 0"
 
 - name: copy apache vhost
   vars:

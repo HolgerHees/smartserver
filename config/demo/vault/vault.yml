@@ -82,6 +82,8 @@ vault_cloudsync_password: "default123"
 # used in custom external openhab config repository
 vault_fritzbox_username: "openhab"
 vault_fritzbox_password: "default123"
+vault_fritzbox_wan_uuid: "12345"
+vault_fritzbox_lan_uuid: "12345"
 vault_telegram_bots: {
     bot_testuser1: { # for user1
         chat_id: "<chat_id>",
