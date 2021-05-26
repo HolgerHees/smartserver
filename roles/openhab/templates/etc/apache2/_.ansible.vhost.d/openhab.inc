@@ -15,7 +15,8 @@ ProtocolsHonorOrder Off
   ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
   
-  RequestHeader set Authorization "Basic YWRtaW46YWRtaW4="
+  Header add Set-Cookie "X-OPENHAB-AUTH-HEADER=true;path=/;Secure"
+  RequestHeader unset Authorization
 </Location>
 
 <Location /basicui/manifest.json>

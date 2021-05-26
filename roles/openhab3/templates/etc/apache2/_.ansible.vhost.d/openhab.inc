@@ -15,16 +15,8 @@ ProtocolsHonorOrder Off
   ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
   
-  #RequestHeader set Authorization "Basic YWRtaW46YWRtaW4="
-  
   Header add Set-Cookie "X-OPENHAB-AUTH-HEADER=true;path=/;Secure"
   RequestHeader unset Authorization
-  
-  #RequestHeader set Authorization "Basic aGhlZXM6aGhlZXM="
-  
-  #RequestHeader unset Authorization
-  #RequestHeader set X-Forwarded-User %{REMOTE_USERNAME}e
-  #RequestHeader set X-Forwarded-User %{ENV:REMOTE_USERNAME}e
 </Location>
 
 <Location /basicui/manifest.json>
