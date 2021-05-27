@@ -534,42 +534,42 @@
     config_file: "templates/etc/fluent/_.ansible.d/openhab3.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-#- name: create systemd service
-#  vars:
-#    container_name: "openhab3"
-#    container_after: [ "mysql", "influxdb", "mosquitto" ]
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "openhab3"
+    container_after: [ "mysql", "influxdb", "mosquitto" ]
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
-#- name: register service watcher
-#  vars:
-#    name: "openhab3"
-#  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+- name: register service watcher
+  vars:
+    name: "openhab3"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
-#- name: register openhab update notifier
-#  vars:
-#    name: "openhab3"
-#    type: "docker"
-#    url: "https://github.com/openhab/openhab-distro/releases"
-#    config: {
-#      repository: "openhab/openhab",
-#      pattern: "^([0-9\\.]+)-debian$"
-#    }
-#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+- name: register openhab update notifier
+  vars:
+    name: "openhab3"
+    type: "docker"
+    url: "https://github.com/openhab/openhab-distro/releases"
+    config: {
+      repository: "openhab/openhab",
+      pattern: "^([0-9\\.]+)-debian$"
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-#- name: register jython script update notifier
-#  vars:
-#    name: "jsr223"
-#    type: "github"
-#    url: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
-#    #url: "https://github.com/openhab-scripters/openhab-helper-libraries"
-#    config: { 
-#      project: "openhab-scripters/openhab-helper-libraries", 
-#      version: "{{jython_script_version}}" 
-#    }
-#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+- name: register jython script update notifier
+  vars:
+    name: "jsr223"
+    type: "github"
+    url: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
+    #url: "https://github.com/openhab-scripters/openhab-helper-libraries"
+    config: { 
+      project: "openhab-scripters/openhab-helper-libraries", 
+      version: "{{jython_script_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-#- name: trigger openhab handler
-#  vars:
-#    notify: "restart openhab3"
-#    service: "openhab3.service"
-#  import_tasks: roles/_shared/tasks/service_check.yml
+- name: trigger openhab handler
+  vars:
+    notify: "restart openhab3"
+    service: "openhab3.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
