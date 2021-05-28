@@ -188,13 +188,13 @@
 
 # addons folder
 - name: check addons folder
-  shell: "ls -1 {{projects_path}}openhab_config/addons3/"
+  shell: "ls -1 {{projects_path}}openhab_config/addons/"
   register: addons_result
   changed_when: no
 
 - name: copy addons folder
   copy:
-    src: "{{projects_path}}openhab_config/addons3/{{item}}"
+    src: "{{projects_path}}openhab_config/addons/{{item}}"
     dest: "{{global_etc}}openhab3/addons/{{item}}"
     remote_src: yes
     owner: "{{openhab_user}}"
@@ -204,14 +204,14 @@
   
 # SERVICES
 - name: check service folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates3/services/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
   register: services_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare service configs
   fetch:
-    src: "{{projects_path}}openhab_config/templates3/services/{{item}}"
+    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
     dest: "/tmp/ansible/openhab3/services/{{item}}"
     flat: yes
   register: services_state
@@ -230,14 +230,14 @@
 
 # THINGS
 - name: check things folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates3/things/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates/things/"
   register: things_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare things config
   fetch:
-    src: "{{projects_path}}openhab_config/templates3/things/{{item}}"
+    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
     dest: "/tmp/ansible/openhab3/things/{{item}}"
     flat: yes
   register: things_state
@@ -256,14 +256,14 @@
   
 # UDEV
 - name: check udev folder
-  shell: "ls -1 {{projects_path}}openhab_config/templates3/udev/rules.d/"
+  shell: "ls -1 {{projects_path}}openhab_config/templates/udev/rules.d/"
   register: udev_result
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare udev rules
   fetch:
-    src: "{{projects_path}}openhab_config/templates3/udev/rules.d/{{item}}"
+    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
     dest: "/tmp/ansible/openhab3/udev/{{item}}"
     flat: yes
   register: udev_state
