@@ -407,9 +407,16 @@
   register: openhab_container_result 
 #  notify: "restart openhab3"
 
+- name: check ssh key
+  shell: "ls /root/.ssh/known_hosts"
+  register: ssh_key_result
+  changed_when: no
+  failed_when: no
+  when: openhab_container_result.changed
+   
 - name: clean ssh key
   command: "ssh-keygen -R [openhab]:8101 -f /root/.ssh/known_hosts"
-  when: openhab_container_result.changed
+  when: "openhab_container_result.changed and ssh_key_result.rc == 0"
 
 - name: add container name
   vars:
