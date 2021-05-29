@@ -100,6 +100,7 @@ vault_homecontrol_client_secret: "<vault_homecontrol_client_secret>"
 vault_homecontrol_washer: "<vault_homecontrol_washer>"
 vault_homecontrol_dishwasher: "<vault_homecontrol_dishwasher>"
 vault_homecontrol_coffeemaker: "<vault_homecontrol_coffeemaker>"
+vault_garbage_calendar_url: "<google_ical_url>"
 
 # used in custom external openhab config repository and custom role 'apache_proxy'
 vault_automower_device_username: "automower"
