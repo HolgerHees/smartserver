@@ -25,16 +25,15 @@
     mode: 0750
   with_items:
     - "{{global_etc}}openhab3"
+    - "{{global_etc}}openhab3/addons"
     - "{{global_etc}}openhab3/conf"
     - "{{global_etc}}openhab3/conf/html"
     - "{{global_etc}}openhab3/conf/icons"
     - "{{global_etc}}openhab3/python"
-    - "{{global_etc}}openhab3/userdata"
-    - "{{global_etc}}openhab3/userdata/config"
-    - "{{global_etc}}openhab3/userdata/jsondb"
-    - "{{global_log}}openhab3"
     - "{{global_lib}}openhab3"
+    - "{{global_lib}}openhab3/jsondb"
     - "{{global_lib}}openhab3/persistance"
+    - "{{global_log}}openhab3"
 #    - "{{global_lib}}openhab3/jsondb" # => for homeconnect oauth => 
 # userdata/config/SymmetricKeyCipher.config
 
@@ -92,7 +91,7 @@
     follow: no
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 # conf folder
 - name: check conf folder
@@ -109,7 +108,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
   with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 # custom conf sub folder (html & icons)
 - name: check custom html & icons conf folder
@@ -143,7 +142,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
   with_items: "{{config_sub_folders}}"
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 # create missing folder
 - name: prepare missing config folder
@@ -155,8 +154,8 @@
     mode: 0750
   with_items:
     - /conf/automation
-    - /conf/html
-    - /conf/icons
+#    - /conf/html
+#    - /conf/icons
     - /conf/items
     - /conf/persistence
     - /conf/rules
@@ -165,8 +164,7 @@
     - /conf/sitemaps
     - /conf/transform
     - /conf/things
-    - /addons
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
     
 # habpanel if exists
 - name: check habpanel config
@@ -179,7 +177,7 @@
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
     src: "{{projects_path}}openhab_config/habpanel_panelconfig.json"
-    dest: "{{global_etc}}openhab3/userdata/jsondb/uicomponents_habpanel_panelconfig.json"
+    dest: "{{global_lib}}openhab3/jsondb/uicomponents_habpanel_panelconfig.json"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
@@ -226,7 +224,7 @@
     group: "{{openhab_group}}"
     mode: 0640
   with_items: "{{services_result.stdout_lines}}"
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 # THINGS
 - name: check things folder
@@ -252,7 +250,7 @@
     group: "{{openhab_group}}"
     mode: 0640
   with_items: "{{things_result.stdout_lines}}"
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
   
 # UDEV
 - name: check udev folder
@@ -279,7 +277,7 @@
     mode: 0644
   register: udev_rules
   with_items: "{{udev_result.stdout_lines}}"
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 - name: reload udev rules
   shell: "udevadm control --reload-rules && udevadm trigger"
@@ -309,7 +307,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0750
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 - name: copy jython configuration
   template:
@@ -318,7 +316,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     mode: 0640
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
   
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
@@ -374,6 +372,9 @@
       GROUP_ID: "{{openhab_gid}}"
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
+      EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
+      #EXTRA_SHELL_OPTS: "-x"
+      #EXTRA_SHELL_OPTS: "-v"
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
     network_mode: host
     log_driver: journald
@@ -385,10 +386,8 @@
       - '{{global_etc}}openhab3/addons:/openhab/addons:z'
       - '{{global_etc}}openhab3/conf:/openhab/conf:z'
       - '{{global_etc}}openhab3/python:/openhab/python:z'
-      - '{{global_etc}}openhab3/runtime/lib/python:/openhab/runtime/lib/python:z'
-      - "{{global_etc}}openhab3/userdata/config:/openhab/userdata/config/org/openhab/:z"
-      - "{{global_etc}}openhab3/userdata/jsondb:/openhab/userdata/jsondb/:z"
-#      - '{{global_lib}}openhab3/jsondb:/openhab/userdata/jsondb:z'
+#      - "{{global_etc}}openhab3/userdata/jsondb:/openhab/userdata/jsondb/:z"
+      - '{{global_lib}}openhab3/jsondb:/openhab/userdata/jsondb:z'
       - '{{global_lib}}openhab3/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab3:/openhab/userdata/logs:z'
     devices: "{{openhab_device_mounts | default([])}}"
@@ -405,7 +404,7 @@
       - "5007"  
       - "8101" 
   register: openhab_container_result 
-#  notify: "restart openhab3"
+  notify: "restart openhab3"
 
 - name: check ssh key
   shell: "ls /root/.ssh/known_hosts"
