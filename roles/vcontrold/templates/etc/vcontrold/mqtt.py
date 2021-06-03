@@ -1,7 +1,7 @@
 import subprocess
 import signal
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import paho.mqtt.client as mqtt
 import telnetlib
@@ -14,7 +14,7 @@ class Handler(object):
         self.process = None
         self.telnet_client = None
         self.mqtt_client = None
-        self.lastPublishTime = datetime.now()
+        self.lastPublishTime = datetime.now() - timedelta(minutes=10)
 
         self.cmds = ['getTempAussen', 'getTempAussenGedaempft', 'getTempVorlaufSoll','getTempVorlauf','getTempKesselSoll','getTempKessel','getHeizkreisPumpeDrehzahl','getBrennerStarts','getBrennerStunden','getTempWasserSpeicher','getTempSolarKollektor','getSolarStunden','getTempSolarSpeicher','getSolarLeistung','getSammelstoerung','getLeistungIst','getBetriebsart','getTempRaumSoll','getSolarPumpeStatus','getNachladeunterdrueckungStatus']
 
