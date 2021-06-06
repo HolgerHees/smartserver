@@ -77,6 +77,15 @@
     state: absent
   when: is_suse|bool
 
+- name: add zypper repository => is_suse and ansible_distribution_version == '15.3'
+  zypper_repository:
+    name: Mail (msmtp)
+    repo: "https://download.opensuse.org/repositories/server:/mail/openSUSE_Leap_{{ansible_distribution_version}}/"
+    auto_import_keys: yes
+    priority: "100"
+    state: present
+  when: "is_suse|bool and ansible_distribution_version == '15.3'"
+
 - name: install required packages => is_suse
   zypper:
     name: msmtp
