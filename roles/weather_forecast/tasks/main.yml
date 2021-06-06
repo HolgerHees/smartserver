@@ -42,22 +42,14 @@
   changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
   
 - name: prepare table config
-  fetch:
+  copy:
     src: "roles/weather_forecast/templates/weather_forecast.sql"
-    dest: "/tmp/ansible/weather_forecast/weather_forecast.sql"
-    flat: yes
+    dest: "{{ global_build }}weather_forecast/weather_forecast.sql"
   changed_when: no
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
 - name: create missing table 'weather_forecast' => does not exists in database
-  shell: "cat /tmp/ansible/weather_forecast/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
-  when: "'weather_forecast' not in mysql_data_exists.stdout"
-  
-- name: clean table config
-  file:
-    path: "/tmp/ansible/weather_forecast/"
-    state: absent
-  changed_when: no
+  shell: "cat {{ global_build }}weather_forecast/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
   when: "'weather_forecast' not in mysql_data_exists.stdout"
   
 - name: copy service
