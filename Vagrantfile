@@ -72,7 +72,7 @@ end
 
 $env_ip = ""
 $with_password = setup_config != 'demo'
-$is_reboot_possible = false
+#$is_reboot_possible = false
 $image_name = "smartserver_" + setup_config + "_" + setup_os
 
 Vagrant.configure(2) do |config|
@@ -111,36 +111,11 @@ Vagrant.configure(2) do |config|
     #  vw.vmx["numvcpus"] = "2"
     #end
 
-    
-    if setup_os == 'fedora' then
-        $is_reboot_possible = true
-        setup.vm.provision "ansible_local" do |ansible|
-            ansible.limit = "all"
-            ansible.playbook = "utils/fedora.yml"
-            ansible.inventory_path = "config/#{setup_config}/server.ini"
-            ansible.compatibility_mode = "2.0"
-            ansible.provisioning_path = "/vagrant/"
-            
-            if setup_image.end_with?('cloud-base') then
-                ansible.become = true
-                ansible.become_user = "root"
-            end
-            #ansible.raw_arguments = "--ask-vault-pass"
-            #ansible.ask_vault_pass = true
-        end
-    end  
-
     # Ask for vault password
     setup.vm.provision "shell", env: {"VAULT_PASS" => Environment.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
-
-    if $is_reboot_possible and (setup_os != 'fedora' or !setup_image.end_with?('cloud-base')) then
-        setup.vm.provision "shell", inline: <<-SHELL
-        sudo mount -t vboxsf -o uid=$UID,gid=$(id -g) vagrant /vagrant
-        SHELL
-    end
-
+    
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo zypper --non-interactive install python-xml python3-netaddr
@@ -149,10 +124,37 @@ Vagrant.configure(2) do |config|
         SHELL
     else
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo yum --assumeyes install ansible python python3-netaddr
+        sudo yum --assumeyes install python python3-netaddr
+        sudo pip install ansible==2.10.7
         SHELL
-    end
-    
+
+        #$is_reboot_possible = true
+        setup.vm.provision "ansible_local" do |ansible|
+            ansible.limit = "all"
+            ansible.playbook = "utils/fedora.yml"
+            ansible.inventory_path = "config/#{setup_config}/server.ini"
+            ansible.compatibility_mode = "2.0"
+            ansible.provisioning_path = "/vagrant/"
+            ansible.install = false
+            if setup_image.end_with?('cloud-base') then
+                ansible.become = true
+                ansible.become_user = "root"
+            end
+            #ansible.raw_arguments = "--ask-vault-pass"
+            #ansible.ask_vault_pass = true
+        end
+
+        # Wait for reboot
+        setup.vm.provision "shell", env: {"RESULT" => Reachability.new}, inline: <<-SHELL
+        SHELL
+    end  
+
+    #if $is_reboot_possible and (setup_os != 'fedora' or !setup_image.end_with?('cloud-base')) then
+    #    setup.vm.provision "shell", inline: <<-SHELL
+    #    sudo mount -t vboxsf -o uid=$UID,gid=$(id -g) vagrant /vagrant
+    #    SHELL
+    #end
+
     setup.vm.provision "ansible_local" do |ansible|
       ansible.limit = "all"
       ansible.playbook = "server.yml"
@@ -178,30 +180,33 @@ Vagrant.configure(2) do |config|
   end
 end
 
-# Password Input Function
-class Environment
+# Reachability check
+class Reachability
     require 'socket'
     require 'timeout'
     require 'net/ssh'
     
-    def to_s        
+    def to_s       
+        sleep(0.5) # give server time to initiate reboot
 
-        if $is_reboot_possible then
-            sleep(0.5) # give server time to initiate reboot
-
-            print "check server reachability "
-            
-            begin
-                #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
-                #session.close
-                Socket.tcp($env_ip, 22, connect_timeout: 1) {}
-                print " ok\n"
-            rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-                print "." # + e.message
-                retry
-            end
+        print "check server reachability "
+        
+        begin
+            #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
+            #session.close
+            Socket.tcp($env_ip, 22, connect_timeout: 1) {}
+            print " ok\n"
+        rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+            print "." # + e.message
+            retry
         end
+        ""
+    end
+end
 
+# Password Input Function
+class Environment
+    def to_s        
         pass = ""
         if $with_password then
             loop do
