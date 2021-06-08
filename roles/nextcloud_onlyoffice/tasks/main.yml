@@ -65,13 +65,15 @@
     log_driver: journald
     log_options:
       tag: onlyoffice
-    volumes:
-      - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
-      - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "onlyoffice"
         ipv4_address: "{{docker_onlyoffice_ip}}"
     networks_cli_compatible: yes
+    volumes:
+      - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
+      - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
     exposed_ports:
      - "80"  
      - "443"  

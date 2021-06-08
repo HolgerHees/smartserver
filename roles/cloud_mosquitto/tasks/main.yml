@@ -36,6 +36,8 @@
     log_driver: journald
     log_options:
       tag: cloud_mosquitto
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "cloud_vpn"
         ipv4_address: "{{vpn_cloud_services.local.mosquitto}}"

@@ -22,13 +22,14 @@
     name: weather_forecast
     image: "custom_weather_forecast:{{alpine_version}}"
     state: present
-    network_mode: "host"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: weather_forecast
+    container_default_behavior: "compatibility"
+    network_mode: "host"
     volumes:
       - '{{global_etc}}weather_forecast/:/etc/weather_forecast:ro,z'
   notify: "restart weather_forecast"

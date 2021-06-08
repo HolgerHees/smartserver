@@ -61,6 +61,8 @@
     log_driver: journald
     log_options:
       tag: minidlna
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "macvlan"
         ipv4_address: "{{dlna_ip}}"

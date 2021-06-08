@@ -36,6 +36,8 @@
     log_driver: journald
     log_options:
       tag: mosquitto
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "isolated"
         ipv4_address: "{{docker_mosquitto_ip}}"

@@ -42,6 +42,8 @@
     log_driver: journald
     log_options:
       tag: elastalert
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: elastalert_databases
     networks_cli_compatible: yes

@@ -41,6 +41,8 @@
     log_driver: journald
     log_options:
       tag: named
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "isolated"
         ipv4_address: "{{docker_dns_ip}}"

@@ -96,8 +96,6 @@
     name: "wireguard_cloud"
     image: "custom_wireguard_cloud:{{alpine_version}}"
     state: present
-#    network_mode: "none"
-#    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
@@ -111,6 +109,8 @@
     privileged: yes
     #domainname : "cloud"
     #hostname: "nfsd"
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "cloud_vpn"
         ipv4_address: "{{vpn_cloud_services.local.gateway}}"

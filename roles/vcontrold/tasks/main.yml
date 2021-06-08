@@ -47,6 +47,8 @@
     log_driver: journald
     log_options:
       tag: vcontrold
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "vcontrold"
     networks_cli_compatible: yes

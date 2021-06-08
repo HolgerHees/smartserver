@@ -98,6 +98,8 @@
     log_driver: journald
     log_options:
       tag: grafana
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "grafana"
         ipv4_address: "{{docker_grafana_ip}}"

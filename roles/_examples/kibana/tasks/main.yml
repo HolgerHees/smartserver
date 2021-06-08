@@ -35,6 +35,8 @@
     log_driver: journald
     log_options:
       tag: kibana
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: kibana_databases
     networks_cli_compatible: yes

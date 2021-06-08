@@ -40,6 +40,8 @@
     log_driver: journald
     log_options:
       tag: php
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks: 
       - name: "php"
         ipv4_address: "{{docker_php_ip}}"

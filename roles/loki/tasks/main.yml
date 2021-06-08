@@ -35,7 +35,6 @@
     name: loki
     image: "grafana/loki:{{loki_version}}"
     state: present
-#    network_mode: "host"
 #    user: "root:root"
 #    recreate: true
     env:
@@ -47,13 +46,15 @@
     log_driver: journald
     log_options:
       tag: loki
-    volumes:
-      - '{{global_etc}}loki:/etc/loki:z'
-      - '{{global_lib}}loki:/loki:z'
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "isolated"
         ipv4_address: "{{docker_loki_ip}}"
     networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}loki:/etc/loki:z'
+      - '{{global_lib}}loki:/loki:z'
     exposed_ports:
      - "3100"
   notify: "restart loki"

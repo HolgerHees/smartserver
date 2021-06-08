@@ -8,6 +8,7 @@ opts = GetoptLong.new(
 )
 
 setup_os = ""
+setup_version = ""
 setup_image = ""
 setup_config = ""
 setup_ansible = ""
@@ -45,11 +46,12 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse" then
             setup_os = "suse"
-            setup_image = "bento/opensuse-leap-15.2"
+            setup_version = "15.2"
+            setup_image = "bento/opensuse-leap-" + setup_version
         else
             setup_os = "fedora"
-            #setup_image = "bento/fedora-31"
-            setup_image = "fedora/31-cloud-base"
+            setup_version = "31"
+            setup_image = "fedora/" + setup_version + "-cloud-base"
         end
       when '--ansible'
         setup_ansible=arg
@@ -141,7 +143,9 @@ Vagrant.configure(2) do |config|
 
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo zypper --non-interactive install ansible python-xml python3-netaddr
+        sudo zypper --non-interactive install python-xml python3-netaddr
+        sudo zypper --non-interactive install python3-cairo python3-cryptography
+        sudo pip install ansible==2.10.7
         SHELL
     else
         setup.vm.provision "shell", inline: <<-SHELL
@@ -156,7 +160,7 @@ Vagrant.configure(2) do |config|
       ansible.compatibility_mode = "2.0"
       ansible.provisioning_path = "/vagrant/"
       ansible.raw_arguments = setup_ansible
-          
+      ansible.install = false
       if setup_config != 'demo' then
         ansible.vault_password_file = "/tmp/vault_pass"
       end

@@ -138,7 +138,6 @@
     name: wireguard_mobile
     image: "custom_wireguard_mobile:{{alpine_version}}"
     state: present
-    network_mode: "host"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
@@ -148,6 +147,8 @@
     capabilities:
       - NET_ADMIN
       - SYS_MODULE
+    container_default_behavior: "compatibility"
+    network_mode: "host"
 #    networks:
 #      - name: "mobile_vpn"
 #    networks_cli_compatible: yes

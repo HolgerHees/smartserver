@@ -376,10 +376,12 @@
       #EXTRA_SHELL_OPTS: "-x"
       #EXTRA_SHELL_OPTS: "-v"
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
-    network_mode: host
     log_driver: journald
     log_options:
       tag: openhab3
+    devices: "{{openhab_device_mounts | default([])}}"
+    container_default_behavior: "compatibility"
+    network_mode: "host"
     volumes:
       - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
       - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
@@ -390,7 +392,6 @@
       - '{{global_lib}}openhab3/jsondb:/openhab/userdata/jsondb:z'
       - '{{global_lib}}openhab3/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab3:/openhab/userdata/logs:z'
-    devices: "{{openhab_device_mounts | default([])}}"
 #    networks:
 #      - name: "openhab"
 #        ipv4_address: "{{docker_openhab_ip}}"

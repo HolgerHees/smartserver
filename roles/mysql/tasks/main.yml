@@ -36,6 +36,8 @@
     volumes:
       - '{{ global_lib }}mysql:/var/lib/mysql:z'
       - '{{backup_path}}mysql:/var/lib/mysql_backup:z'
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "isolated"
         ipv4_address: "{{docker_mysql_ip}}"

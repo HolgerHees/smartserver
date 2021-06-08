@@ -20,6 +20,8 @@
     log_driver: journald
     log_options:
       tag: redis
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "isolated"
     networks_cli_compatible: yes

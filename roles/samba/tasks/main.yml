@@ -39,6 +39,11 @@
     log_driver: journald
     log_options:
       tag: samba
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+    networks_cli_compatible: yes
     volumes:
       - '{{ global_etc }}samba:/etc/samba:z'
       - '{{ global_lib }}samba:/var/lib/samba:z'
@@ -48,9 +53,6 @@
       - '/etc/group:/etc/group:ro,z'
       - '/etc/passwd:/etc/passwd:ro,z'
       - '/etc/shadow:/etc/shadow:ro,z'
-    networks:
-      - name: "isolated"
-    networks_cli_compatible: yes
     published_ports:
       - "137:137/udp"
       - "138:138/udp"

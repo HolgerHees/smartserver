@@ -24,7 +24,6 @@
     name: pihole
     image: "pihole/pihole:v{{pihole_version}}"
     state: present
-#    network_mode: "none"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
@@ -34,13 +33,15 @@
     log_driver: journald
     log_options:
       tag: pihole
-    volumes:
-      - '{{ global_etc }}pihole/:/etc/pihole/:z'
-      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "macvlan"
         ipv4_address: "{{pihole_ip}}"
     networks_cli_compatible: yes
+    volumes:
+      - '{{ global_etc }}pihole/:/etc/pihole/:z'
+      - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
     exposed_ports:
       - "53/tcp"
       - "53/udp"

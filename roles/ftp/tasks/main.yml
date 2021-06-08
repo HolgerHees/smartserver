@@ -111,6 +111,8 @@
       tag: vsftpd
     volumes:
       - '{{ftp_path}}:/home/uploads:z'
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "isolated"
     networks_cli_compatible: yes

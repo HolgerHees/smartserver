@@ -442,7 +442,6 @@
       #CRYPTO_POLICY: "unlimited"
       EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
-    network_mode: host
     log_driver: journald
     log_options:
       tag: openhab
@@ -458,6 +457,8 @@
       - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
     devices: "{{openhab_device_mounts | default([])}}"
+    container_default_behavior: "compatibility"
+    network_mode: "host"
 #    networks:
 #      - name: "openhab"
 #        ipv4_address: "{{docker_openhab_ip}}"

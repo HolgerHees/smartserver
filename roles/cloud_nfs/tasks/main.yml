@@ -93,6 +93,8 @@
     privileged: yes
     #domainname : "cloud"
     #hostname: "nfsd"
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "cloud_vpn"
         ipv4_address: "{{vpn_cloud_services.local.nfs}}"

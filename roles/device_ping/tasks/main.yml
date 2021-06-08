@@ -22,13 +22,14 @@
     name: device_ping
     image: "custom_device_ping:{{alpine_version}}"
     state: present
-    network_mode: "host"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: device_ping
+    container_default_behavior: "compatibility"
+    network_mode: "host"
     volumes:
       - '{{global_etc}}device_ping/:/etc/device_ping:ro,z'
 #  notify: "restart device_ping"

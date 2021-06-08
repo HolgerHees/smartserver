@@ -48,8 +48,6 @@
     name: "ssh_vpn"
     image: "custom_ssh_vpn:{{alpine_version}}"
     state: present
-#    network_mode: "host"
-#    network_mode: "none"
 #    recreate: true
     env:
       SSH_GID: "10002"
@@ -60,6 +58,8 @@
     log_driver: journald
     log_options:
       tag: "ssh_vpn"
+    container_default_behavior: "compatibility"
+    network_mode: "default"
     networks:
       - name: "mobile_vpn"
     networks_cli_compatible: yes

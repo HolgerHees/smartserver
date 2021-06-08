@@ -1,3 +1,0 @@
-ansible
-
-https://download.opensuse.org/repositories/systemsmanagement/openSUSE_Leap_15.3/
