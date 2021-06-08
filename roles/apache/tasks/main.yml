@@ -1,8 +1,8 @@
 - name: set version
   set_fact:
-    apache_version: '2.4.46'
+    apache_version: '2.4.48'
 #    openidc_version: '2.4.1'
-    openidc_version: '2.4.6'
+    openidc_version: '2.4.8.4'
   tags: [ 'update_notifier_configs' ]
   
 # SELFSIGNED CERTIFICATE
@@ -178,13 +178,14 @@
     name: apache2
     image: "custom_apache2:{{apache_version}}"
     state: present
-    network_mode: "host"
 #    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
       tag: apache
+    container_default_behavior: "compatibility"
+    network_mode: "host"
     volumes:
       - '{{global_etc}}apache2/_.ansible.conf.d:/etc/apache2/_.ansible.conf.d:z'
       - '{{global_etc}}apache2/_.ansible.vhost.d:/etc/apache2/_.ansible.vhost.d:z'

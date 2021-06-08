@@ -96,5 +96,5 @@ dlna_volumes:                    "{
 pihole_whitelist_domains:          [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ]
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.13.2"
-debian_version:                   "buster-20210208-slim"
+alpine_version:                   "3.13.5"
+debian_version:                   "buster-20210511-slim"
