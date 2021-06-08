@@ -20,7 +20,7 @@
           - "network:    {{server_network}}/24"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'none'}}"
           - "arpha:      {{server_arpa}}"
-          - "os-name:    {{ansible_distribution}}"
+          - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}}"
           - "net:        {{main_network_interface}}"
       tags: always
 
