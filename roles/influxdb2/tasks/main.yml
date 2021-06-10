@@ -57,6 +57,7 @@
       - '{{backup_path}}influxdb2:/var/lib/influxdb_backup:z'
     exposed_ports:
      - "8086"  
+     - "9999"  
 #  notify: "restart influxdb"
     
 - name: add container name
@@ -74,6 +75,18 @@
 #    hour: "0"
 #    minute: "45"
 #  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+#- name: register webui
+#  vars:
+#    name: "influxdb2"
+#    js_file: "templates/webui/influxdb2.js"
+#    i18n_files: [ { language: "de", file: "templates/webui/influxdb2.de.json" } ]
+#  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache config
+  vars:
+    config_file: "templates/etc/apache2/_.ansible.conf.d/influxdb2.conf"
+  import_tasks: roles/apache/tasks/add_config.yml
 
 - name: copy fluentd config
   vars:
