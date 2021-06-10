@@ -1,0 +1,99 @@
+- name: set version
+  set_fact:
+    telegraf_version: '1.18.3'
+  tags: [ 'update_notifier_configs' ]    
+
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{ global_etc }}telegraf"
+
+- name: copy config
+  template:
+    src: "templates/etc/telegraf.conf"
+    dest: "{{ global_etc }}telegraf/telegraf.conf"
+    owner: root
+    group: root
+    mode: 0640
+#  notify: "restart telegraf"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker network
+  docker_network:
+    name: telegraf
+    ipam_config:
+      - subnet: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.1"
+    connected:
+      - influxdb2
+    appends: yes
+  tags: [ 'influxdb2' ]
+
+- name: create docker container
+  docker_container:
+    name: telegraf
+    image: "telegraf:{{telegraf_version}}-alpine"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: telegraf
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "telegraf"
+        ipv4_address: "{{docker_telegraf_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{ global_etc }}telegraf:/etc/telegraf:z'
+    exposed_ports:
+     - "8092/udp"  
+     - "8094/tcp"  
+     - "4242"  
+#  notify: "restart telegraf"
+    
+- name: add container name
+  vars:
+    host_name: "telegraf"
+    host_ip_address: "{{docker_telegraf_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/telegraf.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+#- name: create systemd service
+#  vars:
+#    container_name: "telegraf"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+#- name: register update notifier
+#  vars:
+#    name: "telegraf"
+#    type: "docker"
+#    url: "https://docs.influxdata.com/telegraf/v1.18/"
+#    config: {
+#      repository: "telegraf",
+#      pattern: "^([0-9\\.]+)-alpine$"
+#    }
+#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+#- name: trigger telegraf handler
+#  vars:
+#    notify: "restart telegraf"
+#    service: "telegraf.service"
+#  import_tasks: roles/_shared/tasks/service_check.yml
+

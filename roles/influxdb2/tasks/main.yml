@@ -1,0 +1,104 @@
+- name: set version
+  set_fact:
+    influxdb_version: '2.0.7'
+  tags: [ 'update_notifier_configs' ]    
+
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+#    - '{{ global_build }}influxdb'
+    - '{{ global_lib }}influxdb2'
+    - '{{ global_lib }}influxdb2/hh'
+    - '{{ global_lib }}influxdb2/meta'
+    - '{{ global_lib }}influxdb2/data'
+    - '{{ global_lib }}influxdb2/wal'  
+#    - '{{backup_path}}influxdb'
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: influxdb2
+    image: "influxdb:{{influxdb_version}}-alpine"
+    state: present
+#    recreate: true
+    entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
+    env:
+      DOCKER_INFLUXDB_INIT_MODE: "setup"
+      DOCKER_INFLUXDB_INIT_USERNAME: "{{vault_influxdb_admin_username}}"
+      DOCKER_INFLUXDB_INIT_PASSWORD: "{{vault_influxdb_admin_password}}"
+      DOCKER_INFLUXDB_INIT_ORG: "default-org"
+      DOCKER_INFLUXDB_INIT_BUCKET: "default-bucket"
+      DOCKER_INFLUXDB_INIT_RETENTION: "1w"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{vault_influxdb_admin_token}}"
+      INFLUXD_REPORTING_DISABLED: "true"
+#      INFLUXDB_LOGGING_FORMAT: "json"
+#      INFLUXDB_DATA_WAL_FSYNC_DELAY: "1s"
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: influxdb2
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_influxdb2_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{ global_lib }}influxdb2:/var/lib/influxdb:z'
+      - '{{backup_path}}influxdb2:/var/lib/influxdb_backup:z'
+    exposed_ports:
+     - "8086"  
+#  notify: "restart influxdb"
+    
+- name: add container name
+  vars:
+    host_name: "influxdb2"
+    host_ip_address: "{{docker_influxdb2_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
+#- name: create cron job
+#  vars:
+#    name: "Influxdb Cleanup"
+#    cmd: "find {{backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
+#    file: "ansible_influxdb"
+#    hour: "0"
+#    minute: "45"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/influxdb2.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+#- name: create systemd service
+#  vars:
+#    container_name: "influxdb"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+#- name: register update notifier
+#  vars:
+#    name: "influxdb"
+#    type: "docker"
+#    url: "https://docs.influxdata.com/influxdb/v1.7/about_the_project/releasenotes-changelog/"
+#    config: {
+#      repository: "influxdb",
+#      pattern: "^([0-9\\.]+)-alpine$"
+#    }
+#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+#- name: trigger influxdb handler
+#  vars:
+#    notify: "restart influxdb"
+#    service: "influxdb.service"
+#  import_tasks: roles/_shared/tasks/service_check.yml
+
