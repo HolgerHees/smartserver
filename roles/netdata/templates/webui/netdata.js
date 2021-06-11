@@ -1,4 +1,4 @@
-mx.Menu.getMainGroup('other').getSubGroup('states').addUrl('netdata','//netdata.{host}/', 'admin', 200, '{i18n_Server State}', '{i18n_Netdata}', false);
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('netdata','//netdata.{host}/', 'admin', 102, '{i18n_Server State}', '{i18n_Netdata}', false);
 
 mx.Alarms = (function( ret ) {
     var buttonSelector;

@@ -1,11 +1,12 @@
 {
+  "workspace": {
+    "Workspace": "Arbeitsplatz"
+  },
   "automation": {
     "Automation": "Automation"
   },
-  "other": {
-    "Other": "Sonstiges",
-    "Logs & States": "Logs & Status",
-    "States": "Status",
+  "admin": {
+    "Admin": "Administration",
     "Tools": "Tools",
     "Devices": "Geräte"
   },

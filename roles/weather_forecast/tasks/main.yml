@@ -83,9 +83,10 @@
 
 - name: register webui
   vars:
-    name: "toolbox"
-    js_file: "templates/webui/toolbox.js"
-    i18n_files: [ { language: "de", file: "templates/webui/toolbox.de.json" } ]
+    name: "weather_forecast"
+    js_file: "templates/webui/weather_forecast.js"
+    i18n_files: [ { language: "de", file: "templates/webui/weather_forecast.de.json" } ]
+    icons: [ 'templates/webui/icons/weather_forecast.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
   
 

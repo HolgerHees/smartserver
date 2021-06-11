@@ -272,7 +272,7 @@
 
                         var button = buttonTemplate.cloneNode(true);
                         button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
-                        button.setAttribute("onClick","mx.Actions.openMenuById('" + mainGroup['id'] + "','" + subGroup['id'] + "');");
+                        button.setAttribute("onClick","mx.Actions.openMenuById(event,'" + mainGroup['id'] + "','" + subGroup['id'] + "');");
                         button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="main/icons/' + subGroup['iconUrl'] + '" height="20" width="20" />' : '';
                         button.lastChild.innerHTML = subGroup['title'];
                         menuDiv.appendChild(button);
@@ -283,11 +283,10 @@
             };
 
             ret.addMainGroup('home', -1, 'Home').addSubGroup('home', -1, 'Home');
+            ret.addMainGroup('workspace', 1000, '{i18n_Workspace}');
+            ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
-            var mainGroup = ret.addMainGroup('automation', 2000, '{i18n_Automation}');
-
-            mainGroup = ret.addMainGroup('other', 3000, '{i18n_Other}');
-            mainGroup.addSubGroup('states', 100, mx.User.memberOf('admin') ? '{i18n_Logs & States}' : '{i18n_States}', 'core_stats.svg');
+            var mainGroup = ret.addMainGroup('admin', 3000, '{i18n_Admin}');
             mainGroup.addSubGroup('tools', 200, '{i18n_Tools}', 'core_tools.svg');
             mainGroup.addSubGroup('devices', 300, '{i18n_Devices}', 'core_devices.svg');
 
@@ -525,23 +524,30 @@
                 setIFrameUrl(url);
             }
 
-            ret.openMenuById = function(mainGroupId,subGroupId)
+            ret.openMenuById = function(event,mainGroupId,subGroupId)
             {
                 menu = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId);
-                mx.Actions.openMenu(menu);
+                mx.Actions.openMenu(menu,event);
             
             };
-            ret.openMenu = function(subGroup)
+            ret.openMenu = function(subGroup,event)
             {
                 if( mx.History.getActiveNavigation() === subGroup && !isIFrameVisible() ) return;
                 
                 showMenu();
+                
+                if( subGroup.getEntries().length == 1 )
+                {
+                    mx.Actions.openEntryById(event,subGroup.getMainGroup().getId(),subGroup.getId(),subGroup.getEntries()[0].getId())
+                }
+                else
+                {
+                    mx.Menu.buildMenu( subGroup, setMenuEntries);
 
-                mx.Menu.buildMenu( subGroup, setMenuEntries);
+                    activateMenu(subGroup);
 
-                activateMenu(subGroup);
-
-                mx.History.addMenu(subGroup);
+                    mx.History.addMenu(subGroup);
+                }
             };
 
             ret.openEntryById = function(event,mainGroupId,subGroupId,entryId)

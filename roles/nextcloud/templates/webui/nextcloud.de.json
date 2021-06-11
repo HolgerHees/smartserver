@@ -1,8 +1,8 @@
 {
-  "nextcloud": {
+  "workspace": {
     "Nextcloud": "Nextcloud"
   },
-  "nextcloud_nextcloud": {
+  "workspace_nextcloud": {
     "Documents": "Dokumente",
     "News": "News",
     "Keys": "Keys",

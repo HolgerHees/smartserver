@@ -1,10 +1,7 @@
 {
-  "other_tools": {
+  "admin_tools": {
     "Grafana": "Grafana",
-    "Dashboards": "Dashboards"
-  },
-  "other_states": {
-    "Grafana": "Grafana",
+    "Dashboards": "Dashboards",
     "Server Logs": "Server Logs"
   }
 }
