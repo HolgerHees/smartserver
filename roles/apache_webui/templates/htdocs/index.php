@@ -164,7 +164,9 @@
                 var menuEntries = subGroup.getEntries();
                 var currentIndex = 1;
                 
-                var hasGroups = Math.floor(menuEntries[0].getOrder()/100) != Math.floor(menuEntries[menuEntries.length-1].getOrder()/100);
+                var lastOrder = Math.max.apply(Math, menuEntries.map(function(o) { return o.getOrder(); }));
+
+                var hasGroups = lastOrder && Math.floor(menuEntries[0].getOrder()/100) != Math.floor(lastOrder/100);
                 
                 if( hasGroups ) entries.push('<div class="group">')
                 
@@ -172,18 +174,19 @@
                 {
                     var entry = menuEntries[i];
                     
+                    if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
+                    {
+                        continue;
+                    }
+
                     var index = Math.floor(entry.getOrder()/100);
+                    
                     if( currentIndex != index )
                     {
                         entries.push('</div><div class="group">');
                         currentIndex = index;
                     }
                     
-                    if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
-                    {
-                        continue;
-                    }
-
                     if( entry.getType() == 'html' )
                     {
                         entries.push(entry.getHtml());

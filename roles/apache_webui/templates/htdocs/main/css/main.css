@@ -522,7 +522,7 @@ body.dark #submenu {
     padding: 10px;
     width: 80%;
     max-width: 400px;
-    text-align: center;
+/*    text-align: center;*/
     margin-left: auto;
     margin-right: auto;
     border: 1px solid transparent;
@@ -530,7 +530,7 @@ body.dark #submenu {
 #submenu .service.button > div:first-child {
     display: flex;
     align-items: center;
-    justify-content: center;
+/*    justify-content: center;*/
 }
 /*#submenu .service.button > div:first-child img {
     filter: invert(100%);
@@ -545,12 +545,12 @@ body.dark #submenu {
 #submenu .service.button > div:first-child div {
     margin-top: -10px;
 }
-#submenu .service.button div:first-child {
+#submenu .service.button > div:first-child {
     font-size: 10vw;
     text-shadow: 0 1px 5px rgba(0,0,0,.6);
 }
 @media screen and (min-width: 601px) {
-    #submenu .service.button div:first-child {
+    #submenu .service.button > div:first-child {
         font-size: 40px;
     }
 }
@@ -560,13 +560,14 @@ body.nobackground #submenu .service.button div:last-child {
 body.dark.nobackground #submenu .service.button div:last-child {
     color: var(--dark-content-nobackground-info);
 }
-#submenu .service.button div:last-child {
+#submenu .service.button > div:last-child {
     color: var(--light-content-background-info);
     font-size: 112.5%;
     font-weight: 300;
     text-shadow: 0 1px 2px rgba(0,0,0,.6);
+    padding-left: 40px;
 }
-body.dark #submenu .service.button div:last-child {
+body.dark #submenu .service.button > div:last-child {
     color: var(--dark-content-background-info);
 }
 @media (hover: hover) {
@@ -589,17 +590,20 @@ body.dark #submenu .service.button:active {
 #submenu .service.imageWatcher {
     display:flex;
     align-items: center;
-    justify-content: space-evenly;
     flex-direction: column;
     flex-grow: 1;
-    margin-top: -5vh;
 }
 #submenu .service.imageWatcher img {
     width: 100%;
 }
 #submenu .service.imageWatcher > div {
     position: relative;
-    max-width:640px;
+}
+#submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
+    max-width: 90%;
+}
+#submenu .service.imageWatcher > div:first-child:nth-last-child(2) {
+    max-width: 640px;
 }
 #submenu .service.imageWatcher > div > a,
 #submenu .service.imageWatcher > div > img {
@@ -622,10 +626,13 @@ body.dark #submenu .service.button:active {
         flex-grow: 0;
         margin-top: 0;
         align-items: stretch;
+        justify-content: space-evenly;
     }
     #submenu .service.imageWatcher > div {
-        width:calc(50% - 10px);
         background-color: var(--image-watcher-bg);
+    }
+    #submenu .service.imageWatcher > div:first-child:nth-last-child(2) {
+        width:calc(50% - 10px);
     }
     #submenu .service.imageWatcher > div > a,
     #submenu .service.imageWatcher > div > img {
@@ -678,4 +685,7 @@ body.phone #menu .alarm.button {
 }
 body.phone #menu .spacer {
     opacity: 1;
+}
+body.phone #submenu .service.imageWatcher {
+    margin-top: -5vh;
 }
