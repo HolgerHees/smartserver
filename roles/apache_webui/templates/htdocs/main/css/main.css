@@ -495,6 +495,10 @@ body.dark #submenu {
 #submenu .group {
   position: relative;
   padding-bottom: 13px;
+  padding-top: 10px;
+}
+#submenu .group:first-child {
+  padding-top: 0;
 }
 #submenu .group:after {
     content: "";
@@ -534,8 +538,10 @@ body.dark #submenu {
 #submenu .service.button > div:first-child svg {
     fill: #FFF;
     height: 30px;
-    margin-top: 10px;
     margin-right: 10px;
+}
+#submenu .service.button > div:first-child div {
+    margin-top: -10px;
 }
 #submenu .service.button div:first-child {
     font-size: 10vw;
