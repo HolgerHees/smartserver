@@ -179,8 +179,6 @@
                         currentIndex = index;
                     }
                     
-                    console.log(entry.getOrder() + " " + index);
-                     
                     if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
                     {
                         continue;
@@ -564,6 +562,8 @@
                 if( subGroup.getEntries().length == 1 )
                 {
                     mx.Actions.openEntryById(event,subGroup.getMainGroup().getId(),subGroup.getId(),subGroup.getEntries()[0].getId())
+                    
+                    if( visualisationType != "desktop" ) menuPanel.close();
                 }
                 else
                 {

@@ -224,7 +224,8 @@ body.dark #side.iframe #header {
     cursor: pointer;
 }
 #side #content {
-    flex: 1;
+    flex: 1 1 auto;
+    height: 0;
 }
 #side #content #inline {
     min-height: 100%;
@@ -360,6 +361,7 @@ body.phone #menu .header {
 #menu .service div:first-child svg {
     fill: var(--light-menu-text);
     height: 100%;
+    width: 100%;
 }
 /*body.dark #menu .service div:first-child img {
     filter: invert(100%);
