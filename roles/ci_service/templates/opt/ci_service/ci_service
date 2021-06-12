@@ -104,13 +104,15 @@ elif cmd == "start" or cmd == "restart":
                         log_url = "https://{}/ci/details.php?datetime={}&config={}&os={}&branch={}&hash={}".format(server_host,start_time_str, deployment['config'],deployment['os'],branch,current_git_hash)
                         log_url = urllib.parse.quote_plus(log_url)
                         
-                        body = "Reason: {}".format(error_reason);
+                        body = "Reason: {}".format(error_reason)
                         body += "\n\n"
-                        body += "Logs: https://{}/?ref=other|tools|ci|{}".format(server_host,log_url);
+                        body += "Logs: https://{}/?ref=other|tools|ci|{}".format(server_host,log_url)
                         body += "\n\n"
-                        body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash);
+                        body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash)
                         
-                        helper.sendEmail("CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body);
+                        helper.sendEmail("CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body)
+                        
+                        break
                     else:
                         if access_token != "":
                             git.setState(repository_owner,access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
