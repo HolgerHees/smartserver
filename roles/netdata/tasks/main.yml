@@ -308,6 +308,7 @@
     js_file: "templates/webui/netdata.js"
     i18n_files: [ { language: "de", file: "templates/webui/netdata.de.json" } ]
     listener: { "sub_domain": "netdata", "js_file": "templates/webui/netdata.listener.js" }
+    icons: [ 'templates/webui/icons/netdata_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: copy apache vhost

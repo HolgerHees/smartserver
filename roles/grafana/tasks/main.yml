@@ -123,6 +123,7 @@
     name: "grafana"
     js_file: "templates/webui/grafana.js"
     i18n_files: [ { language: "de", file: "templates/webui/grafana.de.json" } ]
+    icons: [ 'templates/webui/icons/grafana_logo.svg', 'templates/webui/icons/grafana_logs.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: copy apache config

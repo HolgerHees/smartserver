@@ -56,6 +56,7 @@
     name: "pihole"
     js_file: "templates/webui/pihole.js"
     i18n_files: [ { language: "de", file: "templates/webui/pihole.de.json" } ]
+    icons: [ 'templates/webui/icons/pihole_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: create cron job

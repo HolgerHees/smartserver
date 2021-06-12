@@ -178,7 +178,14 @@
                     }
                     else
                     {
-                        entries.push('<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + subGroup.getMainGroup().getId() + '\',\'' + subGroup.getId() + '\',\'' + entry.getId() + '\')"><div>' + entry.getTitle() + '</div><div>' + entry.getInfo() + '</div></div>');
+                        var html = '<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + subGroup.getMainGroup().getId() + '\',\'' + subGroup.getId() + '\',\'' + entry.getId() + '\')">';
+                        html += '<div>';
+                        if( entry.getIconUrl() ) html += '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + entry.getIconUrl() + '#icon" /></svg>';
+                        //if( entry.getIconUrl() ) html += '<img src="/main/icons/' + entry.getIconUrl() + '"/>';
+                        html += '<div>' + entry.getTitle() + '</div>';
+                        html += '</div><div>' + entry.getInfo() + '</div></div>';
+                        
+                        entries.push(html);
                     }
                 }
 
@@ -273,7 +280,8 @@
                         var button = buttonTemplate.cloneNode(true);
                         button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
                         button.setAttribute("onClick","mx.Actions.openMenuById(event,'" + mainGroup['id'] + "','" + subGroup['id'] + "');");
-                        button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="main/icons/' + subGroup['iconUrl'] + '" height="20" width="20" />' : '';
+                        //button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="/main/icons/' + subGroup['iconUrl'] + '"/>' : '';
+                        button.firstChild.innerHTML = subGroup['iconUrl'] ? '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + subGroup['iconUrl'] + '#icon" /></svg>' : '';
                         button.lastChild.innerHTML = subGroup['title'];
                         menuDiv.appendChild(button);
 

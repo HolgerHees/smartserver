@@ -51,6 +51,7 @@
     name: "update_notifier"
     js_file: "templates/webui/update_notifier.js"
     i18n_files: [ { language: "de", file: "templates/webui/update_notifier.de.json" } ]
+    icons: [ 'templates/webui/icons/update_notifier_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
   
 - name: create cron job
