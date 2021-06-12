@@ -92,7 +92,7 @@ mx.Alarms = (function( ret ) {
         mx.$$(buttonSelector).forEach(function(element){ 
             element.addEventListener("click",function()
             {
-                mx.Actions.openEntry(mx.Menu.getMainGroup('other').getSubGroup('states').getEntry('netdata'));
+                mx.Actions.openEntry(mx.Menu.getMainGroup('admin').getSubGroup('tools').getEntry('netdata'));
             });
         });
         loadAlerts();
