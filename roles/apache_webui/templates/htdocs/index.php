@@ -117,7 +117,7 @@
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
-                                                //getOrder: function(){ return entry['order']; },
+                                                getOrder: function(){ return entry['order']; },
                                                 getUserGroups: function(){ return entry['usergroups']; },
                                                 getType: function(){ return entry['type']; },
                                                 getSubGroup: function(){ return subGroup['_']; },
@@ -137,7 +137,7 @@
                                             _: {
                                                 isEntry: function(){ return true; },
                                                 getId: function(){ return entry['id']; },
-                                                //getOrder: function(){ return entry['order']; },
+                                                getOrder: function(){ return entry['order']; },
                                                 getUserGroups: function(){ return entry['usergroups']; },
                                                 getType: function(){ return entry['type']; },
                                                 getSubGroup: function(){ return subGroup['_']; },
@@ -162,10 +162,25 @@
                 var callbacks = [];
 
                 var menuEntries = subGroup.getEntries();
+                var currentIndex = 1;
+                
+                var hasGroups = Math.floor(menuEntries[0].getOrder()/100) != Math.floor(menuEntries[menuEntries.length-1].getOrder()/100);
+                
+                if( hasGroups ) entries.push('<div class="group">')
+                
                 for(var i = 0; i < menuEntries.length; i++)
                 {
                     var entry = menuEntries[i];
                     
+                    var index = Math.floor(entry.getOrder()/100);
+                    if( currentIndex != index )
+                    {
+                        entries.push('</div><div class="group">');
+                        currentIndex = index;
+                    }
+                    
+                    console.log(entry.getOrder() + " " + index);
+                     
                     if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
                     {
                         continue;
@@ -188,6 +203,8 @@
                         entries.push(html);
                     }
                 }
+                
+                if( hasGroups ) entries.push('</div>')
 
                 callback(entries.join(""),callbacks);
             };

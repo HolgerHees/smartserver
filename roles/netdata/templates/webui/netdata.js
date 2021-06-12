@@ -1,4 +1,4 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('netdata','//netdata.{host}/', 'admin', 102, '{i18n_Server State}', '{i18n_Netdata}', false, "netdata_logo.svg");
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('netdata','//netdata.{host}/', 'admin', 110, '{i18n_Server State}', '{i18n_Netdata}', false, "netdata_logo.svg");
 
 mx.Alarms = (function( ret ) {
     var buttonSelector;

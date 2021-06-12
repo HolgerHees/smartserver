@@ -492,6 +492,26 @@ body.dark.nobackground #submenu {
 body.dark #submenu {
     color: var(--dark-content-background-text);
 }
+#submenu .group {
+  position: relative;
+  padding-bottom: 13px;
+}
+#submenu .group:after {
+    content: "";
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 400px;
+    height: 1px;
+    border-bottom: 2px dashed var(--light-content-background-text);
+    opacity: 0.4;
+}
+#submenu .group:last-child:after {
+    display: none;
+}
+
 #submenu .service.button {
     padding: 10px;
     width: 80%;
