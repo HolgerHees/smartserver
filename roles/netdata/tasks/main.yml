@@ -281,66 +281,34 @@
     #- { field: "Nice", value: "0" } # was "#Nice=0" before
   notify: "restart netdata"
 
-# ***** INFLUXDB DATABASE ****
-- name: check influxdb data
-  stat:
-    path: "{{ global_lib }}influxdb/data/opentsdb"
-  register: influxdb_data_exists
-  changed_when: not influxdb_data_exists.stat.exists
-
-- name: check influxdb service => database does not exists
-  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
-  when: "not influxdb_data_exists.stat.exists"
-
-- name: create missing influx databases => database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute 'CREATE DATABASE opentsdb'\""
-  when: "not influxdb_data_exists.stat.exists"
-
-- name: create retention policy
-  vars:
-    database: "opentsdb"
-  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
-
 # ***** INFLUXDB2 DATABASE ****
-- name: check influxdb2 service => enable_influxdb2 is defined
-  import_tasks: roles/influxdb2/tasks/wait_until_ready.yml
-  when: "enable_influxdb2 is defined"
+- name: check influxdb service
+  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
 
-- name: check bucket => enable_influxdb2 is defined
-  shell: "docker exec influxdb2 sh -c \"influx bucket list --name opentsdb --json\""
+- name: check bucket
+  shell: "docker exec influxdb sh -c \"influx bucket list --name opentsdb --json\""
   register: influxdb_bucket_result
+  failed_when: "influxdb_bucket_result.rc == 1 and 'not found' not in influxdb_bucket_result.stdout"
   changed_when: False
-  when: "enable_influxdb2 is defined"
 
-- name: create bucket => enable_influxdb2 is defined and bucket does not exists
-  shell: "docker exec influxdb2 sh -c \"influx bucket create --name opentsdb --retention 365d -o default-org\""
-  when: "enable_influxdb2 is defined and ( influxdb_bucket_result.stdout | from_json | length ) == 0"
+- name: create bucket => bucket does not exists
+  shell: "docker exec influxdb sh -c \"influx bucket create --name opentsdb --retention 365d -o default-org\""
+  when: "'not found' in influxdb_bucket_result.stdout"
 
-- name: check bucket mapping => enable_influxdb2 is defined
-  shell: "docker exec influxdb2 sh -c \"influx v1 dbrp list --db opentsdb --json\""
+- name: check bucket mapping
+  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --db opentsdb --json\""
   register: influxdb_mapping_result
   changed_when: False
-  when: "enable_influxdb2 is defined"
   
-- name: get bucket id => enable_influxdb2 is defined and bucket mapping does not exists
-  shell: "docker exec influxdb2 sh -c \"influx bucket list --name opentsdb --json\""
+- name: get bucket id => bucket mapping does not exists
+  shell: "docker exec influxdb sh -c \"influx bucket list --name opentsdb --json\""
   register: influxdb_bucket_result
-  when: "enable_influxdb2 is defined and ( influxdb_mapping_result.stdout | from_json | length ) == 0"
+  when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
 
-- name: create bucket mapping => enable_influxdb2 is defined and bucket mapping does not exists
-  shell: "docker exec influxdb2 sh -c \"influx v1 dbrp create --db opentsdb --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
-  when: "enable_influxdb2 is defined and ( influxdb_mapping_result.stdout | from_json | length ) == 0"
+- name: create bucket mapping => bucket mapping does not exists
+  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db opentsdb --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
+  when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
   
-#- name: create cron job
-#  vars:
-#    name: "Influxdb OpenTSDB Backup"
-#    cmd: "docker exec influxdb2 sh -c \"influx backup --bucket opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-#    file: "ansible_netdata"
-#    hour: "1"
-#    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
-#  when: "enable_influxdb2 is defined"
-
 # ***** OTHER *****
 - name: register webui
   vars:
@@ -360,7 +328,7 @@
 - name: create cron job
   vars:
     name: "Influxdb OpenTSDB Backup"
-    cmd: "docker exec influxdb sh -c \"influxd backup -database opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    cmd: "docker exec influxdb sh -c \"influx backup --bucket opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
     file: "ansible_netdata"
     hour: "1"
     minute: "0"

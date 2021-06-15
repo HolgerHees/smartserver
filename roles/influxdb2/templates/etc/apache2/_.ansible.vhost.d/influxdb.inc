@@ -1,6 +1,0 @@
-<Location />
-  ProxyPreserveHost On
-  ProxyPass http://influxdb2:8086/
-  ProxyPassReverse http://influxdb2:8086/
-</Location>
-

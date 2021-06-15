@@ -34,9 +34,9 @@
       - subnet: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.1"
     connected:
-      - influxdb2
+      - influxdb
     appends: yes
-  tags: [ 'influxdb2' ]
+  tags: [ 'influxdb' ]
 
 - name: create docker container
   docker_container:

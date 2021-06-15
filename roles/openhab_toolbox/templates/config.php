@@ -13,7 +13,7 @@ class Setup
 	
 	public static function getOpenHabInfluxDB()
 	{
-		return new DBConnectorInflux( "influxdb", "8086", "{{vault_openhab_influxdb_username}}", "{{vault_openhab_influxdb_password}}", "openhab_db" );
+		return new DBConnectorInflux( "influxdb", "8086", "openhab", "{{vault_influxdb_admin_token}}", null );
 	}
 	
 	public static function getOpenHabRest()

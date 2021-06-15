@@ -19,9 +19,9 @@ datasources:
     # <string> url
     url: http://influxdb:8086
     # <string> database password, if used
-    password: {{vault_grafana_influxdb_password}}
+    password:
     # <string> database user, if used
-    user: {{vault_grafana_influxdb_username}}
+    user:
     # <string> database name, if used
     database: opentsdb
     # <bool> enable/disable basic auth
@@ -35,6 +35,14 @@ datasources:
     # <bool> mark as default datasource. Max one per org
     #isDefault:
     # <map> fields that will be converted to json and stored in json_data
+    jsonData:
+      "defaultBucket": "default-bucket"
+      "organization": "default-org"
+      "version": "InfluxQL"
+      "httpHeaderName1": "Authorization"
+      "httpMode": "POST"
+    secureJsonData:
+      "httpHeaderValue1": "Token {{vault_influxdb_admin_token}}"
     #jsonData:
     #  graphiteVersion: "1.1"
     #  tlsAuth: false

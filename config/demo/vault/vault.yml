@@ -24,6 +24,10 @@ vault_pihole_password: "<password>"
 vault_ftp_username: "ftp"
 vault_ftp_password: "default123"
 
+vault_influxdb_admin_username: "admin"
+vault_influxdb_admin_password: "default123"
+vault_influxdb_admin_token: "lkjfdh7123kjas"
+
 vault_shared_mysql_username: "shared"
 vault_shared_mysql_password: "default123"
 
@@ -44,8 +48,6 @@ vault_onlyoffice_shared_key: "qwe0983yxcxy435"
 vault_onlyoffice_mysql_username: "onlyoffice"
 vault_onlyoffice_mysql_password: "default123"
 
-vault_grafana_influxdb_username: "grafana"
-vault_grafana_influxdb_password: "default123"
 vault_grafana_app_username: "admin"
 vault_grafana_app_password: "admin"
 
@@ -64,8 +66,6 @@ vault_deployment_token_git: ""
 vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
 vault_openhab_mysql_username: "openhab"
 vault_openhab_mysql_password: "default123"
-vault_openhab_influxdb_username: "openhab"
-vault_openhab_influxdb_password: "default123"
 
 # ****** OPTIONAL VARIABLES ******
 # variables are optional and only necessary if they are referenced in one of the optional roles or configurations

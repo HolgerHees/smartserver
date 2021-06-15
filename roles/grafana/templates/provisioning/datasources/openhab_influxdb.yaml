@@ -19,11 +19,11 @@ datasources:
     # <string> url
     url: http://influxdb:8086
     # <string> database password, if used
-    password: ndjwi824swg§
+    password:
     # <string> database user, if used
-    user: grafana
+    user:
     # <string> database name, if used
-    database: openhab_db
+    database: openhab
     # <bool> enable/disable basic auth
     basicAuth:
     # <string> basic auth username
@@ -35,6 +35,14 @@ datasources:
     # <bool> mark as default datasource. Max one per org
     isDefault:
     # <map> fields that will be converted to json and stored in json_data
+    jsonData:
+      "defaultBucket": "default-bucket"
+      "organization": "default-org"
+      "version": "InfluxQL"
+      "httpHeaderName1": "Authorization"
+      "httpMode": "POST"
+    secureJsonData:
+      "httpHeaderValue1": "Token {{vault_influxdb_admin_token}}"
     #jsonData:
     #  graphiteVersion: "1.1"
     #  tlsAuth: false

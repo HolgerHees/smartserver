@@ -86,9 +86,9 @@
             }
           ],
           "hide": false,
-          "measurement": "netdata.system.cpu.softirq",
+          "measurement": "netdata.local.system.cpu.softirq",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -123,9 +123,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.cpu.iowait",
+          "measurement": "netdata.local.system.cpu.iowait",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -161,9 +161,9 @@
             }
           ],
           "hide": false,
-          "measurement": "netdata.system.cpu.system",
+          "measurement": "netdata.local.system.cpu.system",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -198,9 +198,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.cpu.user",
+          "measurement": "netdata.local.system.cpu.user",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -329,9 +329,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.load.load1",
+          "measurement": "netdata.local.system.load.load1",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -366,9 +366,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.load.load5",
+          "measurement": "netdata.local.system.load.load5",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -403,9 +403,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.load.load15",
+          "measurement": "netdata.local.system.load.load15",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -534,9 +534,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.net.received",
+          "measurement": "netdata.local.system.net.received",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -571,9 +571,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.net.sent",
+          "measurement": "netdata.local.system.net.sent",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -701,9 +701,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.io.in",
+          "measurement": "netdata.local.system.io.in",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -738,9 +738,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.io.out",
+          "measurement": "netdata.local.system.io.out",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -868,9 +868,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.ram.used",
+          "measurement": "netdata.local.system.ram.used",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -905,9 +905,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.ram.buffers",
+          "measurement": "netdata.local.system.ram.buffers",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -942,9 +942,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.ram.cached",
+          "measurement": "netdata.local.system.ram.cached",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -979,9 +979,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.system.ram.free",
+          "measurement": "netdata.local.system.ram.free",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -1110,9 +1110,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._dataraid.reserved_for_root",
+          "measurement": "netdata.local.disk_space._dataraid.reserved_for_root",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1147,9 +1147,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._dataraid.used",
+          "measurement": "netdata.local.disk_space._dataraid.used",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1184,9 +1184,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._dataraid.avail",
+          "measurement": "netdata.local.disk_space._dataraid.avail",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -1315,9 +1315,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._datadisk.reserved_for_root",
+          "measurement": "netdata.local.disk_space._datadisk.reserved_for_root",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1352,9 +1352,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._datadisk.used",
+          "measurement": "netdata.local.disk_space._datadisk.used",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1389,9 +1389,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._datadisk.avail",
+          "measurement": "netdata.local.disk_space._datadisk.avail",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -1520,9 +1520,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._.reserved_for_root",
+          "measurement": "netdata.local.disk_space._.reserved_for_root",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1557,9 +1557,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._.used",
+          "measurement": "netdata.local.disk_space._.used",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1594,9 +1594,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "netdata.disk_space._.avail",
+          "measurement": "netdata.local.disk_space._.avail",
           "orderByTime": "ASC",
-          "policy": "$rp",
+          "policy": "autogen",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -1666,35 +1666,7 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": [
-      {
-        "allValue": null,
-        "current": {
-          "selected": false,
-          "text": "autogen",
-          "value": "autogen"
-        },
-        "datasource": "OpenTSDB",
-        "definition": "SELECT rp FROM config.rp_config WHERE $__to - $__from > \"start\" AND $__to - $__from <= \"end\"",
-        "error": null,
-        "hide": 2,
-        "includeAll": false,
-        "label": null,
-        "multi": false,
-        "name": "rp",
-        "options": [],
-        "query": "SELECT rp FROM config.rp_config WHERE $__to - $__from > \"start\" AND $__to - $__from <= \"end\"",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      }
-    ]
+    "list": []
   },
   "time": {
     "from": "now-24h",

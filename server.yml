@@ -92,9 +92,8 @@
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
-    - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab and netdata                         [docker,user:root]
-    - { import_role: { name: influxdb2 }, tags: [ 'influxdb2' ], when: "enable_influxdb2 is defined" } # influxdb => needed by openhab                               [docker,user:root]
-    - { import_role: { name: telegraf }, tags: [ 'telegraf' ], when: "enable_influxdb2 is defined" } # telegraf => needed by netdata                                 [docker,user:root]
+    - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab                                     [docker,user:root]
+    - { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
     
     - { import_role: { name: loki }, tags: [ 'loki' ] }                                          # grafana logstore                                                  [docker,user:10001|10001]
 
@@ -154,7 +153,7 @@
 
     - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud', 'nextcloud_apps' ] }   # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 
-    - { import_role: { name: influxdb2, tasks_from: create_users, handlers_from: empty }, tags: [ 'influxdb2', 'influxdb2_users' ], when: "enable_influxdb2 is defined" }   # create influxdb2 users
+    - { import_role: { name: influxdb, tasks_from: create_users, handlers_from: empty }, tags: [ 'influxdb', 'influxdb_users' ] }   # create influxdb users
 
     - { import_role: { name: openhab3, tasks_from: create_users, handlers_from: empty }, tags: [ 'openhab3', 'openhab3_users' ], when: "enable_openhab2 is not defined" }   # create openhab users
 
