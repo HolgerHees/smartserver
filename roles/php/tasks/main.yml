@@ -25,6 +25,15 @@
     appends: yes
   tags: [ 'mysql', 'influxdb', 'redis' ]
 
+- name: connect influxdb2 to docker network
+  docker_network:
+    name: php
+    connected:
+      - influxdb2
+    appends: yes
+  tags: [ 'influxdb2' ]
+  when: "enable_influxdb2 is defined"
+
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
 - name: create docker container
