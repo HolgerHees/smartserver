@@ -20,7 +20,7 @@
     owner: root
     group: root
     mode: 0640
-#  notify: "restart telegraf"
+  notify: "restart telegraf"
 
 - name: check started docker
   systemd:
@@ -61,7 +61,7 @@
      - "8092/udp"  
      - "8094/tcp"  
      - "4242"  
-#  notify: "restart telegraf"
+  notify: "restart telegraf"
     
 - name: add container name
   vars:
@@ -75,10 +75,10 @@
     config_file: "templates/etc/fluent/_.ansible.d/telegraf.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
     
-#- name: create systemd service
-#  vars:
-#    container_name: "telegraf"
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "telegraf"
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
 #- name: register update notifier
 #  vars:
@@ -91,9 +91,9 @@
 #    }
 #  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-#- name: trigger telegraf handler
-#  vars:
-#    notify: "restart telegraf"
-#    service: "telegraf.service"
-#  import_tasks: roles/_shared/tasks/service_check.yml
+- name: trigger telegraf handler
+  vars:
+    notify: "restart telegraf"
+    service: "telegraf.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
 

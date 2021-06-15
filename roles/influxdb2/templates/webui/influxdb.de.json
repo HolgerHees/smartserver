@@ -1,0 +1,7 @@
+{
+  "admin_tools": {
+    "Influxdb": "Influxdb",
+    "Influxdb_Admin": "Admin UI",
+    "Server Logs": "Server Logs"
+  }
+}

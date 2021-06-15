@@ -1,0 +1,20 @@
+- name: read service facts
+  service_facts:
+
+- name: check if influxdb is running
+  systemd:
+    name: influxdb2
+    state: started
+    daemon_reload: yes
+  changed_when: "'influxdb2.service' not in ansible_facts.services or ansible_facts.services['influxdb2.service'].state != 'running'"
+  
+- name: wait for influxdb to become ready
+  uri:
+    url: "http://influxdb2:8086/ping"
+    status_code: 204
+  register: result
+  until: result.status == 204
+  retries: 60
+  delay: 1
+  changed_when: "'influxdb2.service' not in ansible_facts.services or ansible_facts.services['influxdb2.service'].state != 'running'"
+ 

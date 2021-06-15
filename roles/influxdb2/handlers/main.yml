@@ -1,0 +1,8 @@
+- name: restart influxdb2
+  systemd:
+    name: influxdb2
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart influxdb2"

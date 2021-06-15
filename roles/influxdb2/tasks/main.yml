@@ -57,8 +57,7 @@
       - '{{backup_path}}influxdb2:/var/lib/influxdb_backup:z'
     exposed_ports:
      - "8086"  
-     - "9999"  
-#  notify: "restart influxdb"
+  notify: "restart influxdb2"
     
 - name: add container name
   vars:
@@ -76,27 +75,29 @@
 #    minute: "45"
 #  import_tasks: roles/cron/tasks/add_cronjob.yml
 
-#- name: register webui
-#  vars:
-#    name: "influxdb2"
-#    js_file: "templates/webui/influxdb2.js"
-#    i18n_files: [ { language: "de", file: "templates/webui/influxdb2.de.json" } ]
-#  import_tasks: roles/apache_webui/tasks/add_webui.yml
-
-- name: copy apache config
+- name: register webui
   vars:
-    config_file: "templates/etc/apache2/_.ansible.conf.d/influxdb2.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+    name: "influxdb"
+    js_file: "templates/webui/influxdb.js"
+    i18n_files: [ { language: "de", file: "templates/webui/influxdb.de.json" } ]
+    icons: [ 'templates/webui/icons/influxdb_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "influxdb"
+    include: "templates/etc/apache2/_.ansible.vhost.d/influxdb.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/influxdb2.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
     
-#- name: create systemd service
-#  vars:
-#    container_name: "influxdb"
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "influxdb2"
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
 #- name: register update notifier
 #  vars:
@@ -109,9 +110,9 @@
 #    }
 #  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-#- name: trigger influxdb handler
-#  vars:
-#    notify: "restart influxdb"
-#    service: "influxdb.service"
-#  import_tasks: roles/_shared/tasks/service_check.yml
+- name: trigger influxdb handler
+  vars:
+    notify: "restart influxdb2"
+    service: "influxdb.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
 

@@ -1,0 +1,18 @@
+# ***** CHECK *****
+- name: check influxdb2 service
+  import_tasks: roles/influxdb2/tasks/wait_until_ready.yml
+
+# ***** DISABLE APPS *****
+- name: check users
+  shell: "docker exec influxdb2 sh -c \"influx user list\""
+  register: influxdb_user_result
+  changed_when: False
+  tags: [ 'user' ]
+
+- name: add new user
+  shell: "docker exec influxdb2 sh -c \"influx user create -n {{item}} -p {{vault_userpasswords[item].web_password}} -o default-org\""
+  when: "item not in influxdb_user_result.stdout and 'admin' in userdata[item].groups"
+  with_items: "{{userdata}}"
+  tags: [ 'user' ]
+
+ 

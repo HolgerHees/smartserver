@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    grafana_version: '8.0.1'
+    grafana_version: '8.0.2'
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder
@@ -78,6 +78,15 @@
       - loki
     appends: yes
   tags: [ 'influxdb', 'loki', 'mysql' ]
+
+- name: connect influxdb2 to docker network
+  docker_network:
+    name: grafana
+    connected:
+      - influxdb2
+    appends: yes
+  tags: [ 'influxdb2' ]
+  when: "enable_influxdb2 is defined"
 
 - name: create docker container
   docker_container:

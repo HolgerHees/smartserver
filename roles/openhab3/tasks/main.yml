@@ -424,7 +424,7 @@
     host_ip_address: "127.0.0.1"
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
-# ***** DATABASE ****
+# ***** MYSQL DATABASE ****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
   
@@ -449,6 +449,7 @@
   shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
   when: "'openhab' not in mysql_data_exists.stdout"
   
+# ***** INFLUXDB DATABASE ****
 - name: check influxdb data
   stat:
     path: "{{ global_lib }}influxdb/data/openhab_db"
@@ -483,6 +484,46 @@
 #  vars:
 #    database: "openhab_db"
 #  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
+
+# ***** INFLUXDB2 DATABASE ****
+- name: check influxdb2 service => enable_influxdb2 is defined
+  import_tasks: roles/influxdb2/tasks/wait_until_ready.yml
+  when: "enable_influxdb2 is defined"
+
+- name: check bucket => enable_influxdb2 is defined
+  shell: "docker exec influxdb2 sh -c \"influx bucket list --name openhab --json\""
+  register: influxdb_bucket_result
+  changed_when: False
+  when: "enable_influxdb2 is defined"
+  
+- name: create bucket => enable_influxdb2 is defined and bucket does not exists
+  shell: "docker exec influxdb2 sh -c \"influx bucket create --name openhab --retention 0 -o default-org\""
+  when: "enable_influxdb2 is defined and ( influxdb_bucket_result.stdout | from_json | length ) == 0"
+ 
+- name: check bucket mapping => enable_influxdb2 is defined
+  shell: "docker exec influxdb2 sh -c \"influx v1 dbrp list --db openhab --json\""
+  register: influxdb_mapping_result
+  changed_when: False
+  when: "enable_influxdb2 is defined"
+  
+- name: get bucket id => enable_influxdb2 is defined and bucket mapping does not exists
+  shell: "docker exec influxdb2 sh -c \"influx bucket list --name openhab --json\""
+  register: influxdb_bucket_result
+  when: "enable_influxdb2 is defined and ( influxdb_mapping_result.stdout | from_json | length ) == 0"
+
+- name: create bucket mapping => enable_influxdb2 is defined and bucket mapping does not exists
+  shell: "docker exec influxdb2 sh -c \"influx v1 dbrp create --db openhab --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
+  when: "enable_influxdb2 is defined and ( influxdb_mapping_result.stdout | from_json | length ) == 0"
+
+#- name: create cron job
+#  vars:
+#    name: "Influxdb OpenTSDB Backup"
+#    cmd: "docker exec influxdb2 sh -c \"influx backup --bucket openhab /var/lib/influxdb_backup/openhab_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+#    file: "ansible_netdata"
+#    hour: "1"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: "enable_influxdb2 is defined"
 
 # ***** FINALIZE *****
 - name: create cron job

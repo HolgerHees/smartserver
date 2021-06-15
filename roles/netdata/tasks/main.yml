@@ -281,7 +281,7 @@
     #- { field: "Nice", value: "0" } # was "#Nice=0" before
   notify: "restart netdata"
 
-# ***** DATABASE ****
+# ***** INFLUXDB DATABASE ****
 - name: check influxdb data
   stat:
     path: "{{ global_lib }}influxdb/data/opentsdb"
@@ -300,6 +300,46 @@
   vars:
     database: "opentsdb"
   import_tasks: roles/influxdb/tasks/create_retention_policy.yml
+
+# ***** INFLUXDB2 DATABASE ****
+- name: check influxdb2 service => enable_influxdb2 is defined
+  import_tasks: roles/influxdb2/tasks/wait_until_ready.yml
+  when: "enable_influxdb2 is defined"
+
+- name: check bucket => enable_influxdb2 is defined
+  shell: "docker exec influxdb2 sh -c \"influx bucket list --name opentsdb --json\""
+  register: influxdb_bucket_result
+  changed_when: False
+  when: "enable_influxdb2 is defined"
+
+- name: create bucket => enable_influxdb2 is defined and bucket does not exists
+  shell: "docker exec influxdb2 sh -c \"influx bucket create --name opentsdb --retention 365d -o default-org\""
+  when: "enable_influxdb2 is defined and ( influxdb_bucket_result.stdout | from_json | length ) == 0"
+
+- name: check bucket mapping => enable_influxdb2 is defined
+  shell: "docker exec influxdb2 sh -c \"influx v1 dbrp list --db opentsdb --json\""
+  register: influxdb_mapping_result
+  changed_when: False
+  when: "enable_influxdb2 is defined"
+  
+- name: get bucket id => enable_influxdb2 is defined and bucket mapping does not exists
+  shell: "docker exec influxdb2 sh -c \"influx bucket list --name opentsdb --json\""
+  register: influxdb_bucket_result
+  when: "enable_influxdb2 is defined and ( influxdb_mapping_result.stdout | from_json | length ) == 0"
+
+- name: create bucket mapping => enable_influxdb2 is defined and bucket mapping does not exists
+  shell: "docker exec influxdb2 sh -c \"influx v1 dbrp create --db opentsdb --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
+  when: "enable_influxdb2 is defined and ( influxdb_mapping_result.stdout | from_json | length ) == 0"
+  
+#- name: create cron job
+#  vars:
+#    name: "Influxdb OpenTSDB Backup"
+#    cmd: "docker exec influxdb2 sh -c \"influx backup --bucket opentsdb /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+#    file: "ansible_netdata"
+#    hour: "1"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: "enable_influxdb2 is defined"
 
 # ***** OTHER *****
 - name: register webui
