@@ -80,16 +80,16 @@
     container_name: "telegraf"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
-#- name: register update notifier
-#  vars:
-#    name: "telegraf"
-#    type: "docker"
-#    url: "https://docs.influxdata.com/telegraf/v1.18/"
-#    config: {
-#      repository: "telegraf",
-#      pattern: "^([0-9\\.]+)-alpine$"
-#    }
-#  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+- name: register update notifier
+  vars:
+    name: "telegraf"
+    type: "docker"
+    url: "https://docs.influxdata.com/telegraf/v1.18/"
+    config: {
+      repository: "telegraf",
+      pattern: "^([0-9\\.]+)-alpine$"
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
 - name: trigger telegraf handler
   vars:

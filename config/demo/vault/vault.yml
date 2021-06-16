@@ -5,9 +5,9 @@ vault_root_mail_host: "smtp.gmail.com"
 vault_root_mail_port: "587"
 
 vault_userpasswords: {
-    testuser1: { samba_password: "test", web_password: "test" },
-    testuser2: { samba_password: "test", web_password: "test" },
-    testuser3: { samba_password: "test", web_password: "test" }
+    testuser1: { samba_password: "test12345", web_password: "test12345" },
+    testuser2: { samba_password: "test12345", web_password: "test12345" },
+    testuser3: { samba_password: "test12345", web_password: "test12345" }
 }
 
 # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc

@@ -1,5 +1,5 @@
 <?php
-class Setup
+class SystemConfig
 {
     public static function getTimezone()
     {

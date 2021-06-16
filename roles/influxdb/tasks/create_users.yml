@@ -10,9 +10,43 @@
   tags: [ 'user' ]
 
 - name: add new user
-  shell: "docker exec influxdb sh -c \"influx user create -n {{item}} -p {{vault_userpasswords[item].web_password}} -o default-org\""
+  shell: "docker exec influxdb sh -c \"influx user create --name {{item}} --password {{vault_userpasswords[item].web_password}} --org default-org\""
   when: "item not in influxdb_user_result.stdout and 'admin' in userdata[item].groups"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
- 
+- name: check auth
+  shell: "docker exec influxdb sh -c \"influx auth list --org default-org\""
+  register: influxdb_auth_result
+  changed_when: False
+  tags: [ 'user' ]
+  
+- name: add new auth
+  shell: "docker exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org \
+  --read-buckets \
+  --read-checks \
+  --read-dashboards \
+  --read-dbrps \
+  --read-notificationEndpoints \
+  --read-notificationRules \
+  --read-orgs \
+  --read-tasks \
+  --read-telegrafs \
+  --read-user \
+  --write-buckets \
+  --write-checks \
+  --write-dashboards \
+  --write-dbrps \
+  --write-notificationEndpoints \
+  --write-notificationRules \
+  --write-orgs \
+  --write-tasks \
+  --write-telegrafs \
+  --write-user\""
+  when: "item not in influxdb_auth_result.stdout and 'admin' in userdata[item].groups"
+  with_items: "{{userdata}}"
+  tags: [ 'user' ]
+
+
+  
+  

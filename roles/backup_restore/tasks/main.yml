@@ -49,16 +49,12 @@
   when: influxdb_backup_exists.rc == 0
   
 # ??? check if this is enough or if we need to import metadata from opentsdb too
-- name: import influxdb metadata backup => influxdb_backup_exists
-  shell: "docker exec influxdb sh -c \"influxd restore -metadir /var/lib/influxdb/meta /var/lib/influxdb_backup/import/openhab*\""
-  when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
-  
 - name: import influxdb openhab backup => influxdb_backup_exists
-  shell: "docker exec influxdb sh -c \"influxd restore -db openhab_db -newdb openhab_db -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/openhab*\""
+  shell: "docker exec influxdb sh -c \"influxd restore --bucket openhab --org default-org /var/lib/influxdb/data /var/lib/influxdb_backup/import/openhab*\""
   when: influxdb_backup_exists.rc == 0 and 'openhab' in influxdb_backup_exists.stdout
 
 - name: import influxdb opentsdb backup => influxdb_backup_exists
-  shell: "docker exec influxdb sh -c \"influxd restore -db opentsdb -newdb opentsdb -datadir /var/lib/influxdb/data /var/lib/influxdb_backup/import/opentsdb*\""
+  shell: "docker exec influxdb sh -c \"influxd restore --bucket opentsdb --org default-org /var/lib/influxdb/data /var/lib/influxdb_backup/import/opentsdb*\""
   when: influxdb_backup_exists.rc == 0 and 'opentsdb' in influxdb_backup_exists.stdout
   
 - name: unmount influxdb backup import folder => influxdb_backup_exists

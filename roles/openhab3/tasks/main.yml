@@ -454,27 +454,27 @@
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
 
 - name: check bucket
-  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab --json\""
+  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab --org default-org --json\""
   register: influxdb_bucket_result
   failed_when: "influxdb_bucket_result.rc == 1 and 'not found' not in influxdb_bucket_result.stdout"
   changed_when: False
   
 - name: create bucket => bucket does not exists
-  shell: "docker exec influxdb sh -c \"influx bucket create --name openhab --retention 0 -o default-org\""
+  shell: "docker exec influxdb sh -c \"influx bucket create --name openhab --org default-org --retention 0\""
   when: "'not found' in influxdb_bucket_result.stdout"
  
 - name: check bucket mapping
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --db openhab --json\""
+  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --db openhab --org default-org --json\""
   register: influxdb_mapping_result
   changed_when: False
   
 - name: get bucket id => bucket mapping does not exists
-  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab --json\""
+  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab --org default-org --json\""
   register: influxdb_bucket_result
   when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
 
 - name: create bucket mapping => bucket mapping does not exists
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db openhab --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
+  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db openhab --org default-org --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
   when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
 
 # ***** FINALIZE *****
@@ -490,7 +490,7 @@
 - name: create cron job
   vars:
     name: "Influxdb Openhab Backup"
-    cmd: "docker exec influxdb sh -c \"influx backup --bucket openhab /var/lib/influxdb_backup/openhab_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    cmd: "docker exec influxdb sh -c \"influx backup --bucket openhab --org default-org /var/lib/influxdb_backup/openhab_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
     file: "ansible_openhab"
     hour: "1"
     minute: "0"

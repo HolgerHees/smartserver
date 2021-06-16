@@ -5,11 +5,26 @@
     git_clone_url: "https://github.com/HolgerHees/toolbox.git"
   import_tasks: roles/_shared/tasks/git_clone.yml
 
-- name: copy config
+- name: copy system config
   template:
-    src: "templates/config.php"
-    dest: "{{projects_path}}toolbox/_lib/config.php"
+    src: "templates/system.php"
+    dest: "{{projects_path}}toolbox/_lib/config/system.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640
-  tags: ['apache_webui_page']
+
+- name: check environment config
+  shell: "ls {{projects_path}}openhab_config/toolbox/environment.php"
+  register: environment_result
+  changed_when: no
+  failed_when: no
+
+- name: copy environment config
+  copy:
+    src: "{{projects_path}}openhab_config/toolbox/environment.php"
+    dest: "{{projects_path}}toolbox/_lib/config/environment.php"
+    remote_src: yes
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640  
+  when: "environment_result.rc == 0"
