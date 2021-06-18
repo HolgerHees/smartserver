@@ -39,19 +39,19 @@
 
 - name: check mysql table
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
-  register: mysql_data_exists
-  changed_when: "'weather_forecast' not in mysql_data_exists.stdout"
+  register: mysql_table_exists
+  changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
   
 - name: prepare table config
   copy:
     src: "roles/weather_forecast/templates/weather_forecast.sql"
     dest: "{{ global_build }}weather_forecast/weather_forecast.sql"
   changed_when: no
-  when: "'weather_forecast' not in mysql_data_exists.stdout"
+  when: "'weather_forecast' not in mysql_table_exists.stdout"
   
 - name: create missing table 'weather_forecast' => does not exists in database
   shell: "cat {{ global_build }}weather_forecast/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
-  when: "'weather_forecast' not in mysql_data_exists.stdout"
+  when: "'weather_forecast' not in mysql_table_exists.stdout"
   
 - name: copy service
   template:

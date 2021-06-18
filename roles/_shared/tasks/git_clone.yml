@@ -17,3 +17,6 @@
   register: "git_clone_result"
   when: "_git_clone_result.rc == 1"
  
+- name: register result state
+  set_fact:
+    git_clone_changed: "{{ git_clone_result.changed }}"

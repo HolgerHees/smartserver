@@ -61,7 +61,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     recurse: yes
-  when: "git_clone_result.changed"
+  when: "git_clone_changed"
 
 - name: set symbolic link to shared python scripts
   file:
@@ -90,7 +90,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     recurse: yes
-  when: "git_clone_result.changed"
+  when: "git_clone_changed"
   
 # => custom python
 - name: link custom python

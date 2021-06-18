@@ -1,0 +1,27 @@
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  
+- name: check mysql databases
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
+  register: mysql_database_exists
+  changed_when: "name not in mysql_database_exists.stdout"
+
+- name: create missing mysql databases => database does not exists
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create {{name}}\""
+  when: "name not in mysql_database_exists.stdout"
+
+- name: create missing mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{username}}'@'%' IDENTIFIED BY '{{password}}';\\\"\""
+  when: "name not in mysql_database_exists.stdout"
+
+- name: grant permissions to mysql user => database does not exists
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON {{name}}.* TO '{{username}}'@'%';\\\"\""
+  when: "name not in mysql_database_exists.stdout"
+
+- name: refresh mysql privileges => database does not exists
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
+  when: "name not in mysql_database_exists.stdout"
+
+- name: register result state
+  set_fact:
+    database_added: "{{ name not in mysql_database_exists.stdout }}"

@@ -56,41 +56,24 @@
   command: "mv {{global_tmp}}nextcloud/ {{htdocs_path}}nextcloud-{{nextcloud_version}}"
   when: not nextcloud_version_exists.stat.exists
 
-# ***** DATABASE *****
-- name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
-
-- name: check mysql databases
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
-  register: mysql_data_exists
-  changed_when: "'nextcloud' not in mysql_data_exists.stdout"
+# ***** MYSQL DATABASE *****
+- name: create database
+  vars:
+    name: "nextcloud"
+    username: "{{vault_nextcloud_mysql_username}}"
+    password: "{{vault_nextcloud_mysql_password}}"
+  import_tasks: roles/mysql/tasks/add_database.yml
   tags: [ 'user' ]
-  
-- name: create missing mysql databases => database does not exists
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create nextcloud\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
-  
-- name: create missing mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{vault_nextcloud_mysql_username}}'@'%' IDENTIFIED BY '{{vault_nextcloud_mysql_password}}';\\\"\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
-
-- name: grant permissions to mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON nextcloud.* TO '{{vault_nextcloud_mysql_username}}'@'%';\\\"\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
-
-- name: refresh mysql privileges => database does not exists
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
 
 # ***** REDIS ****
 - name: check redis service => database does not exists
   import_tasks: roles/redis/tasks/wait_until_ready.yml
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
 # ***** APACHE *****  
 - name: check apache service
   import_tasks: roles/apache/tasks/wait_until_ready.yml
-  when: "'nextcloud' not in mysql_data_exists.stdout or not nextcloud_version_exists.stat.exists"
+  when: "database_added or not nextcloud_version_exists.stat.exists"
 
   
   
@@ -100,39 +83,39 @@
   file:
     dest: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/config/config.php"
     state: absent
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
 - name: backup old admin folder => database does not exists
   command: "mv {{nextcloud_data_path}}{{vault_nextcloud_admin_username}}/ {{nextcloud_data_path}}{{vault_nextcloud_admin_username}}-{{lookup('pipe', 'date +%Y%m%d-%H%M')}}/"
   failed_when: no
   changed_when: no
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
 - name: initialise nextcloud => database does not exists
   shell: "docker exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{vault_nextcloud_mysql_username}}' --database-pass '{{vault_nextcloud_mysql_password}}' --admin-user '{{vault_nextcloud_admin_username}}' --admin-pass '{{vault_nextcloud_admin_password}}'\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
 - name: disable password policy => database does not exists
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ app:disable password_policy\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
 - name: backup old user folder => database does not exists
   command: "mv {{nextcloud_data_path}}{{item}}/ {{nextcloud_data_path}}{{item}}-{{lookup('pipe', 'date +%Y%m%d-%H%M')}}/"
   with_items: "{{userdata}}"
   failed_when: no
   changed_when: no
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
 - name: enable cron as background job handler => database does not exists
   shell: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud-{{nextcloud_version}}/occ background:cron\""
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
   
 - name: read new nextcloud config => database does not exists
   slurp:
     src: "{{htdocs_path}}nextcloud-{{nextcloud_version}}/config/config.php"
   register: new_nextcloud_config
   failed_when: no
-  when: "'nextcloud' not in mysql_data_exists.stdout"
+  when: "database_added"
 
   
   
@@ -143,7 +126,7 @@
     src: "{{htdocs_path}}nextcloud/config/config.php"
   register: previous_nextcloud_config
   failed_when: no
-  when: "'nextcloud' in mysql_data_exists.stdout"
+  when: "database_added"
 
 
 
@@ -218,7 +201,7 @@
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ user:list\" | grep -o \"\\- [a-zA-Z0-9]*:\" | grep -o \"[a-zA-Z0-9]*\""
   register: nextcloud_user_result
   changed_when: False
-  #when: "'nextcloud' not in mysql_data_exists.stdout"
+  #when: "database_added"
   tags: [ 'user' ]
   
 #  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
@@ -243,7 +226,7 @@
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
 #  with_items: "{{userdata | intersect(nextcloud_user_result.stdout_lines)}}"
-#  #when: "'nextcloud' not in mysql_data_exists.stdout"
+#  #when: "database_added"
 #  tags: [ 'user' ]
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
@@ -252,7 +235,7 @@
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
-#  when: "'nextcloud' in mysql_data_exists.stdout"
+#  when: "database_added"
   
 # ***** FINALIZE *****
 - name: create cron job

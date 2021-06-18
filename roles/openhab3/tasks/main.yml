@@ -51,7 +51,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     recurse: yes
-  when: "git_clone_result.changed"
+  when: "git_clone_changed"
 
 - name: set symbolic link to shared python scripts
   file:
@@ -80,7 +80,7 @@
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
     recurse: yes
-  when: "git_clone_result.changed"
+  when: "git_clone_changed"
   
 # => custom python
 - name: link custom python
@@ -425,57 +425,19 @@
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
-- name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
-  
-- name: check mysql databases
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
-  register: mysql_data_exists
-  changed_when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: create missing mysql databases => database does not exists
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create openhab\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: create missing mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{vault_openhab_mysql_username}}'@'%' IDENTIFIED BY '{{vault_openhab_mysql_password}}';\\\"\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: grant permissions to mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON openhab.* TO '{{vault_openhab_mysql_username}}'@'%';\\\"\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: refresh mysql privileges => database does not exists
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-  
-# ***** INFLUXDB2 DATABASE ****
-- name: check influxdb service
-  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
-
-- name: check bucket
-  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab --org default-org --json\""
-  register: influxdb_bucket_result
-  failed_when: "influxdb_bucket_result.rc == 1 and 'not found' not in influxdb_bucket_result.stdout"
-  changed_when: False
-  
-- name: create bucket => bucket does not exists
-  shell: "docker exec influxdb sh -c \"influx bucket create --name openhab --org default-org --retention 0\""
-  when: "'not found' in influxdb_bucket_result.stdout"
- 
-- name: check bucket mapping
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --db openhab --org default-org --json\""
-  register: influxdb_mapping_result
-  changed_when: False
-  
-- name: get bucket id => bucket mapping does not exists
-  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab --org default-org --json\""
-  register: influxdb_bucket_result
-  when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
-
-- name: create bucket mapping => bucket mapping does not exists
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db openhab --org default-org --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
-  when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
+- name: create database
+  vars:
+    name: "openhab"
+    username: "{{vault_openhab_mysql_username}}"
+    password: "{{vault_openhab_mysql_password}}"
+  import_tasks: roles/mysql/tasks/add_database.yml
+    
+# ***** INFLUXDB DATABASE ****
+- name: create database
+  vars:
+    name: "openhab"
+    retention: "0"
+  import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****
 - name: create cron job
