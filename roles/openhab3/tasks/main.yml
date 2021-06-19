@@ -436,7 +436,8 @@
 - name: create database
   vars:
     name: "openhab"
-    retention: "0"
+    retentions:
+      - { retention: "0" }
   import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****

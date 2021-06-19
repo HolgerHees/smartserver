@@ -2,25 +2,26 @@
   import_tasks: roles/influxdb/tasks/wait_until_ready.yml
 
 - name: check bucket
-  shell: "docker exec influxdb sh -c \"influx bucket list --name {{name}} --org default-org --json\""
+  shell: "docker exec influxdb sh -c \"influx bucket list --org default-org\""
   register: influxdb_bucket_result
-  failed_when: "influxdb_bucket_result.rc == 1 and 'not found' not in influxdb_bucket_result.stdout"
   changed_when: False
 
 - name: create bucket => bucket does not exists
-  shell: "docker exec influxdb sh -c \"influx bucket create --name {{name}} --org default-org --retention {{retention}}\""
-  when: "'not found' in influxdb_bucket_result.stdout"
+  shell: "docker exec influxdb sh -c \"influx bucket create --name {{name + ('_' + item.name if item.name is defined else '')}} --org default-org --retention {{item.retention}}\""
+  when: "'\t' + name + ('_' + item.name if item.name is defined else '') + '\t' not in influxdb_bucket_result.stdout"
+  with_items: "{{retentions}}"
+  
+- name: get bucket ids => bucket mapping does not exists
+  shell: "docker exec influxdb sh -c \"influx bucket list --org default-org --json\""
+  register: influxdb_bucket_result
+  changed_when: False
 
 - name: check bucket mapping
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --db {{name}} --org default-org --json\""
+  shell: "docker exec influxdb sh -c \"influx v1 dbrp list --org default-org\""
   register: influxdb_mapping_result
   changed_when: False
   
-- name: get bucket id => bucket mapping does not exists
-  shell: "docker exec influxdb sh -c \"influx bucket list --name {{name}} --org default-org --json\""
-  register: influxdb_bucket_result
-  when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
-
 - name: create bucket mapping => bucket mapping does not exists
-  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db {{name}} --org default-org --rp autogen --bucket-id {{( influxdb_bucket_result.stdout | from_json)[0].id}} --default\""
-  when: "( influxdb_mapping_result.stdout | from_json | length ) == 0"
+  shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db {{name}} --org default-org --rp {{item.name if item.name is defined else 'autogen'}} --bucket-id {{(influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', name + ('_' + item.name if item.name is defined else '')) )[0].id}} {{'' if item.name is defined else '--default'}}\""
+  when: "'\t' + ( influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', name + ('_' + item.name if item.name is defined else '')) )[0].id + '\t' not in influxdb_mapping_result.stdout"
+  with_items: "{{retentions}}"  

@@ -1,0 +1,126 @@
+- name: set version
+  set_fact:
+    netdata_version: "1.29.3"
+  tags: [ 'update_notifier_configs' ]
+  
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: "201"
+    group: "201"
+    mode: 0750
+  with_items:
+    - "{{ global_lib }}netdata_test"
+    - "{{ global_lib }}netdata_test/cache"
+    - "{{ global_etc }}netdata"
+    - "{{ global_etc }}netdata/health.d"
+#    - "/opt/netdata_helper"
+
+- name: copy config
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: "201"
+    group: "201"
+    mode: 0640
+  with_items:
+    - { src: "/etc/netdata_test/.environment", dest: "{{ global_etc }}netdata/.environment" }
+    - { src: "/etc/netdata_test/netdata.conf", dest: "{{ global_etc }}netdata/netdata.conf" }
+    - { src: "/etc/netdata_test/exporting.conf", dest: "{{ global_etc }}netdata/exporting.conf" }
+    - { src: "/etc/netdata_test/python.d.conf", dest: "{{ global_etc }}netdata/python.d.conf" }
+    - { src: "/etc/netdata_test/fping.conf", dest: "{{ global_etc }}netdata/fping.conf" }
+    - { src: "/etc/netdata_test/health_alarm_notify.conf", dest: "{{ global_etc }}netdata/health_alarm_notify.conf" }
+    - { src: "/etc/netdata_test/health.d/disks.conf", dest: "{{ global_etc }}netdata/health.d/disks.conf" }
+    - { src: "/etc/netdata_test/health.d/softnet.conf", dest: "{{ global_etc }}netdata/health.d/softnet.conf" }
+    - { src: "/etc/netdata_test/health.d/net.conf", dest: "{{ global_etc }}netdata/health.d/net.conf" }
+    - { src: "/etc/netdata_test/health.d/fping.conf", dest: "{{ global_etc }}netdata/health.d/fping.conf" }
+    - { src: "/etc/netdata_test/health.d/udp_errors.conf", dest: "{{ global_etc }}netdata/health.d/udp_errors.conf" }
+  notify: "restart netdata"
+
+#- name: copy helper
+#  template:
+#    src: "templates{{item}}"
+#    dest: "{{item}}"
+#    owner: root
+#    group: root
+#    mode: 750
+#  with_items:
+#    - "/opt/netdata_helper/send_notification.sh"
+#    - "/opt/netdata_helper/inform_openhab"    
+    
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+#- name: create docker network
+#  docker_network:
+#    name: netdata
+#    connected:
+#      - influxdb
+#    appends: yes
+#  tags: ['influxdb']
+
+- name: create docker container
+  docker_container:
+    name: netdata_test
+    image: "netdata/netdata:v{{netdata_version}}"
+    state: present
+    #pid_mode: "host"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      PGID: "473"
+    #  NETDATA_PORT: "29999"
+      NETDATA_PORT: "19999"
+    #  DOCKER_USR: "root"
+    #  VIRTUALIZATION: "kvm"
+    log_driver: journald
+    log_options:
+      tag: netdata_test
+    capabilities:
+      - SYS_PTRACE
+    #  - SYS_ADMIN
+    security_opts:
+      - "apparmor:unconfined"
+    pid_mode: "host"
+    privileged: yes
+    container_default_behavior: "compatibility"
+    network_mode: "host"
+#    networks:
+#      - name: "netdata"
+#    networks_cli_compatible: yes
+    volumes:
+      - '{{ global_lib }}netdata_test:/var/lib/netdata:z'
+      - '{{ global_lib }}netdata_test/cache:/var/cache/netdata:z'      
+      - "{{ global_etc }}netdata/.environment:/etc/netdata/.environment:ro,z"
+      - "{{ global_etc }}netdata/netdata.conf:/etc/netdata/netdata.conf:ro,z"
+      - "{{ global_etc }}netdata/python.d.conf:/etc/netdata/python.d.conf:ro,z"
+      - "{{ global_etc }}netdata/fping.conf:/etc/netdata/fping.conf:ro,z"
+      - "{{ global_etc }}netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/disks.conf:/etc/netdata/health.d/disks.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/softnet.conf:/etc/netdata/health.d/softnet.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/net.conf:/etc/netdata/health.d/net.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/fping.conf:/etc/netdata/health.d/fping.conf:ro,z"
+      - "{{ global_etc }}netdata/health.d/udp_errors.conf:/etc/netdata/health.d/udp_errors.conf:ro,z"
+      - '/opt/netdata_helper/:/opt/netdata_helper/:ro'
+      - '/etc/os-release:/host/etc/os-release:ro'
+      - '/etc/passwd:/host/etc/passwd:ro'
+      - '/etc/group:/host/etc/group:ro'
+      - '/proc:/host/proc:ro'
+      - '/sys:/host/sys:ro'
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    exposed_ports:
+     - "19999"  
+    # - "127.0.0.1:19999:19999"  
+#  notify: "restart netdata"
+
+# chown -R netdata:netdata /usr/share/netdata/web/
+
+# https://github.com/Tecnativa/docker-socket-proxy
+
+#- name: create systemd service
+#  vars:
+#    container_name: "netdata_test"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
