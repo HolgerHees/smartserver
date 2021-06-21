@@ -63,13 +63,4 @@
     minute: "0"
   include_tasks: roles/cron/tasks/add_cronjob.yml
   with_items: "{{retentions}}"
-
-#- name: create cron job
-#  vars:
-#    name: "Influxdb OpenTSDB Backup"
-#    cmd: "docker exec influxdb sh -c \"influx backup --bucket opentsdb --org default-org /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-#    file: "ansible_netdata"
-#    hour: "1"
-#    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
-
+  
