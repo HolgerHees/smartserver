@@ -88,9 +88,10 @@
 # ***** DATABASE *****
 - name: create database
   vars:
-    name: "onlyoffice"
+    database: "onlyoffice"
     username: "{{vault_onlyoffice_mysql_username}}"
     password: "{{vault_onlyoffice_mysql_password}}"
+    backup: no
   import_tasks: roles/mysql/tasks/add_database.yml
   
 # ***** FINALIZE *****

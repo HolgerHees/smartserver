@@ -59,9 +59,10 @@
 # ***** MYSQL DATABASE *****
 - name: create database
   vars:
-    name: "nextcloud"
+    database: "nextcloud"
     username: "{{vault_nextcloud_mysql_username}}"
     password: "{{vault_nextcloud_mysql_password}}"
+    backup: yes
   import_tasks: roles/mysql/tasks/add_database.yml
   tags: [ 'user' ]
 
@@ -250,15 +251,6 @@
   vars:
     name: "Nextcloud Fileindex"
     cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
-    file: "ansible_nextcloud"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-
-- name: create cron job
-  vars:
-    name: "Nextcloud MySQL Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump nextcloud -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/nextcloud_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
     file: "ansible_nextcloud"
     hour: "1"
     minute: "0"

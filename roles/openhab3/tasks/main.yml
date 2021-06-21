@@ -427,38 +427,22 @@
 # ***** MYSQL DATABASE ****
 - name: create database
   vars:
-    name: "openhab"
+    database: "openhab"
     username: "{{vault_openhab_mysql_username}}"
     password: "{{vault_openhab_mysql_password}}"
+    backup: yes
   import_tasks: roles/mysql/tasks/add_database.yml
     
 # ***** INFLUXDB DATABASE ****
 - name: create database
   vars:
-    name: "openhab"
+    database: "openhab"
     retentions:
       - { retention: "0" }
+    backup: yes
   import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****
-- name: create cron job
-  vars:
-    name: "MySQL Openhab Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-    file: "ansible_openhab"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-
-- name: create cron job
-  vars:
-    name: "Influxdb Openhab Backup"
-    cmd: "docker exec influxdb sh -c \"influx backup --bucket openhab --org default-org /var/lib/influxdb_backup/openhab_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-    file: "ansible_openhab"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-
 - name: register default webui
   vars:
     name: "openhab"
@@ -503,11 +487,6 @@
     container_after: [ "mysql", "influxdb", "mosquitto" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
-- name: register service watcher
-  vars:
-    name: "openhab3"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
 - name: register openhab update notifier
   vars:
     name: "openhab3"

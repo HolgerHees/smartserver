@@ -55,20 +55,20 @@
 # ***** FINALIZE *****
 - name: create cron job
   vars:
-    name: "MySQL Core Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-    file: "ansible_mysql"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-
-- name: create cron job
-  vars:
     name: "MySQL Clean Backup"
     cmd: "find {{backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
     file: "ansible_mysql"
     hour: "0"
     minute: "45"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: create cron job
+  vars:
+    name: "MySQL Core Backup"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
+    file: "ansible_mysql"
+    hour: "1"
+    minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: copy fluentd config
@@ -101,8 +101,9 @@
 # ***** SHARED DATABASE ****
 - name: create database
   vars:
-    name: "shared"
+    database: "shared"
     username: "{{vault_shared_mysql_username}}"
     password: "{{vault_shared_mysql_password}}"
+    backup: yes
   import_tasks: roles/mysql/tasks/add_database.yml
   

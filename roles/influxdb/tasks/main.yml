@@ -11,13 +11,13 @@
     group: root
     mode: 0750
   with_items:
-#    - '{{ global_build }}influxdb'
+    - '{{ global_build }}influxdb'
     - '{{ global_lib }}influxdb'
     - '{{ global_lib }}influxdb/hh'
     - '{{ global_lib }}influxdb/meta'
     - '{{ global_lib }}influxdb/data'
     - '{{ global_lib }}influxdb/wal'  
-#    - '{{backup_path}}influxdb'
+    - '{{backup_path}}influxdb'
 
 - name: check started docker
   systemd:
@@ -69,7 +69,7 @@
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"
-    cmd: "find {{backup_path}}influxdb/ -type d -mtime +30 -exec rm -rf {} +;"
+    cmd: "find {{backup_path}}influxdb/ -type d -mtime +7 -exec rm -rf {} +;"
     file: "ansible_influxdb"
     hour: "0"
     minute: "45"

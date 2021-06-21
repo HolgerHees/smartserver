@@ -22,6 +22,10 @@
   shell: "bzcat {{deployment_backup_path}}mysql/openhab* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 openhab\""
   when: mysql_backup_exists.stat.exists
   
+- name: import shared database => mysql_backup_exists
+  shell: "bzcat {{deployment_backup_path}}mysql/shared* | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
+  when: mysql_backup_exists.stat.exists
+
 # **** INFLUXDB ****     
 - name: check influxdb backup import folder
   shell: "ls {{deployment_backup_path}}influxdb/"

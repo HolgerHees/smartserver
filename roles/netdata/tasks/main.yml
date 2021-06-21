@@ -118,14 +118,15 @@
 # ***** INFLUXDB DATABASE ****
 - name: create database
   vars:
-    name: "opentsdb"
+    database: "opentsdb"
     retentions: 
-      - { retention: "365d" }
-      - { retention: "28d", name: "028d", interval: "10s" }
-      - { retention: "90d", name: "090d", interval: "30s" }
-      - { retention: "180d", name: "180d", interval: "2m" }
-      - { retention: "360d", name: "360d", interval: "5m" }
-      - { retention: "0", name: "999d", interval: "15m" }
+      - { retention: "14d" }
+      - { retention: "28d", name: "028d", interval: "10s", every: "6h" }
+      - { retention: "90d", name: "090d", interval: "30s", every: "1d" }
+      - { retention: "180d", name: "180d", interval: "2m", every: "2d" }
+      - { retention: "360d", name: "360d", interval: "5m", every: "4d" }
+      - { retention: "0", name: "999d", interval: "15m", every: "7d" }
+    backup: yes
   import_tasks: roles/influxdb/tasks/add_bucket.yml
   
 # ***** OTHER *****
@@ -143,15 +144,6 @@
     sub_domain: "netdata"
     include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
-
-- name: create cron job
-  vars:
-    name: "Influxdb OpenTSDB Backup"
-    cmd: "docker exec influxdb sh -c \"influx backup --bucket opentsdb --org default-org /var/lib/influxdb_backup/opentsdb_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-    file: "ansible_netdata"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create cron job
   vars:
