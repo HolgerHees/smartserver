@@ -16,8 +16,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 32,
-  "iteration": 1610713779293,
+  "iteration": 1624355743150,
   "links": [],
   "panels": [
     {
@@ -28,7 +27,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -60,7 +58,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -88,7 +86,7 @@
           "hide": false,
           "measurement": "netdata.local.system.cpu.softirq",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -125,7 +123,7 @@
           ],
           "measurement": "netdata.local.system.cpu.iowait",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -163,7 +161,7 @@
           "hide": false,
           "measurement": "netdata.local.system.cpu.system",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -200,7 +198,7 @@
           ],
           "measurement": "netdata.local.system.cpu.user",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -272,7 +270,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -304,7 +301,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -331,7 +328,7 @@
           ],
           "measurement": "netdata.local.system.load.load1",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -368,7 +365,7 @@
           ],
           "measurement": "netdata.local.system.load.load5",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -405,7 +402,7 @@
           ],
           "measurement": "netdata.local.system.load.load15",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -477,7 +474,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -509,7 +505,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -536,7 +532,7 @@
           ],
           "measurement": "netdata.local.system.net.received",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -573,7 +569,7 @@
           ],
           "measurement": "netdata.local.system.net.sent",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -644,7 +640,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -676,7 +671,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -703,7 +698,7 @@
           ],
           "measurement": "netdata.local.system.io.in",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -740,7 +735,7 @@
           ],
           "measurement": "netdata.local.system.io.out",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -811,7 +806,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -843,7 +837,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -870,7 +864,7 @@
           ],
           "measurement": "netdata.local.system.ram.used",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -907,7 +901,7 @@
           ],
           "measurement": "netdata.local.system.ram.buffers",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -944,7 +938,7 @@
           ],
           "measurement": "netdata.local.system.ram.cached",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -981,7 +975,7 @@
           ],
           "measurement": "netdata.local.system.ram.free",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -1053,7 +1047,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -1085,7 +1078,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1112,7 +1105,7 @@
           ],
           "measurement": "netdata.local.disk_space._dataraid.reserved_for_root",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1149,7 +1142,7 @@
           ],
           "measurement": "netdata.local.disk_space._dataraid.used",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1186,7 +1179,7 @@
           ],
           "measurement": "netdata.local.disk_space._dataraid.avail",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -1258,7 +1251,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -1290,7 +1282,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1317,7 +1309,7 @@
           ],
           "measurement": "netdata.local.disk_space._datadisk.reserved_for_root",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1354,7 +1346,7 @@
           ],
           "measurement": "netdata.local.disk_space._datadisk.used",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1391,7 +1383,7 @@
           ],
           "measurement": "netdata.local.disk_space._datadisk.avail",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -1463,7 +1455,6 @@
       "datasource": "OpenTSDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -1495,7 +1486,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "8.0.2",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1522,7 +1513,7 @@
           ],
           "measurement": "netdata.local.disk_space._.reserved_for_root",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1559,7 +1550,7 @@
           ],
           "measurement": "netdata.local.disk_space._.used",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1596,7 +1587,7 @@
           ],
           "measurement": "netdata.local.disk_space._.avail",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -1662,11 +1653,36 @@
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 26,
+  "schemaVersion": 30,
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "autogen",
+          "value": "autogen"
+        },
+        "datasource": "OpenTSDB",
+        "definition": "SHOW RETENTION POLICIES on \"opentsdb\" ",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "rp",
+        "options": [],
+        "query": "SHOW RETENTION POLICIES on \"opentsdb\" ",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-24h",
@@ -1700,5 +1716,5 @@
   "timezone": "",
   "title": "Server Health",
   "uid": "server-health",
-  "version": 1
+  "version": 6
 }

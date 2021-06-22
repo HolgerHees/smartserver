@@ -5,19 +5,15 @@
 
 - name: prepare needed folder
   file:
-    path: '{{item}}'
+    path: '{{item.path}}'
     state: directory
-    owner: root
-    group: root
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
     mode: 0750
   with_items:
-    - '{{ global_build }}influxdb'
-    - '{{ global_lib }}influxdb'
-    - '{{ global_lib }}influxdb/hh'
-    - '{{ global_lib }}influxdb/meta'
-    - '{{ global_lib }}influxdb/data'
-    - '{{ global_lib }}influxdb/wal'  
-    - '{{backup_path}}influxdb'
+    - { user: "root", group: "root", path: "{{ global_build }}influxdb" }
+    - { user: "1000", group: "1000", path: "{{ global_lib }}influxdb" }
+    - { user: "root", group: "root", path: "{{backup_path}}influxdb" }
 
 - name: check started docker
   systemd:
@@ -53,12 +49,13 @@
         ipv4_address: "{{docker_influxdb_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{ global_lib }}influxdb:/var/lib/influxdb:z'
+      - '{{ global_lib }}influxdb:/var/lib/influxdb2:z'
       - '{{backup_path}}influxdb:/var/lib/influxdb_backup:z'
     exposed_ports:
-     - "8086"  
+     - "8086"
+  register: influxdb_container_result
   notify: "restart influxdb"
-    
+
 - name: add container name
   vars:
     host_name: "influxdb"
@@ -116,3 +113,18 @@
     service: "influxdb.service"
   import_tasks: roles/_shared/tasks/service_check.yml
 
+# CHECK local cli token => only needed if a new container is created and data folder already exists
+- name: check influxdb service
+  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
+  when: "influxdb_container_result.changed"
+  
+- name: check cli config
+  shell: "docker exec influxdb sh -c \"influx config list\""
+  register: influxdb_config_result
+  changed_when: False
+  when: "influxdb_container_result.changed"
+  
+- name: create cli config token => config does not exists
+  shell: "docker exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token {{vault_influxdb_admin_token}} --active\""
+  changed_when: False
+  when: "influxdb_container_result.changed and '\tdefault\t' not in influxdb_config_result.stdout"
