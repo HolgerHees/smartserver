@@ -6,24 +6,15 @@
 
 - name: set openhab version
   set_fact:
-    openhab_version: "2.5.12"
-    jython_version: "2.7.2"
+    openhab_version: "3.0.2"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"
     openhab_gid: "{{system_groups['openhab'].id}}"
     openhab_group: "{{system_groups['openhab'].name}}"
 #    openhab_user: "root"
 #    openhab_group: "root"
-    # stable version from 05.03.2020
-    #jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
-    # stable version from 15.10.2020
-    jython_script_version: "5e6bee796f5ffcc60d277619965e621a9ba652b2"
+    jython_script_version: "db88d897c962ea9328d0f685bc01f02af887e6b4"
   tags: [ 'update_notifier_configs' ]
-
-#- name: get gid from "dialout"
-#  shell: "getent group dialout | cut -d: -f3"
-#  register: group_dialout_id
-#  changed_when: no
 
 - name: prepare needed config folder
   file:
@@ -34,16 +25,15 @@
     mode: 0750
   with_items:
     - "{{global_etc}}openhab"
+    - "{{global_etc}}openhab/addons"
     - "{{global_etc}}openhab/conf"
     - "{{global_etc}}openhab/conf/html"
     - "{{global_etc}}openhab/conf/icons"
     - "{{global_etc}}openhab/python"
-    - "{{global_etc}}openhab/runtime/lib/python"
-    - "{{global_etc}}openhab/userdata"
-    - "{{global_etc}}openhab/userdata/config"
-    - "{{global_log}}openhab"
     - "{{global_lib}}openhab"
+    - "{{global_lib}}openhab/jsondb"
     - "{{global_lib}}openhab/persistance"
+    - "{{global_log}}openhab"
 #    - "{{global_lib}}openhab/jsondb" # => for homeconnect oauth => 
 # userdata/config/SymmetricKeyCipher.config
 
@@ -164,8 +154,8 @@
     mode: 0750
   with_items:
     - /conf/automation
-    - /conf/html
-    - /conf/icons
+#    - /conf/html
+#    - /conf/icons
     - /conf/items
     - /conf/persistence
     - /conf/rules
@@ -174,12 +164,11 @@
     - /conf/sitemaps
     - /conf/transform
     - /conf/things
-    - /addons
   notify: "restart openhab"
     
 # habpanel if exists
 - name: check habpanel config
-  shell: "ls {{projects_path}}openhab_config/habpanel.config"
+  shell: "ls {{projects_path}}openhab_config/habpanel_panelconfig.json"
   register: habpanel_result
   changed_when: no
   failed_when: no
@@ -187,12 +176,12 @@
    
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
-    src: "{{projects_path}}openhab_config/habpanel.config"
-    dest: "{{global_etc}}openhab/userdata/config/habpanel.config"
+    src: "{{projects_path}}openhab_config/habpanel_panelconfig.json"
+    dest: "{{global_lib}}openhab/jsondb/uicomponents_habpanel_panelconfig.json"
     remote_src: yes
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
-    mode: 0640
+    mode: 0644
   when: "habpanel_result.rc == 0"
 
 # addons folder
@@ -211,12 +200,6 @@
     mode: 0640
   with_items: "{{addons_result.stdout_lines}}"
   
-- name: copy bundle kar
-  get_url:
-    url: "https://openhab.jfrog.io/artifactory/libs-release-local/org/openhab/distro/openhab-addons/{{openhab_version}}/openhab-addons-{{openhab_version}}.kar"
-    dest: "{{global_etc}}openhab/addons/openhab-addons-{{openhab_version}}.kar"
-    mode: 0640
-  
 # SERVICES
 - name: check service folder
   shell: "ls -1 {{projects_path}}openhab_config/templates/services/"
@@ -227,7 +210,7 @@
 - name: prepare service configs
   fetch:
     src: "{{projects_path}}openhab_config/templates/services/{{item}}"
-    dest: "/tmp/ansible/openhab2/services/{{item}}"
+    dest: "/tmp/ansible/openhab/services/{{item}}"
     flat: yes
   register: services_state
   with_items: "{{services_result.stdout_lines}}"
@@ -235,7 +218,7 @@
     
 - name: copy service configs
   template:
-    src: "/tmp/ansible/openhab2/services/{{item}}"
+    src: "/tmp/ansible/openhab/services/{{item}}"
     dest: "{{ global_etc }}openhab/conf/services/{{item}}"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
@@ -253,7 +236,7 @@
 - name: prepare things config
   fetch:
     src: "{{projects_path}}openhab_config/templates/things/{{item}}"
-    dest: "/tmp/ansible/openhab2/things/{{item}}"
+    dest: "/tmp/ansible/openhab/things/{{item}}"
     flat: yes
   register: things_state
   with_items: "{{things_result.stdout_lines}}"
@@ -261,7 +244,7 @@
 
 - name: copy things configs
   template:
-    src: "/tmp/ansible/openhab2/things/{{item}}"
+    src: "/tmp/ansible/openhab/things/{{item}}"
     dest: "{{ global_etc }}openhab/conf/things/{{item}}"
     owner: "{{openhab_user}}"
     group: "{{openhab_group}}"
@@ -279,7 +262,7 @@
 - name: prepare udev rules
   fetch:
     src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
-    dest: "/tmp/ansible/openhab2/udev/{{item}}"
+    dest: "/tmp/ansible/openhab/udev/{{item}}"
     flat: yes
   register: udev_state
   with_items: "{{udev_result.stdout_lines}}"
@@ -287,7 +270,7 @@
 
 - name: copy udev rules
   template:
-    src: "/tmp/ansible/openhab2/udev/{{item}}"
+    src: "/tmp/ansible/openhab/udev/{{item}}"
     dest: "/etc/udev/rules.d/{{item}}"
     owner: root
     group: root
@@ -303,23 +286,16 @@
 # CLEANUP  
 - name: clean configs
   file:
-    path: "/tmp/ansible/openhab2/"
+    path: "/tmp/ansible/openhab/"
     state: absent
   changed_when: no
   
-# JYTHON
-- name: install jython jar
-  get_url:
-    url: "https://repo1.maven.org/maven2/org/python/jython-standalone/{{jython_version}}/jython-standalone-{{jython_version}}.jar"
-    dest: "{{global_etc}}openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar"
-    mode: 0640
-
 # JYTHON HELPER
 - name: "clone jython helper git"
   git:
     #https://community.openhab.org/t/ivan-s-helper-libraries-oh3-python-javascript/116458
-    #repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
-    repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
+    repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
+    #repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
     dest: '{{global_build}}openhab-jython'
     version: '{{jython_script_version}}'
 
@@ -342,38 +318,6 @@
     mode: 0640
   notify: "restart openhab"
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
 - name: collect devices
   shell: "grep -P  \"^[^#]+$\" {{projects_path}}openhab_config/templates/udev/rules.d/*.rules | grep -oP \"SYMLINK\\+=\\\"\\K([^\\\"])+\""
   register: device_result
@@ -413,19 +357,6 @@
       - roles/openhab/templates/container/init.sh
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-#- name: create docker network
-#  docker_network:
-#    name: openhab
-#    ipam_config:
-#      - subnet: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.0/24"
-#        gateway: "{{docker_openhab_ip.split('.')[:3] | join('.')}}.1"
-#    connected:
-#      - mysql
-#      - influxdb
-#      - mosquitto
-#    appends: yes
-#  tags: [ 'mysql', 'influxdb', 'mosquitto' ]
-
 - name: create docker container
   docker_container:
     name: openhab
@@ -440,25 +371,27 @@
       USER_ID: "{{openhab_uid}}"
       GROUP_ID: "{{openhab_gid}}"
       #CRYPTO_POLICY: "unlimited"
-      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Xbootclasspath/a:/openhab/runtime/lib/python/jython-standalone-{{jython_version}}.jar -Dpython.home=/openhab/runtime/lib/python/ -Dpython.path=/openhab/python/"
+      EXTRA_JAVA_OPTS: "-Duser.timezone={{timezone}} {{openhab_device_java_opts | default('')}} -Dpython.path=/openhab/python/"
+      EXTRA_SHELL_OPTS: "+x" # disable debug logs in entrypoint bash script
+      #EXTRA_SHELL_OPTS: "-x"
+      #EXTRA_SHELL_OPTS: "-v"
       OPENHAB_HTTP_ADDRESS: "127.0.0.1"
     log_driver: journald
     log_options:
       tag: openhab
+    devices: "{{openhab_device_mounts | default([])}}"
+    container_default_behavior: "compatibility"
+    network_mode: "host"
     volumes:
       - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
       - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
       - '{{global_etc}}openhab/addons:/openhab/addons:z'
       - '{{global_etc}}openhab/conf:/openhab/conf:z'
       - '{{global_etc}}openhab/python:/openhab/python:z'
-      - '{{global_etc}}openhab/runtime/lib/python:/openhab/runtime/lib/python:z'
-      - "{{global_etc}}openhab/userdata/config:/openhab/userdata/config/org/openhab/:z"
-#      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
+#      - "{{global_etc}}openhab/userdata/jsondb:/openhab/userdata/jsondb/:z"
+      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
       - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
       - '{{global_log}}openhab:/openhab/userdata/logs:z'
-    devices: "{{openhab_device_mounts | default([])}}"
-    container_default_behavior: "compatibility"
-    network_mode: "host"
 #    networks:
 #      - name: "openhab"
 #        ipv4_address: "{{docker_openhab_ip}}"
@@ -470,8 +403,20 @@
       - "8080"  
       - "8443"  
       - "5007"  
-      - "8101"  
+      - "8101" 
+  register: openhab_container_result 
   notify: "restart openhab"
+
+- name: check ssh key
+  shell: "ls /root/.ssh/known_hosts"
+  register: ssh_key_result
+  changed_when: no
+  failed_when: no
+  when: openhab_container_result.changed
+   
+- name: clean ssh key
+  command: "ssh-keygen -R [openhab]:8101 -f /root/.ssh/known_hosts"
+  when: "openhab_container_result.changed and ssh_key_result.rc == 0"
 
 - name: add container name
   vars:
@@ -479,100 +424,32 @@
     host_ip_address: "127.0.0.1"
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
-#- name: connect php network
-#  docker_network:
-#    name: php
-#    connected:
-#      - openhab
-#    appends: yes
-#  tags: [ 'php' ]
-
-# ***** DATABASE ****
-- name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
-  
-- name: check mysql databases
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
-  register: mysql_data_exists
-  changed_when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: create missing mysql databases => database does not exists
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create openhab\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: create missing mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{vault_openhab_mysql_username}}'@'%' IDENTIFIED BY '{{vault_openhab_mysql_password}}';\\\"\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: grant permissions to mysql user => database does not exists
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON openhab.* TO '{{vault_openhab_mysql_username}}'@'%';\\\"\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-
-- name: refresh mysql privileges => database does not exists
-  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
-  when: "'openhab' not in mysql_data_exists.stdout"
-  
-- name: check influxdb data
-  stat:
-    path: "{{ global_lib }}influxdb/data/openhab_db"
-  register: influxdb_data_exists
-  changed_when: not influxdb_data_exists.stat.exists
-  
-- name: check influxdb service => database does not exists
-  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
-  when: "not influxdb_data_exists.stat.exists"
-
-- name: create missing influx databases => database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute 'CREATE DATABASE openhab_db'\""
-  when: "not influxdb_data_exists.stat.exists"
-  
-- name: create missing influx openhab user => database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{vault_openhab_influxdb_username}} WITH PASSWORD '{{vault_openhab_influxdb_password}}'\\\"\""
-  when: "not influxdb_data_exists.stat.exists"
-  
-- name: grant permissions to influx openhab user => database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT ALL ON openhab_db TO {{vault_openhab_influxdb_username}}'\""
-  when: "not influxdb_data_exists.stat.exists"
-
-- name: create missing influx grafana user => database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute \\\"CREATE USER {{vault_grafana_influxdb_username}} WITH PASSWORD '{{vault_grafana_influxdb_password}}'\\\"\""
-  when: "not influxdb_data_exists.stat.exists"
-
-- name: grant permissions to influx openhab user => database does not exists
-  shell: "docker exec influxdb sh -c \"influx -execute 'GRANT READ ON openhab_db TO {{vault_grafana_influxdb_username}}'\""
-  when: "not influxdb_data_exists.stat.exists"
-
-#- name: create retention policy
-#  vars:
-#    database: "openhab_db"
-#  import_tasks: roles/influxdb/tasks/create_retention_policy.yml
+# ***** MYSQL DATABASE ****
+- name: create database
+  vars:
+    database: "openhab"
+    username: "{{vault_openhab_mysql_username}}"
+    password: "{{vault_openhab_mysql_password}}"
+    backup: yes
+  import_tasks: roles/mysql/tasks/add_database.yml
+    
+# ***** INFLUXDB DATABASE ****
+- name: create database
+  vars:
+    database: "openhab"
+    retentions:
+      - { retention: "0" }
+    backup: yes
+  import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****
-- name: create cron job
-  vars:
-    name: "MySQL Openhab Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump openhab -h 127.0.0.1 | bzip2 -c > /var/lib/mysql_backup/openhab_$(date +\\%Y-\\%m-\\%d).sql.bz2\""
-    file: "ansible_openhab"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-
-- name: create cron job
-  vars:
-    name: "Influxdb Openhab Backup"
-    cmd: "docker exec influxdb sh -c \"influxd backup -database openhab_db /var/lib/influxdb_backup/openhab_db_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
-    file: "ansible_openhab"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-
 - name: register default webui
   vars:
     name: "openhab"
     js_file: "templates/webui/openhab.js"
     i18n_files: [ { language: "de", file: "templates/webui/openhab.de.json" } ]
     listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
-    icons: [ 'templates/webui/icons/openhab_logo.svg' ]
+    icons: [ 'templates/webui/icons/openhab_logo.svg', 'templates/webui/icons/openhab_basicui.svg', 'templates/webui/icons/openhab_adminui.svg', 'templates/webui/icons/openhab_habot.svg', 'templates/webui/icons/openhab_habpanel.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
 - name: register habpanel webui
@@ -604,50 +481,12 @@
     config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-#- name: allow http openhab service
-#  vars:
-#    name: "https.openhab"
-#    rule: "proto tcp dport 443 saddr {{docker_openhab_ip}}"
-#  import_tasks: roles/firewall/tasks/allow_service.yml
-#  tags: [ 'firewall_config' ]
-
-#- name: allow openhab service
-#  vars:
-#    name: "openhab"
-#    rule: "saddr {{docker_openhab_ip}}"
-#    is_docker: True
-#  import_tasks: roles/firewall/tasks/allow_service.yml
-#  tags: [ 'firewall_config' ]
-
-#- name: prepare needed opt folder
-#  file:
-#    path:  "/opt/openhab"
-#    state: directory
-#    owner: "root"
-#    group: "root"
-#    mode: 0750
-
-# needed to allow arping from inside container
-#- name: copy systemd container_pre_init binary
-#  copy:
-#    src: "templates/opt/container_pre_init"
-#    dest: "/opt/openhab/"
-#    owner: "root"
-#    group: "root"
-#    mode: 0750
-    
 - name: create systemd service
   vars:
     container_name: "openhab"
     container_after: [ "mysql", "influxdb", "mosquitto" ]
-#    container_exec_start_pre: "/opt/openhab/container_pre_init"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
-- name: register service watcher
-  vars:
-    name: "openhab"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-
 - name: register openhab update notifier
   vars:
     name: "openhab"
@@ -659,24 +498,12 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: register jython update notifier
-  vars:
-    name: "jython"
-    type: "github"
-    url: "https://www.jython.org/news"
-    config: { 
-      project: "jythontools/jython",
-      pattern: "^v([0-9\\.]+)$",
-      version: "v{{jython_version}}" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-
 - name: register jython script update notifier
   vars:
     name: "jsr223"
     type: "github"
-    #url: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
-    url: "https://github.com/openhab-scripters/openhab-helper-libraries"
+    url: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
+    #url: "https://github.com/openhab-scripters/openhab-helper-libraries"
     config: { 
       project: "openhab-scripters/openhab-helper-libraries", 
       version: "{{jython_script_version}}" 

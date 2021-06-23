@@ -34,9 +34,6 @@ ProtocolsHonorOrder Off
 </Location>
 
 <Location /grafana>
-  RewriteCond %{HTTP:Upgrade} =websocket [NC]
-  RewriteRule /api/live/(.*) ws://grafana:3000/api/live/$1 [P,L]
-  
   ProxyPreserveHost On
   ProxyPass http://grafana:3000
   ProxyPassReverse http://grafana:3000

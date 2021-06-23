@@ -3,10 +3,10 @@
 
 - name: check if openhab is running
   systemd:
-    name: openhab3
+    name: openhab
     state: started
     daemon_reload: yes
-  changed_when: "'openhab3.service' not in ansible_facts.services or ansible_facts.services['openhab3.service'].state != 'running'"
+  changed_when: "'openhab.service' not in ansible_facts.services or ansible_facts.services['openhab.service'].state != 'running'"
 
 - name: wait for openhab to become ready
   command: "sshpass -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
@@ -14,4 +14,4 @@
   until: "'Password authentication' in result.stderr and result.rc == 0"
   retries: 240
   delay: 1
-  changed_when: "'openhab3.service' not in ansible_facts.services or ansible_facts.services['openhab3.service'].state != 'running'"
+  changed_when: "'openhab.service' not in ansible_facts.services or ansible_facts.services['openhab.service'].state != 'running'"

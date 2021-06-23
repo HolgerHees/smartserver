@@ -89,7 +89,7 @@
       , gcc                # used for ansible gem module => to build native extension
       , make               # used for ansible gem module => to build native extension
       , git                # used for ansible git module
-      , sshpass            # used for ssh accessibility checks (e.g. openhab3 => wait until ready)
+      , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
 #     , python2-setuptools      # needed by openssl ansible module
       , python3-setuptools

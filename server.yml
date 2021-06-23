@@ -127,8 +127,7 @@
 
     - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_volumes|length>0" } # dlna media server                                         [docker,user:wwwrun|apache]
      
-    - { import_role: { name: openhab3 }, tags: [ 'openhab3' ], when: "enable_openhab2 is not defined" } # openhab iot server                                                [docker,user:openhab|openhab]
-    - { import_role: { name: openhab }, tags: [ 'openhab' ], when: "enable_openhab2 is defined" } # openhab iot server                                                [docker,user:openhab|openhab]
+    - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
     - { import_role: { name: device_ping }, tags: [ 'device_ping' ] }                            # ping mobile device service
 
@@ -155,6 +154,6 @@
 
     - { import_role: { name: influxdb, tasks_from: create_users, handlers_from: empty }, tags: [ 'influxdb', 'influxdb_users' ] }   # create influxdb users
 
-    - { import_role: { name: openhab3, tasks_from: create_users, handlers_from: empty }, tags: [ 'openhab3', 'openhab3_users' ], when: "enable_openhab2 is not defined" }   # create openhab users
+    - { import_role: { name: openhab, tasks_from: create_users, handlers_from: empty }, tags: [ 'openhab', 'openhab_users' ] }   # create openhab users
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running
