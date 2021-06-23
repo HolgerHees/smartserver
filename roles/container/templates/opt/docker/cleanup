@@ -1,0 +1,76 @@
+#!/usr/bin/python3
+
+import subprocess
+import json
+from datetime import datetime
+
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %Z'
+
+class Container:
+    def __init__(self,id,name,image):
+        self.id = id
+        self.name = name
+        self.image = image
+
+class Image:
+    def __init__(self,id,name,tag,created):
+        self.id = id
+        self.name = name
+        self.tag = tag
+        self.created = created
+        
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __lt__(self, other):
+        return self.name < other.name or ( self.name == other.name and self.created < other.created )
+      
+def execCommand(cmd, cwd=None ):
+    return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
+
+containers = {}
+result = execCommand("docker ps -a --format '{{json .}}'")
+lines = result.stdout.decode("utf-8").split("\n")
+for line in lines[0:-1]:
+    obj = json.loads(line)
+    
+    #print(obj)
+    #{"Command":"\"/usr/bin/python3 /e…\"","CreatedAt":"2021-06-23 09:56:20 +0200 CEST","ID":"ee21889ca3be","Image":"custom_vcontrold:buster-20210621-slim-v0.98.10","Labels":"","LocalVolumes":"0","Mounts":"/dataDisk/etc/…,/dataDisk/var/…","Names":"vcontrold","Networks":"vcontrold","Ports":"3002/tcp","RunningFor":"About an hour ago","Size":"0B (virtual 213MB)","State":"running","Status":"Up About an hour"}
+
+    container = Container(obj["ID"],obj["Names"],obj["Image"])
+    if container.image not in containers:
+        containers[container.image] = []
+    containers[container.image].append(container)
+
+images = {}
+result = execCommand("docker image list --format '{{json .}}'")
+lines = result.stdout.decode("utf-8").split("\n")
+for line in lines[0:-1]:
+    #print(line)
+    obj = json.loads(line)
+    
+    #print(obj)
+    #{"Containers":"N/A","CreatedAt":"2021-03-05 15:38:36 +0100 CET","CreatedSince":"3 months ago","Digest":"\u003cnone\u003e","ID":"3ebfae07f702","Repository":"custom_weather_forecast","SharedSize":"N/A","Size":"59.7MB","Tag":"3.13.2","UniqueSize":"N/A","VirtualSize":"59.74MB"}
+
+    created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
+    image = Image(obj["ID"],obj["Repository"],obj["Tag"],created)
+    if image.name not in images:
+        images[image.name] = []
+    images[image.name].append(image)
+    
+for name in sorted(images):
+    image_versions = sorted(images[name], reverse=True)
+    
+    if len(image_versions) == 1:
+        image_version = image_versions[0]
+        container_image = u"{}:{}".format(image_version.name,image_version.tag)
+        if container_image in containers:
+            #print(u"'{}' found".format(container_image))
+            continue
+          
+        print(u"'{} ({})' has no container".format(container_image,image_version.id))
+    else:
+        for image_version in image_versions[1:]:
+            print( u"Remove '{} {} {}'".format(image_version.name,image_version.tag,image_version.created))
+            
+            execCommand("docker image rm {}".format(image_version.id))

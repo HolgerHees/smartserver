@@ -77,7 +77,7 @@
   with_items:
     - "/etc/docker/"
     - "{{global_lib}}docker"
-    - "/opt/docker_visualizer"
+    - "/opt/docker"
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:
@@ -109,11 +109,14 @@
 
 - name: copy docker_visualizer
   copy:
-    src: "templates/opt/docker_visualizer/visualizer"
-    dest: "/opt/docker_visualizer/visualizer"
+    src: "templates/opt/docker/{{item}}"
+    dest: "/opt/docker/{{item}}"
     owner: root
     group: root
     mode: 0700
+  with_items:
+    - visualizer
+    - cleanup
 
 #### PODMAN ####
 # !!!!remote deployment does not work

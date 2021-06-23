@@ -98,4 +98,4 @@ pihole_whitelist_domains:          [ "www.googleadservices.com", "clickserve.dar
 
 # version of alpine linux used in several container based roles
 alpine_version:                   "3.14.0"
-debian_version:                   "buster-20210511-slim"
+debian_version:                   "buster-20210621-slim"
