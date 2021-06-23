@@ -78,6 +78,7 @@
     - "/etc/docker/"
     - "{{global_lib}}docker"
     - "/opt/docker"
+    - "/opt/docker/lib"
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:
@@ -107,7 +108,7 @@
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-- name: copy docker_visualizer
+- name: copy docker tools
   copy:
     src: "templates/opt/docker/{{item}}"
     dest: "/opt/docker/{{item}}"
@@ -117,6 +118,14 @@
   with_items:
     - visualizer
     - cleanup
+
+- name: copy docker tools config
+  template:
+    src: "templates/opt/docker/lib/config.py"
+    dest: "/opt/docker/lib/config.py"
+    owner: root
+    group: root
+    mode: 0700
 
 #### PODMAN ####
 # !!!!remote deployment does not work

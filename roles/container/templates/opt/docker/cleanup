@@ -4,6 +4,8 @@ import subprocess
 import json
 from datetime import datetime
 
+from lib.config import GLOBAL_BUILD
+
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %Z'
 
 class Container:
@@ -27,7 +29,16 @@ class Image:
       
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
+  
+# Collect Images used in Dockerfiles
+build_images = {}
+result = execCommand("grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(GLOBAL_BUILD))
+lines = result.stdout.decode("utf-8").split("\n")
+for line in lines[0:-1]:
+    columns = line.split()
+    build_images[columns[-1]] = True
 
+# Collect Images used in Containers
 containers = {}
 result = execCommand("docker ps -a --format '{{json .}}'")
 lines = result.stdout.decode("utf-8").split("\n")
@@ -42,6 +53,7 @@ for line in lines[0:-1]:
         containers[container.image] = []
     containers[container.image].append(container)
 
+# Collect all Images
 images = {}
 result = execCommand("docker image list --format '{{json .}}'")
 lines = result.stdout.decode("utf-8").split("\n")
@@ -61,16 +73,16 @@ for line in lines[0:-1]:
 for name in sorted(images):
     image_versions = sorted(images[name], reverse=True)
     
-    if len(image_versions) == 1:
-        image_version = image_versions[0]
+    for image_version in image_versions:
         container_image = u"{}:{}".format(image_version.name,image_version.tag)
         if container_image in containers:
-            #print(u"'{}' found".format(container_image))
+            print(u"\033[0;32mUSED\033[0m      : '{}', '{}'".format(image_version.id,container_image))
             continue
-          
-        print(u"'{} ({})' has no container".format(container_image,image_version.id))
-    else:
-        for image_version in image_versions[1:]:
-            print( u"Remove '{} {} {}'".format(image_version.name,image_version.tag,image_version.created))
-            
-            execCommand("docker image rm {}".format(image_version.id))
+
+        if container_image in build_images:
+            print(u"\033[0;33mREFERENCED\033[0m: '{}', '{}'".format(image_version.id,container_image))
+            continue
+
+        print(u"\033[0;91mDELETED\033[0m   : '{}', '{}'".format(image_version.id,container_image))
+
+        execCommand("docker image rm {}".format(image_version.id))
