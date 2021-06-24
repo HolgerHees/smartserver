@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.29.3"
+    netdata_version: "1.31.0"
   tags: [ 'update_notifier_configs' ]
 
 - name: install required packages => is_fedora
@@ -86,7 +86,7 @@
     - "/etc/netdata/fping.conf"
     - "/etc/netdata/health_alarm_notify.conf"
     - "/etc/netdata/health.d/disks.conf"
-    - "/etc/netdata/health.d/softnet.conf"
+#    - "/etc/netdata/health.d/softnet.conf"
     - "/etc/netdata/health.d/net.conf"
     - "/etc/netdata/health.d/fping.conf"
     - "/etc/netdata/health.d/udp_errors.conf"

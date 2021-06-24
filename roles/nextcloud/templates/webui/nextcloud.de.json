@@ -3,9 +3,13 @@
     "Nextcloud": "Nextcloud"
   },
   "workspace_nextcloud": {
-    "Documents": "Dokumente",
+    "Files": "Alle Dateien",
+    "Documents": "Dokumente & Bilder",
+    "Photos": "Fotos",
+    "Gallery": "Gallerie",
     "News": "News",
-    "Keys": "Keys",
+    "RSSFeeds": "RSS Feeds",
+    "Keys": "Passwörter",
     "Keeweb": "Keeweb"
   }
 }
