@@ -58,11 +58,8 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   sed -i 's/pm.max_spare_servers.*/pm.max_spare_servers = 30/' /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/pm.process_idle_timeout.*/pm.process_idle_timeout = 15s/' /usr/local/etc/php-fpm.d/www.conf && \
   sed -i 's/pm.max_requests.*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/access.log.*/access.log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf
-
-
-
-
+  sed -i 's/access.log.*/access.log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf && \
+  sed -i 's/domain="coder" rights="none"/domain="coder" rights="read"/' /etc/ImageMagick-6/policy.xml
 
 #TODO
 #      , systemd-devel         # php-systemd => nextcloud

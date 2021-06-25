@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    telegraf_version: '1.18.3'
+    telegraf_version: '1.19.0'
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder
@@ -84,7 +84,7 @@
   vars:
     name: "telegraf"
     type: "docker"
-    url: "https://docs.influxdata.com/telegraf/v1.18/"
+    url: "https://docs.influxdata.com/telegraf/v{{telegraf_version | regex_replace('^([0-9]*\\.[0-9]*).*$', '\\1')}}/"
     config: {
       repository: "telegraf",
       pattern: "^([0-9\\.]+)-alpine$"

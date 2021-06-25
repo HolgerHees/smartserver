@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mysql_version: "10.5.10"
+    mysql_version: "10.6.2"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
@@ -25,6 +25,7 @@
     image: "mariadb:{{mysql_version}}"
     state: present
 #    recreate: true
+    command: "--innodb-read-only-compressed=OFF" # => FIX for nextcloud, https://github.com/nextcloud/docker/issues/1492
     env:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: ""

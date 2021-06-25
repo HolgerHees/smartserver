@@ -91,6 +91,11 @@
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/php.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+  
 - name: create systemd service
   vars:
     container_name: "php"
