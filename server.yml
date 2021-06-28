@@ -22,8 +22,10 @@
           - "arpha:      {{server_arpa}}"
           - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}}"
           - "net:        {{main_network_interface}}"
+          - "default:    {{default_gateway}}"
       tags: always
 
+      
     - name: dynamic values from init role
       debug:
         msg: 
