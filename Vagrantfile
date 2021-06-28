@@ -98,17 +98,33 @@ Vagrant.configure(2) do |config|
   config.vm.define $image_name, autostart: true do |setup|
     setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'
-    setup.ssh.password = 'vagrant'
-    setup.ssh.insert_key = 'true'
+    
+    #https://stackoverflow.com/questions/30075461/how-do-i-add-my-own-public-key-to-vagrant-vm
+    if setup_os == 'ubuntu' then
+        setup.vm.provision "shell" do |s|
+            ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+            s.inline = <<-SHELL
+              echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+              echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
+            SHELL
+        end
+        setup.ssh.insert_key = 'true'
+    else
+        setup.ssh.password = 'vagrant'
+        setup.ssh.insert_key = 'true'
+    end
+
     setup.vm.network "private_network", ip: $env_ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
     #, automount: true
+
     setup.vm.provider :virtualbox do |vb|
         vb.name = $image_name
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
     end
+
     setup.vm.provider "hyperv" do |hv|
         hv.vmname = $image_name
         hv.memory = 6144
@@ -118,12 +134,12 @@ Vagrant.configure(2) do |config|
     #  vw.vmx["memsize"] = "6144"
     #  vw.vmx["numvcpus"] = "2"
     #end
-
+   
     # Ask for vault password
     setup.vm.provision "shell", env: {"VAULT_PASS" => Environment.new}, inline: <<-SHELL
         echo "$VAULT_PASS" > /tmp/vault_pass
     SHELL
-    
+   
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo zypper --non-interactive install python-xml python3-netaddr
@@ -132,7 +148,8 @@ Vagrant.configure(2) do |config|
         SHELL
     elsif setup_os == 'ubuntu' then
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo apt-get install python-xml python3-netaddr
+        sudo apt-get update
+        sudo apt-get -y install python3-netaddr python3-pip
         sudo pip install ansible==2.10.7
         SHELL
     elsif setup_os == 'fedora' then

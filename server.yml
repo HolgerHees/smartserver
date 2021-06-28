@@ -28,7 +28,7 @@
       debug:
         msg: 
           - "production: {{ 'active' if is_production else 'inactive' }}"
-          - "flags:      is_suse: {{is_suse}}, is_fedora: {{is_fedora}}"
+          - "flags:      is_suse: {{is_suse}}, is_fedora: {{is_fedora}}, is_ubuntu: {{is_ubuntu}}"
       tags: always
 
     # needed by all roles which needs to register their own fluentd handler
