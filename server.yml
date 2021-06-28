@@ -16,13 +16,12 @@
         msg: 
           - "mode:       {{inventory_hostname}}"
           - "server:     {{server_ip}}"
-          - "gateway:    {{server_gateway}}"
+          - "gateway:    {{server_gateway}}{{ ' (' + default_gateway + ')' if server_gateway != default_gateway else ''}}"
           - "network:    {{server_network}}/24"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'none'}}"
           - "arpha:      {{server_arpa}}"
           - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}}"
           - "net:        {{main_network_interface}}"
-          - "default:    {{default_gateway}}"
       tags: always
 
       
