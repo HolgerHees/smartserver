@@ -4,6 +4,12 @@
     state: present
   when: is_fedora|bool
   
+- name: install required packages => is_ubuntu
+  apt:
+    name: "ruby-all-dev"
+    state: present
+  when: is_ubuntu|bool
+
 - name: install required packages => is_suse
   zypper:
     name: "ruby-devel"

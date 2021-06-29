@@ -54,6 +54,12 @@
     state: present
   when: is_fedora|bool
 
+- name: install required packages for fetchPOTD => is_ubuntu
+  apt:
+    name: imagemagick
+    state: present
+  when: is_ubuntu|bool
+
 - name: install required packages for fetchPOTD => is_suse
   zypper:
     name: ImageMagick

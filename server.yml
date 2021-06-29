@@ -20,7 +20,7 @@
           - "network:    {{server_network}}/24"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'none'}}"
           - "arpha:      {{server_arpa}}"
-          - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}}"
+          - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}} ({{ansible_distribution_release}})"
           - "net:        {{main_network_interface}}"
       tags: always
 
@@ -147,9 +147,9 @@
   post_tasks:
     - { import_role: { name: apache, tasks_from: letsencrypt, handlers_from: empty }, tags: [ 'apache_letsencrypt' ], when: "ssl_certificate == 'letsencrypt'" }   # activate letsencrypt certificate
 
-    - { import_role: { name: dns, tasks_from: enable, handlers_from: empty }, tags: [ 'dns' ] }   # activate local named
+    #- { import_role: { name: dns, tasks_from: enable, handlers_from: empty }, tags: [ 'dns' ] }   # activate local named
 
-    - { import_role: { name: pihole, tasks_from: whitelist, handlers_from: empty }, tags: [ 'pihole' ] }   # activate local named
+    - { import_role: { name: pihole, tasks_from: whitelist, handlers_from: empty }, tags: [ 'pihole' ] }   # add whitelist entries
 
     - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud', 'nextcloud_apps' ] }   # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
 

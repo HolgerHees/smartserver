@@ -54,8 +54,8 @@ Example: vagrant --config=demo --os=suse up
             setup_os = "ubuntu"
             #setup_version = "20.04"
             #setup_image = "ubuntu/focal64"
-            setup_version = "21.10"
-            setup_image = "ubuntu/impish64"
+            setup_version = "21.04"
+            setup_image = "ubuntu/hirsute64"
         elsif arg == "fedora" then
             setup_os = "fedora"
             setup_version = "31"

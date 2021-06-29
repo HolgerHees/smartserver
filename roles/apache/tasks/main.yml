@@ -14,6 +14,14 @@
     state: present
   when: is_fedora|bool
   
+- name: install required packages => is_ubuntu
+  apt:
+    name: [
+      python3-cryptography
+    ]
+    state: present
+  when: is_ubuntu|bool
+
 - name: install required packages => is_suse
   zypper:
     name: [

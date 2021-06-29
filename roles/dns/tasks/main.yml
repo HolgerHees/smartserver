@@ -77,6 +77,10 @@
     container_name: "named"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
+# must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
+- name: enable dns
+  import_tasks: roles/dns/tasks/enable.yml
+
 - name: force dns restart
   systemd:
     state: restarted
@@ -89,3 +93,4 @@
     notify: "restart named"
     service: "named.service"
   import_tasks: roles/_shared/tasks/service_check.yml
+

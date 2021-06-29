@@ -30,13 +30,35 @@
       , iotop
       , smem 
 
-#      , libxml2-devel
+      , wireguard-tools
+      
+      , curl
+      , bzip2
+      , zip
+      , gcc
+      , make
+      , git
+      , sshpass
+      
+      , python3-setuptools
+      , python3-pip
+      , python3-passlib
+      
+      , python3-libselinux # used by ansible on fedora
+      , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
+      , redhat-rpm-config  # used by ansible gem mobule
+    ]
+    state: present
+  when: is_fedora|bool
 
-#      , subversion         # ???
-#      , autoconf           # ???
-#      , automake           # ???
-#      , lm_sensors
-#      , ImageMagick        # ???
+- name: install required packages => is_ubuntu
+  apt:
+    name: [
+        mc
+      , htop
+      , sysstat
+      , iotop
+      , smem 
 
       , wireguard-tools
       
@@ -48,20 +70,13 @@
       , git
       , sshpass
       
-      #, python2-setuptools
       , python3-setuptools
-      #, python2-pip
       , python3-pip
-      #, python2-passlib
       , python3-passlib
-      
-      , python3-libselinux # used by ansible on fedora
-      , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
-      , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
-  when: is_fedora|bool
-
+  when: is_ubuntu|bool
+  
 - name: install required packages => is_suse
   zypper:
     name: [  
@@ -70,16 +85,6 @@
       , sysstat
       , iotop
       , smem               # useful tool to debug memory usage (including swap usage)
-
-#      , libxml2-devel
-
-#      , subversion         # ???
-#      , make               # ???
-#      , autoconf           # ???
-#      , automake           # ???
-#      , gcc                # ???
-#      , sensors
-#      , ImageMagick        # ???
 
       , wireguard-tools
 
@@ -91,11 +96,8 @@
       , git                # used for ansible git module
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
-#     , python2-setuptools      # needed by openssl ansible module
       , python3-setuptools
-#      , python2-pip        # used for ansible pip module => python2 is used because it installes python2-setuptools and depends on it. python3-pip still needs python2-setuptools (vagrant suse version is using it)
       , python3-pip
-#      , python2-passlib    # used by ansible htpasswd module (user role) => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/web_infrastructure/htpasswd.py" is using python2 (vagrant suse version is using it)
       , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task
       
       , insserv-compat     # used by ansible systemd module

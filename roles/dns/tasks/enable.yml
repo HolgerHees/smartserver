@@ -15,6 +15,35 @@
     name: NetworkManager
     state: restarted
   when: "is_fedora|bool and networkmanager_status.changed"
+  
+- name: disable systemd-resolved => is_ubuntu
+  systemd:
+    state: stopped
+    enabled: no
+    name: systemd-resolved
+  when: "is_ubuntu|bool"
+
+- name: check resolv.conf => is_ubuntu
+  stat:
+    path: /etc/resolv.conf
+  register: resolv_link_status
+  when: "is_ubuntu|bool"
+  
+- name: remove symlink of resolv.conf => is_ubuntu
+  file:
+    path: /etc/resolv.conf
+    state: absent
+  when: "is_ubuntu|bool and resolv_link_status.stat.islnk is defined and resolv_link_status.stat.islnk"
+   
+- name: ensure resolv.conf exists => is_ubuntu
+  copy:
+    content: ""
+    dest: /etc/resolv.conf
+    force: no
+    group: root
+    owner: root
+    mode: 0644
+  when: "is_ubuntu|bool"
 
 - name: disable netconfig dns handling => is_suse
   lineinfile:
@@ -44,7 +73,7 @@
     group: root
     mode: 0755
   when: "is_suse|bool and netconfig_status.changed"
-
+  
 - name: set dns config
   lineinfile:
     path: /etc/resolv.conf

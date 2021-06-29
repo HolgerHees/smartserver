@@ -63,7 +63,7 @@ for config_file in files:
                 if isVirtualized:
                     with open(service_file) as f:
                         content = f.read()
-                        m = re.search("ConditionVirtualization\s*=\s*false",content,re.IGNORECASE)
+                        m = re.search("ConditionVirtualization\s*=\s*(false|no)",content,re.IGNORECASE)
                         if m != None:
                             ignore = True
                 if not ignore:

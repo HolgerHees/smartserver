@@ -3,10 +3,17 @@
     netdata_version: "1.31.0"
   tags: [ 'update_notifier_configs' ]
 
+#- name: install docker repository => is_fedora
+#  command: dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+#  args:
+#    warn: no
+#  changed_when: no
+#  when: is_fedora|bool
+
 - name: install required packages => is_fedora
   yum:
     name: [
-        netdata
+        "https://packagecloud.io/netdata/netdata/packages/fedora/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.fc32.x86_64.rpm/download.rpm"
       , fping
       , lm_sensors
     ]
@@ -14,6 +21,38 @@
   notify: "restart netdata"
   when: is_fedora|bool
 
+#wget --content-disposition https://packagecloud.io/netdata/netdata/packages/ubuntu/hirsute/netdata_1.31.0_amd64.deb/download.deb
+
+#- name: add netdata gpg key => is_ubuntu
+#  apt_key:
+#    url: https://packagecloud.io/netdata/netdata/gpgkey
+#    state: present
+#  when: is_ubuntu|bool
+
+#- name: install netdata repository => is_ubuntu
+#  apt_repository:
+#    repo: "deb [arch=amd64] https://packagecloud.io/netdata/netdata/ubuntu/ {{ansible_distribution_release}} main"
+#    state: present
+#  when: is_ubuntu|bool
+
+- name: install required packages 1/2 => is_ubuntu
+  apt:
+    deb: "https://packagecloud.io/netdata/netdata/packages/ubuntu/{{ansible_distribution_release}}/netdata_{{netdata_version}}_amd64.deb/download.deb"
+    state: present
+  notify: "restart netdata"
+  when: is_ubuntu|bool
+
+- name: install required packages 2/2 => is_ubuntu
+  apt:
+    name: [
+      fping
+      , lm-sensors
+    ]
+    state: present
+  notify: "restart netdata"
+  when: is_ubuntu|bool
+
+#https://packagecloud.io/netdata/netdata/packages/opensuse/15.3/netdata-1.31.0-1.x86_64.rpm/download.rpm
 - name: add zypper repository => is_suse
   zypper_repository:
     name: Network (netdata)
@@ -107,10 +146,11 @@
   lineinfile:
     path: /usr/lib/systemd/system/netdata.service
     insertafter: '^\[Service\]'
-    regexp: '^{{item.field}}\s*='
-    line: '{{item.field}}={{item.value}}'
+    regexp: '^{{item.field}}'
+    line: '{{item.value}}'
   with_items:
-    - { field: "User", value: "root" }
+    - { field: "User\\s*=", value: "User=root" }
+    - { field: "ReadWriteDirectories\\s*=\\s*{{ global_lib }}netdata", value: "ReadWriteDirectories={{ global_lib }}netdata" }
     #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
     #- { field: "Nice", value: "0" } # was "#Nice=0" before
   notify: "restart netdata"

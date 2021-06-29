@@ -42,6 +42,28 @@
     state: present
   when: is_fedora|bool
   
+- name: add docker gpg key => is_ubuntu
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: is_ubuntu|bool
+        
+- name: install docker repository => is_ubuntu
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable"
+    state: present
+  when: is_ubuntu|bool
+
+- name: install required packages => is_ubuntu
+  apt:
+    name: [
+        docker-ce
+        , python3-docker
+        , podman
+    ]
+    state: present
+  when: is_ubuntu|bool
+
 #- name: add suse zypper repository
 #  zypper_repository:
 #    name: Devel:Kubic (podman)
@@ -58,7 +80,7 @@
 #        , python2-docker  # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2 (vagrant suse version is using it)
         , python3-docker  # used by ansible docker module
         , podman
-        , cni
+#        , cni
 #        , podman>=1.6.2
 #        , cni>=0.7.1
 #        , cni-plugins>=0.8.3
@@ -101,6 +123,7 @@
     owner: root
     group: root
     mode: 0644
+  register: docker_config_result
   notify: "restart docker"
 
 - name: copy fluentd config
@@ -204,11 +227,17 @@
   shell: sysctl -p
   when: sysctlchanged.changed
 
+- name: force docker stop => docker_config_result changed
+  systemd:
+    state: stopped
+    name: docker
+  when: docker_config_result.changed
+
 # needs to be started to create docker_network
 - name: starting docker
   systemd:
-    name: docker
     state: started
+    name: docker
     
 # bridge network to allow containers host access without beeing in networkmode "host"
 - name: create isolated docker network

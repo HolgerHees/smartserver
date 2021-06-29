@@ -5,6 +5,13 @@
   when: is_fedora|bool
   notify: "restart virtualbox" 
 
+- name: install required packages => is_ubuntu
+  apt:
+    name: virtualbox
+    state: present
+  when: is_ubuntu|bool
+  notify: "restart virtualbox" 
+
 - name: install required packages => is_suse
   zypper:
     name: virtualbox

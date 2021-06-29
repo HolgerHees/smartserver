@@ -11,6 +11,13 @@
   notify: "restart mdmonitor"
   when: mdraid.stat.exists and is_fedora|bool
   
+- name: install required packages => is_ubuntu
+  apt:
+    name: "mdadm"
+    state: present
+  notify: "restart mdmonitor"
+  when: mdraid.stat.exists and is_ubuntu|bool
+
 - name: install required packages => is_suse
   zypper:
     name: "mdadm"
