@@ -13,7 +13,8 @@
 - name: install required packages => is_fedora
   yum:
     name: [
-        "https://packagecloud.io/netdata/netdata/packages/fedora/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.fc32.x86_64.rpm/download.rpm"
+        #"https://packagecloud.io/netdata/netdata/packages/fedora/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.fc{{ansible_distribution_version}}.x86_64.rpm/download.rpm"
+        netdata
       , fping
       , lm_sensors
     ]
