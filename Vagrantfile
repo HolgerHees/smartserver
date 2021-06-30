@@ -135,11 +135,9 @@ Vagrant.configure(2) do |config|
     #  vw.vmx["memsize"] = "6144"
     #  vw.vmx["numvcpus"] = "2"
     #end
-   
+    
     # Ask for vault password
-    setup.vm.provision "shell", env: {"VAULT_PASS" => Environment.new}, inline: <<-SHELL
-        echo "$VAULT_PASS" > /tmp/vault_pass
-    SHELL
+    password = Environment.getPassword()
    
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
@@ -174,10 +172,16 @@ Vagrant.configure(2) do |config|
             #ansible.raw_arguments = "--ask-vault-pass"
             #ansible.ask_vault_pass = true
         end
-
+        
+        setup.vm.provision :shell do |shell|
+            shell.privileged = true
+            shell.inline = 'Reboot to activate \'cgroup\' boot parameter'
+            shell.reboot = true
+        end
+        
         # Wait for reboot
-        setup.vm.provision "shell", env: {"RESULT" => Reachability.new}, inline: <<-SHELL
-        SHELL
+        #setup.vm.provision "shell", env: {"RESULT" => Environment.checkReachability()}, inline: <<-SHELL
+        #SHELL
     else
         print "*** not supported ***"
         return
@@ -189,6 +193,10 @@ Vagrant.configure(2) do |config|
     #    SHELL
     #end
 
+    setup.vm.provision "shell", env: {"VAULT_PASS" => password }, inline: <<-SHELL
+        echo "$VAULT_PASS" > /tmp/vault_pass
+    SHELL
+    
     setup.vm.provision "ansible_local" do |ansible|
       ansible.limit = "all"
       ansible.playbook = "server.yml"
@@ -214,50 +222,51 @@ Vagrant.configure(2) do |config|
   end
 end
 
-# Reachability check
-class Reachability
-    require 'socket'
-    require 'timeout'
-    require 'net/ssh'
-    
-    def to_s       
-        sleep(0.5) # give server time to initiate reboot
+module Environment
+#  require 'socket'
+#  require 'timeout'
+#  require 'net/ssh'
+  
+#  # Reachability check
+#  def self.checkReachability
+#      
+#      def to_s       
+#          sleep(0.5) # give server time to initiate reboot#
 
-        print "check server reachability "
-        
-        begin
-            #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
-            #session.close
-            Socket.tcp($env_ip, 22, connect_timeout: 1) {}
-            print " ok\n"
-        rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-            print "." # + e.message
-            retry
-        end
-        ""
-    end
-end
+#          print "check server reachability "
+          
+#          begin
+#              #session = Net::SSH.start( '192.168.1.50', 'vagrant', password: "vagrant" )
+#              #session.close
+#              Socket.tcp($env_ip, 22, connect_timeout: 1) {}
+#              print " ok\n"
+#          rescue Exception => e #Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+#              print "." # + e.message
+#              retry
+#          end
+#          ""
+#      end
+#  end
 
-# Password Input Function
-class Environment
-    def to_s        
-        pass = ""
-        if $with_password then
-            loop do
-            begin
-                system 'stty -echo'
-                print "Ansible Vault Password: "
-                pass = URI.escape(STDIN.gets.chomp)
-            ensure
-                system 'stty echo'
-            end
-            print "\n"
-            
-            if not pass.empty?
-                break
-            end
-            end
-        end
-        pass
-    end
+  # Password Input Function
+  def self.getPassword
+      pass = ""
+      if $with_password then
+          loop do
+          begin
+              system 'stty -echo'
+              print "Ansible Vault Password: "
+              pass = URI.escape(STDIN.gets.chomp)
+          ensure
+              system 'stty echo'
+          end
+          print "\n"
+          
+          if not pass.empty?
+              break
+          end
+          end
+      end
+      pass
+  end
 end

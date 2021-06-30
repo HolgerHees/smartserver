@@ -17,12 +17,12 @@
       shell: "grub2-mkconfig -o /boot/grub2/grub.cfg"
       when: cgroup_result is changed
 
-    - name: reboot to activate changed config => cgroup changed
-      shell: "shutdown -r now && sleep 10"
-      async: 0
-      poll: 0
-      ignore_errors: true
-      when: cgroup_result is changed
+#    - name: reboot to activate changed config => cgroup changed
+#      shell: "shutdown -r now && sleep 10"
+#      async: 0
+#      poll: 0
+#      ignore_errors: true
+#      when: cgroup_result is changed
       
 #    - name: reboot to activate changed config => cgroup changed
 #      shell: "sleep 3 && shutdown -r now && sleep 5"
