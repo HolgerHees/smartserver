@@ -29,7 +29,7 @@ access_token = "{{vault_deployment_token_git}}"
 
 branch = "master"
 
-deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" } ]
+deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" }, { "config": "demo", "os": "ubuntu" } ]
 
 repository_owner = repository_url.replace("https://github.com/","")
 repository_owner = repository_owner.replace(".git","")
@@ -106,7 +106,7 @@ elif cmd == "start" or cmd == "restart":
                         
                         body = "Reason: {}".format(error_reason)
                         body += "\n\n"
-                        body += "Logs: https://{}/?ref=other|tools|ci|{}".format(server_host,log_url)
+                        body += "Logs: https://{}/?ref=admin|tools|ci|{}".format(server_host,log_url)
                         body += "\n\n"
                         body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash)
                         
