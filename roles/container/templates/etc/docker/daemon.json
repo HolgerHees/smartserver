@@ -1,4 +1,5 @@
 {
-    "data-root": "{{global_lib}}docker"
+    "data-root": "{{global_lib}}docker",
+    "registry-mirrors": ["https://mirror.gcr.io"]
 }
   
