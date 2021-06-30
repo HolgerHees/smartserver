@@ -99,22 +99,18 @@ Vagrant.configure(2) do |config|
   config.vm.define $image_name, autostart: true do |setup|
     setup.vm.box = setup_image
     setup.ssh.username = 'vagrant'
+    #setup.ssh.password = 'vagrant'
+    setup.ssh.insert_key = 'true'
     
-    #https://stackoverflow.com/questions/30075461/how-do-i-add-my-own-public-key-to-vagrant-vm
-    if setup_os == 'ubuntu' then
-        setup.vm.provision "shell" do |s|
-            ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
-            s.inline = <<-SHELL
-              echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
-              echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
-            SHELL
-        end
-        setup.ssh.insert_key = 'true'
-    else
-        setup.ssh.password = 'vagrant'
-        setup.ssh.insert_key = 'true'
+    setup.vm.provision "shell" do |s|
+        ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+        s.inline = <<-SHELL
+          echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+          mkdir -p /root/.ssh && touch /root/.ssh/authorized_keys
+          echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
+        SHELL
     end
-
+    
     setup.vm.network "private_network", ip: $env_ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
@@ -175,7 +171,7 @@ Vagrant.configure(2) do |config|
         
         setup.vm.provision :shell do |shell|
             shell.privileged = true
-            shell.inline = 'Reboot to activate \'cgroup\' boot parameter'
+            shell.inline = 'echo "Reboot to activate \'cgroup\' boot parameter"'
             shell.reboot = true
         end
         
