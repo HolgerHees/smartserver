@@ -102,13 +102,15 @@ Vagrant.configure(2) do |config|
     #setup.ssh.password = 'vagrant'
     setup.ssh.insert_key = 'true'
     
-    setup.vm.provision "shell" do |s|
-        ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
-        s.inline = <<-SHELL
-          echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
-          mkdir -p /root/.ssh && touch /root/.ssh/authorized_keys
-          echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
-        SHELL
+    if File.exist?("#{Dir.home}/.ssh/id_rsa.pub") then
+        setup.vm.provision "shell" do |s|
+            ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+            s.inline = <<-SHELL
+              echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+              mkdir -p /root/.ssh && touch /root/.ssh/authorized_keys
+              echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
+            SHELL
+        end
     end
     
     setup.vm.network "private_network", ip: $env_ip
