@@ -13,6 +13,8 @@ from datetime import datetime
 
 import subprocess
 
+send_notification = {{'True' if update_notification_email else 'False'}}
+
 server_host = "{{server_domain}}"
 
 target_dir = "{{global_log}}update_notifier/"
@@ -112,7 +114,7 @@ for config_file in files:
         current_states['states'].append(current_state)
             
 if limit_config == None:
-    if len(update_message_r) > 0:
+    if send_notification and len(update_message_r) > 0:
         message_r = []
         message_r.append("There are new updates")
         for message in update_message_r:

@@ -136,6 +136,8 @@
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
+    - { import_role: { name: update_notifier }, tags: [ 'update_notifier' ] }                    # update check service
+
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }                          # Details can be found inside the demo configuration 'config/demo/roles.yml'
     # **************************************
