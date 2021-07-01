@@ -14,7 +14,10 @@
 
 - name: install required packages => is_suse
   zypper:
-    name: virtualbox
+    name: [
+      virtualbox
+      , libncurses5
+    ]
     state: present
   when: is_suse|bool
   notify: "restart virtualbox" 
