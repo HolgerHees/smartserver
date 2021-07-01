@@ -13,7 +13,7 @@ from datetime import datetime
 
 import subprocess
 
-send_notification = {{'True' if update_notification_email else 'False'}}
+send_notification = {{'True' if send_update_notifier_email else 'False'}}
 
 server_host = "{{server_domain}}"
 

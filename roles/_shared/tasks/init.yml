@@ -54,8 +54,6 @@
     default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
 #    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
     main_network_interface: "{{main_device_result.stdout_lines[0]}}"
-    ssl_certificate: "{{ ssl_certificate | default('selfsigned') }}"    # selfsigned | letsencrypt
-    update_notification_email: "{{ update_notification_email | default(no) }}" # yes | no
   tags: always
   
 # load shared variables
