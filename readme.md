@@ -1,6 +1,6 @@
 # Smartserver
 
-This project contains my complete automated IoT Server deployment setup.
+This project contains my complete automated IoT Server setup, deployable on opensuse, fedora and ubuntu.
 
 For a detailed overview about installed software and services check
 
