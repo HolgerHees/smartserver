@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    nextcloud_news_version: '16.0.0'
+    nextcloud_keeweb_version: '0.6.5'
+  
 # ***** CHECK *****
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml
@@ -67,7 +72,7 @@
 # ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists
   unarchive:
-    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v0.6.5/keeweb-0.6.5.tar.gz"
+    src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v{{nextcloud_keeweb_version}}/keeweb-{{nextcloud_keeweb_version}}.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/keeweb/"
@@ -95,7 +100,7 @@
 # ***** INSTALL NEWS *****
 - name: install news app
   unarchive:
-    src: "https://github.com/nextcloud/news/releases/download/15.3.2/news.tar.gz"
+    src: "https://github.com/nextcloud/news/releases/download/{{nextcloud_news_version}}/news.tar.gz"
     dest: "{{htdocs_path}}nextcloud/apps/"
     remote_src: yes
     creates: "{{htdocs_path}}nextcloud/apps/news/"
@@ -128,6 +133,14 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640
+    
+# ***** INSTALL NOTIFIER *****
+- name: clone files_home_inotify git
+  vars:
+    git_clone_name: "files_home_inotify"
+    git_clone_path: "{{htdocs_path}}nextcloud/apps/files_home_inotify"
+    git_clone_url: "https://github.com/HolgerHees/files_home_inotify.git"
+  import_tasks: roles/_shared/tasks/git_clone.yml
  
 # maybe cleanup 
 # UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'
@@ -146,5 +159,28 @@
   with_items:
     - keeweb
     - news
+    - files_home_inotify
 
- 
+- name: register news update notifier
+  vars:
+    name: "nextcloud_news"
+    type: "github"
+    url: "https://github.com/nextcloud/news/releases"
+    config: { 
+      project: "nextcloud/news", 
+      pattern: "^([0-9\\.]+)$",
+      version: "{{nextcloud_news_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: register keeweb update notifier
+  vars:
+    name: "nextcloud_keeweb"
+    type: "github"
+    url: "https://github.com/jhass/nextcloud-keeweb/releases"
+    config: { 
+      project: "jhass/nextcloud-keeweb", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{nextcloud_keeweb_version}}" 
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
