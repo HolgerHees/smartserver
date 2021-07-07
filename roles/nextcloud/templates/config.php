@@ -47,6 +47,7 @@ $CONFIG = array (
     7 => 'OC\\Preview\\MarkDown',
     8 => 'OC\\Preview\\PDF',
   ),
+  'filesystem_check_changes' => 1,
   'memcache.local' => '\\OC\\Memcache\\APCu',
   'filelocking.enabled' => true,
   'memcache.locking' => '\\OC\\Memcache\\Redis',

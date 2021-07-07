@@ -47,8 +47,8 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   docker-php-ext-enable redis && \
   
 # Redis
-  pecl install inotify && \
-  docker-php-ext-enable inotify && \
+#  pecl install inotify && \
+#  docker-php-ext-enable inotify && \
 
 # CLEANUPS
   apt-get autoremove -y && \

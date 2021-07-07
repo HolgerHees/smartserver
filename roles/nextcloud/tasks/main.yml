@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '21.0.3'
+    nextcloud_version: '22.0.0'
   tags: [ 'update_notifier_configs', 'user' ]
 
 # ***** PREPARE FOLDER *****
@@ -127,7 +127,7 @@
     src: "{{htdocs_path}}nextcloud/config/config.php"
   register: previous_nextcloud_config
   failed_when: no
-  when: "database_added"
+  when: "not database_added"
 
 
 
