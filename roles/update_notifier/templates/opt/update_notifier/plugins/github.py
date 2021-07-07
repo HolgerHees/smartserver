@@ -28,7 +28,8 @@ class Repository(Plugin):
             
     def _requestData(self,url):
         req = urllib.request.Request(url)
-        req.add_header('Authorization', "token {}".format(self.access_token))
+        if self.access_token:
+            req.add_header('Authorization', "token {}".format(self.access_token))
         
         raw = self.requestUrl(req)
         return json.loads(raw)
