@@ -47,10 +47,10 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse" then
             setup_os = "suse"
-            setup_version = "15.2"
-            setup_image = "bento/opensuse-leap-" + setup_version
-            #setup_version = "15.3"
-            #setup_image = "opensuse/Leap-" + setup_version + ".x86_64"
+            #setup_version = "15.2"
+            #setup_image = "bento/opensuse-leap-" + setup_version
+            setup_version = "15.3"
+            setup_image = "opensuse/Leap-" + setup_version + ".x86_64"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
             #setup_version = "20.04"
@@ -139,8 +139,7 @@ Vagrant.configure(2) do |config|
    
     if setup_os == 'suse' then
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo zypper --non-interactive install python-xml python3-netaddr
-        sudo zypper --non-interactive install python3-cairo python3-cryptography
+        sudo zypper --non-interactive install python3-netaddr python3-pip system-user-nobody
         sudo pip install ansible==2.10.7
         SHELL
     elsif setup_os == 'ubuntu' then

@@ -13,7 +13,7 @@ config_dir = "/dataDisk/etc/systemd_watcher/services/"
 
 exit_status = 0
 
-result = subprocess.run([ "cat /proc/cpuinfo | grep -o hypervisor" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+result = subprocess.run([ "hostnamectl status | grep -o \"Chassis: vm\"" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 isVirtualized = result.returncode == 0
 
 result = subprocess.run([ "/usr/sbin/service --status-all | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
