@@ -103,10 +103,11 @@ include "widgetWeatherDetailOverview.php"
   rainButton.addEventListener("click",function(){
     //var url = "https://meteocool.com/#widgetMap=10/<?php echo str_replace(",","/",LOCATION); ?>/1";
     //var url = "https://meteocool.com/?latLonZ=52.347667%2C13.621581%2C10.00&logo=";
-    var url = "https://www.windy.com/de/-Wetterradar-radar?radar,52.316,13.392,10";
-    window.open(url);
+    //var url = "https://www.windy.com/de/-Wetterradar-radar?radar,52.316,13.392,10";
     //var url = "https://meteocool.com/#map=10/1516347.41/6863233.92/0";
-    /*if( rainFrame.parentNode.classList.contains("open") )
+    var url = "https://embed.windy.com/embed2.html?lat=52.344&lon=13.618&detailLat=52.316&detailLon=13.392&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
+    //window.open(url);
+    if( rainFrame.parentNode.classList.contains("open") )
     {
       rainButton.classList.remove("open");
       rainButton.innerHTML = "Radar";
@@ -130,7 +131,7 @@ include "widgetWeatherDetailOverview.php"
         rainFrame.parentNode.classList.add("open");
         rainFrame.src=url;
       },0);
-    }*/
+    }
   });
   
   function clickHandler()
