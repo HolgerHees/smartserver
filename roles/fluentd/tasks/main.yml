@@ -10,7 +10,7 @@
 - name: install required packages => is_ubuntu
   apt:
     name: [
-      ruby-devel
+      ruby-all-dev
       , hostname
     ]
     state: present
