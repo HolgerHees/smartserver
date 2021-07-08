@@ -102,7 +102,8 @@ include "widgetWeatherDetailOverview.php"
   rainFrame.src="about:blank";
   rainButton.addEventListener("click",function(){
     //var url = "https://meteocool.com/#widgetMap=10/<?php echo str_replace(",","/",LOCATION); ?>/1";
-    var url = "https://meteocool.com/?latLonZ=52.347667%2C13.621581%2C10.00&logo=";
+    //var url = "https://meteocool.com/?latLonZ=52.347667%2C13.621581%2C10.00&logo=";
+    var url = "https://www.windy.com/de/-Wetterradar-radar?radar,52.316,13.392,10";
     window.open(url);
     //var url = "https://meteocool.com/#map=10/1516347.41/6863233.92/0";
     /*if( rainFrame.parentNode.classList.contains("open") )
