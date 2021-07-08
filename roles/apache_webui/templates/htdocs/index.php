@@ -560,8 +560,6 @@
             {
                 if( mx.History.getActiveNavigation() === subGroup && !isIFrameVisible() ) return;
                 
-                showMenu();
-                
                 if( subGroup.getEntries().length == 1 )
                 {
                     mx.Actions.openEntryById(event,subGroup.getMainGroup().getId(),subGroup.getId(),subGroup.getEntries()[0].getId())
@@ -570,6 +568,8 @@
                 }
                 else
                 {
+                    showMenu();
+                
                     mx.Menu.buildMenu( subGroup, setMenuEntries);
 
                     activateMenu(subGroup);
