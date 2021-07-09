@@ -11,8 +11,8 @@
     group: "{{item.group}}"
     mode: 0750
   with_items:
-    - { user: "nobody", group: "nobody", path: "{{ global_etc }}prometheus" }
-    - { user: "nobody", group: "nobody", path: "{{ global_lib }}prometheus" }
+    - { user: "nobody", group: "nogroup", path: "{{ global_etc }}prometheus" }
+    - { user: "nobody", group: "nogroup", path: "{{ global_lib }}prometheus" }
     - { user: "root", group: "root", path: "{{backup_path}}prometheus" }
 
 - name: copy config
@@ -20,7 +20,7 @@
     src: "templates/etc/prometheus.yml"
     dest: "{{ global_etc }}prometheus/prometheus.yml"
     owner: nobody
-    group: nobody
+    group: nogroup
     mode: 0640
   notify: "restart prometheus"
 
