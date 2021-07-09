@@ -38,6 +38,7 @@ docker_influxdb_ip:               "172.16.0.203"
 docker_loki_ip:                   "172.16.0.204"
 docker_mysql_ip:                  "172.16.0.205"
 docker_mosquitto_ip:              "172.16.0.206"
+docker_prometheus_ip:             "172.16.0.207"
 
 docker_default_network:           "172.17.0.0"
 

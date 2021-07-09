@@ -1,0 +1,98 @@
+- name: set version
+  set_fact:
+    prometheus_version: '2.28.1'
+  tags: [ 'update_notifier_configs' ]    
+
+- name: prepare needed folder
+  file:
+    path: '{{item.path}}'
+    state: directory
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
+    mode: 0750
+  with_items:
+    - { user: "nobody", group: "nobody", path: "{{ global_etc }}prometheus" }
+    - { user: "nobody", group: "nobody", path: "{{ global_lib }}prometheus" }
+    - { user: "root", group: "root", path: "{{backup_path}}prometheus" }
+
+- name: copy config
+  template:
+    src: "templates/etc/prometheus.yml"
+    dest: "{{ global_etc }}prometheus/prometheus.yml"
+    owner: nobody
+    group: nobody
+    mode: 0640
+  notify: "restart prometheus"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: prometheus
+    image: "prom/prometheus:v{{prometheus_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: prometheus
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_prometheus_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{ global_etc }}prometheus:/etc/prometheus:z'
+      - '{{ global_lib }}prometheus:/prometheus:z'
+      - '{{backup_path}}prometheus:/var/lib/prometheus_backup:z'
+    exposed_ports:
+     - "9090"
+  notify: "restart prometheus"
+
+- name: add container name
+  vars:
+    host_name: "prometheus"
+    host_ip_address: "{{docker_prometheus_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
+- name: create cron job
+  vars:
+    name: "Prometheus Cleanup"
+    cmd: "find {{backup_path}}prometheus/ -type d -mtime +7 -exec rm -rf {} +;"
+    file: "ansible_influxdb"
+    hour: "0"
+    minute: "45"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/prometheus.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "prometheus"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+- name: register update notifier
+  vars:
+    name: "prometheus"
+    type: "docker"
+    url: "https://github.com/prometheus/prometheus/releases"
+    config: {
+      repository: "prometheus",
+      pattern: "^v([0-9\\.]+)$"
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: trigger prometheus handler
+  vars:
+    notify: "restart prometheus"
+    service: "prometheus.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

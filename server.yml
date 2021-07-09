@@ -96,6 +96,8 @@
     - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab                                     [docker,user:root]
     - { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
     
+    - { import_role: { name: prometheus }, tags: [ 'prometheus' ] }                              # prometheus => needed by openhab                                   [docker,user:root]
+
     - { import_role: { name: loki }, tags: [ 'loki' ] }                                          # grafana logstore                                                  [docker,user:10001|10001]
 
     - { import_role: { name: redis }, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud                                   [docker,user:999]
