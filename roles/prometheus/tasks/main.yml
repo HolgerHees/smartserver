@@ -29,6 +29,14 @@
     name: docker
     state: started
 
+- name: create docker network
+  docker_network:
+    name: prometheus
+    ipam_config:
+      - subnet: "{{docker_prometheus_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_prometheus_ip.split('.')[:3] | join('.')}}.1"
+    appends: yes
+  
 - name: create docker container
   docker_container:
     name: prometheus
@@ -43,7 +51,7 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "isolated"
+      - name: "prometheus"
         ipv4_address: "{{docker_prometheus_ip}}"
     networks_cli_compatible: yes
     volumes:
@@ -53,7 +61,7 @@
     exposed_ports:
      - "9090"
   notify: "restart prometheus"
-
+  
 - name: add container name
   vars:
     host_name: "prometheus"
@@ -82,9 +90,12 @@
     config_file: "templates/etc/fluent/_.ansible.d/prometheus.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
     
+#nsenter -n -t $(docker inspect --format {{.State.Pid}} prometheus) ip route del default
+#nsenter -n -t $(docker inspect --format {{.State.Pid}} prometheus) ip route add default via 172.16.0.1
 - name: create systemd service
   vars:
     container_name: "prometheus"
+#    container_exec_start_post: "nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} prometheus) ip route del default && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} prometheus) ip route add default via {{docker_base_gateway}}"
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier

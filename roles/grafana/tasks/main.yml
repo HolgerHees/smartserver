@@ -77,9 +77,8 @@
       - mysql
       - influxdb
       - loki
-      - prometheus
     appends: yes
-  tags: [ 'influxdb', 'prometheus', 'loki', 'mysql' ]
+  tags: [ 'influxdb', 'loki', 'mysql' ]
 
 - name: create docker container
   docker_container:
@@ -113,6 +112,14 @@
      - "3000"
   notify: "restart grafana"
       
+- name: attach to prometheus docker network
+  docker_network:
+    name: prometheus
+    connected:
+      - grafana
+    appends: yes
+  tags: [ 'prometheus' ]  
+
 - name: add container name
   vars:
     host_name: "grafana"
