@@ -403,7 +403,8 @@ for network in sorted_network_r:
                             hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
                             for key in openPorts:
                                 data = openPorts[key]
-                                if hostMatch or rule['targetPort'] == key:
+                                sourceIp = rule['sourceIp'].split('/')[0]
+                                if hostMatch or ( rule['targetPort'] == key and (sourceIp == '0.0.0.0' or not ipaddress.ip_address(sourceIp).is_private) ):
                                     data["access"] = "extern"
 
         rows.append([2,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
