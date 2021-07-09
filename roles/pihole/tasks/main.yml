@@ -68,14 +68,6 @@
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
-- name: allow pihole service
-  vars:
-    name: "pihole"
-    rule: "saddr {{docker_pihole_ip}} daddr !{{server_network}}/24"
-    is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
-
 - name: create systemd service
   vars:
     container_name: "pihole"
