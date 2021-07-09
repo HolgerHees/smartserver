@@ -77,8 +77,9 @@
       - mysql
       - influxdb
       - loki
+      - prometheus
     appends: yes
-  tags: [ 'influxdb', 'loki', 'mysql' ]
+  tags: [ 'influxdb', 'prometheus', 'loki', 'mysql' ]
 
 - name: create docker container
   docker_container:
