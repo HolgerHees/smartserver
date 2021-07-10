@@ -8,6 +8,8 @@
     "Administration": "Administration",
     "Main UI": "Main UI",
     "Chatbot": "Chatbot",
-    "Habot": "Habot"
+    "Habot": "Habot",
+    "Metrics": "Metrics",
+    "Grafana": "Grafana"
   }
 }
