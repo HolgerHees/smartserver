@@ -104,7 +104,7 @@
     type: "docker"
     url: "https://github.com/prometheus/prometheus/releases"
     config: {
-      repository: "prometheus",
+      repository: "prom/prometheus",
       pattern: "^v([0-9\\.]+)$"
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml

@@ -442,28 +442,6 @@
     backup: yes
   import_tasks: roles/influxdb/tasks/add_bucket.yml
 
-- name: create metrics database
-  vars:
-    database: "openhab_metrics"
-    retentions:
-      - { retention: "30d" }
-    backup: yes
-  import_tasks: roles/influxdb/tasks/add_bucket.yml
-
-- name: get bucket ids
-  shell: "docker exec influxdb sh -c \"influx bucket list --name openhab_metrics --org default-org --json\""
-  register: influxdb_bucket_result
-  changed_when: False
-  
-- name: get v1 auth
-  shell: "docker exec influxdb sh -c \"influx v1 auth list --org default-org\""
-  register: influxdb_auth_result
-  changed_when: False
-
-- name: create v1 auth for metrics database => auth does not exists
-  shell: "docker exec influxdb sh -c \"influx v1 auth create --write-bucket {{(influxdb_bucket_result.stdout | from_json)[0].id}} --description	'legacy auth' --username openhab_metrics --password {{vault_influxdb_admin_password}} --org default-org\""
-  when: "'\topenhab_metrics\t' not in influxdb_auth_result.stdout or 'buckets/' + (influxdb_bucket_result.stdout | from_json)[0].id not in influxdb_auth_result.stdout"
-
 # ***** FINALIZE *****
 - name: register default webui
   vars:

@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
     grafana_version: '8.0.5'
+    natel_discrete_plugin_version: "0.1.1"
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder
@@ -13,6 +14,7 @@
   with_items:
     - "{{ global_lib }}grafana/"
     - "{{ global_lib }}grafana/dashboards/"
+    - "{{ global_lib }}grafana/plugins/"
     - "{{ global_etc }}grafana/"
     - "{{ global_etc }}grafana/provisioning"
     - "{{ global_etc }}grafana/provisioning/dashboards/"
@@ -29,6 +31,7 @@
     mode: 0640
   notify: "restart grafana"
   with_items:
+    - "templates/dashboards/OpenHAB metrics.json"
     - "templates/dashboards/Server Health.json"
     - "templates/dashboards/Logs.json"
 
@@ -51,12 +54,22 @@
     mode: 0640
   notify: "restart grafana"
   with_items:
+    - "provisioning/datasources/opentsdb_influxdb.yaml"
     - "provisioning/datasources/openhab_influxdb.yaml"
-    - "provisioning/datasources/openhab_metrics.yaml"
-    - "provisioning/datasources/opentsdb.yaml"
     - "provisioning/datasources/openhab_mysql.yaml"
+    - "provisioning/datasources/prometheus.yaml"
     - "provisioning/datasources/loki.yaml"
     - "provisioning/dashboards/provider.yaml"
+    
+- name: install natel-discrete-panel archive
+  unarchive:
+    src: "https://grafana.com/api/plugins/natel-discrete-panel/versions/{{natel_discrete_plugin_version}}/download"
+    dest: "{{ global_lib }}grafana/plugins/"
+    creates: "{{ global_lib }}grafana/plugins/natel-discrete-panel/"
+    remote_src: yes
+    owner: "root"
+    group: "root"
+  notify: "restart grafana"
 
 - name: build docker image
   vars:
@@ -91,7 +104,7 @@
     env:
       GF_SERVER_DOMAIN: "{{server_domain}}"
 #      GF_SERVER_HTTP_ADDR: "127.0.0.1"
-      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:/grafana"
+      GF_SERVER_ROOT_URL: "https://%(domain)s/grafana"
 #      GF_LOG_MODE: "syslog"
 #      GF_LOG_SYSLOG_TAG: "grafana"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
