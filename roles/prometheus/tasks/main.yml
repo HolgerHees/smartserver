@@ -85,6 +85,20 @@
     minute: "45"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
+- name: register webui
+  vars:
+    name: "prometheus"
+    js_file: "templates/webui/prometheus.js"
+    i18n_files: [ { language: "de", file: "templates/webui/prometheus.de.json" } ]
+    icons: [ 'templates/webui/icons/prometheus_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "prometheus"
+    include: "templates/etc/apache2/_.ansible.vhost.d/prometheus.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/prometheus.conf"
