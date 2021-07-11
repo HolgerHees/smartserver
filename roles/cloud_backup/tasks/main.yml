@@ -25,7 +25,7 @@
     - {name: 'nextcloud', src: '{{nextcloud_data_path}}'}
     - {name: 'mysql', src: '{{backup_path}}mysql'}
     - {name: 'potd', src: '{{htdocs_path}}img/potd'}
-    - {name: '{{ansible_project_name}}', src: '{{projects_path}}{{ansible_project_name}}'}
+    - {name: 'smartserver', src: '{{projects_path}}smartserver'}
     
 # RCLONE
 - name: install archive
