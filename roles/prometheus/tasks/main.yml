@@ -80,7 +80,7 @@
   vars:
     name: "Prometheus Cleanup"
     cmd: "find {{backup_path}}prometheus/ -type d -mtime +7 -exec rm -rf {} +;"
-    file: "ansible_influxdb"
+    file: "ansible_prometheus"
     hour: "0"
     minute: "45"
   import_tasks: roles/cron/tasks/add_cronjob.yml

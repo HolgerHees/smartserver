@@ -1,8 +1,0 @@
-  - job_name: 'openhab'
-    scrape_interval: 1m
-    scheme: http
-    metrics_path: /rest/metrics/prometheus
-    static_configs:
-    - targets:
-      - 'openhab:8080'
- 

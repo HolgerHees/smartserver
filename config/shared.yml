@@ -15,7 +15,7 @@ projects_path:                    "/dataRaid/projects/"
 cloud_path:                       "/dataRaid/cloud/"
 backup_path:                      "/dataRaid/backups/"
 
-deployment_backup_path:           "{{projects_path}}{{ansible_project_name}}/{{config_path}}backup/"
+deployment_backup_path:           "{{projects_path}}smartserver/{{config_path}}backup/"
 
 nextcloud_data_path:              "/dataRaid/nextcloud/"
 
