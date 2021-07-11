@@ -1,7 +1,7 @@
 - name: clone deployment git
   vars:
     git_clone_name: "deployment"
-    git_clone_path: "{{projects_path}}smartserver"
+    git_clone_path: "{{projects_path}}{{project_name}}"
     git_clone_url: "{{vault_deployment_config_git}}"
   import_tasks: roles/_shared/tasks/git_clone.yml
   
@@ -13,7 +13,7 @@
     group: root
     mode: 0750
   with_items:
-    - "{{projects_path}}smartserver/{{config_path}}backup/"
+    - "{{projects_path}}{{project_name}}/{{config_path}}backup/"
     - "/opt/backup_collector"
     
 - name: copy cmd
