@@ -598,12 +598,12 @@ body.dark #submenu .service.button:active {
 }
 #submenu .service.imageWatcher > div {
     position: relative;
-}
-#submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
+    width: auto;
     max-width: 90%;
 }
-#submenu .service.imageWatcher > div:first-child:nth-last-child(2) {
-    max-width: 640px;
+#submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
+    width: auto;
+    max-width: 90%;
 }
 #submenu .service.imageWatcher > div > a,
 #submenu .service.imageWatcher > div > img {
@@ -629,10 +629,10 @@ body.dark #submenu .service.button:active {
         justify-content: space-evenly;
     }
     #submenu .service.imageWatcher > div {
-        background-color: var(--image-watcher-bg);
+        width: calc(50% - 10px);
     }
-    #submenu .service.imageWatcher > div:first-child:nth-last-child(2) {
-        width:calc(50% - 10px);
+    #submenu .service.imageWatcher > div {
+        background-color: var(--image-watcher-bg);
     }
     #submenu .service.imageWatcher > div > a,
     #submenu .service.imageWatcher > div > img {
