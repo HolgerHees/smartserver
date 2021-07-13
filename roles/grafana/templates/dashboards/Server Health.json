@@ -24,7 +24,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -267,7 +267,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -471,7 +471,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -637,7 +637,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -803,7 +803,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1044,7 +1044,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1248,7 +1248,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1452,7 +1452,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpenTSDB",
+      "datasource": "OpentsdbInfluxDB",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1665,7 +1665,7 @@
           "text": "autogen",
           "value": "autogen"
         },
-        "datasource": "OpenTSDB",
+        "datasource": "OpentsdbInfluxDB",
         "definition": "SHOW RETENTION POLICIES on \"opentsdb\" ",
         "description": null,
         "error": null,

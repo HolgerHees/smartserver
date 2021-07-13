@@ -14,11 +14,23 @@
   when: "'admin' in userdata[item].groups and item + ' (administrator)' not in openhab_user_result.stdout and item + ' (' in openhab_user_result.stdout"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
+  
+- name: check users
+  shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"users list\""
+  register: openhab_user_result
+  changed_when: False
+  tags: [ 'user' ]
 
 - name: add new user
   shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"users add {{item}} {{vault_userpasswords[item].web_password}} {{'administrator' if 'admin' in userdata[item].groups else 'user'}}\""
-  when: "item not in openhab_user_result.stdout or ('admin' in userdata[item].groups and item + ' (administrator)' not in openhab_user_result.stdout)"
+  when: "item not in openhab_user_result.stdout"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
+- name: update user password
+  shell: "sshpass -p \"habopen\" ssh -p 8101 openhab@openhab \"users password {{item}} {{vault_userpasswords[item].web_password}}\""
+  when: "item in openhab_user_result.stdout"
+  with_items: "{{userdata}}"
+  changed_when: False
+  tags: [ 'user' ]
  
