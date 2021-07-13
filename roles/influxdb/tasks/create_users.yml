@@ -15,12 +15,18 @@
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
-#- name: update user password
-#  shell: "echo '{{vault_userpasswords[item].web_password}}' | docker exec -i influxdb sh -c \"influx user password --name {{item}}\""
-#  when: "item in influxdb_user_result.stdout"
-#  with_items: "{{userdata}}"
-#  changed_when: False
-#  tags: [ 'user' ]
+- name: update user password
+  shell: |
+    spawn docker exec -it influxdb sh -c "influx user password --name {{item}}"
+    expect "Please type your new password:"
+    send "{{vault_userpasswords[item].web_password}}\n" 
+    expect "Please type your new password again:"
+    send "{{vault_userpasswords[item].web_password}}\n" 
+    exit 0
+  when: "item in influxdb_user_result.stdout"
+  with_items: "{{userdata}}"
+  changed_when: False
+  tags: [ 'user' ]
 
 - name: check auth
   shell: "docker exec influxdb sh -c \"influx auth list --org default-org\""
