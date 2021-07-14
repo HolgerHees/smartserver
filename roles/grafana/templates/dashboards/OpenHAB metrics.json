@@ -552,7 +552,7 @@
         }
       ],
       "rowHeight": 30,
-      "showLegend": true,
+      "showLegend": false,
       "showLegendNames": true,
       "showLegendPercent": true,
       "showLegendValues": true,
@@ -700,7 +700,7 @@
         }
       ],
       "rowHeight": 30,
-      "showLegend": true,
+      "showLegend": false,
       "showLegendNames": true,
       "showLegendPercent": true,
       "showLegendValues": true,
