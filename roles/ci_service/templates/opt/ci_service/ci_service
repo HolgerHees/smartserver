@@ -130,7 +130,7 @@ elif cmd == "start" or cmd == "restart":
         log.info(u"Nothing to do. Commit '{}' already processed.".format(current_git_hash))
         exit(0)
 elif cmd != "":
-    log.error(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop>".format(cmd))
+    log.error(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop|clean|status>".format(cmd))
     exit(1)
 else:
     log.error(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop|clean|status>")
