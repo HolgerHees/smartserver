@@ -600,6 +600,7 @@ body.dark #submenu .service.button:active {
     position: relative;
     width: auto;
     max-width: 90%;
+    padding-bottom: 5px;
 }
 #submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
     width: auto;
@@ -620,7 +621,7 @@ body.dark #submenu .service.button:active {
 #submenu .service.imageWatcher > div > span.time {
     right: 1%;
 }
-@media screen and (min-width: 1000px) {
+@media screen and (min-width: 1400px) {
     #submenu .service.imageWatcher {
         flex-direction: row;
         flex-grow: 0;
@@ -630,6 +631,7 @@ body.dark #submenu .service.button:active {
     }
     #submenu .service.imageWatcher > div {
         width: calc(50% - 10px);
+        padding-bottom: 0px;
     }
     #submenu .service.imageWatcher > div {
         background-color: var(--image-watcher-bg);
