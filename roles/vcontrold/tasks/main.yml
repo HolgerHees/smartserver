@@ -104,17 +104,6 @@
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
-- name: register update notifier
-  vars:
-    name: "debian"
-    type: "docker"
-    url: "https://debian.org/"
-    config: {
-      repository: "debian",
-      pattern: "^buster-([0-9]+)-slim$" 
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-
 - name: trigger vcontrold handler
   vars:
     notify: "restart vcontrold"

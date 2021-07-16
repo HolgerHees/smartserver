@@ -13,7 +13,7 @@
 - { import_role: { name: weather_forecast }, tags: [ 'weather_forecast', 'alpine' ], vars: { publish_topic: no } } 
 
 # *** OPTIONAL OTHERS ***
-#- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'debian' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]
+#- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'alpine' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]
 
 - { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }  # proxy and redirect configs for custom devices
 
