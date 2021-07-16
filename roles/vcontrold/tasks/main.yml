@@ -23,7 +23,7 @@
   vars:
     name: "vcontrold"
     image_name: "custom_vcontrold"
-    image_version: "{{debian_version}}-{{vcontrold_version}}"
+    image_version: "{{alpine_version}}-{{vcontrold_version}}"
     files:
       - roles/vcontrold/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
@@ -39,7 +39,7 @@
 - name: create docker container
   docker_container:
     name: vcontrold
-    image: "custom_vcontrold:{{debian_version}}-{{vcontrold_version}}"
+    image: "custom_vcontrold:{{alpine_version}}-{{vcontrold_version}}"
     state: present
 #    recreate: true
     env:
