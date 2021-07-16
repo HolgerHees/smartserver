@@ -41,6 +41,8 @@ ProtocolsHonorOrder Off
   ProxyPass http://grafana:3000
   ProxyPassReverse http://grafana:3000
   RequestHeader set Authorization "Basic YWRtaW46YWRtaW4="
+  
+  RequestHeader set Origin "https://{{server_domain}}"
 </Location>
 
 <Location /api/v1/settings/notifications>
