@@ -102,9 +102,9 @@
     user: "root:root"
 #    recreate: true
     env:
-      GF_SERVER_DOMAIN: "{{server_domain}}"
+      GF_SERVER_DOMAIN: "grafana.{{server_domain}}"
 #      GF_SERVER_HTTP_ADDR: "127.0.0.1"
-      GF_SERVER_ROOT_URL: "https://%(domain)s/grafana"
+      GF_SERVER_ROOT_URL: "https://%(domain)s/"
 #      GF_LOG_MODE: "syslog"
 #      GF_LOG_SYSLOG_TAG: "grafana"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
@@ -148,10 +148,11 @@
     icons: [ 'templates/webui/icons/grafana_logo.svg', 'templates/webui/icons/grafana_logs.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
-- name: copy apache config
+- name: copy apache vhost
   vars:
-    config_file: "templates/etc/apache2/_.ansible.conf.d/grafana.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+    sub_domain: "grafana"
+    include: "templates/etc/apache2/_.ansible.vhost.d/grafana.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
 
 - name: copy fluentd config
   vars:
