@@ -362,6 +362,14 @@ function getVersion($path,$suffixes)
             
             var iframeLoadingTimer = null;
             
+            window.addEventListener("message", (event) => {
+                console.log(event);
+                if( event.data == 'loaded' )
+                {
+                    console.log(">>>> IFRAME MESSAGE " + event.source.document.location.href + " <<<<" );
+                }
+            });
+            
             function iFrameLoadHandler(e)
             {
                 var url = null;
