@@ -363,11 +363,15 @@ function getVersion($path,$suffixes)
             var iframeLoadingTimer = null;
             
             window.addEventListener("message", (event) => {
-                /*console.log(event);
-                if( event.data == 'loaded' )
+                if( 'type' in event.data && [ 'load', 'pushState', 'replaceState' ].includes(event.data['type']) )
                 {
-                    console.log(">>>> IFRAME MESSAGE " + event.source.document.location.href + " <<<<" );
-                }*/
+                    console.log(">>>> IFRAME " + event.data['type'] + " " + event.data['url'] + " <<<<" );
+                }
+                else
+                {
+                    console.log("Wrong message" );
+                    debugger;
+                }
             });
             
             function iFrameLoadHandler(e)
