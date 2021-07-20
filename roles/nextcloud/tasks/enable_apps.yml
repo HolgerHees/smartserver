@@ -31,6 +31,7 @@
   with_items:
     - user_saml # must always be the first one
     - onlyoffice # must always be the second one
+    - jsloader # must always be the third one
     - bookmarks
     - contacts
     - calendar
@@ -69,6 +70,11 @@
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
   when: "command_result.results[1].changed"
 
+# ***** CONFIGURE jsloader *****
+- name: set jsloader
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('jsloader', 'snippet', 'document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/js/domain.js\\'; document.head.appendChild(script);') ON DUPLICATE KEY UPDATE configvalue='document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/js/domain.js\\'; document.head.appendChild(script);';\\\"\""
+#  when: "command_result.results[2].changed"
+  
 # ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists
   unarchive:
