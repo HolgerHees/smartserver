@@ -9,8 +9,6 @@
     - { import_role: { name: _shared, tasks_from: init }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************   
 
-    - { import_role: { name: _shared, tasks_from: preconditions } }
-  
     - name: loaded values from config files
       debug:
         msg: 
