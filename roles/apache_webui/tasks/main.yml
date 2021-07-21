@@ -24,6 +24,7 @@
     - main/icons
     - main/img
     - main/js
+    - main/listener
     - gallery/
     - favicon.ico
     - info.php
