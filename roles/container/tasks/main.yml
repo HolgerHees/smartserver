@@ -62,7 +62,7 @@
   when: is_fedora|bool
   
 - name: remove old packages => is_ubuntu
-  yum:
+  apt:
     name: [
         docker 
         , docker-engine 
