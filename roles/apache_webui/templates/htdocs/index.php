@@ -388,7 +388,12 @@ function getVersion($path,$suffixes)
                     url = iframeElement.getAttribute("src");
                     if( url ) console.log(" FALLBACK URL" );
                 }
-
+                
+                loadHandler(url);
+            }
+            
+            function loadHandler(url)
+            {
                 console.log(">>>> IFRAME " + history.length + " " + url + " <<<<");
                 console.log(history.state);
 
