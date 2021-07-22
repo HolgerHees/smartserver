@@ -364,7 +364,6 @@ function getVersion($path,$suffixes)
             
             function iFrameLoadHandler(e)
             {
-                var url = null;
                 try
                 {
                     var url = e.target.contentWindow.location.href;
