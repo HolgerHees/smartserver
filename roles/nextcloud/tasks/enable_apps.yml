@@ -72,8 +72,8 @@
 
 # ***** CONFIGURE jsloader *****
 - name: set jsloader
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('jsloader', 'snippet', 'document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/js/domain.js\\'; document.head.appendChild(script);') ON DUPLICATE KEY UPDATE configvalue='document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/js/domain.js\\'; document.head.appendChild(script);';\\\"\""
-#  when: "command_result.results[2].changed"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('jsloader', 'snippet', 'document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);') ON DUPLICATE KEY UPDATE configvalue='document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);';\\\"\""
+  when: "command_result.results[2].changed"
   
 # ***** INSTALL KEEWEB *****
 - name: install keeweb app => app does not exists
