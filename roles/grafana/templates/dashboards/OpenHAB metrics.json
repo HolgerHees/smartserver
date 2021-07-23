@@ -3365,9 +3365,6 @@
         "allFormat": "glob",
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "openhab.smartmarvin.de:443",
-          "value": "openhab.smartmarvin.de:443"
         },
         "datasource": "Prometheus",
         "definition": "",
