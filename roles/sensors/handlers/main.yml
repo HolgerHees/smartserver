@@ -1,0 +1,8 @@
+- name: restart lm_sensors
+  systemd:
+    name: lm_sensors
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart lm_sensors"

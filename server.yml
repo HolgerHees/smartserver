@@ -71,6 +71,7 @@
 
     - { import_role: { name: mdadm }, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
     - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring
+    - { import_role: { name: sensors }, tags: [ 'sensors' ] }                                    # sensors monitoring
 
     - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
