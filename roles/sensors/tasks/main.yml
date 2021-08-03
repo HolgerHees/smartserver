@@ -22,7 +22,9 @@
     state: present
   when: is_suse|bool
        
-- name: detect sensors => sysctl changed
+- name: detect sensors
   shell: "[ -f \"/etc/sysconfig/lm_sensors\" ] || sensors-detect --auto"
+  register: sensor_result
+  changed_when: "'Do you want to overwrite' in sensor_result.stdout"
   notify: "restart lm_sensors"
 
