@@ -266,7 +266,7 @@ class Handler(object):
                 date = datetime.now(timezone(config.timezone))
                 target = date.replace(minute=5,second=0)
                 
-                if target < date:
+                if target <= date:
                     target = target + timedelta(hours=1)
 
                 diff = target - date
