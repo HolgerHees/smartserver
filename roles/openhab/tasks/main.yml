@@ -13,7 +13,6 @@
     openhab_group: "{{system_groups['openhab'].name}}"
 #    openhab_user: "root"
 #    openhab_group: "root"
-    jython_script_version: "db88d897c962ea9328d0f685bc01f02af887e6b4"
   tags: [ 'update_notifier_configs' ]
 
 - name: prepare needed config folder
@@ -290,26 +289,7 @@
     state: absent
   changed_when: no
   
-# JYTHON HELPER
-- name: "clone jython helper git"
-  git:
-    #https://community.openhab.org/t/ivan-s-helper-libraries-oh3-python-javascript/116458
-    repo: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
-    #repo: 'https://github.com/openhab-scripters/openhab-helper-libraries.git'
-    dest: '{{global_build}}openhab-jython'
-    version: '{{jython_script_version}}'
-
-- name: copy jython core classes
-  copy:
-    src: "{{global_build}}openhab-jython/Core/automation/lib/python/core"
-    dest: "{{global_etc}}openhab/python/"
-    remote_src: yes
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    mode: 0750
-  notify: "restart openhab"
-
-- name: copy jython configuration
+- name: copy python configuration
   template:
     src: "templates/python/configuration.py"
     dest: "{{global_etc}}openhab/python/configuration.py"
@@ -495,18 +475,6 @@
     config: {
       repository: "openhab/openhab",
       pattern: "^([0-9\\.]+)-debian$"
-    }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-
-- name: register jython script update notifier
-  vars:
-    name: "jsr223"
-    type: "github"
-    url: 'https://github.com/CrazyIvan359/openhab-helper-libraries'
-    #url: "https://github.com/openhab-scripters/openhab-helper-libraries"
-    config: { 
-      project: "openhab-scripters/openhab-helper-libraries", 
-      version: "{{jython_script_version}}" 
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
