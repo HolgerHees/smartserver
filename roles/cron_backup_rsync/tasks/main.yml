@@ -9,7 +9,7 @@
 - name: create cron job => is_production
   vars:
     name: "DataDisk RSync Backup"
-    cmd: "/usr/bin/rsync --quiet -av --one-file-system --delete {{data_path}} {{backup_path}}dataDisk/ --exclude=var --exclude=tmp"
+    cmd: "/usr/bin/rsync --quiet -av --bwlimit=25m --one-file-system --delete {{data_path}} {{backup_path}}dataDisk/ --exclude=var --exclude=tmp"
     file: "ansible_cron_backup_rsync"
     hour: "5"
     minute: "0"
