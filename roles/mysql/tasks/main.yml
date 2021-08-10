@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mysql_version: "10.6.3"
+    mysql_version: "10.6.4"
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
