@@ -14,20 +14,23 @@ frameHandler = (function() {
           
             head.setAttribute("frame-initialized", "true");
 
-            postMessage("load");
+            if( window.top.location.href.startsWith('https://' + document.domain) )
+            {
+                postMessage("load");
 
-            window.addEventListener("popstate",function(event) { postMessage("popState"); });
-            //browser.webNavigation.onHistoryStateUpdated.addListener(function()
-            var _pushState = history.pushState; 
-            history.pushState = function() { 
-                _pushState.apply(this, arguments); 
-                postMessage("pushState");
-            }; 
-            var _replaceState = history.replaceState; 
-            history.replaceState = function() { 
-                _replaceState.apply(this, arguments); 
-                postMessage("replaceState");
-            }; 
+                window.addEventListener("popstate",function(event) { postMessage("popState"); });
+                //browser.webNavigation.onHistoryStateUpdated.addListener(function()
+                var _pushState = history.pushState; 
+                history.pushState = function() { 
+                    _pushState.apply(this, arguments); 
+                    postMessage("pushState");
+                }; 
+                var _replaceState = history.replaceState; 
+                history.replaceState = function() { 
+                    _replaceState.apply(this, arguments); 
+                    postMessage("replaceState");
+                }; 
+            }
         }
     } 
 })();
