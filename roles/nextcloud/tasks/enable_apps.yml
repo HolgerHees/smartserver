@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     nextcloud_news_version: '16.0.1'
-    nextcloud_keeweb_version: '0.6.5'
+    nextcloud_keeweb_version: '0.6.6'
   
 # ***** CHECK *****
 - name: check mysql service
@@ -76,6 +76,18 @@
   when: "command_result.results[2].changed"
   
 # ***** INSTALL KEEWEB *****
+- name: check for outdated keeweb version
+  shell: "grep --invert \"<version>{{nextcloud_keeweb_version}}<\\/version>\" {{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml | grep \"<version>.*<\\/version>\""
+  register: keeweb_result
+  changed_when: "keeweb_result.rc == 0"
+  failed_when: False
+  
+- name: uninstall outdated keeweb version => old version was detected
+  file:
+    state: absent
+    path: "{{htdocs_path}}nextcloud/apps/keeweb/"
+  when: "keeweb_result.rc == 0"
+  
 - name: install keeweb app => app does not exists
   unarchive:
     src: "https://github.com/jhass/nextcloud-keeweb/releases/download/v{{nextcloud_keeweb_version}}/keeweb-{{nextcloud_keeweb_version}}.tar.gz"
@@ -104,6 +116,18 @@
 #  when: keeweb_installation.changed
   
 # ***** INSTALL NEWS *****
+- name: check for outdated news version
+  shell: "grep --invert \"<version>{{nextcloud_news_version}}<\\/version>\" {{htdocs_path}}nextcloud/apps/news/appinfo/info.xml | grep \"<version>.*<\\/version>\""
+  register: news_result
+  changed_when: "news_result.rc == 0"
+  failed_when: False
+  
+- name: uninstall outdated news version => old version was detected
+  file:
+    state: absent
+    path: "{{htdocs_path}}nextcloud/apps/news/"
+  when: "news_result.rc == 0"
+
 - name: install news app
   unarchive:
     src: "https://github.com/nextcloud/news/releases/download/{{nextcloud_news_version}}/news.tar.gz"
@@ -112,14 +136,14 @@
     creates: "{{htdocs_path}}nextcloud/apps/news/"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-  register: news_installed
+  register: news_installation
   
 #- name: patch news app min required version => app installation changed
 #  lineinfile:
 #    path: "{{htdocs_path}}nextcloud/apps/news/appinfo/info.xml"
 #    regexp: '<nextcloud min-version='
 #    line: '<nextcloud min-version="14" max-version="20"/>'
-#  when: news_installed.changed
+#  when: news_installation.changed
   
 - name: prepare news config folder
   file:
@@ -139,9 +163,14 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640
-    
+
 # maybe cleanup 
 # UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'
+    
+# ***** UPGRADE AFTER keeweb or news installatioin *****
+- name: upgrade existing database => keeweb or news version changed
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
+  when: "keeweb_installation.changed or news_installation.changed"
   
 # ***** ENABLE ADDITIONAL APPS *****
 - name: get app status
