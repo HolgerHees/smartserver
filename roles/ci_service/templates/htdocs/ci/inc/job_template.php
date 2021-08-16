@@ -16,7 +16,7 @@ class JobTemplate
       '1;35' => "<span style='color:plum'>"
     );
     
-    function getLogLine($line)
+    public static function getLogLine($line)
     {
         $result = '<div>';
 
@@ -55,7 +55,7 @@ class JobTemplate
         return $result;
     }
 
-    function getState($job)
+    public static function getState($job)
     {
         $result = '<span class="state ' . $job->getState() . ' icon-resize-horizontal"><span class="text">' . $job->getState() . '</span>';
         switch( $job->getState() )
@@ -80,7 +80,7 @@ class JobTemplate
         return $result;
     }
     
-    function getDetails($job,$list_view)
+    public static function getDetails($job,$list_view)
     {
         $result = '<div id="' . $job->getHash() . '" data-state="' . $job->getState() . '" data-duration="' . $job->getDuration() . '" class="row"';
         if( $list_view ) 
@@ -107,7 +107,7 @@ class JobTemplate
         return $result;
     }
     
-    function formatDuration($duration) 
+    public static function formatDuration($duration) 
     {
       $days = floor($duration / 86400);
       $duration -= $days * 86400;

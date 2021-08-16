@@ -14,7 +14,7 @@ class Job {
     private $bytes = 0;
     private $content = [];
     
-    function __construct($log_path,$filename) {
+    public function __construct($log_path,$filename) {
         $this->path = $log_path.$filename;
         
         $data = explode("-",$filename);
@@ -42,7 +42,7 @@ class Job {
         $this->subject = str_replace("_"," ",$this->subject);
     }
     
-    static function getJobs($log_folder)
+    public static function getJobs($log_folder)
     {
         $files = scandir($log_folder);
         $jobs = [];
@@ -67,7 +67,7 @@ class Job {
         return $jobs;
     }
     
-    function initContent($position)
+    public function initContent($position)
     {
         $this->bytes = $position;
         $this->content = [];
@@ -82,72 +82,72 @@ class Job {
         }
     }
     
-    function getHash()
+    public function getHash()
     {
         return md5($this->datetime_raw.':'.$this->config.':'.$this->os.':'.$this->branch.':'.$this->git_hash);
     }
     
-    function getBytes()
+    public function getBytes()
     {
         return $this->bytes;
     }
 
-    function getLines()
+    public function getLines()
     {
         return $this->content;
     }
     
-    function getPath()
+    public function getPath()
     {
         return $this->path;
     }
     
-    function getDateTime()
+    public function getDateTime()
     {
         return $this->datetime;
     }
     
-    function getDateTimeRaw()
+    public function getDateTimeRaw()
     {
         return $this->datetime_raw;
     }
 
-    function getDuration()
+    public function getDuration()
     {
         return $this->duration;
     }
     
-    function getState()
+    public function getState()
     {
         return $this->state;
     }
 
-    function getConfig()
+    public function getConfig()
     {
         return $this->config;
     }
 
-    function getOs()
+    public function getOs()
     {
         return $this->os;
     }
 
-    function getBranch()
+    public function getBranch()
     {
         return $this->branch;
     }
 
-    function getGitHash()
+    public function getGitHash()
     {
         return $this->git_hash;
     }
 
-    function getAuthor()
+    public function getAuthor()
     {
         return $this->author;
     }
 
-    function getSubject()
+    public function getSubject()
     {
         return $this->subject;
     }
