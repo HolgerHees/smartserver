@@ -125,6 +125,6 @@
   when: "influxdb_container_result.changed"
   
 - name: create cli config token => config does not exists
-  shell: "docker exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token {{vault_influxdb_admin_token}} --active\""
+  shell: "docker exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{vault_influxdb_admin_token}}' --active\""
   changed_when: False
   when: "influxdb_container_result.changed and '\tdefault\t' not in influxdb_config_result.stdout"
