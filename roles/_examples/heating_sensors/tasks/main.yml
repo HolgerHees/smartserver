@@ -1,0 +1,36 @@
+- name: prepare needed folder
+  file:
+    path: "/opt/heating_sensors"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy cmd's
+  template:
+    src: "templates/opt/{{item}}"
+    dest: "/opt/{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "heating_sensors/sensoren.bash"
+  
+- name: copy cmd binaries
+  copy:
+    src: "templates/opt/{{item}}"
+    dest: "/opt/{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "heating_sensors/TempCmd"
+
+- name: create cron job => is_production
+  vars:
+    name: "Heating Sensors"
+    cmd: "/opt/heating_sensors/sensoren.bash"
+    file: "ansible_heating_sensors"
+    minute: "*/1"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: "is_production|bool"
