@@ -108,7 +108,12 @@ mx.OnDocReady.push( initPage );
         echo '<div class="row ' . $class . '">';
         echo '<div class="typeLink" onClick="mx.UNCore.openUrl(event,\'' .$state->url . '\')"><span class="' . $icon . '"></span></div>';
         echo '<div>' . $state->name . '</div>';
-        echo '<div>' . formatVersion($state->current->version) . '</div>';
+
+        $latest_date = date_create($state->current->date);
+        $date = $latest_date->format("d.m.Y H:i");
+
+        echo '<div class="tooltip">' . formatVersion($state->current->version) . ' <span class="hover">Released: ' . $date . '</span></div>';
+        
         if( count($state->updates) > 0)
         {
             $updates = $state->updates;

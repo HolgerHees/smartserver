@@ -110,6 +110,8 @@ div.currentBranch {
   /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;
+  
+  background-color: #f2f2f2;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
