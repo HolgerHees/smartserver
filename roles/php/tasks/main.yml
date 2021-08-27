@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    php_version: "8.0.9"
+    php_version: "8.0.10"
   tags: [ 'update_notifier_configs' ]
   
 - name: build docker image
@@ -105,7 +105,7 @@
   vars:
     name: "php"
     type: "docker"
-    url: "https://www.php.net/ChangeLog-7.php"
+    url: "https://www.php.net/ChangeLog-8.php"
     config: {
       repository: "php",
       pattern: "^([0-9\\.]+)-fpm$" 
