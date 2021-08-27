@@ -3,7 +3,7 @@ frameHandler = (function() {
         var head = document.getElementsByTagName("HEAD")[0]
         if( head.hasAttribute("frame-initialized") )
         {
-            console.err("Frame already initialized");
+            console.error("Frame already initialized");
         }
         else
         {
