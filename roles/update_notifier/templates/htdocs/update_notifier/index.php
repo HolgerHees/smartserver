@@ -112,7 +112,7 @@ mx.OnDocReady.push( initPage );
         $latest_date = date_create($state->current->date);
         $date = $latest_date->format("d.m.Y H:i");
 
-        echo '<div class="tooltip">' . formatVersion($state->current->version) . ' <span class="hover">Released: ' . $date . '</span></div>';
+        echo '<div class="tooltip">' . formatVersion($state->current->version) . ' <span class="hover">Version ' . formatVersion($state->current->version) . ' from ' . $date . '</span></div>';
         
         if( count($state->updates) > 0)
         {
