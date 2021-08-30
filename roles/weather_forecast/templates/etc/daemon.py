@@ -13,6 +13,7 @@ import time
 import requests
 import urllib.parse
 import json
+import decimal
 
 import config
 
@@ -69,6 +70,9 @@ class ForecastDataException(RequestDataException):
     pass
 
 class MySQL(object):
+    def getFullDaySQL():
+        return "SELECT * FROM {} WHERE `datetime` >= NOW() AND `datetime` <= DATE_ADD(NOW(), INTERVAL 24 HOUR) ORDER BY `datetime` ASC".format(config.db_table)
+
     def getOffsetSQL(offset):
         return "SELECT * FROM {} WHERE `datetime` > DATE_ADD(NOW(), INTERVAL {} HOUR) ORDER BY `datetime` ASC LIMIT 1".format(config.db_table,offset-1)
 
@@ -210,6 +214,33 @@ class Fetcher(object):
     def triggerSummerizedItems(self, mqtt_client):
         db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
         cursor = db.cursor()
+        
+        cursor.execute(MySQL.getFullDaySQL())
+        result = cursor.fetchall() 
+        fields = list(map(lambda x:x[0], cursor.description))
+        
+        tmp = {}
+        for field in summeryFields:
+            tmp[field] = [ None, None, decimal.Decimal(0.0) ]
+        for data in result:
+            for field in summeryFields:
+                index = fields.index(field)
+                if tmp[field][0] == None:
+                    tmp[field][0] = decimal.Decimal(0.0) + data[index]
+                    tmp[field][1] = decimal.Decimal(0.0) + data[index]
+                else:
+                    if tmp[field][0] > data[index]:
+                        tmp[field][0] = data[index]
+                    if tmp[field][1] < data[index]:
+                        tmp[field][1] = data[index]
+                        
+                tmp[field][2] = tmp[field][2] + data[index]
+        for field in summeryFields:
+            tmp[field][2] = tmp[field][2] / len(result)
+
+            mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
+            mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
+            mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
         
         for offset in summeryOffsets:            
             cursor.execute(MySQL.getOffsetSQL(offset))
