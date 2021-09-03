@@ -113,6 +113,11 @@
     include: "templates/etc/apache2/_.ansible.vhost.d/onlyoffice.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/onlyoffice.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
 - name: create systemd service
   vars:
     container_name: "onlyoffice"
