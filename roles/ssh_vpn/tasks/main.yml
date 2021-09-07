@@ -66,7 +66,7 @@
     volumes:
       - '{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z'
       - '{{global_etc}}ssh_vpn/util:/etc/ssh/util:z'
-      - '{{global_etc}}ssh_vpn/run:/home/vpn/.ssh:z'
+      - '{{global_etc}}ssh_vpn/run:/home/{{vault_ssh_vpn_username}}/.ssh:z'
     published_ports:
      - "{{vault_ssh_vpn_internal_port}}:{{vault_ssh_vpn_internal_port}}/tcp"
   notify: "restart ssh_vpn"

@@ -5,8 +5,8 @@ if ! id -g vpn >/dev/null 2>&1; then
 fi
 
 if ! id -u "$SSH_USERNAME" >/dev/null 2>&1; then
-    mkdir /home/$SSH_USERNAME
-    mkdir /home/$SSH_USERNAME/.ssh
+    #mkdir /home/$SSH_USERNAME
+    #mkdir /home/$SSH_USERNAME/.ssh
     adduser -u $SSH_UID -D -G vpn -h /home/$SSH_USERNAME -s /bin/sh --no-create-home $SSH_USERNAME
     chown -R vpn.vpn /home/$SSH_USERNAME
 
