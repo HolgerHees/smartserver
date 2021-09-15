@@ -56,14 +56,21 @@
     - { name: "StorageUrl", value: "" }
     - { name: "customizationChat", value: "false" }
     - { name: "customizationCompactHeader", value: "true" }
+    - { name: "customizationForcesave", value: "true" }
     - { name: "customizationFeedback", value: "false" }
     - { name: "customizationHelp", value: "true" }
+    - { name: "customizationReviewDisplay", value: "original" }
     - { name: "customizationToolbarNoTabs", value: "true" }
     - { name: "defFormats", value: '{\\\"csv\\\":\\\"true\\\",\\\"doc\\\":\\\"true\\\",\\\"docm\\\":\\\"false\\\",\\\"docx\\\":\\\"true\\\",\\\"dotx\\\":\\\"true\\\",\\\"epub\\\":\\\"false\\\",\\\"html\\\":\\\"false\\\",\\\"odp\\\":\\\"true\\\",\\\"ods\\\":\\\"true\\\",\\\"odt\\\":\\\"true\\\",\\\"pdf\\\":\\\"false\\\",\\\"potm\\\":\\\"false\\\",\\\"potx\\\":\\\"false\\\",\\\"ppsm\\\":\\\"false\\\",\\\"ppsx\\\":\\\"true\\\",\\\"ppt\\\":\\\"false\\\",\\\"pptm\\\":\\\"false\\\",\\\"pptx\\\":\\\"false\\\",\\\"rtf\\\":\\\"true\\\",\\\"txt\\\":\\\"true\\\",\\\"xls\\\":\\\"true\\\",\\\"xlsm\\\":\\\"false\\\",\\\"xlsx\\\":\\\"true\\\",\\\"xltm\\\":\\\"false\\\",\\\"xltx\\\":\\\"false\\\"}' }
     - { name: "editFormats", value: '{\\\"csv\\\":\\\"true\\\",\\\"odp\\\":\\\"false\\\",\\\"ods\\\":\\\"false\\\",\\\"odt\\\":\\\"false\\\",\\\"rtf\\\":\\\"false\\\",\\\"txt\\\":\\\"true\\\"}' }
     - { name: "enabled", value: "yes" }
     - { name: "groups", value: "[]" }
+    - { name: "preview", value: "false" }
     - { name: "sameTab", value: "false" }
+    - { name: "settings_error", value: "" }
+    - { name: "types", value: "filesystem" }
+    - { name: "verify_peer_off", value: "false" }
+    - { name: "versionHistory", value: "true" }
   when: "command_result.results[1].changed"
 
 - name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log

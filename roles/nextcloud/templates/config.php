@@ -12,7 +12,7 @@ $CONFIG = array (
   ),
   'allow_local_remote_servers' => true,
   'auth.bruteforce.protection.enabled' => false,
-  'overwrite.cli.url' => '/',
+  'overwrite.cli.url' => 'https://nextcloud.{{server_domain}}/',
   'datadirectory' => '{{nextcloud_data_path}}',
   'dbtype' => 'mysql',
   'version' => '{{current_nextcloud_version}}',
