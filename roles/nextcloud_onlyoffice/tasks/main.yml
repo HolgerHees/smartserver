@@ -14,6 +14,7 @@
     - "{{global_log}}onlyoffice"
     - "{{global_lib}}onlyoffice"
     - "{{global_etc}}onlyoffice"
+    - "{{global_etc}}onlyoffice/fonts"
 
 - name: build docker image
   vars:
@@ -72,6 +73,7 @@
         ipv4_address: "{{docker_onlyoffice_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}onlyoffice/fonts:/usr/share/fonts/truetype/custom:z'
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
     exposed_ports:
