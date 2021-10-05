@@ -62,6 +62,14 @@
      - "9090"
   notify: "restart prometheus"
   
+- name: attach postfix to docker network
+  docker_network:
+    name: prometheus
+    connected:
+      - postfix
+    appends: yes
+  tags: [ 'postfix' ]  
+
 - name: add container name
   vars:
     host_name: "prometheus"

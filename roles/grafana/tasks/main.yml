@@ -90,8 +90,9 @@
       - mysql
       - influxdb
       - loki
+      - alertmanager
     appends: yes
-  tags: [ 'influxdb', 'loki', 'mysql' ]
+  tags: [ 'influxdb', 'loki', 'mysql', 'alertmanager' ]
 
 - name: create docker container
   docker_container:

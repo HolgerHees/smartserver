@@ -36,9 +36,9 @@ docker_base_gateway:              "172.16.0.1"
 docker_dns_ip:                    "172.16.0.200"
 docker_postfix_ip:                "172.16.0.201"
 docker_influxdb_ip:               "172.16.0.203"
-docker_loki_ip:                   "172.16.0.204"
 docker_mysql_ip:                  "172.16.0.205"
 docker_mosquitto_ip:              "172.16.0.206"
+docker_alertmanager_ip:           "172.16.0.207"
 
 docker_default_network:           "172.17.0.0"
 
@@ -47,7 +47,7 @@ docker_php_ip:                    "172.30.2.200"
 docker_grafana_ip:                "172.30.3.200"
 docker_telegraf_ip:               "172.30.4.200"
 docker_prometheus_ip:             "172.30.5.200"
-docker_alertmanager_ip:           "172.30.6.200"
+docker_loki_ip:                   "172.30.6.200"
 #docker_openhab_ip:                "172.30.4.200"
 
 # 0 => production, 1 => production

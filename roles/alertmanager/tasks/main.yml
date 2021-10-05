@@ -27,14 +27,6 @@
     name: docker
     state: started
 
-- name: create docker network
-  docker_network:
-    name: alertmanager
-    ipam_config:
-      - subnet: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.1"
-    appends: yes
-  
 - name: create docker container
   docker_container:
     name: alertmanager
@@ -49,7 +41,7 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "alertmanager"
+      - name: "isolated"
         ipv4_address: "{{docker_alertmanager_ip}}"
     networks_cli_compatible: yes
     volumes:
@@ -58,6 +50,14 @@
      - "9093"
   notify: "restart alertmanager"
   
+- name: attach to prometheus docker network
+  docker_network:
+    name: prometheus
+    connected:
+      - alertmanager
+    appends: yes
+  tags: [ 'prometheus' ]  
+
 - name: add container name
   vars:
     host_name: "alertmanager"

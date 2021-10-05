@@ -30,6 +30,17 @@
     name: docker
     state: started
     
+- name: create docker network
+  docker_network:
+    name: loki
+    ipam_config:
+      - subnet: "{{docker_loki_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_loki_ip.split('.')[:3] | join('.')}}.1"
+    connected:
+      - alertmanager
+    appends: yes
+  tags: [ 'alertmanager' ]
+
 - name: create docker container
   docker_container:
     name: loki
@@ -49,7 +60,7 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "isolated"
+      - name: "loki"
         ipv4_address: "{{docker_loki_ip}}"
     networks_cli_compatible: yes
     volumes:
