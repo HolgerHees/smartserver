@@ -55,7 +55,7 @@
     volumes:
       - '{{ global_etc }}alertmanager:/etc/alertmanager:z'
     exposed_ports:
-     - "9090"
+     - "9093"
   notify: "restart alertmanager"
   
 - name: add container name
