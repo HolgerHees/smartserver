@@ -95,6 +95,7 @@
     - { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
     
     - { import_role: { name: prometheus }, tags: [ 'prometheus' ] }                              # prometheus => needed by openhab                                   [docker,user:root]
+    - { import_role: { name: alertmanager }, tags: [ 'alertmanager' ] }                          # alertmanager => needed by loki alerts                                   [docker,user:root]
 
     - { import_role: { name: loki }, tags: [ 'loki' ] }                                          # grafana logstore                                                  [docker,user:10001|10001]
 

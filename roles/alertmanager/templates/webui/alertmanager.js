@@ -1,0 +1,1 @@
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('alertmanager_ui', '//alertmanager.{host}/','admin', 212, '{i18n_Alertmanager}', '{i18n_Alertmanager_Admin}', false, 'alertmanager_logo.svg');

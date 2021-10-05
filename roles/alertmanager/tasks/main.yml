@@ -1,0 +1,107 @@
+- name: set version
+  set_fact:
+    alertmanager_version: '0.23.0'
+  tags: [ 'update_notifier_configs' ]    
+
+- name: prepare needed folder
+  file:
+    path: '{{item.path}}'
+    state: directory
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
+    mode: 0750
+  with_items:
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_etc }}alertmanager" }
+
+- name: copy config
+  template:
+    src: "templates/etc/alertmanager.yml"
+    dest: "{{ global_etc }}alertmanager/alertmanager.yml"
+    owner: nobody
+    group: "{{ 'nobody' if is_fedora else 'nogroup'}}"
+    mode: 0640
+  notify: "restart alertmanager"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker network
+  docker_network:
+    name: alertmanager
+    ipam_config:
+      - subnet: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.1"
+    appends: yes
+  
+- name: create docker container
+  docker_container:
+    name: alertmanager
+    image: "prom/alertmanager:v{{alertmanager_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: alertmanager
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "alertmanager"
+        ipv4_address: "{{docker_alertmanager_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{ global_etc }}alertmanager:/etc/alertmanager:z'
+    exposed_ports:
+     - "9090"
+  notify: "restart alertmanager"
+  
+- name: add container name
+  vars:
+    host_name: "alertmanager"
+    host_ip_address: "{{docker_alertmanager_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
+- name: register webui
+  vars:
+    name: "alertmanager"
+    js_file: "templates/webui/alertmanager.js"
+    i18n_files: [ { language: "de", file: "templates/webui/alertmanager.de.json" } ]
+    icons: [ 'templates/webui/icons/alertmanager_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "alertmanager"
+    include: "templates/etc/apache2/_.ansible.vhost.d/alertmanager.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/alertmanager.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "alertmanager"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+- name: register update notifier
+  vars:
+    name: "alertmanager"
+    type: "docker"
+    url: "https://github.com/prometheus/alertmanager/releases"
+    config: {
+      repository: "prom/alertmanager",
+      pattern: "^v([0-9\\.]+)$"
+    }
+  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+
+- name: trigger alertmanager handler
+  vars:
+    notify: "restart alertmanager"
+    service: "alertmanager.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

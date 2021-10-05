@@ -69,12 +69,12 @@
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
-- name: allow prometheus service
-  vars:
-    name: "prometheus"
-    rule: "proto tcp dport 443 saddr {{docker_prometheus_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
+#- name: allow prometheus service
+#  vars:
+#    name: "prometheus"
+#    rule: "proto tcp dport 443 saddr {{docker_prometheus_ip}}"
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
 
 - name: create cron job
   vars:

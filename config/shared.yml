@@ -47,6 +47,7 @@ docker_php_ip:                    "172.30.2.200"
 docker_grafana_ip:                "172.30.3.200"
 docker_telegraf_ip:               "172.30.4.200"
 docker_prometheus_ip:             "172.30.5.200"
+docker_alertmanager_ip:           "172.30.6.200"
 #docker_openhab_ip:                "172.30.4.200"
 
 # 0 => production, 1 => production
