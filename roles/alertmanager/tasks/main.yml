@@ -27,6 +27,18 @@
     name: docker
     state: started
 
+- name: create docker network
+  docker_network:
+    name: alertmanager
+    internal: yes
+    ipam_config:
+      - subnet: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.1"
+    connected:
+      - postfix
+    appends: yes
+  tags: [ 'postfix' ]
+
 - name: create docker container
   docker_container:
     name: alertmanager
@@ -41,7 +53,7 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "isolated"
+      - name: "alertmanager"
         ipv4_address: "{{docker_alertmanager_ip}}"
     networks_cli_compatible: yes
     volumes:
