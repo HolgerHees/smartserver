@@ -30,6 +30,7 @@
 - name: create docker network
   docker_network:
     name: telegraf
+    internal: yes
     ipam_config:
       - subnet: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.1"

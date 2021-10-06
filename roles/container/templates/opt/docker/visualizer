@@ -16,11 +16,13 @@ class Network:
         self.subnet = ""
         self.gateway = ""
         self.bridge = ""
+        self.is_internal = False
         
-    def addDetails(self,subnet,gateway,bridge):
+    def addDetails(self,subnet,gateway,bridge,is_internal):
         self.subnet = subnet
         self.gateway = gateway
         self.bridge = bridge
+        self.is_internal = is_internal
 
     def addConnection(self,connection):
         key = connection.ip + " " + connection.container.type + ' ' + connection.container.name
@@ -190,17 +192,19 @@ for name in network_r:
     network_json = networks_json_dict[network.name]
     
     if network.name == 'host':
-        network.addDetails(host_subnet,host_gateway,host_device)
+        network.addDetails(host_subnet,host_gateway,host_device,False)
     else:
         if len(network_json['IPAM']['Config']) > 0:
             subnet = network_json['IPAM']['Config'][0]['Subnet']
             gateway = network_json['IPAM']['Config'][0]['Gateway']
+            is_internal = network_json['Internal']
+            
             result = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)
             if len(result)>0:
                 bridge_device = re.findall("^.*{}.*".format(gateway), ip_list, flags=re.MULTILINE)[0].split()[-1]
             else:
                 bridge_device = host_device
-            network.addDetails(subnet,gateway,bridge_device)
+            network.addDetails(subnet,gateway,bridge_device,is_internal)
     
     for container_id in network_json['Containers']:
       
@@ -317,8 +321,24 @@ for key in listen_port_map['httpd']:
 #        connection = Connection(container,"","")
 #        network.addConnection(connection)
 
+TYPE_HEADLINE = 0
+TYPE_NETWORK = 1
+TYPE_CONTAINER = 2
+
+colors = {
+    TYPE_HEADLINE: [0,"1;37m","1;37m","1;37m","1;37m","1;37m","1;37m"],
+    TYPE_NETWORK: [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;100m","0;30;46m"],
+    TYPE_CONTAINER: [0,"0;37m","0;33m","1;35m","1;35m","0;39m","0;36m"]
+}
+
+port_colors = {
+    "local": "0;37",
+    "intern": "0;32",
+    "extern": "0;91"
+}
+
 # Prepare column values
-rows = [[0,"Type","Name","Network","Subnet / Outgoing allowed","\033[1;37mPorts / Incomming (\033[0;37mlocal\033[0m\033[1;37m, \033[0;32mintern\033[0m\033[1;37m, \033[0;91mextern\033[0m\033[1;37m) traffic allowed\033[0m","Interface"]]
+rows = [[TYPE_HEADLINE,"Type","Name","Network","Subnet / Outgoing allowed","\033[1;37mPorts / Incomming (\033[0;37mlocal\033[0m\033[1;37m, \033[0;32mintern\033[0m\033[1;37m, \033[0;91mextern\033[0m\033[1;37m) traffic allowed\033[0m","Interface"]]
 
 sorted_network_r = list(network_r)
 sorted_network_r.sort(key=lambda item: socket.inet_aton(network_r[item].gateway) if network_r[item].gateway else socket.inet_aton("0.0.0.0"), reverse=False)
@@ -329,7 +349,9 @@ for network in sorted_network_r:
     if len(network.connection_r) == 0:
         continue
     
-    rows.append([1,"Network",network.name,network.gateway,network.subnet,"",network.bridge])
+    subnet_msg = u"{}{}".format(network.subnet," (internal)" if network.is_internal else "")
+    
+    rows.append([TYPE_NETWORK,"Network",network.name,network.gateway,subnet_msg,"",network.bridge])
 
     key_r = list(network.connection_r.keys())
     key_r.sort(key=lambda item: socket.inet_aton(network.connection_r[item].ip), reverse=False)
@@ -407,7 +429,7 @@ for network in sorted_network_r:
                                 if hostMatch or ( rule['targetPort'] == key and (sourceIp == '0.0.0.0' or not ipaddress.ip_address(sourceIp).is_private) ):
                                     data["access"] = "extern"
 
-        rows.append([2,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
+        rows.append([TYPE_CONTAINER,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
                 
 # Calculate column sizes
 columnLength = [0] * (len(rows[0]) + 1)
@@ -417,35 +439,23 @@ for row in rows:
             length = messureLength(row[i])
             if length > columnLength[i]:
                 columnLength[i] = length
-
-colors = [
-    [0,"1;37m","1;37m","1;37m","1;37m","1;37m","1;37m"],
-    [0,"0;30;47m","1;37;43m","1;37;45m","1;37;45m","0;100m","0;30;46m"],
-    [0,"0;37m","0;33m","1;35m","1;35m","0;39m","0;36m"]
-]
-
-port_colors = {
-    "local": "0;37",
-    "intern": "0;32",
-    "extern": "0;91"
-}
     
 # Visualize
 for row in rows:
-    if row[0] == 0:
+    if row[0] == TYPE_HEADLINE:
         print("")
-    elif row[0] == 1:
+    elif row[0] == TYPE_NETWORK:
         print("")
     print("\033[{} {} \033[0m".format(colors[row[0]][1],row[1].ljust(columnLength[1])),end="")
     print("\033[{} {} \033[0m".format(colors[row[0]][2],row[2].ljust(columnLength[2])),end="")
     print("\033[{} {} \033[0m".format(colors[row[0]][3],row[3].ljust(columnLength[3])),end="")
     
-    if row[0] != 2:
+    if row[0] != TYPE_CONTAINER:
         print("\033[{} {} \033[0m".format(colors[row[0]][4],row[4].ljust(columnLength[4])),end="")
     else:
         print("\033[0;91m {} \033[0m".format(row[7].ljust(columnLength[4])),end="")
       
-    if row[0] != 2:
+    if row[0] != TYPE_CONTAINER:
         length = messureLength(row[5])
         print("\033[{} {} \033[0m".format(colors[row[0]][5],row[5] + "".ljust(65-length-2)),end="")
     else:

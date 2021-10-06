@@ -83,6 +83,7 @@
 - name: create docker network
   docker_network:
     name: grafana
+    internal: yes
     ipam_config:
       - subnet: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.1"
@@ -90,9 +91,10 @@
       - mysql
       - influxdb
       - loki
+      - prometheus
       - alertmanager
     appends: yes
-  tags: [ 'influxdb', 'loki', 'mysql', 'alertmanager' ]
+  tags: [ 'influxdb', 'loki', 'mysql', 'prometheus', 'alertmanager' ]
 
 - name: create docker container
   docker_container:
@@ -126,14 +128,6 @@
      - "3000"
   notify: "restart grafana"
       
-- name: attach to prometheus docker network
-  docker_network:
-    name: prometheus
-    connected:
-      - grafana
-    appends: yes
-  tags: [ 'prometheus' ]  
-
 - name: add container name
   vars:
     host_name: "grafana"

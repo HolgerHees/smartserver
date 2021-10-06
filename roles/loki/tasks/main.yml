@@ -33,6 +33,7 @@
 - name: create docker network
   docker_network:
     name: loki
+    internal: yes
     ipam_config:
       - subnet: "{{docker_loki_ip.split('.')[:3] | join('.')}}.0/24"
         gateway: "{{docker_loki_ip.split('.')[:3] | join('.')}}.1"
