@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    influxdb_version: '2.0.8'
+    influxdb_version: '2.0.9'
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder
