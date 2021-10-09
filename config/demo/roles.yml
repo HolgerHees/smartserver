@@ -2,8 +2,6 @@
 # They can be removed in your individual setup if not needed
 # You can also add your own custom role as shown in the example "apache_proxy"
 
-- { import_role: { name: ssh_vpn }, tags: [ 'ssh_vpn', 'alpine' ] }                      # vpn configuration (ssh based vpn)                 [docker,user:10002:10002]
-
 # *** OPTIONAL CLOUD ***
 - { import_role: { name: wireguard_cloud }, tags: [ 'wireguard', 'wireguard_cloud', 'alpine' ] } 
 - { import_role: { name: cloud_nfs }, tags: [ 'cloud_nfs', 'alpine' ] }
