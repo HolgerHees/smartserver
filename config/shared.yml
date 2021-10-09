@@ -38,7 +38,6 @@ docker_postfix_ip:                "172.16.0.201"
 docker_influxdb_ip:               "172.16.0.203"
 docker_mysql_ip:                  "172.16.0.205"
 docker_mosquitto_ip:              "172.16.0.206"
-docker_alertmanager_ip:           "172.16.0.207"
 
 docker_default_network:           "172.17.0.0"
 
