@@ -47,6 +47,10 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+      - "--web.external-url=https://alertmanager.{{server_domain}}/"
     log_driver: journald
     log_options:
       tag: alertmanager

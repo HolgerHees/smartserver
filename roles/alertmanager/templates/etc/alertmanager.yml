@@ -1,26 +1,45 @@
 global: 
   smtp_smarthost: postfix:25
-  resolve_timeout: 5m
   smtp_require_tls: False
   smtp_from: {{vault_root_email}}
- 
+  resolve_timeout: 60m
 
 #templates:
 #  - /etc/alertmanager/templates/*.tmpl
 
 route:
-  group_wait: 120s
-  group_by: [alertname]
+  group_by: 
+    - group
+    - alertname
+#    - log
+  group_wait: 1m
   group_interval: 5m
   repeat_interval: 60m
-  receiver: default-receiver
+  receiver: email-receiver
+  routes:
+    - matchers:
+      - group="netdata"
+      receiver: dummy
+    - matchers:
+      - group="crony"
+      receiver: dummy
+    - matchers:
+      - group="php"
+      - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
+      receiver: dummy
+    - matchers:
+      - group="apache"
+      - log=~".*/grafana/api/live/ws.*Mobile.*"
+      receiver: dummy
 
 receivers:
-  - name: default-receiver
+  - name: dummy
+  - name: email-receiver
     email_configs:
-    - to: {{vault_root_email}}
-      headers:
-        Reply-To: '{{vault_root_email}}'
-      send_resolved: true
-      html: ''
-      text: ''
+      - to: {{vault_root_email}}
+        headers:
+          Reply-To: '{{vault_root_email}}'
+          subject: '{{'{{'}} .Status | toUpper {{'}} • {{'}} .GroupLabels.SortedPairs.Values | join " • " {{'}}{{'}} if eq .Status "firing" {{'}} • {{'}} .Alerts.Firing | len {{'}}'}} time(s){{'{{'}} end {{'}}'}}'
+#          send_resolved: true
+#        html: ''
+#        text: ''

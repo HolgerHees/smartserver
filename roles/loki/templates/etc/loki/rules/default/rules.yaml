@@ -1,0 +1,33 @@
+ groups:
+  - name: alerting
+    interval: 60s
+    rules:
+      - alert: error
+        expr: |
+            sum by (group,log)(
+              count_over_time(
+                {level="ERROR"}
+                # extract the entire log line as a label
+                | regexp `(?P<log>(?s).+)`
+                [60m]
+              )
+            )
+            > 0.0
+        for: 0s
+        annotations:
+            logurl: "https://{{server_domain}}/?ref=admin|tools|grafana_logs"
+      - alert: alert
+        expr: |
+            sum by (group,log)(
+              count_over_time(
+                {level="ALERT"}
+                # extract the entire log line as a label
+                | regexp `(?P<log>(?s).+)`
+                [60m]
+              )
+            )
+            > 0.0
+        for: 0s
+        annotations:
+            logurl: "https://{{server_domain}}/?ref=admin|tools|grafana_logs"
+
