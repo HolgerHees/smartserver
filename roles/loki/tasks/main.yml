@@ -54,10 +54,10 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-    entrypoint:
-      - "/bin/sh"
-      - "-c"
-      - "\"/usr/bin/loki -config.file=/etc/loki/local-config.yaml 2>&1\""
+#    entrypoint:
+#      - "/bin/sh"
+#      - "-c"
+#      - "\"/usr/bin/loki -log.level=debug -config.file=/etc/loki/local-config.yaml 2>&1\""
     log_driver: journald
     log_options:
       tag: loki
