@@ -149,8 +149,19 @@
     #- { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 65536" }
     - { regex: "fs\\.inotify\\.max_user_watches", line: "fs.inotify.max_user_watches = 262144" } # => max 270MB
   register: sysctlchanged
-  
+   
 - name: refresh sysctl to activate sysctl changes => sysctl changed
   shell: sysctl -p
   when: sysctlchanged.changed
+
+- name: disable suspend action on logind
+  lineinfile:
+    path: /etc/systemd/logind.conf
+    regexp: '^[#]*{{item.key}}\s*='
+    line: '{{item.key}}={{item.value}}'
+  with_items:
+#    - { key: "HandlePowerKey", value: "ignore" }
+    - { key: "HandleSuspendKey", value: "ignore" }
+    - { key: "HandleHibernateKey", value: "ignore" }
+  notify: "restart logind"
 
