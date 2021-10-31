@@ -7,8 +7,8 @@
   file:
     path: '{{item}}'
     state: directory
-    owner: root
-    group: root
+    owner: "100"
+    group: "101"
     mode: 0750
   with_items:
     - "{{ global_etc }}telegraf"
@@ -17,9 +17,9 @@
   template:
     src: "templates/etc/telegraf.conf"
     dest: "{{ global_etc }}telegraf/telegraf.conf"
-    owner: root
-    group: root
-    mode: 0640
+    owner: "100"
+    group: "101"
+mode: 0640
   notify: "restart telegraf"
 
 - name: check started docker
