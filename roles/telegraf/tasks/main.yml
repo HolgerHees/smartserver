@@ -19,7 +19,7 @@
     dest: "{{ global_etc }}telegraf/telegraf.conf"
     owner: "100"
     group: "101"
-mode: 0640
+    mode: 0640
   notify: "restart telegraf"
 
 - name: check started docker
