@@ -21,7 +21,9 @@
 {% for username in userdata %}{% if 'user' in userdata[username].groups %}
         Require user {{username}}
 {% endif %}{% endfor %}
+{% if authenticated_ip_addresses is defined and authenticated_ip_addresses | length > 0 %}
         Require ip {{ authenticated_ip_addresses | join(' ') }}
+{% endif %}
         Require ip 172.0.0.0/8
         Require local
     </RequireAny>
