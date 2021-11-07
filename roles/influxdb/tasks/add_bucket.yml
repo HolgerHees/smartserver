@@ -57,7 +57,7 @@
 - name: create cron job
   vars:
     name: "Influxdb {{(database|capitalize) + ('_' + item.name if item.name is defined else '')}} Backup"
-    cmd: "docker exec influxdb sh -c \"influx backup --bucket {{database + ('_' + item.name if item.name is defined else '')}} --org default-org /var/lib/influxdb_backup/{{database + ('_' + item.name if item.name is defined else '')}}_$(date +\\%Y-\\%m-\\%d)/ > /dev/null\""
+    cmd: "docker exec influxdb sh -c \"influx backup --bucket {{database + ('_' + item.name if item.name is defined else '')}} --org default-org /var/lib/influxdb_backup/{{database + ('_' + item.name if item.name is defined else '')}}_$(date +\\%Y-\\%m-\\%d)/ &> /dev/null\""
     file: "ansible_influxdb"
     hour: "1"
     minute: "0"
