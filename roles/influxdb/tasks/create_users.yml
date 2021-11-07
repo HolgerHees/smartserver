@@ -35,27 +35,7 @@
   tags: [ 'user' ]
   
 - name: add new auth
-  shell: "docker exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org \
-  --read-buckets \
-  --read-checks \
-  --read-dashboards \
-  --read-dbrps \
-  --read-notificationEndpoints \
-  --read-notificationRules \
-  --read-orgs \
-  --read-tasks \
-  --read-telegrafs \
-  --read-user \
-  --write-buckets \
-  --write-checks \
-  --write-dashboards \
-  --write-dbrps \
-  --write-notificationEndpoints \
-  --write-notificationRules \
-  --write-orgs \
-  --write-tasks \
-  --write-telegrafs \
-  --write-user\""
+  shell: "docker exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org --operator\""
   when: "item not in influxdb_auth_result.stdout and 'admin' in userdata[item].groups"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
