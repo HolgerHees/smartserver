@@ -21,8 +21,8 @@ RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjanss
     && autoreconf -fi \
     && ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" \
     && make clean && make test \
-    && make install \
-    && cp /usr/lib/apache2/modules/mod_auth_openidc.so /usr/local/apache2/modules/ \
+    && make \
+    && cp .libs/mod_auth_openidc.so /usr/local/apache2/modules/mod_auth_openidc.so \
     && cd / \
     && rm -rf /mod_auth_openidc \
     && apt-get purge -y git pkg-config \
@@ -31,6 +31,11 @@ RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjanss
     && rm -rf /var/lib/apt/lists/*
 
 
+#&& make install \
+#&& cp .libs/mod_auth_openidc.lai /usr/local/apache2/modules/mod_auth_openidc.la \
+#&& cp .libs/mod_auth_openidc.a /usr/local/apache2/modules/mod_auth_openidc.a \
+#&& touch /usr/local/apache2/conf/httpd.conf \ # needed to proceed successful with "make install"
+#&& cp /usr/lib/apache2/modules/mod_auth_openidc.so /usr/local/apache2/modules/ \
 
 
 
