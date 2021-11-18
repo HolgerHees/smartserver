@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    telegraf_version: '1.20.3'
+    telegraf_version: '1.20.4'
   tags: [ 'update_notifier_configs' ]    
 
 - name: prepare needed folder
