@@ -23,7 +23,7 @@ for line in lines:
     if len(columns) == 0:
         continue
     
-    error("Service '{}' failed".format(columns[1] if columns[0] == '●' else columns[0]))
+    error("Service '{}' failed".format(columns[1] if len(columns[0]) == 1 else columns[0]))
     exit_status = 1
 
 
