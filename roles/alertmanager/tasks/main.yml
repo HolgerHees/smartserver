@@ -37,7 +37,7 @@
     connected:
       - postfix
     appends: yes
-  tags: [ 'postfix' ]
+  tags: [ 'postfix', 'alpine' ]
 
 - name: create docker container
   docker_container:
