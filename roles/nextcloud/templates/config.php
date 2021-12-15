@@ -31,6 +31,7 @@ $CONFIG = array (
   'mail_smtpmode' => 'sendmail',
   'mail_domain' => '{{server_domain}}',
   'mail_from_address' => 'root',
+  'default_phone_region' => '{{country}}',
   'appcodechecker' => false,
   'secret' => '{{vault_nextcloud_secret}}',
   'trashbin_retention_obligation' => 'auto',
