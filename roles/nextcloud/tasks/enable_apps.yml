@@ -32,6 +32,7 @@
     - user_saml # must always be the first one
     - onlyoffice # must always be the second one
     - jsloader # must always be the third one
+    - previewgenerator # must always be the fourth one
     - bookmarks
     - contacts
     - calendar
@@ -82,6 +83,28 @@
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('jsloader', 'snippet', 'document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);') ON DUPLICATE KEY UPDATE configvalue='document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);';\\\"\""
   when: "command_result.results[2].changed"
   
+# ***** CONFIGURE previewgenerator *****
+#- name: initial previewgenerator setup
+#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ preview:generate-all\""
+#  when: "command_result.results[3].changed"
+
+- name: create previewgenerator daily cron job
+  vars:
+    name: "Nextcloud Previewindex"
+    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
+    file: "ansible_nextcloud"
+    hour: "3"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: create previewgenerator incremental cron job
+  vars:
+    name: "Nextcloud Previewupdates"
+    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
+    file: "ansible_nextcloud"
+    minute: "*/15"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
 # ***** INSTALL KEEWEB *****
 - name: check for outdated keeweb version
   shell: "grep --invert \"<version>{{nextcloud_keeweb_version}}<\\/version>\" {{htdocs_path}}nextcloud/apps/keeweb/appinfo/info.xml | grep \"<version>.*<\\/version>\""
