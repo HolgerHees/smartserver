@@ -22,8 +22,9 @@
       - mysql
       - influxdb
       - redis
+      - postfix # => used by nextcloud
     appends: yes
-  tags: [ 'mysql', 'influxdb', 'redis' ]
+  tags: [ 'mysql', 'influxdb', 'redis', 'postfix' ]
 
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
