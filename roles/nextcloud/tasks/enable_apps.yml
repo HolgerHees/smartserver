@@ -88,14 +88,14 @@
 #  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ preview:generate-all\""
 #  when: "command_result.results[3].changed"
 
-- name: create previewgenerator daily cron job
-  vars:
-    name: "Nextcloud Previewindex"
-    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
-    file: "ansible_nextcloud"
-    hour: "3"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+#- name: create previewgenerator daily cron job
+#  vars:
+#    name: "Nextcloud Previewindex"
+#    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
+#    file: "ansible_nextcloud"
+#    hour: "3"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create previewgenerator incremental cron job
   vars:

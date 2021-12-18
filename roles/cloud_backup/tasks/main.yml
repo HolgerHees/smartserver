@@ -22,7 +22,6 @@
     group: root
   with_items:
     - {name: 'archive', src: '{{backup_path}}archive'}
-    - {name: 'nextcloud', src: '{{nextcloud_data_path}}'}
     - {name: 'mysql', src: '{{backup_path}}mysql'}
     - {name: 'potd', src: '{{htdocs_path}}img/potd'}
     - {name: '{{project_name}}', src: '{{projects_path}}{{project_name}}'}

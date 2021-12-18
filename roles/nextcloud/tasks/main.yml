@@ -238,6 +238,16 @@
 #  changed_when: False
 #  when: "database_added"
   
+- name: set backup links
+  file:
+    src: "{{nextcloud_data_path}}/{{item}}"
+    dest: "{{global_lib}}cloud_backup/nextcloud_{{item}}"
+    state: link
+    follow: no
+    owner: root
+    group: root
+  with_items: "{{userdata}}"
+    
 # ***** FINALIZE *****
 - name: create cron job
   vars:
