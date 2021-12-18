@@ -238,23 +238,12 @@
 #  changed_when: False
 #  when: "database_added"
   
-- name: check user folder
+- name: check user folder # => needed for initial cloud backup links
   file:
     path: "{{nextcloud_data_path}}/{{item}}"
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-  when: "'user' in userdata[item].groups"
-  with_items: "{{userdata}}"
-
-- name: set backup links
-  file:
-    src: "{{nextcloud_data_path}}/{{item}}"
-    dest: "{{global_lib}}cloud_backup/nextcloud_{{item}}"
-    state: link
-    follow: no
-    owner: root
-    group: root
   when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
     

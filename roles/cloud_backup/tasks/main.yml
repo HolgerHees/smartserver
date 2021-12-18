@@ -25,6 +25,17 @@
     - {name: 'mysql', src: '{{backup_path}}mysql'}
     - {name: 'potd', src: '{{htdocs_path}}img/potd'}
     - {name: '{{project_name}}', src: '{{projects_path}}{{project_name}}'}
+
+- name: set nextcloud backup links
+  file:
+    src: "{{nextcloud_data_path}}/{{item}}"
+    dest: "{{global_lib}}cloud_backup/nextcloud_{{item}}"
+    state: link
+    follow: no
+    owner: root
+    group: root
+  when: "'user' in userdata[item].groups"
+  with_items: "{{userdata}}"
     
 # RCLONE
 - name: install archive
