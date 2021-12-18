@@ -21,7 +21,7 @@
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    recurse: yes
+#    recurse: yes
   with_items:
     - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
@@ -238,6 +238,15 @@
 #  changed_when: False
 #  when: "database_added"
   
+- name: check user folder
+  file:
+    path: "{{nextcloud_data_path}}/{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+  when: "'user' in userdata[item].groups"
+  with_items: "{{userdata}}"
+
 - name: set backup links
   file:
     src: "{{nextcloud_data_path}}/{{item}}"
@@ -246,6 +255,7 @@
     follow: no
     owner: root
     group: root
+  when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
     
 # ***** FINALIZE *****
