@@ -97,6 +97,15 @@
 #    minute: "0"
 #  import_tasks: roles/cron/tasks/add_cronjob.yml
 
+# ***** CONFIGURE previewgenerator *****
+- name: configure previewgenerator setup
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ config:app:set {{item}}\""
+#  when: "command_result.results[3].changed"
+  with_items:
+    - "--value=\\\"256\\\" previewgenerator squareSizes"
+    - "--value=\\\"256\\\" previewgenerator widthSizes"
+    - "--value=\\\"256\\\" previewgenerator heightSizes"
+
 - name: create previewgenerator incremental cron job
   vars:
     name: "Nextcloud Previewupdates"

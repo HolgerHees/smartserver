@@ -10,6 +10,8 @@ $CONFIG = array (
     3 => 'fa-nextcloud.{{server_domain}}',
     4 => 'ba-nextcloud.{{server_domain}}'
   ),
+  'preview_max_x' => '2048',
+  'preview_max_y' => '2048',
   'allow_local_remote_servers' => true,
   'auth.bruteforce.protection.enabled' => false,
   'overwrite.cli.url' => 'https://nextcloud.{{server_domain}}/',
