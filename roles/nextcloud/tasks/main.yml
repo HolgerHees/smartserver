@@ -13,18 +13,28 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   with_items:
+    - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
 
-- name: check owner and group
+- name: prepare user folder # => needed for initial cloud backup links
   file:
-    path: "{{item}}"
+    path: "{{nextcloud_data_path}}/{{item}}"
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
+  when: "'user' in userdata[item].groups"
+  with_items: "{{userdata}}"
+
+#- name: check owner and group
+#  file:
+#    path: "{{item}}"
+#    state: directory
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
 #    recurse: yes
-  with_items:
-    - "{{nextcloud_data_path}}"
-    - "{{global_log}}nextcloud"
+#  with_items:
+#    - "{{nextcloud_data_path}}"
+#    - "{{global_log}}nextcloud"
     
 - name: prepare .ocdata file
   copy:
@@ -237,16 +247,7 @@
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
 #  when: "database_added"
-  
-- name: check user folder # => needed for initial cloud backup links
-  file:
-    path: "{{nextcloud_data_path}}/{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-  when: "'user' in userdata[item].groups"
-  with_items: "{{userdata}}"
-    
+      
 # ***** FINALIZE *****
 - name: create cron job
   vars:
