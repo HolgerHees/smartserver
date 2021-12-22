@@ -2,7 +2,7 @@ FROM alpine:{{image_version}}
 
 COPY entrypoint.sh /usr/sbin/
 
-RUN apk update && apk upgrade &&  apk --update --no-cache add vsftpd
+RUN apk update && apk upgrade &&  apk --update --no-cache add procps vsftpd
 
 RUN echo "local_enable=YES" >> /etc/vsftpd/vsftpd.conf \
   && echo "chroot_local_user=YES" >> /etc/vsftpd/vsftpd.conf \
@@ -19,5 +19,5 @@ RUN echo "local_enable=YES" >> /etc/vsftpd/vsftpd.conf \
   && cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_or \
   && chmod +x /usr/sbin/entrypoint.sh
 
-CMD /usr/sbin/entrypoint.sh
+ENTRYPOINT [ "/usr/sbin/entrypoint.sh" ]
  

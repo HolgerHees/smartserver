@@ -55,6 +55,21 @@ echo "}" >> /etc/logrotate.d/vsftpd
 touch $LOG_FILE
 tail -F $LOG_FILE &
 
+stop()
+{
+    echo "Shutting down server"
+    killall vsftpd
+    exit
+}
+
+trap "stop" SIGTERM SIGINT
+
+/usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf &
+pid=$!
+
 echo "Server started"
-/usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf
- 
+
+#while :; do sleep 360 & wait; done
+while `ps -p $pid >/dev/null`; do sleep 15 & wait; done
+
+exit 1
