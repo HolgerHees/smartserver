@@ -3,11 +3,8 @@ cd /etc/wireguard
 
 stop()
 {
-    echo "SIGTERM caught, shutting down wireguard interfaces..."
-
+    echo "Shutting down wireguard interfaces"
     wg-quick down wg0
-  
-    echo "done"
     exit
 }
 
