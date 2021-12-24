@@ -57,7 +57,6 @@
     volumes:
       - '{{ global_etc }}prometheus:/etc/prometheus:z'
       - '{{ global_lib }}prometheus:/prometheus:z'
-      - '{{backup_path}}prometheus:/var/lib/prometheus_backup:z'
     exposed_ports:
      - "9090"
   notify: "restart prometheus"
@@ -75,15 +74,6 @@
     rule: "proto tcp dport 443 saddr {{docker_prometheus_ip}}"
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
-
-- name: create cron job
-  vars:
-    name: "Prometheus Cleanup"
-    cmd: "find {{backup_path}}prometheus/ -mindepth 1 -type d -mtime +7 -exec rm -rf {} +;"
-    file: "ansible_prometheus"
-    hour: "0"
-    minute: "45"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: register webui
   vars:

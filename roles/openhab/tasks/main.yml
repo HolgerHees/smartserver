@@ -17,22 +17,23 @@
 
 - name: prepare needed config folder
   file:
-    path:  "{{item}}"
+    path:  "{{item.path}}"
     state: directory
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
     mode: 0750
   with_items:
-    - "{{global_etc}}openhab"
-    - "{{global_etc}}openhab/addons"
-    - "{{global_etc}}openhab/conf"
-    - "{{global_etc}}openhab/conf/html"
-    - "{{global_etc}}openhab/conf/icons"
-    - "{{global_etc}}openhab/python"
-    - "{{global_lib}}openhab"
-    - "{{global_lib}}openhab/jsondb"
-    - "{{global_lib}}openhab/persistance"
-    - "{{global_log}}openhab"
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/addons" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/html" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/icons" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/python" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/jsondb" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/persistance" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_log}}openhab" }
+    - { user: "root", group: "root", path: "{{backup_path}}openhab" }
 #    - "{{global_lib}}openhab/jsondb" # => for homeconnect oauth => 
 # userdata/config/SymmetricKeyCipher.config
 
@@ -455,6 +456,24 @@
     mode: 0644
   notify: "restart apache2"
   tags: ['apache_conf']
+
+- name: create cleanup cron job
+  vars:
+    name: "Openhab Cleanup"
+    cmd: "find {{backup_path}}openhab/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
+    file: "ansible_openhab"
+    hour: "0"
+    minute: "45"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: create backup cron job
+  vars:
+    name: "Openhab Backup"
+    cmd: "cp -r {{global_lib}}openhab/persistance/mapdb/ {{backup_path}}openhab/mapdb_$(date +\\%Y-\\%m-\\%d)"
+    file: "ansible_openhab"
+    hour: "0"
+    minute: "30"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: copy fluentd config
   vars:

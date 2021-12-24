@@ -142,11 +142,6 @@
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }                          # Details can be found inside the demo configuration 'config/demo/roles.yml'
     # **************************************
-
-    # ****** BACKUP RESTORE ON STAGING *****     
-    - { import_role: { name: backup_restore }, tags: [ 'backup_restore' ], when: "not is_production" } # !!! will drop and reimport nextcloud, openhab, maxvin and mysql databases
-    # **************************************
-    
   post_tasks:
     - { import_role: { name: apache, tasks_from: letsencrypt, handlers_from: empty }, tags: [ 'apache_letsencrypt' ], when: "ssl_certificate == 'letsencrypt'" }   # activate letsencrypt certificate
 
