@@ -23,6 +23,7 @@
   with_items:
     - {name: 'archive', src: '{{backup_path}}archive'}
     - {name: 'mysql', src: '{{backup_path}}mysql'}
+    - {name: 'influxdb', src: '{{backup_path}}influxdb'}
     - {name: 'potd', src: '{{htdocs_path}}img/potd'}
     - {name: '{{project_name}}', src: '{{projects_path}}{{project_name}}'}
 

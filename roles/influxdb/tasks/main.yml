@@ -66,7 +66,7 @@
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"
-    cmd: "find {{backup_path}}influxdb/ -mindepth 1  -type d -mtime +7 -exec rm -rf {} +;"
+    cmd: "find {{backup_path}}influxdb/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
     file: "ansible_influxdb"
     hour: "0"
     minute: "45"

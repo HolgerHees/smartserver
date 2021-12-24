@@ -4,31 +4,3 @@
     git_clone_path: "{{projects_path}}{{project_name}}"
     git_clone_url: "{{vault_deployment_config_git}}"
   import_tasks: roles/_shared/tasks/git_clone.yml
-  
-- name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "{{projects_path}}{{project_name}}/{{config_path}}backup/"
-    - "/opt/backup_collector"
-    
-- name: copy cmd
-  template:
-    src: "templates/collect_backup.sh"
-    dest: "/opt/backup_collector/collect_backup.sh"
-    owner: root
-    group: root
-    mode: 0750
-
-- name: create cron job
-  vars:
-    name: "Backup Collector"
-    cmd: "/opt/backup_collector/collect_backup.sh;"
-    file: "ansible_deployment"
-    hour: "5"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
