@@ -64,3 +64,12 @@
   include_tasks: roles/cron/tasks/add_cronjob.yml
   with_items: "{{retentions}}"
   
+- name: copy backup restore script
+  template:
+    src: "roles/influxdb/templates/backup_restore/influxdb.sh"
+    dest: "/opt/backup_restore/influxdb_{{database + ('_' + item.name if item.name is defined else '')}}.sh"
+    owner: root
+    group: root
+    mode: 0750
+  tags: ['backup_restore']
+  with_items: "{{retentions}}"

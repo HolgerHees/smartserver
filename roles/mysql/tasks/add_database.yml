@@ -35,3 +35,12 @@
 - name: register result state
   set_fact:
     database_added: "{{ database not in mysql_database_exists.stdout }}"
+
+- name: copy backup restore script
+  template:
+    src: "roles/mysql/templates/backup_restore/mysql.sh"
+    dest: "/opt/backup_restore/mysql_{{database}}.sh"
+    owner: root
+    group: root
+    mode: 0750
+  tags: ['backup_restore']

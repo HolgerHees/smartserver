@@ -21,6 +21,8 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
     - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}" }
 
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/backup_restore" }
+
 - name: install required packages => is_fedora
   yum:
     name: [
@@ -164,4 +166,3 @@
     - { key: "HandleSuspendKey", value: "ignore" }
     - { key: "HandleHibernateKey", value: "ignore" }
   notify: "restart logind"
-
