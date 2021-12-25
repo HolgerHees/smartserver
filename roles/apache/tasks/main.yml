@@ -81,14 +81,6 @@
     group: root
     mode: "750"
 
-- name: copy letsencrypt config
-  template:
-    src: "templates/letsencrypt/_config"
-    dest: "/opt/letsencrypt/_config"
-    owner: root
-    group: root
-    mode: 0750
-
 - name: copy letsencrypt check script
   template:
     src: "templates/letsencrypt/check.sh"

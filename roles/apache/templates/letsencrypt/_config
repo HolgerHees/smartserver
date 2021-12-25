@@ -1,5 +1,0 @@
-CONFIG_PATH="{{playbook_dir}}/config/{{inventory_hostname}}/" 
-ETC_PATH="{{global_etc}}"
-HTDOCS_PATH="{{htdocs_path}}"
-SERVER_DOMAIN="{{server_domain}}"
-SERVER_EMAIL="{{vault_root_email}}"
