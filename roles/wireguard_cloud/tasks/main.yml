@@ -9,10 +9,11 @@
     - "{{global_etc}}wireguard_cloud"
     - "{{global_etc}}wireguard_cloud/keys"
     - "{{global_etc}}wireguard_cloud/util"
+    - "{{config_path}}vault/wireguard_cloud/"
 
 - name: check for vault keys
-  stat:
-    path: "{{config_path}}vault/wireguard_cloud"
+  find:
+    paths: "{{config_path}}vault/wireguard_cloud"
   register: key_directory
 
 - name: copy keys => is_production and key_directory exists
@@ -23,7 +24,7 @@
     owner: root
     group: root
     mode: 0600
-  when: "is_production|bool and key_directory.stat.exists"
+  when: "is_production|bool and key_directory.matched > 0"
 
 - name: copy startup script
   template:
@@ -34,11 +35,17 @@
     mode: 0700
   notify: "restart wireguard_cloud"
   
-- name: generate server keys
+- name: generate server keys if not exists
   shell: "cd {{global_etc}}wireguard_cloud/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
   register: stat_server_key_result
   changed_when: "stat_server_key_result.rc==0"
   failed_when: False
+  
+- name: backup server keys
+  copy:
+    src: "{{global_etc}}/wireguard_cloud/keys/"
+    dest: "{{config_path}}vault/wireguard_cloud/"
+  when: "is_production|bool and ( stat_server_key_result.changed or key_directory.matched != 2 )"
   
 - name: fetch keys
   fetch:

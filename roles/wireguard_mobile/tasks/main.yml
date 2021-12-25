@@ -9,10 +9,11 @@
     - "{{global_etc}}wireguard_mobile"
     - "{{global_etc}}wireguard_mobile/keys"
     - "{{global_etc}}wireguard_mobile/clients"
+    - "{{config_path}}vault/wireguard_mobile/"
     
 - name: check for vault keys
-  stat:
-    path: "{{config_path}}vault/wireguard_mobile/"
+  find:
+    paths: "{{config_path}}vault/wireguard_mobile/"
   register: key_directory
 
 - name: copy keys => is_production and key_directory exists
@@ -23,7 +24,7 @@
     owner: root
     group: root
     mode: 0600
-  when: "is_production|bool and key_directory.stat.exists"
+  when: "is_production|bool and key_directory.matched > 0"
   
 - name: generate server keys
   shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
@@ -64,6 +65,12 @@
   failed_when: False
   with_items: "{{vpn_gates}}"
   tags: [ 'user' ]
+  
+- name: backup server & client keys
+  copy:
+    src: "{{global_etc}}/wireguard_mobile/keys/"
+    dest: "{{config_path}}vault/wireguard_mobile/"
+  when: "is_production|bool and ( stat_server_key_result.changed or stat_client_key_result.changed or key_directory.matched != ( ( vpn_gates | length ) * 2 ) + 2 )"
 
 # have to fetch files before, because ansible lookup module works only with local files
 - name: check keys folder
