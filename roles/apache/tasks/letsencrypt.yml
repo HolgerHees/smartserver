@@ -13,16 +13,6 @@
     certificate_mode: "{% if certificate_files_from_etc.stat.exists %}exists{% elif certificate_files_from_vault.stat.exists %}vault{% else %}create{% endif %}"
     changed_when: "certificate_mode != 'exists'"
   
-# BACKUP RESTORE #  
-- name: install certificate => certificate_mode = 'vault'
-  unarchive:
-    src: "{{config_path}}vault/letsencrypt/letsencrypt.tgz"
-    dest: "{{global_etc}}"
-    creates: "{{global_etc}}letsencrypt/"
-    decrypt: yes
-  notify: "restart apache2"
-  when: "certificate_mode == 'vault'"
-
 # CREATE #  
 - name: check for vault certificate files
   stat:
@@ -52,5 +42,3 @@
     hour: "1"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
-  
-

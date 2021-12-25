@@ -73,15 +73,30 @@
     mode: 0640
   when: not certificate_files.stat.exists
   
-#- name: create certificate symlink
-#  file:
-#    src: "letsencrypt"
-#    dest: "/etc/certbot"
-#    state: link
-#    follow: no
-#    owner: root
-#    group: root
-    
+- name: prepare needed folder
+  file:
+    path: "/opt/letsencrypt/"
+    state: directory
+    owner: root
+    group: root
+    mode: "750"
+
+- name: copy letsencrypt config
+  template:
+    src: "templates/letsencrypt/_config"
+    dest: "/opt/letsencrypt/_config"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy letsencrypt check script
+  template:
+    src: "templates/letsencrypt/check.sh"
+    dest: "/opt/letsencrypt/check.sh"
+    owner: root
+    group: root
+    mode: 0750
+
 # APACHE
 - name: prepare needed folder
   file:
