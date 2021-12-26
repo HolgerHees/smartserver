@@ -105,6 +105,7 @@
     - "--value=\\\"256\\\" previewgenerator squareSizes"
     - "--value=\\\"256\\\" previewgenerator widthSizes"
     - "--value=\\\"256\\\" previewgenerator heightSizes"
+  when: "command_result.results[3].changed"
 
 - name: create previewgenerator incremental cron job
   vars:
