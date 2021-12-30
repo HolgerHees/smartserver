@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.31.0"
+    netdata_version: "1.32.1"
   tags: [ 'update_notifier_configs' ]
 
 #- name: install docker repository => is_fedora
