@@ -33,7 +33,7 @@ route:
       receiver: dummy
     - matchers:
       - group="apache"
-      - log=~".*/cgi-bin/.%2e/.%2e/.%2e/.%2e/bin/sh.*"
+      - log=~".*/cgi-bin/.%2e/.*"
       receiver: dummy
 
 receivers:
