@@ -4,7 +4,9 @@
   },
   "workspace_nextcloud": {
     "Files": "Alle Dateien",
-    "Documents": "Dokumente & Bilder",
+    "Documents": "Dokumente",
+    "Notes": "Notizen",
+    "Notes_Infos": "Notizzettel",
     "Photos": "Fotos",
     "Gallery": "Gallerie",
     "News": "News",
