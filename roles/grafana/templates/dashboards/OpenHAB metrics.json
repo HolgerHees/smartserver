@@ -37,7 +37,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 4701,
   "graphTooltip": 1,
-  "iteration": 1641547758533,
+  "iteration": 1641651481736,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -288,7 +288,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^\\$__interval$/",
+          "fields": "",
           "values": false
         },
         "text": {},
@@ -297,11 +297,16 @@
       "pluginVersion": "8.3.3",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "exemplar": true,
           "expr": "sum(increase(event_count_total{topic=~\"openhab/items/.*/state\"}[1h]))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "$__interval",
+          "legendFormat": "",
           "refId": "A",
           "step": 14400
         }
@@ -3311,6 +3316,6 @@
   "timezone": "browser",
   "title": "OpenHAB metrics",
   "uid": "openhab_metrics",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }
