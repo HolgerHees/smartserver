@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    pihole_version: '5.8.1'
+    pihole_version: '2022.01.1'
   tags: [ 'update_notifier_configs' ]
   
 - name: prepare needed folder
@@ -22,7 +22,7 @@
 - name: create docker container
   docker_container:
     name: pihole
-    image: "pihole/pihole:v{{pihole_version}}"
+    image: "pihole/pihole:{{pihole_version}}"
     state: present
 #    recreate: true
     env:
@@ -80,7 +80,7 @@
     url: "https://github.com/pi-hole/docker-pi-hole/releases"
     config: {
       repository: "pihole/pihole",
-      pattern: "^v([0-9\\.]+)$"
+      pattern: "^20([0-9\\.]+)$"
     }
   import_tasks: roles/update_notifier/tasks/add_notifier.yml
 
