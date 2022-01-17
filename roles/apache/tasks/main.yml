@@ -170,14 +170,15 @@
 
 - name: copy domain fallback
   template:
-    src: "templates/htdocs/fallback/domain/{{item}}"
-    dest: "{{htdocs_path}}fallback/domain/{{item}}"
+    src: "templates/htdocs/fallback/{{item}}"
+    dest: "{{htdocs_path}}fallback/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
   with_items:
-    - index.html
-    - style.css
+    - error.php
+    - domain/index.html
+    - domain/style.css
 
 - name: build docker image
   vars:
