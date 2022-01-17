@@ -12,6 +12,7 @@ mx.State = (function( ret ) {
     
     var reachabilityTimer = false;
     
+    var failedRequestCallbacks = [];
     var connectionStateCallbacks = [];
     
     var connectionChangedCallback = false;
@@ -141,13 +142,46 @@ mx.State = (function( ret ) {
         }
     }
     
+    function checkFailedRequest(url,callback)
+    {
+        getUrl(url,function(rc_response)
+        {
+            if( rc_response.status == 200 )
+            {
+                delete failedRequestCallbacks[url];
+                callback();
+            }
+            else
+            {
+                failedRequestCallbacks[url] = window.setTimeout(function(){ 
+                    checkFailedRequest(url, callback); 
+                },15000);
+            }
+        });
+    }
+    
     ret.handleRequestError = function(status,url,callback)
     {
         if( debug ) console.log("mx.Status.handleRequestError: status => " + status + ", url => " + url);
         
-        if( status == 404 || status >= 500 )
+        if( status == 404 )
         {
-            if( debug ) console.error("Skipped state check for 404 and 500");
+            if( debug ) console.error("Skipped state check for 404");
+        }
+        else if( status >= 500 )
+        {
+            if( !(url in failedRequestCallbacks) )
+            {
+                failedTimer = window.setTimeout(function(){ 
+                    checkFailedRequest(url, callback); 
+                },15000);
+                
+                failedRequestCallbacks[url] = failedTimer;
+            }
+            else
+            {
+                if( debug ) console.error("State check for " + status + " already started");
+            }
         }
         /*else if( ( this.status == 401 || this.status == 403 ) && connectionState >= mx.State.REACHABLE && isVisible )
         {
