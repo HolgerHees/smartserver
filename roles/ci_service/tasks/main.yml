@@ -102,7 +102,7 @@
 - name: create cleanup cron job
   vars:
     name: "Continues integration cleanup"
-    cmd: "ls -1t /dataDisk/var/log/ci/*.log | tail -n +50 | xargs rm -f"
+    cmd: "ls -1t {{global_log}}ci/*.log | tail -n +50 | xargs rm -f"
     file: "ansible_ci_service"
     hour: "0"
     minute: "40"

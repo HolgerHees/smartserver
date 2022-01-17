@@ -45,9 +45,6 @@ lines = result.stdout.decode("utf-8").split("\n")
 for line in lines[0:-1]:
     obj = json.loads(line)
     
-    #print(obj)
-    #{"Command":"\"/usr/bin/python3 /e…\"","CreatedAt":"2021-06-23 09:56:20 +0200 CEST","ID":"ee21889ca3be","Image":"custom_vcontrold:buster-20210621-slim-v0.98.10","Labels":"","LocalVolumes":"0","Mounts":"/dataDisk/etc/…,/dataDisk/var/…","Names":"vcontrold","Networks":"vcontrold","Ports":"3002/tcp","RunningFor":"About an hour ago","Size":"0B (virtual 213MB)","State":"running","Status":"Up About an hour"}
-
     container = Container(obj["ID"],obj["Names"],obj["Image"])
     if container.image not in containers:
         containers[container.image] = []
@@ -61,9 +58,6 @@ for line in lines[0:-1]:
     #print(line)
     obj = json.loads(line)
     
-    #print(obj)
-    #{"Containers":"N/A","CreatedAt":"2021-03-05 15:38:36 +0100 CET","CreatedSince":"3 months ago","Digest":"\u003cnone\u003e","ID":"3ebfae07f702","Repository":"custom_weather_forecast","SharedSize":"N/A","Size":"59.7MB","Tag":"3.13.2","UniqueSize":"N/A","VirtualSize":"59.74MB"}
-
     created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
     image = Image(obj["ID"],obj["Repository"],obj["Tag"],created)
     if image.name not in images:
