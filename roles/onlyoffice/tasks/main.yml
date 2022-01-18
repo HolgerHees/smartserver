@@ -22,7 +22,7 @@
     image_name: "custom_onlyoffice"
     image_version: "{{onlyoffice_version}}"
     files:
-      - roles/nextcloud_onlyoffice/templates/container/Dockerfile
+      - roles/onlyoffice/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: create docker network
