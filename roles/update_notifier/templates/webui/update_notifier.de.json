@@ -1,6 +1,6 @@
 {
   "admin_tools": {
-    "Updates": "Updates",
-    "Software updates": "Software Aktualisierungen"
+    "Software": "Software",
+    "Software status": "Software Version Status"
   }
 }

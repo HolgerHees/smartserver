@@ -16,18 +16,24 @@
 # ***** DISABLE APPS *****
 - name: disable apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:disable {{item}}\""
-  register: command_result
-  changed_when: "'disabled' in command_result.stdout"
-#  failed_when: "'disabled' not in command_result.stdout and 'such app enabled' not in command_result.stdout"
+  register: app_disable_result
+  changed_when: "'disabled' in app_disable_result.stdout"
+#  failed_when: "'disabled' not in app_disable_result.stdout and 'such app enabled' not in app_disable_result.stdout"
   with_items:
     - dashboard
 
 # ***** INSTALL APPS *****
+- name: check apps
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:list\""
+  changed_when: no
+  register: app_list_result
+
 - name: install apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
-  register: command_result
-  failed_when: "'installed' not in command_result.stdout and 'enabled' not in command_result.stdout and 'already exists' not in command_result.stdout"
-  changed_when: "'enabled' in command_result.stdout"
+  register: app_install_result
+  failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
+  changed_when: "'enabled' in app_install_result.stdout"
+  when: "'- ' + item + ':' not in app_list_result.stdout"
   with_items:
     - user_saml # must always be the first one
     - onlyoffice # must always be the second one
@@ -39,13 +45,32 @@
     - notes
     - tasks
     
+- name: update apps
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --all\""
+#  failed_when: "'updated' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout"
+  register: app_update_result
+  changed_when: "'updated' in app_update_result.stdout"
+#  when: "not app_install_result.results[ansible_loop.index0].changed"
+#  loop_control:
+#    extended: yes
+#  with_items:
+#    - user_saml # must always be the first one
+#    - onlyoffice # must always be the second one
+#    - jsloader # must always be the third one
+#    - previewgenerator # must always be the fourth one
+#    - bookmarks
+#    - contacts
+#    - calendar
+#    - notes
+#    - tasks
+
 # ***** CONFIGURE user_saml *****
 - name: enable environment based authentication through user_saml app
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
   with_items:
     - { name: "type", value: "environment-variable" }
     - { name: "general-uid_mapping", value: "REMOTE_USERNAME" }
-  when: "command_result.results[0].changed" # index 0 is app 'user_saml'
+  when: "app_install_result.results[0].changed" # index 0 is app 'user_saml'
 
 # ***** CONFIGURE onlyoffice *****
 - name: set onlyoffice configuration
@@ -72,21 +97,21 @@
     - { name: "types", value: "filesystem" }
     - { name: "verify_peer_off", value: "false" }
     - { name: "versionHistory", value: "true" }
-  when: "command_result.results[1].changed"
+  when: "app_install_result.results[1].changed"
 
 - name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
-  when: "command_result.results[1].changed"
+  when: "app_install_result.results[1].changed"
 
 # ***** CONFIGURE jsloader *****
 - name: set jsloader
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('jsloader', 'snippet', 'document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);') ON DUPLICATE KEY UPDATE configvalue='document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);';\\\"\""
-  when: "command_result.results[2].changed"
+  when: "app_install_result.results[2].changed"
   
 # ***** CONFIGURE previewgenerator *****
 #- name: initial previewgenerator setup
 #  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ preview:generate-all\""
-#  when: "command_result.results[3].changed"
+#  when: "app_install_result.results[3].changed"
 
 #- name: create previewgenerator daily cron job
 #  vars:
@@ -100,12 +125,12 @@
 # ***** CONFIGURE previewgenerator *****
 - name: configure previewgenerator setup
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ config:app:set {{item}}\""
-#  when: "command_result.results[3].changed"
+#  when: "app_install_result.results[3].changed"
   with_items:
     - "--value=\\\"256\\\" previewgenerator squareSizes"
     - "--value=\\\"256\\\" previewgenerator widthSizes"
     - "--value=\\\"256\\\" previewgenerator heightSizes"
-  when: "command_result.results[3].changed"
+  when: "app_install_result.results[3].changed"
 
 - name: create previewgenerator incremental cron job
   vars:
@@ -212,18 +237,22 @@
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""
   when: "keeweb_installation.changed or news_installation.changed"
   
-# ***** ENABLE ADDITIONAL APPS *****
-- name: get app status
+# ***** CHECK FOR DISABLED APPS *****
+- name: get final app status
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:list\""
   register: app_status
   changed_when: no
 
-- name: enable keeweb and news apps
+- name: enable disabled apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item}} --force\""
-  register: command_result
-  failed_when: "'enabled' not in command_result.stdout"
+  register: app_enable_result
+  failed_when: "'enabled' not in app_enable_result.stdout"
   when: "item not in app_status.stdout.split('Disabled')[0]"
   with_items:
+    - user_saml
+    - onlyoffice
+    - jsloader
+    - previewgenerator
     - keeweb
     - news
 
