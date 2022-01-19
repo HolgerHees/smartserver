@@ -23,7 +23,7 @@
     - dashboard
 
 # ***** INSTALL APPS *****
-- name: check apps
+- name: check installed apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:list\""
   changed_when: no
   register: app_list_result
@@ -45,24 +45,20 @@
     - notes
     - tasks
     
-- name: update apps
-  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --all\""
-#  failed_when: "'updated' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout"
+#docker exec php sh -c "php -f /dataDisk/htdocs/nextcloud/occ update:check"
+- name: check available app updates
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --showonly\""
+  changed_when: no
   register: app_update_result
-  changed_when: "'updated' in app_update_result.stdout"
-#  when: "not app_install_result.results[ansible_loop.index0].changed"
-#  loop_control:
-#    extended: yes
-#  with_items:
-#    - user_saml # must always be the first one
-#    - onlyoffice # must always be the second one
-#    - jsloader # must always be the third one
-#    - previewgenerator # must always be the fourth one
-#    - bookmarks
-#    - contacts
-#    - calendar
-#    - notes
-#    - tasks
+  
+- name: show available app updates
+  debug:
+    msg: "{{app_update_result}}"
+
+#- name: update apps
+#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --all\""
+#  register: app_update_result
+#  changed_when: "'updated' in app_update_result.stdout"
 
 # ***** CONFIGURE user_saml *****
 - name: enable environment based authentication through user_saml app
