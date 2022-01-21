@@ -1,0 +1,43 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  background-color: white;
+}
+body.dark {
+    background-color: #202124;
+}
+div.table {
+  border-top: 1px solid #d2d2d2;
+}
+div.table > div.row > div:first-child {
+  border-left: 1px solid #d2d2d2;
+} 
+div.table > div.row > div:last-child {
+  border-right: 1px solid #d2d2d2;
+} 
+div.table > div.row > div {
+  border-bottom: 1px solid #d2d2d2;
+} 
+div.table {
+  font-size: 16px;
+  overflow: auto;
+}
+div.table > div.row {
+  display: table-row;
+}
+div.table > div.row:hover {
+  background-color: #f2f2f2;
+}
+body.dark div.table > div.row:hover {
+  background-color: rgba(51,122,183,.20);
+}
+div.table > div.row > div {
+  display: table-cell;
+  padding: 10px;
+  text-align: left;
+  color: #333;
+  white-space: nowrap;
+}
+body.dark div.table > div.row > div {
+  color: #eee;
+}
+ 

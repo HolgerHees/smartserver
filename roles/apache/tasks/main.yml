@@ -284,7 +284,7 @@
       repository: "httpd", 
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: register openidc update notifier
   vars:
@@ -296,7 +296,7 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{openidc_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
   
 - name: trigger apache2 handler
   vars:

@@ -70,7 +70,7 @@
       repository: "eclipse-mosquitto", 
       pattern: "^([0-9\\.]+)$" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger mosquitto handler
   vars:

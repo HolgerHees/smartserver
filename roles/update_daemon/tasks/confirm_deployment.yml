@@ -1,0 +1,5 @@
+- name: "confirm deployment"
+  file:
+    path: "{{global_lib}}update_daemon/deployment.state"
+    state: touch
+    mode: u=rw,g=r,o=r

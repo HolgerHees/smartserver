@@ -1,0 +1,78 @@
+div.table {
+  width: 100%;
+  max-width: 800px;
+  margin: 10px auto;
+}
+div.table > div.row:first-child > div {
+    font-weight: bold;
+}
+div.table > div.row > div:first-child {
+    width: 5px;
+    min-width: 5px;
+    padding: 2px;
+}
+div.table > div.row > div:first-child,
+body.dark div.table > div.row > div:first-child {
+    color: #666;
+}
+div.table > div.row:first-child > div:first-child {
+    background-color: #aaa;
+    text-align: center;
+}
+div.table > div.row.red > div:first-child {
+    background-color: #ff7479;
+}
+div.table > div.row.yellow > div:first-child  {
+    background-color: #ffd768;
+}
+
+div.table > div.row.green > div:first-child  {
+    background-color: #b5ce69;
+}
+div.table > div.row > div:nth-child(2) {
+    width: 100%;
+    white-space: normal; 
+}
+div.versionLink, div.typeLink {
+    cursor: pointer;
+}
+
+div.versionLink {
+    display: inline-block;
+}
+
+div.currentBranch {
+    font-weight: bold;
+}
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .hover {
+  visibility: hidden;
+  text-align: center;
+  padding: 10px 10px;
+  border-radius: 6px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+  
+  background-color: #f2f2f2;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .hover {
+  visibility: visible;
+}
+.tooltip:hover .default {
+  visibility: hidden;
+}

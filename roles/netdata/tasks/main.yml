@@ -207,7 +207,7 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{netdata_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger netdata handler
   vars:

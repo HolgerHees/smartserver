@@ -1,0 +1,78 @@
+#!/usr/bin/python3
+
+from flask import Flask
+from flask import request
+
+import subprocess
+import threading
+import json
+
+app = Flask(__name__)
+
+globalThread = None
+globalResult = None
+
+def startThread(cmd, need_refresh):
+    global globalResult
+    global globalThread
+
+    if globalThread is None:
+        globalResult = None
+        globalThread = threading.Thread(target=workerFunction, args=(cmd, need_refresh,))
+        globalThread.start()
+        return True
+    else:
+        return False
+      
+def finishThread(returncode, result, need_refresh):
+    global globalResult
+    global globalThread
+
+    globalResult = { "returncode": returncode, "result": result, "need_refresh": need_refresh }
+    globalThread = None
+
+
+def workerFunction(cmd, need_refresh):  
+    app.logger.info(cmd)
+    
+    result = subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    finishThread(result.returncode, result.stdout.decode("utf-8"), need_refresh)
+
+@app.route('/ping/', methods = ['POST'])
+def ping():
+    return 'ok'
+
+@app.route('/result/', methods = ['POST'])
+def result():
+    return json.dumps(globalResult) if globalResult is not None else ""
+
+@app.route('/refreshUpdateState/', methods = ['POST'])
+def refreshUpdateState():
+    status = startThread( "/opt/update_daemon/system_update_check {}".format(request.form["parameter"]), False )
+    return "1" if status else "0"
+
+@app.route('/systemReboot/', methods = ['POST'])
+def systemReboot():
+    if globalThread is None:
+        finishThread("0", "systemReboot called", False)
+    return "1" if globalThread is None else 0
+
+@app.route('/restartService/', methods = ['POST'])
+def restartService():
+    services = request.form["parameter"].split(",")
+    status = startThread( "systemctl restart {}".format(" ".join(services)), "system_state" )
+    return "1" if status else "0"
+
+@app.route('/installSystemUpdates/', methods = ['POST'])
+def installSystemUpdates():
+    status = startThread( "zypper dup -y", "system_update" )
+    return "1" if status else "0"
+
+@app.route('/deploySmartserverUpdates/', methods = ['POST'])
+def deploySmartserverUpdates():
+    if globalThread is None:
+        finishThread("0", "deploySmartserverUpdates called", False)
+    return "1" if globalThread is None else 0
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port='8505')

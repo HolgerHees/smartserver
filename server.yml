@@ -50,7 +50,7 @@
 
     - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher' ] }
     
-    - { import_role: { name: update_notifier, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_notifier' ] }  # prototype
+    - { import_role: { name: update_daemon, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_daemon' ] }  # prototype
 
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
@@ -137,7 +137,7 @@
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
-    - { import_role: { name: update_notifier }, tags: [ 'update_notifier' ] }                    # update check service
+    - { import_role: { name: update_daemon }, tags: [ 'update_daemon' ] }                        # update check & handler
 
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }                          # Details can be found inside the demo configuration 'config/demo/roles.yml'
@@ -156,3 +156,5 @@
     - { import_role: { name: openhab, tasks_from: create_users, handlers_from: empty }, tags: [ 'openhab', 'openhab_users' ] }   # create openhab users
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running
+
+    - { import_role: { name: update_daemon, tasks_from: confirm_deployment, handlers_from: empty }, tags: [ 'all', 'confirm_deployment' ] } # set confirm date

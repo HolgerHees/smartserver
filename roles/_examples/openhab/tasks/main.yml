@@ -657,7 +657,7 @@
       repository: "openhab/openhab",
       pattern: "^([0-9\\.]+)-debian$"
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: register jython update notifier
   vars:
@@ -669,7 +669,7 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{jython_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: register jython script update notifier
   vars:
@@ -681,7 +681,7 @@
       project: "openhab-scripters/openhab-helper-libraries", 
       version: "{{jython_script_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger openhab handler
   vars:

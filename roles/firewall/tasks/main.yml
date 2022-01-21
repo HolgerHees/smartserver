@@ -85,7 +85,7 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{ferm_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger ferm handler
   command: "/bin/true"

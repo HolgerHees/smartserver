@@ -1,8 +1,0 @@
-- name: "copy update notifier config for '{{name}}'"
-  copy:
-    content: "{{ lookup('template', 'roles/update_notifier/templates/config.json') }}"
-    dest: "{{global_etc}}update_notifier/{{name}}.conf"
-    owner: root
-    group: root
-    mode: 0644
-  tags: ['update_notifier_configs']

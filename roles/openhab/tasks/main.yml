@@ -504,7 +504,7 @@
       repository: "openhab/openhab",
       pattern: "^([0-9\\.]+)-debian$"
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger openhab handler
   vars:

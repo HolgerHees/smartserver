@@ -1,0 +1,2 @@
+class Os:
+    pass

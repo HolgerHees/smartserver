@@ -103,7 +103,7 @@
       pattern: "^v([0-9\\.]+)$",
       version: "{{vcontrold_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger vcontrold handler
   vars:

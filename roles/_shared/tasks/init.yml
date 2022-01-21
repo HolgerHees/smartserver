@@ -50,6 +50,7 @@
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
     is_fedora: "{{ansible_distribution == 'Fedora'}}"
     is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
+    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
     is_production: "{{host_ip == production_ip}}"
     default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
 #    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"

@@ -1,0 +1,152 @@
+- name: install required packages => is_fedora
+  yum:
+    name: [
+        python3-flask
+      , yum-utils # used by needs-restart
+    ]
+    state: present
+  when: is_fedora|bool
+
+- name: install required packages => is_ubuntu
+  apt:
+    name: [
+        python3-flask
+    ]
+    state: present
+  when: is_ubuntu|bool
+  
+- name: install required packages => is_suse
+  zypper:
+    name: [  
+        python3-Flask
+    ]
+    state: present
+  when: is_suse|bool
+  
+- name: prepare needed folder
+  file:
+    path: "{{item.path}}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}update_daemon/server/" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon/config" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_daemon" }
+
+- name: copy server
+  copy:
+    src: "templates/etc/update_daemon/server/{{item.script}}"
+    dest: "{{global_etc}}update_daemon/server/"
+    owner: root
+    group: root
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rwx,g=rx,o=", script: "run" }
+  notify: "restart update_daemon"
+
+- name: copy tool
+  copy:
+    src: "templates/opt/update_daemon/{{item}}"
+    dest: "/opt/update_daemon/"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - helper
+    - plugins
+    - software_version_check
+    - system_update_check
+
+- name: copy config
+  template:
+    src: "templates/opt/update_daemon/config/config.py"
+    dest: "/opt/update_daemon/config/config.py"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy software webui
+  copy:
+    src: "templates/htdocs/update_software"
+    dest: "{{htdocs_path}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+
+- name: copy software webui config
+  template:
+    src: "templates/update_software_config.php"
+    dest: "{{htdocs_path}}update_software/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+
+- name: copy system webui
+  copy:
+    src: "templates/htdocs/update_system"
+    dest: "{{htdocs_path}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+
+- name: copy system webui config
+  template:
+    src: "templates/update_system_config.php"
+    dest: "{{htdocs_path}}update_system/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+
+- name: register webui
+  vars:
+    name: "update_daemon"
+    js_file: "templates/webui/update_daemon.js"
+    i18n_files: [ { language: "de", file: "templates/webui/update_daemon.de.json" } ]
+    icons: [ 'templates/webui/icons/update_software_logo.svg', 'templates/webui/icons/update_system_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  
+- name: create version check cron job
+  vars:
+    name: "Software Version check"
+    cmd: "/opt/update_daemon/software_version_check > /dev/null"
+    file: "ansible_update_daemon"
+    minute: "0"
+    hour: "3"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
+- name: create system check cron job
+  vars:
+    name: "System update check"
+    cmd: "/opt/update_daemon/system_update_check > /dev/null"
+    file: "ansible_update_daemon"
+    minute: "30"
+    hour: "3"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+  
+- name: "create systemd service"
+  template:
+    src: "templates/etc/systemd/system/update_daemon.service"
+    dest: "/etc/systemd/system/update_daemon.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart update_daemon"
+ 
+- name: register systemd service watcher
+  vars:
+    name: "update_daemon"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
+- name: trigger update_daemon handler
+  vars:
+    notify: "restart update_daemon"
+    service: "update_daemon.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
+

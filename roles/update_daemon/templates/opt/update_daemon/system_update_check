@@ -1,0 +1,132 @@
+#!/usr/bin/python3
+
+import subprocess
+import os
+from datetime import datetime, timezone
+import json
+import sys 
+
+import importlib
+
+from config import config
+
+limit_step = None
+if len(sys.argv) >= 2:
+    limit_step = sys.argv[1]
+
+config_directory = "/dataRaid/projects/smartserver"
+
+state_template = {"os_updates": [], "os_outdated_processes": [], "os_reboot": False, "smartserver_code": False, "smartserver_changes": []}
+last_states = {}
+if os.path.isfile(config.system_update_state_file):
+    with open(config.system_update_state_file, 'r') as f:
+        last_states = json.load(f)
+last_states = {**state_template, **last_states}
+
+state = last_states
+update_message_r = []
+
+# **** SYSTEM CHECK **********************************************
+if limit_step is None or limit_step == "system_state" or limit_step == "system_update":
+    print("System")
+    plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
+    repo = plugin.Repository()
+
+if limit_step is None or limit_step == "system_state":
+    state["os_reboot"] = repo.getRebootState()
+    if not state["os_reboot"]:
+      print( "  - \033[0;32mno reboot required\033[0m")
+    else:
+      print( "  - \033[1;31mneeds reboot\033[0m")
+
+    state["os_outdated"] = repo.getOutdatedProcesses()
+    if len(state["os_outdated"]) == 0:
+      print( "  - \033[0;32mno outdated processes\033[0m")
+    else:
+      print( "  - \033[1;31mhas outdated processes\033[0m")
+
+if limit_step is None or limit_step == "system_update":
+    state["os_updates"] = repo.getUpdates()
+    if len(state["os_updates"]) == 0:
+      print( "  - \033[0;32mis updates\033[0m")
+    else:
+      print( "  - \033[1;33mhas updates\033[0m")
+
+if    ( len(state["os_updates"]) > 0 and len(last_states["os_updates"]) != len(state["os_updates"]) ) \
+  or ( len(state["os_outdated"]) > 0 and len(last_states["os_outdated"]) != len(state["os_outdated"]) ) \
+  or ( state["os_reboot"] and last_states["os_reboot"] != state["os_reboot"] ):
+    if len(state["os_updates"]) > 0:
+        update_message_r.append(u"system has {} updates".format(len(state["os_updates"])))
+    if len(state["os_outdated"]) > 0:
+        update_message_r.append(u"system has {} outdated processes".format(len(state["os_outdated"])))
+    if state["os_reboot"]:
+        update_message_r.append(u"system reboot required")
+# ****************************************************************
+
+# **** SMARTSERVER ***********************************************
+if limit_step is None or limit_step == "deployment_updates":
+    print("Smartserver")
+    
+    # git add files (intent to add)  
+    subprocess.run([ "/usr/bin/git", "-C", config_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    result = subprocess.run([ "/usr/bin/git", "-C", config_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    lines = result.stdout.decode("utf-8").strip().split("\n")
+
+    deployment_stat = os.stat(config.deployment_state_file)
+    deployment_mtime = deployment_stat.st_mtime
+
+    if len(lines) == 1 and lines[0] == "":
+        result = subprocess.run([ "/usr/bin/git", "pull" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        state["smartserver_code"] = "pulled"
+        
+        last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
+        #last_deployment = "2020-01-20 14:02:00.651984+00:00"
+        #print( " ".join([ "/usr/bin/git", "-C", config_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
+        result = subprocess.run([ "/usr/bin/git", "-C", config_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        ref = result.stdout.decode("utf-8").strip()
+        
+        #print( " ".join([ "/usr/bin/git", "-C", config_directory, "diff-index", "--name-status", ref, "HEAD", "--" ]))
+        result = subprocess.run([ "/usr/bin/git", "-C", config_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        lines = result.stdout.decode("utf-8").strip().split("\n")
+    else:
+        state["smartserver_code"] = "uncommitted"
+        print( "  - \033[1;31mhas uncommitted changes\033[0m")
+        
+    lines = [ele.split("\t") for ele in lines]
+
+    filtered_lines = []
+    for line in lines:
+        flag, path = line
+        
+        if flag != "D":
+            file_stat = os.stat("{}/{}".format(config_directory,path))
+            file_mtime = file_stat.st_mtime
+            
+            if file_mtime > deployment_mtime:
+                filtered_lines.append({"flag": flag, "path": path})
+    lines = filtered_lines
+
+    state["smartserver_changes"] = lines
+
+    if len(state["smartserver_changes"]) == 0:
+      print( "  - \033[0;32mis deployed\033[0m")
+    else:
+      print( "  - \033[1;33mhas not deployed changes\033[0m")
+
+    if len(last_states["smartserver_changes"]) != len(state["smartserver_changes"]):
+        update_message_r.append(u"smartserver has {} updates".format(len(state["smartserver_changes"])))
+# ****************************************************************
+
+if limit_step is None and config.send_system_update_notification and len(update_message_r) > 0:
+    message_r = []
+    message_r.append("There are new updates")
+    for message in update_message_r:
+        message_r.append("  - {}".format(message))
+    message_r.append("\n\nCheck https://{}/?ref=admin|tools|update_system for details".format(config.server_host))
+   
+    print("Send notification mail")
+
+    subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" root".format("\n".join(message_r),"New system updates available") ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+  
+with open(config.system_update_state_file, 'w') as f:
+    json.dump(state, f)

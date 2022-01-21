@@ -1,7 +1,0 @@
-- name: prepare shared folder
-  file:
-    path: "{{global_etc}}update_notifier/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755

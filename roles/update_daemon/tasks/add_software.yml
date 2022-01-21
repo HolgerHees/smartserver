@@ -1,0 +1,8 @@
+- name: "copy software check config '{{name}}'"
+  copy:
+    content: "{{ lookup('template', 'roles/update_daemon/templates/update_software_config.json') }}"
+    dest: "{{global_etc}}update_daemon/software/{{name}}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  tags: ['update_notifier_configs']

@@ -124,22 +124,6 @@
   with_items:
     - "{{backup_path}}archive"
 
-- name: register update notifier => is_fedora
-  vars:
-    name: "fedora"
-    type: "fedora"
-    url: "https://lwn.net/Alerts/Fedora/"
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-  when: is_fedora|bool
-
-- name: register update notifier => is_suse
-  vars:
-    name: "opensuse"
-    type: "opensuse"
-    url: "https://www.suse.com/support/update/"
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
-  when: is_suse|bool
-  
 - name: set sysctl inotify related values
   lineinfile:
     path: /etc/sysctl.conf

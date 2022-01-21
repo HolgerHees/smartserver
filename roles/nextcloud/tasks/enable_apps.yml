@@ -262,7 +262,7 @@
       pattern: "^([0-9\\.]+)$",
       version: "{{nextcloud_news_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: register keeweb update notifier
   vars:
@@ -274,4 +274,4 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{nextcloud_keeweb_version}}" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml

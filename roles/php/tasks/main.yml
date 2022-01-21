@@ -53,6 +53,7 @@
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'
+      - '{{global_lib}}update_daemon:{{global_lib}}update_daemon:z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
       - '{{ftp_path}}:{{ftp_path}}:z'                             # needed by apache_gallery
@@ -84,6 +85,13 @@
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
+- name: allow http php service
+  vars:
+    name: "update_daemon.php"
+    rule: "proto tcp dport 8505 saddr {{docker_php_ip}}"
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: allow php service
   vars:
     name: "php"
@@ -111,7 +119,7 @@
       repository: "php",
       pattern: "^([0-9\\.]+)-fpm$" 
     }
-  import_tasks: roles/update_notifier/tasks/add_notifier.yml
+  import_tasks: roles/update_daemon/tasks/add_software.yml
 
 - name: trigger php handler
   vars:
