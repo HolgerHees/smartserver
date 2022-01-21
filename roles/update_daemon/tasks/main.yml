@@ -36,17 +36,6 @@
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon/config" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_daemon" }
 
-- name: copy server
-  copy:
-    src: "templates/etc/update_daemon/server/{{item.script}}"
-    dest: "{{global_etc}}update_daemon/server/"
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rwx,g=rx,o=", script: "run" }
-  notify: "restart update_daemon"
-
 - name: copy tool
   copy:
     src: "templates/opt/update_daemon/{{item}}"
@@ -57,6 +46,7 @@
   with_items:
     - helper
     - plugins
+    - server
     - software_version_check
     - system_update_check
 

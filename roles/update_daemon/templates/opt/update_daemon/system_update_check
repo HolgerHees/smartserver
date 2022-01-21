@@ -14,8 +14,6 @@ limit_step = None
 if len(sys.argv) >= 2:
     limit_step = sys.argv[1]
 
-config_directory = "/dataRaid/projects/smartserver"
-
 state_template = {"os_updates": [], "os_outdated_processes": [], "os_reboot": False, "smartserver_code": False, "smartserver_changes": []}
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
@@ -68,8 +66,8 @@ if limit_step is None or limit_step == "deployment_updates":
     print("Smartserver")
     
     # git add files (intent to add)  
-    subprocess.run([ "/usr/bin/git", "-C", config_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-    result = subprocess.run([ "/usr/bin/git", "-C", config_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    result = subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
     lines = result.stdout.decode("utf-8").strip().split("\n")
 
     deployment_stat = os.stat(config.deployment_state_file)
@@ -81,12 +79,12 @@ if limit_step is None or limit_step == "deployment_updates":
         
         last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
         #last_deployment = "2020-01-20 14:02:00.651984+00:00"
-        #print( " ".join([ "/usr/bin/git", "-C", config_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-        result = subprocess.run([ "/usr/bin/git", "-C", config_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        #print( " ".join([ "/usr/bin/git", "-C", config.git_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
+        result = subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         ref = result.stdout.decode("utf-8").strip()
         
-        #print( " ".join([ "/usr/bin/git", "-C", config_directory, "diff-index", "--name-status", ref, "HEAD", "--" ]))
-        result = subprocess.run([ "/usr/bin/git", "-C", config_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        #print( " ".join([ "/usr/bin/git", "-C", config.git_directory, "diff-index", "--name-status", ref, "HEAD", "--" ]))
+        result = subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         lines = result.stdout.decode("utf-8").strip().split("\n")
     else:
         state["smartserver_code"] = "uncommitted"
@@ -99,7 +97,7 @@ if limit_step is None or limit_step == "deployment_updates":
         flag, path = line
         
         if flag != "D":
-            file_stat = os.stat("{}/{}".format(config_directory,path))
+            file_stat = os.stat("{}/{}".format(config.git_directory,path))
             file_mtime = file_stat.st_mtime
             
             if file_mtime > deployment_mtime:

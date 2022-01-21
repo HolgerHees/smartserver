@@ -7,6 +7,8 @@ import subprocess
 import threading
 import json
 
+from config import config
+
 app = Flask(__name__)
 
 globalThread = None
@@ -54,7 +56,7 @@ def refreshUpdateState():
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
     if globalThread is None:
-        finishThread("0", "systemReboot called", False)
+        finishThread("0", "systemReboot not implemented", False)
     return "1" if globalThread is None else 0
 
 @app.route('/restartService/', methods = ['POST'])
@@ -71,8 +73,8 @@ def installSystemUpdates():
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
     if globalThread is None:
-        finishThread("0", "deploySmartserverUpdates called", False)
+        finishThread("0", "deploySmartserverUpdates not implemented", False)
     return "1" if globalThread is None else 0
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port='8505')
+    app.run(debug=True, host=config.daemon_ip, port='8505')

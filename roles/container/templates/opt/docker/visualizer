@@ -411,7 +411,7 @@ for network in sorted_network_r:
                         if rule['targetPort'] != '':
                             value = rule['targetPort']
                             if rule['chain'] == 'input':
-                                value = host_ip + ":" + value
+                                value = ( "" if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp'] ) + ":" + value
                             else:
                                 value = rule['targetIp'] + ":" + value
                         else:

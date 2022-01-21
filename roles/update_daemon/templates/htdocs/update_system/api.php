@@ -1,4 +1,6 @@
 <?php
+require "config.php";
+
 $name = $_SERVER['REMOTE_USERNAME'];
 $groups = [];
 $handle = fopen("../secret/.htdata", "r");
@@ -41,7 +43,7 @@ if( !empty($data->parameter) )
     $post['parameter'] = $data->parameter;
 }
 
-$ch = curl_init("http://192.168.0.50:8505/" . $action . '/' ); // such as http://example.com/example.xml
+$ch = curl_init("http://".$daemon_ip.":8505/" . $action . '/' ); // such as http://example.com/example.xml
 curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, 0);

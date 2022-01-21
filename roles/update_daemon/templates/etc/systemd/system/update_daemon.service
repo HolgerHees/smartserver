@@ -5,7 +5,7 @@ Description=update_daemon
 TimeoutStartSec=0
 TimeoutStopSec=10
 Restart=always
-ExecStart={{global_etc}}update_daemon/server/run
+ExecStart=/opt/update_daemon/server
 
 [Install]
 WantedBy=multi-user.target
