@@ -160,7 +160,6 @@ for additional_port in additional_port_list:
             listen_port_map[additional_port[0]] = listen_ports
         protocol = additional_port[7].lower()
         port = columns[1].split("->")[0]
-        #print(columns)
         listen_ports[port] = {'access': 'intern' if columns[0] == '*' else 'local', 'port':port,'protocol':protocol}
    
 # Collect additional kernel ports
@@ -293,33 +292,48 @@ for name in list(network_r.keys()):
     
     del network_r[name]
 
-
 # Add missing dynamic (not exposed) ports
-http_container = container_r['apache2']
-for key in listen_port_map['httpd']:
-    port = listen_port_map['httpd'][key]
-    http_container.addExposedPort(port['port'],port['protocol'])
-    #http_container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+#http_container = container_r['apache2']
+#for key in listen_port_map['httpd']:
+#    port = listen_port_map['httpd'][key]
+#    http_container.addExposedPort(port['port'],port['protocol'])
+#    #http_container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
 
 # Add Services
-#for name in listen_port_map:
-#    ports = listen_port_map[name]
-#    if name == 'httpd':
-#        for key in ports:
-#            port = ports[key]
-#            http_container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
-#    else:
-#        network = network_r['host']
+service_mapping = {
+    "sshd": "sshd",
+    "cupsd": "cupsd",
+    "netdata": "netdata",
+    "server": "update_daemon",
+    "VBoxHeadl": "ci"
+}
+for name in listen_port_map:
+    if name.isnumeric():
+        continue
+  
+    ports = listen_port_map[name]
+    if name not in service_mapping:
+        #print(name)
+        #print(ports)
+        pass
+        #for key in ports:
+        #    port = ports[key]
+        #    http_container.addExposedPort(port['port'],port['protocol'])
+        #    #http_container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+    else:
+        name = service_mapping[name]
+        network = network_r['host']
         
-#        container = Container("Service",name,"","")
-#        container_r[name] = container
+        container = Container("Service",name,"","")
+        container_r[name] = container
         
-#        for key in ports:
-#            port = ports[key]
-#            container.addPort("0.0.0.0",port['port'],port['port'],port['protocol'])
+        for key in ports:
+            port = ports[key]
+            container.addExposedPort(port['port'],port['protocol'])
+            #container.addPublishedPort("0.0.0.0",port['port'],port['port'],port['protocol'])
         
-#        connection = Connection(container,"","")
-#        network.addConnection(connection)
+        connection = Connection(container,host_ip,"host")
+        network.addConnection(connection)
 
 TYPE_HEADLINE = 0
 TYPE_NETWORK = 1
