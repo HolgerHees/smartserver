@@ -129,6 +129,8 @@ if( count($data->smartserver_changes) > 0 )
         $deploymentUpdateDetails .= "<div>" . $update->flag . "</div>";
         $deploymentUpdateDetails .= "<div>" . $update->path . "</div>";
         $deploymentUpdateDetails .= "</div>";
+        #$last_deployment_update = date_create();
+        #break;
     }
 }
 else

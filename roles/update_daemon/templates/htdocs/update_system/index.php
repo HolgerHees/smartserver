@@ -58,6 +58,7 @@ require "config.php";
                       systemStateDetailsElement.innerHTML = content.querySelector("#systemStateDetails").innerHTML;
                       last_system_state_modified = _last_system_state_modified;
                       setToogle(mx.$("#systemState .form.button.toggle"),systemStateDetailsElement);
+                      fixScrollHeight(systemStateDetailsElement);
                   }
                   
                   _last_system_update_modified = content.querySelector("#systemUpdateTimestamp").innerHTML;
@@ -68,6 +69,7 @@ require "config.php";
                       systemUpdateDetailsElement.innerHTML = content.querySelector("#systemUpdateDetails").innerHTML;
                       last_system_update_modified = _last_system_update_modified;
                       setToogle(mx.$("#systemUpdate .form.button.toggle"),systemUpdateDetailsElement);
+                      fixScrollHeight(systemUpdateDetailsElement);
                   }
 
                   _last_deployment_update_modified = content.querySelector("#deploymentUpdateTimestamp").innerHTML;
@@ -78,6 +80,7 @@ require "config.php";
                       deploymentUpdateDetailsElement.innerHTML = content.querySelector("#deploymentUpdateDetails").innerHTML;
                       last_deployment_update_modified = _last_deployment_update_modified;
                       setToogle(mx.$("#deploymentUpdate .form.button.toggle"),deploymentUpdateDetailsElement);
+                      fixScrollHeight(deploymentUpdateDetailsElement);
                   }
                   
                   callback();
@@ -153,6 +156,14 @@ require "config.php";
                 }
             };
             xhr.send(JSON.stringify({"action": "state"}));
+        }
+        
+        fixScrollHeight = function(detailElement)
+        {
+            if( detailElement.style.maxHeight )
+            {
+                detailElement.style.maxHeight = ( detailElement.scrollHeight + 20 ) + "px";
+            }
         }
         
         setToogle = function(btnElement,detailElement)
