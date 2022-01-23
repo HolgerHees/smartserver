@@ -54,8 +54,8 @@ class Repository(Os):
         result = result.stdout.decode("utf-8").strip()
         
         # Ein Neustart wird benötigt, um sicher zu stellen, dass ihr System von diesen Updates profitiert.
-        m = re.search('[Nn]eustart|restart|reboot', result)
-        self.needs_restart = m.group(0) is not None
+        m = re.search('(?!.*nicht).*[Nn]eustart.*|(?!.*not).*(restart|reboot).*', result)
+        self.needs_restart = m is not None
         
         # PID   | PPID  | UID | User     | Command          | Service
         # ------+-------+-----+----------+------------------+-----------------

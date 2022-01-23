@@ -168,7 +168,15 @@ class Handler():
             self.invalid_state_file_time = None
             
         is_running = state["cmd_type"] or active_cmd_type is not None
-        running_type = "daemon" if state["cmd_type"] else ( "manual" if is_running else None )
+        if state["cmd_type"]:
+            running_type = "daemon"
+        elif is_running:
+            running_type = "manual"
+            self.last_exit_code = 0
+            self.last_cmd_type = None
+            self.last_cmd_name = None
+        else:
+            running_type = None
         cmd_type = active_cmd_type if active_cmd_type is not None else state["cmd_type"]
         
         update_state_file_stat = os.stat(config.system_update_state_file)
