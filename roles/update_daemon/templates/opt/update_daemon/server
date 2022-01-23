@@ -1,80 +1,227 @@
 #!/usr/bin/python3
 
-from flask import Flask
-from flask import request
+from flask import Flask, request, make_response
 
+import pexpect 
 import subprocess
 import threading
 import json
+import sys
+import os
+import importlib
+from datetime import datetime
+from json.decoder import JSONDecodeError
 
 from config import config
 
-app = Flask(__name__)
+sys.path.insert(0, "/opt/shared/python")
 
-globalThread = None
-globalResult = None
+from smartserver.logfile import LogFile
 
-def startThread(cmd, need_refresh):
-    global globalResult
-    global globalThread
+cmd_processlist = "/usr/bin/ps -alx"
+cmd_system_update_check = "/opt/update_daemon/system_update_check"
+cmd_service_restart = "systemctl restart"
+cmd_request_reboot = "reboot"
+cmd_check_reboot = "runlevel | grep \"6\""
 
-    if globalThread is None:
-        globalResult = None
-        globalThread = threading.Thread(target=workerFunction, args=(cmd, need_refresh,))
-        globalThread.start()
-        return True
-    else:
-        return False
+cmd_mapping = {
+    "ansible": "smartserver deployment",
+    "system_update_check": "daemon process",
+    "service_restart": "service restart",
+    "rpm": "system update",
+    "yum": "system update",
+    "apt": "system update",
+    "dnf": "system update",
+    "zypper": "system update",
+    "systemctl": "service restart"
+}
+
+START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
+
+class Handler():
+    def __init__(self):
+        self.last_exit_code = 0
+        self.last_cmd_type = None
+        self.last_cmd_name = None
+        self.invalid_state_file_time = None
+
+    def createStateFile(self, cmd_type):
+        with open(config.job_state_file, 'w') as f:
+            json.dump({"cmd_type": cmd_type}, f)
+
+    def removeStateFile(self, exit_code,cmd_type):
+        self.last_exit_code = exit_code
+        self.last_cmd_type = cmd_type
+        self.last_cmd_name = cmd_mapping[cmd_type]
+
+        os.unlink(config.job_state_file)
+
+    def buildResult(self, status, is_running, running_type, cmd_name, last_data_mtime):
+        return json.dumps({ 
+            "status": 0, 
+            "is_running": is_running, 
+            "running_type": running_type, 
+            "cmd_name": cmd_name, 
+            "last_modified": last_data_mtime,
+            "last_status": self.last_exit_code, 
+            "last_cmd_name": self.last_cmd_name
+        })
+
+    def run(self, cmd, cmd_type, post_system_update = None):
+        start_time = datetime.now()
+        start_time_str = start_time.strftime(START_TIME_STR_FORMAT)
+        job_log_file = u"{}{}-{}.log".format(config.job_log_folder,start_time_str,cmd_type)
+        exit_status = 1
+        with open(job_log_file, 'w') as f:
+            try:
+                app.logger.info(u"Start cmd '{}'".format(cmd))
+
+                lf = LogFile(f)
+                (cmd_output,exit_status) = pexpect.run(cmd, timeout=1800, logfile=lf, withexitstatus=True)
+
+                duration = datetime.now() - start_time
+                f.write("\n")
+                if exit_status == 0:
+                    lf.write("The command '{}' exited with 0 (successful) after {}.\n".format(cmd,duration.total_seconds()))
+                else:
+                    lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,exit_status,duration.total_seconds()))
+
+                if exit_status == 0 and post_system_update:
+                    start_time = datetime.now()
+                    post_cmd = u"{} {}".format(cmd_system_update_check, post_system_update)
+
+                    app.logger.info(u"Start post cmd '{}'".format(post_cmd))
+
+                    f.write("\n")
+
+                    (post_cmd_output,exit_status) = pexpect.run(post_cmd, timeout=1800, logfile=lf, withexitstatus=True)
+
+                    duration = datetime.now() - start_time
+                    f.write("\n")
+                    if exit_status == 0:
+                        lf.write("The command '{}' exited with 0 (successful) after {}.\n".format(post_cmd,duration.total_seconds()))
+                    else:
+                        lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(post_cmd,exit_status,duration.total_seconds()))
+            except ValueError:
+                #app.logger.warn(traceback.format_exc())
+                pass
+              
+        self.removeStateFile(exit_status, cmd_type)
+        
+        return exit_status
+
+    def startCommand(self, cmd, cmd_type, post_system_update = None):
+        active_cmd_type = self.checkProcesses()
+        if active_cmd_type is None:
+            self.createStateFile(cmd_type)
+
+            exit_status = run(cmd, cmd_type, post_system_update)
+            
+            update_state_file_stat = os.stat(config.system_update_state_file)
+            update_state_file_mtime = update_state_file_stat.st_mtime
+
+            return self.buildResult(exit_status, False, "", "", update_state_file_mtime )
+        else:
+            return state()
+          
+    def startThread(self, cmd, cmd_type, post_system_update = None):
+        active_cmd_type = self.checkProcesses()
+        if active_cmd_type is None:
+            self.createStateFile(cmd_type)
+            
+            thread = threading.Thread(target=self.run, args=(cmd, cmd_type, post_system_update, ))
+            thread.start()
+        return state()
+
+    def checkProcesses(self):
+        result = subprocess.run([ cmd_processlist ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        stdout = result.stdout.decode("utf-8")
+        active_cmd_type = None
+        for term in cmd_mapping:
+            if term in stdout:
+                active_cmd_type = term
+                break
+        return active_cmd_type
       
-def finishThread(returncode, result, need_refresh):
-    global globalResult
-    global globalThread
+    def getState(self):
+        state_template = {"cmd_type": None}
+        state = {}
+        if os.path.isfile(config.job_state_file):
+            with open(config.job_state_file, 'r') as f:
+                try:
+                    state = json.load(f)
+                except JSONDecodeError:
+                    pass
+                    
+        state = {**state_template, **state}
+        
+        active_cmd_type = self.checkProcesses()
+        
+        if state["cmd_type"] and active_cmd_type is None:
+            if self.invalid_state_file_time is None:
+                self.invalid_state_file_time = datetime.now()
+            elif (datetime.now() - self.invalid_state_file_time).total_seconds() > 15:
+                app.logger.warn(u"Clean job state file. Related processes are not running anymore. Maybe they crashed")
+                self.removeStateFile(1,state["cmd_type"])
+                state = state_template
+        else:
+            self.invalid_state_file_time = None
+            
+        is_running = state["cmd_type"] or active_cmd_type is not None
+        running_type = "daemon" if state["cmd_type"] else ( "manual" if is_running else None )
+        cmd_type = active_cmd_type if active_cmd_type is not None else state["cmd_type"]
+        
+        update_state_file_stat = os.stat(config.system_update_state_file)
+        update_state_file_mtime = update_state_file_stat.st_mtime
+        
+        #result = subprocess.run([ cmd_check_reboot ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        #reboot_in_progress = True if result.returncode == 0 else False
+        
+        cmd_name = cmd_mapping[cmd_type] if cmd_type else None
+        return self.buildResult(0, is_running, running_type, cmd_name, update_state_file_mtime )
 
-    globalResult = { "returncode": returncode, "result": result, "need_refresh": need_refresh }
-    globalThread = None
+      
+app = Flask(__name__)
+handler = Handler()
 
-
-def workerFunction(cmd, need_refresh):  
-    app.logger.info(cmd)
-    
-    result = subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-    finishThread(result.returncode, result.stdout.decode("utf-8"), need_refresh)
-
-@app.route('/ping/', methods = ['POST'])
-def ping():
-    return 'ok'
-
-@app.route('/result/', methods = ['POST'])
-def result():
-    return json.dumps(globalResult) if globalResult is not None else ""
-
-@app.route('/refreshUpdateState/', methods = ['POST'])
-def refreshUpdateState():
-    status = startThread( "/opt/update_daemon/system_update_check {}".format(request.form["parameter"]), False )
-    return "1" if status else "0"
-
-@app.route('/systemReboot/', methods = ['POST'])
-def systemReboot():
-    if globalThread is None:
-        finishThread("0", "systemReboot not implemented", False)
-    return "1" if globalThread is None else 0
+@app.route('/state/', methods = ['POST'])
+def state():     
+    return handler.getState()
+  
+@app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
+def refreshSystemUpdateCheck():
+    return handler.startThread(cmd_system_update_check,"system_update_check")
 
 @app.route('/restartService/', methods = ['POST'])
 def restartService():
     services = request.form["parameter"].split(",")
-    status = startThread( "systemctl restart {}".format(" ".join(services)), "system_state" )
-    return "1" if status else "0"
+    cmd = "{} {}".format(cmd_service_restart, " ".join(services))
+    return handler.startThread(cmd,"service_restart","system_state")
+    #return startCommand(cmd,"service_restart","system_state")
+      
+@app.route('/systemReboot/', methods = ['POST'])
+def systemReboot():
+    return make_response("<h2>Not Implemented</h2>", 501)
 
 @app.route('/installSystemUpdates/', methods = ['POST'])
 def installSystemUpdates():
-    status = startThread( "zypper dup -y", "system_update" )
-    return "1" if status else "0"
+    plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
+    repo = plugin.Repository()
+    (cmd, cmd_type) = repo.getSystemUpdateCmd()
+    return handler.startThread(cmd, cmd_type,"system_update")
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
-    if globalThread is None:
-        finishThread("0", "deploySmartserverUpdates not implemented", False)
-    return "1" if globalThread is None else 0
+    #cmd = "ansible-playbook -i config/marvin/server_local.ini server.yml"
+    return make_response("<h2>Not Implemented</h2>", 501)
+
+@app.route('/testSyncCall/', methods = ['POST'])
+def testSyncCall():
+    return handler.startCommand("sleep 15","test")
+
+@app.route('/testASyncCall/', methods = ['POST'])
+def testASyncCall():
+    return handler.startThread("sleep 15","test")
 
 if __name__ == '__main__':
     app.run(debug=True, host=config.daemon_ip, port='8505')

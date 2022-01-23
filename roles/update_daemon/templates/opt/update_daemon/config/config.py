@@ -19,3 +19,6 @@ global_config = {
 }
 
 os_type = "{{os_type}}"
+
+job_state_file = "{{global_tmp}}update_daemon.state"
+job_log_folder = "{{global_log}}update_daemon/"

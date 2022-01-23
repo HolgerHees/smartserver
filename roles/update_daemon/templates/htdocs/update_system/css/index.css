@@ -1,7 +1,7 @@
 div.widget {
   width: 100%;
   max-width: 800px;
-  margin: 10px auto;
+  margin: auto;
 }
 div.table {
   font-size: 16px;
@@ -23,60 +23,19 @@ div.info {
   flex-grow: 1; 
 }
 div.info {
-  font-size: 18px;
-}
-div.button {
   font-size: 16px;
+}
+div.form.button {
   margin-left: 5px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  letter-spacing: .15px;
-  outline: 0;
-  padding: 10px 24px;
-  text-align: center;
-  text-decoration: none;
-  white-space: normal;
-  color: #3c4043; 
-  display: inline-block;
-}
-div.button.disabled {
-    opacity: 0.5;
-}
-div.button:hover:not(.disabled) {
-    background-color: #f7f8f8;
-}
-div.button:active:not(.disabled) {
-    background-color: #e8e8e9;
-    border-color: transparent;
-    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);
-    -webkit-tap-highlight-color: transparent;
-}
-div.button.red {
-    background-color: #ff7479;
-}
-div.button.red:hover:not(.disabled) {
-    background-color: #ef6469;
-}
-div.button.red:active:not(.disabled) {
-    background-color: #df5459;
-}
-div.button.yellow {
-    background-color: #ffd768;
-}
-div.button.yellow:hover:not(.disabled) {
-    background-color: #efc758;
-}
-div.button.yellow:active:not(.disabled) {
-    background-color: #dfb748;
 }
 .green {
-    color: #b5ce69;
+    color: var(--color-green);
 }
 .yellow {
-    color: #ffd768;
+    color: var(--color-yellow);
 }
 .red {
-    color: #ff7479;
+    color: var(--color-red);
 }
 div.table {
   margin-left: 20px;

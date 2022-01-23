@@ -1,6 +1,8 @@
 <?php
 require "config.php";
 
+require "/opt/shared/php/http.php";
+
 $name = $_SERVER['REMOTE_USERNAME'];
 $groups = [];
 $handle = fopen("../secret/.htdata", "r");
@@ -48,6 +50,11 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, 0);
 $data = curl_exec($ch);
+
+$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+if( $code == 0 ) $code = 500;
+
+header('HTTP/1.0 ' . $code . " " . $http_status_reason[$code]);
 curl_close($ch);
 
 echo $data;

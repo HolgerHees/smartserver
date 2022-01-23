@@ -2,15 +2,6 @@
 body, body * {
     max-height: 1000000px;
 }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Neue Haas Grotesk Text Pro", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    font-size: 16px;
-    background-color: white;
-    margin: 0;
-}
-body.dark {
-    background-color: #202124;
-}
 @media only screen and (max-width: 600px) {
     div.header.table:not(.sticky) {
         display: flex;

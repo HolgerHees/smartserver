@@ -20,25 +20,11 @@ class Repository(Os):
     ImageMagick.x86_64          6.9.9.38-1.fc26      updates                 
     '''
     def __init__(self):                              
-        result = subprocess.run([ "/usr/bin/needrestart -r i" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        result.stdout.decode("utf-8").strip().split("\n")
-        self.needs_restart = False
-        self.outdated = []
+        self.needs_restart = None
+        self.outdated = None
 
-    def getLastUpdate(self):
-        # get last update
-        result = subprocess.run([ "/usr/bin/dnf history list last" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        lines = result.stdout.decode("utf-8").strip().split("\n")
-        lines = reversed(lines)
-        self.current_version = ""
-        for line in lines: 
-            columns = line.split(" | ")
-            
-            date = datetime.strptime(columns[2], self.HISTORY_FORMAT)
-            self.current_version = date.strftime(self.VERSION_FORMAT)
-            break
-
-        return self.current_version
+    def getSystemUpdateCmd(self):
+        return [ "/usr/bin/dnf update -y", "dnf" ]
 
     def getUpdates(self, last_updates):
         # get repositories
@@ -55,20 +41,45 @@ class Repository(Os):
         result = subprocess.run([ "/usr/bin/dnf -y list updates" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         lines = result.stdout.decode("utf-8").strip().split("\n")
         lines = reversed(lines)
-        self.updates = []
+        updates = []
         for line in lines:
             columns = re.sub(r"\s+", " ", line).split(" ")
             
             if len(columns) < 3 or columns[2] not in repositories:
                 break
             columns = [ele.strip() for ele in columns]
-            self.updates.append({'repository': columns[2], 'name': columns[0], 'current': None, 'update': columns[1], "arch": "" })
+            updates.append({'repository': columns[2], 'name': columns[0], 'current': None, 'update': columns[1], "arch": "" })
 
-        return self.updates
+        return updates
       
-    def getRebootState(self):
-        return self.needs_restart
+    def getLastUpdate(self):
+        # get last update
+        result = subprocess.run([ "/usr/bin/dnf history list last" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        lines = result.stdout.decode("utf-8").strip().split("\n")
+        lines = reversed(lines)
+        current_version = ""
+        for line in lines: 
+            columns = line.split(" | ")
+            
+            date = datetime.strptime(columns[2], self.HISTORY_FORMAT)
+            current_version = date.strftime(self.VERSION_FORMAT)
+            break
+
+        return current_version
+      
+    def __initSystemState__(self):
+        result = subprocess.run([ "/usr/bin/needrestart -r i" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        result.stdout.decode("utf-8").strip().split("\n")
+        self.needs_restart = False
+        self.outdated = []
 
     def getOutdatedProcesses(self):
+        if self.outdated is None:
+            self.__initSystemState__()
         return self.outdated
+  
+    def getRebootState(self):
+        if self.needs_restart is None:
+            self.__initSystemState__()
+        return self.needs_restart
 

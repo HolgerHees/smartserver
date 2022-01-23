@@ -35,6 +35,7 @@
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon/config" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_daemon" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_daemon/" }
 
 - name: copy tool
   copy:
@@ -120,6 +121,15 @@
     hour: "3"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   
+- name: create cleanup cron job
+  vars:
+    name: "System update cleanup"
+    cmd: "ls -1t {{global_log}}update_daemon/*.log | tail -n +50 | xargs rm -f"
+    file: "ansible_update_daemon"
+    hour: "0"
+    minute: "40"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
 - name: "create systemd service"
   template:
     src: "templates/etc/systemd/system/update_daemon.service"

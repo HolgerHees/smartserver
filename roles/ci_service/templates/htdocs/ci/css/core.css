@@ -1,104 +1,98 @@
-div.table {
+div.form.table {
   width: 100%;
   max-width: 800px;
-  margin: 10px auto;
+  margin: auto;
   font-size: 16px;
   overflow: auto;
 }
-div.table > div.row {
-  display: table-row;
+div.form.table > div.row {
   cursor: pointer;
 }
-div.table > div.row:hover {
-  background-color: #f2f2f2;
-}
-body.dark div.table > div.row:hover {
-  background-color: rgba(51,122,183,.20);
-}
-div.table > div.row > div {
+div.form.table > div.row > div {
   padding: 10px;
   text-align: left;
   vertical-align: top;
   display: table-cell;
   color: #333;
+  white-space: normal;
 }
-body.dark div.table > div.row > div {
+body.dark div.form.table > div.row > div {
   color: #eee;
 }
-div.table > div.row > div {
+div.form.table > div.row > div {
   width: 1%;
 }
-div.table > div.row > div.subject {
+div.form.table > div.row > div.subject {
   width: auto;
   min-width:100px;
 }
-div.table > div.row > div.subject > div{
+div.form.table > div.row > div.subject > div{
   max-height: 43px;
   overflow-y: hidden;
   line-height: 22px;
 }
-div.table > div.row > div:last-child {
+div.form.table > div.row > div:last-child {
   text-align: right;
 }
-div.table > div.row > div:first-child {
+div.form.table > div.row > div:first-child {
   width: 5px;
 }
-div.table > div.row > div > span {
+div.form.table > div.row > div > span {
   display: block;
   margin-top: 5px;
 }
-div.table > div.row > div > span:first-child {
+div.form.table > div.row > div > span:first-child {
   margin-top: 0;
 }
-div.table > div.row > div.running {
+div.form.table > div.row > div.running {
   background-color: #ffd768;
 }
-div.table > div.row > div > span.state.running {
+div.form.table > div.row > div > span.state.running {
   color: #ffd768;
 }
-div.table > div.row > div.success {
-  background-color: #b5ce69;
+div.form.table > div.row > div.success {
+  background-color: var(--color-green);
 }
-div.table > div.row > div > span.state.success {
-  color: #b5ce69;
+div.form.table > div.row > div > span.state.success {
+  color: var(--color-green);
 }
-div.table > div.row > div.stopped {
+div.form.table > div.row > div.stopped {
   background-color: #959595;
 }
-div.table > div.row > div > span.state.stopped {
+div.form.table > div.row > div > span.state.stopped {
   color: #959595;
 }
-div.table > div.row > div.retry {
+div.form.table > div.row > div.retry {
   background-color: #541edc;
 }
-div.table > div.row > div > span.state.retry {
+div.form.table > div.row > div > span.state.retry {
   color: #541edc;
 }
-div.table > div.row > div.failed {
-  background-color: #ff7479;
+div.form.table > div.row > div.failed {
+  background-color: var(--color-red);
 }
-div.table > div.row > div > span.state.failed {
-  color: #ff7479;
+div.form.table > div.row > div > span.state.failed {
+  color: var(--color-red);
 }
-div.table > div.row > div > span.state, 
-div.table > div.row > div > span.hash {
+div.form.table > div.row > div > span.state, 
+div.form.table > div.row > div > span.hash {
   display: flex;
   justify-content: space-between;
 }
-div.table > div.row > div > span.hash {
+div.form.table > div.row > div > span.hash {
    cursor: pointer;
 }
-div.table > div.row > div > span.state > span.text {
+div.form.table > div.row > div > span.state > span.text {
   padding-right: 5px;
 }
-div.table > div.row > div > span.runtime, 
-div.table > div.row > div > span.datetime, 
-div.table > div.row > div > span.author, 
-div.table > div.row > div > span.state, 
-div.table > div.row > div > span.hash {
+div.form.table > div.row > div > span.runtime, 
+div.form.table > div.row > div > span.datetime, 
+div.form.table > div.row > div > span.author, 
+div.form.table > div.row > div > span.state, 
+div.form.table > div.row > div > span.hash {
   white-space: nowrap;
 }
-div.table > div.row > div > span.state > span.icon-dot:before {
+div.form.table > div.row > div > span.state > span.icon-dot:before {
   font-size: 40px;
   margin: -12px -8px -10px -5px;
 }

@@ -1,0 +1,92 @@
+.form.button {
+  font-size: 16px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  letter-spacing: .15px;
+  outline: 0;
+  padding: 10px 24px;
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  color: var(--light-button-text);
+  display: inline-block;
+}
+body.dark .form.button {
+    color: var(--dark-button-text);
+}
+@media (hover: hover) {
+    .form.button:hover:not(.disabled) {
+        background-color: var(--light-button-hover-bg);
+    }
+    body.dark .form.button:hover:not(.disabled) {
+        background-color: var(--dark-button-hover-bg);
+    }
+}
+body.dark .form.button:focus {
+    outline: none;
+}
+.form.button.disabled {
+    opacity: 0.5;
+}
+.form.button:active:not(.disabled) {
+    background-color: var(--light-button-active-bg);
+    border-color: transparent;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);
+    -webkit-tap-highlight-color: transparent;
+}
+body.dark .form.button:active:not(.disabled) {
+    background-color: var(--dark-button-active-bg);
+}
+.form.button.red {
+    background-color: var(--color-red) !important;
+}
+.form.button.red:hover:not(.disabled) {
+    filter: brightness(0.9);
+}
+.form.button.red:active:not(.disabled) {
+    filter: brightness(0.8);
+}
+.form.button.yellow {
+    background-color: var(--color-yellow) !important;
+}
+.form.button.yellow:hover:not(.disabled) {
+    filter: brightness(0.9);
+}
+.form.button.yellow:active:not(.disabled) {
+    filter: brightness(0.8);
+}
+div.form.table {
+  border-top: 1px solid #d2d2d2;
+}
+div.form.table > div.row > div:first-child {
+  border-left: 1px solid #d2d2d2;
+} 
+div.form.table > div.row > div:last-child {
+  border-right: 1px solid #d2d2d2;
+} 
+div.form.table > div.row > div {
+  border-bottom: 1px solid #d2d2d2;
+} 
+div.form.table {
+  font-size: 16px;
+  overflow: auto;
+}
+div.form.table > div.row {
+  display: table-row;
+}
+div.form.table > div.row:hover {
+  background-color: #f2f2f2;
+}
+body.dark div.form.table > div.row:hover {
+  background-color: rgba(51,122,183,.20);
+}
+div.form.table > div.row > div {
+  display: table-cell;
+  padding: 10px;
+  text-align: left;
+  color: #333;
+  white-space: nowrap;
+}
+body.dark div.form.table > div.row > div {
+  color: #eee;
+}

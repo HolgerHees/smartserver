@@ -33,6 +33,8 @@ else
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
+<link rel="stylesheet" href="/main/css/shared_root.css">
+<link rel="stylesheet" href="/main/css/shared_ui.css">
 <link rel="stylesheet" href="./css/core.css">
 <link rel="stylesheet" href="./css/details.css">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
@@ -73,7 +75,7 @@ mx.OnDocReady.push( initPage );
     if( theme ) document.body.classList.add(theme);
 </script>
 <?php
-    echo '<div class ="header table">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.CIDetails.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
+    echo '<div class ="header form table">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.CIDetails.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
     
     foreach( $job->getLines() as $line )
     {

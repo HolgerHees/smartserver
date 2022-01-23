@@ -51,6 +51,7 @@
       openhab: "{{server_ip}}" # fix to make openhab reachable
       netdata: "{{server_ip}}" # fix to make netdata reachable
     volumes:
+      - '/opt/shared/php:/opt/shared/php:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'
       - '{{global_lib}}update_daemon:{{global_lib}}update_daemon:z'

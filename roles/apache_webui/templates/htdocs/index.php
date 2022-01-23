@@ -986,7 +986,7 @@ function getVersion($path,$suffixes)
             if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )
             {
         ?>
-        <a class="logout" href="/auth/logout/" data-i18n="Logout"></a>
+        <a class="logout form button" href="/auth/logout/" data-i18n="Logout"></a>
         <?php
             }
         ?>

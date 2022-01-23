@@ -1,35 +1,35 @@
-div.table {
+div.form.table {
   width: 100%;
   max-width: 800px;
-  margin: 10px auto;
+  margin: auto;
 }
-div.table > div.row:first-child > div {
+div.form.table > div.row:first-child > div {
     font-weight: bold;
 }
-div.table > div.row > div:first-child {
+div.form.table > div.row > div:first-child {
     width: 5px;
     min-width: 5px;
     padding: 2px;
 }
-div.table > div.row > div:first-child,
-body.dark div.table > div.row > div:first-child {
+div.form.table > div.row > div:first-child,
+body.dark div.form.table > div.row > div:first-child {
     color: #666;
 }
-div.table > div.row:first-child > div:first-child {
+div.form.table > div.row:first-child > div:first-child {
     background-color: #aaa;
     text-align: center;
 }
-div.table > div.row.red > div:first-child {
-    background-color: #ff7479;
+div.form.table > div.row.red > div:first-child {
+    background-color: var(--color-red);
 }
-div.table > div.row.yellow > div:first-child  {
-    background-color: #ffd768;
+div.form.table > div.row.yellow > div:first-child  {
+    background-color: var(--color-yellow);
 }
 
-div.table > div.row.green > div:first-child  {
-    background-color: #b5ce69;
+div.form.table > div.row.green > div:first-child  {
+    background-color: var(--color-green);
 }
-div.table > div.row > div:nth-child(2) {
+div.form.table > div.row > div:nth-child(2) {
     width: 100%;
     white-space: normal; 
 }

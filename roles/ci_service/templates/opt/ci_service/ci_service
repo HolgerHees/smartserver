@@ -15,6 +15,8 @@ from ci import log
 
 import pexpect 
 
+sys.path.insert(0, "/opt/shared/python")
+
 server_host = "{{server_domain}}"
 
 status_file = "{{global_tmp}}ci_service.status"

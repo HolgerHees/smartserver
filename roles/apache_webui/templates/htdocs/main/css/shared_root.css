@@ -1,0 +1,92 @@
+:root {
+  --light-bg: white;
+  --dark-bg: #202124;
+  
+  --light-header-bg: rgba(85,118,210,0.3);
+  --dark-header-bg: rgba(25,118,210,0.3);
+  
+  --light-fullsize-header-bg: rgba(0,0,0,0.7);
+  --dark-fullsize-header-bg: rgba(0,0,0,0.7);
+  
+  --light-panel-header-bg: #1976D2;
+  --dark-panel-header-bg: rgba(25,118,210,0.3);
+
+  --light-menu-headline-color: #1976D2;
+  --light-menu-border-color: #1976D2;
+  --dark-menu-headline-color: #e7e9ec;
+  --dark-menu-border-color: #383a3e;
+
+  --light-embed-progress: #555;
+  --dark-embed-progress: #777;
+  
+  --light-button-text: #3c4043;
+  --light-button-hover-bg: #f7f8f8;
+  --light-button-active-bg: #e8e8e9;
+  --dark-button-text: #fff;
+  --dark-button-hover-bg: rgba(25,118,210,0.12);
+  --dark-button-active-bg: rgba(25,118,210,0.3);
+
+  --light-menu-text: #111;
+  --dark-menu-text: #fff;
+  
+  --light-menu-hover-bg: rgba(51,122,183,.12);
+  --light-menu-active-bg: rgba(51,122,183,.22);
+  --dark-menu-hover-bg: rgba(51,122,183,.20);
+  --dark-menu-active-bg: rgba(51,122,183,.30);
+
+  --light-content-nobackground-text: #111;
+  --light-content-background-text: white;
+  --light-content-image-text: rgba(255,255,255,.85);
+  --light-content-nobackground-info: rgba(40,40,40,.9);
+  --light-content-background-info: rgba(255,255,255,.9);
+  --light-content-hover-bg: rgba(255,255,255,0.2);
+  --light-content-active-text: #444;
+  --light-content-active-bg: rgba(51,122,183,.12);
+  --dark-content-nobackground-text: #bbb;
+  --dark-content-background-text: #fff;
+  --dark-content-image-text: rgba(255,255,255,.85);
+  --dark-content-nobackground-info: rgba(255,255,255,.3);
+  --dark-content-background-info: rgba(255,255,255,.9);
+  --dark-content-hover-bg: rgba(255,255,255,0.2);
+  --dark-content-active-text: #444;
+  --dark-content-active-bg: rgba(51,122,183,.12);
+
+  --alarm-button-default: white;
+  --alarm-button-warn: #fe7d37;
+  --alarm-button-error: #db4437;
+  --alarm-button-disabled: #db4437;
+  
+  --menu-panel-layer: black;
+  --info-panel-layer: rgba(0,0,0,0);
+  --info-panel-text: white;
+  
+  --image-watcher-text: yellow;
+  --image-watcher-bg: black;
+  
+  --color-red: #ff7479;
+  --color-yellow: #ffd768;
+  --color-green: #b5ce69;
+}
+
+html {
+    height: 100%;
+    box-sizing: border-box;
+}
+body {
+    background-color: var(--light-bg);
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+       -moz-user-select: none; /* Firefox */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+body.dark {
+    background-color: var(--dark-bg);
+} 
+body.inline {
+   padding-top: 10px;
+}

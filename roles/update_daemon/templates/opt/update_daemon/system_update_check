@@ -13,8 +13,10 @@ from config import config
 limit_step = None
 if len(sys.argv) >= 2:
     limit_step = sys.argv[1]
+    
+update_time = "{}Z".format(datetime.now().utcnow().isoformat('T'))
 
-state_template = {"os_updates": [], "os_outdated_processes": [], "os_reboot": False, "smartserver_code": False, "smartserver_changes": []}
+state_template = {"last_system_state": update_time, "last_system_update": update_time, "last_deployment_update": update_time, "os_updates": [], "os_outdated": [], "os_reboot": False, "smartserver_code": False, "smartserver_changes": []}
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
     with open(config.system_update_state_file, 'r') as f:
@@ -22,6 +24,8 @@ if os.path.isfile(config.system_update_state_file):
 last_states = {**state_template, **last_states}
 
 state = last_states
+state = {i:j for i,j in state.items() if i in state_template}
+
 update_message_r = []
 
 # **** SYSTEM CHECK **********************************************
@@ -31,6 +35,8 @@ if limit_step is None or limit_step == "system_state" or limit_step == "system_u
     repo = plugin.Repository()
 
 if limit_step is None or limit_step == "system_state":
+    state["last_system_state"] = update_time
+
     state["os_reboot"] = repo.getRebootState()
     if not state["os_reboot"]:
       print( "  - \033[0;32mno reboot required\033[0m")
@@ -44,6 +50,8 @@ if limit_step is None or limit_step == "system_state":
       print( "  - \033[1;31mhas outdated processes\033[0m")
 
 if limit_step is None or limit_step == "system_update":
+    state["last_system_update"] = update_time
+
     state["os_updates"] = repo.getUpdates()
     if len(state["os_updates"]) == 0:
       print( "  - \033[0;32mis updates\033[0m")
@@ -63,6 +71,8 @@ if    ( len(state["os_updates"]) > 0 and len(last_states["os_updates"]) != len(s
 
 # **** SMARTSERVER ***********************************************
 if limit_step is None or limit_step == "deployment_updates":
+    state["last_deployment_update"] = update_time
+
     print("Smartserver")
     
     # git add files (intent to add)  
