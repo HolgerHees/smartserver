@@ -5,6 +5,7 @@ import pathlib
 import glob
 import os
 import re
+import sys
 
 from datetime import datetime
 from datetime import timedelta
@@ -13,6 +14,8 @@ from ci import helper
 from ci import virtualbox
 from ci import status
 from ci import log
+
+sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.logfile import LogFile
 
