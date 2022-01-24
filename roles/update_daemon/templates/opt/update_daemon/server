@@ -201,7 +201,7 @@ class Handler():
         if self.current_cmd_type and active_cmd_type is None:
             if self.invalid_state_file_time is None:
                 self.invalid_state_file_time = datetime.now()
-            elif (datetime.now() - self.invalid_state_file_time).total_seconds() > 15:
+            elif (datetime.now() - self.invalid_state_file_time).total_seconds() > 600:
                 app.logger.warn(u"Clean job state. Related processes are not running anymore. Maybe they crashed")
                 self.unlock(1)
         else:
