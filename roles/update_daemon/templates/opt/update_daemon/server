@@ -65,7 +65,7 @@ class Handler():
     def unlock(self, exit_code):
         self.last_exit_code = exit_code
         self.last_cmd_type = self.current_cmd_type
-        self.last_duration = ( datetime.now() - self.current_started ).total_seconds()
+        self.last_duration = ( datetime.now() - self.current_started ).total_seconds() if self.current_started is not None else 0 # 'None' can happen on server restart
         
         self.current_cmd_type = None
         self.current_started = None
