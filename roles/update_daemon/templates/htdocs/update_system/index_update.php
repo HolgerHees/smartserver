@@ -12,8 +12,8 @@ else
 }
    
 # test data
-$data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test", "service" => "device_ping" ];
-$data->os_updates[] = (object) ["name" => "test", "current" => "1.0", "update" => "2.0", "arch" => "x86_64" ];
+#$data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test", "service" => "device_ping" ];
+#$data->os_updates[] = (object) ["name" => "test", "current" => "1.0", "update" => "2.0", "arch" => "x86_64" ];
 
 $needs_system_reboot = false;
 $service_restarts = [];
