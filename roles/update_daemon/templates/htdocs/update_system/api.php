@@ -28,25 +28,25 @@ if( !in_array("admin",$groups) )
 }
 
 $entityBody = file_get_contents('php://input');
-$data = json_decode($entityBody);
+$data = json_decode($entityBody, true);
 
-if( !$data || empty($data->action) )
+if( !$data || empty($data["action"]) )
 {
     header('HTTP/1.0 404 Not Found');
     echo 'Action not found';
     exit;
 }
 
-$action = $data->action;
+$action = $data["action"];
 
 $post = [];
-if( !empty($data->parameter) )
+if( !empty($data["parameter"]) )
 {
-    $post['parameter'] = $data->parameter;
+    $post = $data["parameter"];
 }
 
 $ch = curl_init("http://".$daemon_ip.":8505/" . $action . '/' ); // such as http://example.com/example.xml
-curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, 0);
 $data = curl_exec($ch);

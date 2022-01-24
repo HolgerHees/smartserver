@@ -24,7 +24,7 @@ class Repository(Os):
         self.outdated = None
 
     def getSystemUpdateCmd(self):
-        return [ "/usr/bin/dnf update -y", "dnf" ]
+        return "/usr/bin/dnf update -y"
 
     def getUpdates(self, last_updates):
         # get repositories

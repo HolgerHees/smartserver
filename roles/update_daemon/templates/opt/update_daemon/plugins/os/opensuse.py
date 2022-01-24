@@ -15,7 +15,7 @@ class Repository(Os):
         self.outdated = None
 
     def getSystemUpdateCmd(self):
-        return [ "/usr/bin/zypper dup -y", "zypper" ]
+        return "/usr/bin/zypper dup -y"
 
     def getUpdates(self):
         # get updates

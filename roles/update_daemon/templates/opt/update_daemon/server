@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from flask import Flask, request, make_response
+import logging
 
 import pexpect 
 import subprocess
@@ -11,6 +12,7 @@ import os
 import importlib
 from datetime import datetime
 from json.decoder import JSONDecodeError
+from pexpect.exceptions import EOF, TIMEOUT
 
 from config import config
 
@@ -25,49 +27,72 @@ cmd_request_reboot = "reboot"
 cmd_check_reboot = "runlevel | grep \"6\""
 
 cmd_mapping = {
-    "ansible-playbook": "smartserver deployment",
-    "system_update_check": "daemon process",
+    "system_update_check": "update check",
     "service_restart": "service restart",
-    "rpm": "system update",
-    "yum": "system update",
-    "apt": "system update",
-    "dnf": "system update",
-    "zypper": "system update",
-    "systemctl": "service restart"
+    "system_reboot": "system reboot",
+    "system_update": "system update",
+    "deployment_update": "deployment update",
+}
+
+process_mapping = {
+    "system_update_check": "system_update_check",
+    "systemctl": "service_restart",
+    "rpm": "system_update",
+    "yum": "system_update",
+    "apt": "system_update",
+    "dnf": "system_update",
+    "zypper": "system_update",
+    "ansible": "deployment_update",
 }
 
 START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
 class Handler():
     def __init__(self):
+        self.current_cmd_type = None
+        self.current_started = None
+      
         self.last_exit_code = 0
         self.last_cmd_type = None
-        self.last_cmd_name = None
+        self.last_duration = 0
+        
         self.invalid_state_file_time = None
 
-    def createStateFile(self, cmd_type):
-        with open(config.job_state_file, 'w') as f:
-            json.dump({"cmd_type": cmd_type}, f)
+    def lock(self, cmd_type):
+        self.current_cmd_type = cmd_type
+        self.current_started = datetime.now()
 
-    def removeStateFile(self, exit_code,cmd_type):
+    def unlock(self, exit_code):
         self.last_exit_code = exit_code
-        self.last_cmd_type = cmd_type
-        self.last_cmd_name = cmd_mapping[cmd_type]
+        self.last_cmd_type = self.current_cmd_type
+        self.last_duration = ( datetime.now() - self.current_started ).total_seconds()
+        
+        self.current_cmd_type = None
+        self.current_started = None
 
-        os.unlink(config.job_state_file)
-
-    def buildResult(self, status, is_running, running_type, cmd_name, last_data_mtime):
+    def buildSuccessResult(self, running_type, cmd_type):
+        update_state_file_stat = os.stat(config.system_update_state_file)
+        last_data_mtime = update_state_file_stat.st_mtime
+        
         return json.dumps({ 
             "status": 0, 
-            "is_running": is_running, 
-            "running_type": running_type, 
-            "cmd_name": cmd_name, 
-            "last_modified": last_data_mtime,
-            "last_status": self.last_exit_code, 
-            "last_cmd_name": self.last_cmd_name
+            "job_is_running": running_type is not None, 
+            "job_running_type": running_type, 
+            "job_cmd_name": cmd_mapping[cmd_type] if cmd_type is not None else "", 
+            "job_started": self.current_started.isoformat() if self.current_started is not None else None, 
+            "last_job_status": self.last_exit_code, 
+            "last_job_cmd_name": cmd_mapping[self.last_cmd_type] if self.last_cmd_type is not None else "",
+            "last_job_duration": self.last_duration,
+            "last_data_modified": last_data_mtime
         })
 
-    def run(self, cmd, cmd_type, post_system_update = None):
+    def buildErrorResult(self, status, message):
+        return json.dumps({ 
+            "status": status, 
+            "message": message
+        })
+
+    def run(self, cmd, cmd_type, post_system_update, interaction, cwd):
         start_time = datetime.now()
         start_time_str = start_time.strftime(START_TIME_STR_FORMAT)
         job_log_file = u"{}{}-{}.log".format(config.job_log_folder,start_time_str,cmd_type)
@@ -77,7 +102,27 @@ class Handler():
                 app.logger.info(u"Start cmd '{}'".format(cmd))
 
                 lf = LogFile(f)
-                (cmd_output,exit_status) = pexpect.run(cmd, timeout=1800, logfile=lf, withexitstatus=True)
+                child = pexpect.spawn(cmd, timeout=3600, cwd=cwd)
+                child.logfile_read = lf
+                
+                if interaction is not None:
+                    patterns = list(interaction.keys())
+                    responses = list(interaction.values())
+                else:
+                    patterns = None
+                    responses = None
+                    
+                while child.isalive():
+                    try:
+                        index = child.expect(patterns)
+                        child.sendline(responses[index])
+                    except TIMEOUT:
+                        break
+                    except EOF:
+                        break
+
+                child.close()
+                exit_status = child.exitstatus
 
                 duration = datetime.now() - start_time
                 f.write("\n")
@@ -93,8 +138,12 @@ class Handler():
                     app.logger.info(u"Start post cmd '{}'".format(post_cmd))
 
                     f.write("\n")
-
-                    (post_cmd_output,exit_status) = pexpect.run(post_cmd, timeout=1800, logfile=lf, withexitstatus=True)
+                    
+                    child = pexpect.spawn(post_cmd, timeout=180, cwd=cwd)
+                    child.logfile_read = lf
+                    child.wait()
+                    child.close()
+                    exit_status = child.exitstatus
 
                     duration = datetime.now() - start_time
                     f.write("\n")
@@ -106,30 +155,30 @@ class Handler():
                 #app.logger.warn(traceback.format_exc())
                 pass
               
-        self.removeStateFile(exit_status, cmd_type)
+        self.unlock(exit_status)
         
         return exit_status
 
-    def startCommand(self, cmd, cmd_type, post_system_update = None):
+    def startCommand(self, cmd, cmd_type, post_system_update, interaction, cwd):
         active_cmd_type = self.checkProcesses()
         if active_cmd_type is None:
-            self.createStateFile(cmd_type)
+            self.lock(cmd_type)
+            exit_status = run(cmd, cmd_type, post_system_update, interaction, cwd)
+            self.unlock(exit_status)
 
-            exit_status = run(cmd, cmd_type, post_system_update)
-            
-            update_state_file_stat = os.stat(config.system_update_state_file)
-            update_state_file_mtime = update_state_file_stat.st_mtime
-
-            return self.buildResult(exit_status, False, "", "", update_state_file_mtime )
+            if exit_status == 0:
+                return self.buildSuccessResult(False,None)
+            else:
+                return self.buildErrorResult(exit_status, "Command '{}' exited with code '{}'".format(cmd,exit_status) )
         else:
             return state()
           
-    def startThread(self, cmd, cmd_type, post_system_update = None):
+    def startThread(self, cmd, cmd_type, post_system_update, interaction, cwd):
         active_cmd_type = self.checkProcesses()
         if active_cmd_type is None:
-            self.createStateFile(cmd_type)
+            self.lock(cmd_type)
             
-            thread = threading.Thread(target=self.run, args=(cmd, cmd_type, post_system_update, ))
+            thread = threading.Thread(target=self.run, args=(cmd, cmd_type, post_system_update, interaction, cwd, ))
             thread.start()
         return state()
 
@@ -137,57 +186,30 @@ class Handler():
         result = subprocess.run([ cmd_processlist ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         stdout = result.stdout.decode("utf-8")
         active_cmd_type = None
-        for term in cmd_mapping:
+        for term in process_mapping:
             if "{} ".format(term) in stdout:
-                active_cmd_type = term
+                active_cmd_type = process_mapping[term]
                 break
         return active_cmd_type
       
     def getState(self):
-        state_template = {"cmd_type": None}
-        state = {}
-        if os.path.isfile(config.job_state_file):
-            with open(config.job_state_file, 'r') as f:
-                try:
-                    state = json.load(f)
-                except JSONDecodeError:
-                    pass
-                    
-        state = {**state_template, **state}
-        
         active_cmd_type = self.checkProcesses()
         
-        if state["cmd_type"] and active_cmd_type is None:
+        if self.current_cmd_type and active_cmd_type is None:
             if self.invalid_state_file_time is None:
                 self.invalid_state_file_time = datetime.now()
             elif (datetime.now() - self.invalid_state_file_time).total_seconds() > 15:
-                app.logger.warn(u"Clean job state file. Related processes are not running anymore. Maybe they crashed")
-                self.removeStateFile(1,state["cmd_type"])
-                state = state_template
+                app.logger.warn(u"Clean job state. Related processes are not running anymore. Maybe they crashed")
+                self.unlock(1)
         else:
             self.invalid_state_file_time = None
             
-        is_running = state["cmd_type"] or active_cmd_type is not None
-        if state["cmd_type"]:
-            running_type = "daemon"
-        elif is_running:
-            running_type = "manual"
-            self.last_exit_code = 0
-            self.last_cmd_type = None
-            self.last_cmd_name = None
+        if self.current_cmd_type:
+            return self.buildSuccessResult("daemon",self.current_cmd_type)
+        elif active_cmd_type:
+            return self.buildSuccessResult("manual",active_cmd_type)
         else:
-            running_type = None
-        cmd_type = active_cmd_type if active_cmd_type is not None else state["cmd_type"]
-        
-        update_state_file_stat = os.stat(config.system_update_state_file)
-        update_state_file_mtime = update_state_file_stat.st_mtime
-        
-        #result = subprocess.run([ cmd_check_reboot ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        #reboot_in_progress = True if result.returncode == 0 else False
-        
-        cmd_name = cmd_mapping[cmd_type] if cmd_type else None
-        return self.buildResult(0, is_running, running_type, cmd_name, update_state_file_mtime )
-
+            return self.buildSuccessResult(None, None)
       
 app = Flask(__name__)
 handler = Handler()
@@ -198,38 +220,63 @@ def state():
   
 @app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
-    return handler.startThread(cmd_system_update_check,"system_update_check")
+    return handler.startThread(cmd_system_update_check,"system_update_check",None,interaction=None,cwd=None)
 
 @app.route('/restartService/', methods = ['POST'])
 def restartService():
-    services = request.form["parameter"].split(",")
+    services = request.form["service"].split(",")
     cmd = "{} {}".format(cmd_service_restart, " ".join(services))
-    return handler.startThread(cmd,"service_restart","system_state")
-    #return startCommand(cmd,"service_restart","system_state")
+    return handler.startThread(cmd,"service_restart","system_state",interaction=None,cwd=None)
       
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
-    return make_response("<h2>Not Implemented</h2>", 501)
+    return handler.startThread(cmd,"system_reboot","system_state",interaction=None,cwd=None)
 
 @app.route('/installSystemUpdates/', methods = ['POST'])
 def installSystemUpdates():
     plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
     repo = plugin.Repository()
-    (cmd, cmd_type) = repo.getSystemUpdateCmd()
-    return handler.startThread(cmd, cmd_type,"system_update")
+    cmd = repo.getSystemUpdateCmd()
+    return handler.startThread(cmd, "system_update","system_update",interaction=None,cwd=None)
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
-    #cmd = "ansible-playbook -i config/marvin/server_local.ini server.yml"
-    return make_response("<h2>Not Implemented</h2>", 501)
+    if os.path.isfile(config.deployment_state_file):
+        deployment_state = None
+        with open(config.deployment_state_file, 'r') as f:
+            try:
+                deployment_state = json.load(f)
+            except JSONDecodeError:
+                pass
+        if deployment_state is not None:
+            cmd = "ansible-playbook -i config/{}/{}".format(deployment_state["config"],deployment_state["server"])
+            if "password" in request.form:
+                cmd = "{} --ask-vault-pass".format(cmd) 
+                interaction = {"Vault password:": "{}\n".format(request.form["password"])}
+            else:
+                interaction = None
+            if request.form["tags"]:
+                tags = request.form["tags"]
+                if request.form["confirm"] == "1":
+                    tags = u"{},confirm_deployment".format(tags)
+                cmd = "{} --tags \"{}\"".format(cmd,tags) 
+            cmd = "{} server.yml".format(cmd)
+            
+            return handler.startThread(cmd, "deployment_update","deployment_update",interaction=interaction,cwd=config.git_directory)
+
+        else:
+            return self.buildErrorResult("501", "Deployment state file empty or not readable")
+    else:
+        return self.buildErrorResult("501", "Deployment state file missing")
 
 @app.route('/testSyncCall/', methods = ['POST'])
 def testSyncCall():
-    return handler.startCommand("sleep 15","test")
+    return handler.startCommand("sleep 15","test",interaction=None,cwd=None)
 
 @app.route('/testASyncCall/', methods = ['POST'])
 def testASyncCall():
-    return handler.startThread("sleep 15","test")
+    return handler.startThread("sleep 15","test",interaction=None,cwd=None)
 
 if __name__ == '__main__':
-    app.run(debug=True, host=config.daemon_ip, port='8505')
+    app.logger.setLevel(logging.DEBUG)
+    app.run(debug=False, use_reloader=True, host=config.daemon_ip, port='8505')

@@ -1,0 +1,1 @@
+{"has_encrypted_vault":{{'true' if has_encrypted_vault else 'false'}}, "config": "{{inventory_hostname}}", "server": "{{ansible_inventory_sources[0] | basename}}"} 

@@ -13,6 +13,7 @@ system_update_state_file = "{}system_updates.state".format(target_dir)
 deployment_state_file = "{}deployment.state".format(target_dir)
 
 git_directory = "{{projects_path}}{{project_name}}"
+git_remote = "{{vault_deployment_config_git}}"
 
 global_config = { 
   "github_access_token": "{{vault_deployment_token_git}}"

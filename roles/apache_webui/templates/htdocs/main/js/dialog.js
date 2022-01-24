@@ -36,7 +36,7 @@ mx.Dialog = (function( ret ) {
             button.classList.add("form");
             button.classList.add("button");
             if( cfg["class"] ) button.classList.add(cfg["class"]);
-            button.onclick = function(){ hideDialog(options); if( cfg["callback"] ) cfg["callback"](); };
+            button.onclick = function(){ if( cfg["callback"] ) cfg["callback"](); else hideDialog(options); };
             button.innerHTML = cfg["text"];
             options.elements.contentActions.appendChild(button);
         }

@@ -119,6 +119,7 @@ body.dark div.form.table > div.row > div {
     padding: 15px;
 }
 .dialogLayer .box .header {
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
 }

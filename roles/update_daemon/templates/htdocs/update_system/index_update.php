@@ -1,37 +1,50 @@
 <?php
 require "config.php";
 
-if( file_exists($system_state_file) )
+if( file_exists($deployment_state_file) )
 {
-    $data = file_get_contents($system_state_file);
-    $data = json_decode($data);
+    $deployment_data = file_get_contents($deployment_state_file);
+    $deployment_data = json_decode($deployment_data);
 }
 else
 {
-    $data = array();
+    $deployment_data = array();
+}
+
+$has_encrypted_vault = $deployment_data->has_encrypted_vault;
+
+if( file_exists($system_state_file) )
+{
+    $system_data = file_get_contents($system_state_file);
+    $system_data = json_decode($system_data);
+}
+else
+{
+    $system_data = array();
 }
    
 # test data
-#$data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test", "service" => "device_ping" ];
-#$data->os_updates[] = (object) ["name" => "test", "current" => "1.0", "update" => "2.0", "arch" => "x86_64" ];
+#$system_data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test", "service" => "device_ping" ];
+#$system_data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test1", "service" => "" ];
+#$system_data->os_updates[] = (object) ["name" => "test", "current" => "1.0", "update" => "2.0", "arch" => "x86_64" ];
 
 $needs_system_reboot = false;
 $service_restarts = [];
-foreach( $data->os_outdated as $outdate)
+foreach( $system_data->os_outdated as $outdate)
 {
     if( empty($outdate->service) ) $needs_system_reboot = true;
     else $service_restarts[] = $outdate->service;
 }
 
-$last_system_state = date_create($data->last_system_state);
+$last_system_state = date_create($system_data->last_system_state);
 $last_system_state->setTimezone(new DateTimeZone('Europe/Berlin'));
 $last_system_state_fmt = $last_system_state->format("d.m.Y H:i");
     
-$last_system_update = date_create($data->last_system_update);
+$last_system_update = date_create($system_data->last_system_update);
 $last_system_update->setTimezone(new DateTimeZone('Europe/Berlin'));
 $last_system_update_fmt = $last_system_update->format("d.m.Y H:i");
 
-$last_deployment_update = date_create($data->last_deployment_update);
+$last_deployment_update = date_create($system_data->last_deployment_update);
 $last_deployment_update->setTimezone(new DateTimeZone('Europe/Berlin'));
 $last_deployment_update_fmt = $last_deployment_update->format("d.m.Y H:i");
 
@@ -40,28 +53,26 @@ if( $last_system_update < $last_update ) $last_update = $last_system_update;
 if( $last_deployment_update < $last_update ) $last_update = $last_deployment_update;
 $last_update_fmt = $last_update->format("d.m.Y H:i");
 
-if( $data->os_reboot || $needs_system_reboot )
+if( $system_data->os_reboot || $needs_system_reboot )
 { 
     $rebootNeeded = "<div class=\"info red\">Reboot needed (";
     $reason = [];
-    if( $data->os_reboot ) $reason[] = "installed core updates";
+    if( $system_data->os_reboot ) $reason[] = "installed core updates";
     if( $needs_system_reboot ) $reason[] = "outdated processes";
     $rebootNeeded .= implode(", ", $reason);
-    $rebootNeeded .= ")</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'systemReboot',null,true)\">Reboot system</div></div>";
+    $rebootNeeded .= ")</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.actionRebootSystem(this)\">Reboot system</div></div>";
 }
 else
 {
     $rebootNeeded = "";
 }
 
-if( count($data->os_outdated) > 0 )
+if( count($system_data->os_outdated) > 0 )
 {
 
-    $systemState = "<div class=\"info\">System has " . count($data->os_outdated) . " outdated processes" . ( $last_update_fmt != $last_system_state_fmt ? " " . $last_system_state_fmt : "" ) . "</div><div class=\"buttons\">";
-    if(count($service_restarts)>0) $systemState .= "<div class=\"form button yellow\" onclick=\"mx.UNCore.action(this,'restartService','" . implode(",",$service_restarts) . "',true)\">Restart services</div>";
+    $systemState = "<div class=\"info\">System has " . count($system_data->os_outdated) . " outdated processes</div><div class=\"buttons\">";
+    if(count($service_restarts)>0) $systemState .= "<div class=\"form button yellow\" onclick=\"mx.UNCore.actionRestartServices(this)\" data-service=\"" . implode(",",$service_restarts) . "\">Restart services</div>";
     $systemState .= "<div class=\"form button toggle\" id=\"systemProcesses\" onclick=\"mx.UNCore.toggle(this,'systemStateDetails')\"></div></div>";
-    
-    error_log($systemState);
 
     $systemStateDetails = "<div class=\"row\">
           <div>PID</div>
@@ -72,7 +83,7 @@ if( count($data->os_outdated) > 0 )
           <div class=\"grow\">Service</div>
           <div></div>
         </div>";
-    foreach( $data->os_outdated as $outdate)
+    foreach( $system_data->os_outdated as $outdate)
     {
         $systemStateDetails .= "<div class=\"row\">";
         $systemStateDetails .= "<div>" . $outdate->pid . "</div>";
@@ -81,7 +92,7 @@ if( count($data->os_outdated) > 0 )
         $systemStateDetails .= "<div>" . $outdate->user . "</div>";
         $systemStateDetails .= "<div>" . $outdate->command . "</div>";
         $systemStateDetails .= "<div>" . $outdate->service . "</div>";
-        $systemStateDetails .= "<div>" . ( $outdate->service ? "<div class=\"form button yellow\" onclick=\"mx.UNCore.action(this,'restartService','" . $outdate->service . "',true)\">Restart</div>" : "" ) . "</div>";
+        $systemStateDetails .= "<div>" . ( $outdate->service ? "<div class=\"form button yellow\" onclick=\"mx.UNCore.actionRestartServices(this)\" data-service=\"" . $outdate->service . "\">Restart</div>" : "" ) . "</div>";
         $systemStateDetails .= "</div>";
     }
 }
@@ -91,9 +102,9 @@ else
     $systemStateDetails = "";
 }
 
-if( count($data->os_updates) > 0 )
+if( count($system_data->os_updates) > 0 )
 {
-    $systemUpdate = "<div class=\"info\">" . count($data->os_updates) . " System updates " . ( $last_update_fmt != $last_system_update_fmt ? " " . $last_system_update_fmt : "" ) . "</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'installSystemUpdates',null,true)\">Install updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
+    $systemUpdate = "<div class=\"info\">" . count($system_data->os_updates) . " System updates</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.actionInstallUpdates(this)\">Install updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
 
     $systemUpdateDetails = "<div class=\"row\">
           <div>Name</div>
@@ -101,7 +112,7 @@ if( count($data->os_updates) > 0 )
           <div class=\"grow\">Update</div>
           <div>Arch</div>
         </div>";
-    foreach( $data->os_updates as $update)
+    foreach( $system_data->os_updates as $update)
     {
         $systemUpdateDetails .= "<div class=\"row\">";
         $systemUpdateDetails .= "<div>" . $update->name . "</div>";
@@ -113,19 +124,19 @@ if( count($data->os_updates) > 0 )
 }
 else
 {
-    $systemUpdate = "<div class=\"info green\">No system updates available " . ( $last_update_fmt != $last_system_update_fmt ? " " . $last_system_update_fmt : "") . "</div>";
+    $systemUpdate = "<div class=\"info green\">No system updates available</div>";
     $systemUpdateDetails = "";
 }
 
-if( count($data->smartserver_changes) > 0 )
+if( count($system_data->smartserver_changes) > 0 )
 {
-    $deploymentUpdate = "<div class=\"info\">" . count($data->smartserver_changes) . " Deployment updates " . ( $last_update_fmt != $last_deployment_update_fmt ? " " . $last_deployment_update_fmt : "" ) . "</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.actionSmartserverUpdateDialog(this,'deploySmartserverUpdates')\">Deploy updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'deploymentUpdateDetails')\"></div></div>";
+    $deploymentUpdate = "<div class=\"info\">" . count($system_data->smartserver_changes) . " Deployment updates</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">Deploy updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'deploymentUpdateDetails')\"></div></div>";
 
     $deploymentUpdateDetails = "<div class=\"row\">
           <div>Flag</div>
           <div class=\"grow\">File</div>
         </div>";
-    foreach( $data->smartserver_changes as $update)
+    foreach( $system_data->smartserver_changes as $update)
     {
         $deploymentUpdateDetails .= "<div class=\"row\">";
         $deploymentUpdateDetails .= "<div>" . $update->flag . "</div>";
@@ -137,21 +148,32 @@ if( count($data->smartserver_changes) > 0 )
 }
 else
 {
-    $deploymentUpdate = "<div class=\"info green\">No deployment updates available" . ( $last_update_fmt != $last_deployment_update_fmt ? " " . $last_deployment_update_fmt : "") . "</div>";
+    $deploymentUpdate = "<div class=\"info green\">No deployment updates available</div>";
     $deploymentUpdateDetails = "";
 }
 
-echo "<div id=\"lastUpdates\">Last full refresh " . $last_update_fmt . "</div>";
+$deploymentUpdateInfo = $system_data->smartserver_code;
+$last_smartserver_pull = date_create($system_data->smartserver_pull);
+$last_smartserver_pull->setTimezone(new DateTimeZone('Europe/Berlin'));
+$last_smartserver_pull_fmt = $last_smartserver_pull->format("d.m.Y H:i");
+
+echo "<div id=\"hasEncryptedVault\">" . ( $has_encrypted_vault ? 1 : 0 ) . "</div>";
+echo "<div id=\"lastUpdates\">" . $last_update_fmt . "</div>";
 
 echo "<div id=\"rebootNeeded\">" . $rebootNeeded . "</div>";
 echo "<div id=\"systemState\">" . $systemState . "</div>";
 echo "<div id=\"systemStateDetails\">" . $systemStateDetails . "</div>";
 echo "<div id=\"systemStateTimestamp\">" . $last_system_state->getTimestamp() . "</div>";
+echo "<div id=\"systemStateFmt\">" . $last_system_state_fmt . "</div>";
 
 echo "<div id=\"systemUpdate\">" . $systemUpdate . "</div>";
 echo "<div id=\"systemUpdateDetails\">" . $systemUpdateDetails . "</div>";
 echo "<div id=\"systemUpdateTimestamp\">" . $last_system_update->getTimestamp() . "</div>";
+echo "<div id=\"systemUpdateFmt\">" . $last_system_update_fmt . "</div>";
 
+echo "<div id=\"deploymentUpdateInfo\">" . $deploymentUpdateInfo . "</div>";
 echo "<div id=\"deploymentUpdate\">" . $deploymentUpdate . "</div>";
 echo "<div id=\"deploymentUpdateDetails\">" . $deploymentUpdateDetails . "</div>";
 echo "<div id=\"deploymentUpdateTimestamp\">" . $last_deployment_update->getTimestamp() . "</div>";
+echo "<div id=\"deploymentUpdateFmt\">" . $last_deployment_update_fmt . "</div>";
+echo "<div id=\"deploymentUpdatePullDate\">" . $last_smartserver_pull_fmt . "</div>";
