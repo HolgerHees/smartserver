@@ -55,8 +55,6 @@ class Handler():
         self.last_exit_code = 0
         self.last_cmd_type = None
         self.last_duration = 0
-        
-        self.invalid_state_file_time = None
 
     def lock(self, cmd_type):
         self.current_cmd_type = cmd_type
@@ -198,15 +196,6 @@ class Handler():
     def getState(self):
         active_cmd_type = self.checkProcesses()
         
-        if self.current_cmd_type and active_cmd_type is None:
-            if self.invalid_state_file_time is None:
-                self.invalid_state_file_time = datetime.now()
-            elif (datetime.now() - self.invalid_state_file_time).total_seconds() > 600:
-                app.logger.warn(u"Clean job state. Related processes are not running anymore. Maybe they crashed")
-                self.unlock(1)
-        else:
-            self.invalid_state_file_time = None
-            
         if self.current_cmd_type:
             return self.buildSuccessResult("daemon",self.current_cmd_type)
         elif active_cmd_type:
