@@ -11,6 +11,10 @@ else
     $data = array();
 }
    
+# test data
+$data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test", "service" => "device_ping" ];
+$data->os_updates[] = (object) ["name" => "test", "current" => "1.0", "update" => "2.0", "arch" => "x86_64" ];
+
 $needs_system_reboot = false;
 $service_restarts = [];
 foreach( $data->os_outdated as $outdate)
@@ -43,23 +47,21 @@ if( $data->os_reboot || $needs_system_reboot )
     if( $data->os_reboot ) $reason[] = "installed core updates";
     if( $needs_system_reboot ) $reason[] = "outdated processes";
     $rebootNeeded .= implode(", ", $reason);
-    $rebootNeeded .= ")</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'systemReboot')\">Reboot system</div></div>";
+    $rebootNeeded .= ")</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'systemReboot',null,true)\">Reboot system</div></div>";
 }
 else
 {
     $rebootNeeded = "";
 }
 
-# test data
-#$data->os_outdated[] = (object) ["pid" => 1, "ppid" => 2, "uid" => 3, "user" => "hhees", "command" => "test", "service" => "device_ping" ];
-#$data->os_updates[] = (object) ["name" => "test", "current" => "1.0", "update" => "2.0", "arch" => "x86_64" ];
-
 if( count($data->os_outdated) > 0 )
 {
 
     $systemState = "<div class=\"info\">System has " . count($data->os_outdated) . " outdated processes" . ( $last_update_fmt != $last_system_state_fmt ? " " . $last_system_state_fmt : "" ) . "</div><div class=\"buttons\">";
-    if(count($service_restarts)>0) $systemState ."<div class=\"form button yellow\" onclick=\"mx.UNCore.action(this,'restartService','" . implode(",",$service_restarts) . "')\">Restart services</div>";
+    if(count($service_restarts)>0) $systemState .= "<div class=\"form button yellow\" onclick=\"mx.UNCore.action(this,'restartService','" . implode(",",$service_restarts) . "',true)\">Restart services</div>";
     $systemState .= "<div class=\"form button toggle\" id=\"systemProcesses\" onclick=\"mx.UNCore.toggle(this,'systemStateDetails')\"></div></div>";
+    
+    error_log($systemState);
 
     $systemStateDetails = "<div class=\"row\">
           <div>PID</div>
@@ -79,7 +81,7 @@ if( count($data->os_outdated) > 0 )
         $systemStateDetails .= "<div>" . $outdate->user . "</div>";
         $systemStateDetails .= "<div>" . $outdate->command . "</div>";
         $systemStateDetails .= "<div>" . $outdate->service . "</div>";
-        $systemStateDetails .= "<div>" . ( $outdate->service ? "<div class=\"form button yellow\" onclick=\"mx.UNCore.action(this,'restartService','" . $outdate->service . "')\">Restart</div>" : "" ) . "</div>";
+        $systemStateDetails .= "<div>" . ( $outdate->service ? "<div class=\"form button yellow\" onclick=\"mx.UNCore.action(this,'restartService','" . $outdate->service . "',true)\">Restart</div>" : "" ) . "</div>";
         $systemStateDetails .= "</div>";
     }
 }
@@ -91,7 +93,7 @@ else
 
 if( count($data->os_updates) > 0 )
 {
-    $systemUpdate = "<div class=\"info\">" . count($data->os_updates) . " System updates " . ( $last_update_fmt != $last_system_update_fmt ? " " . $last_system_update_fmt : "" ) . "</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'installSystemUpdates')\">Install updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
+    $systemUpdate = "<div class=\"info\">" . count($data->os_updates) . " System updates " . ( $last_update_fmt != $last_system_update_fmt ? " " . $last_system_update_fmt : "" ) . "</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'installSystemUpdates',null,true)\">Install updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
 
     $systemUpdateDetails = "<div class=\"row\">
           <div>Name</div>
@@ -117,7 +119,7 @@ else
 
 if( count($data->smartserver_changes) > 0 )
 {
-    $deploymentUpdate = "<div class=\"info\">" . count($data->smartserver_changes) . " Deployment updates " . ( $last_update_fmt != $last_deployment_update_fmt ? " " . $last_deployment_update_fmt : "" ) . "</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.action(this,'deploySmartserverUpdates')\">Deploy updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'deploymentUpdateDetails')\"></div></div>";
+    $deploymentUpdate = "<div class=\"info\">" . count($data->smartserver_changes) . " Deployment updates " . ( $last_update_fmt != $last_deployment_update_fmt ? " " . $last_deployment_update_fmt : "" ) . "</div><div class=\"buttons\"><div class=\"form button red\" onclick=\"mx.UNCore.actionSmartserverUpdateDialog(this,'deploySmartserverUpdates')\">Deploy updates</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'deploymentUpdateDetails')\"></div></div>";
 
     $deploymentUpdateDetails = "<div class=\"row\">
           <div>Flag</div>

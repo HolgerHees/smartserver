@@ -52,9 +52,10 @@ class Repository(Os):
     def __initSystemState__(self):
         result = subprocess.run([ "/usr/bin/zypper ps -s" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         result = result.stdout.decode("utf-8").strip()
+        lines = result.split("\n")
         
         # Ein Neustart wird benötigt, um sicher zu stellen, dass ihr System von diesen Updates profitiert.
-        m = re.search('(?!.*nicht).*[Nn]eustart.*|(?!.*not).*(restart|reboot).*', result)
+        m = re.search('(?!.*nicht).*[Nn]eustart.*|(?!.*not).*[Rr]eboot.*', lines[-1])
         self.needs_restart = m is not None
         
         # PID   | PPID  | UID | User     | Command          | Service
@@ -62,7 +63,6 @@ class Repository(Os):
         # 1     | 0     | 0   | root     | systemd          | 
         # 409   | 1     | 0   | root     | systemd-journald | systemd-journald
         outdated = []
-        lines = result.split("\n")
         for line in lines:
             if "|" not in line:
                 continue

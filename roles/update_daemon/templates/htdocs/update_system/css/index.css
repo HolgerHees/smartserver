@@ -48,3 +48,7 @@ div.row div.grow  {
   width: 100%;
   white-space: normal; 
 }
+
+div.dialogLayer .confirmDialog {
+  max-width: 300px;
+}

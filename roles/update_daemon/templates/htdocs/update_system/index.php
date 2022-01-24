@@ -189,13 +189,8 @@ require "config.php";
             }
         }
         
-        ret.action = function(btn, action, parameter )
+        runAction = function(btn, action, parameter)
         {
-            if( btn.classList.contains("disabled") ) 
-            {
-                return;
-            }
-            
             btn.classList.add("disabled");
             
             var xhr = new XMLHttpRequest();
@@ -217,6 +212,48 @@ require "config.php";
             xhr.send(JSON.stringify({"action": action, "parameter": parameter }));
         }
         
+        ret.actionSmartserverUpdateDialog = function(btn, action)
+        {
+            var dialog = mx.Dialog.init({
+                body: "Are you sure?<br>Password: <input name\"password\" type=\"password\" autocomplete=\"off\"><br>Tags: <input name\"tags\">",
+                buttons: [
+                    { "text": "Continue", "class": "red", "callback": function(){ 
+                        //console.log(dialog.getBody().querySelector("").value())
+                        runAction(btn, action, null); 
+                    } },
+                    { "text": "Cancel" },
+                ],
+                class: "confirmDialog",
+                destroy: true
+            });
+            dialog.open();
+        }
+        ret.action = function(btn, action, parameter, confirm )
+        {
+            if( btn.classList.contains("disabled") ) 
+            {
+                return;
+            }
+            
+            if( confirm )
+            {
+                var dialog = mx.Dialog.init({
+                    body: "Are you sure?",
+                    buttons: [
+                        { "text": "Continue", "class": "red", "callback": function(){ runAction(btn, action, parameter); } },
+                        { "text": "Cancel" },
+                    ],
+                    class: "confirmDialog",
+                    destroy: true
+                });
+                dialog.open();
+            }
+            else
+            {
+                runAction(btn, action, parameter);
+            }
+        }
+        
         ret.init = function()
         {
             loadData(function()
@@ -227,7 +264,7 @@ require "config.php";
                     window.setTimeout(function(){ mx.$("#systemProcesses").click(); }, 100 );
                 }
             });
-            refreshDaemonState();
+            refreshDaemonState();            
         }
         return ret;
     })( mx.UNCore || {} );
@@ -237,7 +274,7 @@ require "config.php";
 <div class="widget">
     <h1>System status</h1>
     <div class="action"><div class="info" id="runningState"></div></div>
-    <div class="action"><div class="info" id="lastUpdate"></div><div class="buttons"><div class="form button" onclick="mx.UNCore.action(this,'refreshSystemUpdateCheck')">Refresh</div></div></div>
+    <div class="action"><div class="info" id="lastUpdate"></div><div class="buttons"><div class="form button" onclick="mx.UNCore.action(this,'refreshSystemUpdateCheck',false)">Refresh</div></div></div>
     <div class="action" id="rebootNeeded"></div>
     <div class="action" id="systemState"></div>
     <div class="form table" id="systemStateDetails"></div>

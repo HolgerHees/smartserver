@@ -1,0 +1,15 @@
+- name: prepare needed folder
+  file:
+    path: "/opt/shared/"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+
+- name: copy libs
+  copy:
+    src: "templates/shared/"
+    dest: "/opt/shared/"
+    owner: "root"
+    group: "root"
+    mode: 0750

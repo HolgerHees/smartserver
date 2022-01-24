@@ -25,7 +25,7 @@ cmd_request_reboot = "reboot"
 cmd_check_reboot = "runlevel | grep \"6\""
 
 cmd_mapping = {
-    "ansible": "smartserver deployment",
+    "ansible-playbook": "smartserver deployment",
     "system_update_check": "daemon process",
     "service_restart": "service restart",
     "rpm": "system update",
@@ -138,7 +138,7 @@ class Handler():
         stdout = result.stdout.decode("utf-8")
         active_cmd_type = None
         for term in cmd_mapping:
-            if term in stdout:
+            if "{} ".format(term) in stdout:
                 active_cmd_type = term
                 break
         return active_cmd_type

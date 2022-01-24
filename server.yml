@@ -103,6 +103,8 @@
     
     - { import_role: { name: mosquitto }, tags: [ 'mosquitto' ] }                                # mqtt message broker                                               [docker,user:1883]
 
+    - { import_role: { name: shared_libs }, tags: [ 'shared_libs' ] }                            # php & python libs                                                           
+    
     - { import_role: { name: php }, tags: [ 'php' ] }                                            # php cli                                                           [docker,user:wwwrun|apache]
     
     - { import_role: { name: apache }, tags: [ 'apache' ] }                                      # apache web server & php runtime                                   [docker,user:wwwrun|apache]
