@@ -78,8 +78,9 @@ require "config.php";
                       setToogle(mx.$("#systemState .form.button.toggle"),systemStateDetailsElement);
                       fixScrollHeight(systemStateDetailsElement);
                       
-                      mx.$("#lastSystemStateCheck").innerHTML = "(Last checked " + content.querySelector("#systemStateFmt").innerHTML + ")";
-                      
+                      var last = content.querySelector("#systemStateFmt").innerHTML;
+                      if( last ) mx.$("#lastSystemStateCheck").innerHTML = "(Last checked " + last + ")";
+                      else mx.$("#lastSystemStateCheck").innerHTML = "(Was never checked)";
                   }
                   
                   _last_system_update_modified = content.querySelector("#systemUpdateTimestamp").innerHTML;
@@ -92,7 +93,9 @@ require "config.php";
                       setToogle(mx.$("#systemUpdate .form.button.toggle"),systemUpdateDetailsElement);
                       fixScrollHeight(systemUpdateDetailsElement);
 
-                      mx.$("#lastSystemUpdateCheck").innerHTML = "(Last checked " + content.querySelector("#systemUpdateFmt").innerHTML + ")";
+                      var last = content.querySelector("#systemUpdateFmt").innerHTML;
+                      if( last ) mx.$("#lastSystemUpdateCheck").innerHTML = "(Last checked " + last + ")";
+                      else mx.$("#lastSystemUpdateCheck").innerHTML = "(Was never checked)";
                   }
 
                   _last_deployment_update_modified = content.querySelector("#deploymentUpdateTimestamp").innerHTML;
@@ -105,15 +108,22 @@ require "config.php";
                           "uncommitted": ["red","Skipped git pull (has uncommitted changes)"]
                       };
                       
+                      var deploymentUpdateElement = mx.$("#deploymentUpdateInfo");
                       var deploymentUpdateInfoCode = content.querySelector("#deploymentUpdateInfo").innerHTML;
                       var deploymentUpdateData = deploymentUpdateInfoCodes[deploymentUpdateInfoCode];
-                      var deploymentUpdateElement = mx.$("#deploymentUpdateInfo");
-                      deploymentUpdateElement.innerHTML = deploymentUpdateData[1] + ". Last git pull was on " + content.querySelector("#deploymentUpdatePullDate").innerHTML + ".";
-                      deploymentUpdateElement.classList.remove("green");
-                      deploymentUpdateElement.classList.remove("yellow");
-                      deploymentUpdateElement.classList.remove("red");
-                      deploymentUpdateElement.classList.add(deploymentUpdateData[0]);
-                    
+                      if( deploymentUpdateData )
+                      {
+                          deploymentUpdateElement.style.display = "";
+                          deploymentUpdateElement.innerHTML = deploymentUpdateData[1] + ". Last git pull was on " + content.querySelector("#deploymentUpdatePullDate").innerHTML + ".";
+                          deploymentUpdateElement.classList.remove("green");
+                          deploymentUpdateElement.classList.remove("yellow");
+                          deploymentUpdateElement.classList.remove("red");
+                          deploymentUpdateElement.classList.add(deploymentUpdateData[0]);
+                      }
+                      else
+                      {
+                          deploymentUpdateElement.style.display = "none";
+                      }
                       mx.$("#deploymentUpdate").innerHTML = content.querySelector("#deploymentUpdate").innerHTML;
                       var deploymentUpdateDetailsElement = mx.$("#deploymentUpdateDetails");
                       deploymentUpdateDetailsElement.innerHTML = content.querySelector("#deploymentUpdateDetails").innerHTML;
@@ -121,7 +131,9 @@ require "config.php";
                       setToogle(mx.$("#deploymentUpdate .form.button.toggle"),deploymentUpdateDetailsElement);
                       fixScrollHeight(deploymentUpdateDetailsElement);
 
-                      mx.$("#lastDeploymentUpdateCheck").innerHTML = "(Last checked " + content.querySelector("#deploymentUpdateFmt").innerHTML + ")";
+                      var last = content.querySelector("#deploymentUpdateFmt").innerHTML;
+                      if( last ) mx.$("#lastDeploymentUpdateCheck").innerHTML = "(Last checked " + last + ")";
+                      else mx.$("#lastDeploymentUpdateCheck").innerHTML = "(Was never checked)";
                   }
                   
                   callback();
@@ -177,14 +189,20 @@ require "config.php";
                 refreshDaemonStateTimer = window.setTimeout(refreshDaemonState, 5000);
             }
             
-            var lastRunningElement = mx.$("#lastRunningState");
+            var lastRunningBlock = mx.$("#lastRunningStateBlock");
             if( last_job_cmd_name )
             {
+                lastRunningBlock.style.display = "";
+                var lastRunningElement = mx.$("#lastRunningState");
                 var msg = "Last '" + last_job_cmd_name + "' " + ( last_job_status == "0" ? "was successful" : "failed" );
                 msg += " after " + Math.round(last_job_duration * 10) / 10 + " seconds";
                 lastRunningElement.innerHTML = msg;
                 if( last_job_status == 0 ) lastRunningElement.classList.remove("red");
                 else lastRunningElement.classList.add("red");
+            }
+            else
+            {
+                lastRunningBlock.style.display = "None";
             }
             
             if( has_new_data )
@@ -420,7 +438,7 @@ require "config.php";
 <div class="widget">
     <div class="header"><span>Daemon status</span><span></span></div>
     <div class="action"><div class="info" id="currentRunningState"></div></div>
-    <div class="action"><div class="info" id="lastRunningState"></div></div>
+    <div class="action" id="lastRunningStateBlock"><div class="info" id="lastRunningState"></div></div>
 </div>
 <div class="widget">
     <div class="header"><span>System status</span><span id="lastSystemStateCheck"></span></div>

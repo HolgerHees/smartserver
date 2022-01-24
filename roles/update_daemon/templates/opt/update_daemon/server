@@ -71,9 +71,12 @@ class Handler():
         self.current_started = None
 
     def buildSuccessResult(self, running_type, cmd_type):
-        update_state_file_stat = os.stat(config.system_update_state_file)
-        last_data_mtime = update_state_file_stat.st_mtime
-        
+        if os.path.isfile(config.system_update_state_file):
+            update_state_file_stat = os.stat(config.system_update_state_file)
+            last_data_mtime = update_state_file_stat.st_mtime
+        else:
+            last_data_mtime = 0
+            
         return json.dumps({ 
             "status": 0, 
             "job_is_running": running_type is not None, 
