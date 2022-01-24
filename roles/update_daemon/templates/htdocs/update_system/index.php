@@ -199,7 +199,15 @@ require "config.php";
         {
             if( detailElement.style.maxHeight )
             {
-                detailElement.style.maxHeight = ( detailElement.scrollHeight + 20 ) + "px";
+                if( detailElement.innerHTML )
+                {
+                    detailElement.style.maxHeight = ( detailElement.scrollHeight + 20 ) + "px";
+                }
+                else
+                {
+                    detailElement.style.maxHeight = "";
+                    detailElement.style.display = "";
+                }
             }
         }
         
