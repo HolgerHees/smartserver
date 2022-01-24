@@ -143,11 +143,11 @@ if limit_step is None or limit_step == "deployment_update":
     lines = uncommitted_changes + committed_changes
     lines = [ele.split("\t") for ele in lines]
     
-    #print(uncommitted_changes)
-    #print(committed_changes)
-
     filtered_lines = {}
     for line in lines:
+        if len(line) == 1:
+            continue
+          
         flag, path = line
         
         if flag != "D":
