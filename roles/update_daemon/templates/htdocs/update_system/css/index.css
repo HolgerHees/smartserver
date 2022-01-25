@@ -1,3 +1,6 @@
+#serverNeedsRestart {
+  display:none;
+}
 div.widget {
   width: 100%;
   max-width: 800px;
@@ -73,7 +76,7 @@ div.dialogLayer .confirmDialog .table {
   max-width: 100%;
 }
 div.dialogLayer .confirmDialog .row > div:last-child,
-div.dialogLayer .confirmDialog .row input {
+div.dialogLayer .confirmDialog .row input:not([type='checkbox']) {
   width: 100%;
   box-sizing: border-box;
 }

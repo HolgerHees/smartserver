@@ -134,3 +134,77 @@ body.dark div.form.table > div.row > div {
 .dialogLayer .box .actions .form.button {
     margin-left: 5px;
 }
+
+/* AUTOCOMPLETE */
+.autoCompleteLayer {
+    display: none;
+    opacity: 0;
+    position: absolute;
+    z-index: 100001;
+    background-color: var(--light-bg);
+    max-height: 200px;
+    overflow-y: auto;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-left: 1px solid #dadce0;
+    border-right: 1px solid #dadce0;
+    border-bottom: 1px solid #dadce0;
+    transition: opacity 100ms linear;
+}
+.autoCompleteLayer > div.separator {
+    height: 1px;
+    border-bottom: 1px solid #dadce0;
+}
+.autoCompleteLayer > div.row {
+    display: block;
+    font-size: 12px;
+    padding: 2px;
+    cursor: pointer;
+}
+.autoCompleteLayer > div.row:hover {
+    background-color: #f2f2f2;
+}
+.autoCompleteLayer > div.row.term {
+    color: #666;
+    font-style: italic;
+}
+.autoCompleteLayer > div.row.active {
+  background-color: rgba(51,122,183,.20);
+}
+body.dark .autoCompleteLayer > div:hover {
+  background-color: rgba(51,122,183,.20);
+}
+.autoCompletionSelection {
+    display: none;
+    flex-flow: wrap;
+    margin-bottom: 5px;
+    gap: 5px;
+}
+.autoCompletionSelection > div {
+    display: flex;
+    border-radius: 5px;
+    border: 1px solid #dadce0;
+    font-size: 12px;
+    padding: 2px;
+    position: relative;
+    background-color: #FFF;
+    cursor: pointer;
+}
+.autoCompletionSelection > div > div.value {
+    margin-right: 18px;
+}
+.autoCompletionSelection > div > div.close {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+.autoCompletionSelection > div > div.close::before {
+    content: "✖";
+    margin-left: 2px;
+    line-height: 15px;
+}

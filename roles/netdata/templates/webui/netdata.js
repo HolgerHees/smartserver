@@ -1,4 +1,4 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('netdata','//netdata.{host}/', 'admin', 110, '{i18n_Server State}', '{i18n_Netdata}', false, "netdata_logo.svg");
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('netdata','//netdata.{host}/', 'admin', 110, '{i18n_Server State}', '{i18n_Netdata}', false, "netdata_logo.svg");
 
 mx.Alarms = (function( ret ) {
     var buttonSelector;
@@ -92,7 +92,7 @@ mx.Alarms = (function( ret ) {
         mx.$$(buttonSelector).forEach(function(element){ 
             element.addEventListener("click",function()
             {
-                mx.Actions.openEntry(mx.Menu.getMainGroup('admin').getSubGroup('tools').getEntry('netdata'));
+                mx.Actions.openEntry(mx.Menu.getMainGroup('admin').getSubGroup('system').getEntry('netdata'));
             });
         });
         loadAlerts();

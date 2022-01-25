@@ -1,7 +1,10 @@
 {
   "admin_tools": {
     "Grafana": "Grafana",
-    "Dashboards": "Dashboards",
+    "Dashboards": "Dashboards"
+  },
+  "admin_system": {
+    "Grafana": "Grafana",
     "Server Logs": "Server Logs"
   }
 }

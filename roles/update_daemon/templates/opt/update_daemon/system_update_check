@@ -2,13 +2,16 @@
 
 import subprocess
 import os
-from datetime import datetime, timezone
 import json
+
+from datetime import datetime
 import sys 
 
 import importlib
 
 from config import config
+
+from plugins.deploymentUpdate import DeploymentUpdate
 
 limit_step = None
 if len(sys.argv) >= 2:
@@ -16,7 +19,7 @@ if len(sys.argv) >= 2:
     
 update_time = "{}Z".format(datetime.now().utcnow().isoformat('T'))
 
-state_template = {"last_system_state": update_time, "last_system_update": update_time, "last_deployment_update": update_time, "os_updates": [], "os_outdated": [], "os_reboot": False, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": update_time}
+state_template = {"last_system_state": update_time, "last_system_update": update_time, "last_deployment_update": update_time, "os_updates": [], "os_outdated": [], "os_reboot": False, "smartserver_code": "", "smartserver_changes": [], "smartserver_tags": [], "smartserver_pull": update_time}
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
     with open(config.system_update_state_file, 'r') as f:
@@ -39,24 +42,24 @@ if limit_step is None or limit_step == "system_state":
 
     state["os_reboot"] = repo.getRebootState()
     if not state["os_reboot"]:
-      print( "  - \033[0;32mno reboot required\033[0m")
+      print( u"  - \033[0;32mno reboot required\033[0m")
     else:
-      print( "  - \033[1;31mneeds reboot\033[0m")
+      print( u"  - \033[1;31mneeds reboot\033[0m")
 
     state["os_outdated"] = repo.getOutdatedProcesses()
     if len(state["os_outdated"]) == 0:
-      print( "  - \033[0;32mno outdated processes\033[0m")
+      print( u"  - \033[0;32mno outdated processes\033[0m")
     else:
-      print( "  - \033[1;31mhas outdated processes\033[0m")
+      print( u"  - \033[1;31mhas outdated processes\033[0m")
 
 if limit_step is None or limit_step == "system_update":
     state["last_system_update"] = update_time
 
     state["os_updates"] = repo.getUpdates()
     if len(state["os_updates"]) == 0:
-      print( "  - \033[0;32mis updated\033[0m")
+      print( u"  - \033[0;32mis updated\033[0m")
     else:
-      print( "  - \033[1;33mhas updates\033[0m")
+      print( u"  - \033[1;33mhas updates\033[0m")
 
 if    ( len(state["os_updates"]) > 0 and len(last_states["os_updates"]) != len(state["os_updates"]) ) \
   or ( len(state["os_outdated"]) > 0 and len(last_states["os_outdated"]) != len(state["os_outdated"]) ) \
@@ -75,115 +78,51 @@ if limit_step is None or limit_step == "deployment_update":
 
     print("Smartserver")
     
-    if not os.path.isfile(config.deployment_state_file):
-        print( "  - \033[1;31mgit check not possible (please run a full deployment first)\033[0m")
-        state["smartserver_code"] = "missing"
-    else:
-        # git add files (intent to add)  
-        subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        result = subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
-
-        deployment_stat = os.stat(config.deployment_state_file)
-        deployment_mtime = deployment_stat.st_mtime
-
-        if len(uncommitted_changes) == 1 and uncommitted_changes[0] == "":
-            can_pull = False
-            if "github" in config.git_remote:
-                result = subprocess.run([ "/usr/bin/git", "ls-remote", config.git_remote ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-                commits = result.stdout.decode("utf-8").strip().split("\n")
-                last_git_hash = commits[0].split("\t")[0]
-
-                repository_owner = config.git_remote.replace("https://github.com/","")
-                repository_owner = repository_owner.replace(".git","")
-                statusUrl = "https://api.github.com/repos/{}/statuses/{}".format(repository_owner,last_git_hash)
-
-                result = subprocess.run([ "/usr/bin/wget", "-qO", "-", statusUrl ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-                result = result.stdout.decode("utf-8").strip()
-                
-                json_result = json.loads(result)
-
-                build_states = {}
-                for build_state in json_result:
-                    if build_state["context"] not in build_states:
-                        build_states[build_state["context"]] = False
-
-                    if build_state["state"] == "success":
-                        build_states[build_state["context"]] = True 
-
-                build_failed_states = [s for s in build_states if not s]
-                build_success_states = [s for s in build_states if s]
-
-                if len(build_failed_states) > 0:
-                    print( "  - \033[1;31mskipped git pull (broken remote ci tests)\033[0m")
-                    state["smartserver_code"] = "failed"
-                elif len(build_success_states) < 3:
-                    print( "  - \033[1;33mskipped git pull (some remote ci pending)\033[0m")
-                    state["smartserver_code"] = "pending"
-                else:
-                    can_pull = True
-                    print( "  - \033[0;32mgit pulled (all remote ci succeeded)\033[0m")
-            else:
-                can_pull = True
-                
-            if can_pull:
-                result = subprocess.run([ "/usr/bin/git", "pull" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-                state["smartserver_code"] = "pulled"
-                state["smartserver_pull"] = update_time;
-        else:
-            state["smartserver_code"] = "uncommitted"
-            print( "  - \033[1;31mskipped git pull (has uncommitted changes)\033[0m")
-            
-        last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
-        #last_deployment = "2020-01-20 14:02:00.651984+00:00"
-        #print( " ".join([ "/usr/bin/git", "-C", config.git_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-        result = subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        ref = result.stdout.decode("utf-8").strip()
-        
-        #print( " ".join([ "/usr/bin/git", "-C", config.git_directory, "diff-index", "--name-status", ref ]))
-        result = subprocess.run([ "/usr/bin/git", "-C", config.git_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        committed_changes = result.stdout.decode("utf-8").strip().split("\n")
-
-        lines = uncommitted_changes + committed_changes
-        lines = [ele.split("\t") for ele in lines]
-        
-        filtered_lines = {}
-        for line in lines:
-            if len(line) == 1:
-                continue
-              
-            flag, path = line
-            
-            if flag != "D":
-                file_stat = os.stat("{}/{}".format(config.git_directory,path))
-                file_mtime = file_stat.st_mtime
-                
-                if file_mtime > deployment_mtime:
-                    if path not in filtered_lines or flag == "A":
-                        filtered_lines[path] = {"flag": flag, "path": path}
+    deploymentUpdate = DeploymentUpdate(config)
+    
+    (smartserver_code, smartserver_pull, smartserver_changes) = deploymentUpdate.process()
+    
+    state["smartserver_code"] = smartserver_code
+    
+    if smartserver_code == "missing":
+        print( u"  - \033[1;31mgit check not possible (please run a full deployment first)\033[0m")
+    elif smartserver_code == "failed":
+        print( u"  - \033[1;31mskipped git pull (broken remote ci tests)\033[0m")
+    elif smartserver_code == "pending":
+        print( u"  - \033[1;33mskipped git pull (some remote ci pending)\033[0m")
+    elif smartserver_code == "uncommitted":
+        print( u"  - \033[1;31mskipped git pull (has uncommitted changes)\033[0m")
+    elif smartserver_code == "pulled_ci":
+        print( u"  - \033[0;32mgit pulled (all remote ci succeeded)\033[0m")
+    elif smartserver_code == "pulled":
+        print( u"  - \033[0;32mgit pulled\033[0m")
                         
-        filtered_values = filtered_lines.values()
-        lines = list(filtered_values)
-        
-        state["smartserver_changes"] = lines
+    if smartserver_pull is not None:
+        state["smartserver_pull"] = smartserver_pull
 
+    if smartserver_changes is not None:
+        state["smartserver_changes"] = smartserver_changes
         if len(state["smartserver_changes"]) == 0:
-          print( "  - \033[0;32mis deployed\033[0m")
+          print( u"  - \033[0;32mis deployed\033[0m")
         else:
-          print( "  - \033[1;33mhas not deployed changes\033[0m")
+          print( u"  - \033[1;33mhas not deployed changes\033[0m")
 
         if len(last_states["smartserver_changes"]) != len(state["smartserver_changes"]):
             update_message_r.append(u"smartserver has {} updates".format(len(state["smartserver_changes"])))
+            
+    tags = deploymentUpdate.getAnsibleTags()
+    state["smartserver_tags"] = tags
+    print( u"  - found {} ansible tags".format(len(tags)))
 # ****************************************************************
 
 if limit_step is None and config.send_system_update_notification and len(update_message_r) > 0:
     message_r = []
-    message_r.append("There are new updates")
+    message_r.append(u"There are new updates")
     for message in update_message_r:
         message_r.append("  - {}".format(message))
-    message_r.append("\n\nCheck https://{}/?ref=admin|tools|update_system for details".format(config.server_host))
+    message_r.append(u"\n\nCheck https://{}/?ref=admin|tools|update_system for details".format(config.server_host))
    
-    print("Send notification mail")
+    print(u"Send notification mail")
 
     subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" root".format("\n".join(message_r),"New system updates available") ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
   

@@ -3,6 +3,8 @@
 from flask import Flask, request, make_response
 import logging
 
+import pyinotify
+
 import pexpect 
 import subprocess
 import threading
@@ -47,15 +49,39 @@ process_mapping = {
 
 START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
-class Handler():
+
+class Identity(pyinotify.ProcessEvent):
+    def __init__(self, s):
+        super().__init__(s)
+        self.startup_time = datetime.now()
+        self.modified_time = self.startup_time
+        
+    def process_default(self, event):
+        app.logger.info(event)
+        self.modified_time = datetime.now()
+        
+    def hasChanged(self):
+        app.logger.info(self.startup_time != self.modified_time)
+        return self.startup_time != self.modified_time
+
+# Thread #1
+
+class Handler(pyinotify.ProcessEvent):
     def __init__(self):
+        wm = pyinotify.WatchManager()
+        s = pyinotify.Stats()
+        self.identity = Identity(s)
+        notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self.identity)
+        notifier.start()
+        wm.add_watch(__file__, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MODIFY, rec=True, auto_add=True)
+        
         self.current_cmd_type = None
         self.current_started = None
       
         self.last_exit_code = 0
         self.last_cmd_type = None
         self.last_duration = 0
-
+        
     def lock(self, cmd_type):
         self.current_cmd_type = cmd_type
         self.current_started = datetime.now()
@@ -69,6 +95,8 @@ class Handler():
         self.current_started = None
 
     def buildSuccessResult(self, running_type, cmd_type):
+        #app.logger.info(__file__)
+        
         if os.path.isfile(config.system_update_state_file):
             update_state_file_stat = os.stat(config.system_update_state_file)
             last_data_mtime = update_state_file_stat.st_mtime
@@ -84,7 +112,8 @@ class Handler():
             "last_job_status": self.last_exit_code, 
             "last_job_cmd_name": cmd_mapping[self.last_cmd_type] if self.last_cmd_type is not None else "",
             "last_job_duration": self.last_duration,
-            "last_data_modified": last_data_mtime
+            "last_data_modified": last_data_mtime,
+            "update_server_needs_restart": self.identity.hasChanged()
         })
 
     def buildErrorResult(self, status, message):
@@ -93,7 +122,7 @@ class Handler():
             "message": message
         })
 
-    def run(self, cmd, cmd_type, post_system_update, interaction, cwd):
+    def run(self, cmd, cmd_type, post_system_update, interaction, cwd, env):
         start_time = datetime.now()
         start_time_str = start_time.strftime(START_TIME_STR_FORMAT)
         job_log_file = u"{}{}-{}.log".format(config.job_log_folder,start_time_str,cmd_type)
@@ -103,7 +132,7 @@ class Handler():
                 app.logger.info(u"Start cmd '{}'".format(cmd))
 
                 lf = LogFile(f)
-                child = pexpect.spawn(cmd, timeout=3600, cwd=cwd)
+                child = pexpect.spawn(cmd, timeout=3600, cwd=cwd, env=env)
                 child.logfile_read = lf
                 
                 if interaction is not None:
@@ -157,10 +186,10 @@ class Handler():
                 pass
               
         self.unlock(exit_status)
-        
+
         return exit_status
 
-    def startCommand(self, cmd, cmd_type, post_system_update, interaction, cwd):
+    def startCommand(self, cmd, cmd_type, post_system_update, interaction, cwd, env):
         active_cmd_type = self.checkProcesses()
         if active_cmd_type is None:
             self.lock(cmd_type)
@@ -174,12 +203,12 @@ class Handler():
         else:
             return state()
           
-    def startThread(self, cmd, cmd_type, post_system_update, interaction, cwd):
+    def startThread(self, cmd, cmd_type, post_system_update, interaction, cwd, env):
         active_cmd_type = self.checkProcesses()
         if active_cmd_type is None:
             self.lock(cmd_type)
             
-            thread = threading.Thread(target=self.run, args=(cmd, cmd_type, post_system_update, interaction, cwd, ))
+            thread = threading.Thread(target=self.run, args=(cmd, cmd_type, post_system_update, interaction, cwd, env, ))
             thread.start()
         return state()
 
@@ -212,24 +241,24 @@ def state():
   
 @app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
-    return handler.startThread(cmd_system_update_check,"system_update_check",None,interaction=None,cwd=None)
+    return handler.startThread(cmd_system_update_check,"system_update_check",None,interaction=None,cwd=None,env=None)
 
 @app.route('/restartService/', methods = ['POST'])
 def restartService():
     services = request.form["service"].split(",")
     cmd = "{} {}".format(cmd_service_restart, " ".join(services))
-    return handler.startThread(cmd,"service_restart","system_state",interaction=None,cwd=None)
+    return handler.startThread(cmd,"service_restart","system_state",interaction=None,cwd=None,env=None)
       
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
-    return handler.startThread(cmd,"system_reboot","system_state",interaction=None,cwd=None)
+    return handler.startThread(cmd,"system_reboot","system_state",interaction=None,cwd=None,env=None)
 
 @app.route('/installSystemUpdates/', methods = ['POST'])
 def installSystemUpdates():
     plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
     repo = plugin.Repository()
     cmd = repo.getSystemUpdateCmd()
-    return handler.startThread(cmd, "system_update","system_update",interaction=None,cwd=None)
+    return handler.startThread(cmd, "system_update","system_update",interaction=None,cwd=None,env=None)
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
@@ -254,7 +283,7 @@ def deploySmartserverUpdates():
                 cmd = "{} --tags \"{}\"".format(cmd,tags) 
             cmd = "{} server.yml".format(cmd)
             
-            return handler.startThread(cmd, "deployment_update","deployment_update",interaction=interaction,cwd=config.git_directory)
+            return handler.startThread(cmd, "deployment_update","deployment_update",interaction=interaction,cwd=config.git_directory,env={"ANSIBLE_FORCE_COLOR": "1"})
 
         else:
             return self.buildErrorResult("501", "Deployment state file empty or not readable")
@@ -263,12 +292,12 @@ def deploySmartserverUpdates():
 
 @app.route('/testSyncCall/', methods = ['POST'])
 def testSyncCall():
-    return handler.startCommand("sleep 15","test",interaction=None,cwd=None)
+    return handler.startCommand("sleep 15","test",interaction=None,cwd=None,env=None)
 
 @app.route('/testASyncCall/', methods = ['POST'])
 def testASyncCall():
-    return handler.startThread("sleep 15","test",interaction=None,cwd=None)
+    return handler.startThread("sleep 15","test",interaction=None,cwd=None,env=None)
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
-    app.run(debug=False, use_reloader=True, host=config.daemon_ip, port='8505')
+    app.run(debug=False, use_reloader=False, host=config.daemon_ip, port='8505')

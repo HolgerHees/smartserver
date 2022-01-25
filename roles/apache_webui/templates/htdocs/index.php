@@ -336,7 +336,8 @@ function getVersion($path,$suffixes)
 
             var mainGroup = ret.addMainGroup('admin', 3000, '{i18n_Admin}');
             mainGroup.addSubGroup('tools', 200, '{i18n_Tools}', 'core_tools.svg');
-            mainGroup.addSubGroup('devices', 300, '{i18n_Devices}', 'core_devices.svg');
+            mainGroup.addSubGroup('system', 300, '{i18n_System}', 'core_system.svg');
+            mainGroup.addSubGroup('devices', 400, '{i18n_Devices}', 'core_devices.svg');
 
             return ret;
         })( mx.Menu || {} );

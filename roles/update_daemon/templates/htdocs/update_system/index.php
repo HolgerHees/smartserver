@@ -33,6 +33,8 @@ require "config.php";
         
         var refreshDaemonStateTimer = 0;
         
+        var deploymentTags = [];
+        
         var daemonApiUrl = mx.Host.getBase() + 'api.php';
     
         function handleServerError( response )
@@ -43,6 +45,29 @@ require "config.php";
         function handleRequestError( code, text )
         {
             alert("error '" + code + " " + text + "'");
+        }
+        
+        function getContentValue(content,id)
+        {
+            return content.querySelector(id).innerHTML;
+        }
+        
+        function setTableContent(content,tableId,headerId)
+        {
+            mx.$(headerId).innerHTML = content.querySelector(headerId).innerHTML;
+                      
+            var systemStateDetailsElement = mx.$(tableId);
+            systemStateDetailsElement.innerHTML = content.querySelector(tableId).innerHTML;
+            setToogle(mx.$(headerId + " .form.button.toggle"),systemStateDetailsElement);
+            fixScrollHeight(systemStateDetailsElement);
+        }
+
+        function setLastCheckedContent(content,id)
+        {
+            var element = mx.$(id)
+            var last = content.querySelector(id).innerHTML;
+            if( last ) element.innerHTML = "(Last checked " + last + ")";
+            else element.innerHTML = "(Was never checked)";
         }
         
         function loadData(callback)
@@ -58,47 +83,34 @@ require "config.php";
                   var content = document.createElement("div");
                   content.innerHTML = this.response;
                   
-                  hasEncryptedVault = content.querySelector("#hasEncryptedVault").innerHTML == '1' ? true : false;
+                  hasEncryptedVault = getContentValue(content,"#hasEncryptedVault") == '1' ? true : false;
                   
-                  mx.$("#lastUpdate").innerHTML = "Last full refresh " + content.querySelector("#lastUpdates").innerHTML;
+                  mx.$("#lastUpdateDateFormatted").innerHTML = "Last full refresh " + getContentValue(content,"#lastUpdateDateFormatted");
                   
-                  
-                  _last_system_state_modified = content.querySelector("#systemStateTimestamp").innerHTML;
+                  _last_system_state_modified = getContentValue(content,"#systemStateDateAsTimestamp");
                   if( last_system_state_modified == null || last_system_state_modified != _last_system_state_modified )
                   {
-                      var rebootNeededElement = mx.$("#rebootNeeded");
-                      var rebootNeededContent = content.querySelector("#rebootNeeded").innerHTML;
+                      var rebootNeededElement = mx.$("#systemRebootNeeded");
+                      var rebootNeededContent = getContentValue(content,"#systemRebootNeeded");
                       rebootNeededElement.innerHTML = rebootNeededContent;
                       rebootNeededElement.style.display = rebootNeededContent ? "" : "None";
                       
-                      mx.$("#systemState").innerHTML = content.querySelector("#systemState").innerHTML;
-                      var systemStateDetailsElement = mx.$("#systemStateDetails");
-                      systemStateDetailsElement.innerHTML = content.querySelector("#systemStateDetails").innerHTML;
                       last_system_state_modified = _last_system_state_modified;
-                      setToogle(mx.$("#systemState .form.button.toggle"),systemStateDetailsElement);
-                      fixScrollHeight(systemStateDetailsElement);
-                      
-                      var last = content.querySelector("#systemStateFmt").innerHTML;
-                      if( last ) mx.$("#lastSystemStateCheck").innerHTML = "(Last checked " + last + ")";
-                      else mx.$("#lastSystemStateCheck").innerHTML = "(Was never checked)";
+                     
+                      setTableContent(content,"#systemStateDetails","#systemStateHeader")
+                      setLastCheckedContent(content,"#systemStateDateFormatted");
                   }
                   
-                  _last_system_update_modified = content.querySelector("#systemUpdateTimestamp").innerHTML;
+                  _last_system_update_modified = getContentValue(content,"#systemUpdateDateAsTimestamp");
                   if( last_system_update_modified == null || last_system_update_modified != _last_system_update_modified )
                   {
-                      mx.$("#systemUpdate").innerHTML = content.querySelector("#systemUpdate").innerHTML;
-                      var systemUpdateDetailsElement = mx.$("#systemUpdateDetails");
-                      systemUpdateDetailsElement.innerHTML = content.querySelector("#systemUpdateDetails").innerHTML;
                       last_system_update_modified = _last_system_update_modified;
-                      setToogle(mx.$("#systemUpdate .form.button.toggle"),systemUpdateDetailsElement);
-                      fixScrollHeight(systemUpdateDetailsElement);
-
-                      var last = content.querySelector("#systemUpdateFmt").innerHTML;
-                      if( last ) mx.$("#lastSystemUpdateCheck").innerHTML = "(Last checked " + last + ")";
-                      else mx.$("#lastSystemUpdateCheck").innerHTML = "(Was never checked)";
+                      
+                      setTableContent(content,"#systemUpdateDetails","#systemUpdateHeader")
+                      setLastCheckedContent(content,"#systemUpdateDateFormatted");
                   }
 
-                  _last_deployment_update_modified = content.querySelector("#deploymentUpdateTimestamp").innerHTML;
+                  _last_deployment_update_modified = getContentValue(content,"#deploymentUpdateDateAsTimestamp");
                   if( last_deployment_update_modified == null || last_deployment_update_modified != _last_deployment_update_modified )
                   {
                       deploymentUpdateInfoCodes = {
@@ -108,32 +120,26 @@ require "config.php";
                           "uncommitted": ["red","Skipped git pull (has uncommitted changes)"]
                       };
                       
-                      var deploymentUpdateElement = mx.$("#deploymentUpdateInfo");
-                      var deploymentUpdateInfoCode = content.querySelector("#deploymentUpdateInfo").innerHTML;
-                      var deploymentUpdateData = deploymentUpdateInfoCodes[deploymentUpdateInfoCode];
+                      var deploymentUpdateElement = mx.$("#deploymentUpdateStatusInfo");
+                      var deploymentUpdateStatusCode = getContentValue(content,"#deploymentUpdateStatusCode");
+                      var deploymentUpdateData = deploymentUpdateInfoCodes[deploymentUpdateStatusCode];
                       if( deploymentUpdateData )
                       {
                           deploymentUpdateElement.style.display = "";
-                          deploymentUpdateElement.innerHTML = deploymentUpdateData[1] + ". Last git pull was on " + content.querySelector("#deploymentUpdatePullDate").innerHTML + ".";
-                          deploymentUpdateElement.classList.remove("green");
-                          deploymentUpdateElement.classList.remove("yellow");
-                          deploymentUpdateElement.classList.remove("red");
+                          deploymentUpdateElement.innerHTML = deploymentUpdateData[1] + ". Last git pull was on " + getContentValue(content,"#deploymentUpdateLastPullDate") + ".";
+                          ["green","yellow","red"].forEach(function(color){ deploymentUpdateElement.classList.remove(color); });
                           deploymentUpdateElement.classList.add(deploymentUpdateData[0]);
                       }
                       else
                       {
                           deploymentUpdateElement.style.display = "none";
                       }
-                      mx.$("#deploymentUpdate").innerHTML = content.querySelector("#deploymentUpdate").innerHTML;
-                      var deploymentUpdateDetailsElement = mx.$("#deploymentUpdateDetails");
-                      deploymentUpdateDetailsElement.innerHTML = content.querySelector("#deploymentUpdateDetails").innerHTML;
                       last_deployment_update_modified = _last_deployment_update_modified;
-                      setToogle(mx.$("#deploymentUpdate .form.button.toggle"),deploymentUpdateDetailsElement);
-                      fixScrollHeight(deploymentUpdateDetailsElement);
 
-                      var last = content.querySelector("#deploymentUpdateFmt").innerHTML;
-                      if( last ) mx.$("#lastDeploymentUpdateCheck").innerHTML = "(Last checked " + last + ")";
-                      else mx.$("#lastDeploymentUpdateCheck").innerHTML = "(Was never checked)";
+                      setTableContent(content,"#deploymentUpdateDetails","#deploymentUpdateHeader")
+                      setLastCheckedContent(content,"#deploymentUpdateDateFormatted");
+                 
+                      deploymentTags = getContentValue(content,"#deploymentTags").split(",");
                   }
                   
                   callback();
@@ -152,6 +158,8 @@ require "config.php";
 
             has_new_data = last_data_modified != null && last_data_modified != state["last_data_modified"];
           
+            mx.$("#serverNeedsRestart").style.display = state["update_server_needs_restart"] ? "flex" : "";
+            
             job_is_running = state["job_is_running"];
             job_running_type = state["job_running_type"];
             job_cmd_name = state["job_cmd_name"];
@@ -265,7 +273,7 @@ require "config.php";
             xhr.send(JSON.stringify({"action": "state"}));
         }
         
-        function runAction(btn, action, parameter)
+        function runAction(btn, action, parameter, response_callback)
         {
             btn.classList.add("disabled");
             
@@ -275,27 +283,34 @@ require "config.php";
             xhr.onreadystatechange = function() {
                 if (this.readyState != 4) return;
                 
-                if( this.status == 200 ) 
+                if( response_callback )
                 {
-                    var response = JSON.parse(this.response);
-                    if( response["status"] == "0" )
-                    {
-                        handleDaemonState(response);
-                    }
-                    else
-                    {
-                        handleServerError(response);
-                    }
+                    response_callback(this);
                 }
                 else
                 {
-                    handleRequestError(this.status, this.statusText);
+                    if( this.status == 200 ) 
+                    {
+                        var response = JSON.parse(this.response);
+                        if( response["status"] == "0" )
+                        {
+                            handleDaemonState(response);
+                        }
+                        else
+                        {
+                            handleServerError(response);
+                        }
+                    }
+                    else
+                    {
+                        handleRequestError(this.status, this.statusText);
+                    }
                 }
             };
             xhr.send(JSON.stringify({"action": action, "parameter": parameter }));
         }
         
-        function confirmAction(btn, action, parameter, confirm, button_color )
+        function confirmAction(btn, action, parameter, confirm, button_color, response_callback )
         {
             if( btn.classList.contains("disabled") ) 
             {
@@ -308,7 +323,7 @@ require "config.php";
                     title: "Are you sure?",
                     body: confirm,
                     buttons: [
-                        { "text": "Continue", "class": button_color, "callback": function(){ dialog.close(); runAction(btn, action, parameter); } },
+                        { "text": "Continue", "class": button_color, "callback": function(){ dialog.close(); runAction(btn, action, parameter, response_callback); } },
                         { "text": "Cancel" },
                     ],
                     class: "confirmDialog",
@@ -325,6 +340,7 @@ require "config.php";
         ret.actionDeployUpdates = function(btn)
         {
             var passwordField = null;
+            var passwordRemember = null;
             var passwordHint = null;
             var tagField = null;
             var confirmField = null;
@@ -332,10 +348,21 @@ require "config.php";
             var body = "You want to <b>deploy smartserver changes</b>?<br><br><div class=\"form table\">";            
             if( hasEncryptedVault )
             {
-                body += "<div class=\"row\"><div>Password:</div><div><input name=\"password\" type=\"password\" autocomplete=\"off\"><div class=\"hint red\">Please enter a password</div></div></div>";
+                var lastDeploymentPassword = sessionStorage.getItem("lastDeploymentPassword");
+                
+                body += "<div class=\"row\"><div>Password:</div><div>";
+                body += "<input name=\"password\" type=\"password\" autocomplete=\"off\"";
+                if( lastDeploymentPassword ) body += " value=\"" + lastDeploymentPassword + "\"";
+                body += ">";
+                body += "<br><input type=\"checkbox\" name=\"remember\"";
+                if( lastDeploymentPassword ) body += " checked";
+                body += "> Remember";
+                body += "<div class=\"hint red\">Please enter a password</div>";
+                body += "</div></div>";
             }
-            body += "<div class=\"row\"><div>Tags:</div><div><input name=\"tag\"></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation\"><input type=\"checkbox\" name=\"confirm\" checked> Mark all changes as deployed</div>";
+            body += "<div class=\"row\"><div>Tags:</div><div><div class=\"autoCompletionSelection\"></div><input name=\"tag\"></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation\"><input type=\"checkbox\" name=\"confirm\" checked> Mark all changes as deployed</div>";
             
+            var autocomplete = null;
             var dialog = mx.Dialog.init({
                 title: "Are you sure?",
                 body: body,
@@ -352,10 +379,18 @@ require "config.php";
                             {
                                 passwordHint.style.maxHeight = 0;
                                 parameter["password"] = passwordField.value;
+                                if( passwordRemember.checked ) sessionStorage.setItem("lastDeploymentPassword", passwordField.value);
+                                else sessionStorage.removeItem("lastDeploymentPassword");
                             }
-                            parameter["tags"] = tagField.value;
-                            parameter["confirm"] = confirmField.checked;
+                                                       
+                            var selectedTags = autocomplete.getSelectedValue();
+                            autocomplete.setTopValues(selectedTags);
+                            var selectedTagsAsString = selectedTags.join(",");
+                            localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
+                            parameter["tags"] = selectedTagsAsString;
                             
+                            parameter["confirm"] = confirmField.checked;
+
                             dialog.close(); 
                             runAction(btn, 'deploySmartserverUpdates', parameter); 
                         }
@@ -368,17 +403,29 @@ require "config.php";
             dialog.open();
             
             passwordField = dialog.getBody().querySelector("input[name=\"password\"]");
+            passwordRemember = dialog.getBody().querySelector("input[name=\"remember\"]");
             passwordHint = dialog.getBody().querySelector(".hint");
             tagField = dialog.getBody().querySelector("input[name=\"tag\"]");
             confirmField = dialog.getBody().querySelector("input[name=\"confirm\"]");    
             
-            function tagInputHandler()
+            var lastSelectedTags = localStorage.getItem("lastSelectedDeploymentTags");
+            
+            autocomplete = mx.Autocomplete.init({
+                input: tagField,
+                values: deploymentTags,
+                top_values: lastSelectedTags ? lastSelectedTags.split(",") : [],
+                selectors: {
+                    selectionLayer: ".autoCompletionSelection"
+                }
+            });
+            dialog.getRootLayer().addEventListener("destroy",autocomplete.destroy);
+            
+            function selectionHandler()
             {
-                if( tagField.value ) confirmField.checked = false;
+                if( autocomplete.getSelectedValue().length>0 ) confirmField.checked = false;
                 else confirmField.checked = true;
             }
-            tagField.addEventListener("keyup",tagInputHandler);
-            tagField.addEventListener("change",tagInputHandler);
+            autocomplete.getRootLayer().addEventListener("selectionChanged",selectionHandler);
         }
         
         ret.actionRebootSystem = function(btn)
@@ -401,6 +448,15 @@ require "config.php";
         ret.actionRefreshState = function(btn)
         {
             confirmAction(btn,'refreshSystemUpdateCheck')
+        }
+        
+        ret.actionRestartDaemon = function(btn)
+        {
+            window.clearTimeout(refreshDaemonStateTimer);
+            confirmAction(btn,'restartService',{'service': 'update_daemon'},'You want to <b>restart update_daemon</b>?',"red", function(response){
+                mx.$$("div.form.button").forEach(function(element){ element.classList.add("disabled"); });
+                window.setTimeout(function(){ refreshDaemonState(); },2000);
+            });
         }
         
         ret.toggle = function(btn,id)
@@ -437,25 +493,26 @@ require "config.php";
 </script>
 <div class="widget">
     <div class="header"><span>Daemon status</span><span></span></div>
+    <div class="action" id="serverNeedsRestart"><div class="info red">Daemon was updated and needs to restart</div><div class="buttons"><div class="form button red" onclick="mx.UNCore.actionRestartDaemon(this)">Restart daemon</div></div></div>
     <div class="action"><div class="info" id="currentRunningState"></div></div>
     <div class="action" id="lastRunningStateBlock"><div class="info" id="lastRunningState"></div></div>
 </div>
 <div class="widget">
-    <div class="header"><span>System status</span><span id="lastSystemStateCheck"></span></div>
-    <div class="action"><div class="info" id="lastUpdate"></div><div class="buttons"><div class="form button" onclick="mx.UNCore.actionRefreshState(this)">Refresh</div></div></div>
-    <div class="action" id="rebootNeeded"></div>
-    <div class="action" id="systemState"></div>
+    <div class="header"><span>System status</span><span id="systemStateDateFormatted"></span></div>
+    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button" onclick="mx.UNCore.actionRefreshState(this)">Refresh</div></div></div>
+    <div class="action" id="systemRebootNeeded"></div>
+    <div class="action" id="systemStateHeader"></div>
     <div class="list form table" id="systemStateDetails"></div>
 </div>
 <div class="widget">
-    <div class="header"><span>System updates</span><span id="lastSystemUpdateCheck"></span></div>
-    <div class="action" id="systemUpdate"></div>
+    <div class="header"><span>System updates</span><span id="systemUpdateDateFormatted"></span></div>
+    <div class="action" id="systemUpdateHeader"></div>
     <div class="list form table" id="systemUpdateDetails"></div>
 </div>
 <div class="widget">
-    <div class="header"><span>Deployment updates</span><span id="lastDeploymentUpdateCheck"></span></div>
-    <div class="action" id="deploymentUpdateInfo"></div>
-    <div class="action" id="deploymentUpdate"></div>
+    <div class="header"><span>Deployment updates</span><span id="deploymentUpdateDateFormatted"></span></div>
+    <div class="action" id="deploymentUpdateStatusInfo"></div>
+    <div class="action" id="deploymentUpdateHeader"></div>
     <div class="list form table" id="deploymentUpdateDetails"></div>
 </div>
 </body>

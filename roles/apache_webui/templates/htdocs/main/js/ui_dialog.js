@@ -1,16 +1,10 @@
 mx.Dialog = (function( ret ) {
     var _options = {
-        width: "auto",
-        height: "auto",
-        isBackgroundLayerEnabled: true,
-        maxBackgroundLayerOpacity: 0.5,
         buttons: [],
         class: "",
         destroy: false
     };
 
-    var activeInstance = null;
-    
     function createDialog(options)
     {
         options.elements.dialogLayer = document.createElement("div");
@@ -52,7 +46,11 @@ mx.Dialog = (function( ret ) {
     {
         mx.Core.waitForTransitionEnd(options.elements.dialogLayer, function(){ 
             options.elements.dialogLayer.style.display = ""; 
-            if( options.destroy ) options.elements.dialogLayer.remove();
+            if( options.destroy ) 
+            {
+                mx.Core.triggerEvent(options.elements.dialogLayer, "destroy", false );
+                options.elements.dialogLayer.remove();
+            }
         },"Dialog closed");
         options.elements.dialogLayer.style.backgroundColor = "rgba(0,0,0,0)";
     }
@@ -66,8 +64,6 @@ mx.Dialog = (function( ret ) {
              
         createDialog(options);
       
-        options._.openEventTriggered = false;
-
         return {
             open: function()
             {
@@ -80,6 +76,10 @@ mx.Dialog = (function( ret ) {
             getBody: function()
             {
                 return options.elements.contentBody;
+            },
+            getRootLayer: function()
+            {
+                return options.elements.dialogLayer;
             }
         };
     };
