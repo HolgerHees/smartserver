@@ -320,12 +320,12 @@ require "config.php";
             if( new_data.length > 0 ) loadData(new_data, function(){});
         }
         
-        function handleDaemonError(msg)
+        function handleDaemonError(msg, title)
         {
             var currentRunningStateElement = mx.$("#currentRunningState");
             var currentRunningActionsElement = mx.$("#currentRunningActions");
             currentRunningActionsElement.style.display="";
-            currentRunningStateElement.innerHTML = "Daemon Error: " + msg;
+            currentRunningStateElement.innerHTML = "<div class=\"red\"><b>" + ( title ? title : "Daemon Error" ) + "</b><br>" + msg + "</div>";
             setExclusiveButtonsState(false)
         }
                                       
@@ -351,7 +351,7 @@ require "config.php";
                 }
                 else
                 {
-                    handleDaemonError("Code: " + this.status + ", Message: '" + this.statusText + "'")
+                    handleDaemonError(this.response, "Code: " + this.status + ", Message: '" + this.statusText + "'")
                     refreshDaemonStateTimer = window.setTimeout(refreshDaemonState, 15000);
                 }
             };

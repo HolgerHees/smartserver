@@ -1,0 +1,139 @@
+# **** DEFAULT Variables ***
+#
+# - Variables without a default value are MANDATORY except there is a condition. 
+#    - In this case it is only mandatory if the condition is true. e.g variable 'system_update_notification_email'
+#
+# - The default value is used if the variable is not defined in your configuration
+#
+# **************************
+default_variables: {
+    "location":       {},                                         # "52.3476672,13.6215805" => latitude / longitude
+    "timezone":       {},                                         # "Europe/Berlin"
+    "language":       {},                                         # "en", "de" ...
+    "country":        {},                                         # "EN", "DE" ...
+    "region":         {},                                         # "bb" => berlin / brandenburg => https://www.openhab.org/docs/configuration/actions.html#ephemeris
+    
+    "root_email":     {},                                         # "testadmin@test.com" => gets all admin / alert / warning emails from your server
+
+    "server_name":    {},                                         # "test"
+    "server_domain":  {},                                         # "smartserver.test"
+    
+    "ssl_certificate": { "default": "selfsigned" },               # "selfsigned", "letsencrypt"
+    
+    "production_ip":  {},                                         # "192.168.7.50" your server ip
+    "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
+
+    # pihole and dlna ip's should be part of a contiguous area at the end of your server network
+    # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
+    "pihole_ip":      { "default": null },                        # pihole ip address from same network as your server ip => 'null' means disabled
+    "dlna_ip":        { "default": null },                        # dlna ip address from same network as your server ip => 'null' means disabled
+
+    # used in main role 'apache' and can be an empty array []
+    authenticated_ip_addresses: { "default": [] },                # apache access always allowed for ipaddresses e.g. from wallmounted tablets
+    
+    # used in generic optional role 'wireguard_mobile'
+    mobile_vpn_internal_port: { "default": "51828" },             # the port, used on your server
+    mobile_vpn_public_port: {},                                   # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+    # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
+    
+    "userdata":       {
+        #example_value: [
+        #    testuser1: { 
+        #        name: "Test User 1", 
+        #        email: "test1@test.de",
+        #        groups: [ "admin", "user" ], 
+        #        telegram_bot: "bot_testuser1",    # used by openhab => reference to bot key in vault.yml
+        #        phone_device: {                   # optional. will be used by device_ping role
+        #          ip: "{{server_subnet}}.69", 
+        #          timeout: 60 
+        #        },
+        #        vpn_gates: {                      # optional. will be used by wireguard_mobile role
+        #          "phone": "{{vpn_mobile_subnet}}.11", 
+        #          "tablet": "{{vpn_mobile_subnet}}.12" 
+        #        },
+        #        media_dir: {
+        #          "test_media": "/"               # nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+        #        }
+        #    }        
+        #]
+    },
+    
+    "update_daemon_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
+    "update_daemon_software_check_email": { "default": null },    # null, "testadmin@test.com" => sends a notification email after each check, if new software is available 
+    "update_daemon_system_check_enabled": { "default": yes },     # enables the update check for this deployment
+    "update_daemon_system_check_email": { "default": null },      # null, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    
+    #vault_telegram_bots: {
+    #    bot_testuser1: { # for user1
+    #        chat_id: "<chat_id>",
+    #        chat_token: "<chat_token>"
+    #    }
+    #}
+    
+    "vault_mailserver_username": {},                              # "testusername@test.com", "testadmin@test.com" ... => username from your email server
+    "vault_mailserver_password": {},                              # "<mypassword>" => password from your email server
+    "vault_mailserver_host": {},                                  # "smtp.gmail.com" => smtp address from your email server
+    "vault_mailserver_port": {},                                  # "587" => smtp port from your email server
+
+    "vault_userpasswords": {
+        #"example_value": {
+        #    testuser1: { samba_password: "<mysambapassword>", web_password: "<mywebpassword>" },
+        #    testuser2: { samba_password: "<mysambapassword>", web_password: "<mywebpassword>" },
+        #    testuser3: { samba_password: "<mysambapassword>", web_password: "<mywebpassword>" }
+        #}
+    },
+
+    # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
+    # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
+    "vault_openid_connect_url": { "default": null },              # 'null' means disabled, to enable check documentation urls to get the right values
+    "vault_openid_connect_client_id": { "default": null },
+    "vault_openid_connect_client_secret": { "default": null },
+    "vault_openid_connect_passphrase": { "default": null },
+
+    "vault_form_auth_passphrase": {},                             # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
+
+    "vault_pihole_password": {                                    # used to login into pihole
+        condition: "pihole_ip"
+    },
+
+    "vault_ftp_username": { "default": null },                    # "ftp" => used for e.g. camera image uploads ('null' means disabled) 
+    "vault_ftp_password": {
+        condition: "vault_ftp_username"
+    },
+
+    "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
+    "vault_influxdb_admin_password": {},
+    "vault_influxdb_admin_token": {},                             # "lkjfdh7123kjas" => token used for internal command line operations
+
+    "vault_shared_mysql_username": { "default": "shared" },       # used for internal data
+    "vault_shared_mysql_password": {},
+
+    # to enable obtain a login from https://api.weather.mg/
+    # to disable, leave the username empty
+    "vault_weather_api_username": { "default": null },            # 'null' means disabled
+    "vault_weather_api_password": { "default": null },
+
+    "vault_nextcloud_instance_id": {},                            # "234sdgzw87399443s" => used internally
+    "vault_nextcloud_password_salt": {},                          # "9ad9aus92z4ij20j20idj928912hd1jd0"
+    "vault_nextcloud_secret": {},                                 # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+    "vault_nextcloud_mysql_username": { "default": "nextcloud" }, # used for nextcloud data
+    "vault_nextcloud_mysql_password": {},
+    "vault_nextcloud_admin_username": { "default": "admin" },     # used to login as a nextcloud data
+    "vault_nextcloud_admin_password": {},
+
+    "vault_onlyoffice_shared_key": {},                            # e.g. "qwe0983yxcxy435"
+    "vault_onlyoffice_mysql_username": { "default": "onlyoffice" }, # used for onlyoffice data
+    "vault_onlyoffice_mysql_password": {},
+
+    "vault_grafana_app_username": { "default": "admin" },
+    "vault_grafana_app_password": {},                             # e.g. "lksjdls" => used 
+
+    "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
+    "vault_deployment_token_git": { "default": null },            # only needed if you enable "ci_service"
+
+    "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
+    "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
+    "vault_openhab_mysql_password": {},
+}
+
+

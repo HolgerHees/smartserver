@@ -653,7 +653,7 @@ def deploySmartserverUpdates():
     if cmd:
         return handler.startThread(cmd)
     else:
-        return self.buildErrorResult("501", "Deployment state file missing, empty or not readable")
+        return make_response("Deployment state file missing, empty or not readable", 501);
 
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
