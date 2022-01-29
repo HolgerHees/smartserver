@@ -2,11 +2,11 @@
   yum:
     name: [
         python3-flask,
-        python3-pyinotify
+        python3-inotify
       , yum-utils # used by needs-restart
     ]
     state: present
-  when: is_fedora|bool
+  when: "is_fedora|bool and update_daemon_system_check_enabled"
 
 - name: install required packages => is_ubuntu
   apt:
@@ -15,7 +15,7 @@
         python3-pyinotify
     ]
     state: present
-  when: is_ubuntu|bool
+  when: "is_ubuntu|bool and update_daemon_system_check_enabled"
   
 - name: install required packages => is_suse
   zypper:
@@ -24,7 +24,7 @@
         python3-pyinotify
     ]
     state: present
-  when: is_suse|bool
+  when: "is_suse|bool and update_daemon_system_check_enabled"
   
 - name: prepare needed folder
   file:
@@ -34,25 +34,21 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}update_daemon/server/" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_daemon/config" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_daemon" }
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_daemon/" }
 
-- name: copy tool
-  copy:
-    src: "templates/opt/update_daemon/{{item}}"
-    dest: "/opt/update_daemon/"
+- name: prepare needed system_check folder
+  file:
+    path: "{{item.path}}"
+    state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: "{{item.mode}}"
   with_items:
-    - helper
-    - plugins
-    - server
-    - software_version_check
-    - system_update_check
+    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}update_daemon/server/" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_daemon/" }
+  when: "update_daemon_system_check_enabled|bool"
 
 - name: copy config
   template:
@@ -62,6 +58,40 @@
     group: root
     mode: 0750
 
+- name: copy libs
+  copy:
+    src: "templates/opt/update_daemon/{{item}}"
+    dest: "/opt/update_daemon/"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - helper
+    - plugins
+
+- name: copy software_check tool
+  copy:
+    src: "templates/opt/update_daemon/{{item}}"
+    dest: "/opt/update_daemon/"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - software_version_check
+  when: "update_daemon_software_check_enabled|bool"
+
+- name: copy system_check tool
+  copy:
+    src: "templates/opt/update_daemon/{{item}}"
+    dest: "/opt/update_daemon/"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - server
+    - system_update_check
+  when: "update_daemon_system_check_enabled|bool"
+
 - name: copy software webui
   copy:
     src: "templates/htdocs/update_software"
@@ -70,6 +100,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   tags: ['apache_webui_page']
+  when: "update_daemon_software_check_enabled|bool"
 
 - name: copy software webui config
   template:
@@ -79,6 +110,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   tags: ['apache_webui_page']
+  when: "update_daemon_software_check_enabled|bool"
 
 - name: copy system webui
   copy:
@@ -88,6 +120,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   tags: ['apache_webui_page']
+  when: "update_daemon_system_check_enabled|bool"
 
 - name: copy system webui config
   template:
@@ -97,6 +130,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   tags: ['apache_webui_page']
+  when: "update_daemon_system_check_enabled|bool"
 
 - name: register webui
   vars:

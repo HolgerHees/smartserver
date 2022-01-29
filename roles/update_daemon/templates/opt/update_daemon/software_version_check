@@ -106,7 +106,7 @@ for config_file in files:
         current_states['states'].append(current_state)
             
 if limit_config == None:
-    if config.send_software_version_notification and len(update_message_r) > 0:
+    if config.software_check_email and len(update_message_r) > 0:
         message_r = []
         message_r.append("There are new updates")
         for message in update_message_r:
@@ -115,7 +115,7 @@ if limit_config == None:
         
         print("Send notification mail")
 
-        subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" root".format("\n".join(message_r),"New component updates available") ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" {}".format("\n".join(message_r),"New component updates available",config.software_check_email) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 
     with open(config.software_version_state_file, 'w') as f:
         json.dump(current_states, f)

@@ -1,11 +1,12 @@
 - name: prepare shared folder
   file:
-    path: "{{item}}"
+    path: "{{item.path}}"
     state: directory
-    owner: root
-    group: root
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
     mode: 0755
   with_items:
-    - "{{global_etc}}apache2/"
-    - "{{global_etc}}apache2/_.ansible.conf.d/"
-    - "{{global_etc}}apache2/_.ansible.vhost.d/"
+    - {owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}" }
+    - {owner: "root", group: "root", path: "{{global_etc}}apache2/" }
+    - {owner: "root", group: "root", path: "{{global_etc}}apache2/_.ansible.conf.d/" }
+    - {owner: "root", group: "root", path: "{{global_etc}}apache2/_.ansible.vhost.d/" }

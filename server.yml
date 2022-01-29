@@ -80,7 +80,7 @@
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
-    - { import_role: { name: pihole }, tags: [ 'pihole' ] }                                      # adblock server                                                    [docker,user:root]
+    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip != null" }           # adblock server                                                    [docker,user:root]
 
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 
@@ -88,7 +88,7 @@
 
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 
-    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ] }                                  # ftp file server for camera picture upload and cleanup             [docker,user:ftp]
+    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ], when: "vault_ftp_username != null" } # ftp file server for camera picture upload and cleanup          [docker,user:ftp]
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
@@ -130,7 +130,7 @@
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
     - { import_role: { name: onlyoffice }, tags: [ 'onlyoffice' ] }                              # office editor                                                     [docker,user:106|108]
 
-    - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_volumes|length>0" } # dlna media server                                         [docker,user:wwwrun|apache]
+    - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_ip != null and dlna_volumes|length>0" } # dlna media server                     [docker,user:wwwrun|apache]
      
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
@@ -140,7 +140,7 @@
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
-    - { import_role: { name: update_daemon }, tags: [ 'update_daemon' ] }                        # update check & handler
+    - { import_role: { name: update_daemon }, tags: [ 'update_daemon' ], when: "update_daemon_software_check_enabled or update_daemon_system_check_enabled" }      # update check & handler
 
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }                          # Details can be found inside the demo configuration 'config/demo/roles.yml'
@@ -160,4 +160,6 @@
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running
 
-    - { import_role: { name: update_daemon, tasks_from: confirm_deployment, handlers_from: empty }, tags: [ 'all', 'confirm_deployment' ] } # set confirm date
+    - { import_role: { name: update_daemon, tasks_from: collect_deployment_tags, handlers_from: empty }, tags: [ 'all', 'collect_deployment_tags', 'confirm' ], when: "update_daemon_system_check_enabled" } # get ansible tags, used in update daemon webui
+
+    - { import_role: { name: update_daemon, tasks_from: confirm_deployment, handlers_from: empty }, tags: [ 'all', 'confirm_deployment', 'confirm' ], when: "update_daemon_system_check_enabled" } # set confirm date

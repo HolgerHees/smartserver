@@ -2,6 +2,7 @@
 
 import subprocess
 import json
+import sys
 from datetime import datetime
 
 from lib.config import GLOBAL_BUILD
@@ -30,6 +31,10 @@ class Image:
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
   
+is_quite = None
+if len(sys.argv) >= 2:
+    is_quite = sys.argv[1] == "-q"
+
 # Collect Images used in Dockerfiles
 build_images = {}
 result = execCommand("grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(GLOBAL_BUILD))
@@ -70,13 +75,16 @@ for name in sorted(images):
     for image_version in image_versions:
         container_image = u"{}:{}".format(image_version.name,image_version.tag)
         if container_image in containers:
-            print(u"\033[0;32mUSED\033[0m      : '{}', '{}'".format(image_version.id,container_image))
+            if not is_quite:
+                print(u"\033[0;32mUSED\033[0m      : '{}', '{}'".format(image_version.id,container_image))
             continue
 
         if container_image in build_images:
-            print(u"\033[0;33mREFERENCED\033[0m: '{}', '{}'".format(image_version.id,container_image))
+            if not is_quite:
+                print(u"\033[0;33mREFERENCED\033[0m: '{}', '{}'".format(image_version.id,container_image))
             continue
 
         print(u"\033[0;91mDELETED\033[0m   : '{}', '{}'".format(image_version.id,container_image))
 
         execCommand("docker image rm {}".format(image_version.id))
+      

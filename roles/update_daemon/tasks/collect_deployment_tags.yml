@@ -1,0 +1,45 @@
+
+- name: "parse tags"
+  set_fact:
+    list_cmd: "ansible-playbook -i {{projects_path}}{{project_name}}/config/{{inventory_hostname}}/{{ansible_inventory_sources[0] | basename}} --list-tags server.yml | grep -Po \"TAGS: \\[[^\\]]+\\]\""
+    grep_cmd: "grep -RPo \"tags\\s*:\\s*\\[\\K[^\\]]+\" --include \\*.yml --no-filename {{projects_path}}{{project_name}}/config/{{inventory_hostname}}"
+
+- name: debug
+  debug:
+    msg: "{{list_cmd}}"
+
+- name: "list tags"
+  shell: "{{list_cmd}}"
+  changed_when: no
+  register: list_result
+            
+- name: debug
+  debug:
+    msg: "{{grep_cmd}}"
+
+- name: "grep tags"
+  shell: "{{grep_cmd}}"
+  changed_when: no
+  register: grep_result
+            
+- name: "parse tags"
+  set_fact:
+    listed_tag_result: "{{ (list_result.stdout | regex_replace('\\s', '') )[6:-1].split(',') }}"
+    grepped_tag_result: "{{ ( grep_result.stdout | regex_replace('\\n', ',') | regex_replace(\"'|\\s\", '') ).split(',') }}"
+
+- name: "merge and sort tags"
+  set_fact:
+    tag_result: "{{ ( listed_tag_result + grepped_tag_result ) | unique | sort }}"
+
+#- name: debug
+#  debug:
+#    msg: "{{ tag_result }}"
+
+- name: "write deployment tags"
+  template:
+    src: "templates/deployment.tags"
+    dest: "{{global_lib}}update_daemon/deployment.tags"
+    owner: root
+    group: root
+    mode: 0644
+

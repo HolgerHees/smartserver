@@ -21,15 +21,8 @@ class Job {
         $this->datetime_raw = $data[0];
                
         $this->state = $data[2];
-        $this->config = $data[3];
-        $this->os = $data[4];
-        $this->branch = $data[5];
-        $this->git_hash = $data[6];
-        $this->author = $data[7];
-        $this->author = str_replace("_"," ",$this->author);
-        $this->subject = explode(".",$data[8])[0];
-        if( substr($this->subject,-1) == '_' ) $this->subject = substr($this->subject,0,strlen($this->subject)-1) . '...';
-        $this->subject = str_replace("_"," ",$this->subject);
+        $this->cmd = $data[3];
+        $this->username = explode(".",$data[4])[0];
 
         $this->duration = $data[1];
         if( $this->duration == 0 && $this->state == "running" ) 
@@ -66,7 +59,7 @@ class Job {
        
     public function getHash()
     {
-        return md5($this->datetime_raw.':'.$this->config.':'.$this->os.':'.$this->branch.':'.$this->git_hash);
+        return md5($this->datetime_raw.':'.$this->username.':'.$this->cmd);
     }
         
     public function getDateTime()
@@ -89,33 +82,13 @@ class Job {
         return $this->state;
     }
 
-    public function getConfig()
+    public function getUsername()
     {
-        return $this->config;
+        return $this->username;
     }
 
-    public function getOs()
+    public function getCmd()
     {
-        return $this->os;
-    }
-
-    public function getBranch()
-    {
-        return $this->branch;
-    }
-
-    public function getGitHash()
-    {
-        return $this->git_hash;
-    }
-
-    public function getAuthor()
-    {
-        return $this->author;
-    }
-
-    public function getSubject()
-    {
-        return $this->subject;
+        return $this->cmd;
     }
 }

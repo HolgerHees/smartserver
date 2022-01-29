@@ -1,7 +1,7 @@
 <?php
 require "config.php";
 
-require "/opt/shared/php/http.php";
+require "..//shared/libs/http.php";
 
 $name = $_SERVER['REMOTE_USERNAME'];
 $groups = [];
@@ -45,6 +45,8 @@ if( !empty($data["parameter"]) )
     $post = $data["parameter"];
 }
 
+$post['username'] = $_SERVER['REMOTE_USERNAME'];
+
 $ch = curl_init("http://".$daemon_ip.":8505/" . $action . '/' ); // such as http://example.com/example.xml
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -54,7 +56,7 @@ $data = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 if( $code == 0 ) $code = 500;
 
-header('HTTP/1.0 ' . $code . " " . $http_status_reason[$code]);
+header('HTTP/1.0 ' . $code . " " . HttpResponse::getStatusReason($code));
 curl_close($ch);
 
 echo $data;

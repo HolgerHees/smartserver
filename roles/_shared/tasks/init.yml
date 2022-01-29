@@ -47,6 +47,57 @@
   changed_when: False
   register: "vault_check_result"
   
+# load initial environment variables
+- name: load default vars
+  include_vars: "config/default.yml"
+  tags: always
+
+- name: apply default vars => ['green' means DEFAULT value, 'turquoise' means CUSTOM value, 'red' means MISSING value]
+  set_fact: 
+    "{{item}}": "{{ default_variables[item]['default'] if default_variables[item]['default'] is defined else None }}"
+  when: >
+    vars[item] is not defined
+    and
+    (
+      default_variables[item]['condition'] is not defined
+      or
+      ( 
+        vars[default_variables[item]['condition']] is defined and vars[default_variables[item]['condition']] 
+      )
+      or
+      ( 
+        vars[default_variables[item]['condition']] is not defined 
+        and 
+        default_variables[default_variables[item]['condition']]['default'] is defined and default_variables[default_variables[item]['condition']]['default'] 
+      )
+    )
+  failed_when: >
+    vars[item] is not defined
+    and 
+    default_variables[item]['default'] is not defined 
+    and
+    ( 
+      default_variables[item]['condition'] is not defined 
+      or
+      ( 
+        vars[default_variables[item]['condition']] is defined and vars[default_variables[item]['condition']] 
+      )
+      or
+      ( 
+        vars[default_variables[item]['condition']] is not defined 
+        and 
+        default_variables[default_variables[item]['condition']]['default'] is defined and default_variables[default_variables[item]['condition']]['default'] 
+      )
+    )
+  ignore_errors: yes
+  register: check_result
+  with_items: "{{default_variables}}"
+  
+- name: check for missing variables
+  assert:
+    that: "check_result.failed is not defined or not check_result.failed"
+    msg: "Some variables are not defined. Please check the 'config/default.yml' file and add the missing variables to your configuration."
+
 # set environment specific variables [pre]
 - name: set pre state vars
   set_fact:

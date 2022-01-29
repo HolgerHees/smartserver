@@ -7,7 +7,7 @@ compatibility_level = 1
 myhostname = {{server_name}}
 mynetworks = 127.0.0.0/8 [::1]/128 172.0.0.0/8
 mydestination = localhost
-relayhost = [{{vault_root_mail_host}}]:{{vault_root_mail_port}}
+relayhost = [{{vault_mailserver_host}}]:{{vault_mailserver_port}}
 recipient_canonical_maps = regexp:/etc/postfix/canonical_maps_recipient
 
 # add message id
@@ -15,7 +15,7 @@ always_add_missing_headers = yes
 
 # smtp-out params
 smtp_sasl_auth_enable = yes
-smtp_sasl_password_maps = static:{{ vault_root_mail_username }}:{{ vault_root_mail_password }}
+smtp_sasl_password_maps = static:{{ vault_mailserver_username }}:{{ vault_mailserver_password }}
 smtp_sasl_security_options = noanonymous
 smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 #smtp_tls_security_level = may

@@ -15,7 +15,7 @@ mx.CIList = (function( ret ) {
     {
         for( key in elementRunningDuration )
         {
-            var formattedDuration = mx.CICore.formatDuration(++elementRunningDuration[key]);
+            var formattedDuration = mx.Logfile.formatDuration(++elementRunningDuration[key]);
             document.getElementById(key).querySelector(runtimeSelector).innerHTML = formattedDuration;
         }
     }

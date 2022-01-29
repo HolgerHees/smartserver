@@ -19,7 +19,7 @@ if len(sys.argv) >= 2:
     
 update_time = "{}Z".format(datetime.now().utcnow().isoformat('T'))
 
-state_template = {"last_system_state": update_time, "last_system_update": update_time, "last_deployment_update": update_time, "os_updates": [], "os_outdated": [], "os_reboot": False, "smartserver_code": "", "smartserver_changes": [], "smartserver_tags": [], "smartserver_pull": update_time}
+state_template = {"last_system_state": update_time, "last_system_update": update_time, "last_deployment_update": update_time, "os_updates": [], "os_outdated": [], "os_reboot": False, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": update_time}
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
     with open(config.system_update_state_file, 'r') as f:
@@ -32,12 +32,12 @@ state = {i:j for i,j in state.items() if i in state_template}
 update_message_r = []
 
 # **** SYSTEM CHECK **********************************************
-if limit_step is None or limit_step == "system_state" or limit_step == "system_update":
+if limit_step is None or limit_step == "system_state" or limit_step == "system_update" or limit_step == "system":
     print("System")
     plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
     repo = plugin.Repository()
 
-if limit_step is None or limit_step == "system_state":
+if limit_step is None or limit_step == "system_state" or limit_step == "system":
     state["last_system_state"] = update_time
 
     state["os_reboot"] = repo.getRebootState()
@@ -52,7 +52,7 @@ if limit_step is None or limit_step == "system_state":
     else:
       print( u"  - \033[1;31mhas outdated processes\033[0m")
 
-if limit_step is None or limit_step == "system_update":
+if limit_step is None or limit_step == "system_update" or limit_step == "system":
     state["last_system_update"] = update_time
 
     state["os_updates"] = repo.getUpdates()
@@ -109,13 +109,9 @@ if limit_step is None or limit_step == "deployment_update":
 
         if len(last_states["smartserver_changes"]) != len(state["smartserver_changes"]):
             update_message_r.append(u"smartserver has {} updates".format(len(state["smartserver_changes"])))
-            
-    tags = deploymentUpdate.getAnsibleTags()
-    state["smartserver_tags"] = tags
-    print( u"  - found {} ansible tags".format(len(tags)))
 # ****************************************************************
 
-if limit_step is None and config.send_system_update_notification and len(update_message_r) > 0:
+if limit_step is None and config.update_check_email and len(update_message_r) > 0:
     message_r = []
     message_r.append(u"There are new updates")
     for message in update_message_r:
@@ -124,7 +120,7 @@ if limit_step is None and config.send_system_update_notification and len(update_
    
     print(u"Send notification mail")
 
-    subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" root".format("\n".join(message_r),"New system updates available") ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" {}".format("\n".join(message_r),"New system updates available",config.update_check_email) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
   
 with open(config.system_update_state_file, 'w') as f:
     json.dump(state, f)

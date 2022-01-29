@@ -98,7 +98,6 @@
     group: "{{system_groups['www'].name}}"
     mode: 0755
   with_items:
-    - "{{htdocs_path}}"
     - "{{htdocs_path}}letsencrypt"
     - "{{htdocs_path}}letsencrypt/.well-known"
     - "{{htdocs_path}}fallback"

@@ -3,13 +3,14 @@ mx.Autocomplete = (function( ret ) {
         input: null,
         values: [],
         top_values: [],
+        show_term: false,
         selected_values: [],
         selectors: {
             selectionLayer: null,
         },
         activeIndex: -1,
         rowCount: 0,
-        lastTerm: ""
+        lastTerm: null
     };
     
     function show(options)
@@ -17,6 +18,7 @@ mx.Autocomplete = (function( ret ) {
         options.elements.autocompleteLayer.style.display = "block";
         window.setTimeout(function(){ options.elements.autocompleteLayer.style.opacity = 1; }, 0);
 
+        options.input.addEventListener("keydown",options.onKeyDown);
         window.addEventListener('click', options.onBlur);
     }
     
@@ -27,6 +29,7 @@ mx.Autocomplete = (function( ret ) {
         },"Autocomplete closed");
         options.elements.autocompleteLayer.style.opacity = "";
 
+        options.input.removeEventListener("keydown",options.onKeyDown);
         window.removeEventListener('click', options.onBlur);
     }
     
@@ -91,7 +94,7 @@ mx.Autocomplete = (function( ret ) {
                
         options.elements.autocompleteLayer.innerHTML = "";
         
-        if( term != "" && options.values.indexOf(term) == -1 )
+        if( options.show_term && term != "" && options.values.indexOf(term) == -1 )
         {
             buildValue(options, term, "term");
             var element = document.createElement("div");
@@ -133,22 +136,19 @@ mx.Autocomplete = (function( ret ) {
         hide(options);
     }
     
+    function cancelLongKeyPressedHandler(options)
+    {
+      
+    }
+    
     function onKeyUp(event, options)
     {
         //console.log(event.keyCode);
-        if( event.keyCode == 38 )
+        if( event.keyCode == 38 || event.keyCode == 40 || event.keyCode == 13 )
         {
-            options.activeIndex -= 1;
-            hightlightRow(options);
-        }
-        else if( event.keyCode == 40 )
-        {
-            options.activeIndex += 1;
-            hightlightRow(options);
-        }
-        else if( event.keyCode == 13 )
-        {
-            selectActiveRow(options);
+            options.isUpKeyDown = false;
+            options.isDownKeyDown = false;
+            return;
         }
         else 
         {
@@ -156,6 +156,47 @@ mx.Autocomplete = (function( ret ) {
         }
     }
     
+    function onKeyDown(event, options)
+    {
+        //console.log(event.keyCode);
+        if( event.keyCode == 38 )
+        {
+            options.isUpKeyDown = true;
+            function longPressedKeyHandler(){ 
+                if( !options.isUpKeyDown ) return;
+                   
+                options.activeIndex -= 1;
+                hightlightRow(options,true);
+              
+                options.longPressedKeyTrigger = window.setTimeout(function(){ longPressedKeyHandler(); },500);
+            };
+            options.longPressedKeyTrigger = window.setTimeout(function(){ longPressedKeyHandler(); },1000);
+
+            options.activeIndex -= 1;
+            hightlightRow(options,true);
+        }
+        else if( event.keyCode == 40 )
+        {
+            options.isDownKeyDown = true;
+            function longPressedKeyHandler(){ 
+                if( !options.isDownKeyDown ) return;
+
+                options.activeIndex += 1;
+                hightlightRow(options,false);
+              
+                options.longPressedKeyTrigger = window.setTimeout(function(){ longPressedKeyHandler(); },500);
+            };
+            options.longPressedKeyTrigger = window.setTimeout(function(){ longPressedKeyHandler(); },1000);
+
+            options.activeIndex += 1;
+            hightlightRow(options,false);
+        }
+        else if( event.keyCode == 13 )
+        {
+            selectActiveRow(options);
+        }
+    }
+
     function selectActiveRow(options)
     {
         var element = options.visibleRows[options.activeIndex];
@@ -163,13 +204,32 @@ mx.Autocomplete = (function( ret ) {
         selectValue(options, value, element);
     }
     
-    function hightlightRow(options)
+    function hightlightRow(options,is_up)
     {
         if( options.activeIndex < 0 ) options.activeIndex = 0;
         else if( options.activeIndex >= options.visibleRows.length ) options.activeIndex = options.visibleRows.length - 1;
-        
+               
+        var element = options.visibleRows[options.activeIndex];
         options.visibleRows.forEach(function(element){ element.classList.remove("active"); });
-        options.visibleRows[options.activeIndex].classList.add("active");           
+        element.classList.add("active");           
+
+        if( is_up )
+        {
+            var scrollPos = element.offsetTop;
+            if( scrollPos < options.elements.autocompleteLayer.scrollTop )
+            {
+                options.elements.autocompleteLayer.scrollTop = scrollPos;
+            }
+        }
+        else
+        {
+            var scrollPos = ( element.offsetTop + element.clientHeight ) - options.elements.autocompleteLayer.clientHeight;
+            if( scrollPos > options.elements.autocompleteLayer.scrollTop )
+            {
+                options.elements.autocompleteLayer.scrollTop = scrollPos;
+            }
+        }
+        
     }
     
     function createAutocomplete(options)
@@ -181,11 +241,14 @@ mx.Autocomplete = (function( ret ) {
         options.elements.autocompleteLayer.style.width = positionInfo.width + "px";
         options.input.parentNode.appendChild(options.elements.autocompleteLayer);
         
+        //options.autocompleteLayerRect = options.elements.autocompleteLayer.getBoundingClientRect();
+        
         options.onFocus = function(event) { onFocus(event, options); }
         options.input.addEventListener("focus",options.onFocus);
         options.onKeyUp = function(event) { onKeyUp(event, options); }
         options.input.addEventListener("keyup",options.onKeyUp);
 
+        options.onKeyDown = function(event) { onKeyDown(event, options); }
         options.onBlur = function(event) { onBlur(event, options); }
     }
     
@@ -222,6 +285,7 @@ mx.Autocomplete = (function( ret ) {
 
                 options.input.removeEventListener("focus", options.onFocus);
                 options.input.removeEventListener("keyup", options.onKeyUp);
+                options.input.removeEventListener("keydown", options.onKeyDown);
 
                 options.elements.autocompleteLayer.remove();
             }

@@ -1,5 +1,33 @@
-#serverNeedsRestart {
+#serverNeedsRestart,
+#currentRunningActions {
   display:none;
+}
+div.info,
+div.header div:first-child {
+  color: var(--light-menu-text);
+}
+div.action:hover {
+  background-color: var(--light-menu-hover-bg);
+  border-radius: 4px;
+}
+body.dark div.info,
+body.dark div.header div:first-child {
+  color: var(--dark-menu-text);
+}
+body.dark div.action:hover {
+  background-color: var(--dark-menu-hover-bg);
+}
+div.info.green,
+div.header.green {
+  color: var(--color-green);
+}
+div.info.yellow,
+div.header.yellow {
+  color: var(--color-yellow);
+}
+div.info.red,
+div.header.red {
+  color: var(--color-red);
 }
 div.widget {
   width: 100%;
@@ -11,41 +39,44 @@ div.table {
   overflow: auto;
 }
 div.header {
+  padding: 5px 5px 5px 5px;
   display: flex;
   align-items: center;
 }
-div.header span {
-  display: inline-block;
-}
-div.header span:first-child {
+div.header div:first-child {
   font-size: 20px;
   font-weight: bold;
 }
-div.header span:last-child {
+div.header div:last-child {
   color: #AAA;
   font-size: 15px;
   font-weight: normal;
   padding-top: 2px;
   padding-left: 5px;
+  white-space: nowrap;
 }
 div.action {
-  margin: 10px 0 10px 20px;
+  margin: 5px 0 5px 15px;
+  padding: 5px 5px 5px 5px;
   font-weight: normal;
   display: flex;
   align-items: center;
-  height: 45px;
-}
-div.action:hover {
-  background-color: #f2f2f2;
+  min-height: 45px;
 }
 div.info {
   flex-grow: 1; 
-}
-div.info {
   font-size: 16px;
+}
+div.info .sub {
+  color: #AAA;
+  font-size: 13px;
 }
 div.form.button {
   margin-left: 5px;
+  white-space: nowrap;
+}
+div.buttons {
+  white-space: nowrap;
 }
 .green {
     color: var(--color-green);
@@ -58,6 +89,8 @@ div.form.button {
 }
 div.list.form.table {
   margin-left: 20px;
+  margin-right: 5px;
+  margin-bottom: 10px;
   max-height: 0;
   transition: max-height 0.3s;
   display: none;
@@ -91,4 +124,19 @@ div.dialogLayer .confirmDialog .deployConfirmation
   position: absolute;
   margin-top: -35px;
   padding-left: 5px;
+}
+div.detailView {
+  cursor: pointer;
+  display: inline-block;
+  color: #1976d2;
+}
+div.detailView:hover {
+  text-decoration: underline;
+}
+
+div.form.table > div.row > div.indexLogDate {
+  white-space: nowrap;
+}
+div.form.table.logfileBox {
+  width: auto;
 }

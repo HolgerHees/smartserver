@@ -1,0 +1,84 @@
+div.form.table.logfileBox {
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+  font-size: 16px;
+  overflow: auto;
+}
+div.form.table.logfileBox > div.row {
+  cursor: pointer;
+}
+div.form.table.logfileBox > div.row > div {
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+  display: table-cell;
+  color: #333;
+  white-space: normal;
+}
+body.dark div.form.table.logfileBox > div.row > div {
+  color: #eee;
+}
+div.form.table.logfileBox > div.row > div {
+  width: 1%;
+}
+div.form.table.logfileBox > div.row > div:last-child {
+  text-align: right;
+}
+div.form.table.logfileBox > div.row > div:first-child {
+  width: 5px;
+}
+div.form.table.logfileBox > div.row > div > span {
+  display: block;
+  margin-top: 5px;
+}
+div.form.table.logfileBox > div.row > div > span:first-child {
+  margin-top: 0;
+}
+div.form.table.logfileBox > div.row > div.running {
+  background-color: #ffd768;
+}
+div.form.table.logfileBox > div.row > div > span.state.running {
+  color: #ffd768;
+}
+div.form.table.logfileBox > div.row > div.success {
+  background-color: var(--color-green);
+}
+div.form.table.logfileBox > div.row > div > span.state.success {
+  color: var(--color-green);
+}
+div.form.table.logfileBox > div.row > div.stopped {
+  background-color: #959595;
+}
+div.form.table.logfileBox > div.row > div > span.state.stopped {
+  color: #959595;
+}
+div.form.table.logfileBox > div.row > div.retry {
+  background-color: #541edc;
+}
+div.form.table.logfileBox > div.row > div > span.state.retry {
+  color: #541edc;
+}
+div.form.table.logfileBox > div.row > div.failed {
+  background-color: var(--color-red);
+}
+div.form.table.logfileBox > div.row > div > span.state.failed {
+  color: var(--color-red);
+}
+div.form.table.logfileBox > div.row > div > span.state {
+  display: flex;
+  justify-content: space-between;
+}
+div.form.table.logfileBox > div.row > div > span.state > span.text {
+  padding-right: 5px;
+}
+div.form.table.logfileBox > div.row > div > span.runtime, 
+div.form.table.logfileBox > div.row > div > span.datetime, 
+div.form.table.logfileBox > div.row > div > span.username, 
+div.form.table.logfileBox > div.row > div > span.state {
+  white-space: nowrap;
+}
+div.form.table.logfileBox > div.row > div > span.state > span.icon-dot:before {
+  font-size: 40px;
+  margin: -12px -8px -10px -5px;
+} 

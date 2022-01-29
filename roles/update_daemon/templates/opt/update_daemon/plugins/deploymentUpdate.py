@@ -50,16 +50,16 @@ class DeploymentUpdate:
                     
                     json_result = json.loads(result)
 
-                    build_states = {}
+                    build_pending_states = {}
+                    build_failed_states = {}
+                    build_success_states = {}
                     for build_state in json_result:
-                        if build_state["context"] not in build_states:
-                            build_states[build_state["context"]] = False
-
                         if build_state["state"] == "success":
-                            build_states[build_state["context"]] = True 
-
-                    build_failed_states = [s for s in build_states if not s]
-                    build_success_states = [s for s in build_states if s]
+                            build_success_states[build_state["context"]] = True 
+                        elif build_state["state"] == "failure":
+                            build_failed_states[build_state["context"]] = False 
+                        elif build_state["state"] == "pending":
+                            build_pending_states[build_state["context"]] = None 
 
                     if len(build_failed_states) > 0:
                         smartserver_code = "failed"
@@ -110,21 +110,6 @@ class DeploymentUpdate:
             lines = list(filtered_values)
             
             smartserver_changes = lines
-        
+            
         return smartserver_code, smartserver_pull, smartserver_changes
-      
-    def getAnsibleTags(self):
-        tags = []
-        if self.deployment_state is not None:
-            cmd = [ "ansible-playbook", "-i", "config/{}/{}".format(self.deployment_state["config"],self.deployment_state["server"]), "--list-tags", "server.yml" ]
-            result = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=self.config.git_directory )
-            ansible_result = result.stdout.decode("utf-8").strip()
-            m = re.findall('TAGS: \\[[^\\]]*\\]', ansible_result)
-            if m is not None:
-                for matches in m:
-                    _tags = matches[7:-1].split(",")
-                    _tags = [ele.strip() for ele in _tags]
-                    _tags = list(filter(len, _tags))
-                    tags += _tags
-        return tags
 

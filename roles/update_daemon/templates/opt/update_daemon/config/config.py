@@ -1,5 +1,5 @@
-send_software_version_notification = {{'True' if send_update_notifier_email else 'False'}}
-send_system_update_notification = {{'True' if send_update_notifier_email else 'False'}}
+software_check_email = {{ "'" + update_daemon_software_check_email + "'" if update_daemon_software_check_email is defined and update_daemon_software_check_email != None else 'None'}}
+update_check_email = {{ "'" + update_daemon_system_check_email + "'" if update_daemon_system_check_email is defined and update_daemon_system_check_email != None else 'None'}}
 
 server_host = "{{server_domain}}"
 
@@ -11,6 +11,9 @@ components_config_dir = "{{global_etc}}update_daemon/software/"
 software_version_state_file = "{}software_versions.state".format(target_dir)
 system_update_state_file = "{}system_updates.state".format(target_dir)
 deployment_state_file = "{}deployment.state".format(target_dir)
+deployment_tags_file = "{}deployment.tags".format(target_dir)
+
+deployment_workflow_file = "{{global_tmp}}update_daemon.workflow".format(target_dir)
 
 git_directory = "{{projects_path}}{{project_name}}"
 git_remote = "{{vault_deployment_config_git}}"

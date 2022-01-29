@@ -23,6 +23,13 @@ body.dark .form.button {
         background-color: var(--dark-button-hover-bg);
     }
 }
+.form.button {
+    background-color: var(--light-button-bg);
+  
+}
+body.dark .form.button {
+    background-color: var(--dark-button-bg);
+}
 body.dark .form.button:focus {
     outline: none;
 }
@@ -54,6 +61,15 @@ body.dark .form.button:active:not(.disabled) {
     filter: brightness(0.9);
 }
 .form.button.yellow:active:not(.disabled) {
+    filter: brightness(0.8);
+}
+.form.button.green {
+    background-color: var(--color-green) !important;
+}
+.form.button.green:hover:not(.disabled) {
+    filter: brightness(0.9);
+}
+.form.button.green:active:not(.disabled) {
     filter: brightness(0.8);
 }
 
@@ -118,10 +134,21 @@ body.dark div.form.table > div.row > div {
     margin: 0 auto;
     padding: 15px;
 }
+body.dark .dialogLayer .box {
+    background-color: var(--dark-bg);
+}
 .dialogLayer .box .header {
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
+}
+.dialogLayer .box .header,
+.dialogLayer .box .body {
+    color: var(--light-menu-text);
+}
+body.dark .dialogLayer .box .header,
+body.dark .dialogLayer .box .body {
+    color: var(--dark-menu-text);
 }
 .dialogLayer .box .body {
     margin-bottom: 15px;
@@ -150,6 +177,9 @@ body.dark div.form.table > div.row > div {
     border-right: 1px solid #dadce0;
     border-bottom: 1px solid #dadce0;
     transition: opacity 100ms linear;
+}
+body.dark .autoCompleteLayer {
+    background-color: var(--dark-bg);
 }
 .autoCompleteLayer > div.separator {
     height: 1px;

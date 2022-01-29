@@ -1,23 +1,21 @@
 <?php
 require "../shared/libs/logfile.php";
 
-require "inc/job.php";
 require "inc/job_template.php";
+require "inc/job.php";
 require "config.php";
 
 $datetime = isset($_GET['datetime']) ? $_GET['datetime'] : "";
-$config = isset($_GET['config']) ? $_GET['config'] : "";
-$os = isset($_GET['os']) ? $_GET['os'] : "";
-$branch = isset($_GET['branch']) ? $_GET['branch'] : "";
-$hash = isset($_GET['hash']) ? $_GET['hash'] : "";
+$cmd = isset($_GET['cmd']) ? $_GET['cmd'] : "";
+$username = isset($_GET['username']) ? $_GET['username'] : "";
 
-$matches = glob($log_folder . $datetime . '-*-' . $config . '-' . $os . '-' . $branch . '-' . $hash . '*.log' );
+$matches = glob($deployment_logs_folder . $datetime . '-*-' . $cmd . '-' . $username . '.log' );
 
 if( sizeof($matches) == 1 )
 {
-    $logfile = new LogFile($log_folder,basename($matches[0]));
+    $logfile = new LogFile($deployment_logs_folder,basename($matches[0]));
     $logfile->init(0);
-
+    
     $job = new Job(basename($matches[0]));
 }
 else if( sizeof($matches) > 1 )
@@ -31,6 +29,7 @@ else
     echo 'no file found';
     exit();
 }
+
 ?>
 <html>
 <head>
@@ -45,7 +44,6 @@ else
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
 <script src="/ressources?type=js"></script>
 <script src="/shared/js/logfile.js"></script>
-<script src="js/core.js"></script>
 <script>
 function initPage()
 {
@@ -70,6 +68,15 @@ function initPage()
         mx.Logfile.checkScrollPosition(e,body,goToControl,false);
     });
     mx.Logfile.checkScrollPosition(null,body,goToControl,false);
+    
+    mx.CICore = (function( ret ) {
+
+        ret.openOverview = function(event)
+        {
+            document.location = './';
+        }
+        return ret;
+    })( mx.CICore || {} );
 }
 mx.OnDocReady.push( initPage );
 </script>
@@ -80,7 +87,9 @@ mx.OnDocReady.push( initPage );
     if( theme ) document.body.classList.add(theme);
 </script>
 <?php
-    echo '<div class ="header form table logfileBox">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
+    echo '<div class ="header form table logfileBox">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
+
+    echo '<div class="log">';
     
     foreach( $logfile->getLines() as $line )
     {

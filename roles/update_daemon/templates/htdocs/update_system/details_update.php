@@ -8,16 +8,14 @@ require "config.php";
 $position = isset($_GET['position']) ? $_GET['position'] : 0;
 
 $datetime = isset($_GET['datetime']) ? $_GET['datetime'] : "";
-$config = isset($_GET['config']) ? $_GET['config'] : "";
-$os = isset($_GET['os']) ? $_GET['os'] : "";
-$branch = isset($_GET['branch']) ? $_GET['branch'] : "";
-$hash = isset($_GET['hash']) ? $_GET['hash'] : "";
+$cmd = isset($_GET['cmd']) ? $_GET['cmd'] : "";
+$username = isset($_GET['username']) ? $_GET['username'] : "";
 
-$matches = glob($log_folder . $datetime . '-*-' . $config . '-' . $os . '-' . $branch . '-' . $hash . '*.log' );
+$matches = glob($deployment_logs_folder . $datetime . '-*-' . $cmd . '-' . $username . '.log' );
 
 if( sizeof($matches) == 1 )
 {
-    $logfile = new LogFile($log_folder,basename($matches[0]));
+    $logfile = new LogFile($deployment_logs_folder,basename($matches[0]));
     $logfile->init($position);
 
     $job = new Job(basename($matches[0]));

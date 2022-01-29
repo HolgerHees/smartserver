@@ -20,9 +20,11 @@
   --dark-embed-progress: #777;
   
   --light-button-text: #3c4043;
+  --light-button-bg: white;
   --light-button-hover-bg: #f7f8f8;
   --light-button-active-bg: #e8e8e9;
   --dark-button-text: #fff;
+  --dark-button-bg: #202124;
   --dark-button-hover-bg: rgba(25,118,210,0.12);
   --dark-button-active-bg: rgba(25,118,210,0.3);
 

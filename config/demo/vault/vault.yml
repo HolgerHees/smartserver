@@ -1,21 +1,13 @@
-vault_root_email: "test@test.com"
-vault_root_mail_username: "test@test.com"
-vault_root_mail_password: "default123"
-vault_root_mail_host: "smtp.gmail.com"
-vault_root_mail_port: "587"
+vault_mailserver_username: "test@test.com"
+vault_mailserver_password: "default123"
+vault_mailserver_host: "smtp.gmail.com"
+vault_mailserver_port: "587"
 
 vault_userpasswords: {
     testuser1: { samba_password: "test12345", web_password: "test12345" },
     testuser2: { samba_password: "test12345", web_password: "test12345" },
     testuser3: { samba_password: "test12345", web_password: "test12345" }
 }
-
-# for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
-# to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
-vault_openid_connect_url: ""
-vault_openid_connect_client_id: ""
-vault_openid_connect_client_secret: ""
-vault_openid_connect_passphrase: ""
 
 vault_form_auth_passphrase: "8924jkhf2/8?23"
 
@@ -24,47 +16,22 @@ vault_pihole_password: "<password>"
 vault_ftp_username: "ftp"
 vault_ftp_password: "default123"
 
-vault_influxdb_admin_username: "admin"
 vault_influxdb_admin_password: "default123"
 vault_influxdb_admin_token: "lkjfdh7123kjas"
-
-vault_shared_mysql_username: "shared"
 vault_shared_mysql_password: "default123"
-
-# to enable obtain a login from https://api.weather.mg/
-# to disable, leave the username empty
-vault_weather_api_username: ""
-vault_weather_api_password: ""
 
 vault_nextcloud_instance_id: "234sdgzw87399443s"
 vault_nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
 vault_nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
-vault_nextcloud_mysql_username: "nextcloud"
 vault_nextcloud_mysql_password: "default123"
-vault_nextcloud_admin_username: "admin"
 vault_nextcloud_admin_password: "default123"
 
 vault_onlyoffice_shared_key: "qwe0983yxcxy435"
-vault_onlyoffice_mysql_username: "onlyoffice"
 vault_onlyoffice_mysql_password: "default123"
 
-vault_grafana_app_username: "admin"
 vault_grafana_app_password: "admin"
 
-# used in generic optional role 'ssh_vpn'
-vault_ssh_vpn_username: "<username>"
-vault_ssh_vpn_password: "<password>"
-vault_ssh_vpn_internal_port: "2222" # the port, used on your server
-vault_ssh_vpn_allowed_ips: {
-  "1.2.3.4/32"
-}
-# to complete the setup you have to configure port forwarding on your internet router to this internal port
-
-vault_deployment_config_git: "https://github.com/HolgerHees/smartserver.git"
-vault_deployment_token_git: ""
-
 vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
-vault_openhab_mysql_username: "openhab"
 vault_openhab_mysql_password: "default123"
 
 # ****** OPTIONAL VARIABLES ******

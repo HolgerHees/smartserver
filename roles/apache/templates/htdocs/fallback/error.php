@@ -1,10 +1,9 @@
 <?php
-
-require "/opt/shared/php/http.php";
+require "../shared/libs/http.php";
 
 $code = $_SERVER['REDIRECT_STATUS'];
-$reason = (isset($http_status_reason[$code]) ? $http_status_reason[$code] : '');
-$message = (isset($http_status_message[$code]) ? str_replace('%U%', htmlspecialchars(strip_tags(stripslashes($_SERVER['REQUEST_URI']))), $http_status_message[$code]) : 'Error');
+$reason = HttpResponse::getStatusReason($code);
+$message = HttpResponse::getStatusMessage($code,$_SERVER['REQUEST_URI']);
 
 header("Status: " . $code . " " . $reason );
 

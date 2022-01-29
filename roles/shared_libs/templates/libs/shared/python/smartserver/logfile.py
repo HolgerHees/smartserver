@@ -125,3 +125,6 @@ class LogFile:
         
     def flush(self):
         self.file.flush()
+        
+    def getFile(self):
+        return self.file

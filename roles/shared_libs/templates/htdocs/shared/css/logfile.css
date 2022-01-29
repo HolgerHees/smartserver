@@ -2,49 +2,52 @@
 body, body * {
     max-height: 1000000px;
 }
+body {
+    height: auto !important;
+}
 @media only screen and (max-width: 600px) {
-    div.header.table:not(.sticky) {
+    div.header.table.logfileBox:not(.sticky) {
         display: flex;
     }
-    div.header.table:not(.sticky) > div.row {
+    div.header.table.logfileBox:not(.sticky) > div.row {
         display: flex;
         width: 100%;
         overflow: auto;
     }
-    div.header.table:not(.sticky) > div.row > div {
+    div.header.table.logfileBox:not(.sticky) > div.row > div {
         width: auto;
     }
 }
-div.header.table {
+div.header.table.logfileBox {
     position: sticky;
     top: 0px;
     background-color: white;
     transition: all 200ms ease-in-out;
 }
-body.dark div.header.table {
+body.dark div.header.table.logfileBox {
     background-color: #202124;
     border-bottom: 1px solid #383a3e;
     border-left: 1px solid #383a3e;
     border-right: 1px solid #383a3e;
 }
-body.sticky div.header.table {
+body.sticky div.header.table.logfileBox {
     display: table;
     width: 100%;
 }
-div.header div.row > div {
+div.header.table.logfileBox div.row > div {
     transition: all 200ms ease-in-out;
 }
-body.sticky div.header {
+body.sticky div.header.table.logfileBox {
     max-width: 100px;
 }
 
-body.sticky div.header div.row > div {
+body.sticky div.header.table.logfileBox div.row > div {
     width: auto;
 }
 
-body.sticky div.header div.row > div:nth-child(1),
-body.sticky div.header div.row > div:nth-child(2),
-body.sticky div.header div.row > div:nth-child(3) {
+body.sticky div.header.table.logfileBox div.row > div:nth-child(1),
+body.sticky div.header.table.logfileBox div.row > div:nth-child(2),
+body.sticky div.header.table.logfileBox div.row > div:nth-child(3) {
     width: 0;
     min-width: 0;
     max-width: 0;
@@ -55,15 +58,14 @@ body.sticky div.header div.row > div:nth-child(3) {
     overflow: hidden;
     white-space: nowrap;
 }
-body.sticky div.header div.row > div:nth-child(1) *,
-body.sticky div.header div.row > div:nth-child(2) *,
-body.sticky div.header div.row > div:nth-child(3) *,
-body.sticky div.header div.row > div span.datetime,
-body.sticky div.header div.row > div span.hash 
-{
+
+body.sticky div.header.table.logfileBox div.row > div:nth-child(1) *,
+body.sticky div.header.table.logfileBox div.row > div:nth-child(2) *,
+body.sticky div.header.table.logfileBox div.row > div:nth-child(3) *,
+body.sticky div.header.table.logfileBox div.row > div span.datetime,
+body.sticky div.header.table.logfileBox div.row > div span.hash {
     display: none;
 }
-
 
 div.scrollControl, div.goToControl {
     position: fixed;

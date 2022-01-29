@@ -1,7 +1,7 @@
 global: 
   smtp_smarthost: postfix:25
   smtp_require_tls: False
-  smtp_from: {{vault_root_email}}
+  smtp_from: {{root_email}}
   resolve_timeout: 60m
 
 #templates:
@@ -40,9 +40,9 @@ receivers:
   - name: dummy
   - name: email-receiver
     email_configs:
-      - to: {{vault_root_email}}
+      - to: {{root_email}}
         headers:
-          Reply-To: '{{vault_root_email}}'
+          Reply-To: '{{root_email}}'
           subject: '{{'{{'}} .Status | toUpper {{'}} • {{'}} .GroupLabels.SortedPairs.Values | join " • " {{'}}{{'}} if eq .Status "firing" {{'}} • {{'}} .Alerts.Firing | len {{'}}'}} time(s){{'{{'}} end {{'}}'}}'
 #          send_resolved: true
 #        html: ''

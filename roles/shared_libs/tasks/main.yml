@@ -1,15 +1,30 @@
 - name: prepare needed folder
   file:
-    path: "/opt/shared/"
+    path: "{{item.path}}"
     state: directory
-    owner: "root"
-    group: "root"
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
     mode: 0750
+  with_items:
+    - {owner: "root", group: "root", path: "/opt/shared/" }
+    - {owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
 
-- name: copy libs
+- name: copy core libs
   copy:
-    src: "templates/shared/"
+    src: "templates/libs/shared/"
     dest: "/opt/shared/"
     owner: "root"
     group: "root"
     mode: 0750
+
+- name: copy web libs
+  copy:
+    src: "templates/htdocs/shared/{{item}}"
+    dest: "{{htdocs_path}}/shared/{{item}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  with_items:
+    - "css/"
+    - "js/"
+    - "libs/"

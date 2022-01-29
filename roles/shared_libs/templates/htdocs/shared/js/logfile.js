@@ -1,4 +1,4 @@
-mx.CIDetails = (function( ret ) {
+mx.Logfile = (function( ret ) {
     var stateColorElement = null;
     var stateTextElement = null;
     var runtimeElement = null;
@@ -24,7 +24,7 @@ mx.CIDetails = (function( ret ) {
     {
         var scrollControl = document.querySelector(".scrollControl");
         scrollControl.classList.add("active");
-        mx.CIDetails.goToBottom();
+        mx.Logfile.goToBottom();
         window.setTimeout(function()
         {
             bottomScrollEnabled = true;
@@ -40,7 +40,7 @@ mx.CIDetails = (function( ret ) {
     
     function refreshDuration()
     {
-        formattedDuration = mx.CICore.formatDuration(++duration);
+        formattedDuration = mx.Logfile.formatDuration(++duration);
         
         runtimeElement.innerHTML = formattedDuration;
     }
@@ -65,14 +65,19 @@ mx.CIDetails = (function( ret ) {
         var _logElements = content.querySelector("#logs").childNodes;
         if( _logElements.length > 0 )
         {
-            logElement.lastChild.innerHTML = logElement.lastChild.innerHTML + _logElements[0].innerHTML;
+            var startIndex = 0;
+            if( logElement.lastChild )
+            {
+                logElement.lastChild.innerHTML = logElement.lastChild.innerHTML + _logElements[0].innerHTML;
+                startIndex = 1;
+            }
             
-            for( i = 1; i < _logElements.length; i++ )
+            for( i = startIndex; i < _logElements.length; i++ )
             {
                 logElement.appendChild(_logElements[i].cloneNode(true));
             }
 
-            if( bottomScrollEnabled ) mx.CIDetails.goToBottom();
+            if( bottomScrollEnabled ) mx.Logfile.goToBottom();
         }
         
         var stateRawElement = content.querySelector("#state");
@@ -150,7 +155,7 @@ mx.CIDetails = (function( ret ) {
     {
         window.scrollTo(0,0);
         logElement.scrollLeft = 0;
-        if( bottomScrollEnabled ) mx.CIDetails.toggleBottomScroll();
+        if( bottomScrollEnabled ) mx.Logfile.toggleBottomScroll();
     }
     
     ret.toggleBottomScroll = function()
@@ -186,7 +191,7 @@ mx.CIDetails = (function( ret ) {
         {
             if( ( logLayerScrolled && logElement.scrollLeft > 0 ) || ( !logLayerScrolled && lastScrollY > window.scrollY + 30 ) )
             {
-                mx.CIDetails.toggleBottomScroll();
+                mx.Logfile.toggleBottomScroll();
             }
         }
         
@@ -209,7 +214,7 @@ mx.CIDetails = (function( ret ) {
                     goToControl.style.opacity = "";
                 }
 
-                goToControl.setAttribute("onClick", "mx.CIDetails.goToTop()");
+                goToControl.setAttribute("onClick", "mx.Logfile.goToTop()");
                 goToControl.firstChild.classList.add("icon-up")
             }
             else
@@ -217,7 +222,7 @@ mx.CIDetails = (function( ret ) {
                 body.classList.remove('sticky');
                 if( goToControl.classList.contains("singleButton") )
                 {
-                    goToControl.setAttribute("onClick", "mx.CIDetails.goToBottom()");
+                    goToControl.setAttribute("onClick", "mx.Logfile.goToBottom()");
                     goToControl.firstChild.classList.add("icon-down-1")
                     goToControl.firstChild.classList.remove("icon-up")
                 }
@@ -230,6 +235,22 @@ mx.CIDetails = (function( ret ) {
         }
     }
         
+    ret.formatDuration = function(duration)
+    {
+        var days = Math.floor(duration / 86400);
+        duration -= days * 86400;
+        var hours = Math.floor(duration / 3600);
+        duration -= hours * 3600;
+        var minutes = Math.floor(duration / 60);
+        var seconds = duration - minutes * 60;
+        
+        if( hours < 10 ) hours = '0' + hours;
+        if( minutes < 10 ) minutes = '0' + minutes;
+        if( seconds < 10 ) seconds = '0' + seconds;
+
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
     ret.startUpdateProcess = function(position)
     {
         if( location.hash == '#autoscroll' )
@@ -251,4 +272,4 @@ mx.CIDetails = (function( ret ) {
     }
 
     return ret;
-})( mx.CIDetails || {} );
+})( mx.Logfile || {} );

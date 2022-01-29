@@ -30,7 +30,7 @@
   when: "certificate_mode == 'create'"
 
 - name: create certificates => certificate_mode = 'create'
-  shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{vault_root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
+  shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
   notify: "restart apache2"
   when: "certificate_mode == 'create'"
   
