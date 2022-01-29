@@ -62,7 +62,7 @@ default_variables: {
         #        },
         #        media_dir: {"default": omitting} 
         #        {
-        #          "test_media": "/"               # nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+        #          "test_media": "/"                              # nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
         #        }
         #    }        
         #]
