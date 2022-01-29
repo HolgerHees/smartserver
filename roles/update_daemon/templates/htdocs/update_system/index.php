@@ -252,7 +252,9 @@ require "config.php";
                 }
             }
             
-            mx.$("#serverNeedsRestart").style.display = state["update_server_needs_restart"] ? "flex" : "";
+            var daemonNeedsRestart = state["update_server_needs_restart"];
+            var needsRestartElement = mx.$("#serverNeedsRestart");
+            needsRestartElement.style.display = daemonNeedsRestart ? "flex" : "";
             
             job_is_running = state["job_is_running"];
             job_running_type = state["job_running_type"];
@@ -301,7 +303,16 @@ require "config.php";
             {
                 currentRunningActionsElement.style.display="";
                 currentRunningStateElement.innerHTML = "No update process is running";
-                setExclusiveButtonsState(true);
+                
+                if( daemonNeedsRestart )
+                {
+                    setExclusiveButtonsState(false);
+                    needsRestartElement.querySelector(".button").classList.remove("disabled");
+                }
+                else
+                {
+                    setExclusiveButtonsState(true);
+                }
 
                 refreshDaemonStateTimer = window.setTimeout(refreshDaemonState, 5000);
             }

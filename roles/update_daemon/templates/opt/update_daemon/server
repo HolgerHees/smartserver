@@ -126,11 +126,11 @@ class Handler(pyinotify.ProcessEvent):
         self.current_started = None
         self.current_logfile = None
         self.current_child = None
-        
+       
         self.handleRunningStates()
         
         self.testWorkflow = True
-        
+
     def prepareTestWorkflow(self,cmd_block):
         for cmd in cmd_block["cmds"]:
             interaction = cmd["interaction"]
