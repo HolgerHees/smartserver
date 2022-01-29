@@ -8,16 +8,12 @@ global_etc:                       "/dataDisk/etc/"
 
 data_path:                        "/dataDisk/"
 ftp_path:                         "/dataDisk/ftp/"
-java_path:                        "/dataDisk/java/"
 htdocs_path:                      "/dataDisk/htdocs/"
 
 raid_path:                        "/dataRaid/"
-media_path:                       "/dataRaid/media/"
 projects_path:                    "/dataRaid/projects/"
 cloud_path:                       "/dataRaid/cloud/"
 backup_path:                      "/dataRaid/backups/"
-
-deployment_backup_path:           "{{projects_path}}{{project_name}}/{{config_path}}backup/"
 
 nextcloud_data_path:              "/dataRaid/nextcloud/"
 
@@ -60,7 +56,7 @@ vpn_mobile_subnet:                "10.100.{{netgroup}}"
 
 vpn_cloud_subnet:                 "10.101"
 vpn_cloud_services:               "{
-{% if cloud_vpn is defined %}
+{% if cloud_vpn != 'None' %}
   \"local\": {
       \"bridge\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.1\",
       \"gateway\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2\",
@@ -98,8 +94,6 @@ dlna_volumes:                    "{
 {% endif %}
 {% endfor %}
 }"
-
-pihole_whitelist_domains:          [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ]
 
 # version of alpine linux used in several container based roles
 alpine_version:                   "3.15.0"

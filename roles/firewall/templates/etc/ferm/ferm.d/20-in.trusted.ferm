@@ -7,10 +7,8 @@ domain (ip ip6) {
             # ansible ip can connect to host
             saddr {{default_gateway}} ACCEPT;
 {% endif %}
-{% if vpn_mobile_network is defined %}
             # mobile vpn ip's can connect to host
             saddr {{vpn_mobile_network}}/24 ACCEPT;
-{% endif %}
         }
         chain DOCKER-USER {
             # internal ip's can forward to containers
@@ -19,14 +17,12 @@ domain (ip ip6) {
             # ansible ip can forward to containers
             saddr {{default_gateway}} ACCEPT;
 {% endif %}
-{% if vpn_mobile_network is defined %}
 {% if macvlan_range | length > 0 %}
             # mobile vpn ip's can forward to pihole
             saddr {{vpn_mobile_network}}/24 daddr {{macvlan_range}} ACCEPT;
 {% endif %}
             # mobile vpn ip's can forward to internet
             saddr {{vpn_mobile_network}}/24 daddr !{{server_network}}/24 ACCEPT;
-{% endif %}
         }
     }
 } 

@@ -26,7 +26,12 @@ default_variables: {
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
     "pihole_ip":      { "default": None },                        # pihole ip address from same network as your server ip => 'None' means disabled
+    "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] },
+
     "dlna_ip":        { "default": None },                        # dlna ip address from same network as your server ip => 'None' means disabled
+
+    "dns_forward_ip_addresses": { "default": [ "8.8.8.8", "8.8.4.4" ] }, # used by dnsmasq
+    "fping_test_hosts": { "default": [ "8.8.8.8" ] },             # reachability check in netdata
 
     # used in main role 'apache' and can be an empty array []
     authenticated_ip_addresses: { "default": [] },                # apache access always allowed for ipaddresses e.g. from wallmounted tablets
@@ -36,22 +41,27 @@ default_variables: {
     mobile_vpn_public_port: {},                                   # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     
+    cloud_vpn: { "default": None },                               # used in generic optional role 'wirguard_cloud'
+
     "userdata":       {
         #example_value: [
         #    testuser1: { 
-        #        name: "Test User 1", 
-        #        email: "test1@test.de",
-        #        groups: [ "admin", "user" ], 
-        #        telegram_bot: "bot_testuser1",    # used by openhab => reference to bot key in vault.yml
-        #        phone_device: {                   # optional. will be used by device_ping role
+        #        name: {}                                         # "Test User 1", 
+        #        email: {}                                        # "test1@test.de",
+        #        groups: {}                                       # [ "admin", "user" ], 
+        #        telegram_bot: {"default": omitting}              # "bot_testuser1",    # used by openhab => reference to bot key in vault.yml
+        #        phone_device: {"default": omitting}              # optional. will be used by device_ping role
+        #        {
         #          ip: "{{server_subnet}}.69", 
         #          timeout: 60 
         #        },
-        #        vpn_gates: {                      # optional. will be used by wireguard_mobile role
+        #        vpn_gates: {"default": omitting}                 # optional. will be used by wireguard_mobile role
+        #        {
         #          "phone": "{{vpn_mobile_subnet}}.11", 
         #          "tablet": "{{vpn_mobile_subnet}}.12" 
         #        },
-        #        media_dir: {
+        #        media_dir: {"default": omitting} 
+        #        {
         #          "test_media": "/"               # nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
         #        }
         #    }        
