@@ -76,11 +76,11 @@ vpn_cloud_services:               "{
       {% endfor %}
   }
 {% endif %}
-}"  
+}"
 
 macvlan_ips:                      "[
-{% if pihole_ip is defined %}'{{pihole_ip}}',{% endif %}
-{% if dlna_ip is defined %}'{{dlna_ip}}',{% endif %}
+{% if pihole_ip != 'None' %}'{{pihole_ip}}',{% endif %}
+{% if dlna_ip != 'None' %}'{{dlna_ip}}',{% endif %}
 ]"
 
 macvlan_range: "{% if macvlan_ips | length > 0 %}{{macvlan_ips | cidr_merge('span')}}{% else %}{% endif %}"

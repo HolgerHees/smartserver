@@ -1,5 +1,5 @@
-api_username    = "{{vault_weather_api_username}}"
-api_password    = "{{vault_weather_api_password}}"
+api_username    = "{{vault_weather_api_username if vault_weather_api_username != 'None' else ''}}"
+api_password    = "{{vault_weather_api_password if vault_weather_api_password != 'None' else ''}}"
 
 db_host         = "mysql"
 db_name         = "shared"

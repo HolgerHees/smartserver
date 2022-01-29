@@ -16,7 +16,7 @@
           - "server:     {{server_ip}}"
           - "gateway:    {{server_gateway}}{{ ' (' + default_gateway + ')' if server_gateway != default_gateway else ''}}"
           - "network:    {{server_network}}/24"
-          - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'none'}}"
+          - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'None'}}"
           - "arpha:      {{server_arpa}}"
           - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}} ({{ansible_distribution_release}})"
           - "net:        {{main_network_interface}}"
@@ -80,7 +80,7 @@
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
-    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip != null" }           # adblock server                                                    [docker,user:root]
+    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip != 'None'" }           # adblock server                                                    [docker,user:root]
 
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 
@@ -88,7 +88,7 @@
 
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 
-    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ], when: "vault_ftp_username != null" } # ftp file server for camera picture upload and cleanup          [docker,user:ftp]
+    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ], when: "vault_ftp_username != 'None'" } # ftp file server for camera picture upload and cleanup          [docker,user:ftp]
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
@@ -130,7 +130,7 @@
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
     - { import_role: { name: onlyoffice }, tags: [ 'onlyoffice' ] }                              # office editor                                                     [docker,user:106|108]
 
-    - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_ip != null and dlna_volumes|length>0" } # dlna media server                     [docker,user:wwwrun|apache]
+    - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_ip != 'None' and ( dlna_volumes | length ) > 0" } # dlna media server             [docker,user:wwwrun|apache]
      
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools

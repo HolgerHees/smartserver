@@ -25,8 +25,8 @@ default_variables: {
 
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
-    "pihole_ip":      { "default": null },                        # pihole ip address from same network as your server ip => 'null' means disabled
-    "dlna_ip":        { "default": null },                        # dlna ip address from same network as your server ip => 'null' means disabled
+    "pihole_ip":      { "default": None },                        # pihole ip address from same network as your server ip => 'None' means disabled
+    "dlna_ip":        { "default": None },                        # dlna ip address from same network as your server ip => 'None' means disabled
 
     # used in main role 'apache' and can be an empty array []
     authenticated_ip_addresses: { "default": [] },                # apache access always allowed for ipaddresses e.g. from wallmounted tablets
@@ -59,9 +59,9 @@ default_variables: {
     },
     
     "update_daemon_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
-    "update_daemon_software_check_email": { "default": null },    # null, "testadmin@test.com" => sends a notification email after each check, if new software is available 
+    "update_daemon_software_check_email": { "default": None },    # None, "testadmin@test.com" => sends a notification email after each check, if new software is available 
     "update_daemon_system_check_enabled": { "default": yes },     # enables the update check for this deployment
-    "update_daemon_system_check_email": { "default": null },      # null, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    "update_daemon_system_check_email": { "default": None },      # None, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
     
     #vault_telegram_bots: {
     #    bot_testuser1: { # for user1
@@ -85,10 +85,10 @@ default_variables: {
 
     # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
     # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
-    "vault_openid_connect_url": { "default": null },              # 'null' means disabled, to enable check documentation urls to get the right values
-    "vault_openid_connect_client_id": { "default": null },
-    "vault_openid_connect_client_secret": { "default": null },
-    "vault_openid_connect_passphrase": { "default": null },
+    "vault_openid_connect_url": { "default": None },              # 'None' means disabled, to enable check documentation urls to get the right values
+    "vault_openid_connect_client_id": { "default": None },
+    "vault_openid_connect_client_secret": { "default": None },
+    "vault_openid_connect_passphrase": { "default": None },
 
     "vault_form_auth_passphrase": {},                             # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
 
@@ -96,7 +96,7 @@ default_variables: {
         condition: "pihole_ip"
     },
 
-    "vault_ftp_username": { "default": null },                    # "ftp" => used for e.g. camera image uploads ('null' means disabled) 
+    "vault_ftp_username": { "default": None },                    # "ftp" => used for e.g. camera image uploads ('None' means disabled) 
     "vault_ftp_password": {
         condition: "vault_ftp_username"
     },
@@ -110,8 +110,8 @@ default_variables: {
 
     # to enable obtain a login from https://api.weather.mg/
     # to disable, leave the username empty
-    "vault_weather_api_username": { "default": null },            # 'null' means disabled
-    "vault_weather_api_password": { "default": null },
+    "vault_weather_api_username": { "default": None },            # 'None' means disabled
+    "vault_weather_api_password": { "default": None },
 
     "vault_nextcloud_instance_id": {},                            # "234sdgzw87399443s" => used internally
     "vault_nextcloud_password_salt": {},                          # "9ad9aus92z4ij20j20idj928912hd1jd0"
@@ -129,7 +129,7 @@ default_variables: {
     "vault_grafana_app_password": {},                             # e.g. "lksjdls" => used 
 
     "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
-    "vault_deployment_token_git": { "default": null },            # only needed if you enable "ci_service"
+    "vault_deployment_token_git": { "default": None },            # only needed if you enable "ci_service"
 
     "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
