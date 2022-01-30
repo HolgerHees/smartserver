@@ -37,24 +37,9 @@ function getVersion($path,$suffixes)
     
     <script>
 <?php
-        $name = $_SERVER['REMOTE_USERNAME'];
-        $groups = [];
-        $handle = fopen("./secret/.htdata", "r");
-        if ($handle) {
-            while (($line = fgets($handle)) !== false) {
-                list($_username,$_name,$_groups) = explode(":", $line);
-                if( trim($_username) == $name )
-                {
-                    $name = trim($_name);
-                    $groups = explode(",",trim($_groups));
-                    break;
-                }
-            }
-
-            fclose($handle);
-        }
-        echo "        mx.User.name = " . json_encode($name) . ";\n";
-        echo "        mx.User.groups = " . json_encode($groups) . ";\n";
+        require "./shared/libs/auth.php";
+        echo "        mx.User.name = " . json_encode(Auth::getFullname()) . ";\n";
+        echo "        mx.User.groups = " . json_encode(Auth::getGroups()) . ";\n";
 ?>
 
         // mx.Menu needs to be defined in the beginning, because it is used during component initialisation

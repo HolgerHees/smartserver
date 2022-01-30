@@ -18,7 +18,7 @@ class DeploymentUpdate:
                 except JSONDecodeError:
                     pass
       
-    def process(self):
+    def process(self, update_time):
         smartserver_code = None
         smartserver_pull = None
         smartserver_changes = None

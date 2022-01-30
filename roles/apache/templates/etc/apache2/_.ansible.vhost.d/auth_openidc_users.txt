@@ -1,3 +1,0 @@
-{% for username in userdata %}
-{{userdata[username].email}} {{username}}
-{% endfor %}

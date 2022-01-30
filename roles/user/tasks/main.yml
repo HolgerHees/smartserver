@@ -48,6 +48,7 @@
   vars:
     username: "{{item}}"
     password: "{{vault_userpasswords[item].web_password}}"
+    email:    "{{userdata[item].email}}"
     fullname: "{{userdata[item].name}}"
     usergroups: "{{userdata[item].groups}}"
   include_tasks: roles/user/tasks/add_web_user.yml
