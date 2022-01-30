@@ -43,6 +43,9 @@
       , git
       , sshpass
       
+      , python3-flask
+      , python3-inotify
+
       , python3-setuptools
       , python3-pip
       , python3-passlib
@@ -74,6 +77,9 @@
       , git
       , sshpass
       
+      , python3-flask
+      , python3-pyinotify
+      
       , python3-setuptools
       , python3-pip
       , python3-passlib
@@ -92,7 +98,8 @@
 
       , wireguard-tools
 
-      , curl               # used to send multi part/formdata => kibana
+      , curl               # used to fetch e.g. picture of the day
+      
       , bzip2              # used to import databases with bzcat
       , zip                # used for ansible unarchive mobule
       , unzip              # used for ansible unarchive mobule
@@ -101,6 +108,9 @@
       , git                # used for ansible git module
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
+      , python3-Flask      # used for daemon services like update_daemon and ci_service
+      , python3-pyinotify  # used for daemon services like update_daemon and ci_service
+      
       , python3-setuptools
       , python3-pip
       , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task

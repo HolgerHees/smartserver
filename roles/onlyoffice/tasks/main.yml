@@ -5,16 +5,16 @@
   
 - name: prepare needed folder
   file:
-    path: "{{item}}"
+    path: "{{item.path}}"
     state: directory
     owner: "109" # user id from docker container
     group: "112" # group id from docker container
-    mode: 0750
+    mode: "{{item.mode}}"
   with_items:
-    - "{{global_log}}onlyoffice"
-    - "{{global_lib}}onlyoffice"
-    - "{{global_etc}}onlyoffice"
-    - "{{global_etc}}onlyoffice/fonts"
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}onlyoffice" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}onlyoffice" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}onlyoffice" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}onlyoffice/fonts" }
 
 - name: build docker image
   vars:

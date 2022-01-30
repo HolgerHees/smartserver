@@ -1,30 +1,10 @@
 - name: install required packages => is_fedora
   yum:
     name: [
-        python3-flask,
-        python3-inotify
-      , yum-utils # used by needs-restart
+      yum-utils # used by needs-restart
     ]
     state: present
   when: "is_fedora|bool and update_daemon_system_check_enabled"
-
-- name: install required packages => is_ubuntu
-  apt:
-    name: [
-        python3-flask,
-        python3-pyinotify
-    ]
-    state: present
-  when: "is_ubuntu|bool and update_daemon_system_check_enabled"
-  
-- name: install required packages => is_suse
-  zypper:
-    name: [  
-        python3-Flask,
-        python3-pyinotify
-    ]
-    state: present
-  when: "is_suse|bool and update_daemon_system_check_enabled"
   
 - name: prepare needed folder
   file:
