@@ -1,0 +1,7 @@
+    <Location />
+        <RequireAny>
+{% for username in userdata %}{% if usergroup in userdata[username].groups %}
+            Require user {{username}}
+{% endif %}{% endfor %}
+        </RequireAny>
+    </Location>

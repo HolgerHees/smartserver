@@ -92,6 +92,7 @@
 - name: copy apache vhost
   vars:
     sub_domain: "alertmanager"
+    usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/alertmanager.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 

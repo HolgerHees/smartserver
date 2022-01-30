@@ -125,6 +125,7 @@
     mode: 0644
   vars:
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
+    usergroup: "user"
   with_items:
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
@@ -136,7 +137,7 @@
     - _.ansible.httpd.conf
   notify: "restart apache2"
 
-- name: copy config
+- name: copy auth config
   template:
     src: "templates/etc/apache2/{{item}}"
     dest: "{{global_etc}}apache2/{{item}}"
@@ -146,6 +147,7 @@
   vars:
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
   with_items:
+    - _.ansible.vhost.d/auth_additionals.inc
     - _.ansible.vhost.d/auth_basic.inc
     - _.ansible.vhost.d/auth_form1.inc
     - _.ansible.vhost.d/auth_openidc1.inc

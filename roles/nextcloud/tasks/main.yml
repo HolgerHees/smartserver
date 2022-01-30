@@ -287,6 +287,7 @@
 - name: copy apache vhost
   vars:
     sub_domain: "nextcloud"
+    usergroup: "user"
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 

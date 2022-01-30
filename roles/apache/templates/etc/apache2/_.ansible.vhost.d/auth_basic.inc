@@ -6,11 +6,11 @@ RewriteMap lookupFullname "txt:/etc/apache2/_.ansible.auth/auth_user_fullnames.t
     AuthType        Basic
     AuthUserFile    /etc/apache2/_.ansible.auth/.htpasswd
 
-    <RequireAny>
-{% for username in userdata %}{% if 'user' in userdata[username].groups %}
-        Require user {{username}}
-{% endif %}{% endfor %}
-    </RequireAny>
+#    <RequireAny>
+#{% for username in userdata %}{% if 'user' in userdata[username].groups %}
+#        Require user {{username}}
+#{% endif %}{% endfor %}
+#    </RequireAny>
 
     RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_USER},E=REMOTE_USERGROUP:${lookupGroup:%{REMOTE_USER}},E=REMOTE_USERFULLNAME:${lookupFullname:%{REMOTE_USER}}]
 </Location>

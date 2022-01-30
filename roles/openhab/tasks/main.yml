@@ -444,6 +444,7 @@
 - name: copy apache vhost
   vars:
     sub_domain: "openhab"
+    usergroup: "user"
     include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 

@@ -35,7 +35,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0644
   when: "listener is defined"
-  tags: ['apache_conf']
+  tags: ['apache_webui_configs']
 
 - name: "copy apache subdomain listener for '{{name}}'"
   copy:
@@ -46,7 +46,7 @@
     mode: 0644
   when: "listener is defined"
   notify: "restart apache2"
-  tags: ['apache_conf']
+  tags: ['apache_webui_configs']
 
 #- name: "copy apache subdomain listener for '{{name}}'"
 #  copy:
@@ -57,7 +57,7 @@
 #    mode: 0644
 #  when: "listener is defined and listener.sub_domain is defined"
 #  notify: "restart apache2"
-#  tags: ['apache_conf']
+#  tags: ['apache_webui_configs']
 
 #- name: "copy apache prefix listener for '{{name}}'"
 #  copy:
@@ -68,4 +68,4 @@
 #    mode: 0644
 #  when: "listener is defined and listener.sub_domain is not defined and listener.prefix is defined"
 #  notify: "restart apache2"
-#  tags: ['apache_conf']
+#  tags: ['apache_webui_configs']
