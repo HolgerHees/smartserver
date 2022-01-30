@@ -1,26 +1,10 @@
 <?php
 require "config.php";
 
-require "..//shared/libs/http.php";
+require "../shared/libs/http.php";
+require "../shared/libs/auth.php";
 
-$name = $_SERVER['REMOTE_USERNAME'];
-$groups = [];
-$handle = fopen("../secret/.htdata", "r");
-if ($handle) {
-    while (($line = fgets($handle)) !== false) {
-        list($_username,$_name,$_groups) = explode(":", $line);
-        if( trim($_username) == $name )
-        {
-            $name = trim($_name);
-            $groups = explode(",",trim($_groups));
-            break;
-        }
-    }
-
-    fclose($handle);
-}
-
-if( !in_array("admin",$groups) )
+if( !Auth::hasGroup("admin") )
 {
     header('HTTP/1.0 403 Forbidden');
     echo 'You are forbidden!';
@@ -45,7 +29,7 @@ if( !empty($data["parameter"]) )
     $post = $data["parameter"];
 }
 
-$post['username'] = $_SERVER['REMOTE_USERNAME'];
+$post['username'] = Auth::getUser();
 
 $ch = curl_init("http://".$daemon_ip.":8505/" . $action . '/' ); // such as http://example.com/example.xml
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));

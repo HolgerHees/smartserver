@@ -15,4 +15,9 @@ class Auth
     {
         return explode(",",trim($_SERVER['REMOTE_USERGROUP']));
     }
+
+    public static function hasGroup($group) 
+    {
+        return in_array($group,Auth::getGroups());
+    }
 }
