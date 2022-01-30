@@ -4,7 +4,7 @@
     state: directory
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0755
+    mode: 0750
   with_items:
     - "{{global_etc}}minidlna"
     - "{{global_lib}}minidlna"

@@ -9,11 +9,11 @@
     state: directory
     owner: "{{item.user}}"
     group: "{{item.group}}"
-    mode: 0750
+    mode: "{{item.mode}}"
   with_items:
-    - { user: "root", group: "root", path: "{{ global_build }}influxdb" }
-    - { user: "1000", group: "1000", path: "{{ global_lib }}influxdb" }
-    - { user: "root", group: "root", path: "{{backup_path}}influxdb" }
+    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{ global_build }}influxdb" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=,o=", path: "{{ global_lib }}influxdb" }
+    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{backup_path}}influxdb" }
 
 - name: check started docker
   systemd:

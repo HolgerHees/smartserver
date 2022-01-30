@@ -9,7 +9,7 @@
     state: directory
     owner: "109" # user id from docker container
     group: "112" # group id from docker container
-    mode: 0755
+    mode: 0750
   with_items:
     - "{{global_log}}onlyoffice"
     - "{{global_lib}}onlyoffice"

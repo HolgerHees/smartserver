@@ -124,16 +124,16 @@
 ##### DOCKER #####
 - name: prepare needed folder
   file:
-    path: "{{item}}"
+    path: "{{item.path}}"
     state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: "{{item.mode}}"
   with_items:
-    - "/etc/docker/"
-    - "{{global_lib}}docker"
-    - "/opt/docker"
-    - "/opt/docker/lib"
+    - { mode: "u=rwx,g=rx,o=", path: "/etc/docker/" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/docker" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/docker/lib" }
+    - { mode: "u=rwx,g=x,o=", path: "{{global_lib}}docker" }
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:

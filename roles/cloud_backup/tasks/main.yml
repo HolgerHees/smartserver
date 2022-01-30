@@ -8,6 +8,7 @@
   file:
     path: '{{item}}'
     state: directory
+    mode: 0750
   with_items:
     - "{{global_lib}}cloud_backup"
     - "{{global_log}}cloud_backup"  

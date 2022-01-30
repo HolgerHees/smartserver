@@ -11,6 +11,7 @@
     group: "root"
     mode: 0750
   with_items:
+    - "{{global_build}}ferm"
     - "/etc/ferm"
     - "/etc/ferm/ferm.d"
 
