@@ -6,9 +6,7 @@ require "../shared/libs/auth.php";
 
 if( !Auth::hasGroup("admin") )
 {
-    header('HTTP/1.0 403 Forbidden');
-    echo 'You are forbidden!';
-    exit;
+    HttpResponse::throwForbidden();
 }
 
 $entityBody = file_get_contents('php://input');
@@ -16,9 +14,7 @@ $data = json_decode($entityBody, true);
 
 if( !$data || empty($data["action"]) )
 {
-    header('HTTP/1.0 404 Not Found');
-    echo 'Action not found';
-    exit;
+    HttpResponse::throwNotFound();
 }
 
 $action = $data["action"];

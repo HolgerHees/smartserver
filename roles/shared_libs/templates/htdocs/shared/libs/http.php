@@ -99,4 +99,18 @@ class HttpResponse
     {
         return (isset(HttpResponse::$http_status_message[$code]) ? str_replace('%U%', htmlspecialchars(strip_tags(stripslashes($url))), HttpResponse::$http_status_reason[$code]) : 'Error');
     }
+    
+    public static function throwForbidden()
+    {
+        header('HTTP/1.0 403 Forbidden');
+        echo 'You are forbidden!';
+        exit;
+    }
+
+    public static function throwNotFound()
+    {
+        header('HTTP/1.0 403 Forbidden');
+        echo 'You are forbidden!';
+        exit;
+    }
 }
