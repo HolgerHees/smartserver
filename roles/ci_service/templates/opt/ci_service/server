@@ -1,0 +1,121 @@
+#!/usr/bin/python3
+
+from flask import Flask, request, make_response
+import logging
+import socket
+
+import glob
+
+import pyinotify
+
+import pexpect 
+import subprocess
+import threading
+import json
+import sys
+import os
+import importlib
+import time
+
+from datetime import datetime, timezone
+from json.decoder import JSONDecodeError
+from pexpect.exceptions import EOF, TIMEOUT
+
+from config import config
+
+sys.path.insert(0, "/opt/shared/python")
+
+from lib import helper
+from lib import status
+from lib import service
+from lib import job
+from lib import git
+from lib import log
+
+watched_data_files = [
+]
+
+env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
+
+app = Flask(__name__)
+
+log.setLogger(app.logger)
+
+class Identity(pyinotify.ProcessEvent):
+    def __init__(self, s):
+        super().__init__(s)
+        self.modified_time = {}
+        
+    def process_default(self, event):
+        self.modified_time[event.path] = datetime.timestamp(datetime.now())
+        
+    def addWatcher(self,path,wm):
+        file_stat = os.stat(path)
+        self.modified_time[path] = file_stat.st_mtime
+        wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MODIFY, rec=True, auto_add=True)
+        
+    def getModifiedTime(self,path):
+        return self.modified_time[path]
+
+# Thread #1
+
+class Handler(pyinotify.ProcessEvent):
+    def __init__(self):
+      
+        self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        try:
+            # The null byte (\0) means the socket is created 
+            # in the abstract namespace instead of being created 
+            # on the file system itself.
+            # Works only in Linux
+            self._lock_socket.bind('\0ci_service')
+        except socket.error:
+            return
+        
+        wm = pyinotify.WatchManager()
+        s = pyinotify.Stats()
+        self.identity = Identity(s)
+        notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self.identity)
+        notifier.start()
+        
+        self.identity.addWatcher(__file__,wm)
+        self.update_server_time = self.identity.getModifiedTime(__file__)
+        
+        self.watched_data_files = {}
+        for watched_data_file in watched_data_files:
+            if not os.path.isfile(watched_data_file):
+                self.watched_data_files[watched_data_file] = None
+            else:
+                self.identity.addWatcher(watched_data_file,wm)
+                self.watched_data_files[watched_data_file] = os.path.basename(watched_data_file)
+                
+        self.cleanJobs()
+        
+    def _cleanJobs(self):
+        service.showRunningJobs()
+        
+        if service.getPid() is None:
+            running_jobs = glob.glob(u"{}*-*-running-*-*.log".format(config.log_dir))
+            if len(running_jobs) > 0:
+                for name in running_jobs:
+                    app.logger.info("Clean '{}'".format(name))
+                    os.rename(name, name.replace("-running-","-failed-"))
+
+                service.cleanRunningJobs("all")
+          
+    def cleanJobs(self):
+        thread = threading.Thread(target=self._cleanJobs, args=())
+        thread.start()
+        
+    def getState(self):
+        pass
+      
+@app.route('/state/', methods = ['POST'])
+def state():     
+    return handler.getState()
+
+if __name__ == '__main__':
+    handler = Handler()
+    
+    app.logger.setLevel(logging.DEBUG)
+    app.run(debug=False, use_reloader=False, host=config.daemon_ip, port='8506')

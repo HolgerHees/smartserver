@@ -36,6 +36,7 @@
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rwx,g=rx,o=", path: "/opt/ci_service" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{global_build}}ci_job" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci" }
 
 - name: install vagrant binary
@@ -48,21 +49,32 @@
     group: root
     mode: 0750
 
-- name: copy ci package
+- name: copy config
+  template:
+    src: "templates/opt/ci_service/config/config.py"
+    dest: "/opt/ci_service/config/config.py"
+    owner: root
+    group: root
+    mode: 0750
+
+- name: copy ci libs
   copy:
-    src: "templates/opt/ci_service/ci"
+    src: "templates/opt/ci_service/lib"
     dest: "/opt/ci_service"
     owner: root
     group: root
     mode: 0750
 
-- name: copy ci_service
+- name: copy ci tool
   template:
-    src: "templates/opt/ci_service/ci_service"
-    dest: "/opt/ci_service/ci_service"
+    src: "templates/opt/ci_service/{{item}}"
+    dest: "/opt/ci_service/{{item}}"
     owner: root
     group: root
     mode: 0750
+  with_items:
+    - ci_job_handler
+    - server
     
 - name: copy webui
   copy:
@@ -93,7 +105,7 @@
 - name: create check cron job
   vars:
     name: "Continues integration job"
-    cmd: "/opt/ci_service/ci_service start > /dev/null"
+    cmd: "/opt/ci_service/ci_job_handler  start > /dev/null"
     file: "ansible_ci_service"
     minute: "*/5"
   import_tasks: roles/cron/tasks/add_cronjob.yml
@@ -109,6 +121,20 @@
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
 # ***** FINALIZE *****
+- name: "create systemd service"
+  template:
+    src: "templates/etc/systemd/system/ci_service.service"
+    dest: "/etc/systemd/system/ci_service.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart ci_service"
+ 
+- name: register systemd service watcher
+  vars:
+    name: "ci_service"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+
 - name: register service watcher
   vars:
     name: "vboxdrv"
@@ -121,3 +147,8 @@
     process: "lsmod | grep vbox"
   import_tasks: roles/_shared/tasks/service_process_check.yml
   
+- name: trigger ci_service handler
+  vars:
+    notify: "restart ci_service"
+    service: "ci_service.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

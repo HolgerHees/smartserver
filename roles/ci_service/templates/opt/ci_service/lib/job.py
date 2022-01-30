@@ -10,10 +10,10 @@ import sys
 from datetime import datetime
 from datetime import timedelta
 
-from ci import helper
-from ci import virtualbox
-from ci import status
-from ci import log
+from lib import helper
+from lib import virtualbox
+from lib import status
+from lib import log
 
 sys.path.insert(0, "/opt/shared/python")
 

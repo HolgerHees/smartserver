@@ -1,5 +1,5 @@
-from ci import helper
-from ci import log
+from lib import helper
+from lib import log
 
 def getRegisteredMachines():
     result = helper.execCommand("VBoxManage list vms")

@@ -6,32 +6,22 @@ import sys
 
 import urllib.parse
 
-from ci import helper
-from ci import status
-from ci import service
-from ci import job
-from ci import git
-from ci import log
+from lib import helper
+from lib import status
+from lib import service
+from lib import job
+from lib import git
+from lib import log
+
+from config import config
 
 import pexpect 
-
-server_host = "{{server_domain}}"
-
-status_file = "{{global_tmp}}ci_service.status"
-
-lib_dir = "{{global_lib}}ci/"
-log_dir = "{{global_log}}ci/"
-build_dir = "{{global_build}}"
-repository_dir = "{{global_build}}ci_job"
-
-repository_url = "{{vault_deployment_config_git}}"
-access_token = "{{vault_deployment_token_git if vault_deployment_token_git != 'None' else ''}}"
 
 branch = "master"
 
 deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" }, { "config": "demo", "os": "ubuntu" } ]
 
-repository_owner = repository_url.replace("https://github.com/","")
+repository_owner = config.repository_url.replace("https://github.com/","")
 repository_owner = repository_owner.replace(".git","")
 
 cmd = ""
@@ -50,33 +40,33 @@ elif cmd == "clean":
         log.error(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
         exit(1)
 elif cmd == "stop":
-    stopped_state_obj = service.stopRunningJob(status_file,log_dir)
+    stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir)
     if stopped_state_obj != None:
-        valid_state = job.getLastValidState(log_dir,stopped_state_obj,branch)
+        valid_state = job.getLastValidState(config.log_dir,stopped_state_obj,branch)
         if valid_state != None:
             if valid_state == "success":
                 log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
+                git.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
             elif valid_state == "failure":
                 log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("failure", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build errored")
+                git.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build errored")
             else:
                 log.error(u"Unable to restore github state '{}' for deployment '{}' on commit '{}'".format(valid_state, stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
         else:
             log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-            git.setState(repository_owner,access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
+            git.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
     exit(0)
 elif cmd == "start" or cmd == "restart":
-    processed_git_hash = service.checkRunningJob(status_file)
+    processed_git_hash = service.checkRunningJob(config.status_file)
 
-    git.initRepository(repository_dir, repository_url, build_dir)
+    git.initRepository(config.repository_dir, config.repository_url, config.build_dir)
 
-    git.updateRepository(repository_dir,branch)
+    git.updateRepository(config.repository_dir,branch)
 
-    current_git_hash = git.getHash(repository_dir)
+    current_git_hash = git.getHash(config.repository_dir)
 
     if processed_git_hash != current_git_hash or cmd == "restart":
-        status.setState(status_file,u"running")
+        status.setState(config.status_file,u"running")
         log.info(u"Check for commit '{}' started.".format(current_git_hash))
 
         pid = os.fork()
@@ -84,29 +74,29 @@ elif cmd == "start" or cmd == "restart":
             try:
                 helper.log( u"Check for commit {} started".format(current_git_hash))
                 
-                status.setGitHash(status_file,current_git_hash)
+                status.setGitHash(config.status_file,current_git_hash)
                 
-                commit = git.getLog(repository_dir,current_git_hash)
+                commit = git.getLog(config.repository_dir,current_git_hash)
                 
-                job_obj = job.Job(log_dir, lib_dir, repository_dir, status_file, branch, current_git_hash, commit )
+                job_obj = job.Job(config.log_dir, config.lib_dir, config.repository_dir, config.status_file, branch, current_git_hash, commit )
                 
                 for deployment in deployments:
-                    status.setDeployment(status_file,deployment['os'])
-                    if access_token != "":
-                        git.setState(repository_owner,access_token,current_git_hash,"pending",deployment['os'],"Build pending")
+                    status.setDeployment(config.status_file,deployment['os'])
+                    if config.access_token != "":
+                        git.setState(repository_owner,config.access_token,current_git_hash,"pending",deployment['os'],"Build pending")
                     
                     successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
 
                     if not successful:
-                        if access_token != "":
-                            git.setState(repository_owner,access_token,current_git_hash,"failure",deployment['os'],"Build failed")
+                        if config.access_token != "":
+                            git.setState(repository_owner,config.access_token,current_git_hash,"failure",deployment['os'],"Build failed")
                             
-                        log_url = "https://{}/ci/details.php?datetime={}&config={}&os={}&branch={}&hash={}".format(server_host,start_time_str, deployment['config'],deployment['os'],branch,current_git_hash)
+                        log_url = "https://{}/ci/details.php?datetime={}&config={}&os={}&branch={}&hash={}".format(config.server_host,start_time_str, deployment['config'],deployment['os'],branch,current_git_hash)
                         log_url = urllib.parse.quote_plus(log_url)
                         
                         body = "Reason: {}".format(error_reason)
                         body += "\n\n"
-                        body += "Logs: https://{}/?ref=admin|system|ci|{}".format(server_host,log_url)
+                        body += "Logs: https://{}/?ref=admin|system|ci|{}".format(config.server_host,log_url)
                         body += "\n\n"
                         body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash)
                         
@@ -114,15 +104,15 @@ elif cmd == "start" or cmd == "restart":
                         
                         break
                     else:
-                        if access_token != "":
-                            git.setState(repository_owner,access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
+                        if config.access_token != "":
+                            git.setState(repository_owner,config.access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
                 
-                status.setState(status_file,u"finished")
+                status.setState(config.status_file,u"finished")
 
                 helper.log( u"Check for commit {} finished".format(current_git_hash))
             except:
                 helper.log( traceback.format_exc(), "err" )
-                status.setState(status_file,u"crashed")
+                status.setState(config.status_file,u"crashed")
             exit(0)
         else:
             exit(0)

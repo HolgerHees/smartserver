@@ -5,8 +5,8 @@ import re
 
 #from github import Github
 
-from ci import helper
-from ci import log
+from lib import helper
+from lib import log
 
 def initRepository(repository_dir, repository_url, build_dir):
   if not os.path.isdir(repository_dir):
