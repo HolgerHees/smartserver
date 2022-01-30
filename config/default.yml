@@ -44,28 +44,27 @@ default_variables: {
     cloud_vpn: { "default": None },                               # used in generic optional role 'wirguard_cloud'
 
     "userdata":       {
-        #example_value: [
+        #"example": {
         #    testuser1: { 
-        #        name: {}                                         # "Test User 1", 
-        #        email: {}                                        # "test1@test.de",
-        #        groups: {}                                       # [ "admin", "user" ], 
-        #        telegram_bot: {"default": omitting}              # "bot_testuser1",    # used by openhab => reference to bot key in vault.yml
-        #        phone_device: {"default": omitting}              # optional. will be used by device_ping role
-        #        {
+        #        name: "Test User 1"                              # mandatory.
+        #        email: "test1@test.de"                           # mandatory.
+        #        groups: [ "admin", "user" ]                      # mandatory.
+        #        telegram_bot: {                                  # optional. used by openhab => reference to bot key in vault.yml
+        #          bot_testuser1                                  
+        #        },              
+        #        phone_device: {                                  # optional. used by device_ping role
         #          ip: "{{server_subnet}}.69", 
         #          timeout: 60 
         #        },
-        #        vpn_gates: {"default": omitting}                 # optional. will be used by wireguard_mobile role
-        #        {
+        #        vpn_gates: {                                     # optional. used by wireguard_mobile role
         #          "phone": "{{vpn_mobile_subnet}}.11", 
         #          "tablet": "{{vpn_mobile_subnet}}.12" 
         #        },
-        #        media_dir: {"default": omitting} 
-        #        {
-        #          "test_media": "/"                              # nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+        #        media_dir: {                                     # optional. nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+        #          "test_media": "/"                              
         #        }
         #    }        
-        #]
+        #}
     },
     
     "update_daemon_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
@@ -74,7 +73,7 @@ default_variables: {
     "update_daemon_system_check_email": { "default": None },      # None, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
     
     #vault_telegram_bots: {
-    #    bot_testuser1: { # for user1
+    #    bot_testuser1: {
     #        chat_id: "<chat_id>",
     #        chat_token: "<chat_token>"
     #    }
@@ -86,10 +85,11 @@ default_variables: {
     "vault_mailserver_port": {},                                  # "587" => smtp port from your email server
 
     "vault_userpasswords": {
-        #"example_value": {
-        #    testuser1: { samba_password: "<mysambapassword>", web_password: "<mywebpassword>" },
-        #    testuser2: { samba_password: "<mysambapassword>", web_password: "<mywebpassword>" },
-        #    testuser3: { samba_password: "<mysambapassword>", web_password: "<mywebpassword>" }
+        #"example": {
+        #    testuser1: { 
+        #       samba_password: "<mysambapassword>",
+        #       web_password: "<mywebpassword>"
+        #    }
         #}
     },
 
