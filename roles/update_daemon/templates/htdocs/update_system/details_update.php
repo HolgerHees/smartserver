@@ -5,6 +5,14 @@ require "inc/job.php";
 require "inc/job_template.php";
 require "config.php";
 
+require "../shared/libs/http.php";
+require "../shared/libs/auth.php";
+
+if( !Auth::hasGroup("admin") )
+{
+    HttpResponse::throwForbidden();
+}
+
 $position = isset($_GET['position']) ? $_GET['position'] : 0;
 
 $datetime = isset($_GET['datetime']) ? $_GET['datetime'] : "";

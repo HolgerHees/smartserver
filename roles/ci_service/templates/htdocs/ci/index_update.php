@@ -4,6 +4,14 @@ require "inc/job.php";
 require "inc/job_template.php";
 require "config.php";
 
+require "../shared/libs/http.php";
+require "../shared/libs/auth.php";
+
+if( !Auth::hasGroup("admin") )
+{
+    HttpResponse::throwForbidden();
+}
+
 $entityBody = file_get_contents('php://input');
 
 $data = json_decode($entityBody);
