@@ -232,7 +232,7 @@ class IndexTemplate
             if( $system_update_available ) $types[] = $system_update_available . " system update" . ( $system_update_available > 1 ? 's' : '' );
             if( $deployment_update_available ) $types[] = $deployment_update_available . " smartserver update" . ( $deployment_update_available > 1 ? 's' : '' );
           
-            $msg = "There " . ( count($types) > 1 ? "are" : "is" ) . " " . implode(" and ",$types) . " available";
+            $msg = "There " . ( $system_update_available + $deployment_update_available > 1 ? "are" : "is" ) . " " . implode(" and ",$types) . " available";
             
             $workflow_fallback_msg = "<div class=\"info\">" . $msg . "<div class=\"sub\">Currently disabled because it is only possible max. 5 minutes after a system status refresh</div></div><div class=\"buttons\"><div class=\"form button exclusive disabled blocked green\" onclick=\"mx.UNCore.actionUpdateWorkflow(this)\">Install all</div></div>";
 
