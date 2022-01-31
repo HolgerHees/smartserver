@@ -91,6 +91,7 @@ class IndexTemplate
                   <div></div>
                   <div class=\"grow\">Cmd</div>
                   <div>Username</div>
+                  <div>State</div>
                   <div>Duration</div>
                   <div>Date</div>
                 </div>";
@@ -100,6 +101,7 @@ class IndexTemplate
                 $last_running_jobs_details_msg .= "<div class=\"state " . $job->getState() . "\"></div>";
                 $last_running_jobs_details_msg .= "<div>" . $job->getCmd() . "</div>";
                 $last_running_jobs_details_msg .= "<div>" . $job->getUsername() . "</div>";
+                $last_running_jobs_details_msg .= "<div>" . LogFile::formatState($job->getState()) . "</div>";
                 $last_running_jobs_details_msg .= "<div>" . ( explode(".", LogFile::formatDuration($job->getDuration()))[0] ) . "</div>";
                 $last_running_jobs_details_msg .= "<div class=\"indexLogDate\">" . $job->getDateTime()->format('d.m.Y H:i:s') . "</div>";
                 $last_running_jobs_details_msg .= "</div>";

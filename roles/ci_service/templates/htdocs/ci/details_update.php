@@ -32,7 +32,7 @@ if( sizeof($matches) == 1 )
 ?>
 <div id="currentPosition"><?php echo $logfile->getBytes(); ?></div>
 <div id="state"><?php echo $job->getState(); ?></div>
-<div id="stateFormatted"><?php echo JobTemplate::getState($job); ?></div>
+<div id="stateFormatted"><?php echo LogFile::formatState($job->getState()); ?></div>
 <div id="duration"><?php echo $job->getDuration(); ?></div>
 <div id="durationFormatted"><?php echo LogFile::formatDuration($job->getDuration()); ?></div>
 <div id="logs"><?php

@@ -55,3 +55,6 @@ class Server():
 
     def hasFileChanged(self,watched_data_file):
         return ( self.watched_data_files[watched_data_file] != self.identity.getModifiedTime(watched_data_file) ) if self.watched_data_files[watched_data_file] is not None else False
+
+    def confirmFileChanged(self,watched_data_file):
+        self.watched_data_files[watched_data_file] = self.identity.getModifiedTime(watched_data_file)

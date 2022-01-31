@@ -16,7 +16,7 @@ def initRepository(repository_dir, repository_url, build_dir):
       if cloneResult.returncode == 0:
           log.info( u"done", flush=True )
       else:
-          log.error( u"error: {}".format(cloneResult.stdout.decode("utf-8")), flush=True, file=sys.stderr )
+          log.error( u"error: {}".format(cloneResult.stdout.decode("utf-8")), flush=True )
 
 def updateRepository(repository_dir,branch):
     # git ls-remote {{vault_deployment_config_git}} HEAD

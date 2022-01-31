@@ -107,4 +107,32 @@ class LogFile
 
       return $hours.':'.$minutes.':'.$seconds;
     }
+    
+    public static function formatState($state)
+    {
+        $result = '<span class="state ' . $state . '"><span class="text">' . $state . '</span>';
+        switch( $state )
+        {
+            case 'running':
+                $result .= '<span class="icon-dot"></span>';
+                break;
+            case 'success':
+                $result .= '<span class="icon-ok"></span>';
+                break;
+            case 'failed':
+                $result .= '<span class="icon-cancel"></span>';
+                break;
+            case 'crashed':
+                $result .= '<span class="icon-crashed"></span>';
+                break;
+            case 'retry':
+                $result .= '<span class="icon-ccw"></span>';
+                break;
+            case 'stopped':
+                $result .= '<span class="icon-block"></span>';
+                break;
+        }
+        $result .= '</span>';
+        return $result;
+    }
 }

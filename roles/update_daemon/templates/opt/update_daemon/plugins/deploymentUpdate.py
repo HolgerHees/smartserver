@@ -47,11 +47,10 @@ class DeploymentUpdate:
                     commits = result.stdout.decode("utf-8").strip().split("\n")
                     last_git_hash = commits[0].split("\t")[0]
 
-                    repository_owner = self.config.git_remote.replace("https://github.com/","")
-                    repository_owner = repository_owner.replace(".git","")
+                    repository_owner = GitHub.getRepositoryOwner(self.config.git_remote)
 
-                    GitHub.getStates(repository_owner,last_git_hash)
-                    
+                    result = GitHub.getStates(repository_owner,last_git_hash)
+
                     states = Counter(result.values())
                     
                     if "failed" in states:

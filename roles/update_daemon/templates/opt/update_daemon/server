@@ -431,7 +431,7 @@ class Handler(Server):
             lf = LogFile(f)
             lf.getFile().write("\n")
             lf.write(error_msg)
-        os.rename(file_name, file_name.replace("-running-","-failed-"))
+        os.rename(file_name, file_name.replace("-running-","-crashed-"))
         
         return False
 
@@ -441,7 +441,7 @@ class Handler(Server):
             lf.getFile().write("\n")
             lf.write("The command crashed.\n")
 
-        os.rename(file_name, file_name.replace("-running-","-failed-"))
+        os.rename(file_name, file_name.replace("-running-","-crashed-"))
         
         return False
       

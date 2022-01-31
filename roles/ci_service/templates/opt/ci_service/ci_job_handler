@@ -25,8 +25,7 @@ branch = "master"
 
 deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" }, { "config": "demo", "os": "ubuntu" } ]
 
-repository_owner = config.repository_url.replace("https://github.com/","")
-repository_owner = repository_owner.replace(".git","")
+repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 
 cmd = ""
 if len(sys.argv) >= 2:
@@ -45,20 +44,24 @@ elif cmd == "clean":
         exit(1)
 elif cmd == "stop":
     stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir)
-    if stopped_state_obj != None:
+    if stopped_state_obj != None and config.access_token != "":
         valid_state = job.getLastValidState(config.log_dir,stopped_state_obj,branch)
         if valid_state != None:
             if valid_state == "success":
                 log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                git.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
+                GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
             elif valid_state == "failure":
                 log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("failure", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                git.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build errored")
+                GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build failed")
             else:
                 log.error(u"Unable to restore github state '{}' for deployment '{}' on commit '{}'".format(valid_state, stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+                GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error", stopped_state_obj['deployment'],"Build stopped")
         else:
             log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-            git.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
+            GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
+              
+        log.info(u"Cancel pending github state on commit '{}'".format(stopped_state_obj["git_hash"]))
+        GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")
     exit(0)
 elif cmd == "start" or cmd == "restart":
     processed_git_hash = service.checkRunningJob(config.status_file)
@@ -98,13 +101,14 @@ elif cmd == "start" or cmd == "restart":
                         _deployments.append(deployment)
 
                     deployments = _deployments
-                    
+                
+                is_failed_job = False
                 for deployment in deployments:
                     # remove older logs from same job
                     for name in job.getLogFiles(config.log_dir,deployment['config'],deployment['os'],"master",current_git_hash):
                         os.unlink(name)
                     
-                    status.setDeployment(config.status_file,deployment['os'])
+                    status.setDeployment(config.status_file,deployment['config'],deployment['os'])
                     
                     successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
 
@@ -123,6 +127,7 @@ elif cmd == "start" or cmd == "restart":
                         
                         helper.sendEmail("CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body)
                         
+                        is_failed_job = True
                         break
                     else:
                         if config.access_token != "":
@@ -130,10 +135,16 @@ elif cmd == "start" or cmd == "restart":
                 
                 status.setState(config.status_file,u"finished")
 
+                if is_failed_job and config.access_token != "":
+                    GitHub.cancelPendingStates(repository_owner, config.access_token, current_git_hash, "Build skipped")
+
                 helper.log( u"Check for commit {} finished".format(current_git_hash))
             except:
                 helper.log( traceback.format_exc(), "err" )
                 status.setState(config.status_file,u"crashed")
+
+                if config.access_token != "":
+                    GitHub.cancelPendingStates(repository_owner, config.access_token, current_git_hash, "Build crashed")
             exit(0)
         else:
             exit(0)

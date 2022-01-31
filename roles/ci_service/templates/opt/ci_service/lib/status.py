@@ -22,7 +22,9 @@ def getState(status_file):
             data[2] = None
         if data[3] == "":
             data[3] = None
-        return { "status": data[0], "deployment": data[1], "git_hash": data[2], "vid": data[3], "last_modified": os.path.getmtime(status_file) }
+        if data[4] == "":
+            data[4] = None
+        return { "status": data[0], "config": data[1], "deployment": data[2], "git_hash": data[3], "vid": data[4], "last_modified": os.path.getmtime(status_file) }
     return None
   
 def setState(status_file,status):
@@ -30,17 +32,18 @@ def setState(status_file,status):
     data[0] = status if status != None else ""
     setData(status_file,data)
 
-def setDeployment(status_file,deployment):
+def setDeployment(status_file,config,deployment):
     data = getData(status_file)
-    data[1] = deployment if deployment != None else ""
+    data[1] = config if config != None else ""
+    data[2] = deployment if deployment != None else ""
     setData(status_file,data)
 
 def setGitHash(status_file,git_hash):
     data = getData(status_file)
-    data[2] = git_hash if git_hash != None else ""
+    data[3] = git_hash if git_hash != None else ""
     setData(status_file,data)
 
 def setVID(status_file,vid):
     data = getData(status_file)
-    data[3] = vid if vid != None else ""
+    data[4] = vid if vid != None else ""
     setData(status_file,data)

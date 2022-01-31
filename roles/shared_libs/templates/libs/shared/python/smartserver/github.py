@@ -4,6 +4,11 @@ from dateutil import parser
 
 class GitHub():
     @staticmethod
+    def getRepositoryOwner(repository_url):
+        repository_owner = repository_url.replace("https://github.com/","")
+        return repository_owner.replace(".git","")
+
+    @staticmethod
     def getStates(repository_owner, git_hash ):
         statusUrl = "https://api.github.com/repos/{}/statuses/{}".format(repository_owner,git_hash)
         result = requests.get(statusUrl)
@@ -46,3 +51,12 @@ class GitHub():
         result = requests.post("https://api.github.com/repos/{}/statuses/{}".format(repository_owner,git_hash), headers=headers, data=json.dumps(data))
         if result.status_code != 201:
             raise Exception( "Unable to set git status. Code: {}, Body: {}".format(result.status_code,result.text) )
+          
+    @staticmethod
+    def cancelPendingStates(repository_owner, access_token, git_hash, context ):
+        states = GitHub.getStates(repository_owner,git_hash)
+        for deployment in states:
+            if states[deployment] != "pending":
+                continue
+            GitHub.setState(repository_owner,access_token,git_hash,"error",deployment,context)
+

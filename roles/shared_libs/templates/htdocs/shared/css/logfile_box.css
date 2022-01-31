@@ -53,6 +53,12 @@ div.form.table.logfileBox > div.row > div.stopped {
 div.form.table.logfileBox > div.row > div > span.state.stopped {
   color: #959595;
 }
+div.form.table.logfileBox > div.row > div.crashed {
+  background-color: var(--color-red);
+}
+div.form.table.logfileBox > div.row > div > span.state.crashed {
+  color: var(--color-red);
+}
 div.form.table.logfileBox > div.row > div.retry {
   background-color: #541edc;
 }

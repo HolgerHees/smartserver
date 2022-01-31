@@ -1,10 +1,12 @@
 import subprocess
-
+import re
 
 def getPid(ppid,name):
-    checkPidResult = execCommand( u"ps -f -o pid,cmd --ppid {} | grep -i \"{}\"".format(ppid,name) )
-    pid = checkPidResult.stdout.decode("utf-8").strip().split(" ")[0];
-    return pid
+    result = subprocess.run([ "ps", "-f", "-o", "pid,cmd", "--ppid", str(ppid) ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+    result = result.stdout.decode("utf-8")
+
+    m = re.search(".{}.*".format(name), result)
+    return m.group(0).strip().split(" ")[0] if m else ""
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )

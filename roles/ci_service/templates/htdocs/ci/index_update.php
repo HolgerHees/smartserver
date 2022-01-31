@@ -41,7 +41,7 @@ foreach( $jobs as $job )
     {
         $running_jobs .= '<div id="' . $job->getHash() . '">';
         $running_jobs .= '    <div class="state">' . $job->getState() . '</div>';
-        $running_jobs .= '    <div class="stateFormatted">' . JobTemplate::getState($job) . '</div>';
+        $running_jobs .= '    <div class="stateFormatted">' . LogFile::formatState($job->getState()) . '</div>';
         $running_jobs .= '    <div class="duration">' . $job->getDuration() . '</div>';
         $running_jobs .= '    <div class="durationFormatted">' . Logfile::formatDuration($job->getDuration()) . '</div>';
         $running_jobs .= '</div>';
