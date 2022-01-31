@@ -98,12 +98,12 @@ elif cmd == "start" or cmd == "restart":
                         _deployments.append(deployment)
 
                     deployments = _deployments
-
+                    
                 for deployment in deployments:
                     # remove older logs from same job
-                    for name in job.getLogFiles(config.job_log_folder,deployment['config'],deployment['os'],"master",current_git_hash):
+                    for name in job.getLogFiles(config.log_dir,deployment['config'],deployment['os'],"master",current_git_hash):
                         os.unlink(name)
-
+                    
                     status.setDeployment(config.status_file,deployment['os'])
                     
                     successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
