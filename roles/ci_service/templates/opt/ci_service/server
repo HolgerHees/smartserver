@@ -69,7 +69,9 @@ class Handler(Server):
                 job_is_running = self._isJobRunning()
                 if self.job_is_running != job_is_running:
                     if not job_is_running and self.state["status"] == "running":
-                        app.logger.info("Job crashed. Check log files.")
+                        app.logger.info("Job crash detected. Marked as 'crashed' now and check log files.")
+                        status.setState(config.status_file,u"crashed")
+                        
                         self._cleanJobs()
 
                     self.job_is_running = job_is_running

@@ -75,7 +75,7 @@ elif cmd == "start" or cmd == "restart":
     if processed_git_hash != current_git_hash or cmd == "restart":
         status.setState(config.status_file,u"running")
         log.info(u"Check for commit '{}' started.".format(current_git_hash))
-         
+
         pid = os.fork()
         if pid == 0:
             try:

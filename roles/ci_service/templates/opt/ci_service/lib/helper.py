@@ -5,7 +5,8 @@ def getPid(ppid,name):
     result = subprocess.run([ "ps", "-f", "-o", "pid,cmd", "--ppid", str(ppid) ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
     result = result.stdout.decode("utf-8")
 
-    m = re.search(".{}.*".format(name), result)
+    m = re.search(".*{}.*".format(name), result)
+    
     return m.group(0).strip().split(" ")[0] if m else ""
 
 def execCommand(cmd, cwd=None ):

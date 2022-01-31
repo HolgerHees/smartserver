@@ -67,9 +67,10 @@ def getLastValidState(log_dir,state_obj,branch):
     files = glob.glob("{}*-{}-{}-{}-*.log".format(log_dir,state_obj['deployment'], branch, state_obj['git_hash']))
     files.sort(key=os.path.getmtime, reverse=True)
     for deployment_log_file in files:
-        if deployment_log_file.find("-success-"):
+        details = getLogFileDetails(os.path.basename(deployment_log_file))
+        if details["state"] == "success":
             return u"success"
-        elif deployment_log_file.find("-failure-"):
+        elif details["state"] == "failure":
             return u"failure"
     return None
   
@@ -77,6 +78,7 @@ def getLogFileDetails(filename):
     data = os.path.basename(filename).split("-")
     
     return {
+        "state": data[2],
         "config": data[3],
         "deployment": data[4],
         "git_hash": data[6]
