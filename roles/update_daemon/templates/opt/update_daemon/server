@@ -2,11 +2,8 @@
 
 from flask import Flask, request, make_response
 import logging
-import socket
 
 import glob
-
-import pyinotify
 
 import pexpect 
 import subprocess
@@ -26,6 +23,7 @@ from config import config
 sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.logfile import LogFile
+from smartserver.server import Server
 
 watched_data_files = [
   config.system_update_state_file,
@@ -72,54 +70,13 @@ START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
 app = Flask(__name__)
 
-class Identity(pyinotify.ProcessEvent):
-    def __init__(self, s):
-        super().__init__(s)
-        self.modified_time = {}
-        
-    def process_default(self, event):
-        self.modified_time[event.path] = datetime.timestamp(datetime.now())
-        
-    def addWatcher(self,path,wm):
-        file_stat = os.stat(path)
-        self.modified_time[path] = file_stat.st_mtime
-        wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MODIFY, rec=True, auto_add=True)
-        
-    def getModifiedTime(self,path):
-        return self.modified_time[path]
 
-# Thread #1
-
-class Handler(pyinotify.ProcessEvent):
+class Handler(Server):
     def __init__(self):
+        super().__init__("update_daemon", watched_data_files + [__file__])
       
-        self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        try:
-            # The null byte (\0) means the socket is created 
-            # in the abstract namespace instead of being created 
-            # on the file system itself.
-            # Works only in Linux
-            self._lock_socket.bind('\0update_daemon')
-        except socket.error:
-            return
+        #self.update_server_time = self.identity.getModifiedTime(__file__)
         
-        wm = pyinotify.WatchManager()
-        s = pyinotify.Stats()
-        self.identity = Identity(s)
-        notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self.identity)
-        notifier.start()
-        
-        self.identity.addWatcher(__file__,wm)
-        self.update_server_time = self.identity.getModifiedTime(__file__)
-        
-        self.watched_data_files = {}
-        for watched_data_file in watched_data_files:
-            if not os.path.isfile(watched_data_file):
-                self.watched_data_files[watched_data_file] = None
-            else:
-                self.identity.addWatcher(watched_data_file,wm)
-                self.watched_data_files[watched_data_file] = os.path.basename(watched_data_file)
-            
         self.last_jobs_modified = datetime.timestamp(datetime.now())
 
         self.current_cmd_type = None
@@ -165,11 +122,9 @@ class Handler(pyinotify.ProcessEvent):
         #app.logger.info(__file__)
         
         last_data_modified = {}
-        for watched_data_file in self.watched_data_files:
-            if self.watched_data_files[watched_data_file] is not None:
-                last_data_modified[self.watched_data_files[watched_data_file]] = self.identity.getModifiedTime(watched_data_file)
-            else:
-                last_data_modified[self.watched_data_files[watched_data_file]] = 0
+        for watched_data_file in watched_data_files:
+            filename  = os.path.basename(watched_data_file)
+            last_data_modified[filename] = self.getFileModificationTime(watched_data_file)
                 
         last_data_modified["job.state"] = self.last_jobs_modified
                 
@@ -182,7 +137,7 @@ class Handler(pyinotify.ProcessEvent):
             "job_logfile": self.current_logfile,
             "job_killable": self.current_cmd_type != "system_reboot",
             "last_data_modified": last_data_modified,
-            "update_server_needs_restart": self.update_server_time != self.identity.getModifiedTime(__file__)
+            "update_server_needs_restart": self.hasFileChanged(__file__)
         })
 
     def buildErrorResult(self, status, message):

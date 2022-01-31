@@ -15,6 +15,10 @@ from lib import log
 
 from config import config
 
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver.github import GitHub
+
 import pexpect 
 
 branch = "master"
@@ -68,7 +72,7 @@ elif cmd == "start" or cmd == "restart":
     if processed_git_hash != current_git_hash or cmd == "restart":
         status.setState(config.status_file,u"running")
         log.info(u"Check for commit '{}' started.".format(current_git_hash))
-
+         
         pid = os.fork()
         if pid == 0:
             try:
@@ -80,16 +84,33 @@ elif cmd == "start" or cmd == "restart":
                 
                 job_obj = job.Job(config.log_dir, config.lib_dir, config.repository_dir, config.status_file, branch, current_git_hash, commit )
                 
+                if config.access_token != "":
+                    # get all github states
+                    deployment_states = GitHub.getStates(repository_owner,current_git_hash)
+
+                    # mark all non successful jobs as pending and clean others
+                    _deployments = []
+                    for deployment in deployments:
+                        if deployment['os'] in deployment_states and deployment_states[deployment['os']] == "success":
+                            continue
+
+                        GitHub.setState(repository_owner,config.access_token,current_git_hash,"pending",deployment['os'],"Build pending")
+                        _deployments.append(deployment)
+
+                    deployments = _deployments
+
                 for deployment in deployments:
+                    # remove older logs from same job
+                    for name in job.getLogFiles(config.job_log_folder,deployment['config'],deployment['os'],"master",current_git_hash):
+                        os.unlink(name)
+
                     status.setDeployment(config.status_file,deployment['os'])
-                    if config.access_token != "":
-                        git.setState(repository_owner,config.access_token,current_git_hash,"pending",deployment['os'],"Build pending")
                     
                     successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
 
                     if not successful:
                         if config.access_token != "":
-                            git.setState(repository_owner,config.access_token,current_git_hash,"failure",deployment['os'],"Build failed")
+                            GitHub.setState(repository_owner,config.access_token,current_git_hash,"failure",deployment['os'],"Build failed")
                             
                         log_url = "https://{}/ci/details.php?datetime={}&config={}&os={}&branch={}&hash={}".format(config.server_host,start_time_str, deployment['config'],deployment['os'],branch,current_git_hash)
                         log_url = urllib.parse.quote_plus(log_url)
@@ -105,7 +126,7 @@ elif cmd == "start" or cmd == "restart":
                         break
                     else:
                         if config.access_token != "":
-                            git.setState(repository_owner,config.access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
+                            GitHub.setState(repository_owner,config.access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
                 
                 status.setState(config.status_file,u"finished")
 

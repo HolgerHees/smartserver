@@ -2,6 +2,7 @@ import os
 import requests
 import json
 import re
+from dateutil import parser
 
 #from github import Github
 
@@ -43,22 +44,3 @@ def getLog(repository_dir,git_hash):
             break;
     
     return {"author":author,"subject":subject}
-    
-#def initAccount(access_token):
-#    return Github(access_token)
-  
-# https://developer.github.com/v3/repos/statuses/
-def setState(repository_owner, access_token, git_hash, state, context, description ):
-    headers = {
-        "Authorization": "token {}".format(access_token),
-        # This header allows for beta access to Checks API
-        #"Accept": 'application/vnd.github.antiope-preview+json'
-    }
-    data = {
-        "state": state,
-        "context": context,
-        "description": description
-    }
-    result = requests.post("https://api.github.com/repos/{}/statuses/{}".format(repository_owner,git_hash), headers=headers, data=json.dumps(data))
-    if result.status_code != 201:
-        helper.log( "Unable to set git status. Code: {}, Body: {}".format(result.status_code,result.text), "err" )

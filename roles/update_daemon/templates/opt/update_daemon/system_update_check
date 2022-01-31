@@ -116,7 +116,7 @@ if limit_step is None and config.update_check_email and len(update_message_r) > 
     message_r.append(u"There are new updates")
     for message in update_message_r:
         message_r.append("  - {}".format(message))
-    message_r.append(u"\n\nCheck https://{}/?ref=admin|tools|update_system for details".format(config.server_host))
+    message_r.append(u"\n\nCheck https://{}/?ref=admin|system|update_system for details".format(config.server_host))
    
     print(u"Send notification mail")
 

@@ -104,7 +104,7 @@ def checkRunningJob(status_file):
         if time() - state_obj["last_modified"] > 14000:
             if state_obj["status"] == "running":
                 status.setState(status_file,u"crashed")
-                log.error(u"Check for commit '{}' is running too long. Marked as 'crashed' now. Maybe it is stucked and you should try to cleanup manually.".format(state_obj["git_hash"]), file=sys.stderr )
+                log.error(u"Check for commit '{}' is running too long. Marked as 'crashed' now. Maybe it is stucked and you should try to cleanup manually.".format(state_obj["git_hash"]))
                 # check for frozen processes
                 exit(1)
             elif state_obj["status"] == "crashed":
@@ -118,7 +118,7 @@ def checkRunningJob(status_file):
                     exit(0)
                 else:
                     status.setState(status_file,u"crashed")
-                    log.error(u"Check for commit '{}' marked as 'running', but pid was not found. Marked as 'crashed' now.".format(state_obj["git_hash"]), file=sys.stderr)
+                    log.error(u"Check for commit '{}' marked as 'running', but pid was not found. Marked as 'crashed' now.".format(state_obj["git_hash"]))
                     exit(1)
 
         return state_obj["git_hash"]

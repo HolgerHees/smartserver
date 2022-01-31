@@ -111,7 +111,7 @@ if limit_config == None:
         message_r.append("There are new updates")
         for message in update_message_r:
             message_r.append("  - {}".format(message))
-        message_r.append("\n\nCheck https://{}/?ref=admin|tools|update_software for details".format(config.server_host))
+        message_r.append("\n\nCheck https://{}/?ref=admin|system|update_software for details".format(config.server_host))
         
         print("Send notification mail")
 

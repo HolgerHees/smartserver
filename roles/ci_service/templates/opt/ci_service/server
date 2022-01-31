@@ -25,6 +25,8 @@ from config import config
 
 sys.path.insert(0, "/opt/shared/python")
 
+from smartserver.server import Server
+
 from lib import helper
 from lib import status
 from lib import service
@@ -41,54 +43,10 @@ app = Flask(__name__)
 
 log.setLogger(app.logger)
 
-class Identity(pyinotify.ProcessEvent):
-    def __init__(self, s):
-        super().__init__(s)
-        self.modified_time = {}
-        
-    def process_default(self, event):
-        self.modified_time[event.path] = datetime.timestamp(datetime.now())
-        
-    def addWatcher(self,path,wm):
-        file_stat = os.stat(path)
-        self.modified_time[path] = file_stat.st_mtime
-        wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MODIFY, rec=True, auto_add=True)
-        
-    def getModifiedTime(self,path):
-        return self.modified_time[path]
-
-# Thread #1
-
-class Handler(pyinotify.ProcessEvent):
+class Handler(Server):
     def __init__(self):
-      
-        self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        try:
-            # The null byte (\0) means the socket is created 
-            # in the abstract namespace instead of being created 
-            # on the file system itself.
-            # Works only in Linux
-            self._lock_socket.bind('\0ci_service')
-        except socket.error:
-            return
+        super().__init__("ci_service", watched_data_files + [__file__])
         
-        wm = pyinotify.WatchManager()
-        s = pyinotify.Stats()
-        self.identity = Identity(s)
-        notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self.identity)
-        notifier.start()
-        
-        self.identity.addWatcher(__file__,wm)
-        self.update_server_time = self.identity.getModifiedTime(__file__)
-        
-        self.watched_data_files = {}
-        for watched_data_file in watched_data_files:
-            if not os.path.isfile(watched_data_file):
-                self.watched_data_files[watched_data_file] = None
-            else:
-                self.identity.addWatcher(watched_data_file,wm)
-                self.watched_data_files[watched_data_file] = os.path.basename(watched_data_file)
-                
         self.cleanJobs()
         
     def _cleanJobs(self):

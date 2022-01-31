@@ -640,7 +640,7 @@ if( !Auth::hasGroup("admin") )
     <div class="header"><div>Daemon status</div><div></div></div>
     <div class="action" id="serverNeedsRestart"><div class="info red">Daemon was updated and needs to restart</div><div class="buttons"><div class="form button red exclusive" onclick="mx.UNCore.actionRestartDaemon(this)">Restart daemon</div></div></div>
     <div class="action" id="updateWorkflow"></div>
-    <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button red" onclick="mx.UNCore.actionKillProcess(this)">Kill Process</div></div></div>
+    <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button red" onclick="mx.UNCore.actionKillProcess(this)">Stop</div></div></div>
     <div class="action" id="lastRunningJobsHeader"></div>
     <div class="list form table logfileBox" id="lastRunningJobsDetails"></div>
 </div>

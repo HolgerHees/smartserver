@@ -7,6 +7,8 @@ import os
 import re
 import sys
 
+import glob
+
 from datetime import datetime
 from datetime import timedelta
 
@@ -70,6 +72,12 @@ def getLastValidState(log_dir,state_obj,branch):
         elif deployment_log_file.find("-failure-"):
             return u"failure"
     return None
+  
+def getLogFiles(log_folder, config_name, os_name, branch, git_hash):
+    return glob.glob(u"{}*-*-*-{}-{}-{}-{}-*.log".format(log_folder,config_name,os_name,branch,git_hash))
+      
+def getLogFilename(log_folder, time_str, duration, state, config_name, os_name, branch, git_hash, author, subject ):
+    return u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(log_folder,time_str,duration, state,config_name,os_name,branch, git_hash,author,subject)
   
 class Job:
   
@@ -139,7 +147,7 @@ class Job:
             self.start_time = datetime.now()
             self.start_time_str = self.start_time.strftime(START_TIME_STR_FORMAT)
 
-            deployment_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,self.start_time_str,0,"running",config_name,os_name,self.branch,self.git_hash,author,subject)
+            deployment_log_file = getLogFilename(self.log_dir,self.start_time_str,0,"running",config_name,os_name,self.branch,self.git_hash,author,subject)
             
             vagrant_path = pathlib.Path(__file__).parent.absolute().as_posix() + "/../vagrant"
 
@@ -221,7 +229,7 @@ class Job:
                     lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,self.deploy_exit_status,timedelta(seconds=duration)))
 
             # Rename logfile
-            finished_log_file = u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(self.log_dir,self.start_time_str,duration,status_msg,config_name,os_name,self.branch,self.git_hash,author,subject)
+            finished_log_file = getLogFilename(self.log_dir,self.start_time_str,duration,status_msg,config_name,os_name,self.branch,self.git_hash,author,subject)
             os.rename(deployment_log_file, finished_log_file)
 
             # Cleanup start
