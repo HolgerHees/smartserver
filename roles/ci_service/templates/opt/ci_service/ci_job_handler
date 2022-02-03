@@ -43,22 +43,10 @@ elif cmd == "clean":
         log.error(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
         exit(1)
 elif cmd == "stop":
-    stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir)
+    stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir,branch)
     if stopped_state_obj != None and config.access_token != "":
-        valid_state = job.getLastValidState(config.log_dir,stopped_state_obj,branch)
-        if valid_state != None:
-            if valid_state == "success":
-                log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("success", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"success",stopped_state_obj['deployment'],"Build succeeded")
-            elif valid_state == "failure":
-                log.info(u"Restore github state to '{}' for deployment '{}' on commit '{}'".format("failure", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"failure", stopped_state_obj['deployment'],"Build failed")
-            else:
-                log.error(u"Unable to restore github state '{}' for deployment '{}' on commit '{}'".format(valid_state, stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-                GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error", stopped_state_obj['deployment'],"Build stopped")
-        else:
-            log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-            GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
+        log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
+        GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
               
         log.info(u"Cancel pending github state on commit '{}'".format(stopped_state_obj["git_hash"]))
         GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")

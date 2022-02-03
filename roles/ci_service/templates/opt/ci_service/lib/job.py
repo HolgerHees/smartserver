@@ -41,8 +41,8 @@ retry_messages = {
 
 START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
       
-def modifyStoppedFile(log_dir):
-    files = glob.glob("{}*-0-running-*.log".format(log_dir))
+def modifyStoppedFile(log_dir, state_obj, branch):
+    files = glob.glob("{}*-{}-{}-{}-{}-*.log".format(log_dir,state_obj['config'],state_obj['deployment'], branch, state_obj['git_hash']))
     files.sort(key=os.path.getmtime, reverse=True)
     for deployment_log_file in files:
         filename = deployment_log_file.split('/')[-1]
@@ -62,18 +62,7 @@ def modifyStoppedFile(log_dir):
         
         log.info(u"Logfile '{}' processed.".format(finished_log_file.split('/')[-1]))
         break
-
-def getLastValidState(log_dir,state_obj,branch):
-    files = glob.glob("{}*-{}-{}-{}-*.log".format(log_dir,state_obj['deployment'], branch, state_obj['git_hash']))
-    files.sort(key=os.path.getmtime, reverse=True)
-    for deployment_log_file in files:
-        details = getLogFileDetails(os.path.basename(deployment_log_file))
-        if details["state"] == "success":
-            return u"success"
-        elif details["state"] == "failure":
-            return u"failure"
-    return None
-  
+ 
 def getLogFileDetails(filename):
     data = os.path.basename(filename).split("-")
     

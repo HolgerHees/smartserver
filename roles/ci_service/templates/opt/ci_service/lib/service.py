@@ -66,7 +66,9 @@ def cleanRunningJobs(vid):
     else:
         virtualbox.destroyMachine(vid)
 
-def stopRunningJob(status_file,log_dir):
+def stopRunningJob(status_file,log_dir,branch):
+    state_obj = status.getState(status_file)
+
     cleaned = False
     pid = getPid()
     if pid != None:
@@ -75,9 +77,7 @@ def stopRunningJob(status_file,log_dir):
         cleaned = True
 
         # Prepare file
-        job.modifyStoppedFile(log_dir)
-    
-    state_obj = status.getState(status_file)
+        job.modifyStoppedFile(log_dir, state_obj,branch)
     
     if state_obj["vid"] != None:
         if virtualbox.destroyMachine(state_obj["vid"]):
