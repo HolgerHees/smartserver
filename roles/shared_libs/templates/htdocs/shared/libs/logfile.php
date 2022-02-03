@@ -123,7 +123,7 @@ class LogFile
                 $result .= '<span class="icon-cancel"></span>';
                 break;
             case 'crashed':
-                $result .= '<span class="icon-crashed"></span>';
+                $result .= '<span class="icon-cancel"></span>';
                 break;
             case 'retry':
                 $result .= '<span class="icon-ccw"></span>';

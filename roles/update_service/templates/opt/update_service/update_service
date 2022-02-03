@@ -1,0 +1,427 @@
+#!/usr/bin/python3
+
+from flask import Flask, request, make_response
+
+import logging
+
+import glob
+
+import threading
+import json
+import sys
+import os
+import time
+
+import importlib
+
+from pathlib import Path
+from datetime import datetime, timezone
+from json.decoder import JSONDecodeError
+
+from config import config
+from server.cmd.builder import CmdBuilder
+from server.cmd.executer import CmdExecuter
+from server.watcher.dependency import DependencyWatcher
+from server.watcher.process import ProcessWatcher
+from server.watcher.system_update import SystemUpdateWatcher
+from server.watcher.deployment_state import DeploymentStateWatcher
+from server.watcher.deployment_tags import DeploymentTagsWatcher
+
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver.logfile import LogFile
+from smartserver.server import Server
+
+watched_data_files = [
+  config.outdated_roles_state_dir,
+  config.system_update_state_file,
+  config.deployment_state_file,
+  config.deployment_tags_file
+]
+
+cmd_mapping = {
+    "system_update_check": "update check",
+    "daemon_restart": "daemon restart",
+    "service_restart": "service restart",
+    "system_reboot": "system reboot",
+    "system_update": "system update",
+    "deployment_update": "deployment update",
+}
+
+MAX_DAEMON_RESTART_TIME = 30
+MAX_SYSTEM_REBOOT_TIME = 600
+
+MIN_PROCESS_INACTIVITY_TIME = 30
+MAX_STARTUP_WAITING_TIME = 180
+
+app = Flask(__name__)
+
+
+class Handler(Server):
+    def __init__(self):
+        super().__init__("update_service", watched_data_files + [__file__], self.fileChangeTriggered )
+      
+        #self.update_server_time = self.identity.getModifiedTime(__file__)
+        
+        self.logger = app.logger
+        
+        plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
+        repo = plugin.Repository()
+        cmd_install_system_updates = repo.getSystemUpdateCmd()
+        reboot_required_packages = repo.getRebootRequiredPackages()
+        
+        self.process_watcher = ProcessWatcher(self.logger)
+        self.system_update_watcher = SystemUpdateWatcher(self.logger,self.process_watcher, reboot_required_packages)
+        self.dependency_watcher = DependencyWatcher(self.logger, self.system_update_watcher)
+        self.deployment_state_watcher = DeploymentStateWatcher(self.logger)
+        self.deployment_tags_watcher = DeploymentTagsWatcher(self.logger)
+        
+        self.cmd_builder = CmdBuilder(self.logger, self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, cmd_install_system_updates)
+        
+        self.cmd_executer = CmdExecuter(self.logger, self)
+
+        self.handleRunningStates()
+        
+        self.testWorkflow = True
+
+    def prepareTestWorkflow(self,cmd_block):
+        for cmd in cmd_block["cmds"]:
+            interaction = cmd["interaction"]
+            cmd["interaction"] = "****" if interaction else interaction
+            cmd["cmd"] = "/*" + cmd["cmd"] + "*/ => sleep 5"
+            self.logger.info(cmd)
+            cmd["interaction"] = interaction
+            cmd["cmd"] = "sleep 5"
+            
+    def fileChangeTriggered(self, event):
+        if event.path == config.outdated_roles_state_dir.rstrip("/"):
+            self.dependency_watcher.notifyChange(event)
+        elif event.path == config.system_update_state_file:
+            self.system_update_watcher.notifyChange(event)
+        elif event.path == config.deployment_state_file:
+            self.deployment_state_watcher.notifyChange(event)
+        elif event.path == config.deployment_tags_file:
+            self.deployment_tags_watcher.notifyChange(event)
+            
+    def checkLastDataModified(self,key,last_data_modified):
+        form_key = "last_data_modified[{}]".format(key)
+        return form_key not in request.form or float(request.form[form_key]) < last_data_modified[key]
+            
+    def buildSuccessResult(self, running_type, cmd_type):
+        #self.logger.info(__file__)
+        
+        last_data_modified = {}
+        last_data_modified["outdated_processes"] = self.process_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["system_state"] = self.system_update_watcher.getSystemStateLastModifiedAsTimestamp()
+        last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
+        last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
+        last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
+        
+        changed_data = {}
+        if self.checkLastDataModified("outdated_processes",last_data_modified):
+            changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
+        if self.checkLastDataModified("outdated_roles",last_data_modified):
+            changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
+        if self.checkLastDataModified("deployment_state",last_data_modified):
+            changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedValut()
+        if self.checkLastDataModified("deployment_tags",last_data_modified):
+            changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
+
+        if self.checkLastDataModified("system_state",last_data_modified) or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
+            changed_data["is_reboot_needed"] = {
+                "all": self.system_update_watcher.isRebootNeeded(),
+                "os": self.system_update_watcher.isRebootNeededByOs(),
+                "installed": self.system_update_watcher.isRebootNeededByInstalledPackages(),
+                "outdated": self.system_update_watcher.isRebootNeededByOutdatedProcesses()
+            }
+            
+        if self.checkLastDataModified("system_updates",last_data_modified):
+            changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
+        if self.checkLastDataModified("smartserver_changes",last_data_modified):
+            changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
+            changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
+            changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
+        if self.checkLastDataModified("jobs",last_data_modified):
+            changed_data["jobs"] = self.cmd_executer.getJobs()
+            
+        current_job_started = self.cmd_executer.getCurrentJobStarted()
+        
+        return json.dumps({ 
+            "status": 0, 
+            "job_is_running": running_type is not None, 
+            "job_running_type": running_type, 
+            "job_cmd_name": cmd_mapping[cmd_type] if cmd_type is not None else "", 
+            "job_started": current_job_started.isoformat() if current_job_started is not None else None, 
+            "job_logfile": self.cmd_executer.getCurrentJobLogfile(),
+            "job_killable": self.cmd_executer.getCurrentJobCmdType() != "system_reboot",
+            "update_server_needs_restart": self.hasFileChanged(__file__),
+            "last_data_modified": last_data_modified,
+            "changed_data": changed_data
+        })
+
+    def buildErrorResult(self, status, message):
+        return json.dumps({ 
+            "status": status, 
+            "message": message
+        })
+     
+    def getState(self):
+        active_cmd_type = self.cmd_executer.getActiveCmdType()
+        
+        if self.cmd_executer.isDaemonJobRunning():
+            return self.buildSuccessResult("daemon",self.cmd_executer.getCurrentJobCmdType())
+        elif active_cmd_type:
+            return self.buildSuccessResult("manual",active_cmd_type)
+        else:
+            return self.buildSuccessResult(None, None)
+         
+    def handleDaemonRestart(self,file_name,file_age,start_time_str):
+        is_success = file_age < MAX_DAEMON_RESTART_TIME
+        
+        with open(file_name, 'a') as f:
+            lf = LogFile(f)
+            lf.getFile().write("\n")
+            if is_success:
+                lf.write("The command was successful.\n")
+            else:
+                lf.write("The command crashed.\n")
+            
+        os.rename(file_name, file_name.replace("-running-","-success-" if is_success else "-failed-"))
+        
+        return is_success
+        
+    def handleSystemReboot(self,file_name,file_age,start_time_str):
+        is_success = file_age < MAX_SYSTEM_REBOOT_TIME
+        
+        if is_success:
+            if os.path.isfile(config.deployment_workflow_file):
+                with open(config.deployment_workflow_file, 'r') as f:
+                    workflow = json.load(f)
+                    if workflow[0]["cmd_type"] == "system_reboot":
+                        return self.proceedSystemReboot(workflow,file_name,start_time_str)
+                    else:
+                        error_msg = "Can't continue. Wrong first workflow.\n"
+            else:
+                error_msg = "Can't continue. Missing workflow file.\n"
+        else:
+            error_msg = "The command crashed.\n"
+
+        with open(file_name, 'a') as f:
+            lf = LogFile(f)
+            lf.getFile().write("\n")
+            lf.write(error_msg)
+        os.rename(file_name, file_name.replace("-running-","-crashed-"))
+        
+        return False
+
+    def handleCrash(self,file_name):
+        with open(file_name, 'a') as f:
+            lf = LogFile(f)
+            lf.getFile().write("\n")
+            lf.write("The command crashed.\n")
+
+        os.rename(file_name, file_name.replace("-running-","-crashed-"))
+        
+        return False
+      
+    def _handleRunningStates(self):
+        for name in glob.glob(u"{}*-*-running-*-*.log".format(config.job_log_folder)):
+            log_mtime = os.stat(name).st_mtime
+            log_modified_time = datetime.fromtimestamp(log_mtime, tz=timezone.utc)
+            file_age = datetime.timestamp(datetime.now()) - datetime.timestamp(log_modified_time)
+
+            name_parts = os.path.basename(name).split("-")
+            
+            result = False
+            if name_parts[3] == "daemon_restart":
+                result = self.handleDaemonRestart(name,file_age,name_parts[0])
+            elif name_parts[3] == "system_reboot":
+                result = self.handleSystemReboot(name,file_age,name_parts[0])
+            else:
+                result = self.handleCrash(name)
+
+            if type(result) == bool:
+                self.logger.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
+            else:
+                self.logger.info("Proceed with job '{}'".format(name_parts[3]))
+      
+         
+        if os.path.isfile(config.deployment_workflow_file):
+            os.unlink(config.deployment_workflow_file)
+
+    def handleRunningStates(self):
+        thread = threading.Thread(target=self._handleRunningStates, args=())
+        thread.start()
+
+    def _proceedSystemReboot(self,workflow, file_name, start_time_str):
+        min_inactivity_time = MIN_PROCESS_INACTIVITY_TIME
+        max_waiting_time = MAX_STARTUP_WAITING_TIME
+        
+        start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
+
+        exit_status = 1
+        with open(file_name, 'a') as f:
+            cmd_block = workflow.pop(0)
+
+            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,file_name)
+            lf = LogFile(f)
+
+            can_proceed = False
+            waiting_start = datetime.timestamp(datetime.now())
+            last_seen_cmd_type = waiting_start
+            while True:
+                now = datetime.timestamp(datetime.now())
+                waiting_time = round(now - waiting_start)
+                inactivity_time = now - last_seen_cmd_type
+
+                if waiting_time % 2 == 0:
+                    if self.cmd_executer.isExternalProcessRunning():
+                        last_seen_cmd_type = now
+
+                    if inactivity_time > min_inactivity_time:
+                        can_proceed = True
+                        break
+
+                    if waiting_time > max_waiting_time:
+                        lf.getFile().write("\n")
+                        lf.write("Not able to proceed. There are still some processed running\n")
+                        break
+                  
+                if waiting_time % 15 == 0:
+                    self.logger.info("Waiting for process inactivity. [Inactive: {} sec (min: {}), Waiting: {} secs (max: {}]".format(round(inactivity_time),min_inactivity_time,round(waiting_time),max_waiting_time))
+                    
+                time.sleep(1)
+
+            if can_proceed:
+                exit_status = self.cmd_executer.processCmdBlock(cmd_block,lf)
+                 
+        self.cmd_executer.finishRun(file_name,exit_status,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
+                      
+        self._runWorkflow(workflow)
+        
+    def proceedSystemReboot(self,workflow,file_name,start_time_str):
+        thread = threading.Thread(target=self._proceedSystemReboot, args=(workflow, file_name, start_time_str))
+        thread.start()
+
+    def _runWorkflow(self, workflow):   
+        while len(workflow) > 0:
+            cmd_block = workflow.pop(0)
+            if "function" in cmd_block:
+                function = self
+                for part in cmd_block["function"].split("."):
+                    function = getattr(function, part )
+
+                _cmd_block = function(cmd_block["username"], cmd_block["params"])
+                if _cmd_block is None:
+                    self.logger.info("Skip workflow function '{}'".format(cmd_block["function"]))
+                    continue
+                else:
+                    self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
+                    cmd_block = _cmd_block
+
+            if cmd_block["cmd_type"] == "system_reboot":
+                with open(config.deployment_workflow_file, 'w') as f:
+                    first_cmd = cmd_block["cmds"].pop(0)
+                    workflow.insert(0,cmd_block)
+                    json.dump(workflow, f)
+                        
+                    cmd_block = CmdBuilder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
+
+                if self.testWorkflow:
+                    self.prepareTestWorkflow(cmd_block)
+                
+            if not self.cmd_executer.isExternalProcessRunning() and self.cmd_executer.lock(cmd_block["cmd_type"]):
+                exit_code = self.cmd_executer.runCmdBlock(cmd_block)
+            else:
+                exit_code = -1
+                
+            if exit_code != 0:
+                if os.path.isfile(config.deployment_workflow_file):
+                    os.unlink(config.deployment_workflow_file)
+                    
+                if self.cmd_executer.isKilledJob():
+                    logfile = self.cmd_executer.getKilledLogfile()
+                    if logfile:
+                        filedata = os.path.basename(logfile).split("-")
+                        files = glob.glob(u"{}{}-*-*-{}-{}".format(config.job_log_folder,filedata[0],filedata[3],filedata[4]))
+                        for filename in files:
+                            os.rename(filename, filename.replace("-failed-","-stopped-"))
+                        self.cmd_executer.resetKilledJobState()
+                else:
+                    self.logger.error("Command '{}' exited with code '{}'".format(cmd_block["cmd_type"],exit_code));
+                break
+          
+            if cmd_block["cmd_type"] == "system_reboot":
+                break
+              
+    def runWorkflow(self, workflow):
+        if not self.cmd_executer.isRunning():
+            thread = threading.Thread(target=self._runWorkflow, args=(workflow, ))
+            thread.start()
+            time.sleep(0.5)
+            return state()
+        else:
+            return self.buildErrorResult(exit_status, u"Job not started" )
+      
+@app.route('/state/', methods = ['POST'])
+def state():     
+    return handler.getState()
+  
+@app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
+def refreshSystemUpdateCheck():
+    cmd = handler.cmd_builder.buildSystemUpdateCheckCmdBlock(request.form['username'])
+    return handler.runWorkflow([ cmd ]);
+
+@app.route('/restartService/', methods = ['POST'])
+def restartService():
+    cmd = handler.cmd_builder.buildRestartServiceCmdBlock(request.form['username'],request.form["service"])
+    return handler.runWorkflow([ cmd ]);
+      
+@app.route('/restartDaemon/', methods = ['POST'])
+def restartDaemon():
+    cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(request.form['username'])
+    return handler.runWorkflow([ cmd ]);
+
+@app.route('/installSystemUpdates/', methods = ['POST'])
+def installSystemUpdates():
+    cmd = handler.cmd_builder.buildInstallSystemUpdateCmdBlock(request.form['username'])
+    return handler.runWorkflow([ cmd ]);
+
+@app.route('/deploySmartserverUpdates/', methods = ['POST'])
+def deploySmartserverUpdates():
+    tags = request.form["tags"] if request.form["tags"].split(",") else None
+    password = request.form["password"] if "password" in request.form else None
+    confirm = request.form["confirm"] == "1"
+    cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.form['username'], password, tags, confirm )
+    if cmd:
+        return handler.runWorkflow([ cmd ]);
+    else:
+        return make_response("Deployment state file missing, empty or not readable", 501);
+
+@app.route('/systemReboot/', methods = ['POST'])
+def systemReboot():
+    cmd = handler.cmd_builder.buildSystemRebootCmdBlock(request.form['username'])
+    return handler.runWorkflow([ cmd ]);
+
+@app.route('/updateWorkflow/', methods = ['POST'])
+def updateWorkflow():
+    workflow = [
+        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", request.form ),
+        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildRestartServiceCmdBlockIfNecessary", request.form ),
+        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildSystemRebootCmdBlockIfNecessary", request.form ),
+        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", request.form )
+    ]
+    return handler.runWorkflow(workflow);
+
+@app.route('/killProcess/', methods = ['POST'])
+def killProcess():
+    return handler.killProcess()
+
+if __name__ == '__main__':
+    handler = Handler()
+    
+    app.logger.setLevel(logging.DEBUG)
+    app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')

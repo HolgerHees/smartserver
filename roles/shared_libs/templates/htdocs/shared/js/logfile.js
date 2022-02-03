@@ -235,6 +235,17 @@ mx.Logfile = (function( ret ) {
         }
     }
         
+    ret.startUpdateProcess = function(position)
+    {
+        if( location.hash == '#autoscroll' )
+        {
+            enableBottomScroll();
+        }
+        
+        currentPosition = position;
+        updateDetails(true);
+    }
+    
     ret.formatDuration = function(duration)
     {
         var days = Math.floor(duration / 86400);
@@ -250,18 +261,35 @@ mx.Logfile = (function( ret ) {
 
         return hours + ':' + minutes + ':' + seconds;
     }
-
-    ret.startUpdateProcess = function(position)
-    {
-        if( location.hash == '#autoscroll' )
-        {
-            enableBottomScroll();
-        }
-        
-        currentPosition = position;
-        updateDetails(true);
-    }
     
+    ret.formatState = function(state)
+    {
+        result = '<span class="state ' + state + '"><span class="text">' + state + '</span>';
+        switch( state )
+        {
+            case 'running':
+                result += '<span class="icon-dot"></span>';
+                break;
+            case 'success':
+                result += '<span class="icon-ok"></span>';
+                break;
+            case 'failed':
+                result += '<span class="icon-cancel"></span>';
+                break;
+            case 'crashed':
+                result += '<span class="icon-cancel"></span>';
+                break;
+            case 'retry':
+                result += '<span class="icon-ccw"></span>';
+                break;
+            case 'stopped':
+                result += '<span class="icon-block"></span>';
+                break;
+        }
+        result += '</span>';
+        return result;
+    }
+
     ret.init = function(_duration, _stateColorElement, _stateTextElement, _runtimeElement, _logElement)
     {
         duration = _duration;

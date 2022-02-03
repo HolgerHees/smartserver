@@ -1,0 +1,8 @@
+- name: restart update_service
+  systemd:
+    name: update_service
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart update_service"

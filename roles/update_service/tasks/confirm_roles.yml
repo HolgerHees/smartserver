@@ -1,0 +1,16 @@
+- name: collect outdated roles
+  shell: 
+    cmd: "ls | grep -P \"^{{'.*' if ansible_run_tags | length == 1 and ansible_run_tags[0] == 'all' else ansible_run_tags | join('|') }}$\""
+    chdir: "{{global_lib}}update_service/outdated_roles"
+  changed_when: no
+  failed_when: no
+  register: check_result
+    
+- name: confirm oudated roles as deployed
+  file:
+    path: "{{global_lib}}update_service/outdated_roles/{{item}}"
+    state: absent
+  with_items: "{{check_result.stdout_lines}}"
+
+    
+    

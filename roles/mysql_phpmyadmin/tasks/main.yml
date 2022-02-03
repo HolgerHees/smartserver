@@ -69,4 +69,4 @@
       pattern: "^RELEASE_([0-9_]+)$",
       version: "RELEASE_{{phpmyadmin_version | regex_replace('\\.','_')}}" 
     }
-  import_tasks: roles/update_daemon/tasks/add_software.yml
+  import_tasks: roles/update_service/tasks/add_software.yml

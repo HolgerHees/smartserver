@@ -37,7 +37,7 @@
   with_items:
     - { mode: "u=rwx,g=rx,o=", path: "/opt/ci_service" }
     - { mode: "u=rwx,g=rx,o=", path: "{{global_build}}ci_job" }
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci_service" }
 
 - name: install vagrant binary
   unarchive:
@@ -74,7 +74,7 @@
     mode: 0750
   with_items:
     - ci_job_handler
-    - server
+    - ci_service
     
 - name: copy webui
   copy:
@@ -121,6 +121,11 @@
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
 # ***** FINALIZE *****
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/ci_service.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+
 - name: "create systemd service"
   template:
     src: "templates/etc/systemd/system/ci_service.service"

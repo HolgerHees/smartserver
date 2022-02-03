@@ -1,0 +1,14 @@
+[Unit]
+Description=update_service
+Requires=php.service
+After=php.service
+
+[Service]
+TimeoutStartSec=0
+TimeoutStopSec=10
+Restart=always
+ExecStart=/opt/update_service/update_service
+SyslogIdentifier=update_service
+
+[Install]
+WantedBy=multi-user.target

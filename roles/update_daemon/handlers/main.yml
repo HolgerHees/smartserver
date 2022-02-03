@@ -1,8 +1,0 @@
-- name: restart update_daemon
-  systemd:
-    name: update_daemon
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart update_daemon"

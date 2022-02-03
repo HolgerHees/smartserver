@@ -1,0 +1,15 @@
+- name: "confirm deployment"
+  template:
+    src: "templates/deployment.state"
+    dest: "{{global_lib}}update_service/deployment.state"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "touch deployment"
+  ansible.builtin.file:
+    dest: "{{global_lib}}update_service/deployment.state"
+    owner: root
+    group: root
+    mode: 0644
+    state: touch

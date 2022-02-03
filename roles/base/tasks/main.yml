@@ -108,8 +108,8 @@
       , git                # used for ansible git module
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
-      , python3-Flask      # used for daemon services like update_daemon and ci_service
-      , python3-pyinotify  # used for daemon services like update_daemon and ci_service
+      , python3-Flask      # used for daemon services like update_service and ci_service
+      , python3-pyinotify  # used for daemon services like update_service and ci_service
       
       , python3-setuptools
       , python3-pip

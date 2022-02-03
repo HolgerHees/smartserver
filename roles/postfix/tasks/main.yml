@@ -142,6 +142,12 @@
     name: "postfix"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
+- name: register system package dependency
+  vars:
+    tag: "postfix"
+    packages: [ "postfix" ]
+  import_tasks: roles/update_service/tasks/add_dependency.yml
+
 - name: trigger postfix handler
   vars:
     notify: "restart postfix"

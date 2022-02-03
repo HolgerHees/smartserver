@@ -1,4 +1,4 @@
 <?php
-$log_folder = "{{global_log}}ci/";
+$log_folder = "{{global_log}}ci_service/";
 
  

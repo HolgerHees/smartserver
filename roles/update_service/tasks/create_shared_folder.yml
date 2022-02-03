@@ -1,0 +1,11 @@
+- name: prepare shared folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "{{global_etc}}update_service/software/"
+    - "{{global_etc}}update_service/dependencies/"
+#    - "{{global_lib}}update_service/deployment/"

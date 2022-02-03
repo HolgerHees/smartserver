@@ -82,7 +82,7 @@
       repository: "pihole/pihole",
       pattern: "^20([0-9\\.]+)$"
     }
-  import_tasks: roles/update_daemon/tasks/add_software.yml
+  import_tasks: roles/update_service/tasks/add_software.yml
 
 - name: trigger pihole handler
   vars:

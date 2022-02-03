@@ -306,4 +306,4 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{nextcloud_version}}" 
     }
-  import_tasks: roles/update_daemon/tasks/add_software.yml
+  import_tasks: roles/update_service/tasks/add_software.yml

@@ -7,7 +7,8 @@ After=php.service
 TimeoutStartSec=0
 TimeoutStopSec=10
 Restart=always
-ExecStart=/opt/ci_service/server
+ExecStart=/opt/ci_service/ci_service
+SyslogIdentifier=ci_service
 
 [Install]
 WantedBy=multi-user.target

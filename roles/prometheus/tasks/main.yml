@@ -112,7 +112,7 @@
       repository: "prom/prometheus",
       pattern: "^v([0-9\\.]+)$"
     }
-  import_tasks: roles/update_daemon/tasks/add_software.yml
+  import_tasks: roles/update_service/tasks/add_software.yml
 
 - name: trigger prometheus handler
   vars:

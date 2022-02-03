@@ -39,7 +39,9 @@ for config_file in files:
         result = subprocess.run([ "/usr/bin/systemctl status {}".format(systemd_service) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         status = result.stdout.decode("utf-8")
         
-        m = re.search("could not be found",status)
+        #print(status)
+        
+        m = re.search("could not be found|Loaded: not-found",status)
         if m:
             error("Service '{}' from role '{}' is unknown".format(systemd_service,role_name)) 
             exit_status = 1

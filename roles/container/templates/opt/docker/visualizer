@@ -298,7 +298,7 @@ service_mapping = {
     "sshd": "sshd",
     "cupsd": "cupsd",
     "netdata": "netdata",
-    "server": "update_daemon",
+    "server": "update_service",
     "VBoxHeadl": "ci"
 }
 for name in listen_port_map:

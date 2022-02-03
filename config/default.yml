@@ -67,10 +67,10 @@ default_variables: {
         #}
     },
     
-    "update_daemon_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
-    "update_daemon_software_check_email": { "default": None },    # None, "testadmin@test.com" => sends a notification email after each check, if new software is available 
-    "update_daemon_system_check_enabled": { "default": yes },     # enables the update check for this deployment
-    "update_daemon_system_check_email": { "default": None },      # None, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    "update_service_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
+    "update_service_software_check_email": { "default": None },    # None, "testadmin@test.com" => sends a notification email after each check, if new software is available 
+    "update_service_system_check_enabled": { "default": yes },     # enables the update check for this deployment
+    "update_service_system_check_email": { "default": None },      # None, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
     
     #vault_telegram_bots: {
     #    bot_testuser1: {

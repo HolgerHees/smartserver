@@ -1,3 +1,6 @@
+<?php
+require "./shared/libs/ressources.php";
+?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -7,33 +10,11 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"> 
     <link href="main/manifest.json" rel="manifest">
 
-<?php
-function getVersion($path,$suffixes)
-{
-    $files = scandir($path);
-    $time = 0;
-    foreach ($files as $name)
-    {
-        if (in_array($name,array(".","..")))
-        {
-            continue;
-        }
-
-        if( in_array( substr($name,strpos($name,'.')), $suffixes ) )
-        {
-            $_time = filemtime($path.$name);
-            if( $_time > $time ) $time = $_time;
-        }
-    }
-    
-    return $time;
-}
-?>
-    <link href="ressources?type=css&version=<?php echo getVersion(__DIR__.'/main/css/',['.css']); ?>" rel="stylesheet">
+    <link href="ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/main/css/'); ?>" rel="stylesheet">
     
     <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };</script>
     
-    <script src="ressources?type=js&version=<?php echo getVersion(__DIR__.'/main/js/',['.js']); ?>"></script>
+    <script src="ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/main/js/'); ?>"></script>
     
     <script>
 <?php
@@ -328,7 +309,7 @@ function getVersion($path,$suffixes)
         })( mx.Menu || {} );
     </script>
 
-    <script src="ressources?type=components&version=<?php echo getVersion(__DIR__.'/main/components/',['.js','*.json']); ?>"></script>
+    <script src="ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/main/components/'); ?>"></script>
 
     <script>
         var demoMode = document.location.search.indexOf("demo=") !== -1;
