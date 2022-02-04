@@ -1,5 +1,5 @@
 domain (ip ip6) {
-{% for ferm_rule in ferm_rules %}    table filter chain {{ferm_chain}} {{ferm_rule}} ACCEPT;
+{% for ferm_rule in ferm_rules %}    table filter chain {{ferm_chain}} {{ferm_rule}} {{ferm_type}};
 {% endfor %}
 } 
 

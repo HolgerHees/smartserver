@@ -53,7 +53,7 @@ class CmdBuilder:
 
     def buildSystemRebootCmdBlock(self, username):
         cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
-        post_cmd = self.buildSystemUpdateCheckCheckCmd("system")
+        post_cmd = self.buildSystemUpdateCheckCheckCmd("system_state")
         return self.buildCmdBlock(username, "system_reboot", [cmd,post_cmd])
 
     def buildSystemRebootCmdBlockIfNecessary(self, username,params):
@@ -68,15 +68,9 @@ class CmdBuilder:
         return self.buildCmdBlock(username, "service_restart", [cmd,post_cmd])
 
     def buildRestartServiceCmdBlockIfNecessary(self, username,params):
-        outdated_processes = self.process_watcher.getOudatedProcesses()
-        if len(outdated_processes) > 0:
-            services = []
-            for line in outdated_processes:
-                if not line["service"]:
-                    continue
-                services.append(line["service"])
-            if len(services) > 0:
-                return self.buildRestartServiceCmdBlock(username,",".join(services))
+        outdated_services = self.process_watcher.getOutdatedServices()
+        if outdated_services.length > 0:
+            return self.buildRestartServiceCmdBlock(username,",".join(outdated_services))
 
         return None
           

@@ -93,7 +93,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let roleDetailsMsg = "";
         let roleHeaderMsg = "";
       
-        outdatedRoleData = changed_data.hasOwnProperty("outdated_roles") ? changed_data["outdated_roles"] : outdatedProcessData;
+        outdatedRoleData = changed_data.hasOwnProperty("outdated_roles") ? changed_data["outdated_roles"] : outdatedRoleData;
         
         let roleCount = outdatedRoleData.length;
 
@@ -148,18 +148,18 @@ mx.UpdateServiceTemplates = (function( ret ) {
         { 
             msg = "<div class=\"info red\">" + mx.I18N.get("Reboot needed");
             
-            let reason = {};
-            if( changed_data["is_reboot_needed"]["os"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = "installed system updates";
-            if( changed_data["is_reboot_needed"]["outdated"] ) reasons["2"] = "outdated processes";
+            let reasons = {};
+            if( changed_data["is_reboot_needed"]["os"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("installed system updates");
+            if( changed_data["is_reboot_needed"]["outdated"] ) reasons["2"] = mx.I18N.get("outdated processes");
                              
             let reasonKeys = Object.keys(reasons);
             let isMultiReason = reasonKeys.length > 1;
             
-            let infoMsg = rebootForcedByOther && rebootForcedByProcess ? "Is needed because of {1} and {2}" : "Is needed because of {}";
+            let infoMsg = isMultiReason ? "Is needed because of {1} and {2}" : "Is needed because of {}";
 
             msg += "<div class=\"sub\">" + mx.I18N.get(infoMsg).fill( isMultiReason ? reasons : reasons[reasonKeys[0]] ) + "</div>";
             
-            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UNCore.actionRebootSystem(this)\"" + mx.I18N.get("Reboot system") + "</div></div>";
+            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UNCore.actionRebootSystem(this)\">" + mx.I18N.get("Reboot system") + "</div></div>";
         }
         
         return [ msg, lastUpdateDateFormatted ];

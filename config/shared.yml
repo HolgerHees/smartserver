@@ -46,9 +46,6 @@ docker_alertmanager_ip:           "172.30.6.200"
 docker_loki_ip:                   "172.30.7.200"
 #docker_openhab_ip:                "172.30.4.200"
 
-update_service_ip:                "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
-ci_service_ip:                    "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
-
 # 0 => production, 1 => production
 netgroup:                         "{{server_ip_r[2]}}"
 

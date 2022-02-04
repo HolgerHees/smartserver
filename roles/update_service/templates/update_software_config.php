@@ -1,3 +1,3 @@
 <?php
-$daemon_ip = "{{update_service_ip}}";
+$daemon_ip = "{{server_name}}";
  

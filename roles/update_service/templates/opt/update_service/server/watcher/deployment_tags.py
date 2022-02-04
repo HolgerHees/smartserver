@@ -14,7 +14,7 @@ class DeploymentTagsWatcher():
         
         self.initDeploymentTags()
         
-    def notifyChange(self, path, mask):
+    def notifyChange(self, event):
         self.initDeploymentTags()
 
     def initDeploymentTags(self):

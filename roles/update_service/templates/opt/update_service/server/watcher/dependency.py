@@ -4,6 +4,8 @@ import json
 from datetime import datetime
 import pyinotify
 
+from pathlib import Path
+
 from config import config
 
 
@@ -18,20 +20,24 @@ class DependencyWatcher():
 
         self.initOutdatedRoles()
         
-    def notifyChange(self, path, mask):
-        name = os.path.basename(path)
-        if mask & pyinotify.IN_CREATE:
+    def notifyChange(self, event):
+        name = os.path.basename(event["pathname"])
+        if event["mask"] & pyinotify.IN_CREATE:
             self.outdated_roles[name] = True
         else:
             del self.outdated_roles[name]
-        self.initOutdatedRoles()
+        self.postProcess()
 
     def initOutdatedRoles(self):
-        self.outdated_roles = {}
+        outdated_roles = {}
         files = glob.glob("{}*".format(config.outdated_roles_state_dir))
         for filename in files:
             name = os.path.basename(filename)
-            self.outdated_roles[name] = True
+            outdated_roles[name] = True
+        self.outdated_roles = outdated_roles
+        self.postProcess()
+        
+    def postProcess(self):
         self.last_modified = round(datetime.timestamp(datetime.now()),3)
             
     def getOutdatedRoles(self):

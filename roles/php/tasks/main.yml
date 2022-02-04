@@ -84,13 +84,6 @@
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
-- name: allow update_service php service
-  vars:
-    name: "update_service.php"
-    rule: "proto tcp daddr {{update_service_ip}} dport 8505 saddr {{docker_php_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
-
 - name: allow php service
   vars:
     name: "php"

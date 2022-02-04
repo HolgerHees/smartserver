@@ -14,7 +14,6 @@ import time
 
 import importlib
 
-from pathlib import Path
 from datetime import datetime, timezone
 from json.decoder import JSONDecodeError
 
@@ -72,8 +71,9 @@ class Handler(Server):
         repo = plugin.Repository()
         cmd_install_system_updates = repo.getSystemUpdateCmd()
         reboot_required_packages = repo.getRebootRequiredPackages()
+        reboot_required_services = repo.getRebootRequiredServices()
         
-        self.process_watcher = ProcessWatcher(self.logger)
+        self.process_watcher = ProcessWatcher(self.logger, reboot_required_services)
         self.system_update_watcher = SystemUpdateWatcher(self.logger,self.process_watcher, reboot_required_packages)
         self.dependency_watcher = DependencyWatcher(self.logger, self.system_update_watcher)
         self.deployment_state_watcher = DeploymentStateWatcher(self.logger)
@@ -101,17 +101,17 @@ class Handler(Server):
             cmd["interaction"] = interaction
             cmd["cmd"] = "sleep 5"
             
-    def fileChangeTriggered(self, path, mask):
-        if path == config.outdated_roles_state_dir.rstrip("/"):
-            self.dependency_watcher.notifyChange(path, mask)
-        elif path == config.system_update_state_file:
-            self.system_update_watcher.notifyChange(path, mask)
-        elif path == config.deployment_state_file:
-            self.deployment_state_watcher.notifyChange(path, mask)
-        elif path == config.deployment_tags_file:
-            self.deployment_tags_watcher.notifyChange(path, mask)
-        elif path == config.software_version_state_file:
-            self.software_versions_watcher.notifyChange(path, mask)
+    def fileChangeTriggered(self, event):
+        if event["path"] == config.outdated_roles_state_dir.rstrip("/"):
+            self.dependency_watcher.notifyChange(event)
+        elif event["path"] == config.system_update_state_file:
+            self.system_update_watcher.notifyChange(event)
+        elif event["path"] == config.deployment_state_file:
+            self.deployment_state_watcher.notifyChange(event)
+        elif event["path"] == config.deployment_tags_file:
+            self.deployment_tags_watcher.notifyChange(event)
+        elif event["path"] == config.software_version_state_file:
+            self.software_versions_watcher.notifyChange(event)
             
     def checkLastDataModified(self,key,last_data_modified):
         form_key = "last_data_modified[{}]".format(key)
@@ -347,7 +347,7 @@ class Handler(Server):
                     workflow.insert(0,cmd_block)
                     json.dump(workflow, f)
                         
-                    cmd_block = CmdBuilder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
+                    cmd_block = self.cmd_builder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
 
                 if self.testWorkflow:
                     self.prepareTestWorkflow(cmd_block)
@@ -416,7 +416,7 @@ def installSystemUpdates():
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
-    tags = request.form["tags"] if request.form["tags"].split(",") else None
+    tags = request.form["tags"].split(",") if request.form["tags"] else None
     password = request.form["password"] if "password" in request.form else None
     confirm = request.form["confirm"] == "1"
     cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.form['username'], password, tags, confirm )
@@ -434,8 +434,8 @@ def systemReboot():
 def updateWorkflow():
     workflow = [
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", request.form ),
-        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildRestartServiceCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildSystemRebootCmdBlockIfNecessary", request.form ),
+        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildRestartServiceCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", request.form )
     ]
     return handler.runWorkflow(workflow, "update");

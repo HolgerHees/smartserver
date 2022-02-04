@@ -13,7 +13,7 @@ class SoftwareVersionWatcher():
         
         self.initSoftwareState()
         
-    def notifyChange(self, path, mask):
+    def notifyChange(self, event):
         self.initSoftwareState()
         
     def initSoftwareState(self):

@@ -29,6 +29,9 @@ class Repository(Os):
     def getRebootRequiredPackages(self):
         return []
 
+    def getRebootRequiredServices(self):
+        return []
+
     def getUpdates(self, last_updates):
         # get repositories
         result = subprocess.run([ "/usr/bin/dnf repolist all" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )

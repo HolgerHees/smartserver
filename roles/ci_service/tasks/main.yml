@@ -102,6 +102,21 @@
     icons: [ 'templates/webui/icons/ci_service_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
+- name: deny everything except php service
+  vars:
+    name: "ci_service.php"
+    rule: "proto tcp dport 8506 saddr !{{docker_php_ip}}"
+    is_drop: yes
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+  
+- name: allow ci_service php service
+  vars:
+    name: "ci_service.php"
+    rule: "proto tcp dport 8506 saddr {{docker_php_ip}}"
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: create check cron job
   vars:
     name: "Continues integration job"

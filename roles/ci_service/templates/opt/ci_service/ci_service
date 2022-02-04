@@ -154,4 +154,4 @@ if __name__ == '__main__':
     handler = Handler()
     
     app.logger.setLevel(logging.DEBUG)
-    app.run(debug=False, use_reloader=False, host=config.daemon_ip, port='8506')
+    app.run(debug=False, use_reloader=False, host=config.service_ip, port='8506')

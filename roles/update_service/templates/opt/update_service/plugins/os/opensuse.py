@@ -20,6 +20,9 @@ class Repository(Os):
     def getRebootRequiredPackages(self):
         return ["wicked","wicked-service"]
 
+    def getRebootRequiredServices(self):
+        return [r"^wicked.*$"]
+
     def getUpdates(self):
         # get updates
         result = subprocess.run([ "/usr/bin/zypper list-updates" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )

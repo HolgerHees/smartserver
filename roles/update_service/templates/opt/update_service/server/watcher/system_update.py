@@ -23,7 +23,7 @@ class SystemUpdateWatcher():
         
         self.initSystemState()
         
-    def notifyChange(self, path, mask):
+    def notifyChange(self, event):
         self.initSystemState()
         
     def parseTime(self, datetimeStr):

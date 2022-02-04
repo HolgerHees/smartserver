@@ -59,8 +59,8 @@ class Chain:
         self.name = name
         self.rule_r = []
 
-    def addRule(self,sourceIp,targetIp,targetPort,raw):
-        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort, "raw": raw })
+    def addRule(self,sourceIp,targetIp,targetPort, mode, raw):
+        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort, "mode": mode, "raw": raw })
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
@@ -123,7 +123,7 @@ for rule in iptables_rules:
         current_chain = Chain(rule_r[1].lower())
         chain_r[current_chain.name] = current_chain
     else:
-        if rule_r[2] != "ACCEPT" or rule_r[5] == "lo":
+        if ( rule_r[2] != "ACCEPT" and rule_r[2] != "DROP" ) or rule_r[5] == "lo":
             continue
         #print(rule_r)
         source_ip = rule_r[7]
@@ -135,7 +135,7 @@ for rule in iptables_rules:
             else:
                 continue
         
-        current_chain.addRule(source_ip,target_ip,target_port,rule_r)
+        current_chain.addRule(source_ip,target_ip,target_port,rule_r[2],rule_r)
         #print(source_ip + ' => ' + target_ip + ' ' + target_port)
             
         #chain_r[current_chain].append()
@@ -143,7 +143,7 @@ for rule in iptables_rules:
 
 # Collect additional ports
 listen_port_map = {}
-additional_port_list = execCommand("lsof -i -P -n | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
+additional_port_list = execCommand("lsof -i -P -n +c0 | grep LISTEN").stdout.decode("utf-8").strip().split("\n")
 for additional_port in additional_port_list:
     additional_port = additional_port.split(" ")
     additional_port = list(filter(lambda item: item.strip(), additional_port))
@@ -160,7 +160,7 @@ for additional_port in additional_port_list:
             listen_port_map[additional_port[0]] = listen_ports
         protocol = additional_port[7].lower()
         port = columns[1].split("->")[0]
-        listen_ports[port] = {'access': 'intern' if columns[0] == '*' else 'local', 'port':port,'protocol':protocol}
+        listen_ports[port] = {'access': 'intern' if columns[0] == '*' or columns[0] == host_ip else 'local', 'port':port,'protocol':protocol}
    
 # Collect additional kernel ports
 additional_port_list = execCommand("ss -lun").stdout.decode("utf-8").strip().split("\n")
@@ -298,7 +298,8 @@ service_mapping = {
     "sshd": "sshd",
     "cupsd": "cupsd",
     "netdata": "netdata",
-    "server": "update_service",
+    "update_service": "update_service",
+    "ci_service": "ci_service",
     "VBoxHeadl": "ci"
 }
 for name in listen_port_map:
@@ -436,12 +437,24 @@ for network in sorted_network_r:
                         activeChain = 'input' if network.name == 'host' and connection.veth != "forwarded" else 'docker-user'
                         
                         if chain == activeChain:
+                          
+                            if rule['mode'] == "DROP":
+                                print(rule)
+                          
                             hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
                             for key in openPorts:
                                 data = openPorts[key]
                                 sourceIp = rule['sourceIp'].split('/')[0]
-                                if hostMatch or ( rule['targetPort'] == key and (sourceIp == '0.0.0.0' or not ipaddress.ip_address(sourceIp).is_private) ):
-                                    data["access"] = "extern"
+                                
+                                if rule['mode'] == "DROP":
+                                    #sourceIp = sourceIp.lstrip("!") # remove left negates
+                                    if hostMatch or rule['targetPort'] == key:
+                                        data["access"] = "local"
+                                        data["port"] += " (" + sourceIp + ")"
+                                else:
+                                    sourceIp = sourceIp.lstrip("!") # remove left negates
+                                    if hostMatch or ( rule['targetPort'] == key and (sourceIp == '0.0.0.0' or not ipaddress.ip_address(sourceIp).is_private) ):
+                                        data["access"] = "extern"
 
         rows.append([TYPE_CONTAINER,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
                 

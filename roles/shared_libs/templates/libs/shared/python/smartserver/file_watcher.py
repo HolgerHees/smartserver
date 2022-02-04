@@ -22,6 +22,11 @@ class FileWatcher(pyinotify.ProcessEvent):
         self.watched_parents = {}
         
         self.watched_directories = {}
+        
+    def notifyListener(self, event):
+        if self.callback:
+            self.logger.info("Notify listener of '{}'".format(event["path"]))
+            self.callback(event)
 
     def process_default(self, event):
         #print(event)
@@ -33,21 +38,18 @@ class FileWatcher(pyinotify.ProcessEvent):
                 if event.pathname in self.modified_time:
                     self.logger.info("New path '{}' watched".format(event.pathname))
                     self.addPath(event.pathname)
-                    if not event.dir and self.callback:
-                        #print("callback")
-                        self.callback(event.pathname, pyinotify.IN_CLOSE_WRITE)
+                    if not event.dir:
+                        self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE })
 
         elif event.path in self.watched_directories:
             if event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE ):
                 self.modified_time[event.path] = datetime.timestamp(datetime.now())
-                if self.callback:
-                    self.callback(event.path, event.mask)
+                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask })
       
         elif event.path in self.watched_files:
             if event.mask & pyinotify.IN_CLOSE_WRITE:
                 self.modified_time[event.path] = datetime.timestamp(datetime.now())
-                if self.callback:
-                    self.callback(event.path, event.mask)
+                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask })
             else:
                 pass
         

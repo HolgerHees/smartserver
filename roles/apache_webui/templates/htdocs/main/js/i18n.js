@@ -20,7 +20,7 @@ mx.I18N = (function( ret ) {
         
         this.fill = function(values)
         {
-            if( typeof(values) == "object" )
+            if( typeof(values) == "object" && !values.hasOwnProperty("fill") )
             {
                 var msg = this.value;
                 for( const [key, value] of Object.entries(values) )
