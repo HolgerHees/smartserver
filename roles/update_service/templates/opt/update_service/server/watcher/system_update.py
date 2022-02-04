@@ -1,7 +1,6 @@
 import os
 import json
 from datetime import datetime
-from dateutil.parser import parse
 
 from config import config
 
@@ -25,6 +24,12 @@ class SystemUpdateWatcher():
         
     def notifyChange(self,event):
         self.initSystemState()
+        
+    def parseTime(self, datetimeStr):
+        datetimeStr = "{}{}".format(datetimeStr[0:-3],datetimeStr[-2:])
+        datetimeObj = datetime.strptime(datetimeStr,"%Y-%m-%dT%H:%M:%S.%f%z")
+        timestamp = round(datetime.timestamp(datetimeObj),3)
+        return timestamp
 
     def initSystemState(self):
         if os.path.isfile(config.system_update_state_file):
@@ -42,12 +47,17 @@ class SystemUpdateWatcher():
                             self.installed_reboot_required_packages[update["name"]] = True
                 
                 self.states = _states
-                self.system_state_last_modified = round(datetime.timestamp(parse(self.states["last_system_state"])),3)
-                self.system_update_last_modified = round(datetime.timestamp(parse(self.states["last_system_update"])),3)
-                self.smartserver_changes_last_modified = round(datetime.timestamp(parse(self.states["last_smartserver_update"])),3)
-                self.smartserver_pull = round(datetime.timestamp(parse(self.states["smartserver_pull"])),3)
+                #2022-02-04T03:30:02.059664+01:00
+                self.system_state_last_modified = self.parseTime(self.states["last_system_state"])
+                self.system_update_last_modified = self.parseTime(self.states["last_system_update"])
+                self.smartserver_changes_last_modified = self.parseTime(self.states["last_smartserver_update"])
+                self.smartserver_pull = self.parseTime(self.states["smartserver_pull"])
+                #self.system_state_last_modified = round(datetime.timestamp(parse(self.states["last_system_state"])),3)
+                #self.system_update_last_modified = round(datetime.timestamp(parse(self.states["last_system_update"])),3)
+                #self.smartserver_changes_last_modified = round(datetime.timestamp(parse(self.states["last_smartserver_update"])),3)
+                #self.smartserver_pull = round(datetime.timestamp(parse(self.states["smartserver_pull"])),3)
 
-        self.process_watcher.initOutdatedProcesses(self.states["system_processes_outdated"])
+            self.process_watcher.initOutdatedProcesses(self.states["system_processes_outdated"])
         
     def getSystemStateLastModifiedAsTimestamp(self):
         return self.system_state_last_modified

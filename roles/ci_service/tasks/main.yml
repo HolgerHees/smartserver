@@ -41,7 +41,7 @@
 
 - name: install vagrant binary
   unarchive:
-    src: "https://releases.hashicorp.com/vagrant/2.2.16/vagrant_2.2.16_linux_amd64.zip"
+    src: "https://releases.hashicorp.com/vagrant/2.2.19/vagrant_2.2.19_linux_amd64.zip"
     dest: "/opt/ci_service"
     remote_src: yes
     creates: "/opt/ci_service/vagrant"
@@ -114,7 +114,7 @@
 - name: create cleanup cron job
   vars:
     name: "Continues integration cleanup"
-    cmd: "ls -1t {{global_log}}ci/*.log | tail -n +50 | xargs rm -f"
+    cmd: "ls -1t {{global_log}}ci_service/*.log | tail -n +50 | xargs rm -f"
     file: "ansible_ci_service"
     hour: "0"
     minute: "40"

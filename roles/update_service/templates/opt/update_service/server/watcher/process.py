@@ -50,8 +50,6 @@ class ProcessWatcher():
                     self.checkRebootRequired()
                     self.last_modified = round(datetime.timestamp(datetime.now()),3)
                     
-                    self.logger.info(self.outdated_processes)
-                    
                     self.condition.wait(15)
                 else:
                     self.logger.info("sleep")
