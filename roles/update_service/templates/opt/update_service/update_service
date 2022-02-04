@@ -59,11 +59,11 @@ app = Flask(__name__)
 
 class Handler(Server):
     def __init__(self):
-        super().__init__("update_service", watched_data_files + [__file__], self.fileChangeTriggered )
+        self.logger = app.logger
+        
+        super().__init__(self.logger, "update_service", watched_data_files + [__file__], self.fileChangeTriggered )
       
         #self.update_server_time = self.identity.getModifiedTime(__file__)
-        
-        self.logger = app.logger
         
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
         repo = plugin.Repository()
@@ -83,6 +83,9 @@ class Handler(Server):
         self.handleRunningStates()
         
         self.testWorkflow = True
+        
+    def terminate(self):
+        self.process_watcher.terminate()
 
     def prepareTestWorkflow(self,cmd_block):
         for cmd in cmd_block["cmds"]:
@@ -93,15 +96,15 @@ class Handler(Server):
             cmd["interaction"] = interaction
             cmd["cmd"] = "sleep 5"
             
-    def fileChangeTriggered(self, event):
-        if event.path == config.outdated_roles_state_dir.rstrip("/"):
-            self.dependency_watcher.notifyChange(event)
-        elif event.path == config.system_update_state_file:
-            self.system_update_watcher.notifyChange(event)
-        elif event.path == config.deployment_state_file:
-            self.deployment_state_watcher.notifyChange(event)
-        elif event.path == config.deployment_tags_file:
-            self.deployment_tags_watcher.notifyChange(event)
+    def fileChangeTriggered(self, path, mask):
+        if path == config.outdated_roles_state_dir.rstrip("/"):
+            self.dependency_watcher.notifyChange(path, mask)
+        elif path == config.system_update_state_file:
+            self.system_update_watcher.notifyChange(path, mask)
+        elif path == config.deployment_state_file:
+            self.deployment_state_watcher.notifyChange(path, mask)
+        elif path == config.deployment_tags_file:
+            self.deployment_tags_watcher.notifyChange(path, mask)
             
     def checkLastDataModified(self,key,last_data_modified):
         form_key = "last_data_modified[{}]".format(key)
@@ -424,4 +427,8 @@ if __name__ == '__main__':
     handler = Handler()
     
     app.logger.setLevel(logging.DEBUG)
-    app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')
+    try:
+        app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')
+    except Exception as e:
+        handler.terminate()
+        raise e

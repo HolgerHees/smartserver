@@ -7,7 +7,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "pending": ["yellow","Skipped git pull because of some remote ci pending"],
         "pulled_tested": ["green", "Git pulled and all remote ci succeeded"],
         "pulled": ["green", "Git pulled"],
-        "uncommitted": ["red","Skipped git pull because of has uncommitted changes"]
+        "uncommitted": ["red","Skipped git pull because of has uncommitted changes"],
+        "missing": ["red","Skipped git pull because of missing deployment state"],
     };
 
     ret.getLastFullRefresh = function(last_data_modified)
@@ -17,9 +18,20 @@ mx.UpdateServiceTemplates = (function( ret ) {
         if( last_update == 0 || last_data_modified["system_updates"] < last_update ) last_update = last_data_modified["system_state"];
         if( last_update == 0 || last_data_modified["smartserver_changes"] < last_update ) last_update = last_data_modified["smartserver_changes"];
       
-        let date = new Date(last_update * 1000);
+        let date = null;
+        let msg = "";
         
-        return [ date, mx.I18N.get("Last full refresh on {}").fill( date.toLocaleString() ) ];
+        if( last_update > 0 )
+        {
+            date = new Date(last_update * 1000);
+            msg = mx.I18N.get("Last full refresh on {}").fill( date.toLocaleString() );
+        }
+        else
+        { 
+            msg = mx.I18N.get("Please press 'Refresh' to check for updates for the first time");         
+        }
+        
+        return [ date, msg ];
     }
     
     ret.getSystemOutdatedDetails = function(last_data_modified, changed_data)
@@ -127,8 +139,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
     ret.getSystemStateDetails = function(last_data_modified, changed_data)
     {
-        let date = new Date(last_data_modified["system_state"] * 1000);
-        let lastUpdateDateFormatted = date.toLocaleString();
+        let date = last_data_modified["system_state"] ? new Date(last_data_modified["system_state"] * 1000) : null;;
+        let lastUpdateDateFormatted = date ? date.toLocaleString() : null;
         
         let msg = "";
 
@@ -159,8 +171,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let headerMsg = "";
         let updateCount = changed_data["system_updates"].length;
         
-        let date = new Date(last_data_modified["system_updates"] * 1000);
-        let lastUpdateDateFormatted = date.toLocaleString();
+        let date = last_data_modified["system_updates"] ? new Date(last_data_modified["system_updates"] * 1000) : null;
+        let lastUpdateDateFormatted = date ? date.toLocaleString() : null;
       
         if( updateCount > 0 )
         {
@@ -204,8 +216,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let headerMsg = "";
         let updateCount = changed_data["smartserver_changes"].length;
         
-        let date = new Date(last_data_modified["smartserver_changes"] * 1000);
-        let lastUpdateDateFormatted = date.toLocaleString();
+        let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
+        let lastUpdateDateFormatted = date ? date.toLocaleString() : null;
       
         if( updateCount > 0 )
         {
@@ -240,13 +252,21 @@ mx.UpdateServiceTemplates = (function( ret ) {
     ret.getSmartserverChangeState = function(last_data_modified, changed_data)
     {
         let code = changed_data["smartserver_code"];
+        let msg = "";
         
-        let date = new Date(changed_data["smartserver_pull"] * 1000);
-        let lastPullFormatted = date.toLocaleString();
-      
-        [colorClass,updateMsg] = startserverChangeInfoCodes[code];
-        
-        return "<div class=\"info " + colorClass + "\">" + mx.I18N.get(updateMsg) + "<div class=\"sub\">" + mx.I18N.get("Last git pull was on {}").fill( lastPullFormatted ) + "</div></div>";
+        if( code )
+        {
+            let date = new Date(changed_data["smartserver_pull"] * 1000);
+            let lastPullFormatted = date.toLocaleString();
+          
+            [colorClass,updateMsg] = startserverChangeInfoCodes[code];
+            
+            msg = "<div class=\"info " + colorClass + "\">" + mx.I18N.get(updateMsg);
+            if( code != "missing" ) msg += "<div class=\"sub\">" + mx.I18N.get("Last git pull was on {}").fill( lastPullFormatted ) + "</div>";
+            msg += "</div>";
+        }
+
+        return msg;
     }
     
     ret.getJobDetails = function(last_data_modified, changed_data)

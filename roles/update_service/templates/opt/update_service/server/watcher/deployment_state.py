@@ -14,7 +14,7 @@ class DeploymentStateWatcher():
         
         self.initDeploymentState()
         
-    def notifyChange(self,event):
+    def notifyChange(self, path, mask):
         self.initDeploymentState()
 
     def initDeploymentState(self):

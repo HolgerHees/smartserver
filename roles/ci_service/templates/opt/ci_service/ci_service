@@ -44,7 +44,9 @@ log.setLogger(app.logger)
 
 class Handler(Server):
     def __init__(self):
-        super().__init__("ci_service", watched_data_files + [__file__])
+        self.logger = app.logger
+        
+        super().__init__(self.logger, "ci_service", watched_data_files + [__file__])
         
         self.terminated = False
         
@@ -69,7 +71,7 @@ class Handler(Server):
                 job_is_running = self._isJobRunning()
                 if self.job_is_running != job_is_running:
                     if not job_is_running and self.state["status"] == "running":
-                        app.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
+                        self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
                         status.setState(config.status_file,u"crashed")
                         
                         self._cleanJobs()
@@ -100,13 +102,13 @@ class Handler(Server):
             if config.access_token != "":
                 # process git hashes
                 for git_hash in git_hashes: 
-                    app.logger.info("Clean states of git hash '{}'".format(git_hash))
+                    self.logger.info("Clean states of git hash '{}'".format(git_hash))
                     GitHub.setState(repository_owner,config.access_token,git_hash,"error", self.state["deployment"],"Build crashed")
                     GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")
 
             # process logfiles
             for name in cleaned_running_jobs:
-                app.logger.info("Clean file '{}'".format(name))
+                self.logger.info("Clean file '{}'".format(name))
                 os.rename(name, name.replace("-running-","-crashed-"))
             
             if service.getPid() is not None:

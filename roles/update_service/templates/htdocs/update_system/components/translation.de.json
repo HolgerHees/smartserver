@@ -13,6 +13,7 @@
     "checked on": "Überprüft am",
     "never checked": "Niemals überprüft",
     "Last full refresh on {}": "Letzte komplette Aktualisierung am {}",
+    "Please press 'Refresh' to check for updates for the first time": "Bitte drücke 'Aktualisieren' um das erste mal nach Updates zu suchen",
     "Currently a '{1}' is running since {2} seconds": "Aktuell läuft seit {2} Sekunden ein '{1}'",
     "Currently a '{}' is running": "Aktuell läuft ein '{}'",
     "Currently a local started '{}' is running": "Aktuell läuft ein lokaler '{}'",
@@ -67,6 +68,7 @@
     "through a system update which affects these role": "durch ein System Update welches diese Rolle beeinflusst",
     "There are no outdated roles": "Es gibt keine veralteten Rollen",
     "Deploy all": "Alle deployen",
+    "Role": "Rolle",
     "There are no outdated processes or roles running": "Es laufen keine veralteten Prozesse oder Rollen",
     
     "{} updates available": "{} Updates verfügbar",
@@ -102,6 +104,7 @@
     "Skipped git pull because of some remote ci pending": "Git pull übersprungen weil aktuell einige CI Tests laufen",
     "Git pulled and all remote ci succeeded": "Git pulles und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
-    "Skipped git pull because of has uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt"
+    "Skipped git pull because of has uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
+    "Skipped git pull because of missing deployment state": "Git pull übersprungen weil der deployment Status fehlt"
   }
 }

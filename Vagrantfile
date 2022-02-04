@@ -29,9 +29,9 @@ vagrant [OPTION] ... CMD
 --os <suse|fedora>:
   Used linux distribution. 
   
-  <suse>   : openSUSE Leap 15.2 (bento/opensuse-leap-15.2)
-  <fedora> : Fedora 34 Server (fedora/31-cloud-base)
-  <ubuntu> : Ubuntu 21.04 (ubuntu/hirsute64)
+  <suse>   : openSUSE Leap 15.3 (bento/opensuse-leap-15.3)
+  <fedora> : Fedora 35 Server (fedora/35-cloud-base)
+  <ubuntu> : Ubuntu 21.10 (ubuntu/impish64)
 
 --ansible [-vvv]:
   Optional argument to provide additional parameters for ansible. 
@@ -56,10 +56,10 @@ Example: vagrant --config=demo --os=suse up
             #setup_version = "20.04"
             #setup_image = "ubuntu/focal64"
             setup_version = "21.04"
-            setup_image = "ubuntu/hirsute64"
+            setup_image = "ubuntu/impish64"
         elsif arg == "fedora" then
             setup_os = "fedora"
-            setup_version = "34"
+            setup_version = "35"
             setup_image = "fedora/" + setup_version + "-cloud-base"
         end
       when '--ansible'

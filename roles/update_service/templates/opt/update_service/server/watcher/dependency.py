@@ -2,6 +2,7 @@ import glob
 import os
 import json
 from datetime import datetime
+import pyinotify
 
 from config import config
 
@@ -17,9 +18,9 @@ class DependencyWatcher():
 
         self.initOutdatedRoles()
         
-    def notifyChange(self,event):
-        name = os.path.basename(event.pathname)
-        if event.maskname == "IN_CREATE":
+    def notifyChange(self, path, mask):
+        name = os.path.basename(path)
+        if mask & pyinotify.IN_CREATE:
             self.outdated_roles[name] = True
         else:
             del self.outdated_roles[name]

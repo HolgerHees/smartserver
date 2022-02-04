@@ -16,13 +16,14 @@ class SystemUpdateWatcher():
         self.states = {}
         self.system_state_last_modified = 0
         self.system_update_last_modified = 0
-        self.smartserver_update_last_modified = 0
+        self.smartserver_changes_last_modified = 0
+        self.smartserver_pull = 0
         
         self.installed_reboot_required_packages = {}
         
         self.initSystemState()
         
-    def notifyChange(self,event):
+    def notifyChange(self, path, mask):
         self.initSystemState()
         
     def parseTime(self, datetimeStr):
@@ -44,6 +45,7 @@ class SystemUpdateWatcher():
                     
                     for update in self.states["system_updates"]:
                         if update["name"] not in new_updates and update["name"] in self.reboot_required_packages:
+                            self.logger.info("Found packages '{}' which is marked as 'requires reboot'".format(update["name"]))
                             self.installed_reboot_required_packages[update["name"]] = True
                 
                 self.states = _states
@@ -51,7 +53,7 @@ class SystemUpdateWatcher():
                 self.system_state_last_modified = self.parseTime(self.states["last_system_state"])
                 self.system_update_last_modified = self.parseTime(self.states["last_system_update"])
                 self.smartserver_changes_last_modified = self.parseTime(self.states["last_smartserver_update"])
-                self.smartserver_pull = self.parseTime(self.states["smartserver_pull"])
+                self.smartserver_pull = self.parseTime(self.states["smartserver_pull"]) if self.states["smartserver_pull"] else ""
                 #self.system_state_last_modified = round(datetime.timestamp(parse(self.states["last_system_state"])),3)
                 #self.system_update_last_modified = round(datetime.timestamp(parse(self.states["last_system_update"])),3)
                 #self.smartserver_changes_last_modified = round(datetime.timestamp(parse(self.states["last_smartserver_update"])),3)
@@ -87,7 +89,7 @@ class SystemUpdateWatcher():
         return self.states["smartserver_changes"] if "smartserver_changes" in self.states else []
       
     def getSmartserverCode(self):
-        return self.states["smartserver_code"] if "smartserver_code" in self.states else []
+        return self.states["smartserver_code"] if "smartserver_code" in self.states else ""
       
     def getSmartserverPullAsTimestamp(self):
         return self.smartserver_pull

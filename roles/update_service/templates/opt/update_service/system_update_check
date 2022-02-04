@@ -21,7 +21,7 @@ if len(sys.argv) >= 2:
     
 update_time = "{}".format(datetime.now().astimezone().isoformat())
 
-state_template = {"last_system_state": update_time, "system_processes_outdated": [], "system_reboot_needed": False, "last_system_update": update_time, "system_updates": [], "last_smartserver_update": update_time, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": update_time }
+state_template = {"last_system_state": update_time, "system_processes_outdated": [], "system_reboot_needed": False, "last_system_update": update_time, "system_updates": [], "last_smartserver_update": update_time, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": None }
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
     with open(config.system_update_state_file, 'r') as f:

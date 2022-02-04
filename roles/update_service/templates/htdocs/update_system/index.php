@@ -61,7 +61,12 @@ if( !Auth::hasGroup("admin") )
                  
             const [ lastUpdateDate, lastUpdateMsg ] = mx.UpdateServiceTemplates.getLastFullRefresh(last_data_modified);
             let lastUpdateDateElement = mx.$("#lastUpdateDateFormatted");
-            if( lastUpdateMsg != lastUpdateDateElement.innerHTML ) lastUpdateDateElement.innerHTML = lastUpdateMsg;
+            if( lastUpdateMsg != lastUpdateDateElement.innerHTML ) 
+            {
+                lastUpdateDateElement.innerHTML = lastUpdateMsg;
+                if( lastUpdateDate == null ) lastUpdateDateElement.classList.add("red");
+                else lastUpdateDateElement.classList.remove("red");
+            }
             
             let updateBehaviorChanged = false;
             
