@@ -1,7 +1,5 @@
 [Unit]
 Description=update_service
-Requires=php.service
-After=php.service
 
 [Service]
 TimeoutStartSec=0
