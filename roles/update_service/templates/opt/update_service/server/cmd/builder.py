@@ -12,6 +12,7 @@ class CmdBuilder:
         self.system_update_watcher = system_update_watcher
         self.deployment_state_watcher = deployment_state_watcher
 
+        self.cmd_software_version_check = "/opt/update_service/software_version_check"
         self.cmd_system_update_check = "/opt/update_service/system_update_check"
         self.cmd_service_restart = "systemctl restart"
         self.cmd_request_reboot = "reboot"
@@ -29,6 +30,13 @@ class CmdBuilder:
       
     def buildFunctionBlock(self, username, function, params ):
         return { "username": username, "function": function, "params": params }
+
+    def buildSoftwareVersionCheckCmd(self, check_type):
+        return self.buildCmd(self.cmd_software_version_check, interaction=None,cwd=None,env=None)
+
+    def buildSoftwareVersionCheckCmdBlock(self, username):
+        cmd = self.buildSoftwareVersionCheckCmd(None)
+        return self.buildCmdBlock(username, "software_update_check", [cmd])
 
     def buildSystemUpdateCheckCheckCmd(self, check_type):
         cmd = u"{} {}".format(self.cmd_system_update_check, check_type if check_type else "")

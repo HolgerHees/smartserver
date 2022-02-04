@@ -76,3 +76,13 @@ div.currentBranch {
 .tooltip:hover .default {
   visibility: hidden;
 }
+
+.tooltip.lastUpdate {
+  overflow: hidden;
+}
+  
+div.detailView {
+  cursor: pointer;
+  display: inline-block;
+  color: #1976d2;
+}

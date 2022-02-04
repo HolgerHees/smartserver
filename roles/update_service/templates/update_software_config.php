@@ -1,4 +1,3 @@
 <?php
-$versions_state_file = "{{global_lib}}update_service/software_versions.state";
-
+$daemon_ip = "{{update_service_ip}}";
  

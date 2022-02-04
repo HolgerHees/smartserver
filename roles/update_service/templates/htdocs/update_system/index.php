@@ -278,7 +278,7 @@ if( !Auth::hasGroup("admin") )
                 }
             };
             
-            xhr.send(JSON.stringify({"action": "state", "parameter": {"last_data_modified": last_data_modified }}));
+            xhr.send(JSON.stringify({"action": "state", "parameter": { "type": "update", "last_data_modified": last_data_modified }}));
         }
         
         function runAction(btn, action, parameter, response_callback)

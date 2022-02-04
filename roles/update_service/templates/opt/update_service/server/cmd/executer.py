@@ -252,8 +252,9 @@ class CmdExecuter:
         child = self.current_child
         if child is not None:
             self.setKilledJobState()
-            subprocess.call(['sudo', 'kill', str(child.pid)])
-        return state()
+            returncode = subprocess.call(['sudo', 'kill', str(child.pid)])
+            return returncode
+        return 0
 
     def getActiveCmdType(self):
         result = subprocess.run([ CmdExecuter.cmd_processlist ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )

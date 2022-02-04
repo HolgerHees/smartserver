@@ -26,6 +26,7 @@ from server.watcher.process import ProcessWatcher
 from server.watcher.system_update import SystemUpdateWatcher
 from server.watcher.deployment_state import DeploymentStateWatcher
 from server.watcher.deployment_tags import DeploymentTagsWatcher
+from server.watcher.software_version import SoftwareVersionWatcher
 
 sys.path.insert(0, "/opt/shared/python")
 
@@ -36,10 +37,12 @@ watched_data_files = [
   config.outdated_roles_state_dir,
   config.system_update_state_file,
   config.deployment_state_file,
-  config.deployment_tags_file
+  config.deployment_tags_file,
+  config.software_version_state_file
 ]
 
 cmd_mapping = {
+    "software_update_check": "software check",
     "system_update_check": "update check",
     "daemon_restart": "daemon restart",
     "service_restart": "service restart",
@@ -76,6 +79,8 @@ class Handler(Server):
         self.deployment_state_watcher = DeploymentStateWatcher(self.logger)
         self.deployment_tags_watcher = DeploymentTagsWatcher(self.logger)
         
+        self.software_versions_watcher = SoftwareVersionWatcher(self.logger)
+
         self.cmd_builder = CmdBuilder(self.logger, self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, cmd_install_system_updates)
         
         self.cmd_executer = CmdExecuter(self.logger, self)
@@ -105,65 +110,76 @@ class Handler(Server):
             self.deployment_state_watcher.notifyChange(path, mask)
         elif path == config.deployment_tags_file:
             self.deployment_tags_watcher.notifyChange(path, mask)
+        elif path == config.software_version_state_file:
+            self.software_versions_watcher.notifyChange(path, mask)
             
     def checkLastDataModified(self,key,last_data_modified):
         form_key = "last_data_modified[{}]".format(key)
         return form_key not in request.form or float(request.form[form_key]) < last_data_modified[key]
             
-    def buildSuccessResult(self, running_type, cmd_type):
+    def buildSuccessResult(self, running_type, cmd_type, state_type ):
         #self.logger.info(__file__)
         
-        last_data_modified = {}
-        last_data_modified["outdated_processes"] = self.process_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["system_state"] = self.system_update_watcher.getSystemStateLastModifiedAsTimestamp()
-        last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
-        last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
-        last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
-        
-        changed_data = {}
-        if self.checkLastDataModified("outdated_processes",last_data_modified):
-            changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
-        if self.checkLastDataModified("outdated_roles",last_data_modified):
-            changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
-        if self.checkLastDataModified("deployment_state",last_data_modified):
-            changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedValut()
-        if self.checkLastDataModified("deployment_tags",last_data_modified):
-            changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
-
-        if self.checkLastDataModified("system_state",last_data_modified) or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
-            changed_data["is_reboot_needed"] = {
-                "all": self.system_update_watcher.isRebootNeeded(),
-                "os": self.system_update_watcher.isRebootNeededByOs(),
-                "installed": self.system_update_watcher.isRebootNeededByInstalledPackages(),
-                "outdated": self.system_update_watcher.isRebootNeededByOutdatedProcesses()
-            }
-            
-        if self.checkLastDataModified("system_updates",last_data_modified):
-            changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
-        if self.checkLastDataModified("smartserver_changes",last_data_modified):
-            changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
-            changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
-            changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
-        if self.checkLastDataModified("jobs",last_data_modified):
-            changed_data["jobs"] = self.cmd_executer.getJobs()
-            
         current_job_started = self.cmd_executer.getCurrentJobStarted()
-        
-        return json.dumps({ 
+            
+        result = { 
             "status": 0, 
             "job_is_running": running_type is not None, 
             "job_running_type": running_type, 
             "job_cmd_name": cmd_mapping[cmd_type] if cmd_type is not None else "", 
-            "job_started": current_job_started.isoformat() if current_job_started is not None else None, 
-            "job_logfile": self.cmd_executer.getCurrentJobLogfile(),
-            "job_killable": self.cmd_executer.getCurrentJobCmdType() != "system_reboot",
-            "update_server_needs_restart": self.hasFileChanged(__file__),
-            "last_data_modified": last_data_modified,
-            "changed_data": changed_data
-        })
+            "job_started": current_job_started.isoformat() if current_job_started is not None else None
+        }
+        
+        last_data_modified = {}
+        changed_data = {}
+        
+        if state_type == "software":
+            last_data_modified["software"] = self.software_versions_watcher.getLastModifiedAsTimestamp()
+            if self.checkLastDataModified("software",last_data_modified):
+                changed_data["software"] = self.software_versions_watcher.getSoftwareVersions()
+        else:
+            last_data_modified["outdated_processes"] = self.process_watcher.getLastModifiedAsTimestamp()
+            last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
+            last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
+            last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
+            last_data_modified["system_state"] = self.system_update_watcher.getSystemStateLastModifiedAsTimestamp()
+            last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
+            last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
+            last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
+            
+            if self.checkLastDataModified("outdated_processes",last_data_modified):
+                changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
+            if self.checkLastDataModified("outdated_roles",last_data_modified):
+                changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
+            if self.checkLastDataModified("deployment_state",last_data_modified):
+                changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedValut()
+            if self.checkLastDataModified("deployment_tags",last_data_modified):
+                changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
+
+            if self.checkLastDataModified("system_state",last_data_modified) or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
+                changed_data["is_reboot_needed"] = {
+                    "all": self.system_update_watcher.isRebootNeeded(),
+                    "os": self.system_update_watcher.isRebootNeededByOs(),
+                    "installed": self.system_update_watcher.isRebootNeededByInstalledPackages(),
+                    "outdated": self.system_update_watcher.isRebootNeededByOutdatedProcesses()
+                }
+                
+            if self.checkLastDataModified("system_updates",last_data_modified):
+                changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
+            if self.checkLastDataModified("smartserver_changes",last_data_modified):
+                changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
+                changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
+                changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
+            if self.checkLastDataModified("jobs",last_data_modified):
+                changed_data["jobs"] = self.cmd_executer.getJobs()
+                
+            result["job_logfile"] = self.cmd_executer.getCurrentJobLogfile()
+            result["job_killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
+            result["update_server_needs_restart"] = self.hasFileChanged(__file__)
+                
+        result["last_data_modified"] = last_data_modified
+        result["changed_data"] = changed_data
+        return json.dumps(result)
 
     def buildErrorResult(self, status, message):
         return json.dumps({ 
@@ -171,15 +187,15 @@ class Handler(Server):
             "message": message
         })
      
-    def getState(self):
+    def getState(self, state_type):
         active_cmd_type = self.cmd_executer.getActiveCmdType()
         
         if self.cmd_executer.isDaemonJobRunning():
-            return self.buildSuccessResult("daemon",self.cmd_executer.getCurrentJobCmdType())
+            return self.buildSuccessResult("daemon",self.cmd_executer.getCurrentJobCmdType(), state_type)
         elif active_cmd_type:
-            return self.buildSuccessResult("manual",active_cmd_type)
+            return self.buildSuccessResult("manual",active_cmd_type, state_type)
         else:
-            return self.buildSuccessResult(None, None)
+            return self.buildSuccessResult(None, None, state_type)
          
     def handleDaemonRestart(self,file_name,file_age,start_time_str):
         is_success = file_age < MAX_DAEMON_RESTART_TIME
@@ -360,38 +376,43 @@ class Handler(Server):
             if cmd_block["cmd_type"] == "system_reboot":
                 break
               
-    def runWorkflow(self, workflow):
+    def runWorkflow(self, workflow, state_type):
         if not self.cmd_executer.isRunning():
             thread = threading.Thread(target=self._runWorkflow, args=(workflow, ))
             thread.start()
             time.sleep(0.5)
-            return state()
+            return self.getState(state_type)
         else:
             return self.buildErrorResult(exit_status, u"Job not started" )
       
+@app.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
+def refreshSoftwareVersionCheck():
+    cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(request.form['username'])
+    return handler.runWorkflow([ cmd ], "software");
+
 @app.route('/state/', methods = ['POST'])
 def state():     
-    return handler.getState()
+    return handler.getState(request.form['type'])
   
 @app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
     cmd = handler.cmd_builder.buildSystemUpdateCheckCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ]);
+    return handler.runWorkflow([ cmd ], "update" );
 
 @app.route('/restartService/', methods = ['POST'])
 def restartService():
     cmd = handler.cmd_builder.buildRestartServiceCmdBlock(request.form['username'],request.form["service"])
-    return handler.runWorkflow([ cmd ]);
+    return handler.runWorkflow([ cmd ], "update");
       
 @app.route('/restartDaemon/', methods = ['POST'])
 def restartDaemon():
     cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ]);
+    return handler.runWorkflow([ cmd ], "update");
 
 @app.route('/installSystemUpdates/', methods = ['POST'])
 def installSystemUpdates():
     cmd = handler.cmd_builder.buildInstallSystemUpdateCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ]);
+    return handler.runWorkflow([ cmd ], "update");
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
@@ -400,14 +421,14 @@ def deploySmartserverUpdates():
     confirm = request.form["confirm"] == "1"
     cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.form['username'], password, tags, confirm )
     if cmd:
-        return handler.runWorkflow([ cmd ]);
+        return handler.runWorkflow([ cmd ], "update");
     else:
         return make_response("Deployment state file missing, empty or not readable", 501);
 
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
     cmd = handler.cmd_builder.buildSystemRebootCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ]);
+    return handler.runWorkflow([ cmd ], "update");
 
 @app.route('/updateWorkflow/', methods = ['POST'])
 def updateWorkflow():
@@ -417,11 +438,12 @@ def updateWorkflow():
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildSystemRebootCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", request.form )
     ]
-    return handler.runWorkflow(workflow);
+    return handler.runWorkflow(workflow, "update");
 
 @app.route('/killProcess/', methods = ['POST'])
 def killProcess():
-    return handler.killProcess()
+    handler.cmd_executer.killProcess()
+    return handler.getState("update")
 
 if __name__ == '__main__':
     handler = Handler()
