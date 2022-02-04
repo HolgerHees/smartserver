@@ -52,7 +52,7 @@
     name: [
         docker-ce
         , docker-ce-cli 
-        , containerd.io-1.4.6 # 1.4.8 does not work
+        , containerd.io #-1.4.6 # 1.4.8 does not work
 #        docker
         , python3-docker  # used by ansible docker module
 #        , golang-github-docker-libnetwork-devel # needed to make docker running together with firewalld

@@ -7,7 +7,7 @@ var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 9
 cameraSubGroup.addHtml('cameras', html, function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); }, 'user', 100 );
 cameraSubGroup.addUrl('camera_streedside','/gallery/?sub=camera');
 
-var subGroup = mx.Menu.getMainGroup('other').getSubGroup('devices');
+var subGroup = mx.Menu.getMainGroup('admin').getSubGroup('devices');
 subGroup.addUrl('automover', '/automowerDevice/', 'admin', 100, '{i18n_Automower}', '{i18n_Robonect}', false);
 subGroup.addUrl('inverter', 'https://{{pv_inverter_garage_ip}}', 'admin', 200, '{i18n_Inverter}', '{i18n_Solar (Extern)}', true);
 subGroup.addUrl('printer', 'https://{{printer_ip}}', 'user', 300, '{i18n_Laserprinter}', '{i18n_HPLaserJet}', true);

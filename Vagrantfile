@@ -150,7 +150,7 @@ Vagrant.configure(2) do |config|
         SHELL
     elsif setup_os == 'fedora' then
         setup.vm.provision "shell", inline: <<-SHELL
-        sudo yum --assumeyes install python python3-netaddr
+        sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install ansible==2.10.7
         SHELL
     else

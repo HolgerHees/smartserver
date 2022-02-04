@@ -6,7 +6,7 @@
     "Street": "Strasse",
     "Automower": "Automower"
   },
-  "other_devices": {
+  "admin_devices": {
     "Automower": "Automower",
     "Robonect": "Robonect",
     "Inverter": "Wechselrichter",

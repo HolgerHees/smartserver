@@ -31,10 +31,12 @@
       , sysstat
       , iotop
       , smem 
-
+      
       , wireguard-tools
       
       , curl
+      , lsof
+
       , bzip2
       , zip
       , unzip
@@ -69,6 +71,8 @@
       , wireguard-tools
       
       , curl
+      , lsof
+
       , bzip2
       , zip
       , unzip
@@ -99,6 +103,7 @@
       , wireguard-tools
 
       , curl               # used to fetch e.g. picture of the day
+      , lsof               # used by docker/visualizer
       
       , bzip2              # used to import databases with bzcat
       , zip                # used for ansible unarchive mobule

@@ -438,8 +438,8 @@ for network in sorted_network_r:
                         
                         if chain == activeChain:
                           
-                            if rule['mode'] == "DROP":
-                                print(rule)
+                            #if rule['mode'] == "DROP":
+                            #    print(rule)
                           
                             hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
                             for key in openPorts:
