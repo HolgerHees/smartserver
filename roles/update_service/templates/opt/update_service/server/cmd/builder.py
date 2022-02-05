@@ -69,7 +69,7 @@ class CmdBuilder:
 
     def buildRestartServiceCmdBlockIfNecessary(self, username,params):
         outdated_services = self.process_watcher.getOutdatedServices()
-        if outdated_services.length > 0:
+        if len(outdated_services) > 0:
             return self.buildRestartServiceCmdBlock(username,",".join(outdated_services))
 
         return None
