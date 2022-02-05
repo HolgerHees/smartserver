@@ -175,7 +175,6 @@
     owner: root
     group: root
     mode: 0644
-  notify: "restart update_service"
  
 - name: register systemd service watcher
   vars:

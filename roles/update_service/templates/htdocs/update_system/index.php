@@ -209,7 +209,6 @@ if( !Auth::hasGroup("admin") )
                 }
                 
                 currentRunningStateElement.innerHTML = msg;
-                mx.UpdateServiceHelper.setExclusiveButtonsState(false);
                 
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 1000);
             }
@@ -219,21 +218,27 @@ if( !Auth::hasGroup("admin") )
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
 
                 currentRunningStateElement.innerHTML = mx.I18N.get("No update process is running");
-                
-                if( daemonNeedsRestart )
-                {
-                    mx.UpdateServiceHelper.setExclusiveButtonsState(false);
-                    needsRestartElement.querySelector(".button").classList.remove("disabled");
-                }
-                else
-                {
-                    mx.UpdateServiceHelper.setExclusiveButtonsState(true);
-                }
 
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
             }
            
             if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
+                 
+            if( job_is_running )
+            {
+                mx.UpdateServiceHelper.setExclusiveButtonsState(false, "kill");
+            }
+            else
+            {
+                if( daemonNeedsRestart )
+                {
+                    mx.UpdateServiceHelper.setExclusiveButtonsState(false, "restart");
+                }
+                else
+                {
+                    mx.UpdateServiceHelper.setExclusiveButtonsState(true, null );
+                }
+            }
         }
         
         function handleDaemonError(msg, title)
@@ -362,6 +367,7 @@ if( !Auth::hasGroup("admin") )
             var passwordRemember = null;
             var passwordHint = null;
             var tagField = null;
+            var tagHint= null;
             var confirmField = null;
 
             var body = "";
@@ -393,13 +399,13 @@ if( !Auth::hasGroup("admin") )
                 body += "<br><input type=\"checkbox\" name=\"remember\"";
                 if( lastDeploymentPassword ) body += " checked";
                 body += "> " + mx.I18N.get("Remember");
-                body += "<div class=\"hint red\">" + mx.I18N.get("Please enter a password") + "</div>";
+                body += "<div class=\"password hint red\">" + mx.I18N.get("Please enter a password") + "</div>";
                 body += "</div></div>";
             }
             
             if( type == "deployment" && !has_tags )
             {
-                body += "<div class=\"row\"><div>" + mx.I18N.get("Tags") + ":</div><div><div class=\"autoCompletionSelection\"></div><input name=\"tag\"></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation\"><input type=\"checkbox\" name=\"confirm\" checked> " + mx.I18N.get("Mark all changes as deployed") + "</div>";
+                body += "<div class=\"row\"><div>" + mx.I18N.get("Tags") + ":</div><div><div class=\"autoCompletionSelection\"></div><input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation\"><input type=\"checkbox\" name=\"confirm\" checked> " + mx.I18N.get("Mark all changes as deployed") + "</div>";
             }
             
             var autocomplete = null;
@@ -435,9 +441,19 @@ if( !Auth::hasGroup("admin") )
                                     var selectedTags = autocomplete.getSelectedValues();
                                     autocomplete.setTopValues(selectedTags);
                                     var selectedTagsAsString = selectedTags.join(",");
-                                    localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
-                                    parameter["tags"] = selectedTagsAsString;
-                                    parameter["confirm"] = confirmField.checked;
+                                    
+                                    if( selectedTags.length == 0 && !confirmField.checked)
+                                    {
+                                        tagHint.style.maxHeight = tagHint.scrollHeight + 'px';
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        tagHint.style.maxHeight = 0;
+                                        localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
+                                        parameter["tags"] = selectedTagsAsString;
+                                        parameter["confirm"] = confirmField.checked;
+                                    }
                                 }
                             }
 
@@ -455,13 +471,14 @@ if( !Auth::hasGroup("admin") )
             
             passwordField = dialog.getBody().querySelector("input[name=\"password\"]");
             passwordRemember = dialog.getBody().querySelector("input[name=\"remember\"]");
-            passwordHint = dialog.getBody().querySelector(".hint");
+            passwordHint = dialog.getBody().querySelector(".password.hint");
             
             if( type == "deployment" && !has_tags )
             {
                 tagField = dialog.getBody().querySelector("input[name=\"tag\"]");
+                tagHint = dialog.getBody().querySelector(".tag.hint");
                 confirmField = dialog.getBody().querySelector("input[name=\"confirm\"]");    
-                
+
                 var lastSelectedTags = localStorage.getItem("lastSelectedDeploymentTags");
                 
                 autocomplete = mx.Autocomplete.init({
@@ -474,6 +491,8 @@ if( !Auth::hasGroup("admin") )
                     }
                 });
                 dialog.getRootLayer().addEventListener("destroy",autocomplete.destroy);
+                
+                confirmField.disabled = true;
                 
                 let lastIncludesAll = true;
                 function selectionHandler(event)
@@ -497,17 +516,24 @@ if( !Auth::hasGroup("admin") )
                                     }
                                 }
                                 confirmField.checked = true;
+                                confirmField.disabled = true;
                             }
                             else
                             {
                                 autocomplete.removeValueFromSelection("all");
                                 confirmField.checked = false;
+                                confirmField.disabled = false;
                             }
                         }
                         else
                         {
                             confirmField.checked = true;
+                            confirmField.disabled = true;
                         }
+                    }
+                    else
+                    {
+                        confirmField.disabled = false;
                     }
                     //if( autocomplete.getSelectedValues().length>0 ) confirmField.checked = false;
                     //else confirmField.checked = true;
@@ -564,7 +590,7 @@ if( !Auth::hasGroup("admin") )
         {
             window.clearTimeout(refreshDaemonStateTimer);
             confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red", function(response){
-                mx.UpdateServiceHelper.setExclusiveButtonsState(false)
+                mx.UpdateServiceHelper.setExclusiveButtonsState(false,null)
                 window.setTimeout(function(){ refreshDaemonState(null); },2000);
             });
         }
@@ -608,9 +634,9 @@ if( !Auth::hasGroup("admin") )
 </script>
 <div class="widget">
     <div class="header"><div data-i18n="Daemon status"></div><div></div></div>
-    <div class="action" id="serverNeedsRestart"><div class="info red" data-i18n="Daemon was updated and needs to restart"></div><div class="buttons"><div class="form button red exclusive" onclick="mx.UNCore.actionRestartDaemon(this)" data-i18n="Restart daemon"></div></div></div>
+    <div class="action" id="serverNeedsRestart"><div class="info red" data-i18n="Daemon was updated and needs to restart"></div><div class="buttons"><div class="form button restart red exclusive" onclick="mx.UNCore.actionRestartDaemon(this)" data-i18n="Restart daemon"></div></div></div>
     <div class="action" id="updateWorkflow"></div>
-    <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button red" onclick="mx.UNCore.actionKillProcess(this)" data-i18n="Stop"></div></div></div>
+    <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button kill red" onclick="mx.UNCore.actionKillProcess(this)" data-i18n="Stop"></div></div></div>
     <div class="action" id="lastRunningJobsHeader"></div>
     <div class="list form table logfileBox" id="lastRunningJobsDetails"></div>
 </div>

@@ -25,11 +25,11 @@ class FileWatcher(pyinotify.ProcessEvent):
         
     def notifyListener(self, event):
         if self.callback:
-            self.logger.info("Notify listener of '{}'".format(event["path"]))
+            self.logger.info("Notify listener of '{}' - '{}'".format(event["path"],event["mask"]))
             self.callback(event)
 
     def process_default(self, event):
-        #print(event)
+        print(event)
       
         if event.path in self.watched_parents:
             if event.mask & pyinotify.IN_DELETE:
@@ -67,7 +67,7 @@ class FileWatcher(pyinotify.ProcessEvent):
             self.modified_time[path] = 0
             
     def addPath(self, path):
-        #print("addPath")
+        #print("addPath " + path)
 
         file_stat = os.stat(path)
         self.modified_time[path] = file_stat.st_mtime

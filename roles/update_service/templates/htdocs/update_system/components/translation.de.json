@@ -29,6 +29,7 @@
     "Password": "Password",
     "Remember": "merken",
     "Please enter a password": "Bitte gib ein Passwort ein",
+    "Please select a tag. e.g 'all'": "Bitte wähle ein Tag. z.B. 'all'",
     "Tags": "Tags",
     "Mark all changes as deployed": "Markiere alles als deployed",
     "You want to <b>reboot your system</b>?": "Du möchtest dein <b>System neu starten</b>?",

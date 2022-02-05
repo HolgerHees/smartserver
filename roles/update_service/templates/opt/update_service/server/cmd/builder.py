@@ -89,7 +89,7 @@ class CmdBuilder:
             return self.buildInstallSystemUpdateCmdBlock(username)
         return None
 
-    def buildDeploymentSmartserverUpdateCmdBlock(self, username, password, tags, confirm):
+    def buildDeploymentSmartserverUpdateCmdBlock(self, username, password, tags):
         deployment_config = self.deployment_state_watcher.getConfig()
         if deployment_config is not None:
             cmd_deploy_system = "ansible-playbook -i config/{}/{}".format(deployment_config,self.deployment_state_watcher.getServer())
@@ -98,9 +98,7 @@ class CmdBuilder:
                 interaction = {"Vault password:": "{}\n".format(password)}
             else:
                 interaction = None
-            if tags:
-                if confirm:
-                    tags.append("confirm_deployment")
+            if len(tags) > 0:
                 cmd_deploy_system = "{} --tags \"{}\"".format(cmd_deploy_system,",".join(tags)) 
             cmd_deploy_system = "{} server.yml".format(cmd_deploy_system)
 

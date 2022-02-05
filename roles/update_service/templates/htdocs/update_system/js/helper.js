@@ -47,15 +47,35 @@ mx.UpdateServiceHelper = (function( ret ) {
         element.style.maxHeight = maxHeight + "px"; 
     }
     
-    ret.setExclusiveButtonsState = function(flag)
+    ret.setExclusiveButtonsState = function(flag, excludeClass)
     {
         if( flag )
         {
-            mx.$$("div.form.button.exclusive:not(.blocked)").forEach(function(element){ element.classList.remove("disabled"); });
+            mx.$$("div.form.button.exclusive:not(.blocked)").forEach(function(element)
+            { 
+                if( excludeClass != null && element.classList.contains(excludeClass) )
+                {
+                    element.classList.add("disabled"); 
+                }
+                else
+                {
+                    element.classList.remove("disabled"); 
+                }
+            });
         }
         else
         {
-            mx.$$("div.form.button.exclusive:not(.blocked)").forEach(function(element){ element.classList.add("disabled"); });
+            mx.$$("div.form.button.exclusive:not(.blocked)").forEach(function(element)
+            {
+                if( excludeClass != null && element.classList.contains(excludeClass) )
+                {
+                    element.classList.remove("disabled"); 
+                }
+                else
+                {
+                    element.classList.add("disabled"); 
+                }
+            });
         }
     }
 

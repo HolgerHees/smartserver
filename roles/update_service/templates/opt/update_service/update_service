@@ -63,8 +63,16 @@ class Handler(Server):
     def __init__(self):
         self.logger = app.logger
         
-        super().__init__(self.logger, "update_service", watched_data_files + [__file__], self.fileChangeTriggered )
-      
+        self.service_base_path = os.path.dirname(__file__)
+        self.service_need_restart = False
+
+        watched_data_files.append(__file__)
+        files = glob.glob("{}**/**/*.py".format(self.service_base_path), recursive = True)
+        for filename in files:
+            watched_data_files.append(filename)
+        
+        super().__init__(self.logger, "update_service", watched_data_files, self.fileChangeTriggered )
+           
         #self.update_server_time = self.identity.getModifiedTime(__file__)
         
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
@@ -112,6 +120,8 @@ class Handler(Server):
             self.deployment_tags_watcher.notifyChange(event)
         elif event["path"] == config.software_version_state_file:
             self.software_versions_watcher.notifyChange(event)
+        elif event["path"].startswith(self.service_base_path):
+            self.service_need_restart = True
             
     def checkLastDataModified(self,key,last_data_modified):
         form_key = "last_data_modified[{}]".format(key)
@@ -175,7 +185,7 @@ class Handler(Server):
                 
             result["job_logfile"] = self.cmd_executer.getCurrentJobLogfile()
             result["job_killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
-            result["update_server_needs_restart"] = self.hasFileChanged(__file__)
+            result["update_server_needs_restart"] = self.service_need_restart
                 
         result["last_data_modified"] = last_data_modified
         result["changed_data"] = changed_data
@@ -416,14 +426,21 @@ def installSystemUpdates():
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
-    tags = request.form["tags"].split(",") if request.form["tags"] else None
-    password = request.form["password"] if "password" in request.form else None
+    tags = request.form["tags"].split(",") if request.form["tags"] else []
     confirm = request.form["confirm"] == "1"
-    cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.form['username'], password, tags, confirm )
-    if cmd:
-        return handler.runWorkflow([ cmd ], "update");
+    if len(tags) > 0 or confirm:
+        password = request.form["password"] if "password" in request.form else None
+        if "all" in tags:
+            tags = []
+        elif confirm:
+            tags.append("confirm_deployment")
+        cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.form['username'], password, tags, confirm )
+        if cmd:
+            return handler.runWorkflow([ cmd ], "update");
+        else:
+            return make_response("Deployment state file missing, empty or not readable", 501);
     else:
-        return make_response("Deployment state file missing, empty or not readable", 501);
+            return make_response("Missing tag", 501);
 
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
