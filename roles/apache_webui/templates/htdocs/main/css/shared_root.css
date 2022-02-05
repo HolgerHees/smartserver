@@ -78,13 +78,6 @@ body {
     background-color: var(--light-bg);
     font-family: 'Open Sans', sans-serif;
     margin: 0;
-    height: 100%;
-    box-sizing: border-box;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-       -moz-user-select: none; /* Firefox */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
 }
 body.dark {
     background-color: var(--dark-bg);

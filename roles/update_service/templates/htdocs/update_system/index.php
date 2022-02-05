@@ -19,9 +19,8 @@ if( !Auth::hasGroup("admin") )
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
-<link rel="stylesheet" href="/main/css/shared_root.css">
-<link rel="stylesheet" href="/main/css/shared_ui.css">
 <link rel="stylesheet" href="/shared/css/logfile_box.css">
+<link href="/ressources?type=css" rel="stylesheet">
 <link href="./ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
 <script src="/ressources?type=js"></script>

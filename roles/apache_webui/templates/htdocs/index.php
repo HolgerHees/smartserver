@@ -911,7 +911,7 @@ require "./shared/libs/ressources.php";
         mx.OnDocReady.push( initPage );
 	</script>
 </head>
-<body>
+<body id="app">
 <script>
     mx.Page = (function( ret ) {
         ret.initTheme = function()

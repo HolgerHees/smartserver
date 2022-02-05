@@ -2,9 +2,6 @@
 body, body * {
     max-height: 1000000px;
 }
-body {
-    height: auto !important;
-}
 @media only screen and (max-width: 600px) {
     div.header.table.logfileBox:not(.sticky) {
         display: flex;

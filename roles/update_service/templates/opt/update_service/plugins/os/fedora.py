@@ -32,16 +32,16 @@ class Repository(Os):
     def getRebootRequiredServices(self):
         return []
 
-    def getUpdates(self, last_updates):
+    def getUpdates(self):
         # get repositories
-        result = subprocess.run([ "/usr/bin/dnf repolist all" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        lines = result.stdout.decode("utf-8").strip().split("\n")
-        repositories = []
-        for line in lines:
-            if not line.startswith("*"):
-                continue
-            columns = line.split(" ")
-            repositories.append(columns[0][1:])
+        #result = subprocess.run([ "/usr/bin/dnf repolist all" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        #lines = result.stdout.decode("utf-8").strip().split("\n")
+        #repositories = []
+        #for line in lines:
+        #    if not line.startswith("*"):
+        #        continue
+        #    columns = line.split(" ")
+        #    repositories.append(columns[0][1:])
 
         # get updates
         result = subprocess.run([ "/usr/bin/dnf -y list updates" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
@@ -51,27 +51,27 @@ class Repository(Os):
         for line in lines:
             columns = re.sub(r"\s+", " ", line).split(" ")
             
-            if len(columns) < 3 or columns[2] not in repositories:
+            if len(columns) < 3:# or columns[2] not in repositories:
                 break
             columns = [ele.strip() for ele in columns]
-            updates.append({'repository': columns[2], 'name': columns[0], 'current': None, 'update': columns[1], "arch": "" })
+            updates.append({'repository': columns[2], 'name': columns[0], 'update': columns[1] })
+            #updates.append({'repository': columns[2], 'name': columns[0], 'current': None, 'update': columns[1], "arch": "" })
 
         return updates
       
-    def getLastUpdate(self):
-        # get last update
-        result = subprocess.run([ "/usr/bin/dnf history list last" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        lines = result.stdout.decode("utf-8").strip().split("\n")
-        lines = reversed(lines)
-        current_version = ""
-        for line in lines: 
-            columns = line.split(" | ")
-            
-            date = datetime.strptime(columns[2], self.HISTORY_FORMAT)
-            current_version = date.strftime(self.VERSION_FORMAT)
-            break
-
-        return current_version
+    #def getLastUpdate(self):
+    #    # get last update
+    #    result = subprocess.run([ "/usr/bin/dnf history list last" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    #    lines = result.stdout.decode("utf-8").strip().split("\n")
+    #    lines = reversed(lines)
+    #    current_version = ""
+    #    for line in lines: 
+    #        columns = line.split(" | ")
+    #        
+    #        date = datetime.strptime(columns[2], self.HISTORY_FORMAT)
+    #        current_version = date.strftime(self.VERSION_FORMAT)
+    #        break
+    #    return current_version
       
     def __initSystemState__(self):
         result = subprocess.run([ "/usr/bin/needrestart -r i" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )

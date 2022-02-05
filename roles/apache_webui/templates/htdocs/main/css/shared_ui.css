@@ -11,6 +11,7 @@
   white-space: normal;
   color: var(--light-button-text);
   display: inline-block;
+  cursor: pointer;
 }
 body.dark .form.button {
     color: var(--dark-button-text);

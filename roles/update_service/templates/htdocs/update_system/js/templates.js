@@ -185,20 +185,23 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
+            
+            let update = changed_data["system_updates"][0];
             detailsMsg += "<div>" + mx.I18N.get("Name") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("Current") + "</div>";
+            if( update.hasOwnProperty("current") ) detailsMsg += "<div>" + mx.I18N.get("Current") + "</div>";
             detailsMsg += "<div class=\"grow\">" + mx.I18N.get("Update") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("Arch") + "</div>";
+            if( update.hasOwnProperty("arch") ) detailsMsg += "<div>" + mx.I18N.get("Arch") + "</div>";
             detailsMsg += "</div>";
+            
             for( index in changed_data["system_updates"] )
             {
                 let update = changed_data["system_updates"][index];
 
                 detailsMsg += "<div class=\"row\">";
                 detailsMsg += "<div>" + update["name"] + "</div>";
-                detailsMsg += "<div>" + update["current"] + "</div>";
+                if( update.hasOwnProperty("current") ) detailsMsg += "<div>" + update["current"] + "</div>";
                 detailsMsg += "<div>" + update["update"] + "</div>";
-                detailsMsg += "<div>" + update["arch"] + "</div>";
+                if( update.hasOwnProperty("arch") ) detailsMsg += "<div>" + update["arch"] + "</div>";
                 detailsMsg += "</div>";
             }
         }

@@ -38,22 +38,22 @@ class Repository(Os):
 
         return updates
           
-    def getLastUpdate(self):
-        # get last update
-        current_version = ""
-        with open("/var/log/zypp/history") as f:
-            lines = f.readlines()
-            lines = reversed(lines)
-            for line in lines:
-                if line.startswith("#"):
-                    continue;
+    #def getLastUpdate(self):
+    #    # get last update
+    #    current_version = ""
+    #    with open("/var/log/zypp/history") as f:
+    #        lines = f.readlines()
+    #        lines = reversed(lines)
+    #        for line in lines:
+    #            if line.startswith("#"):
+    #                continue;
 
-                columns = line.split("|")
-                date = datetime.strptime(columns[0], self.HISTORY_FORMAT)
-                self.current_version = date.strftime(self.VERSION_FORMAT)
-                break
+    #            columns = line.split("|")
+    #            date = datetime.strptime(columns[0], self.HISTORY_FORMAT)
+    #            self.current_version = date.strftime(self.VERSION_FORMAT)
+    #            break
 
-        return current_version
+    #    return current_version
 
     def __initSystemState__(self):
         result = subprocess.run([ "/usr/bin/zypper ps -s" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
