@@ -32,22 +32,11 @@ mx.Autocomplete = (function( ret ) {
         options.input.removeEventListener("keydown",options.onKeyDown);
         window.removeEventListener('click', options.onBlur);
     }
-    
-    function removeValue(options, element, value)
-    { 
-        var index = options.selected_values.indexOf(value);
-        options.selected_values.splice(index, 1);
-        options.elements.selectionLayer.removeChild(element);
         
-        buildValues(options);
-
-        mx.Core.triggerEvent(options.elements.autocompleteLayer, "selectionChanged", false );
-    }
-
-    function selectValue(options, value, element)
+    function addValueToSelection(options,value)
     {
         var elementSelection = document.createElement("div");
-        elementSelection.onclick = function(){ removeValue(options,elementSelection,value) };
+        elementSelection.onclick = function(){ removeValue(options,elementSelection,value,true) };
 
         var elementValue = document.createElement("div");
         elementValue.className="value";
@@ -60,14 +49,61 @@ mx.Autocomplete = (function( ret ) {
         elementSelection.appendChild(elementClose);
 
         options.elements.selectionLayer.appendChild(elementSelection);
+    }
+    
+    function removeValueFromSelection(options,value)
+    {   
+        let found = null;
+        let elements = options.elements.selectionLayer.childNodes;
+        for( let i = 0; i < elements.length; i++ )
+        {
+            let element = elements[i];
+            if( element.firstChild.innerHTML == value )
+            { 
+                found = element;
+                break;
+            }
+        }
+        removeValue(options,found,value,false)
+    }
+    
+    function initSelectedValues(options)
+    {
+        options.selected_values.forEach(function(value){
+            addValueToSelection(options,value);
+        });
+
+        options.elements.selectionLayer.style.display = options.selected_values.length > 0 ? "flex": "";
+        
+        //console.log(options.selected_values);
+    }
+    function removeValue(options, element, value, propagate)
+    { 
+        var index = options.selected_values.indexOf(value);
+        options.selected_values.splice(index, 1);
+        options.elements.selectionLayer.removeChild(element);
+        
+        options.elements.selectionLayer.style.display = options.selected_values.length > 0 ? "flex": "";
+
+        buildValues(options,true);
+        
+        if( propagate )
+        {
+            mx.Core.triggerEvent(options.elements.autocompleteLayer, "selectionChanged", false, {"value": value, "added": false } );
+        }
+    }
+
+    function selectValue(options, value, element)
+    {
+        addValueToSelection(options,value);
         
         options.selected_values.push(value);
         
+        options.elements.selectionLayer.style.display = options.selected_values.length > 0 ? "flex": "";
+        
         options.elements.autocompleteLayer.removeChild(element);
 
-        mx.Core.triggerEvent(options.elements.autocompleteLayer, "selectionChanged", false );
-        
-        options.elements.selectionLayer.style.display = options.selected_values.length > 0 ? "flex": "";
+        mx.Core.triggerEvent(options.elements.autocompleteLayer, "selectionChanged", false, {"value": value, "added": true } );
     }
     
     function buildValue(options,value,cls)
@@ -83,10 +119,10 @@ mx.Autocomplete = (function( ret ) {
         options.elements.autocompleteLayer.appendChild(element);
     }
     
-    function buildValues(options)
+    function buildValues(options,force)
     {
         var term = options.input.value;
-        if( options.lastTerm == term ) return;
+        if( options.lastTerm == term && !force ) return;
         options.lastTerm = term;
         
         var values = options.values.filter(tag => tag.indexOf(term) != -1 && options.selected_values.indexOf(tag) == -1 );
@@ -127,7 +163,7 @@ mx.Autocomplete = (function( ret ) {
     function onFocus(event, options)
     {
         show(options);
-        buildValues(options);
+        buildValues(options,false);
     }
     
     function onBlur(event, options)
@@ -152,7 +188,7 @@ mx.Autocomplete = (function( ret ) {
         }
         else 
         {
-            buildValues(options);
+            buildValues(options,false);
         }
     }
     
@@ -262,9 +298,15 @@ mx.Autocomplete = (function( ret ) {
         if( options === null ) return;
              
         createAutocomplete(options);
+        
+        initSelectedValues(options);
       
         return {
-            getSelectedValue: function()
+            removeValueFromSelection: function(value)
+            {
+                removeValueFromSelection(options,value);
+            },
+            getSelectedValues: function()
             {
                 return options.selected_values;
             },

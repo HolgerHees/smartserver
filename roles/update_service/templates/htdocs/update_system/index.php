@@ -432,7 +432,7 @@ if( !Auth::hasGroup("admin") )
                                 }
                                 else
                                 {
-                                    var selectedTags = autocomplete.getSelectedValue();
+                                    var selectedTags = autocomplete.getSelectedValues();
                                     autocomplete.setTopValues(selectedTags);
                                     var selectedTagsAsString = selectedTags.join(",");
                                     localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
@@ -468,16 +468,50 @@ if( !Auth::hasGroup("admin") )
                     input: tagField,
                     values: deploymentTags,
                     top_values: lastSelectedTags ? lastSelectedTags.split(",") : [],
+                    selected_values: [ "all" ],
                     selectors: {
                         selectionLayer: ".autoCompletionSelection"
                     }
                 });
                 dialog.getRootLayer().addEventListener("destroy",autocomplete.destroy);
                 
-                function selectionHandler()
+                let lastIncludesAll = true;
+                function selectionHandler(event)
                 {
-                    if( autocomplete.getSelectedValue().length>0 ) confirmField.checked = false;
-                    else confirmField.checked = true;
+                    let values = autocomplete.getSelectedValues();
+                    values = [...values];
+                    
+                    if( values.includes("all") )
+                    {
+                        if( values.length > 1 )
+                        {
+                            if( event["detail"]["added"] && event["detail"]["value"] == "all" )
+                            {
+                                for( let i = 0; i < values.length; i++ )
+                                {
+                                    let value = values[i];
+                                    if( value != "all" )
+                                    {
+                                        autocomplete.removeValueFromSelection(value);
+                                        console.log(value);
+                                    }
+                                }
+                                confirmField.checked = true;
+                            }
+                            else
+                            {
+                                autocomplete.removeValueFromSelection("all");
+                                confirmField.checked = false;
+                            }
+                        }
+                        else
+                        {
+                            confirmField.checked = true;
+                        }
+                    }
+                    //if( autocomplete.getSelectedValues().length>0 ) confirmField.checked = false;
+                    //else confirmField.checked = true;
+                 
                 }
                 autocomplete.getRootLayer().addEventListener("selectionChanged",selectionHandler);
             }
