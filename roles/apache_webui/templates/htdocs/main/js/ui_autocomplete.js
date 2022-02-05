@@ -101,7 +101,22 @@ mx.Autocomplete = (function( ret ) {
         
         options.elements.selectionLayer.style.display = options.selected_values.length > 0 ? "flex": "";
         
-        options.elements.autocompleteLayer.removeChild(element);
+        //options.elements.autocompleteLayer.removeChild(element);
+        
+        let elements = [... options.elements.autocompleteLayer.childNodes];
+        for( let i = 0; i < elements.length; i++ )
+        {
+            let element = elements[i];
+            if( element.dataset.value == value )
+            {
+                options.elements.autocompleteLayer.removeChild(element);
+                if( i + 1 < elements.length && elements[i+1].classList.contains("separator") )
+                { 
+                    options.elements.autocompleteLayer.removeChild(elements[i+1]);
+                    i++;
+                }
+            }
+        }
 
         mx.Core.triggerEvent(options.elements.autocompleteLayer, "selectionChanged", false, {"value": value, "added": true } );
     }
@@ -126,8 +141,13 @@ mx.Autocomplete = (function( ret ) {
         options.lastTerm = term;
         
         var values = options.values.filter(tag => tag.indexOf(term) != -1 && options.selected_values.indexOf(tag) == -1 );
-        var top_values = term == "" ? options.top_values.filter(tag => options.values.indexOf(tag) != -1 ) : [];
-               
+        
+        // filter top values out
+        // 1. if they not exists in valid values
+        // 2. if they are in the first 5 available values
+        // 3. if they are selected
+        var top_values = term == "" ? options.top_values.filter(tag => options.values.indexOf(tag) > 5 && options.selected_values.indexOf(tag) == -1 ) : [];
+        
         options.elements.autocompleteLayer.innerHTML = "";
         
         if( options.show_term && term != "" && options.values.indexOf(term) == -1 )

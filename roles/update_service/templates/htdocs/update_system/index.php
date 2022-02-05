@@ -414,49 +414,55 @@ if( !Auth::hasGroup("admin") )
                 body: body,
                 buttons: [
                     { "text": mx.I18N.get("Continue"), "class": "green", "callback": function(){ 
-                        if( hasEncryptedVault && !passwordField.value )
+                        let hasErrors = false;
+                        
+                        parameter = {};
+                        if( hasEncryptedVault )
                         {
-                            passwordHint.style.maxHeight = passwordHint.scrollHeight + 'px';
-                        }
-                        else
-                        {
-                            parameter = {};
-                            if( hasEncryptedVault )
+                            if( !passwordField.value )
+                            {
+                                passwordHint.style.maxHeight = passwordHint.scrollHeight + 'px';
+                                hasErrors = true;
+                            }
+                            else
                             {
                                 passwordHint.style.maxHeight = 0;
                                 parameter["password"] = passwordField.value;
                                 if( passwordRemember.checked ) sessionStorage.setItem("lastDeploymentPassword", passwordField.value);
                                 else sessionStorage.removeItem("lastDeploymentPassword");
                             }
-                            
-                            if( type == "deployment" )
+                        }
+                        
+                        if( type == "deployment" )
+                        {
+                            if( has_tags )
                             {
-                                if( has_tags )
+                                parameter["tags"] = args["tags"]
+                                parameter["confirm"] = false;
+                            }
+                            else
+                            {
+                                var selectedTags = autocomplete.getSelectedValues();
+                                autocomplete.setTopValues(selectedTags);
+                                var selectedTagsAsString = selectedTags.join(",");
+                                
+                                if( selectedTags.length == 0 && !confirmField.checked)
                                 {
-                                    parameter["tags"] = args["tags"]
-                                    parameter["confirm"] = false;
+                                    tagHint.style.maxHeight = tagHint.scrollHeight + 'px';
+                                    hasErrors = true;
                                 }
                                 else
                                 {
-                                    var selectedTags = autocomplete.getSelectedValues();
-                                    autocomplete.setTopValues(selectedTags);
-                                    var selectedTagsAsString = selectedTags.join(",");
-                                    
-                                    if( selectedTags.length == 0 && !confirmField.checked)
-                                    {
-                                        tagHint.style.maxHeight = tagHint.scrollHeight + 'px';
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        tagHint.style.maxHeight = 0;
-                                        localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
-                                        parameter["tags"] = selectedTagsAsString;
-                                        parameter["confirm"] = confirmField.checked;
-                                    }
+                                    tagHint.style.maxHeight = 0;
+                                    localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
+                                    parameter["tags"] = selectedTagsAsString;
+                                    parameter["confirm"] = confirmField.checked;
                                 }
                             }
+                        }
 
+                        if( !hasErrors )
+                        {
                             dialog.close(); 
                             
                             callback(parameter);
