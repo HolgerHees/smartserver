@@ -35,10 +35,10 @@
   changed_when: "'enabled' in app_install_result.stdout"
   when: "'- ' + item + ':' not in app_list_result.stdout"
   with_items:
-    - user_saml # must always be the first one
-    - onlyoffice # must always be the second one
-    - jsloader # must always be the third one
-    - previewgenerator # must always be the fourth one
+    - user_saml
+    - onlyoffice
+    - jsloader
+    - previewgenerator
     - bookmarks
     - contacts
     - calendar
@@ -60,74 +60,66 @@
 #  register: app_update_result
 #  changed_when: "'updated' in app_update_result.stdout"
 
-# ***** CONFIGURE user_saml *****
-- name: enable environment based authentication through user_saml app
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('user_saml', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
-  with_items:
-    - { name: "type", value: "environment-variable" }
-    - { name: "general-uid_mapping", value: "REMOTE_USERNAME" }
-  when: "app_install_result.results[0].changed" # index 0 is app 'user_saml'
+# ***** CONFIGURE apps *****
+- name: read app configs
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"SELECT appid,configkey,configvalue FROM oc_appconfig;\\\"\""
+  changed_when: no
+  register: app_config_result
 
-# ***** CONFIGURE onlyoffice *****
-- name: set onlyoffice configuration
-#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ --no-warnings config:system:set onlyoffice {{item.name}} --value=\\\"{{item.value}}\\\"\""
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
-  with_items:
-    - { name: "DocumentServerInternalUrl", value: "" }
-    - { name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
-    - { name: "StorageUrl", value: "" }
-    - { name: "customizationChat", value: "false" }
-    - { name: "customizationCompactHeader", value: "true" }
-    - { name: "customizationForcesave", value: "true" }
-    - { name: "customizationFeedback", value: "false" }
-    - { name: "customizationHelp", value: "true" }
-    - { name: "customizationReviewDisplay", value: "original" }
-    - { name: "customizationToolbarNoTabs", value: "true" }
-    - { name: "defFormats", value: '{\\\"csv\\\":\\\"true\\\",\\\"doc\\\":\\\"true\\\",\\\"docm\\\":\\\"false\\\",\\\"docx\\\":\\\"true\\\",\\\"dotx\\\":\\\"true\\\",\\\"epub\\\":\\\"false\\\",\\\"html\\\":\\\"false\\\",\\\"odp\\\":\\\"true\\\",\\\"ods\\\":\\\"true\\\",\\\"odt\\\":\\\"true\\\",\\\"pdf\\\":\\\"false\\\",\\\"potm\\\":\\\"false\\\",\\\"potx\\\":\\\"false\\\",\\\"ppsm\\\":\\\"false\\\",\\\"ppsx\\\":\\\"true\\\",\\\"ppt\\\":\\\"false\\\",\\\"pptm\\\":\\\"false\\\",\\\"pptx\\\":\\\"false\\\",\\\"rtf\\\":\\\"true\\\",\\\"txt\\\":\\\"true\\\",\\\"xls\\\":\\\"true\\\",\\\"xlsm\\\":\\\"false\\\",\\\"xlsx\\\":\\\"true\\\",\\\"xltm\\\":\\\"false\\\",\\\"xltx\\\":\\\"false\\\"}' }
-    - { name: "editFormats", value: '{\\\"csv\\\":\\\"true\\\",\\\"odp\\\":\\\"false\\\",\\\"ods\\\":\\\"false\\\",\\\"odt\\\":\\\"false\\\",\\\"rtf\\\":\\\"false\\\",\\\"txt\\\":\\\"true\\\"}' }
-    - { name: "enabled", value: "yes" }
-    - { name: "groups", value: "[]" }
-    - { name: "preview", value: "false" }
-    - { name: "sameTab", value: "false" }
-    - { name: "settings_error", value: "" }
-    - { name: "types", value: "filesystem" }
-    - { name: "verify_peer_off", value: "false" }
-    - { name: "versionHistory", value: "true" }
-  when: "app_install_result.results[1].changed"
+- name: set app configs
+  set_fact:
+    app_configs:
+      - { app: "user_saml", name: "type", value: "environment-variable" }
+      - { app: "user_saml", name: "general-uid_mapping", value: "REMOTE_USERNAME" }
+
+      - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
+      - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
+      - { app: "onlyoffice", name: "StorageUrl", value: "" }
+      - { app: "onlyoffice", name: "customizationChat", value: "false" }
+      - { app: "onlyoffice", name: "customizationCompactHeader", value: "true" }
+      - { app: "onlyoffice", name: "customizationForcesave", value: "true" }
+      - { app: "onlyoffice", name: "customizationFeedback", value: "false" }
+      - { app: "onlyoffice", name: "customizationHelp", value: "true" }
+      - { app: "onlyoffice", name: "customizationReviewDisplay", value: "original" }
+      - { app: "onlyoffice", name: "customizationToolbarNoTabs", value: "true" }
+      - { app: "onlyoffice", name: "defFormats", value: '{"csv":"true","doc":"true","docm":"false","docx":"true","dotx":"true","epub":"false","html":"false","odp":"true","ods":"true","odt":"true","otp":"false","ots":"false","ott":"false","pdf":"false","potm":"false","potx":"false","ppsm":"false","ppsx":"true","ppt":"false","pptm":"false","pptx":"false","rtf":"true","txt":"true","xls":"true","xlsm":"false","xlsx":"true","xltm":"false","xltx":"false"}' }
+      - { app: "onlyoffice", name: "editFormats", value: '{"csv":"true","odp":"false","ods":"false","odt":"false","rtf":"false","txt":"true"}' }
+      - { app: "onlyoffice", name: "enabled", value: "yes" }
+      - { app: "onlyoffice", name: "groups", value: "[]" }
+      - { app: "onlyoffice", name: "preview", value: "false" }
+      - { app: "onlyoffice", name: "sameTab", value: "false" }
+      - { app: "onlyoffice", name: "settings_error", value: "" }
+      - { app: "onlyoffice", name: "types", value: "prevent_group_restriction" }
+      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
+      - { app: "onlyoffice", name: "versionHistory", value: "true" }
+#      - { app: "onlyoffice", name: "jwt_secret", value: "{{vault_onlyoffice_shared_key}}" }
+
+      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; var script = document.createElement('script'); script.src = 'https://' + document.domain + '/main/listener/frame.js'; document.head.appendChild(script);" }
+
+      - { app: "previewgenerator", name: "squareSizes", value: "256" }
+      - { app: "previewgenerator", name: "widthSizes", value: "256" }
+      - { app: "previewgenerator", name: "heightSizes", value: "256" }
+      
+- name: prepare app configs
+  set_fact:
+    prepared_app_configs: "{{ prepared_app_configs | default([]) + [ { 'app': item.app, 'name': item.name, 'value': item.value | replace(\"'\", \"\\'\" ) | replace('\"', '\\\\\\\"') } ] }}"
+  when: "item.app + \"\\t\" + item.name + \"\\t\" + item.value not in app_config_result.stdout "
+  with_items: "{{app_configs}}"
+      
+- name: set app config
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('{{item.app}}', '{{item.name}}', '{{item.value}}') ON DUPLICATE KEY UPDATE configvalue='{{item.value}}';\\\"\""
+  register: change_app_config_result
+  failed_when: change_app_config_result.rc != 0
+  with_items: "{{prepared_app_configs}}"
 
 - name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
-  when: "app_install_result.results[1].changed"
+  register: set_shared_key_result
+  changed_when: no
+  failed_when: set_shared_key_result.rc != 0
+#  when: "app_install_result.results[1].changed"
 
-# ***** CONFIGURE jsloader *****
-- name: set jsloader
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('jsloader', 'snippet', 'document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);') ON DUPLICATE KEY UPDATE configvalue='document.domain=\\'{{server_domain}}\\'; var script = document.createElement(\\'script\\'); script.src = \\'https://\\' + document.domain + \\'/main/listener/frame.js\\'; document.head.appendChild(script);';\\\"\""
-  when: "app_install_result.results[2].changed"
-  
-# ***** CONFIGURE previewgenerator *****
-#- name: initial previewgenerator setup
-#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ preview:generate-all\""
-#  when: "app_install_result.results[3].changed"
-
-#- name: create previewgenerator daily cron job
-#  vars:
-#    name: "Nextcloud Previewindex"
-#    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:generate-all > /dev/null\""
-#    file: "ansible_nextcloud"
-#    hour: "3"
-#    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
-
-# ***** CONFIGURE previewgenerator *****
-- name: configure previewgenerator setup
-  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ config:app:set {{item}}\""
-#  when: "app_install_result.results[3].changed"
-  with_items:
-    - "--value=\\\"256\\\" previewgenerator squareSizes"
-    - "--value=\\\"256\\\" previewgenerator widthSizes"
-    - "--value=\\\"256\\\" previewgenerator heightSizes"
-  when: "app_install_result.results[3].changed"
-
+# ***** PREVIEW GENERATOR CRON JOB *****
 - name: create previewgenerator incremental cron job
   vars:
     name: "Nextcloud Previewupdates"
