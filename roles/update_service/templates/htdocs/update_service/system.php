@@ -50,6 +50,8 @@ if( !Auth::hasGroup("admin") )
         
         var workflowTimer = 0;
         
+        var dialog = null;
+        
         var daemonApiUrl = mx.Host.getBase() + '../api.php'; 
        
         function processData(last_data_modified, changed_data)
@@ -226,6 +228,7 @@ if( !Auth::hasGroup("admin") )
                  
             if( job_is_running )
             {
+                if( dialog != null && dialog.getId() != "killProcess" ) dialogClose();
                 mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? "restart": "kill");
             }
             else
@@ -323,6 +326,12 @@ if( !Auth::hasGroup("admin") )
             xhr.send(JSON.stringify({"action": action, "parameter": parameter }));
         }
         
+        function dialogClose()
+        {
+            dialog.close(); 
+            dialog = null;
+        }
+        
         function confirmAction(btn, action, parameter, confirm, button_color, response_callback, confirmed_callback )
         {
             if( btn.classList.contains("disabled") ) 
@@ -332,12 +341,13 @@ if( !Auth::hasGroup("admin") )
             
             if( confirm )
             {
-                var dialog = mx.Dialog.init({
+                dialog = mx.Dialog.init({
+                    id: action,
                     title: mx.I18N.get("Are you sure?"),
                     body: confirm,
                     buttons: [
-                        { "text": mx.I18N.get("Continue"), "class": button_color, "callback": function(){ dialog.close(); if( confirmed_callback ){ confirmed_callback(); } runAction(btn, action, parameter, response_callback); } },
-                        { "text": mx.I18N.get("Cancel") },
+                        { "text": mx.I18N.get("Continue"), "class": button_color, "callback": function(){ dialogClose(); if( confirmed_callback ){ confirmed_callback(); } runAction(btn, action, parameter, response_callback); } },
+                        { "text": mx.I18N.get("Cancel"), "callback": dialogClose },
                     ],
                     class: "confirmDialog",
                     destroy: true
@@ -410,7 +420,7 @@ if( !Auth::hasGroup("admin") )
             }
             
             var autocomplete = null;
-            var dialog = mx.Dialog.init({
+            dialog = mx.Dialog.init({
                 title: mx.I18N.get("Are you sure?"),
                 body: body,
                 buttons: [
@@ -469,7 +479,7 @@ if( !Auth::hasGroup("admin") )
                             callback(parameter);
                         }
                     } },
-                    { "text": mx.I18N.get("Cancel") },
+                    { "text": mx.I18N.get("Cancel"), "callback": dialogClose },
                 ],
                 class: "confirmDialog",
                 destroy: true

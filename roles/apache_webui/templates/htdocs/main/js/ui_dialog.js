@@ -1,5 +1,6 @@
 mx.Dialog = (function( ret ) {
     var _options = {
+        id: null,
         buttons: [],
         class: "",
         destroy: false
@@ -80,6 +81,10 @@ mx.Dialog = (function( ret ) {
             getRootLayer: function()
             {
                 return options.elements.dialogLayer;
+            },
+            getId: function()
+            {
+                return options.id;
             }
         };
     };

@@ -300,8 +300,7 @@ mx.Logfile = (function( ret ) {
         stateTextElement = _stateTextElement;
         runtimeElement = _runtimeElement;
         logElement = _logElement;
-        
-        
+        update_url = _update_url;
     }
 
     return ret;
