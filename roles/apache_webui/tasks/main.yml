@@ -10,27 +10,13 @@
     - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/potd" }
     - { owner: root, group: root, dir: "/opt/potd_fetcher/" }
 
-- name: copy htdocs
-  copy:
-    src: "templates/htdocs/{{item}}"
-    dest: "{{htdocs_path}}{{item|dirname}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: "u=rwX,g=rX,o=rX"
-  with_items:
-    - main/components
-    - main/css
-    - main/fonts
-    - main/icons
-    - main/img
-    - main/js
-    - main/listener
-    - gallery/
-    - favicon.ico
-    - info.php
-    - index.php
-    - ressources.php
-    - resize.php
+- name: synchronize htdocs
+  synchronize:
+    src: "templates/htdocs/"
+    dest: "{{htdocs_path}}"
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
   
 - name: copy htdocs (template)
   template:

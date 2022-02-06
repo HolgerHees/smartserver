@@ -111,6 +111,7 @@
   register: change_app_config_result
   failed_when: change_app_config_result.rc != 0
   with_items: "{{prepared_app_configs}}"
+  when: "prepared_app_configs is defined"
 
 - name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
@@ -151,14 +152,13 @@
     group: "{{system_groups['www'].name}}"
   register: keeweb_installation
   
-- name: copy patched service-worker.js
-  template:
+- name: synchronize patched service-worker.js
+  synchronize:
     src: "templates/apps/service-worker.js"
-    dest: "{{htdocs_path}}nextcloud/apps/keeweb/templates/service-worker.js"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0644
-#  when: keeweb_installation.changed
+    dest: "{{htdocs_path}}nextcloud/apps/keeweb/templates/"
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=F644"
 
 #- name: check keeweb max version
 #  lineinfile:
@@ -209,13 +209,13 @@
     - "{{nextcloud_data_path}}news"
     - "{{nextcloud_data_path}}news/config"
     
-- name: copy news config
-  template:
+- name: synchronize news config
+  synchronize:
     src: "templates/apps/news.ini"
     dest: "{{nextcloud_data_path}}news/config/config.ini"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=F640"
 
 # maybe cleanup 
 # UPDATE `oc_jobs` SET `reserved_at` = 0 WHERE `class` = 'OCA\\News\\Cron\\Updater'

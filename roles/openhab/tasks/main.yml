@@ -174,14 +174,13 @@
   failed_when: no
   tags: [ 'apache_webui_configs' ]
    
-- name: copy habpanel config => habpanel_result.rc == 0
-  copy:
+- name: synchronize habpanel config => habpanel_result.rc == 0
+  synchronize:
     src: "{{projects_path}}openhab_config/habpanel_panelconfig.json"
     dest: "{{global_lib}}openhab/jsondb/uicomponents_habpanel_panelconfig.json"
-    remote_src: yes
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    mode: 0644
+    rsync_opts:
+      - "--chown={{openhab_user}}:{{openhab_group}}"
+      - "--chmod=F644"
   when: "habpanel_result.rc == 0"
 
 # addons folder
@@ -208,13 +207,21 @@
 
 # have to fetch files before, because ansible template module works only with local files
 - name: prepare service configs
-  fetch:
-    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
-    dest: "/tmp/ansible/openhab/services/{{item}}"
-    flat: yes
-  register: services_state
-  with_items: "{{services_result.stdout_lines}}"
+  synchronize:
+    src: "{{projects_path}}openhab_config/templates/services"
+    dest: "/tmp/ansible/openhab/"
+    mode: "pull"
   changed_when: no
+  when: "services_result.rc == 0"
+
+#- name: prepare service configs
+#  fetch:
+#    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
+#    dest: "/tmp/ansible/openhab/services/{{item}}"
+#    flat: yes
+#  register: services_state
+#  with_items: "{{services_result.stdout_lines}}"
+#  changed_when: no
     
 - name: copy service configs
   template:
@@ -233,14 +240,22 @@
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
-- name: prepare things config
-  fetch:
-    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
-    dest: "/tmp/ansible/openhab/things/{{item}}"
-    flat: yes
-  register: things_state
-  with_items: "{{things_result.stdout_lines}}"
+- name: prepare things configs
+  synchronize:
+    src: "{{projects_path}}openhab_config/templates/things"
+    dest: "/tmp/ansible/openhab/"
+    mode: "pull"
   changed_when: no
+  when: "things_result.rc == 0"
+
+#- name: prepare things config
+#  fetch:
+#    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
+#    dest: "/tmp/ansible/openhab/things/{{item}}"
+#    flat: yes
+#  register: things_state
+#  with_items: "{{things_result.stdout_lines}}"
+#  changed_when: no
 
 - name: copy things configs
   template:
@@ -259,18 +274,26 @@
   changed_when: no
 
 # have to fetch files before, because ansible template module works only with local files
-- name: prepare udev rules
-  fetch:
-    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
-    dest: "/tmp/ansible/openhab/udev/{{item}}"
-    flat: yes
-  register: udev_state
-  with_items: "{{udev_result.stdout_lines}}"
+- name: prepare udev configs
+  synchronize:
+    src: "{{projects_path}}openhab_config/templates/udev/rules.d"
+    dest: "/tmp/ansible/openhab/"
+    mode: "pull"
   changed_when: no
+  when: "udev_result.rc == 0"
+
+#- name: prepare udev rules
+#  fetch:
+#    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
+#    dest: "/tmp/ansible/openhab/udev/{{item}}"
+#    flat: yes
+#  register: udev_state
+#  with_items: "{{udev_result.stdout_lines}}"
+#  changed_when: no
 
 - name: copy udev rules
   template:
-    src: "/tmp/ansible/openhab/udev/{{item}}"
+    src: "/tmp/ansible/openhab/rules.d/{{item}}"
     dest: "/etc/udev/rules.d/{{item}}"
     owner: root
     group: root

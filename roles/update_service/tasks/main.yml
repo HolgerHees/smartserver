@@ -30,48 +30,38 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
   when: "update_service_system_check_enabled|bool"
 
-- name: copy config
+- name: copy service config
   template:
-    src: "templates/opt/update_service/config/config.py"
+    src: "templates/config.py"
     dest: "/opt/update_service/config/config.py"
     owner: root
     group: root
     mode: 0750
 
-- name: copy libs
+- name: copy tool
   copy:
-    src: "templates/opt/update_service/{{item}}"
+    src: "templates/opt/{{item.path}}"
     dest: "/opt/update_service/"
     owner: root
     group: root
     mode: 0750
   with_items:
-    - helper
-    - server
-    - plugins
+    - { "chmod": "u=rwX,g=r,o=", "path": "update_service_libs/" }
+    - { "chmod": "u=rwx,g=rx,o=", "path": "update_service_cmds/" }
 
-- name: copy software_check tool
-  copy:
-    src: "templates/opt/update_service/{{item}}"
-    dest: "/opt/update_service/"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - software_version_check
-  when: "update_service_software_check_enabled|bool"
-
-- name: copy system_check tool
-  copy:
-    src: "templates/opt/update_service/{{item}}"
-    dest: "/opt/update_service/"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - update_service
-    - system_update_check
-  when: "update_service_system_check_enabled|bool"
+# reports every time a change, because of python compilation cache
+#- name: synchronize tool
+#  synchronize:
+#    src: "templates/opt/{{item.path}}"
+#    dest: "/opt/update_service/"
+#    rsync_opts:
+#      - "--chown=root:root"
+#      - "--chmod={{item.chmod}}"
+#      - "--checksum"
+#      - "--ignore-times"
+#  with_items:
+#    - { "chmod": "D750,F640", "path": "update_service_libs/" }
+#    - { "chmod": "D750,F750", "path": "update_service_cmds/" }
 
 - name: copy webui config
   template:
@@ -83,13 +73,13 @@
   tags: ['apache_webui_page']
   when: "update_service_software_check_enabled|bool"
 
-- name: copy webui
-  copy:
+- name: synchronize webui
+  synchronize:
     src: "templates/htdocs/update_service"
     dest: "{{htdocs_path}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
   tags: ['apache_webui_page']
   when: "update_service_system_check_enabled|bool"
 
@@ -124,6 +114,7 @@
     minute: "0"
     hour: "3"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: "update_service_software_check_enabled|bool"
 
 - name: create system check cron job
   vars:
@@ -133,6 +124,7 @@
     minute: "30"
     hour: "3"
   import_tasks: roles/cron/tasks/add_cronjob.yml
+  when: "update_service_system_check_enabled|bool"
   
 - name: create cleanup cron job
   vars:

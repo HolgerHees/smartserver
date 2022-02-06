@@ -164,20 +164,17 @@
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
 
-- name: copy docker tools
-  copy:
-    src: "templates/opt/docker/{{item}}"
-    dest: "/opt/docker/{{item}}"
-    owner: root
-    group: root
-    mode: 0700
-  with_items:
-    - visualizer
-    - cleanup
+- name: synchronize docker tools
+  synchronize:
+    src: "templates/opt/docker"
+    dest: "/opt/"
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
 
 - name: copy docker tools config
   template:
-    src: "templates/opt/docker/lib/config.py"
+    src: "templates/config.py"
     dest: "/opt/docker/lib/config.py"
     owner: root
     group: root

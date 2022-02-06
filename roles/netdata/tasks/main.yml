@@ -111,25 +111,24 @@
     - "/usr/lib64/netdata/conf.d/"
   when: is_fedora|bool
 
+- name: synchronize config
+  synchronize:
+    src: "templates/etc/netdata/"
+    dest: "/etc/netdata/"
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D755,F644"
+      
 - name: copy config
   template:
-    src: "templates{{item}}"
-    dest: "{{item}}"
+    src: "templates/{{item}}"
+    dest: "/etc/netdata/{{item}}"
     owner: root
     group: root
     mode: 0644
   with_items:
-    - "/etc/netdata/.environment"
-    - "/etc/netdata/netdata.conf"
-    - "/etc/netdata/exporting.conf"
-    - "/etc/netdata/python.d.conf"
-    - "/etc/netdata/fping.conf"
-    - "/etc/netdata/health_alarm_notify.conf"
-    - "/etc/netdata/health.d/disks.conf"
-#    - "/etc/netdata/health.d/softnet.conf"
-    - "/etc/netdata/health.d/net.conf"
-    - "/etc/netdata/health.d/fping.conf"
-    - "/etc/netdata/health.d/udp_errors.conf"
+    - "netdata.conf"
+    - "fping.conf"
   notify: "restart netdata"
 
 - name: copy helper

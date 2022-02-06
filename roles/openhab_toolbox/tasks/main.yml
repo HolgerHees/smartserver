@@ -19,12 +19,11 @@
   changed_when: no
   failed_when: no
 
-- name: copy environment config
-  copy:
+- name: synchronize environment config
+  synchronize:
     src: "{{projects_path}}openhab_config/toolbox/environment.php"
     dest: "{{projects_path}}toolbox/_lib/config/environment.php"
-    remote_src: yes
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640  
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
   when: "environment_result.rc == 0"

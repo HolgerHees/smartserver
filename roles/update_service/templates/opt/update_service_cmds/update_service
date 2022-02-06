@@ -57,7 +57,7 @@ MIN_PROCESS_INACTIVITY_TIME = 30
 MAX_STARTUP_WAITING_TIME = 180
 
 app = Flask(__name__)
-
+ 
 
 class Handler(Server):
     def __init__(self):
@@ -329,13 +329,13 @@ class Handler(Server):
                  
         self.cmd_executer.finishRun(file_name,exit_status,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
                       
-        self._runWorkflow(workflow)
+        self._runWorkflow(workflow, True)
         
     def proceedSystemReboot(self,workflow,file_name,start_time_str):
         thread = threading.Thread(target=self._proceedSystemReboot, args=(workflow, file_name, start_time_str))
         thread.start()
 
-    def _runWorkflow(self, workflow):   
+    def _runWorkflow(self, workflow, checkGlobalRunning):   
         while len(workflow) > 0:
             cmd_block = workflow.pop(0)
             if "function" in cmd_block:
@@ -362,7 +362,8 @@ class Handler(Server):
                 if self.testWorkflow:
                     self.prepareTestWorkflow(cmd_block)
                 
-            if not self.cmd_executer.isExternalProcessRunning() and self.cmd_executer.lock(cmd_block["cmd_type"]):
+            isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
+            if not isRunning and self.cmd_executer.lock(cmd_block["cmd_type"]):
                 exit_code = self.cmd_executer.runCmdBlock(cmd_block)
             else:
                 exit_code = -1
@@ -386,19 +387,20 @@ class Handler(Server):
             if cmd_block["cmd_type"] == "system_reboot":
                 break
               
-    def runWorkflow(self, workflow, state_type):
-        if not self.cmd_executer.isRunning():
-            thread = threading.Thread(target=self._runWorkflow, args=(workflow, ))
+    def runWorkflow(self, workflow, state_type, checkGlobalRunning ):
+        isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
+        if not isRunning :
+            thread = threading.Thread(target=self._runWorkflow, args=(workflow, checkGlobalRunning ))
             thread.start()
             time.sleep(0.5)
             return self.getState(state_type)
         else:
-            return self.buildErrorResult(exit_status, u"Job not started" )
+            return self.buildErrorResult(1, u"Job not started" )
       
 @app.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
 def refreshSoftwareVersionCheck():
     cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ], "software");
+    return handler.runWorkflow([ cmd ], "software", True);
 
 @app.route('/state/', methods = ['POST'])
 def state():     
@@ -407,22 +409,22 @@ def state():
 @app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
     cmd = handler.cmd_builder.buildSystemUpdateCheckCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ], "update" );
+    return handler.runWorkflow([ cmd ], "update", True );
 
 @app.route('/restartService/', methods = ['POST'])
 def restartService():
     cmd = handler.cmd_builder.buildRestartServiceCmdBlock(request.form['username'],request.form["service"])
-    return handler.runWorkflow([ cmd ], "update");
+    return handler.runWorkflow([ cmd ], "update", True );
       
 @app.route('/restartDaemon/', methods = ['POST'])
 def restartDaemon():
     cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ], "update");
+    return handler.runWorkflow([ cmd ], "update", False );
 
 @app.route('/installSystemUpdates/', methods = ['POST'])
 def installSystemUpdates():
     cmd = handler.cmd_builder.buildInstallSystemUpdateCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ], "update");
+    return handler.runWorkflow([ cmd ], "update", True );
 
 @app.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
@@ -436,7 +438,7 @@ def deploySmartserverUpdates():
             tags.append("confirm_deployment")
         cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.form['username'], password, tags, confirm )
         if cmd:
-            return handler.runWorkflow([ cmd ], "update");
+            return handler.runWorkflow([ cmd ], "update", True );
         else:
             return make_response("Deployment state file missing, empty or not readable", 501);
     else:
@@ -445,7 +447,7 @@ def deploySmartserverUpdates():
 @app.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
     cmd = handler.cmd_builder.buildSystemRebootCmdBlock(request.form['username'])
-    return handler.runWorkflow([ cmd ], "update");
+    return handler.runWorkflow([ cmd ], "update", True );
 
 @app.route('/updateWorkflow/', methods = ['POST'])
 def updateWorkflow():
@@ -455,7 +457,7 @@ def updateWorkflow():
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildRestartServiceCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", request.form )
     ]
-    return handler.runWorkflow(workflow, "update");
+    return handler.runWorkflow(workflow, "update", True );
 
 @app.route('/killProcess/', methods = ['POST'])
 def killProcess():

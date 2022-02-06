@@ -22,27 +22,29 @@
     - "{{ global_etc }}grafana/provisioning/notifiers/"
     - "{{ global_etc }}grafana/provisioning/plugins/"
 
-- name: copy shared grafana dashboards
-  copy:
-    src: "{{item}}"
-    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
-    owner: root
-    group: root
-    mode: 0640
+- name: synchronize shared grafana dashboards
+  synchronize:
+    src: "templates/dashboards/"
+    dest: "{{ global_lib }}grafana/dashboards/"
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
   notify: "restart grafana"
-  with_items:
-    - "templates/dashboards/OpenHAB metrics.json"
-    - "templates/dashboards/Server Health.json"
-    - "templates/dashboards/Logs.json"
 
-- name: copy individual grafana dashboards
-  copy:
-    src: "{{config_path}}roles/grafana/templates/dashboards/{{item|basename}}"
-    dest: "{{ global_lib }}grafana/dashboards/{{item|basename}}"
-    owner: root
-    group: root
-    mode: 0640
-  with_fileglob: "{{config_path}}roles/grafana/templates/dashboards/*"
+- name: check individual grafana dashboards
+  shell: "ls {{config_path}}roles/grafana/templates/dashboards/"
+  register: dashboard_config_result
+  changed_when: no
+  failed_when: no
+
+- name: synchronize individual grafana dashboards
+  synchronize:
+    src: "{{config_path}}roles/grafana/templates/dashboards/"
+    dest: "{{ global_lib }}grafana/dashboards/"
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
+  when: "dashboard_config_result.rc == 0"
   notify: "restart grafana"
 
 - name: copy grafana provisioning

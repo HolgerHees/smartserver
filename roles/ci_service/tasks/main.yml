@@ -51,44 +51,48 @@
 
 - name: copy config
   template:
-    src: "templates/opt/ci_service/config/config.py"
+    src: "templates/config.py"
     dest: "/opt/ci_service/config/config.py"
     owner: root
     group: root
     mode: 0750
 
-- name: copy ci libs
+- name: copy tool
   copy:
-    src: "templates/opt/ci_service/lib"
-    dest: "/opt/ci_service"
-    owner: root
-    group: root
-    mode: 0750
-
-- name: copy ci tool
-  template:
-    src: "templates/opt/ci_service/{{item}}"
-    dest: "/opt/ci_service/{{item}}"
+    src: "templates/opt/{{item.path}}"
+    dest: "/opt/ci_service/"
     owner: root
     group: root
     mode: 0750
   with_items:
-    - ci_job_handler
-    - ci_service
-    
-- name: copy webui
-  copy:
+    - { "chmod": "u=rwX,g=r,o=", "path": "ci_service_libs/" }
+    - { "chmod": "u=rwx,g=rx,o=", "path": "ci_service_cmds/" }
+
+# reports every time a change, because of python compilation cache
+#- name: synchronize tool
+#  synchronize:
+#    src: "templates/opt/{{item.path}}"
+#    dest: "/opt/ci_service/"
+#    rsync_opts:
+#      - "--chown=root:root"
+#      - "--chmod={{item.chmod}}"
+#  with_items:
+#    - { "chmod": "D750,F640", "path": "ci_service_libs/" }
+#    - { "chmod": "D750,F750", "path": "ci_service_cmds/" }
+
+- name: synchronize webui
+  synchronize:
     src: "templates/htdocs/ci_service"
     dest: "{{htdocs_path}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
   tags: ['apache_webui_page']
 
 - name: copy webui config
   template:
     src: "templates/config.php"
-    dest: "{{htdocs_path}}ci/config.php"
+    dest: "{{htdocs_path}}ci_service/config.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0750

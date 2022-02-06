@@ -226,7 +226,7 @@ if( !Auth::hasGroup("admin") )
                  
             if( job_is_running )
             {
-                mx.UpdateServiceHelper.setExclusiveButtonsState(false, "kill");
+                mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? "restart": "kill");
             }
             else
             {
@@ -323,7 +323,7 @@ if( !Auth::hasGroup("admin") )
             xhr.send(JSON.stringify({"action": action, "parameter": parameter }));
         }
         
-        function confirmAction(btn, action, parameter, confirm, button_color, response_callback )
+        function confirmAction(btn, action, parameter, confirm, button_color, response_callback, confirmed_callback )
         {
             if( btn.classList.contains("disabled") ) 
             {
@@ -336,7 +336,7 @@ if( !Auth::hasGroup("admin") )
                     title: mx.I18N.get("Are you sure?"),
                     body: confirm,
                     buttons: [
-                        { "text": mx.I18N.get("Continue"), "class": button_color, "callback": function(){ dialog.close(); runAction(btn, action, parameter, response_callback); } },
+                        { "text": mx.I18N.get("Continue"), "class": button_color, "callback": function(){ dialog.close(); if( confirmed_callback ){ confirmed_callback(); } runAction(btn, action, parameter, response_callback); } },
                         { "text": mx.I18N.get("Cancel") },
                     ],
                     class: "confirmDialog",
@@ -595,8 +595,7 @@ if( !Auth::hasGroup("admin") )
 
         ret.actionRestartDaemon = function(btn)
         {
-            mx.UpdateServiceHelper.announceRestart();
-            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red");
+            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red",null, mx.UpdateServiceHelper.announceRestart );
             /*, function(response){
             window.clearTimeout(refreshDaemonStateTimer);
             confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red", function(response){

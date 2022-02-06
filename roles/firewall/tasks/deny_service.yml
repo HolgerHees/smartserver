@@ -11,13 +11,3 @@
   register: "firewall_allow_service_result"
   tags: [ 'firewall_config' ]
   notify: "restart ferm"
-
-#- name: "allow service '{{name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
-#  copy:
-#    content: "{{ lookup('template', 'roles/firewall/templates/ferm.template') }}"
-#    dest: "/etc/ferm/ferm.d/30-{{name}}.ferm"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  tags: [ 'firewall_config' ]
-#  notify: "restart ferm"

@@ -9,22 +9,27 @@
     - {owner: "root", group: "root", path: "/opt/shared/" }
     - {owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
 
-- name: copy core libs
+- name: copy libs
   copy:
-    src: "templates/libs/shared/"
-    dest: "/opt/shared/"
-    owner: "root"
-    group: "root"
-    mode: 0750
+    src: "templates/libs/shared"
+    dest: "/opt/"
+    owner: root
+    group: root
+    mode: "u=rwX,g=rX,o="
 
-- name: copy web libs
-  copy:
-    src: "templates/htdocs/shared/{{item}}"
-    dest: "{{htdocs_path}}/shared/{{item}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  with_items:
-    - "css/"
-    - "js/"
-    - "libs/"
+# reports every time a change, because of python compilation cache
+#- name: synchronize libs
+#  synchronize:
+#    src: "templates/libs/shared"
+#    dest: "/opt/"
+#    rsync_opts:
+#      - "--chown=root:root"
+#      - "--chmod=D750,F640"
+
+- name: synchronize web libs
+  synchronize:
+    src: "templates/htdocs/shared"
+    dest: "{{htdocs_path}}"
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"

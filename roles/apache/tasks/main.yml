@@ -156,12 +156,13 @@
   notify: "restart apache2"
   tags: ['user']
 
-- name: copy login form
-  copy:
+- name: synchronize login form
+  synchronize:
     src: "templates/htdocs/auth"
     dest: "{{htdocs_path}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
 
 - name: copy domain fallback
   template:

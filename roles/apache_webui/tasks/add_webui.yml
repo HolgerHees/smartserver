@@ -47,25 +47,3 @@
   when: "listener is defined"
   notify: "restart apache2"
   tags: ['apache_webui_configs']
-
-#- name: "copy apache subdomain listener for '{{name}}'"
-#  copy:
-#    content: "{{ lookup('template', 'roles/apache_webui/templates/subdomain_listener.inc') }}"
-#    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{listener.sub_domain}}-listener.inc"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  when: "listener is defined and listener.sub_domain is defined"
-#  notify: "restart apache2"
-#  tags: ['apache_webui_configs']
-
-#- name: "copy apache prefix listener for '{{name}}'"
-#  copy:
-#    content: "{{ lookup('template', 'roles/apache_webui/templates/prefix_listener.inc') }}"
-#    dest: "{{global_etc}}apache2/_.ansible.vhost.d/default-{{listener.prefix}}-listener.inc"
-#    owner: root
-#    group: root
-#    mode: 0644
-#  when: "listener is defined and listener.sub_domain is not defined and listener.prefix is defined"
-#  notify: "restart apache2"
-#  tags: ['apache_webui_configs']

@@ -4,4 +4,5 @@ config/*
 !config/demo/
 !config/shared.yml
 !config/default.yml
+ansible.cfg
 *.retry

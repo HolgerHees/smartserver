@@ -42,10 +42,13 @@
   register: mysql_table_exists
   changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
   
-- name: prepare table config
-  copy:
-    src: "roles/weather_forecast/templates/weather_forecast.sql"
-    dest: "{{ global_build }}weather_forecast/weather_forecast.sql"
+- name: synchronize table config
+  synchronize:
+    src: "templates/weather_forecast.sql"
+    dest: "{{ global_build }}weather_forecast/"
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F600"
   changed_when: no
   when: "'weather_forecast' not in mysql_table_exists.stdout"
   
@@ -65,13 +68,13 @@
     - { src: "/etc/daemon.py", dest: "{{global_etc}}weather_forecast/daemon.py" }
   notify: "restart weather_forecast"
 
-- name: copy htdocs
-  copy:
-    src: "templates/htdocs/"
-    dest: "{{htdocs_path}}weather"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: "u=rwX,g=rX,o=rX"
+- name: synchronize htdocs
+  synchronize:
+    src: "templates/htdocs/weather"
+    dest: "{{htdocs_path}}"
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
   
 - name: copy htdocs (template)
   template:
