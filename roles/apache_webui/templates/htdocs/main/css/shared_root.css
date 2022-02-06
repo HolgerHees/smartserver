@@ -83,5 +83,5 @@ body.dark {
     background-color: var(--dark-bg);
 } 
 body.inline {
-   padding-top: 10px;
+   padding: 0px 5px 0 5px;
 }

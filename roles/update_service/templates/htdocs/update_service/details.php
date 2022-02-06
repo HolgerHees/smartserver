@@ -49,7 +49,7 @@ else
 <link rel="stylesheet" href="/main/css/shared_ui.css">
 <link rel="stylesheet" href="/shared/css/logfile.css">
 <link rel="stylesheet" href="/shared/css/logfile_box.css">
-<link rel="stylesheet" href="./css/core.css">
+<link rel="stylesheet" href="../css/core.css">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
 <script src="/ressources?type=js"></script>
 <script src="/shared/js/logfile.js"></script>
@@ -58,7 +58,7 @@ function initPage()
 {
     var body = mx.$('body');
     var goToControl = document.querySelector('div.goToControl');
-    mx.Logfile.init(<?php echo $job->getDuration(); ?>,mx.$("div.state"),mx.$("span.state"),mx.$('span.runtime'), mx.$('div.log'));
+    mx.Logfile.init(<?php echo $job->getDuration(); ?>,mx.$("div.state"),mx.$("span.state"),mx.$('span.runtime'), mx.$('div.log'), mx.Host.getBase() + '../details_update/' );
     
 <?php if( $job->getState() == 'running' ){ ?>
     mx.Logfile.startUpdateProcess(<?php echo $logfile->getBytes(); ?>);
@@ -79,10 +79,9 @@ function initPage()
     mx.Logfile.checkScrollPosition(null,body,goToControl,false);
     
     mx.CICore = (function( ret ) {
-
         ret.openOverview = function(event)
         {
-            document.location = './';
+            document.location = '../system/';
         }
         return ret;
     })( mx.CICore || {} );

@@ -23,7 +23,7 @@ $post = empty($data["parameter"]) ? [] : $data["parameter"];
 
 $post['username'] = Auth::getUser();
 
-$ch = curl_init("http://".$daemon_ip.":8505/" . $action . '/' ); // such as http://example.com/example.xml
+$ch = curl_init("http://".$service_ip.":8505/" . $action . '/' ); // such as http://example.com/example.xml
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, 0);

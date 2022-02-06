@@ -1,59 +1,65 @@
-div.form.table {
+body.software div.not_available,
+body.software div.is_running {
+    text-align: center;
+    padding-top: 20px;
+}
+
+body.software div.form.table {
   width: 100%;
   max-width: 800px;
   margin: auto;
 }
-div.form.table > div.row:first-child > div {
+body.software div.form.table > div.row:first-child > div {
     font-weight: bold;
 }
-div.form.table > div.row > div:first-child {
+body.software div.form.table > div.row > div:first-child {
     width: 5px;
     min-width: 5px;
     padding: 2px;
 }
-div.form.table > div.row > div:first-child,
-body.dark div.form.table > div.row > div:first-child {
+body.software div.form.table > div.row > div:first-child,
+body.dark body.software div.form.table > div.row > div:first-child {
     color: #666;
 }
-div.form.table > div.row:first-child > div:first-child {
+body.software div.form.table > div.row:first-child > div:first-child {
     background-color: #aaa;
     text-align: center;
 }
-div.form.table > div.row.red > div:first-child {
+body.software div.form.table > div.row.red > div:first-child {
     background-color: var(--color-red);
 }
-div.form.table > div.row.yellow > div:first-child  {
+body.software div.form.table > div.row.yellow > div:first-child  {
     background-color: var(--color-yellow);
 }
 
-div.form.table > div.row.green > div:first-child  {
+body.software div.form.table > div.row.green > div:first-child  {
     background-color: var(--color-green);
 }
-div.form.table > div.row > div:nth-child(2) {
+body.software div.form.table > div.row > div:nth-child(2) {
     width: 100%;
     white-space: normal; 
 }
-div.versionLink, div.typeLink {
+body.software div.versionLink, div.typeLink {
     cursor: pointer;
 }
 
-div.versionLink {
+body.software div.versionLink {
     display: inline-block;
 }
 
-div.currentBranch {
+body.software div.currentBranch {
     font-weight: bold;
 }
 
 /* Tooltip container */
-.tooltip {
+body.software .tooltip {
   position: relative;
   display: inline-block;
   border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
 }
 
 /* Tooltip text */
-.tooltip .hover {
+body.software .tooltip .hover {
   visibility: hidden;
   text-align: center;
   padding: 10px 10px;
@@ -70,18 +76,18 @@ div.currentBranch {
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .hover {
+body.software .tooltip:hover .hover {
   visibility: visible;
 }
-.tooltip:hover .default {
+body.software .tooltip:hover .default {
   visibility: hidden;
 }
 
-.tooltip.lastUpdate {
+body.software .tooltip.lastUpdate {
   overflow: hidden;
 }
   
-div.detailView {
+body.software div.detailView {
   cursor: pointer;
   display: inline-block;
   color: #1976d2;

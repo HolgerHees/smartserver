@@ -30,9 +30,9 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
         let now = new Date();
         let duration = Math.floor( ( now.getTime() / 1000 - date.getTime() / 1000 ) * 10 ) / 10;
         
-        let action = "<div class=\"detailView\" onclick=\"document.location.href='../update_system/'\">" + mx.I18N.get("Software check") + "</div>";
+        let action = "<div class=\"detailView\" onclick=\"document.location.href='../system/'\">" + mx.I18N.get("Software check") + "</div>";
         
-        document.body.innerHTML = "<div style=\"text-align: center\">" + mx.I18N.get("{1} is running since {2} seconds").fill({"1": action, "2": duration}) + " seconds</div>";
+        document.body.innerHTML = "<div class=\"is_running\">" + mx.I18N.get("{1} is running since {2} seconds").fill({"1": action, "2": duration}) + " seconds</div>";
     }
     
     ret.processData = function(last_data_modified, changed_data)
@@ -43,7 +43,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
             
             if( !changed_data["software"].hasOwnProperty("states") )
             {
-                content += "<div style=\"text-align: center\">";
+                content += "<div class=\"not_available\">";
                 content += mx.I18N.get("No software versions have been checked so far") + "<br><br><div class=\"form button\" onclick=\"mx.SNCore.startSoftwareCheck()\">" + mx.I18N.get("Start initial run") + "</div>";
               
             }
@@ -161,7 +161,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                     
                     content += "<div>" + upgradesHTML + "</div>";
                 
-                    content += "<div class=\"tooltip lastUpdate\">" + lastUpdate + lastUpdateDetails + "</div>";
+                    content += "<div class=\"software tooltip lastUpdate\">" + lastUpdate + lastUpdateDetails + "</div>";
                     
                     content += "</div>";
                 }

@@ -18,20 +18,20 @@ if( !Auth::hasGroup("admin") )
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
 <link href="/ressources?type=css" rel="stylesheet">
-<link href="./ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
+<link href="../ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
 <script src="/ressources?type=js"></script>
-<script src="./ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
-<script src="./ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
+<script src="../ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
+<script src="../ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
 </head>
-<body class="inline">
+<body class="inline software">
 <script>
 var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
 if( theme ) document.body.classList.add(theme);
 
 mx.SNCore = (function( ret ) {
   
-    var daemonApiUrl = mx.Host.getBase() + 'api.php'; 
+    var daemonApiUrl = mx.Host.getBase() + '../api.php'; 
     var refreshDaemonStateTimer = 0;
         
     function handleDaemonState(state)
@@ -66,18 +66,25 @@ mx.SNCore = (function( ret ) {
                 var response = JSON.parse(this.response);
                 if( response["status"] == "0" )
                 {
+                    mx.UpdateServiceHelper.confirmSuccess();
+                    
                     handleDaemonState(response);
                     
                     if( callback ) callback();
                 }
                 else
                 {
-                    alert( response["message"] );
+                    mx.UpdateServiceHelper.handleServerError(response["message"]);
                 }
+            }
+            else if( this.status == 500 ) 
+            {
+                mx.UpdateServiceHelper.handleServerNotAvailable();
+                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, 15000);
             }
             else
             {
-                console.log( this.response, "Code: " + this.status + ", Message: '" + this.statusText + "'" );
+                mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, 15000);
             }
         };
@@ -98,16 +105,22 @@ mx.SNCore = (function( ret ) {
                 var response = JSON.parse(this.response);
                 if( response["status"] == "0" )
                 {
+                    mx.UpdateServiceHelper.confirmSuccess();
+                    
                     handleDaemonState(response);
                 }
                 else
                 {
-                    alert(response["message"]);
+                    mx.UpdateServiceHelper.handleServerError(response["message"]);
                 }
+            }
+            else if( this.status == 500 ) 
+            {
+                mx.UpdateServiceHelper.handleServerNotAvailable();
             }
             else
             {
-                alert("Code: " + this.status + ", Message: '" + this.statusText + "'")
+                mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
             }
         };
         

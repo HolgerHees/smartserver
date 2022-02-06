@@ -1,53 +1,57 @@
-#serverNeedsRestart,
+body.inline.system {
+    padding-right: 0;
+}
+
+body.system #serverNeedsRestart,
 #currentRunningActions {
   display:none;
 }
-div.info,
-div.header div:first-child {
+body.system div.info,
+body.system div.header div:first-child {
   color: var(--light-menu-text);
 }
-div.action:hover {
+body.system div.action:hover {
   background-color: var(--light-menu-hover-bg);
   border-radius: 4px;
 }
-body.dark div.info,
-body.dark div.header div:first-child {
+body.dark.system div.info,
+body.dark.system div.header div:first-child {
   color: var(--dark-menu-text);
 }
-body.dark div.action:hover {
+body.dark.system div.action:hover {
   background-color: var(--dark-menu-hover-bg);
 }
-div.info.green,
-div.header.green {
+body.system div.info.green,
+body.system div.header.green {
   color: var(--color-green);
 }
-div.info.yellow,
-div.header.yellow {
+body.system div.info.yellow,
+body.system div.header.yellow {
   color: var(--color-yellow);
 }
-div.info.red,
-div.header.red {
+body.system div.info.red,
+body.system div.header.red {
   color: var(--color-red);
 }
-div.widget {
+body.system div.widget {
   width: 100%;
   max-width: 800px;
   margin: auto;
 }
-div.table {
+body.system div.table {
   font-size: 16px;
   overflow: auto;
 }
-div.widget div.header {
-  padding: 5px 5px 5px 5px;
+body.system div.widget div.header {
+  padding: 5px 0 5px 0;
   display: flex;
   align-items: center;
 }
-div.widget div.header div:first-child {
+body.system div.widget div.header div:first-child {
   font-size: 20px;
   font-weight: bold;
 }
-div.widget div.header div:last-child {
+body.system div.widget div.header div:last-child {
   color: #AAA;
   font-size: 15px;
   font-weight: normal;
@@ -55,7 +59,7 @@ div.widget div.header div:last-child {
   padding-left: 5px;
   white-space: nowrap;
 }
-div.action {
+body.system div.action {
   margin: 5px 0 5px 15px;
   padding: 5px 5px 5px 5px;
   font-weight: normal;
@@ -63,31 +67,32 @@ div.action {
   align-items: center;
   min-height: 45px;
 }
-div.info {
+body.system div.info {
   flex-grow: 1; 
   font-size: 16px;
 }
-div.info .sub {
+body.system div.info .sub {
   color: #AAA;
   font-size: 13px;
 }
-div.form.button {
+body.system div.form.button {
   margin-left: 5px;
   white-space: nowrap;
+  color: var(--light-button-text);
 }
-div.buttons {
+body.system div.buttons {
   white-space: nowrap;
 }
-.green {
+body.system .green {
     color: var(--color-green);
 }
-.yellow {
+body.system .yellow {
     color: var(--color-yellow);
 }
-.red {
+body.system .red {
     color: var(--color-red);
 }
-div.list.form.table {
+body.system div.list.form.table {
   margin-left: 20px;
   margin-right: 5px;
   margin-bottom: 10px;
@@ -96,47 +101,47 @@ div.list.form.table {
   display: none;
   overflow-y: hidden;
 }
-div.list.form.table div.row div.grow  {
+body.system div.list.form.table div.row div.grow  {
   width: 100%;
   white-space: normal; 
 }
 
-div.dialogLayer .confirmDialog {
+body.system div.dialogLayer .confirmDialog {
   max-width: 350px;
 }
 
-div.dialogLayer .confirmDialog .table {
+body.system div.dialogLayer .confirmDialog .table {
   max-width: 100%;
 }
-div.dialogLayer .confirmDialog .row > div:last-child,
-div.dialogLayer .confirmDialog .row input:not([type='checkbox']) {
+body.system div.dialogLayer .confirmDialog .row > div:last-child,
+body.system div.dialogLayer .confirmDialog .row input:not([type='checkbox']) {
   width: 100%;
   box-sizing: border-box;
 }
-div.dialogLayer .confirmDialog .row .hint {
+body.system div.dialogLayer .confirmDialog .row .hint {
   font-size: 14px;
   max-height: 0px;
   overflow-x: hidden;
   transition: max-height 0.2s;
 }
-div.dialogLayer .confirmDialog .deployConfirmation 
+body.system div.dialogLayer .confirmDialog .deployConfirmation 
 {
   position: absolute;
   margin-top: -35px;
   padding-left: 5px;
 }
-div.detailView {
+body.system div.detailView {
   cursor: pointer;
   display: inline-block;
   color: #1976d2;
 }
-div.detailView:hover {
+body.system div.detailView:hover {
   text-decoration: underline;
 }
 
-div.form.table > div.row > div.indexLogDate {
+body.system div.form.table > div.row > div.indexLogDate {
   white-space: nowrap;
 }
-div.form.table.logfileBox {
+body.system div.form.table.logfileBox {
   width: auto;
 }

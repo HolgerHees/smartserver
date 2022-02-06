@@ -78,7 +78,7 @@
     
 - name: copy webui
   copy:
-    src: "templates/htdocs/ci"
+    src: "templates/htdocs/ci_service"
     dest: "{{htdocs_path}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"

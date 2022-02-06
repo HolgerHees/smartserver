@@ -73,40 +73,20 @@
     - system_update_check
   when: "update_service_system_check_enabled|bool"
 
-- name: copy software webui
-  copy:
-    src: "templates/htdocs/update_software"
-    dest: "{{htdocs_path}}"
+- name: copy webui config
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}update_service/config.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0750
   tags: ['apache_webui_page']
   when: "update_service_software_check_enabled|bool"
 
-- name: copy software webui config
-  template:
-    src: "templates/update_software_config.php"
-    dest: "{{htdocs_path}}update_software/config.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  tags: ['apache_webui_page']
-  when: "update_service_software_check_enabled|bool"
-
-- name: copy system webui
+- name: copy webui
   copy:
-    src: "templates/htdocs/update_system"
+    src: "templates/htdocs/update_service"
     dest: "{{htdocs_path}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
-  tags: ['apache_webui_page']
-  when: "update_service_system_check_enabled|bool"
-
-- name: copy system webui config
-  template:
-    src: "templates/update_system_config.php"
-    dest: "{{htdocs_path}}update_system/config.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0750

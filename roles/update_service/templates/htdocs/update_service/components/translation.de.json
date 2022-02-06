@@ -18,7 +18,6 @@
     "Currently a '{}' is running": "Aktuell läuft ein '{}'",
     "Currently a local started '{}' is running": "Aktuell läuft ein lokaler '{}'",
     "No update process is running": "Aktuell läuft kein Update Prozess",
-    "Daemon Error": "Daemon Fehler",
     "Continue": "Weiter",
     "Cancel": "Abbrechen",
     "Are you sure?": "Bist du sicher?",
@@ -103,9 +102,19 @@
     "Last git pull was on {}": "Letzter git pull war am {}",
     "Skipped git pull because of broken remote ci tests": "Git pull übersprungen weil einige CI Tests fehlerhaft waren",
     "Skipped git pull because of some remote ci pending": "Git pull übersprungen weil aktuell einige CI Tests laufen",
-    "Git pulled and all remote ci succeeded": "Git pulles und alle CI Tests erfolgreich",
+    "Git pulled and all remote ci succeeded": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
     "Skipped git pull because of has uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
-    "Skipped git pull because of missing deployment state": "Git pull übersprungen weil der deployment Status fehlt"
+    "Skipped git pull because of missing deployment state": "Git pull übersprungen weil der deployment Status fehlt",
+    
+    
+    "No software versions have been checked so far": "Es wurden bisher keine Software Versionen überprüft",
+    "Start initial run": "Starte initiale Überprüfung",
+    "Software check": "Versions Überprüfung",
+    "{1} is running since {2} seconds": "{1} läuft seit {2} Sekunden",
+    
+    "Service Error": "Service Fehler",
+    "Service is currently not available": "Service ist aktuell nicht verfügbar",
+    "Service is restarting": "Service wir neu gestartet"
   }
 }

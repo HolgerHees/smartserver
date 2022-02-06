@@ -26,8 +26,8 @@ if( !Auth::hasGroup("admin") )
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
 <script src="/ressources?type=js"></script>
 <script src="/shared/js/logfile.js"></script>
-<script src="js/core.js"></script>
-<script src="js/list.js"></script>
+<script src="./js/core.js"></script>
+<script src="./js/list.js"></script>
 <script>
 function initPage()
 {

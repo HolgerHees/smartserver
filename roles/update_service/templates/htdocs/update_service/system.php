@@ -21,14 +21,14 @@ if( !Auth::hasGroup("admin") )
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
 <link rel="stylesheet" href="/shared/css/logfile_box.css">
 <link href="/ressources?type=css" rel="stylesheet">
-<link href="./ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
+<link href="../ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
 <script src="/ressources?type=js"></script>
 <script src="/shared/js/logfile.js"></script>
-<script src="./ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
-<script src="./ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
+<script src="../ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
+<script src="../ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
 </head>
-<body class="inline">
+<body class="inline system">
 <script>
     var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
     if( theme ) document.body.classList.add(theme);
@@ -50,7 +50,7 @@ if( !Auth::hasGroup("admin") )
         
         var workflowTimer = 0;
         
-        var daemonApiUrl = mx.Host.getBase() + 'api.php'; 
+        var daemonApiUrl = mx.Host.getBase() + '../api.php'; 
        
         function processData(last_data_modified, changed_data)
         {
@@ -241,15 +241,6 @@ if( !Auth::hasGroup("admin") )
             }
         }
         
-        function handleDaemonError(msg, title)
-        {
-            var currentRunningStateElement = mx.$("#currentRunningState");
-            var currentRunningActionsElement = mx.$("#currentRunningActions");
-            currentRunningActionsElement.style.display="";
-            currentRunningStateElement.innerHTML = "<div class=\"red\"><b>" + ( title ? title : mx.I18N.get("Daemon Error") ) + "</b><br>" + msg + "</div>";
-            mx.UpdateServiceHelper.setExclusiveButtonsState(false)
-        }
-                                      
         function refreshDaemonState(last_data_modified,callback)
         {
             var xhr = new XMLHttpRequest();
@@ -263,21 +254,25 @@ if( !Auth::hasGroup("admin") )
                     var response = JSON.parse(this.response);
                     if( response["status"] == "0" )
                     {
+                        mx.UpdateServiceHelper.confirmSuccess();
+                        
                         handleDaemonState(response);
                         
                         if( callback ) callback();
                     }
                     else
                     {
-                        handleDaemonError(response["message"])
+                        mx.UpdateServiceHelper.handleServerError(response["message"])
                     }
+                }
+                else if( this.status == 500 ) 
+                {
+                    mx.UpdateServiceHelper.handleServerNotAvailable();
+                    refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, mx.UpdateServiceHelper.isRestarting() ? 1000 : 15000 );
                 }
                 else
                 {
-                    if( job_running_type != "system_reboot" )
-                    { 
-                        handleDaemonError(this.response, "Code: " + this.status + ", Message: '" + this.statusText + "'")
-                    }
+                    mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                     refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, 15000);
                 }
             };
@@ -306,16 +301,22 @@ if( !Auth::hasGroup("admin") )
                         var response = JSON.parse(this.response);
                         if( response["status"] == "0" )
                         {
+                            mx.UpdateServiceHelper.confirmSuccess();
+
                             handleDaemonState(response);
                         }
                         else
                         {
-                            mx.UpdateServiceHelper.handleServerError(response);
+                            mx.UpdateServiceHelper.handleServerError(response["message"]);
                         }
+                    }
+                    else if( this.status == 500 ) 
+                    {
+                        mx.UpdateServiceHelper.handleServerNotAvailable();
                     }
                     else
                     {
-                        mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText);
+                        mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                     }
                 }
             };
@@ -351,7 +352,7 @@ if( !Auth::hasGroup("admin") )
 
         ret.openDetails = function(event,datetime,cmd,username)
         {
-            document.location = 'details.php?datetime=' + datetime + '&cmd=' + cmd + '&username=' + username;
+            document.location = '../details/?datetime=' + datetime + '&cmd=' + cmd + '&username=' + username;
         }
 
         function updateDialog(type, btn, args, callback )
@@ -594,11 +595,14 @@ if( !Auth::hasGroup("admin") )
 
         ret.actionRestartDaemon = function(btn)
         {
+            mx.UpdateServiceHelper.announceRestart();
+            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red");
+            /*, function(response){
             window.clearTimeout(refreshDaemonStateTimer);
             confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red", function(response){
                 mx.UpdateServiceHelper.setExclusiveButtonsState(false,null)
                 window.setTimeout(function(){ refreshDaemonState(null); },2000);
-            });
+            });*/
         }
         
         ret.toggle = function(btn,id)
@@ -666,5 +670,6 @@ if( !Auth::hasGroup("admin") )
     <div class="action" id="smartserverChangeHeader"></div>
     <div class="list form table" id="smartserverChangeDetails"></div>
 </div>
+<div class="error"></div>
 </body>
 </html>

@@ -13,6 +13,9 @@ mx.Logfile = (function( ret ) {
     var updateTimer = false;
 
     var lastScrollY = 0;
+    
+    var update_url = null;
+    
     /*var lastHashScrollY = 0;
     
     window.addEventListener("hashchange", function(e) {
@@ -101,7 +104,7 @@ mx.Logfile = (function( ret ) {
         
         if( currentInterval == 0 )
         {
-            var url = mx.Host.getBase() + 'details_update.php' + window.location.search + '&position=' + currentPosition;
+            var url = update_url + window.location.search + '&position=' + currentPosition;
             
             var xhr = new XMLHttpRequest();
             xhr.open("GET", url );
@@ -290,13 +293,15 @@ mx.Logfile = (function( ret ) {
         return result;
     }
 
-    ret.init = function(_duration, _stateColorElement, _stateTextElement, _runtimeElement, _logElement)
+    ret.init = function(_duration, _stateColorElement, _stateTextElement, _runtimeElement, _logElement, _update_url)
     {
         duration = _duration;
         stateColorElement = _stateColorElement;
         stateTextElement = _stateTextElement;
         runtimeElement = _runtimeElement;
         logElement = _logElement;
+        
+        
     }
 
     return ret;
