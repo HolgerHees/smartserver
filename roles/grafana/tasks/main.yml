@@ -27,6 +27,8 @@
     src: "templates/dashboards/"
     dest: "{{ global_lib }}grafana/dashboards/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"
@@ -43,6 +45,8 @@
     src: "{{config_path}}roles/grafana/templates/dashboards/"
     dest: "{{ global_lib }}grafana/dashboards/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"

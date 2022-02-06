@@ -47,6 +47,8 @@
     src: "templates/weather_forecast.sql"
     dest: "{{ global_build }}weather_forecast/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=F600"
@@ -73,6 +75,9 @@
   synchronize:
     src: "templates/htdocs/weather"
     dest: "{{htdocs_path}}"
+    archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"

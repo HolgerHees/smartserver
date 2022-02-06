@@ -157,6 +157,8 @@
     src: "templates/apps/service-worker.js"
     dest: "{{htdocs_path}}nextcloud/apps/keeweb/templates/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=F644"
@@ -215,6 +217,8 @@
     src: "templates/apps/news.ini"
     dest: "{{nextcloud_data_path}}news/config/config.ini"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=F640"

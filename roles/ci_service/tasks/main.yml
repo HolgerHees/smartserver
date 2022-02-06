@@ -62,6 +62,8 @@
     src: "templates/opt/{{item.path}}"
     dest: "/opt/ci_service/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod={{item.chmod}}"
@@ -73,6 +75,9 @@
   synchronize:
     src: "templates/htdocs/ci_service"
     dest: "{{htdocs_path}}"
+    archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"

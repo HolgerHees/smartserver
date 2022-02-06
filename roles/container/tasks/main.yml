@@ -172,6 +172,8 @@
     src: "templates/opt/docker"
     dest: "/opt/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"

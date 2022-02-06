@@ -185,6 +185,8 @@
     src: "templates/themes/smartserver"
     dest: "{{htdocs_path}}nextcloud/themes/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D750,F640"

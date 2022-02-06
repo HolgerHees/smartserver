@@ -116,6 +116,8 @@
     src: "templates/etc/netdata/"
     dest: "/etc/netdata/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"

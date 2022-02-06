@@ -43,11 +43,11 @@
     src: "templates/opt/{{item.path}}"
     dest: "/opt/update_service/"
     archive: no
+    checksum: yes
+    recursive: yes
     rsync_opts:
       - "--chown=root:root"
       - "--chmod={{item.chmod}}"
-#      - "--checksum"
-#      - "--ignore-times"
   with_items:
     - { "chmod": "D750,F640", "path": "update_service_libs/" }
     - { "chmod": "D750,F750", "path": "update_service_cmds/" }
