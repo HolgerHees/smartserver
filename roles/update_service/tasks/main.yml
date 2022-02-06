@@ -30,15 +30,7 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
   when: "update_service_system_check_enabled|bool"
 
-- name: copy service config
-  template:
-    src: "templates/config.py"
-    dest: "/opt/update_service/config/config.py"
-    owner: root
-    group: root
-    mode: 0750
-
-- name: synchronize tool
+- name: synchronize service
   synchronize:
     src: "templates/opt/{{item.path}}"
     dest: "/opt/update_service/"
@@ -52,15 +44,13 @@
     - { "chmod": "D750,F640", "path": "update_service_libs/" }
     - { "chmod": "D750,F750", "path": "update_service_cmds/" }
 
-- name: copy webui config
+- name: copy service config
   template:
-    src: "templates/config.php"
-    dest: "{{htdocs_path}}update_service/config.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
+    src: "templates/config.py"
+    dest: "/opt/update_service/config/config.py"
+    owner: root
+    group: root
     mode: 0750
-  tags: ['apache_webui_page']
-  when: "update_service_software_check_enabled|bool"
 
 - name: synchronize webui
   synchronize:
@@ -74,6 +64,16 @@
       - "--chmod=D755,F644"
   tags: ['apache_webui_page']
   when: "update_service_system_check_enabled|bool"
+
+- name: copy webui config
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}update_service/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0750
+  tags: ['apache_webui_page']
+  when: "update_service_software_check_enabled|bool"
 
 - name: register webui
   vars:

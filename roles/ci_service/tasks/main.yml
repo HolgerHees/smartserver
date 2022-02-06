@@ -49,15 +49,7 @@
     group: root
     mode: 0750
 
-- name: copy config
-  template:
-    src: "templates/config.py"
-    dest: "/opt/ci_service/config/config.py"
-    owner: root
-    group: root
-    mode: 0750
-
-- name: synchronize tool
+- name: synchronize service
   synchronize:
     src: "templates/opt/{{item.path}}"
     dest: "/opt/ci_service/"
@@ -70,6 +62,14 @@
   with_items:
     - { "chmod": "D750,F640", "path": "ci_service_libs/" }
     - { "chmod": "D750,F750", "path": "ci_service_cmds/" }
+
+- name: copy service config
+  template:
+    src: "templates/config.py"
+    dest: "/opt/ci_service/config/config.py"
+    owner: root
+    group: root
+    mode: 0750
 
 - name: synchronize webui
   synchronize:
