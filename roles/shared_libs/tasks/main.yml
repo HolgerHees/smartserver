@@ -4,27 +4,19 @@
     state: directory
     owner: "{{item.owner}}"
     group: "{{item.group}}"
-    mode: 0750
+    mode: "{{item.mode}}"
   with_items:
-    - {owner: "root", group: "root", path: "/opt/shared/" }
-    - {owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
+    - {mode: "u=rwX,g=rX,o=", owner: "root", group: "root", path: "/opt/shared/" }
+    - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
 
-- name: copy libs
-  copy:
+- name: synchronize libs
+  synchronize:
     src: "templates/libs/shared"
     dest: "/opt/"
-    owner: root
-    group: root
-    mode: "u=rwX,g=rX,o="
-
-# reports every time a change, because of python compilation cache
-#- name: synchronize libs
-#  synchronize:
-#    src: "templates/libs/shared"
-#    dest: "/opt/"
-#    rsync_opts:
-#      - "--chown=root:root"
-#      - "--chmod=D750,F640"
+    archive: no
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
 
 - name: synchronize web libs
   synchronize:

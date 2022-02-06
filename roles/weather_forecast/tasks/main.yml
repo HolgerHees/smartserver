@@ -46,6 +46,7 @@
   synchronize:
     src: "templates/weather_forecast.sql"
     dest: "{{ global_build }}weather_forecast/"
+    archive: no
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=F600"

@@ -23,6 +23,7 @@
   synchronize:
     src: "{{projects_path}}openhab_config/toolbox/environment.php"
     dest: "{{projects_path}}toolbox/_lib/config/environment.php"
+    archive: no
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"

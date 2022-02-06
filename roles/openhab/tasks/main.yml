@@ -178,6 +178,7 @@
   synchronize:
     src: "{{projects_path}}openhab_config/habpanel_panelconfig.json"
     dest: "{{global_lib}}openhab/jsondb/uicomponents_habpanel_panelconfig.json"
+    archive: no
     rsync_opts:
       - "--chown={{openhab_user}}:{{openhab_group}}"
       - "--chmod=F644"

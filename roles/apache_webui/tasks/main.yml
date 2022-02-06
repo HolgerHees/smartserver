@@ -14,6 +14,7 @@
   synchronize:
     src: "templates/htdocs/"
     dest: "{{htdocs_path}}"
+    archive: no
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"

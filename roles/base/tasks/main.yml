@@ -35,9 +35,8 @@
       , wireguard-tools
       
       , curl
-      , lsof
-
       , bzip2
+
       , zip
       , unzip
       , gcc
@@ -71,9 +70,9 @@
       , wireguard-tools
       
       , curl
-      , lsof
-
       , bzip2
+
+      , rsync              
       , zip
       , unzip
       , gcc
@@ -103,9 +102,9 @@
       , wireguard-tools
 
       , curl               # used to fetch e.g. picture of the day
-      , lsof               # used by docker/visualizer
-      
       , bzip2              # used to import databases with bzcat
+
+      , rsync              # used for ansible synchronize
       , zip                # used for ansible unarchive mobule
       , unzip              # used for ansible unarchive mobule
       , gcc                # used for ansible gem module => to build native extension

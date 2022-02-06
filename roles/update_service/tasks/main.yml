@@ -38,30 +38,19 @@
     group: root
     mode: 0750
 
-- name: copy tool
-  copy:
+- name: synchronize tool
+  synchronize:
     src: "templates/opt/{{item.path}}"
     dest: "/opt/update_service/"
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - { "chmod": "u=rwX,g=r,o=", "path": "update_service_libs/" }
-    - { "chmod": "u=rwx,g=rx,o=", "path": "update_service_cmds/" }
-
-# reports every time a change, because of python compilation cache
-#- name: synchronize tool
-#  synchronize:
-#    src: "templates/opt/{{item.path}}"
-#    dest: "/opt/update_service/"
-#    rsync_opts:
-#      - "--chown=root:root"
-#      - "--chmod={{item.chmod}}"
+    archive: no
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod={{item.chmod}}"
 #      - "--checksum"
 #      - "--ignore-times"
-#  with_items:
-#    - { "chmod": "D750,F640", "path": "update_service_libs/" }
-#    - { "chmod": "D750,F750", "path": "update_service_cmds/" }
+  with_items:
+    - { "chmod": "D750,F640", "path": "update_service_libs/" }
+    - { "chmod": "D750,F750", "path": "update_service_cmds/" }
 
 - name: copy webui config
   template:

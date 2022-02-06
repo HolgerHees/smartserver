@@ -115,9 +115,10 @@
   synchronize:
     src: "templates/etc/netdata/"
     dest: "/etc/netdata/"
+    archive: no
     rsync_opts:
       - "--chown=root:root"
-      - "--chmod=D755,F644"
+      - "--chmod=D750,F640"
       
 - name: copy config
   template:

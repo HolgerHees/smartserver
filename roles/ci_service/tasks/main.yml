@@ -57,28 +57,17 @@
     group: root
     mode: 0750
 
-- name: copy tool
-  copy:
+- name: synchronize tool
+  synchronize:
     src: "templates/opt/{{item.path}}"
     dest: "/opt/ci_service/"
-    owner: root
-    group: root
-    mode: 0750
+    archive: no
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod={{item.chmod}}"
   with_items:
-    - { "chmod": "u=rwX,g=r,o=", "path": "ci_service_libs/" }
-    - { "chmod": "u=rwx,g=rx,o=", "path": "ci_service_cmds/" }
-
-# reports every time a change, because of python compilation cache
-#- name: synchronize tool
-#  synchronize:
-#    src: "templates/opt/{{item.path}}"
-#    dest: "/opt/ci_service/"
-#    rsync_opts:
-#      - "--chown=root:root"
-#      - "--chmod={{item.chmod}}"
-#  with_items:
-#    - { "chmod": "D750,F640", "path": "ci_service_libs/" }
-#    - { "chmod": "D750,F750", "path": "ci_service_cmds/" }
+    - { "chmod": "D750,F640", "path": "ci_service_libs/" }
+    - { "chmod": "D750,F750", "path": "ci_service_cmds/" }
 
 - name: synchronize webui
   synchronize:
