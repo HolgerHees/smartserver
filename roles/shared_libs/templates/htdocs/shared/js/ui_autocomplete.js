@@ -45,7 +45,7 @@ mx.Autocomplete = (function( ret ) {
 
         var elementClose = document.createElement("div");
         elementClose.className="close";
-        elementClose.innerHTML = "";
+        elementClose.innerHTML = "✖";
         elementSelection.appendChild(elementClose);
 
         options.elements.selectionLayer.appendChild(elementSelection);

@@ -424,16 +424,16 @@ if( !Auth::hasGroup("admin") )
                 body += "<input name=\"password\" type=\"password\" autocomplete=\"off\"";
                 if( lastDeploymentPassword ) body += " value=\"" + lastDeploymentPassword + "\"";
                 body += ">";
-                body += "<br><input type=\"checkbox\" name=\"remember\"";
+                body += "<div class=\"middle\"><input type=\"checkbox\" id=\"remember\" name=\"remember\"";
                 if( lastDeploymentPassword ) body += " checked";
-                body += "> " + mx.I18N.get("Remember");
+                body += "><label for=\"remember\">" + mx.I18N.get("Remember") + "</label></div>";
                 body += "<div class=\"password hint red\">" + mx.I18N.get("Please enter a password") + "</div>";
                 body += "</div></div>";
             }
             
             if( type == "deployment" && !has_tags )
             {
-                body += "<div class=\"row\"><div>" + mx.I18N.get("Tags") + ":</div><div><div class=\"autoCompletionSelection\"></div><input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation\"><input type=\"checkbox\" name=\"confirm\" checked> " + mx.I18N.get("Mark all changes as deployed") + "</div>";
+                body += "<div class=\"row\"><div>" + mx.I18N.get("Tags") + ":</div><div><div class=\"autoCompletionSelection\"></div><input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation middle\"><input type=\"checkbox\" id=\"confirm\" name=\"confirm\" checked><label for=\"confirm\">" + mx.I18N.get("Mark all changes as deployed") + "</label></div>";
             }
             
             var autocomplete = null;

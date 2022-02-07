@@ -74,6 +74,12 @@ body.dark .form.button:active:not(.disabled) {
     filter: brightness(0.8);
 }
 
+body.dark .form.button.green,
+body.dark .form.button.yellow,
+body.dark .form.button.red {
+    color: var(--light-button-text);
+}
+
 /* TABLE */
 div.form.table {
   border-top: 1px solid #d2d2d2;
@@ -87,6 +93,12 @@ div.form.table > div.row > div:last-child {
 div.form.table > div.row > div {
   border-bottom: 1px solid #d2d2d2;
 } 
+body.dark div.form.table > div.row > div:first-child,
+body.dark div.form.table > div.row > div:last-child,
+body.dark div.form.table > div.row > div,
+body.dark div.form.table {
+  border-color: #8a8c90;
+}
 div.form.table {
   font-size: 16px;
   overflow: auto;
@@ -124,6 +136,11 @@ body.dark div.form.table > div.row > div {
     z-index: 100000;
     justify-content: center;
     align-items: center;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+       -moz-user-select: none; /* Firefox */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
 }
 
 .dialogLayer .box {
@@ -137,6 +154,7 @@ body.dark div.form.table > div.row > div {
 }
 body.dark .dialogLayer .box {
     background-color: var(--dark-bg);
+    border: 1px solid #8a8c90;
 }
 .dialogLayer .box .header {
     font-size: 20px;
@@ -190,6 +208,11 @@ body.dark .dialogLayer .box .body {
 }
 body.dark .autoCompleteLayer {
     background-color: var(--dark-bg);
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-left: 1px solid #8a8c90;
+    border-right: 1px solid #8a8c90;
+    border-bottom: 1px solid #8a8ce0;
 }
 .autoCompleteLayer > div.separator {
     height: 1px;
@@ -229,6 +252,11 @@ body.dark .autoCompleteLayer > div:hover {
     position: relative;
     background-color: #FFF;
     cursor: pointer;
+    line-height: 15px;
+}
+body.dark .autoCompletionSelection > div {
+    background-color: var(--dark-bg);
+    border-color: #d2d2d2;
 }
 .autoCompletionSelection > div > div.value {
     margin-right: 18px;
@@ -242,9 +270,4 @@ body.dark .autoCompleteLayer > div:hover {
     top: 0;
     bottom: 0;
     margin: auto;
-}
-.autoCompletionSelection > div > div.close::before {
-    content: "✖";
-    margin-left: 2px;
-    line-height: 15px;
 }

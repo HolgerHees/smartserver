@@ -123,14 +123,22 @@ body.system div.dialogLayer .confirmDialog .row input:not([type='checkbox']) {
 body.system div.dialogLayer .confirmDialog .row .hint {
   font-size: 14px;
   max-height: 0px;
-  overflow-x: hidden;
+  overflow-y: hidden;
   transition: max-height 0.2s;
+}
+body.system div.dialogLayer .confirmDialog input[type='checkbox'] {
+  margin-left: 0;
+  margin-right: 6px;
 }
 body.system div.dialogLayer .confirmDialog .deployConfirmation 
 {
   position: absolute;
   margin-top: -35px;
-  padding-left: 5px;
+  padding-left:8px;
+}
+body.system div.dialogLayer .confirmDialog .middle {
+  display: flex;
+  align-items: center;
 }
 body.system div.detailView {
   cursor: pointer;
