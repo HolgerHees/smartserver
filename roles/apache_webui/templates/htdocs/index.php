@@ -10,12 +10,12 @@ require "./shared/libs/ressources.php";
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"> 
     <link href="main/manifest.json" rel="manifest">
 
-    <link href="/shared/ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
+    <link href="/shared/ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/shared/css/'); ?>" rel="stylesheet">
     <link href="/ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/main/css/'); ?>" rel="stylesheet">
     
     <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };</script>
     
-    <script src="/shared/ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
+    <script src="/shared/ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/shared/js/'); ?>"></script>
     <script src="/ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/main/js/'); ?>"></script>
     
     <script>
@@ -378,6 +378,8 @@ require "./shared/libs/ressources.php";
             
             function iFrameListenerHandler(event)
             {
+                console.log(event);
+                
                 if( 'type' in event.data && [ 'load', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
                 {
                     var url = event.data['url'];

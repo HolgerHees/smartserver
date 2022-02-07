@@ -2,7 +2,7 @@
 body, body * {
     max-height: 1000000px;
 }
-@media only screen and (max-width: 600px) {
+/*@media only screen and (max-width: 600px) {
     div.header.table.logfileBox:not(.sticky) {
         display: flex;
     }
@@ -14,7 +14,7 @@ body, body * {
     div.header.table.logfileBox:not(.sticky) > div.row > div {
         width: auto;
     }
-}
+}*/
 div.header.table.logfileBox {
     position: sticky;
     top: 0px;

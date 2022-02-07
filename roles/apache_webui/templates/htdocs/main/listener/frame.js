@@ -9,12 +9,12 @@ frameHandler = (function() {
         {
             function postMessage(type)
             {
-                window.top.postMessage({ type: type, url: document.location.href },'https://' + document.domain); 
+                window.top.postMessage({ type: type, url: document.location.href },'https://' + window.top.document.location.host); 
             }
           
             head.setAttribute("frame-initialized", "true");
 
-            if( window.top.location.href.startsWith('https://' + document.domain) )
+            if( window.top.document.domain == document.domain )
             {
                 postMessage("load");
 

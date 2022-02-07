@@ -24,4 +24,4 @@
   retries: 60
   delay: 1
 #  changed_when: "'influxdb.service' not in ansible_facts.services or ansible_facts.services['influxdb.service'].state != 'running'"
-  when: "service_result.rc != 0"
+  changed_when: "service_result.rc != 0"

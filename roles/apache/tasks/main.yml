@@ -106,6 +106,7 @@
     - "{{htdocs_path}}fallback/domain"
     - "{{global_log}}apache2/"
     - "{{global_etc}}apache2/_.ansible.auth/"
+    - "{{global_etc}}apache2/_.ansible.vhost.d/auth/"
 
 - name: check owner and group
   file:
@@ -132,8 +133,8 @@
     - _.ansible.conf.d/public.conf
     - _.ansible.conf.d/options.conf
     - _.ansible.conf.d/ssl.conf
-    - _.ansible.vhost.d/auth_form2.inc
-    - _.ansible.vhost.d/auth_openidc2.inc
+    - _.ansible.vhost.d/auth/form2.inc
+    - _.ansible.vhost.d/auth/openidc2.inc
     - _.ansible.vhost.d/default-ssl.conf
     - _.ansible.server.conf
     - _.ansible.httpd.conf
@@ -149,10 +150,10 @@
   vars:
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
   with_items:
-    - _.ansible.vhost.d/auth_additionals.inc
-    - _.ansible.vhost.d/auth_basic.inc
-    - _.ansible.vhost.d/auth_form1.inc
-    - _.ansible.vhost.d/auth_openidc1.inc
+    - _.ansible.vhost.d/auth/additionals.inc
+    - _.ansible.vhost.d/auth/basic.inc
+    - _.ansible.vhost.d/auth/form1.inc
+    - _.ansible.vhost.d/auth/openidc1.inc
   notify: "restart apache2"
   tags: ['user']
 

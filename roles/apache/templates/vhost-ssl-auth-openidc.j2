@@ -3,6 +3,6 @@
 {% for username in userdata %}{% if usergroup in userdata[username].groups %}
             Require claim email:{{userdata[username].email}}
 {% endif %}{% endfor %}
-            Include /etc/apache2/_.ansible.vhost.d/auth_additionals.inc
+            Include /etc/apache2/_.ansible.vhost.d/auth/additionals.inc
         </RequireAny>
     </Location>
