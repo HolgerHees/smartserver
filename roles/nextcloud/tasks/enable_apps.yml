@@ -100,7 +100,7 @@
       - { app: "onlyoffice", name: "versionHistory", value: "true" }
 #      - { app: "onlyoffice", name: "jwt_secret", value: "{{vault_onlyoffice_shared_key}}" }
 
-      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; var script = document.createElement('script'); script.src = 'https://' + ( ( window.parent != window && window.parent == window.top ) ? window.top.document.location.host : document.domain ) + '/main/listener/frame.js'; document.head.appendChild(script);" }
+      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var script = document.createElement('script'); script.src = 'https://' + window.top.document.location.host + '/main/listener/frame.js'; document.head.appendChild(script); }" }
 
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
