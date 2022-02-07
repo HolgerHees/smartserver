@@ -18,9 +18,12 @@
     "Currently a '{}' is running": "Aktuell läuft ein '{}'",
     "Currently a local started '{}' is running": "Aktuell läuft ein lokaler '{}'",
     "No update process is running": "Aktuell läuft kein Update Prozess",
+
     "Continue": "Weiter",
     "Cancel": "Abbrechen",
     "Are you sure?": "Bist du sicher?",
+    "'{}' disabled, because of a running job": "'{}' deaktiviert weil ein Prozess läuft",
+
     "all outdated roles": "alle veralteten Rollen",
     "You want to <b>redeploy '{}'</b>?": "Du möchtest '{}' neu deployen?",
     "You want to <b>deploy smartserver updates</b>?": "Du möchtest <b>Smartserver Updates deployen</b>?",

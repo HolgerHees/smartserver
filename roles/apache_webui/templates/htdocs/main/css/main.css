@@ -176,6 +176,37 @@ body.dark #side.iframe #header {
 body.dark #side #content #embedProgress svg {
     color: var(--dark-embed-progress);
 }
+#side #content #embedError {
+    height: 100%;
+    width: 100%;
+}
+#side #content #embedError > div {
+    max-width: 600px;
+    margin: auto;
+    margin-top: 10%;
+}
+#side #content #embedError > div > div {
+    margin-bottom: 10px;
+}
+#side #content #embedError .head {
+    font-size: 20px;
+    font-weight: bold;
+}
+#side #content #embedError .info {
+    font-size: 15px;
+}
+
+#side #content #embedError .reason {
+    font-size: 15px;
+}
+#side #content #embedError .reason b {
+    white-space: nowrap;
+}
+#side #content #embedError .actions {
+    display: flex;
+    justify-content: space-between;
+}
+
 #menu #logo {
     margin: 6px 6px 6px 2px;
     background-image:url(/main/img/marvinRightSmall.png);

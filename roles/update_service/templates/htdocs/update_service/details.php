@@ -45,14 +45,13 @@ else
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
-<link rel="stylesheet" href="/main/css/shared_root.css">
-<link rel="stylesheet" href="/main/css/shared_ui.css">
-<link rel="stylesheet" href="/shared/css/logfile.css">
-<link rel="stylesheet" href="/shared/css/logfile_box.css">
+<link rel="stylesheet" href="/shared/css/logfile/logfile.css">
+<link rel="stylesheet" href="/shared/css/logfile/logfile_box.css">
+<link href="/shared/ressources?type=css" rel="stylesheet">
 <link rel="stylesheet" href="../css/core.css">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
-<script src="/ressources?type=js"></script>
-<script src="/shared/js/logfile.js"></script>
+<script src="/shared/ressources?type=js"></script>
+<script src="/shared/js/logfile/logfile.js"></script>
 <script>
 function initPage()
 {

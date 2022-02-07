@@ -2,12 +2,19 @@
 #  debug:
 #    msg: "{{ansible_facts.services[service]}}"
 
-- name: trigger service handler
+- name: check if {{service}} is running
+  shell: "systemctl is-active --quiet {{service}}"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+  
+- name: trigger {{service}} handler
   command: "/bin/true"
-  changed_when: "service not in ansible_facts.services or ansible_facts.services[service].status == 'disabled'"
+#  changed_when: "service not in ansible_facts.services or ansible_facts.services[service].status == 'disabled'"
+  when: "service_result.rc != 0"
   notify: "{{notify}}"
   
-- name: trigger process handler
+- name: trigger {{process}} handler
   shell: "{{process}}"
   register: result
   changed_when: "result.rc == 1"

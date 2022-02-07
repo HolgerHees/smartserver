@@ -1,12 +1,19 @@
-- name: read service facts
-  service_facts:
+#- name: read service facts
+#  service_facts:
 
-- name: check redis is running
+- name: check if redis is running
+  shell: "systemctl is-active --quiet redis"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+  
+- name: start redis
   systemd:
     name: redis
     state: started
     daemon_reload: yes
-  changed_when: "'redis.service' not in ansible_facts.services or ansible_facts.services['redis.service'].state != 'running'"
+#  changed_when: "'redis.service' not in ansible_facts.services or ansible_facts.services['redis.service'].state != 'running'"
+  when: "service_result.rc != 0"
 
 - name: wait for redis to become ready
   shell: "docker exec redis sh -c 'redis-cli'"
@@ -14,4 +21,5 @@
   retries: 12
   delay: 5
   until: "cmd_res.rc == 0 and cmd_res.stdout == ''"
-  changed_when: "'redis.service' not in ansible_facts.services or ansible_facts.services['redis.service'].state != 'running'"
+#  changed_when: "'redis.service' not in ansible_facts.services or ansible_facts.services['redis.service'].state != 'running'"
+  when: "service_result.rc != 0"

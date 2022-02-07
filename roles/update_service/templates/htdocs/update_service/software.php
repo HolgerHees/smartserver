@@ -17,10 +17,10 @@ if( !Auth::hasGroup("admin") )
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
-<link href="/ressources?type=css" rel="stylesheet">
+<link href="/shared/ressources?type=css" rel="stylesheet">
 <link href="../ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="/ressources?type=js"></script>
+<script src="/shared/ressources?type=js"></script>
 <script src="../ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
 <script src="../ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
 </head>

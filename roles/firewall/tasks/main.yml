@@ -32,6 +32,12 @@
     state: present
   when: is_fedora|bool
 
+- name: check firewalld status
+  shell: "systemctl is-active --quiet firewalld || systemctl is-enabled --quiet firewalld"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+  
 - name: disable firewalld
   systemd:
     name: firewalld
@@ -39,7 +45,8 @@
     daemon_reload: no
     enabled: no
     masked: no
-  when: "'firewalld.service' in ansible_facts.services"
+#  when: "'firewalld.service' in ansible_facts.services"
+  when: "service_result.rc == 0"
 
 - name: "clone ferm git"
   git:
@@ -88,10 +95,16 @@
     }
   import_tasks: roles/update_service/tasks/add_software.yml
 
-- name: trigger ferm handler
-  command: "/bin/true"
-  changed_when: "'ferm.service' not in ansible_facts.services or ansible_facts.services['ferm.service'].status == 'disabled'"
-  notify: "restart ferm"
+#- name: trigger ferm handler
+#  command: "/bin/true"
+#  changed_when: "'ferm.service' not in ansible_facts.services or ansible_facts.services['ferm.service'].status == 'disabled'"
+#  notify: "restart ferm"
+  
+- name: trigger ci_service handler
+  vars:
+    notify: "restart ferm"
+    service: "ferm.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
  
 # nftables rule to filter fritzbox homeplug broadcasts
 #table netdev filter {

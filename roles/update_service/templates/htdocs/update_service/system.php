@@ -19,12 +19,12 @@ if( !Auth::hasGroup("admin") )
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
-<link rel="stylesheet" href="/shared/css/logfile_box.css">
-<link href="/ressources?type=css" rel="stylesheet">
+<link rel="stylesheet" href="/shared/css/logfile/logfile_box.css">
+<link href="/shared/ressources?type=css" rel="stylesheet">
 <link href="../ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="/ressources?type=js"></script>
-<script src="/shared/js/logfile.js"></script>
+<script src="/shared/ressources?type=js"></script>
+<script src="/shared/js/logfile/logfile.js"></script>
 <script src="../ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
 <script src="../ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
 </head>
@@ -226,9 +226,24 @@ if( !Auth::hasGroup("admin") )
            
             if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
                  
+            if( dialog != null && dialog.getId() != "killProcess" ) 
+            { 
+                if( job_is_running )
+                {
+                    let msg = mx.I18N.get("'{}' disabled, because of a running job");
+                    msg = msg.fill(dialog.getElement(".continue").innerHTML);
+                    dialog.setInfo(msg);
+                    dialog.setActionDisabled(".continue",true);
+                }
+                else
+                {
+                    dialog.setInfo("");
+                    dialog.setActionDisabled(".continue",false);
+                }
+            }
+            
             if( job_is_running )
             {
-                if( dialog != null && dialog.getId() != "killProcess" ) dialogClose();
                 mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? "restart": "kill");
             }
             else
@@ -341,12 +356,14 @@ if( !Auth::hasGroup("admin") )
             
             if( confirm )
             {
+                let cls = [ "continue" ];
+                if( button_color ) cls.push(button_color);
                 dialog = mx.Dialog.init({
                     id: action,
                     title: mx.I18N.get("Are you sure?"),
                     body: confirm,
                     buttons: [
-                        { "text": mx.I18N.get("Continue"), "class": button_color, "callback": function(){ dialogClose(); if( confirmed_callback ){ confirmed_callback(); } runAction(btn, action, parameter, response_callback); } },
+                        { "text": mx.I18N.get("Continue"), "class": cls, "callback": function(){ dialogClose(); if( confirmed_callback ){ confirmed_callback(); } runAction(btn, action, parameter, response_callback); } },
                         { "text": mx.I18N.get("Cancel"), "callback": dialogClose },
                     ],
                     class: "confirmDialog",
@@ -424,7 +441,7 @@ if( !Auth::hasGroup("admin") )
                 title: mx.I18N.get("Are you sure?"),
                 body: body,
                 buttons: [
-                    { "text": mx.I18N.get("Continue"), "class": "green", "callback": function(){ 
+                    { "text": mx.I18N.get("Continue"), "class": [ "continue", "green" ], "callback": function(){ 
                         let hasErrors = false;
                         
                         parameter = {};
@@ -437,7 +454,7 @@ if( !Auth::hasGroup("admin") )
                             }
                             else
                             {
-                                passwordHint.style.maxHeight = 0;
+                                passwordHint.style.maxHeight = "";
                                 parameter["password"] = passwordField.value;
                                 if( passwordRemember.checked ) sessionStorage.setItem("lastDeploymentPassword", passwordField.value);
                                 else sessionStorage.removeItem("lastDeploymentPassword");
@@ -464,7 +481,7 @@ if( !Auth::hasGroup("admin") )
                                 }
                                 else
                                 {
-                                    tagHint.style.maxHeight = 0;
+                                    tagHint.style.maxHeight = "";
                                     localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
                                     parameter["tags"] = selectedTagsAsString;
                                     parameter["confirm"] = confirmField.checked;
@@ -486,15 +503,15 @@ if( !Auth::hasGroup("admin") )
             });
             dialog.open();
             
-            passwordField = dialog.getBody().querySelector("input[name=\"password\"]");
-            passwordRemember = dialog.getBody().querySelector("input[name=\"remember\"]");
-            passwordHint = dialog.getBody().querySelector(".password.hint");
+            passwordField = dialog.getElement("input[name=\"password\"]");
+            passwordRemember = dialog.getElement("input[name=\"remember\"]");
+            passwordHint = dialog.getElement(".password.hint");
             
             if( type == "deployment" && !has_tags )
             {
-                tagField = dialog.getBody().querySelector("input[name=\"tag\"]");
-                tagHint = dialog.getBody().querySelector(".tag.hint");
-                confirmField = dialog.getBody().querySelector("input[name=\"confirm\"]");    
+                tagField = dialog.getElement("input[name=\"tag\"]");
+                tagHint = dialog.getElement(".tag.hint");
+                confirmField = dialog.getElement("input[name=\"confirm\"]");    
 
                 var lastSelectedTags = localStorage.getItem("lastSelectedDeploymentTags");
                 
@@ -507,7 +524,7 @@ if( !Auth::hasGroup("admin") )
                         selectionLayer: ".autoCompletionSelection"
                     }
                 });
-                dialog.getRootLayer().addEventListener("destroy",autocomplete.destroy);
+                dialog.addEventListener("destroy",autocomplete.destroy);
                 
                 confirmField.disabled = true;
                 

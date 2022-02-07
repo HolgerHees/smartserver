@@ -1,7 +1,20 @@
-- name: check started docker
+- name: check if docker is running
+  shell: "systemctl is-active --quiet docker"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+
+- name: start docker
   systemd:
     name: docker
     state: started
+    daemon_reload: yes
+  when: "service_result.rc != 0"
+  
+#- name: check started docker
+#  systemd:
+#    name: docker
+#    state: started
     
 - name: prepare build folder
   file:

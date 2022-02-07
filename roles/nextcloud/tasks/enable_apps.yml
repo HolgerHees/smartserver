@@ -49,16 +49,22 @@
 - name: check available app updates
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --showonly\""
   changed_when: no
-  register: app_update_result
+  register: app_update_available_result
   
-- name: show available app updates
-  debug:
-    msg: "{{app_update_result}}"
+#- name: show available app updates
+#  debug:
+#    msg: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}\""
+#  with_items: "{{app_update_available_result.stdout_lines}}"
 
-#- name: update apps
-#  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --all\""
-#  register: app_update_result
-#  changed_when: "'updated' in app_update_result.stdout"
+- name: update apps
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update {{item.split()[0]}}\""
+  register: app_update_process_result
+  changed_when: "'updated' in app_update_process_result.stdout"
+  with_items: "{{app_update_available_result.stdout_lines}}"
+
+#- name: show available app updates
+#  debug:
+#    msg: "{{app_update_process_result}}"
 
 # ***** CONFIGURE apps *****
 - name: read app configs

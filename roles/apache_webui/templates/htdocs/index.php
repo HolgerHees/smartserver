@@ -10,11 +10,13 @@ require "./shared/libs/ressources.php";
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"> 
     <link href="main/manifest.json" rel="manifest">
 
-    <link href="ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/main/css/'); ?>" rel="stylesheet">
+    <link href="/shared/ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
+    <link href="/ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/main/css/'); ?>" rel="stylesheet">
     
     <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };</script>
     
-    <script src="ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/main/js/'); ?>"></script>
+    <script src="/shared/ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
+    <script src="/ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/main/js/'); ?>"></script>
     
     <script>
 <?php
@@ -326,37 +328,10 @@ require "./shared/libs/ressources.php";
             var inlineElement = null;
             var iframeElement = null;
             var iframeProgressElement = null;
+            var iframeErrorElement = null;
             
             var iframeLoadingTimer = null;
-            
-            function iFrameLoadHandler(e)
-            {
-                try
-                {
-                    var url = e.target.contentWindow.location.href;
-                    if( url == 'about:blank' && history.state && history.state["entryId"] )
-                    {
-                        console.log(" ADDITIONAL POP");
-                        history.back();
-                    }
-                }
-                catch{}
-            }
-            
-            window.addEventListener("message", (event) => {
-                if( 'type' in event.data && [ 'load', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
-                {
-                    var url = event.data['url'];
-                    url = url.split(':',2)[1];
-                    if( url.indexOf("//" + window.location.host ) == 0 ) url = url.substr(window.location.host.length+2);
-                    loadHandler(url,event.data['type']);
-                }
-                else
-                {
-                    console.err("Wrong message" );
-                }
-            });
-            
+                                  
             function loadHandler(url,type)
             {
                 /*if( type == 'replaceState' )
@@ -380,7 +355,7 @@ require "./shared/libs/ressources.php";
                         }
                         else
                         {
-                            console.err("Should not happen " + entry.getId() );
+                            console.error("Should not happen " + entry.getId() );
                         }
                     }
                     else
@@ -396,11 +371,44 @@ require "./shared/libs/ressources.php";
                 }
                 else
                 {
-                    console.err("iFrameLoadHandler: MATCHING HISTORY NOT FOUND");
+                    console.error("iFrameLoadHandler: MATCHING HISTORY NOT FOUND");
                 }
                 
             }
             
+            function iFrameListenerHandler(event)
+            {
+                if( 'type' in event.data && [ 'load', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
+                {
+                    var url = event.data['url'];
+                    url = url.split(':',2)[1];
+                    if( url.indexOf("//" + window.location.host ) == 0 ) url = url.substr(window.location.host.length+2);
+                    loadHandler(url,event.data['type']);
+                }
+                else
+                {
+                    console.error("Wrong message" );
+                }
+                //console.log("iFrameListenerHandler");
+            }
+            
+            function iFrameLoadHandler(e)
+            {
+                //console.log("iFrameLoadHandler");
+                try
+                {
+                    //console.log("iframe loaded");
+                    var url = e.target.contentWindow.location.href;
+                    if( url == 'about:blank' && history.state && history.state["entryId"] )
+                    {
+                        console.log(" ADDITIONAL POP");
+                        history.back();
+                    }
+                    //console.log("showIFrame 2");
+                }
+                catch {}
+            }
+
             function clearIFrameTimer()
             {
                 if( iframeLoadingTimer ) 
@@ -412,7 +420,7 @@ require "./shared/libs/ressources.php";
             
             function setIFrameUrl(url)
             {
-                if( iframeElement.getAttribute("url") != url )
+                if( iframeElement.getAttribute("src") != url )
                 {
                     iframeElement.setAttribute('src', url );
 
@@ -420,10 +428,32 @@ require "./shared/libs/ressources.php";
                     
                     // is needed to show iframe content in case of a loading error.
                     // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
-                    iframeLoadingTimer = setTimeout(function(){ showIFrame(); },10000);
-
+                    iframeLoadingTimer = setTimeout(function(){ 
+                      try
+                      {
+                          let url = iframeElement.contentWindow.location.href;
+                          loadHandler(url,"fallback");
+                      }
+                      catch {
+                          showIFrameError(); 
+                      }
+                    },10000);
+                    
                     hideMenu();
                 }
+            }
+            
+            function hideIFrameError()
+            {
+                iframeErrorElement.style.display = "none";
+                iframeElement.style.display = "";
+                window.setTimeout(function(){ iframeElement.style.opacity = 1; }, 0);
+            }
+            
+            function showIFrameError()
+            {
+                iframeProgressElement.style.display = "none";
+                iframeErrorElement.style.display = "";
             }
             
             function showIFrame()
@@ -544,6 +574,17 @@ require "./shared/libs/ressources.php";
                 }
             }
 
+            ret.hideErrorLayer = function()
+            {
+                hideIFrameError();
+            }
+            
+            ret.openFrameInNewWindow = function()
+            {
+                var win = window.open(iframeElement.getAttribute("src"), '_blank');
+                win.focus();
+            }
+            
             ret.openUrl = function(url)
             {
                 setIFrameUrl(url);
@@ -660,9 +701,12 @@ require "./shared/libs/ressources.php";
                 inlineElement = mx.$("#content #inline");
                 
                 iframeProgressElement = mx.$("#content #embedProgress");
+                iframeErrorElement = mx.$("#content #embedError");
 
                 iframeElement = mx.$("#content #embed");
-                iframeElement.addEventListener('load', iFrameLoadHandler);    
+                iframeElement.addEventListener('load', iFrameLoadHandler);                
+                
+                window.addEventListener("message", iFrameListenerHandler);
             }
 
             return ret;
@@ -973,6 +1017,28 @@ require "./shared/libs/ressources.php";
                 <div id="submenu"></div>
             </div>
             <iframe id="embed" frameborder="0" style="display:none"></iframe>
+            <div id="embedError" style="display:none">
+              <div>
+                <div class="head" data-i18n="There was a problem loading the content"></div>
+                <div class="info" data-i18n="This can have several reasons"></div>
+                <div class="reason">
+                  <div>•</div>
+                  <div>
+                    <div data-i18n="The application to be loaded had a problem."></div>
+                    <div data-i18n="You can click <b onclick='mx.Actions.hideErrorLayer()'>'Show anyway'</b> to continue."></div>
+                  </div>
+                </div>
+                <div class="reason">
+                  <div>•</div>
+                  <div>
+                    <div data-i18n="The subdomain's SSL certificate was not accepted."></div>
+                    <div data-i18n="Simply click <b onclick='mx.Actions.openFrameInNewWindow()'>'Open in a new window'</b> and confirm the certificate there."></div>
+                  </div>
+                </div>
+                <div class="info" data-i18n="You can now do the following things"></div>
+                <div class="actions" ><div class="form button" onClick="mx.Actions.hideErrorLayer()" data-i18n="Show anyway"></div><div class="form button" onClick="mx.Actions.openFrameInNewWindow()" data-i18n="Open in new window"></div></div>
+              </div>
+            </div>
             <div id="embedProgress" style="display:none">
                 <svg x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve"><use href="#progress" /></svg>
             </div>

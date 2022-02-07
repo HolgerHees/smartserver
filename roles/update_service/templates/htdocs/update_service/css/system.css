@@ -78,18 +78,20 @@ body.system div.info .sub {
 body.system div.form.button {
   margin-left: 5px;
   white-space: nowrap;
-  color: var(--light-button-text);
 }
 body.system div.buttons {
   white-space: nowrap;
 }
-body.system .green {
+body.system .hint.green,
+body.system .info.green {
     color: var(--color-green);
 }
-body.system .yellow {
+body.system .hint.yellow,
+body.system .info.yellow {
     color: var(--color-yellow);
 }
-body.system .red {
+body.system .hint.red,
+body.system .info.red {
     color: var(--color-red);
 }
 body.system div.list.form.table {
