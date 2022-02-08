@@ -25,11 +25,11 @@ class FileWatcher(pyinotify.ProcessEvent):
         
     def notifyListener(self, event):
         if self.callback:
-            self.logger.info("Notify listener of '{}' - '{}'".format(event["path"],event["mask"]))
+            self.logger.info("Notify listener of '{}' - '{}'".format(event["path"],event["maskname"]))
             self.callback(event)
 
     def process_default(self, event):
-        print(event)
+        #self.logger.info(event)
       
         if event.path in self.watched_parents:
             if event.mask & pyinotify.IN_DELETE:
@@ -39,17 +39,17 @@ class FileWatcher(pyinotify.ProcessEvent):
                     self.logger.info("New path '{}' watched".format(event.pathname))
                     self.addPath(event.pathname)
                     if not event.dir:
-                        self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE })
+                        self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE, "maskname": "IN_CLOSE_WRITE" })
 
         elif event.path in self.watched_directories:
             if event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE ):
                 self.modified_time[event.path] = datetime.timestamp(datetime.now())
-                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask })
+                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname })
       
         elif event.path in self.watched_files:
             if event.mask & pyinotify.IN_CLOSE_WRITE:
                 self.modified_time[event.path] = datetime.timestamp(datetime.now())
-                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask })
+                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname })
             else:
                 pass
         

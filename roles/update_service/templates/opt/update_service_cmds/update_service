@@ -54,7 +54,7 @@ MAX_DAEMON_RESTART_TIME = 30
 MAX_SYSTEM_REBOOT_TIME = 600
 
 MIN_PROCESS_INACTIVITY_TIME = 30
-MAX_STARTUP_WAITING_TIME = 180
+MAX_STARTUP_WAITING_TIME = 300
 
 app = Flask(__name__)
  
@@ -301,14 +301,17 @@ class Handler(Server):
             can_proceed = False
             waiting_start = datetime.timestamp(datetime.now())
             last_seen_cmd_type = waiting_start
+            last_cmd_type = None
             while True:
                 now = datetime.timestamp(datetime.now())
                 waiting_time = round(now - waiting_start)
                 inactivity_time = now - last_seen_cmd_type
 
                 if waiting_time % 2 == 0:
-                    if self.cmd_executer.isExternalProcessRunning():
+                    active_cmd_type = self.cmd_executer.getActiveCmdType()
+                    if active_cmd_type != None:
                         last_seen_cmd_type = now
+                        last_cmd_type = active_cmd_type
 
                     if inactivity_time > min_inactivity_time:
                         can_proceed = True
@@ -316,11 +319,16 @@ class Handler(Server):
 
                     if waiting_time > max_waiting_time:
                         lf.getFile().write("\n")
-                        lf.write("Not able to proceed. There are still an '{}' running\n".format(self.cmd_executer.getActiveCmdType()))
+                        lf.write("Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
                         break
                   
                 if waiting_time % 15 == 0:
-                    self.logger.info("Waiting for process inactivity. [Inactive: {} sec (min: {}), Waiting: {} secs (max: {}]".format(round(inactivity_time),min_inactivity_time,round(waiting_time),max_waiting_time))
+                    if last_cmd_type != None:
+                        cmd_msg = " Last run of '{}' {}s ago.".format(last_cmd_type,round(inactivity_time))
+                    else:
+                        cmd_msg = ""
+                  
+                    self.logger.info("Waiting for 30s of inactivity.{} Waiting since {}s".format(cmd_msg,round(waiting_time)))
                     
                 time.sleep(1)
 

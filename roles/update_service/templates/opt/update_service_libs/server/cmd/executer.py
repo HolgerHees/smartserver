@@ -82,14 +82,11 @@ class CmdExecuter:
         return self.current_cmd_type
       
     def isRunning(self):
-        return self.isDaemonJobRunning() or self.isExternalProcessRunning()
+        return self.isDaemonJobRunning() or self.getActiveCmdType() != None
       
     def isDaemonJobRunning(self):
         return self.current_child != None
       
-    def isExternalProcessRunning(self):
-        return self.getActiveCmdType() != None
-
     def isKilledJob(self):
         return self.killed_job
       
