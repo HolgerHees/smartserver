@@ -102,15 +102,15 @@ class HttpResponse
     
     public static function throwForbidden()
     {
-        header('HTTP/1.0 403 Forbidden');
+        header('HTTP/1.0 403 ' . HttpResponse::getStatusReason(403));
         echo 'You are forbidden!';
         exit;
     }
 
     public static function throwNotFound()
     {
-        header('HTTP/1.0 403 Forbidden');
-        echo 'You are forbidden!';
+        header('HTTP/1.0 404 ' . HttpResponse::getStatusReason(404));
+        echo 'Not found!';
         exit;
     }
 }

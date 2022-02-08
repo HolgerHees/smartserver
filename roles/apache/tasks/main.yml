@@ -161,6 +161,8 @@
     dest: "{{htdocs_path}}"
     archive: no
     checksum: yes
+    group: yes
+    perms: yes
     recursive: yes
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"

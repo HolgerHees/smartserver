@@ -1,12 +1,12 @@
 <?php
 require "../shared/libs/logfile.php";
+require "../shared/libs/http.php";
+require "../shared/libs/auth.php";
+require "../shared/libs/ressources.php";
 
 require "inc/job.php";
 require "inc/job_template.php";
 require "config.php";
-
-require "../shared/libs/http.php";
-require "../shared/libs/auth.php";
 
 if( !Auth::hasGroup("admin") )
 {
@@ -45,12 +45,12 @@ else
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
+<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/logfile/logfile.css">
 <link rel="stylesheet" href="/shared/css/logfile/logfile_box.css">
-<link href="/shared/ressources?type=css" rel="stylesheet">
 <link rel="stylesheet" href="../css/core.css">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
-<script src="/shared/ressources?type=js"></script>
+<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
 <script src="/shared/js/logfile/logfile.js"></script>
 <script src="../js/core.js"></script>
 <script>

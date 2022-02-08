@@ -117,6 +117,8 @@
     dest: "/etc/netdata/"
     archive: no
     checksum: yes
+    group: yes
+    perms: yes
     recursive: yes
     rsync_opts:
       - "--chown=root:root"

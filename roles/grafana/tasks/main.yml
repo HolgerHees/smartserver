@@ -28,6 +28,8 @@
     dest: "{{ global_lib }}grafana/dashboards/"
     archive: no
     checksum: yes
+    group: yes
+    perms: yes
     recursive: yes
     rsync_opts:
       - "--chown=root:root"
@@ -46,6 +48,8 @@
     dest: "{{ global_lib }}grafana/dashboards/"
     archive: no
     checksum: yes
+    group: yes
+    perms: yes
     recursive: yes
     rsync_opts:
       - "--chown=root:root"

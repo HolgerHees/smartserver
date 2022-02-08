@@ -55,10 +55,11 @@ class ProcessWatcher():
                         break
                       
         services = []
-        for line in self.outdated_processes:
-            if not line["service"]:
+        for index in self.outdated_processes:
+            service = self.outdated_processes[index]["service"]
+            if not service:
                 continue
-            services.append(line["service"])
+            services.append(service)
         self.outdated_services = services
         
         self.is_reboot_needed = is_reboot_needed

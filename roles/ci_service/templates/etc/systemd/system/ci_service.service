@@ -1,5 +1,7 @@
 [Unit]
 Description=ci_service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 TimeoutStartSec=0

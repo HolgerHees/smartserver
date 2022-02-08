@@ -316,7 +316,7 @@ class Handler(Server):
 
                     if waiting_time > max_waiting_time:
                         lf.getFile().write("\n")
-                        lf.write("Not able to proceed. There are still some processed running\n")
+                        lf.write("Not able to proceed. There are still an '{}' running\n".format(self.cmd_executer.getActiveCmdType()))
                         break
                   
                 if waiting_time % 15 == 0:

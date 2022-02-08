@@ -135,7 +135,7 @@
   with_items:
     - { mode: "u=rwx,g=rx,o=", path: "/etc/docker/" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/docker" }
-    - { mode: "u=rwx,g=rx,o=", path: "/opt/docker/lib" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/docker/config" }
     - { mode: "u=rwx,g=x,o=", path: "{{global_lib}}docker" }
 
 - name: set docker selinux configuration => is_fedora
@@ -173,15 +173,17 @@
     dest: "/opt/"
     archive: no
     checksum: yes
+    group: yes
+    perms: yes
     recursive: yes
     rsync_opts:
       - "--chown=root:root"
-      - "--chmod=D750,F640"
+      - "--chmod=D750,F750"
 
 - name: copy docker tools config
   template:
     src: "templates/config.py"
-    dest: "/opt/docker/lib/config.py"
+    dest: "/opt/docker/config/config.py"
     owner: root
     group: root
     mode: 0700

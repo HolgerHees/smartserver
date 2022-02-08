@@ -17,12 +17,12 @@ if( !Auth::hasGroup("admin") )
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/main/fonts/css/animation.css">
 <link rel="stylesheet" href="/main/fonts/css/fontello.css">
-<link href="/shared/ressources?type=css" rel="stylesheet">
-<link href="../ressources?type=css&version=<?php echo Ressources::getCSSVersion(__DIR__.'/css/'); ?>" rel="stylesheet">
+<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
+<link href="<?php echo Ressources::getCSSPath('/update_service/'); ?>" rel="stylesheet">
 <script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="/shared/ressources?type=js"></script>
-<script src="../ressources?type=components&version=<?php echo Ressources::getComponentVersion(__DIR__.'/components/'); ?>"></script>
-<script src="../ressources?type=js&version=<?php echo Ressources::getJSVersion(__DIR__.'/js/'); ?>"></script>
+<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
+<script src="<?php echo Ressources::getComponentPath('/update_service/'); ?>"></script>
+<script src="<?php echo Ressources::getJSPath('/update_service/'); ?>"></script>
 </head>
 <body class="inline software">
 <script>
@@ -84,7 +84,7 @@ mx.SNCore = (function( ret ) {
             }
             else
             {
-                mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
+                if( this.status != 0 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, 15000);
             }
         };
