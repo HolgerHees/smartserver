@@ -404,16 +404,16 @@ if( !Auth::hasGroup("admin") )
                 if( has_tags )
                 {
                     var msg = args["tags"].indexOf(',') != -1 ? mx.I18N.get('all outdated roles') : args["tags"];
-                    body += mx.I18N.get("You want to <b>redeploy '{}'</b>?").fill(msg);            
+                    body += mx.I18N.get("You want to <span class='important'>redeploy '{}'</span>?").fill(msg);            
                 }
                 else
                 {
-                    body += mx.I18N.get("You want to <b>deploy smartserver updates</b>?");            
+                    body += mx.I18N.get("You want to <span class='important'>deploy smartserver updates</span>?");            
                 }
             }
             else
             {
-                body += mx.I18N.get("You want to <b>update everything</b>?");            
+                body += mx.I18N.get("You want to <span class='important'>update everything</span>?<span class='spacer'></span>This includes <span class='important'>a system restart</span>, if necessary.");            
             }
             body += "<br><br><div class=\"form table\">";
             if( hasEncryptedVault )
@@ -595,23 +595,23 @@ if( !Auth::hasGroup("admin") )
         
         ret.actionRebootSystem = function(btn)
         {
-            confirmAction(btn,'systemReboot',null,mx.I18N.get("You want to <b>reboot your system</b>?"),"red");          
+            confirmAction(btn,'systemReboot',null,mx.I18N.get("You want to <span class='important'>reboot your system</span>?"),"red");          
         }
         
         ret.actionRestartServices = function(btn)
         {
             var service = btn.dataset.service;
             var msg = service.indexOf(',') != -1 ? mx.I18N.get("all outdated services") : service;
-            confirmAction(btn,'restartService',{'service': service}, mx.I18N.get("You want to <b>restart '{}'</b>?").fill(msg),"yellow");
+            confirmAction(btn,'restartService',{'service': service}, mx.I18N.get("You want to <span class='important'>restart '{}'</span>?").fill(msg),"yellow");
         }
         
         ret.actionInstallUpdates = function(btn)
         { 
-            confirmAction(btn,'installSystemUpdates',null,mx.I18N.get("You want to <b>install system updates<b>?"),"green");          
+            confirmAction(btn,'installSystemUpdates',null,mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
         }
         
         ret.actionRefreshState = function(btn)
-        {
+        { 
             confirmAction(btn,'refreshSystemUpdateCheck');
         }
         
@@ -622,10 +622,10 @@ if( !Auth::hasGroup("admin") )
 
         ret.actionRestartDaemon = function(btn)
         {
-            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red",null, mx.UpdateServiceHelper.announceRestart );
+            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <span class='important'>restart update daemon</span>?"),"red",null, mx.UpdateServiceHelper.announceRestart );
             /*, function(response){
             window.clearTimeout(refreshDaemonStateTimer);
-            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <b>restart update daemon</b>?"),"red", function(response){
+            confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <span class='important'>restart update daemon</span>?"),"red", function(response){
                 mx.UpdateServiceHelper.setExclusiveButtonsState(false,null)
                 window.setTimeout(function(){ refreshDaemonState(null); },2000);
             });*/

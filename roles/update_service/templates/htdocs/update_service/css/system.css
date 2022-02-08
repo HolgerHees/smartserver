@@ -140,6 +140,13 @@ body.system div.dialogLayer .confirmDialog .middle {
   display: flex;
   align-items: center;
 }
+body.system div.dialogLayer .important {
+  font-weight: 600;
+}
+body.system div.dialogLayer .spacer {
+  display: block;
+  margin: 5px 0 0 0;
+}
 body.system div.detailView {
   cursor: pointer;
   display: inline-block;
