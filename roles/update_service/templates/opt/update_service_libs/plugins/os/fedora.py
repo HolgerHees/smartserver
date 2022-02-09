@@ -74,11 +74,41 @@ class Repository(Os):
     #    return current_version
       
     def __initSystemState__(self):
-        result = subprocess.run([ "/usr/bin/needrestart -r i" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        result.stdout.decode("utf-8").strip().split("\n")
-        self.needs_restart = False
-        self.outdated = []
+        '''
+        Core libraries or services have been updated since boot-up:
+          * glibc
+          * linux-firmware
+          * systemd
 
+        Reboot is required to fully utilize these updates.
+        More information: https://access.redhat.com/solutions/27943
+        '''
+        result = subprocess.run([ "/usr/bin/needs-restarting -r" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        self.needs_restart = result.returncode == 1
+
+        '''needs-restarting
+        2438 : /usr/libexec/hald-addon-generic-backlight
+        2458 : hald-addon-storage: polling /dev/sr0 (every 2 sec)
+        2847 : xinetd-stayalive-pidfile/var/run/xinetd.pid
+        2457 : hald-addon-acpi: listening on acpid socket /var/run/acpid.socket
+        2452 : hald-addon-input: Listening on /dev/input/event7 /dev/input/event0 /dev/input/event2 /dev/input/event1
+        27729 : rpc.statd'''
+        #result = subprocess.run([ "/usr/bin/needs-restarting" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        #result.stdout.decode("utf-8").strip()
+        #lines = result.split("\n")
+        #outdated = []
+        #for line in lines:
+        #    if "|" not in line:
+        #        continue
+        #    columns = line.split(":")
+        #    columns = [ele.strip() for ele in columns]
+        #    if not columns[0].isnumeric():
+        #        continue
+            
+        #    outdated.append({"pid": columns[0], "ppid": None, "uid": None, "user": None, "command": columns[1], "service": None})
+        #self.outdated = outdated
+        self.outdated = []
+        
     def getOutdatedProcesses(self):
         if self.outdated is None:
             self.__initSystemState__()

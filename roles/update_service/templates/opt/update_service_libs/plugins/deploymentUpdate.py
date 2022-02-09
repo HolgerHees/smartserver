@@ -5,7 +5,6 @@ import re
 import sys
 
 from datetime import datetime, timezone
-from dateutil import parser
 from collections import Counter
 
 sys.path.insert(0, "/opt/shared/python")

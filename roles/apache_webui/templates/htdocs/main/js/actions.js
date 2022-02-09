@@ -97,14 +97,12 @@ mx.Actions = (function( ret ) {
     {
         if( iframeElement.getAttribute("src") != url )
         {
-            
             hideIFrame(true);
-            
-            iframeElement.setAttribute('src', url );
-            
             hideIFrameError();
             showProgress();
             
+            iframeElement.setAttribute('src', url );
+
             // is needed to show iframe content in case of a loading error.
             // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
             iframeLoadingTimer = setTimeout(function(){ 
@@ -120,6 +118,11 @@ mx.Actions = (function( ret ) {
             
             hideMenu();
         }
+    }
+
+    function removeIFrameUrl()
+    {
+        iframeElement.removeAttribute('src');
     }
     
     function showIFrameError()
@@ -166,7 +169,6 @@ mx.Actions = (function( ret ) {
     function hideIFrame(immediately)
     {
         clearIFrameTimer();
-        iframeElement.removeAttribute('src');
             
         if( iframeElement.style.display == "" )
         {
@@ -234,8 +236,9 @@ mx.Actions = (function( ret ) {
 
         }
 
-        hideIFrameError();
+        removeIFrameUrl();
         hideIFrame();
+        hideIFrameError();
         hideProgress();
     }
     

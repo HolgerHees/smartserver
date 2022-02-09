@@ -1,6 +1,7 @@
 import requests
 import json
-from dateutil import parser
+from datetime import datetime
+
 
 class GitHub():
     @staticmethod
@@ -21,8 +22,8 @@ class GitHub():
         #print(len(json_result))
         states = {}
         for build_state in json_result:
-            created_at = parser.parse(build_state["created_at"])
-            
+            created_at = datetime.strptime(build_state["created_at"].replace("Z","+0000"),"%Y-%m-%dT%H:%M:%S%z")
+                     
             if build_state["context"] in states:
                 if states[build_state["context"]][0] < created_at:
                     states[build_state["context"]] = [created_at, build_state["state"]]
