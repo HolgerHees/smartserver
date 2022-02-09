@@ -36,6 +36,7 @@
       
       , curl
       , bzip2
+      , lsof
 
       , zip
       , unzip
@@ -71,6 +72,7 @@
       
       , curl
       , bzip2
+      , lsof
 
       , rsync              
       , zip
@@ -103,6 +105,7 @@
 
       , curl               # used to fetch e.g. picture of the day
       , bzip2              # used to import databases with bzcat
+      , lsof               # used by container visualizer cli & update_service (only fedora) check
 
       , rsync              # used for ansible synchronize
       , zip                # used for ansible unarchive mobule

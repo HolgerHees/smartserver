@@ -91,7 +91,7 @@ class ProcessWatcher():
                     #self.logger.info("wakeup")
           
     def getProcesslist(self):
-        result = subprocess.run([ "ps", "-xo", "pid,ppid" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+        result = subprocess.run([ "ps", "-axo", "pid,ppid" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
         result = result.stdout.decode("utf-8")
         lines = result.split("\n")
         result = {}

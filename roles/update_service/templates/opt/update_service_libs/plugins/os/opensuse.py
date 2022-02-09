@@ -24,7 +24,6 @@ class Repository(Os):
         return [r"^wicked.*$"]
 
     def getUpdates(self):
-        # get updates
         result = subprocess.run([ "/usr/bin/zypper list-updates" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         lines = result.stdout.decode("utf-8").strip().split("\n")
         lines = reversed(lines)
@@ -38,23 +37,6 @@ class Repository(Os):
 
         return updates
           
-    #def getLastUpdate(self):
-    #    # get last update
-    #    current_version = ""
-    #    with open("/var/log/zypp/history") as f:
-    #        lines = f.readlines()
-    #        lines = reversed(lines)
-    #        for line in lines:
-    #            if line.startswith("#"):
-    #                continue;
-
-    #            columns = line.split("|")
-    #            date = datetime.strptime(columns[0], self.HISTORY_FORMAT)
-    #            self.current_version = date.strftime(self.VERSION_FORMAT)
-    #            break
-
-    #    return current_version
-
     def __initSystemState__(self):
         result = subprocess.run([ "/usr/bin/zypper ps -s" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         result = result.stdout.decode("utf-8").strip()

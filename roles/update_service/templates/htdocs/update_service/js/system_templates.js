@@ -187,10 +187,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
             detailsMsg = "<div class=\"row\">";
             
             let update = changed_data["system_updates"][0];
+            let has_current = update["current"] != null;
+            
             detailsMsg += "<div>" + mx.I18N.get("Name") + "</div>";
-            if( update.hasOwnProperty("current") ) detailsMsg += "<div>" + mx.I18N.get("Current") + "</div>";
+            if( has_current ) detailsMsg += "<div>" + mx.I18N.get("Current") + "</div>";
             detailsMsg += "<div class=\"grow\">" + mx.I18N.get("Update") + "</div>";
-            if( update.hasOwnProperty("arch") ) detailsMsg += "<div>" + mx.I18N.get("Arch") + "</div>";
+            detailsMsg += "<div>" + mx.I18N.get("Arch") + "</div>";
             detailsMsg += "</div>";
             
             for( index in changed_data["system_updates"] )
@@ -199,9 +201,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
                 detailsMsg += "<div class=\"row\">";
                 detailsMsg += "<div>" + update["name"] + "</div>";
-                if( update.hasOwnProperty("current") ) detailsMsg += "<div>" + update["current"] + "</div>";
+                if( has_current ) detailsMsg += "<div>" + update["current"] + "</div>";
                 detailsMsg += "<div>" + update["update"] + "</div>";
-                if( update.hasOwnProperty("arch") ) detailsMsg += "<div>" + update["arch"] + "</div>";
+                detailsMsg += "<div>" + update["arch"] + "</div>";
                 detailsMsg += "</div>";
             }
         }
