@@ -42,15 +42,11 @@ mx.Actions = (function( ret ) {
               mx.History.replaceEntry(entry, entry.getUrl() == url ? null : url );
             }
             
-            if( iframeElement.style.display != "" )
-            {
-                hideMenu();
-                showIFrame();
-            }
+            showIFrame();
         }
         else
         {
-            console.error("iFrameLoadHandler: MATCHING HISTORY NOT FOUND");
+            console.error("iFrameListenerHandler: MATCHING HISTORY NOT FOUND");
         }
         
     }
@@ -73,17 +69,17 @@ mx.Actions = (function( ret ) {
     
     function iFrameLoadHandler(e)
     {
-        //console.log("iFrameLoadHandler");
         try
         {
             //console.log("iframe loaded");
             var url = e.target.contentWindow.location.href;
             if( url == 'about:blank' && history.state && history.state["entryId"] )
             {
-                console.log(" ADDITIONAL POP");
+                //debugger;
+                console.log("iFrameLoadHandler: ADDITIONAL HISTORY POP");
+                //console.log(history);
                 history.back();
             }
-            //console.log("showIFrame 2");
         }
         catch {}
     }
@@ -101,9 +97,13 @@ mx.Actions = (function( ret ) {
     {
         if( iframeElement.getAttribute("src") != url )
         {
+            
+            hideIFrame(true);
+            
             iframeElement.setAttribute('src', url );
-
-            iframeProgressElement.style.display = "";
+            
+            hideIFrameError();
+            showProgress();
             
             // is needed to show iframe content in case of a loading error.
             // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
@@ -122,43 +122,80 @@ mx.Actions = (function( ret ) {
         }
     }
     
-    function hideIFrameError()
-    {
-        iframeErrorElement.style.display = "none";
-        iframeElement.style.display = "";
-        window.setTimeout(function(){ iframeElement.style.opacity = 1; }, 0);
-    }
-    
     function showIFrameError()
     {
-        iframeProgressElement.style.display = "none";
-        iframeErrorElement.style.display = "";
+        hideIFrame();
+        hideMenu();
+        hideProgress();
+
+        if( iframeErrorElement.style.display != "" )
+        {
+            //console.log("showIFrameError");
+          
+            iframeErrorElement.style.display = "";
+        }
+    }
+    
+    function hideIFrameError()
+    {
+        if( iframeErrorElement.style.display == "" )
+        {
+            //console.log("hideIFrameError");
+          
+            iframeErrorElement.style.display = "none";
+        }
     }
     
     function showIFrame()
     {
+        hideIFrameError();
+        hideMenu();
+        hideProgress();
+
         if( iframeElement.style.display != "" )
         {
+            //console.log("showIFrame");
+          
             clearIFrameTimer();
-
-            iframeProgressElement.style.display = "none";
 
             iframeElement.style.display = "";
             window.setTimeout(function(){ iframeElement.style.opacity = 1; }, 0);
         }
     }
     
-    function hideIFrame()
+    function hideIFrame(immediately)
     {
-        if( iframeElement.style.display == "" || iframeProgressElement.style.display == "" )
+        clearIFrameTimer();
+        iframeElement.removeAttribute('src');
+            
+        if( iframeElement.style.display == "" )
         {
-            clearIFrameTimer();
-
-            iframeElement.removeAttribute('src');
-            
-            mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"setSubMenu2");
+            //console.log("hideIFrame");
+          
+            if( immediately ) iframeElement.style.display = "none";
+            else mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"hideIFrame");
             iframeElement.style.opacity = "";
-            
+        }
+        
+        //hideProgress();
+    }
+    
+    function showProgress()
+    {
+        if( iframeProgressElement.style.display != "" )
+        {
+            //console.log("showProgress");
+
+            iframeProgressElement.style.display = "";
+        }
+    }
+
+    function hideProgress()
+    {
+        if( iframeProgressElement.style.display == "" ) 
+        {
+            //console.log("hideProgress");
+          
             iframeProgressElement.style.display = "none";
         }
     }
@@ -174,6 +211,8 @@ mx.Actions = (function( ret ) {
 
         if( inlineElement.style.display == "" )
         {
+            //console.log("hideMenu");
+
             //mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
             inlineElement.style.display = "none";
             sideElement.classList.remove("inline");
@@ -187,12 +226,17 @@ mx.Actions = (function( ret ) {
 
         if( inlineElement.style.display != "" )
         {
+            //console.log("showMenu");
+            
             inlineElement.style.display = "";
             sideElement.classList.add("inline");
             sideElement.classList.remove("iframe");
 
-            hideIFrame();
         }
+
+        hideIFrameError();
+        hideIFrame();
+        hideProgress();
     }
     
     function fadeInMenu(submenu,callbacks)
@@ -253,9 +297,9 @@ mx.Actions = (function( ret ) {
         }
     }
 
-    ret.hideErrorLayer = function()
+    ret.showIFrame = function()
     {
-        hideIFrameError();
+        showIFrame();
     }
     
     ret.openFrameInNewWindow = function()

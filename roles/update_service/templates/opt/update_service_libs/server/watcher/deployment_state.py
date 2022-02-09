@@ -1,27 +1,26 @@
-import os
-import json
 from datetime import datetime
 
 from config import config
 
+from server.watcher import watcher
 
-class DeploymentStateWatcher(): 
+
+class DeploymentStateWatcher(watcher.Watcher): 
     def __init__(self, logger):
+        super().__init__(logger)
+        
         self.logger = logger
         
         self.state = {}
         self.last_modified = 0
         
-        self.initDeploymentState()
+        self.initDeploymentState(False)
         
     def notifyChange(self, event):
-        self.initDeploymentState()
+        self.initDeploymentState(True)
 
-    def initDeploymentState(self):
-        self.state = {}
-        if os.path.isfile(config.deployment_state_file):
-            with open(config.deployment_state_file, 'r') as f:
-                self.state = json.load(f)
+    def initDeploymentState(self,shouldRetry):
+        self.state = self.readJsonFile(config.deployment_state_file,shouldRetry,{})
         self.last_modified = round(datetime.timestamp(datetime.now()),3)
     
     def hasEncryptedValut(self):

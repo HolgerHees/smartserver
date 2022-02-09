@@ -1,27 +1,26 @@
-import os
-import json
 from datetime import datetime
 
 from config import config
 
+from server.watcher import watcher
 
-class DeploymentTagsWatcher(): 
+
+class DeploymentTagsWatcher(watcher.Watcher): 
     def __init__(self, logger):
+        super().__init__(logger)
+      
         self.logger = logger
         
         self.tags = []
         self.last_modified = 0
         
-        self.initDeploymentTags()
+        self.initDeploymentTags(False)
         
     def notifyChange(self, event):
-        self.initDeploymentTags()
+        self.initDeploymentTags(True)
 
-    def initDeploymentTags(self):
-        self.tags = []
-        if os.path.isfile(config.deployment_tags_file):
-            with open(config.deployment_tags_file, 'r') as f:
-                self.tags = json.load(f)
+    def initDeploymentTags(self,shouldRetry):
+        self.tags = self.readJsonFile(config.deployment_tags_file,shouldRetry,[])
         self.last_modified = round(datetime.timestamp(datetime.now()),3)
       
     def getLastModifiedAsTimestamp(self):

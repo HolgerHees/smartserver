@@ -26,10 +26,9 @@
     "There was a problem loading the content": "Es gab eine Problem beim Laden der Inhalte",
     "This can have several reasons": "Dies kann mehrere Gründe haben",
     "The application to be loaded had a problem.": "Die zu ladende Anwendung hatte ein Problem.",
-    "You can click <b onclick='mx.Actions.hideErrorLayer()'>'Show anyway'</b> to continue.": "Sie können <b onclick='mx.Actions.hideErrorLayer()'>'Trotzdem anzeigen'</b> klicken um fortzufahren.",
+    "Click <span class='important' onclick='mx.Actions.showIFrame()'>'Show anyway'</span> to see the problem.": "<span class='important' onclick='mx.Actions.showIFrame()'>'Trotzdem anzeigen'</span> klicken um um das Problem zu sehen.",
     "The subdomain's SSL certificate was not accepted.": "Das SSL Zertifikat der Subdomain wurde nicht akzeptiert.",
-    "Simply click <b onclick='mx.Actions.openFrameInNewWindow()'>'Open in a new window'</b> and confirm the certificate there.": "Hierzu einfach <b onclick='mx.Actions.openFrameInNewWindow()'>'Im neuem Fenster öffnen'</b> klicken und dort das Zertifikat bestätigen.",
-    "You can now do the following things": "Sie können nun folgende Dinge tun",
+    "Click <span class='important' onclick='mx.Actions.openFrameInNewWindow()'>'Open in a new window'</span> and confirm the certificate there.": "<span class='important' onclick='mx.Actions.openFrameInNewWindow()'>'Im neuem Fenster öffnen'</span> klicken und dort das Zertifikat bestätigen.",
     "Show anyway": "Trotzdem anzeigen",
     "Open in new window": "Im neuem Fenster öffnen"
   }

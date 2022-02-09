@@ -1,14 +1,16 @@
-import os
-import json
 from datetime import datetime
 
 from config import config
 
 from server.watcher.process import ProcessWatcher
 
+from server.watcher import watcher
 
-class SystemUpdateWatcher(): 
+
+class SystemUpdateWatcher(watcher.Watcher): 
     def __init__(self, logger, process_watcher, reboot_required_packages ):
+        super().__init__(logger)
+      
         self.logger = logger
         self.process_watcher = process_watcher
         self.reboot_required_packages = reboot_required_packages
@@ -21,10 +23,10 @@ class SystemUpdateWatcher():
         
         self.installed_reboot_required_packages = {}
         
-        self.initSystemState()
+        self.initSystemState(False)
         
     def notifyChange(self, event):
-        self.initSystemState()
+        self.initSystemState(True)
         
     def parseTime(self, datetimeStr):
         datetimeStr = "{}{}".format(datetimeStr[0:-3],datetimeStr[-2:])
@@ -32,32 +34,30 @@ class SystemUpdateWatcher():
         timestamp = round(datetime.timestamp(datetimeObj),3)
         return timestamp
 
-    def initSystemState(self):
-        if os.path.isfile(config.system_update_state_file):
-            with open(config.system_update_state_file, 'r') as f:
-                _states = json.load(f)
-                                       
-                if "system_updates" in self.states:
-                    new_updates = {}
-                    if "system_updates" in _states:
-                        for update in _states["system_updates"]:
-                            new_updates[update["name"]] = True
-                    
-                    for update in self.states["system_updates"]:
-                        if update["name"] not in new_updates and update["name"] in self.reboot_required_packages:
-                            self.logger.info("Found packages '{}' which is marked as 'requires reboot'".format(update["name"]))
-                            self.installed_reboot_required_packages[update["name"]] = True
+    def initSystemState(self,shouldRetry):
+        _states = self.readJsonFile(config.system_update_state_file,shouldRetry,{})
+        if len(_states) > 0:
+            if "system_updates" in self.states:
+                new_updates = {}
+                if "system_updates" in _states:
+                    for update in _states["system_updates"]:
+                        new_updates[update["name"]] = True
                 
-                self.states = _states
-                #2022-02-04T03:30:02.059664+01:00
-                self.system_state_last_modified = self.parseTime(self.states["last_system_state"])
-                self.system_update_last_modified = self.parseTime(self.states["last_system_update"])
-                self.smartserver_changes_last_modified = self.parseTime(self.states["last_smartserver_update"])
-                self.smartserver_pull = self.parseTime(self.states["smartserver_pull"]) if self.states["smartserver_pull"] else ""
-                #self.system_state_last_modified = round(datetime.timestamp(parse(self.states["last_system_state"])),3)
-                #self.system_update_last_modified = round(datetime.timestamp(parse(self.states["last_system_update"])),3)
-                #self.smartserver_changes_last_modified = round(datetime.timestamp(parse(self.states["last_smartserver_update"])),3)
-                #self.smartserver_pull = round(datetime.timestamp(parse(self.states["smartserver_pull"])),3)
+                for update in self.states["system_updates"]:
+                    if update["name"] not in new_updates and update["name"] in self.reboot_required_packages:
+                        self.logger.info("Found packages '{}' which is marked as 'requires reboot'".format(update["name"]))
+                        self.installed_reboot_required_packages[update["name"]] = True
+            
+            self.states = _states
+            #2022-02-04T03:30:02.059664+01:00
+            self.system_state_last_modified = self.parseTime(self.states["last_system_state"])
+            self.system_update_last_modified = self.parseTime(self.states["last_system_update"])
+            self.smartserver_changes_last_modified = self.parseTime(self.states["last_smartserver_update"])
+            self.smartserver_pull = self.parseTime(self.states["smartserver_pull"]) if self.states["smartserver_pull"] else ""
+            #self.system_state_last_modified = round(datetime.timestamp(parse(self.states["last_system_state"])),3)
+            #self.system_update_last_modified = round(datetime.timestamp(parse(self.states["last_system_update"])),3)
+            #self.smartserver_changes_last_modified = round(datetime.timestamp(parse(self.states["last_smartserver_update"])),3)
+            #self.smartserver_pull = round(datetime.timestamp(parse(self.states["smartserver_pull"])),3)
 
             self.process_watcher.initOutdatedProcesses(self.states["system_processes_outdated"])
         

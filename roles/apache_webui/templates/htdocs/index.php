@@ -258,18 +258,17 @@ require "./shared/libs/ressources.php";
                   <div>•</div>
                   <div>
                     <div data-i18n="The application to be loaded had a problem."></div>
-                    <div data-i18n="You can click <b onclick='mx.Actions.hideErrorLayer()'>'Show anyway'</b> to continue."></div>
+                    <div data-i18n="Click <span class='important' onclick='mx.Actions.showIFrame()'>'Show anyway'</span> to see the problem."></div>
                   </div>
                 </div>
                 <div class="reason">
                   <div>•</div>
                   <div>
                     <div data-i18n="The subdomain's SSL certificate was not accepted."></div>
-                    <div data-i18n="Simply click <b onclick='mx.Actions.openFrameInNewWindow()'>'Open in a new window'</b> and confirm the certificate there."></div>
+                    <div data-i18n="Click <span class='important' onclick='mx.Actions.openFrameInNewWindow()'>'Open in a new window'</span> and confirm the certificate there."></div>
                   </div>
                 </div>
-                <div class="info" data-i18n="You can now do the following things"></div>
-                <div class="actions" ><div class="form button" onClick="mx.Actions.hideErrorLayer()" data-i18n="Show anyway"></div><div class="form button" onClick="mx.Actions.openFrameInNewWindow()" data-i18n="Open in new window"></div></div>
+                <div class="actions" ><div class="form button" onClick="mx.Actions.showIFrame()" data-i18n="Show anyway"></div><div class="form button" onClick="mx.Actions.openFrameInNewWindow()" data-i18n="Open in new window"></div></div>
               </div>
             </div>
             <div id="embedProgress" style="display:none">

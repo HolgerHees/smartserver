@@ -1,26 +1,27 @@
-import os
-import json
 from datetime import datetime
 
 from config import config
 
-class SoftwareVersionWatcher(): 
+from server.watcher import watcher
+
+
+class SoftwareVersionWatcher(watcher.Watcher): 
     def __init__(self, logger ):
+        super().__init__(logger)
+      
         self.logger = logger
         
         self.software = {}
         self.last_modified = 0
         
-        self.initSoftwareState()
+        self.initSoftwareState(False)
         
     def notifyChange(self, event):
-        self.initSoftwareState()
+        self.initSoftwareState(True)
         
-    def initSoftwareState(self):
-        if os.path.isfile(config.software_version_state_file):
-            with open(config.software_version_state_file, 'r') as f:
-                self.software = json.load(f)
-                self.last_modified = round(datetime.timestamp(datetime.now()),3)
+    def initSoftwareState(self, shouldRetry):
+        self.software = self.readJsonFile(config.software_version_state_file,shouldRetry,{})
+        self.last_modified = round(datetime.timestamp(datetime.now()),3)
         
     def getLastModifiedAsTimestamp(self):
         return self.last_modified

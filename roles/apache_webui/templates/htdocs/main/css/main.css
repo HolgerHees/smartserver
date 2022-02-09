@@ -185,24 +185,29 @@ body.dark #side #content #embedProgress svg {
     margin: auto;
     margin-top: 10%;
 }
-#side #content #embedError > div > div {
-    margin-bottom: 10px;
-}
 #side #content #embedError .head {
     font-size: 20px;
     font-weight: bold;
+    margin-bottom: 20px;
 }
 #side #content #embedError .info {
     font-size: 15px;
+    margin-bottom: 10px;
 }
 
 #side #content #embedError .reason {
     font-size: 15px;
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
 }
-#side #content #embedError .reason b {
+#side #content #embedError .reason .important {
+    font-weight: 600;
     white-space: nowrap;
+    cursor: pointer;
 }
 #side #content #embedError .actions {
+    margin-top: 25px;
     display: flex;
     justify-content: space-between;
 }

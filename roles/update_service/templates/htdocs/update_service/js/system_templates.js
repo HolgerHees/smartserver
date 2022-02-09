@@ -3,12 +3,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let outdatedRoleData = null;
   
     let startserverChangeInfoCodes = {
-        "failed": ["red","Skipped git pull because of broken remote ci tests"],
-        "pending": ["yellow","Skipped git pull because of some remote ci pending"],
+        "failed": ["red","Git pull skipped because CI tests failed"],
+        "pending": ["yellow","Git pull skipped because CI tests are currently running"],
         "pulled_tested": ["green", "Git pulled and all remote ci succeeded"],
         "pulled": ["green", "Git pulled"],
-        "uncommitted": ["red","Skipped git pull because of has uncommitted changes"],
-        "missing": ["red","Skipped git pull because of missing deployment state"],
+        "uncommitted": ["red","Git pull skipped because there are uncommitted changes"],
+        "missing": ["red","Git pull skipped because deployment status is unknown"],
     };
 
     ret.getLastFullRefresh = function(last_data_modified)

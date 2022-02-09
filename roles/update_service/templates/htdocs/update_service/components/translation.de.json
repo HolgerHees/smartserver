@@ -103,12 +103,12 @@
     "Reboot system": "System Neustart",
     
     "Last git pull was on {}": "Letzter git pull war am {}",
-    "Skipped git pull because of broken remote ci tests": "Git pull übersprungen weil einige CI Tests fehlerhaft waren",
-    "Skipped git pull because of some remote ci pending": "Git pull übersprungen weil aktuell einige CI Tests laufen",
+    "Git pull skipped because CI tests failed": "Git pull übersprungen weil CI Tests fehlerhaft waren",
+    "Git pull skipped because CI tests are currently running": "Git pull übersprungen weil aktuell CI Tests laufen",
     "Git pulled and all remote ci succeeded": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
-    "Skipped git pull because of has uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
-    "Skipped git pull because of missing deployment state": "Git pull übersprungen weil der deployment Status fehlt",
+    "Git pull skipped because there are uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
+    "Git pull skipped because deployment status is unknown": "Git pull übersprungen weil der Deployment Status unbekannt ist",
     
     
     "No software versions have been checked so far": "Es wurden bisher keine Software Versionen überprüft",
