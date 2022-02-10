@@ -51,6 +51,13 @@ class CmdBuilder:
         cmd = self.buildCmd(cmd_daemon_restart, interaction=None,cwd=None,env=None)
         return self.buildCmdBlock(username, "daemon_restart", [cmd])
 
+    def buildRestartDaemonCmdBlockIfNecessary(self, username,params):
+        is_update_service_oudated = self.process_watcher.isUpdateServiceOutdated()
+        if is_update_service_oudated:
+            return self.buildRestartDaemonCmdBlock(username)
+
+        return None
+
     def buildSystemRebootCmdBlock(self, username):
         cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
         post_cmd = self.buildSystemUpdateCheckCheckCmd("system_state")

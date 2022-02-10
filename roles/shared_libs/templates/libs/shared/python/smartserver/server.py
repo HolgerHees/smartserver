@@ -10,7 +10,7 @@ sys.path.insert(0, "/opt/shared/python")
 from smartserver.file_watcher import FileWatcher
 
 class Server():
-    def __init__(self,logger, name, watched_data_files = None, callback = None):
+    def __init__(self,logger, name):
         self.logger = logger
         
         self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -23,6 +23,7 @@ class Server():
         except socket.error:
             return
           
+    def initWatchedFiles(self, watched_data_files, callback = None ):
         if watched_data_files is not None and len(watched_data_files) > 0:
             self.filewatcher = FileWatcher( self.logger, callback )
             

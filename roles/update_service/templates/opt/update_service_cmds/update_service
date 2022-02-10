@@ -60,18 +60,8 @@ class Handler(Server):
     def __init__(self,app):
         self.logger = app.logger
         
-        self.service_base_path = os.path.dirname(__file__)
-        self.service_need_restart = False
-
-        watched_data_files.append(__file__)
-        files = glob.glob("{}**/**/*.py".format(self.service_base_path), recursive = True)
-        for filename in files:
-            watched_data_files.append(filename)
-        
-        super().__init__(self.logger, "update_service", watched_data_files, self.fileChangeTriggered )
+        super().__init__(self.logger, "update_service" )
            
-        #self.update_server_time = self.identity.getModifiedTime(__file__)
-        
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
         repo = plugin.Repository()
         cmd_install_system_updates = repo.getSystemUpdateCmd()
@@ -83,12 +73,21 @@ class Handler(Server):
         self.dependency_watcher = DependencyWatcher(self.logger, self.system_update_watcher)
         self.deployment_state_watcher = DeploymentStateWatcher(self.logger)
         self.deployment_tags_watcher = DeploymentTagsWatcher(self.logger)
-        
         self.software_versions_watcher = SoftwareVersionWatcher(self.logger)
 
         self.cmd_builder = CmdBuilder(self.logger, self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, cmd_install_system_updates)
         
         self.cmd_executer = CmdExecuter(self.logger, self)
+        
+        self.service_base_path = os.path.dirname(__file__)
+        self.service_need_restart = False
+
+        watched_data_files.append(__file__)
+        files = glob.glob("{}**/**/*.py".format(self.service_base_path), recursive = True)
+        for filename in files:
+            watched_data_files.append(filename)
+        
+        self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
 
         self.handleRunningStates()
         
@@ -182,7 +181,7 @@ class Handler(Server):
                 
             result["job_logfile"] = self.cmd_executer.getCurrentJobLogfile()
             result["job_killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
-            result["update_server_needs_restart"] = self.service_need_restart
+            result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
                 
         result["last_data_modified"] = last_data_modified
         result["changed_data"] = changed_data
@@ -203,56 +202,7 @@ class Handler(Server):
             return self.buildSuccessResult("manual",active_cmd_type, state_type)
         else:
             return self.buildSuccessResult(None, None, state_type)
-         
-    def handleDaemonRestart(self,file_name,file_age,start_time_str):
-        is_success = file_age < MAX_DAEMON_RESTART_TIME
-        
-        with open(file_name, 'a') as f:
-            lf = LogFile(f)
-            lf.getFile().write("\n")
-            if is_success:
-                lf.write("The command was successful.\n")
-            else:
-                lf.write("The command crashed.\n")
-            
-        os.rename(file_name, file_name.replace("-running-","-success-" if is_success else "-failed-"))
-        
-        return is_success
-        
-    def handleSystemReboot(self,file_name,file_age,start_time_str):
-        is_success = file_age < MAX_SYSTEM_REBOOT_TIME
-        
-        if is_success:
-            if os.path.isfile(config.deployment_workflow_file):
-                with open(config.deployment_workflow_file, 'r') as f:
-                    workflow = json.load(f)
-                    if workflow[0]["cmd_type"] == "system_reboot":
-                        return self.proceedSystemReboot(workflow,file_name,start_time_str)
-                    else:
-                        error_msg = "Can't continue. Wrong first workflow.\n"
-            else:
-                error_msg = "Can't continue. Missing workflow file.\n"
-        else:
-            error_msg = "The command crashed.\n"
-
-        with open(file_name, 'a') as f:
-            lf = LogFile(f)
-            lf.getFile().write("\n")
-            lf.write(error_msg)
-        os.rename(file_name, file_name.replace("-running-","-crashed-"))
-        
-        return False
-
-    def handleCrash(self,file_name):
-        with open(file_name, 'a') as f:
-            lf = LogFile(f)
-            lf.getFile().write("\n")
-            lf.write("The command crashed.\n")
-
-        os.rename(file_name, file_name.replace("-running-","-crashed-"))
-        
-        return False
-      
+              
     def _handleRunningStates(self):
         for name in glob.glob(u"{}*-*-running-*-*.log".format(config.job_log_folder)):
             log_mtime = os.stat(name).st_mtime
@@ -262,10 +212,12 @@ class Handler(Server):
             name_parts = os.path.basename(name).split("-")
             
             result = False
-            if name_parts[3] == "daemon_restart":
-                result = self.handleDaemonRestart(name,file_age,name_parts[0])
-            elif name_parts[3] == "system_reboot":
-                result = self.handleSystemReboot(name,file_age,name_parts[0])
+            if name_parts[3] in [ "daemon_restart", "system_reboot" ]:
+                code = self.handleWorkflow(name,file_age,MAX_DAEMON_RESTART_TIME,name_parts[0],name_parts[3])
+                if code == 1:
+                    result = self.proceedWorkflow(workflow,file_name,start_time_str,name_parts[3] == "system_reboot")
+                else:
+                    result = True if code == 0 else False
             else:
                 result = self.handleCrash(name)
 
@@ -282,62 +234,103 @@ class Handler(Server):
         thread = threading.Thread(target=self._handleRunningStates, args=())
         thread.start()
 
-    def _proceedSystemReboot(self,workflow, file_name, start_time_str):
+    def handleCrash(self,file_name):
+        with open(file_name, 'a') as f:
+            lf = LogFile(f)
+            lf.getFile().write("\n")
+            lf.write("The command crashed.\n")
+
+        os.rename(file_name, file_name.replace("-running-","-crashed-"))
+        
+        return False
+
+    def handleWorkflow(self,file_name,file_age,max_file_age,start_time_str,expected_workflow):
+        is_success = file_age < max_file_age
+        flag = "success"
+        if is_success:
+            if os.path.isfile(config.deployment_workflow_file):
+                with open(config.deployment_workflow_file, 'r') as f:
+                    workflow = json.load(f)
+                    if workflow[0]["cmd_type"] == expected_workflow:
+                        return 1
+                    else:
+                        msg = "Can't continue. Wrong first workflow. Expected: '{}' - Found: '{}'\n".format(expected_workflow,workflow[0]["cmd_type"])
+                        flag = "failed"
+                        is_success = False
+            else:
+                msg = "The command was successful.\n"
+        else:
+            msg = "The command crashed.\n"
+            flag = "crashed"
+
+        with open(file_name, 'a') as f:
+            lf = LogFile(f)
+            lf.getFile().write("\n")
+            lf.write(msg)
+        os.rename(file_name, file_name.replace("-running-", "-{}-".format(flag)))
+        
+        return 0 if is_success else -1
+
+    def _proceedWorkflow(self,workflow, file_name, start_time_str, wait_for_inactivity):
         min_inactivity_time = MIN_PROCESS_INACTIVITY_TIME
         max_waiting_time = MAX_STARTUP_WAITING_TIME
         
         start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
 
-        exit_status = 1
+        exit_code = 1
         with open(file_name, 'a') as f:
             cmd_block = workflow.pop(0)
 
             self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,file_name)
             lf = LogFile(f)
 
-            can_proceed = False
-            waiting_start = datetime.timestamp(datetime.now())
-            last_seen_cmd_type = waiting_start
-            last_cmd_type = None
-            while True:
-                now = datetime.timestamp(datetime.now())
-                waiting_time = round(now - waiting_start)
-                inactivity_time = now - last_seen_cmd_type
+            if wait_for_inactivity:
+                can_proceed = False
+                waiting_start = datetime.timestamp(datetime.now())
+                last_seen_cmd_type = waiting_start
+                last_cmd_type = None
+                while True:
+                    now = datetime.timestamp(datetime.now())
+                    waiting_time = round(now - waiting_start)
+                    inactivity_time = now - last_seen_cmd_type
 
-                if waiting_time % 2 == 0:
-                    active_cmd_type = self.cmd_executer.getActiveCmdType()
-                    if active_cmd_type != None:
-                        last_seen_cmd_type = now
-                        last_cmd_type = active_cmd_type
+                    if waiting_time % 2 == 0:
+                        active_cmd_type = self.cmd_executer.getActiveCmdType()
+                        if active_cmd_type != None:
+                            last_seen_cmd_type = now
+                            last_cmd_type = active_cmd_type
 
-                    if inactivity_time > min_inactivity_time:
-                        can_proceed = True
-                        break
+                        if inactivity_time > min_inactivity_time:
+                            can_proceed = True
+                            break
 
-                    if waiting_time > max_waiting_time:
-                        lf.getFile().write("\n")
-                        lf.write("Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
-                        break
-                  
-                if waiting_time % 15 == 0:
-                    if last_cmd_type != None:
-                        cmd_msg = " Last run of '{}' {}s ago.".format(last_cmd_type,round(inactivity_time))
-                    else:
-                        cmd_msg = ""
-                  
-                    self.logger.info("Waiting for 30s of inactivity.{} Waiting since {}s".format(cmd_msg,round(waiting_time)))
-                    
-                time.sleep(1)
-
-            if can_proceed:
-                exit_status = self.cmd_executer.processCmdBlock(cmd_block,lf)
-                 
-        self.cmd_executer.finishRun(file_name,exit_status,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
+                        if waiting_time > max_waiting_time:
+                            lf.getFile().write("\n")
+                            lf.write("Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
+                            break
                       
-        self._runWorkflow(workflow, True)
+                    if waiting_time % 15 == 0:
+                        if last_cmd_type != None:
+                            cmd_msg = " Last run of '{}' {}s ago.".format(last_cmd_type,round(inactivity_time))
+                        else:
+                            cmd_msg = ""
+                      
+                        self.logger.info("Waiting for 30s of inactivity.{} Waiting since {}s".format(cmd_msg,round(waiting_time)))
+                        
+                    time.sleep(1)
+                else:
+                    can_proceed = True
+                    
+            if can_proceed:
+                exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf)
+                 
+        self.cmd_executer.finishRun(file_name,exit_code,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
+                      
+        if exit_code == 0:
+            self._runWorkflow(workflow, True)
         
-    def proceedSystemReboot(self,workflow,file_name,start_time_str):
-        thread = threading.Thread(target=self._proceedSystemReboot, args=(workflow, file_name, start_time_str))
+    def proceedWorkflow(self,workflow,file_name,start_time_str,wait_for_inactivity):
+        thread = threading.Thread(target=self._proceedWorkflow, args=(workflow, file_name, start_time_str, wait_for_inactivity))
         thread.start()
 
     def _runWorkflow(self, workflow, checkGlobalRunning):   
@@ -356,17 +349,23 @@ class Handler(Server):
                     self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
                     cmd_block = _cmd_block
 
-            if cmd_block["cmd_type"] == "system_reboot":
-                with open(config.deployment_workflow_file, 'w') as f:
-                    first_cmd = cmd_block["cmds"].pop(0)
-                    workflow.insert(0,cmd_block)
-                    json.dump(workflow, f)
-                        
-                    cmd_block = self.cmd_builder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
+            is_interuptable_workflow = cmd_block["cmd_type"] in [ "system_reboot", "daemon_restart" ]
 
-                if self.testWorkflow:
+            if is_interuptable_workflow:
+                first_cmd = cmd_block["cmds"].pop(0)
+
+                if len(cmd_block["cmds"]) > 0:
+                    workflow.insert(0,cmd_block)
+                    
+                if len(workflow) > 0:
+                    with open(config.deployment_workflow_file, 'w') as f:
+                        json.dump(workflow, f)
+                    
+                cmd_block = self.cmd_builder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
+
+                if cmd_block["cmd_type"] == "system_reboot" and self.testWorkflow:
                     self.prepareTestWorkflow(cmd_block)
-                
+              
             isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
             if not isRunning and self.cmd_executer.lock(cmd_block["cmd_type"]):
                 exit_code = self.cmd_executer.runCmdBlock(cmd_block)
@@ -389,7 +388,7 @@ class Handler(Server):
                     self.logger.error("Command '{}' exited with code '{}'".format(cmd_block["cmd_type"],exit_code));
                 break
           
-            if cmd_block["cmd_type"] == "system_reboot":
+            if is_interuptable_workflow:
                 break
               
     def runWorkflow(self, workflow, state_type, checkGlobalRunning ):
@@ -461,6 +460,7 @@ def updateWorkflow():
     workflow = [
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildSystemRebootCmdBlockIfNecessary", request.form ),
+        handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildRestartDaemonCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildRestartServiceCmdBlockIfNecessary", request.form ),
         handler.cmd_builder.buildFunctionBlock( request.form['username'], "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", request.form )
     ]

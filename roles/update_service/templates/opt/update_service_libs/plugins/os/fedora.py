@@ -1,8 +1,6 @@
 import subprocess
-
-from datetime import datetime
-
 import re
+import sys
 
 from plugins.os.os import Os
 

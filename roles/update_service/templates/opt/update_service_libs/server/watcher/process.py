@@ -20,6 +20,7 @@ class ProcessWatcher():
         self.is_running = True
         
         self.is_reboot_needed = False
+        self.is_update_service_outdated = False
         self.outdated_services = []
         self.outdated_processes = {}
         self.last_modified = 0
@@ -57,15 +58,19 @@ class ProcessWatcher():
                     if regex_pattern.match(service):
                         is_reboot_needed = True
                         break
-                      
+                     
+        is_update_service_outdated = False
         services = []
         for index in self.outdated_processes:
             service = self.outdated_processes[index]["service"]
             if not service:
                 continue
+            if service == "update_service":
+                is_update_service_outdated = True
             services.append(service)
         self.outdated_services = services
         
+        self.is_update_service_outdated = is_update_service_outdated
         self.is_reboot_needed = is_reboot_needed
         self.last_modified = round(datetime.timestamp(datetime.now()),3)
 
@@ -98,6 +103,9 @@ class ProcessWatcher():
     def getOutdatedServices(self):
         return self.outdated_services
       
+    def isUpdateServiceOutdated(self):
+        return self.is_update_service_outdated
+
     def isRebootNeeded(self):
         return self.is_reboot_needed
       

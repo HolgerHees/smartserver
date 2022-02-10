@@ -34,10 +34,6 @@ watched_data_files = [
     config.status_file
 ]
 
-cmd_service_restart = "systemctl restart"
-
-env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
-
 
 class Handler(Server):
     def __init__(self, app):
@@ -45,13 +41,15 @@ class Handler(Server):
         
         log.setLogger(self.logger)
 
-        super().__init__(self.logger, "ci_service", watched_data_files + [__file__])
+        super().__init__(self.logger, "ci_service")
         
         self.terminated = False
         
         self.state = status.getState(config.status_file)
         self.job_is_running = self._isJobRunning()
         
+        self.initWatchedFiles( watched_data_files )
+
         thread = threading.Thread(target=self._jobWatcher, args=())
         thread.start()
         
@@ -113,21 +111,10 @@ class Handler(Server):
             if service.getPid() is not None:
                 service.cleanRunningJobs("all")
           
-    def restartDaemon(self):
-        result = helper.execCommand(u"{} ci_service 2>&1".format(cmd_service_restart))
-        if cloneResult.returncode == 0:
-            return self.getState()
-        else:
-            return json.dumps({ 
-                "status": cloneResult.returncode,
-                "message": "Daemon restart failed with message ''".format(cloneResult.stdout.decode("utf-8"))
-            })
-          
     def getState(self):
         return json.dumps({ 
             "status": 0,
-            "job_is_running": self.job_is_running,
-            "ci_server_needs_restart": self.hasFileChanged(__file__)
+            "job_is_running": self.job_is_running
         })
       
     def terminate(self):
@@ -139,10 +126,6 @@ app = Flask(__name__)
 def state():     
     return handler.getState()
   
-@app.route('/restartDaemon/', methods = ['POST'])
-def restartDaemon():
-    return handler.restartDaemon()
-
 #def cleanup(signum, frame):
 #    print("Shutdown daemon", flush=True)
 #    handler.terminate()
