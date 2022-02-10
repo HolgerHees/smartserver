@@ -243,7 +243,7 @@ if( !Auth::hasGroup("admin") )
             
             if( job_is_running )
             {
-                mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? "restart": "kill");
+                mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? null: "kill");
             }
             else
             {
