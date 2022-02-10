@@ -45,7 +45,7 @@
 - name: copy resolv.conf
   copy:
     src: templates/etc/resolv.conf
-    dest: path: /etc/resolv.conf
+    dest: /etc/resolv.conf
     owner: root
     group: root
     mode: 0755

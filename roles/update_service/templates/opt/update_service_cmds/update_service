@@ -91,8 +91,6 @@ class Handler(Server):
 
         self.handleRunningStates()
         
-        self.testWorkflow = True
-        
     def terminate(self):
         self.process_watcher.terminate()
 
@@ -360,8 +358,8 @@ class Handler(Server):
                     
                 cmd_block = self.cmd_builder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
 
-                if cmd_block["cmd_type"] == "system_reboot" and self.testWorkflow:
-                    self.prepareTestWorkflow(cmd_block)
+                #if cmd_block["cmd_type"] == "system_reboot":
+                #    self.prepareTestWorkflow(cmd_block)
               
             isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
             if not isRunning and self.cmd_executer.lock(cmd_block["cmd_type"]):

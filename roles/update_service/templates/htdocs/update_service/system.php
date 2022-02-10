@@ -414,27 +414,60 @@ if( !Auth::hasGroup("admin") )
             {
                 body += mx.I18N.get("You want to <span class='important'>update everything</span>?<span class='spacer'></span>This includes <span class='important'>a system restart</span>, if necessary.");            
             }
-            body += "<br><br><div class=\"form table\">";
-            if( hasEncryptedVault )
+            
+            let hasPasswordField = hasEncryptedVault;
+            let hasTagField = type == "deployment" && !has_tags;
+            
+            if( hasPasswordField || hasTagField )
             {
-                var lastDeploymentPassword = sessionStorage.getItem("lastDeploymentPassword");
+                body += "<br><br><div class=\"form table\">";
                 
-                body += "<div class=\"row\"><div>" + mx.I18N.get("Password") + ":</div><div>";
-                body += "<input name=\"password\" type=\"password\" autocomplete=\"off\"";
-                if( lastDeploymentPassword ) body += " value=\"" + lastDeploymentPassword + "\"";
-                body += ">";
-                body += "<div class=\"middle\"><input type=\"checkbox\" id=\"remember\" name=\"remember\"";
-                if( lastDeploymentPassword ) body += " checked";
-                body += "><label for=\"remember\">" + mx.I18N.get("Remember") + "</label></div>";
-                body += "<div class=\"password hint red\">" + mx.I18N.get("Please enter a password") + "</div>";
-                body += "</div></div>";
+                if( hasEncryptedVault )
+                {
+                    var lastDeploymentPassword = sessionStorage.getItem("lastDeploymentPassword");
+                    
+                    body += "<div class=\"row\">";
+                    body += "  <div>" + mx.I18N.get("Password") + ":</div>";
+                    body += "  <div>";
+                    body += "    <input name=\"password\" type=\"password\" autocomplete=\"off\"";
+                    if( lastDeploymentPassword ) body += " value=\"" + lastDeploymentPassword + "\"";
+                    body += "    >";
+                    body += "    <div class=\"middle\"><input type=\"checkbox\" id=\"remember\" name=\"remember\"";
+                    if( lastDeploymentPassword ) body += " checked";
+                    body += ">";
+                    body += "    <label for=\"remember\">" + mx.I18N.get("Remember") + "</label>";
+                    body += "   </div>";
+                    body += "   <div class=\"password hint red\">" + mx.I18N.get("Please enter a password") + "</div>";
+                    body += "  </div>";
+                    body += "</div>";
+                }
+                
+                if( hasTagField )
+                {
+                    body += "<div class=\"row\">";
+                    body += "  <div>" + mx.I18N.get("Tags") + ":</div>";
+                    body += "  <div>";
+                    body += "    <div class=\"autoCompletionSelection\"></div>";
+                    body += "    <input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div>";
+                    body += "  </div>";
+                    body += "</div>";
+                    body += "<div class=\"row\">";
+                    body += "  <div>&nbsp;</div>";
+                    body += "  <div>&nbsp;</div>";
+                    body += "</div>";
+                    
+                    body += "</div>"; // => table close
+                    
+                    body += "<div class=\"deployConfirmation middle\">";
+                    body += "  <input type=\"checkbox\" id=\"confirm\" name=\"confirm\" checked><label for=\"confirm\">" + mx.I18N.get("Mark all changes as deployed") + "</label>";
+                    body += "</div>";
+                }
+                else
+                {
+                    body += "</div>"; // => table close
+                }
             }
-            
-            if( type == "deployment" && !has_tags )
-            {
-                body += "<div class=\"row\"><div>" + mx.I18N.get("Tags") + ":</div><div><div class=\"autoCompletionSelection\"></div><input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div></div></div><div class=\"row\"><div>&nbsp;</div><div>&nbsp;</div></div></div><div class=\"deployConfirmation middle\"><input type=\"checkbox\" id=\"confirm\" name=\"confirm\" checked><label for=\"confirm\">" + mx.I18N.get("Mark all changes as deployed") + "</label></div>";
-            }
-            
+                
             var autocomplete = null;
             dialog = mx.Dialog.init({
                 title: mx.I18N.get("Are you sure?"),
@@ -444,7 +477,7 @@ if( !Auth::hasGroup("admin") )
                         let hasErrors = false;
                         
                         parameter = {};
-                        if( hasEncryptedVault )
+                        if( hasPasswordField )
                         {
                             if( !passwordField.value )
                             {
@@ -462,12 +495,7 @@ if( !Auth::hasGroup("admin") )
                         
                         if( type == "deployment" )
                         {
-                            if( has_tags )
-                            {
-                                parameter["tags"] = args["tags"]
-                                parameter["confirm"] = false;
-                            }
-                            else
+                            if( hasTagField )
                             {
                                 var selectedTags = autocomplete.getSelectedValues();
                                 autocomplete.setTopValues(selectedTags);
@@ -486,6 +514,11 @@ if( !Auth::hasGroup("admin") )
                                     parameter["confirm"] = confirmField.checked;
                                 }
                             }
+                            else
+                            {
+                                parameter["tags"] = args["tags"]
+                                parameter["confirm"] = false;
+                            }
                         }
 
                         if( !hasErrors )
@@ -502,11 +535,14 @@ if( !Auth::hasGroup("admin") )
             });
             dialog.open();
             
-            passwordField = dialog.getElement("input[name=\"password\"]");
-            passwordRemember = dialog.getElement("input[name=\"remember\"]");
-            passwordHint = dialog.getElement(".password.hint");
+            if( hasPasswordField )
+            {
+                passwordField = dialog.getElement("input[name=\"password\"]");
+                passwordRemember = dialog.getElement("input[name=\"remember\"]");
+                passwordHint = dialog.getElement(".password.hint");
+            }
             
-            if( type == "deployment" && !has_tags )
+            if( hasTagField )
             {
                 tagField = dialog.getElement("input[name=\"tag\"]");
                 tagHint = dialog.getElement(".tag.hint");
