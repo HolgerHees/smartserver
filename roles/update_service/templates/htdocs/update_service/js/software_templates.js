@@ -63,6 +63,8 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 content += "<div>" + lastUpdateDateFormatted + "</div>";
                 content += "</div>";
                 
+                states = states.sort(function(a,b){ return a["name"].localeCompare(b["name"]); });
+                
                 for( let index in states)
                 { 
                     let state = states[index];
