@@ -85,7 +85,7 @@ class CmdExecuter:
         return self.isDaemonJobRunning() or self.getActiveCmdType() != None
       
     def isDaemonJobRunning(self):
-        return self.current_child != None
+        return self.current_started != None
       
     def isKilledJob(self):
         return self.killed_job
@@ -107,7 +107,7 @@ class CmdExecuter:
         self.current_logfile = file_name
         
     def lock(self, cmd_type):
-        if self.current_child != None:
+        if self.current_started != None:
             return False
         else:
             self.current_cmd_type = cmd_type

@@ -280,25 +280,23 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let headerMsg = "";
         
         let count = changed_data["jobs"].length
-        if( count > 0 )
-        {
-            if( changed_data["jobs"][0]["state"] == "running" )
-            {
-                changed_data["jobs"].shift();
-                count = changed_data["jobs"].length
-            }
-        }
-        
+      
         if( count > 0 )
         {
             let last_job = changed_data["jobs"][0];
-
+            
+            if( last_job["state"] == "running" )
+            {
+                changed_data["jobs"].shift();
+                last_job = changed_data["jobs"][0];
+            }
+            
             let action_msg = "<div class=\"detailView\" onclick=\"mx.UNCore.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">" + last_job["type"] + "</div>";
             
             let state_msg = last_job["state"] == "success" ? "was successful" : last_job["state"];
             let color = last_job["state"] == "failed" || last_job["state"] == "crashed" ? " red" : "";
             
-            headerMsg = "<div class=\"info" + color + "\">" + mx.I18N.get("Last '{1}' {2} after {3} seconds").fill({"1": action_msg, "2": state_msg, "3": last_job["duration"] });
+            headerMsg = "<div class=\"info" + color + "\">" + mx.I18N.get("Last '{1}' {2} after {3} seconds").fill({"1": action_msg, "2": state_msg, "3": Math.round( last_job["duration"] ) });
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'lastRunningJobsDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";

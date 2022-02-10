@@ -145,5 +145,7 @@ mx.SNCore = (function( ret ) {
     
 mx.OnDocReady.push( mx.SNCore.init );
 </script>
+<div class="list"></div>
+<div class="error"></div>
 </body>
 </html>

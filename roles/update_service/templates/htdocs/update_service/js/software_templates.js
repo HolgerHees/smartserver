@@ -28,7 +28,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
     {
         let date = new Date(job_started);
         let now = new Date();
-        let duration = Math.floor( ( now.getTime() / 1000 - date.getTime() / 1000 ) * 10 ) / 10;
+        let duration = Math.round( ( now.getTime() - date.getTime() )  / 1000 );
         
         let action = "<div class=\"detailView\" onclick=\"document.location.href='../system/'\">" + mx.I18N.get("Software check") + "</div>";
         
@@ -169,7 +169,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 
             content += "</div>";
                 
-            document.body.innerHTML = content;
+            document.body.querySelector(".list").innerHTML = content;
         }
     }
     
