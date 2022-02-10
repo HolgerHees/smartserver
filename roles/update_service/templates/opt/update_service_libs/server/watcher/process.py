@@ -1,8 +1,12 @@
 import threading
-import subprocess
 from datetime import datetime
 import re
-import time
+import sys
+
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver.processlist import Processlist
+
 
 class ProcessWatcher(): 
     def __init__(self, logger, reboot_required_services ):
@@ -66,15 +70,13 @@ class ProcessWatcher():
         self.last_modified = round(datetime.timestamp(datetime.now()),3)
 
     def checkProcesses(self):  
-        #processes = self.getProcesslist()
-        #self.logger.info(processes)
         with self.condition:
             while self.is_running:
                 if len(self.outdated_processes) > 0:    
                     #self.logger.info("process")
 
-                    processes = self.getProcesslist()
-                    _outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processes}
+                    processIds = Processlist.getProcessIds()
+                    _outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processIds}
                     
                     if len(_outdated_processes) != len(self.outdated_processes):
                         self.logger.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(_outdated_processes) ))
@@ -90,20 +92,6 @@ class ProcessWatcher():
                     self.condition.wait()
                     #self.logger.info("wakeup")
           
-    def getProcesslist(self):
-        result = subprocess.run([ "ps", "-axo", "pid,ppid" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-        result = result.stdout.decode("utf-8")
-        lines = result.split("\n")
-        result = {}
-        for line in lines:
-            if not line:
-               continue
-            
-            columns = line.split(" ")
-            columns = [column for column in columns if column ]
-            result[columns[0]] = columns[1]
-        return result
-      
     def getOudatedProcesses(self):
         return list(self.outdated_processes.values())
       

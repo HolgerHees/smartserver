@@ -49,7 +49,7 @@ class DeploymentUpdate:
                     repository_owner = GitHub.getRepositoryOwner(self.config.git_remote)
 
                     result = GitHub.getStates(repository_owner,last_git_hash)
-
+                    
                     states = Counter(result.values())
                     
                     if "failed" in states:

@@ -56,11 +56,8 @@ MAX_SYSTEM_REBOOT_TIME = 600
 MIN_PROCESS_INACTIVITY_TIME = 30
 MAX_STARTUP_WAITING_TIME = 300
 
-app = Flask(__name__)
- 
-
 class Handler(Server):
-    def __init__(self):
+    def __init__(self,app):
         self.logger = app.logger
         
         self.service_base_path = os.path.dirname(__file__)
@@ -405,6 +402,8 @@ class Handler(Server):
         else:
             return self.buildErrorResult(1, u"Job not started" )
       
+app = Flask(__name__)
+
 @app.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
 def refreshSoftwareVersionCheck():
     cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(request.form['username'])
@@ -473,8 +472,7 @@ def killProcess():
     return handler.getState("update")
 
 if __name__ == '__main__':
-    handler = Handler()
-    
+    handler = Handler(app)
     app.logger.setLevel(logging.DEBUG)
     try:
         app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')

@@ -6,6 +6,11 @@ import re
 
 from plugins.os.os import Os
 
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver.processlist import Processlist
+
+
 class Repository(Os):
     DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
     HISTORY_FORMAT = "%Y-%m-%d %H:%M"
@@ -47,46 +52,7 @@ class Repository(Os):
         result = subprocess.run([ "/usr/bin/needs-restarting -r" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         self.needs_restart = result.returncode == 1
         
-        result = subprocess.run([ "ps", "-axo", "pid,ppid,uid,user,unit" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-        result = result.stdout.decode("utf-8")
-        lines = result.split("\n")
-        processes = {}
-        for line in lines:
-            if not line:
-               continue
-            
-            columns = line.split(" ")
-            columns = [column for column in columns if column ]
-            pid = columns.pop(0)
-            processes[pid] = columns
-      
-        result = subprocess.run([ "/usr/bin/lsof +c0 2> /dev/null | grep \"deleted\" | grep -vP \"[0-9]+ (/tmp/|/run/|/mem)\"" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        result = result.stdout.decode("utf-8").strip()
-        lines = result.split("\n")
-        outdated = []
-        for line in lines:
-            columns = re.sub(r"\s+", " ", line).split(" ")
-            
-            pid = columns[1]
-            if pid in processes:
-                process_details = processes[pid]
-                ppid, uid, user, unit = process_details
-                if unit == "-":
-                    unit = ""
-                else:
-                    unit = unit.rsplit(".",1)
-                    if len(unit) == 1 or unit[1] != "service":
-                        unit = ""
-                    else:
-                        unit = unit[0]
-            else:
-                ppid = ""
-                uid = ""
-                user = ""
-                unit = ""
-                
-            outdated.append({"pid": columns[1], "ppid": ppid, "uid": uid, "user": user, "command": columns[0], "service": unit})
-        self.outdated = outdated
+        self.outdated = Processlist.getOutdatedProcessIds()
         
     def getOutdatedProcesses(self):
         if self.outdated is None:
