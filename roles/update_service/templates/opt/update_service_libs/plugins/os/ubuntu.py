@@ -1,6 +1,7 @@
 import subprocess
 import re
 import sys
+import os
 
 from plugins.os.os import Os
 
@@ -15,32 +16,41 @@ class Repository(Os):
         self.outdated = None
 
     def getSystemUpdateCmd(self):
-        return "/usr/bin/zypper dup -y"
+        return "apt-get upgrade"
       
     def getRebootRequiredPackages(self):
-        return ["wicked","wicked-service"]
+        return []
 
     def getRebootRequiredServices(self):
-        return [r"^wicked.*$"]
+        return []
 
     def getUpdates(self):
-        result = subprocess.run([ "/usr/bin/zypper list-updates" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        #apt list --upgradable
+      
+        result = subprocess.run([ "/usr/bin/apt list --upgradable" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         lines = result.stdout.decode("utf-8").strip().split("\n")
-        lines = reversed(lines)
         updates = []
         for line in lines:
-            columns = line.split(" | ")
-            if len(columns) < 5:
-                break
-            columns = [ele.strip() for ele in columns]
-            updates.append({'repository': columns[1], 'name': columns[2], 'current': columns[3], 'update': columns[4], 'arch': columns[5] })
+            columns = line.split(" ")
+            
+            #print(columns)
+            #print(len(columns))
+            
+            if len(columns) != 4:
+                continue
+            
+            name, repo = columns[0].split("/")
+            _repo = repo.split(",")
+
+            updates.append({'repository': _repo[0], 'name': name, 'current': None, 'update': columns[1], "arch": columns[2] })
+
+        #print(updates)
 
         return updates
           
     def __initSystemState__(self):
-        result = subprocess.run([ "/usr/bin/zypper", "needs-rebooting" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        self.needs_restart = result.returncode == 1
-
+        self.needs_restart = os.path.exists("/var/run/reboot-required")
+        
         self.outdated = Processlist.getOutdatedProcessIds()
 
     def getOutdatedProcesses(self):

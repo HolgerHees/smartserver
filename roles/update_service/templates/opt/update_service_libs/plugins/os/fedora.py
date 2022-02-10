@@ -10,10 +10,6 @@ from smartserver.processlist import Processlist
 
 
 class Repository(Os):
-    DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-    HISTORY_FORMAT = "%Y-%m-%d %H:%M"
-    VERSION_FORMAT = "%d.%m.%Y"
-    
     def __init__(self):                              
         self.needs_restart = None
         self.outdated = None
