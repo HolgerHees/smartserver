@@ -35,21 +35,26 @@ class ProcessWatcher():
             self.condition.notifyAll()
         
     def initOutdatedProcesses(self,outdated_processes):
+        _outdated_processes = {}
         for state in outdated_processes:
-            self.outdated_processes[state["pid"]] = state
+            _outdated_processes[state["pid"]] = state
             
-        if len(self.outdated_processes) > 0:
-            with self.condition:
-                self.condition.notifyAll()
-        else:
-            #self.outdated_processes["123"] = {"pid": 1, "ppid": 123, "uuid": "hhees", "cmd": "wickedd", "service": "testwickedd-auto"}
-
-            self.postProcess()
+        self.process(_outdated_processes, True)
             
-    def postProcess(self):
+    def process(self, outdated_processes, force):
+      
+        processIds = Processlist.getProcessIds()
+        _outdated_processes = {k: v for k, v in outdated_processes.items() if k in processIds}
+        
+        if len(outdated_processes) != len(_outdated_processes):
+            self.logger.info("{} outdated processe(s) cleaned".format( len(outdated_processes) - len(_outdated_processes) ))
+            outdated_processes = _outdated_processes
+        elif not force:
+            return
+                        
         is_reboot_needed = False
-        for index in self.outdated_processes:
-            service = self.outdated_processes[index]["service"]
+        for index in outdated_processes:
+            service = outdated_processes[index]["service"]
             if service == "":
                 is_reboot_needed = True
                 break
@@ -61,14 +66,16 @@ class ProcessWatcher():
                      
         is_update_service_outdated = False
         services = []
-        for index in self.outdated_processes:
-            service = self.outdated_processes[index]["service"]
+        for index in outdated_processes:
+            service = outdated_processes[index]["service"]
             if not service:
                 continue
             if service == "update_service":
                 is_update_service_outdated = True
             services.append(service)
         self.outdated_services = services
+        
+        self.outdated_processes = outdated_processes
         
         self.is_update_service_outdated = is_update_service_outdated
         self.is_reboot_needed = is_reboot_needed
@@ -78,20 +85,11 @@ class ProcessWatcher():
         with self.condition:
             while self.is_running:
                 if len(self.outdated_processes) > 0:    
-                    #self.logger.info("process")
-
-                    processIds = Processlist.getProcessIds()
-                    _outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processIds}
-                    
-                    if len(_outdated_processes) != len(self.outdated_processes):
-                        self.logger.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(_outdated_processes) ))
-                        
-                        self.outdated_processes = _outdated_processes
-                        
-                        self.postProcess()
-
                     #self.logger.info("sleep")
                     self.condition.wait(15)
+                    #self.logger.info("wakeup")
+
+                    self.process(self.outdated_processes, False)
                 else:
                     #self.logger.info("sleep")
                     self.condition.wait()

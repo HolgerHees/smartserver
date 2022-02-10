@@ -43,8 +43,9 @@
   tags: always
   
 - name: check if vault is encrypted
-  shell: "cat {{config_path}}vault/vault.yml | grep \"$ANSIBLE_VAULT\""
+  shell: "cat {{config_path}}vault/vault.yml | grep \"\\$ANSIBLE_VAULT\""
   changed_when: False
+  failed_when: no
   register: "vault_check_result"
   
 # load initial environment variables

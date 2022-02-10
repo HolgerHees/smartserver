@@ -213,19 +213,16 @@ class Handler(Server):
             
             result = False
             if name_parts[3] in [ "daemon_restart", "system_reboot" ]:
-                code = self.handleWorkflow(name,file_age,MAX_DAEMON_RESTART_TIME,name_parts[0],name_parts[3])
-                if code == 1:
-                    result = self.proceedWorkflow(workflow,file_name,start_time_str,name_parts[3] == "system_reboot")
-                else:
-                    result = True if code == 0 else False
+                result = self.handleWorkflow(name,file_age,MAX_DAEMON_RESTART_TIME,name_parts[0],name_parts[3])
+                if type(result) != bool:
+                    self.proceedWorkflow(result,name,name_parts[0],name_parts[3] == "system_reboot")
             else:
                 result = self.handleCrash(name)
 
-            if type(result) == bool:
-                self.logger.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
-            else:
+            if type(result) != bool:
                 self.logger.info("Proceed with job '{}'".format(name_parts[3]))
-      
+            else:
+                self.logger.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
          
         if os.path.isfile(config.deployment_workflow_file):
             os.unlink(config.deployment_workflow_file)
@@ -252,7 +249,7 @@ class Handler(Server):
                 with open(config.deployment_workflow_file, 'r') as f:
                     workflow = json.load(f)
                     if workflow[0]["cmd_type"] == expected_workflow:
-                        return 1
+                        return workflow
                     else:
                         msg = "Can't continue. Wrong first workflow. Expected: '{}' - Found: '{}'\n".format(expected_workflow,workflow[0]["cmd_type"])
                         flag = "failed"
@@ -269,7 +266,7 @@ class Handler(Server):
             lf.write(msg)
         os.rename(file_name, file_name.replace("-running-", "-{}-".format(flag)))
         
-        return 0 if is_success else -1
+        return is_success
 
     def _proceedWorkflow(self,workflow, file_name, start_time_str, wait_for_inactivity):
         min_inactivity_time = MIN_PROCESS_INACTIVITY_TIME
@@ -472,8 +469,8 @@ def killProcess():
     return handler.getState("update")
 
 if __name__ == '__main__':
-    handler = Handler(app)
     app.logger.setLevel(logging.DEBUG)
+    handler = Handler(app)
     try:
         app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')
     except Exception as e:

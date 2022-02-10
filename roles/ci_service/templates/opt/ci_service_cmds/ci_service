@@ -135,6 +135,6 @@ def state():
 #signal.signal(signal.SIGINT, cleanup)
 
 if __name__ == '__main__':
-    handler = Handler(app)
     app.logger.setLevel(logging.DEBUG)
+    handler = Handler(app)
     app.run(debug=False, use_reloader=False, host=config.service_ip, port='8506')

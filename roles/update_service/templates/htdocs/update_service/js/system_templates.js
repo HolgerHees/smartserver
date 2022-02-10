@@ -280,17 +280,19 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let headerMsg = "";
         
         let count = changed_data["jobs"].length
-      
+        if( count > 0 )
+        {
+            if( changed_data["jobs"][0]["state"] == "running" )
+            {
+                changed_data["jobs"].shift();
+                count = changed_data["jobs"].length
+            }
+        }
+        
         if( count > 0 )
         {
             let last_job = changed_data["jobs"][0];
-            
-            if( last_job["state"] == "running" )
-            {
-                changed_data["jobs"].shift();
-                last_job = changed_data["jobs"][0];
-            }
-            
+
             let action_msg = "<div class=\"detailView\" onclick=\"mx.UNCore.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">" + last_job["type"] + "</div>";
             
             let state_msg = last_job["state"] == "success" ? "was successful" : last_job["state"];
