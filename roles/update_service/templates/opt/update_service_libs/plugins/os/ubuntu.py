@@ -5,16 +5,8 @@ import os
 
 from plugins.os.os import Os
 
-sys.path.insert(0, "/opt/shared/python")
 
-from smartserver.processlist import Processlist
-
-
-class Repository(Os):
-    def __init__(self):          
-        self.needs_restart = None
-        self.outdated = None
-
+class OperatingSystem(Os):
     def getSystemUpdateCmd(self):
         return "apt-get upgrade"
       
@@ -48,18 +40,6 @@ class Repository(Os):
 
         return updates
           
-    def __initSystemState__(self):
-        self.needs_restart = os.path.exists("/var/run/reboot-required")
-        
-        self.outdated = Processlist.getOutdatedProcessIds()
-
-    def getOutdatedProcesses(self):
-        if self.outdated is None:
-            self.__initSystemState__()
-        return self.outdated
-  
     def getRebootState(self):
-        if self.needs_restart is None:
-            self.__initSystemState__()
-        return self.needs_restart
+        return os.path.exists("/var/run/reboot-required")
             

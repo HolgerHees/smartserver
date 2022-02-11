@@ -647,7 +647,7 @@ if( !Auth::hasGroup("admin") )
         
         ret.actionRefreshState = function(btn)
         { 
-            confirmAction(btn,'refreshSystemUpdateCheck');
+            confirmAction(btn,'refreshSystemCheck');
         }
         
         ret.actionKillProcess = function(btn)

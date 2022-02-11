@@ -3,26 +3,27 @@
 import subprocess
 import os
 import json
-
 import glob
 
 from datetime import datetime
 import sys 
-
 import importlib
 
 from config import config
 
 from plugins.deploymentUpdate import DeploymentUpdate
 
+sys.path.insert(0, "/opt/shared/python")
 
-limit_step = None
-if len(sys.argv) >= 2:
-    limit_step = sys.argv[1]
-    
+from smartserver.argsparser import ArgsParser
+
+
+args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()) }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
+   
 update_time = "{}".format(datetime.now().astimezone().isoformat())
 
-state_template = {"last_system_state": update_time, "system_processes_outdated": [], "system_reboot_needed": False, "last_system_update": update_time, "system_updates": [], "last_smartserver_update": update_time, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": None }
+state_template = {"last_system_update": update_time, "system_updates": [], "last_smartserver_update": update_time, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": None }
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
     with open(config.system_update_state_file, 'r') as f:
@@ -35,30 +36,14 @@ state = {i:j for i,j in state.items() if i in state_template}
 update_message_r = []
 
 # **** SYSTEM CHECK **********************************************
-if limit_step is None or limit_step == "system_state" or limit_step == "system_update" or limit_step == "system_dependencies" or limit_step == "system":
+if args_values["limit"] is None or args_values["limit"] == "system_update":
     print("System")
     plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
-    repo = plugin.Repository()
+    operating_system = plugin.OperatingSystem()
 
-if limit_step is None or limit_step == "system_state" or limit_step == "system":
-    state["last_system_state"] = update_time
-
-    state["system_reboot_needed"] = repo.getRebootState()
-    if not state["system_reboot_needed"]:
-      print( u"  - \033[0;32mno reboot required\033[0m")
-    else:
-      print( u"  - \033[1;31mneeds reboot\033[0m")
-
-    state["system_processes_outdated"] = repo.getOutdatedProcesses()
-    if len(state["system_processes_outdated"]) == 0:
-      print( u"  - \033[0;32mno outdated processes\033[0m")
-    else:
-      print( u"  - \033[1;31mhas outdated processes\033[0m")
-
-if limit_step is None or limit_step == "system_update" or limit_step == "system":
     state["last_system_update"] = update_time
 
-    state["system_updates"] = repo.getUpdates()
+    state["system_updates"] = operating_system.getUpdates()
     if len(state["system_updates"]) == 0:
       print( u"  - \033[0;32mis updated\033[0m")
     else:
@@ -69,7 +54,7 @@ if len(state["system_updates"]) > 0 and len(last_states["system_updates"]) != le
 # ****************************************************************
 
 # **** SMARTSERVER ***********************************************
-if limit_step is None or limit_step == "deployment_update":
+if args_values["limit"] is None or args_values["limit"] == "deployment_update":
     print("Smartserver")
 
     state["last_smartserver_update"] = update_time
@@ -107,7 +92,7 @@ if limit_step is None or limit_step == "deployment_update":
             update_message_r.append(u"smartserver has {} updates".format(len(state["smartserver_changes"])))
 # ****************************************************************
 
-if limit_step is None and config.update_check_email and len(update_message_r) > 0:
+if args_values["limit"] is None and args_values["notification"] and config.update_check_email and len(update_message_r) > 0:
     message_r = []
     message_r.append(u"There are new updates")
     for message in update_message_r:

@@ -8,15 +8,14 @@ from server.watcher import watcher
 
 
 class SystemUpdateWatcher(watcher.Watcher): 
-    def __init__(self, logger, process_watcher, reboot_required_packages ):
+    def __init__(self, logger, process_watcher, operating_system ):
         super().__init__(logger)
       
         self.logger = logger
         self.process_watcher = process_watcher
-        self.reboot_required_packages = reboot_required_packages
+        self.reboot_required_packages = operating_system.getRebootRequiredPackages()
         
         self.states = {}
-        self.system_state_last_modified = 0
         self.system_update_last_modified = 0
         self.smartserver_changes_last_modified = 0
         self.smartserver_pull = 0
@@ -50,31 +49,21 @@ class SystemUpdateWatcher(watcher.Watcher):
             
             self.states = _states
             #2022-02-04T03:30:02.059664+01:00
-            self.system_state_last_modified = self.parseTime(self.states["last_system_state"])
             self.system_update_last_modified = self.parseTime(self.states["last_system_update"])
             self.smartserver_changes_last_modified = self.parseTime(self.states["last_smartserver_update"])
             self.smartserver_pull = self.parseTime(self.states["smartserver_pull"]) if self.states["smartserver_pull"] else ""
-            #self.system_state_last_modified = round(datetime.timestamp(parse(self.states["last_system_state"])),3)
-            #self.system_update_last_modified = round(datetime.timestamp(parse(self.states["last_system_update"])),3)
-            #self.smartserver_changes_last_modified = round(datetime.timestamp(parse(self.states["last_smartserver_update"])),3)
-            #self.smartserver_pull = round(datetime.timestamp(parse(self.states["smartserver_pull"])),3)
-
-            self.process_watcher.initOutdatedProcesses(self.states["system_processes_outdated"])
         
-    def getSystemStateLastModifiedAsTimestamp(self):
-        return self.system_state_last_modified
-      
     def isRebootNeeded(self):
-        return self.isRebootNeededByOs() or self.isRebootNeededByOutdatedProcesses() or self.isRebootNeededByInstalledPackages()
+        return self.isRebootNeededByCoreUpdate() or self.isRebootNeededByOutdatedProcesses() or self.isRebootNeededByInstalledPackages()
         
-    def isRebootNeededByOs(self):
-        return self.states["system_reboot_needed"] if "system_reboot_needed" in self.states else False
+    def isRebootNeededByCoreUpdate(self):
+        return self.process_watcher.isRebootNeededByCoreUpdate()
       
     def isRebootNeededByInstalledPackages(self):
         return len(self.installed_reboot_required_packages) > 0
       
     def isRebootNeededByOutdatedProcesses(self):
-        return self.process_watcher.isRebootNeeded()
+        return self.process_watcher.isRebootNeededByOutdatedProcesses()
 
     def getSystemUpdatesLastModifiedAsTimestamp(self):
         return self.system_update_last_modified

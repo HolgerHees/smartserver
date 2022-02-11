@@ -41,8 +41,8 @@ watched_data_files = [
 ]
 
 cmd_mapping = {
-    "software_update_check": "software check",
-    "system_update_check": "update check",
+    "software_check": "software check",
+    "system_check": "system check",
     "daemon_restart": "daemon restart",
     "service_restart": "service restart",
     "system_reboot": "system reboot",
@@ -63,19 +63,16 @@ class Handler(Server):
         super().__init__(self.logger, "update_service" )
            
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
-        repo = plugin.Repository()
-        cmd_install_system_updates = repo.getSystemUpdateCmd()
-        reboot_required_packages = repo.getRebootRequiredPackages()
-        reboot_required_services = repo.getRebootRequiredServices()
-        
-        self.process_watcher = ProcessWatcher(self.logger, reboot_required_services)
-        self.system_update_watcher = SystemUpdateWatcher(self.logger,self.process_watcher, reboot_required_packages)
+        operating_system = plugin.OperatingSystem()
+                
+        self.process_watcher = ProcessWatcher(self.logger, operating_system)
+        self.system_update_watcher = SystemUpdateWatcher(self.logger,self.process_watcher, operating_system)
         self.dependency_watcher = DependencyWatcher(self.logger, self.system_update_watcher)
         self.deployment_state_watcher = DeploymentStateWatcher(self.logger)
         self.deployment_tags_watcher = DeploymentTagsWatcher(self.logger)
         self.software_versions_watcher = SoftwareVersionWatcher(self.logger)
 
-        self.cmd_builder = CmdBuilder(self.logger, self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, cmd_install_system_updates)
+        self.cmd_builder = CmdBuilder(self.logger, self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
         
         self.cmd_executer = CmdExecuter(self.logger, self)
         
@@ -142,11 +139,12 @@ class Handler(Server):
             if self.checkLastDataModified("software",last_data_modified):
                 changed_data["software"] = self.software_versions_watcher.getSoftwareVersions()
         else:
-            last_data_modified["outdated_processes"] = self.process_watcher.getLastModifiedAsTimestamp()
+            last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
+            last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
+
             last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
             last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
             last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
-            last_data_modified["system_state"] = self.system_update_watcher.getSystemStateLastModifiedAsTimestamp()
             last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
             last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
             last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
@@ -160,10 +158,10 @@ class Handler(Server):
             if self.checkLastDataModified("deployment_tags",last_data_modified):
                 changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
 
-            if self.checkLastDataModified("system_state",last_data_modified) or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
+            if self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
                 changed_data["is_reboot_needed"] = {
                     "all": self.system_update_watcher.isRebootNeeded(),
-                    "os": self.system_update_watcher.isRebootNeededByOs(),
+                    "core": self.system_update_watcher.isRebootNeededByCoreUpdate(),
                     "installed": self.system_update_watcher.isRebootNeededByInstalledPackages(),
                     "outdated": self.system_update_watcher.isRebootNeededByOutdatedProcesses()
                 }
@@ -407,9 +405,9 @@ def refreshSoftwareVersionCheck():
 def state():     
     return handler.getState(request.form['type'])
   
-@app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
+@app.route('/refreshSystemCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
-    cmd = handler.cmd_builder.buildSystemUpdateCheckCmdBlock(request.form['username'])
+    cmd = handler.cmd_builder.buildSystemCheckCmdBlock(request.form['username'])
     return handler.runWorkflow([ cmd ], "update", True );
 
 @app.route('/restartService/', methods = ['POST'])

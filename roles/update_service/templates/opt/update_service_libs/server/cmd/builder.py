@@ -2,10 +2,10 @@ from config import config
 
 
 class CmdBuilder: 
-    def __init__(self,logger,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, cmd_install_system_updates):
+    def __init__(self,logger,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, operating_system):
         self.logger = logger
         
-        self.cmd_install_system_updates = cmd_install_system_updates
+        self.cmd_install_system_updates = operating_system.getSystemUpdateCmd()
         
         self.dependency_watcher = dependency_watcher
         self.process_watcher = process_watcher
@@ -31,20 +31,34 @@ class CmdBuilder:
     def buildFunctionBlock(self, username, function, params ):
         return { "username": username, "function": function, "params": params }
 
+    def buildProcessWatcherFunction(self, is_cleanup):
+        return self.buildFunction("process_watcher.cleanup" if is_cleanup else "process_watcher.refresh" )
+
     def buildSoftwareVersionCheckCmd(self, check_type):
         return self.buildCmd(self.cmd_software_version_check, interaction=None,cwd=None,env=None)
 
     def buildSoftwareVersionCheckCmdBlock(self, username):
         cmd = self.buildSoftwareVersionCheckCmd(None)
-        return self.buildCmdBlock(username, "software_update_check", [cmd])
+        return self.buildCmdBlock(username, "software_check", [cmd])
 
     def buildSystemUpdateCheckCheckCmd(self, check_type):
         cmd = u"{} {}".format(self.cmd_system_update_check, check_type if check_type else "")
         return self.buildCmd(cmd, interaction=None,cwd=None,env=None)
       
-    def buildSystemUpdateCheckCmdBlock(self, username):
-        cmd = self.buildSystemUpdateCheckCheckCmd(None)
-        return self.buildCmdBlock(username, "system_update_check", [cmd])
+    def buildSystemCheckCmdBlock(self, username):
+        system_check_cmd = self.buildSystemUpdateCheckCheckCmd(None)
+        refresh_process_watcher_cmd = self.buildProcessWatcherFunction(False)
+        return self.buildCmdBlock(username, "system_check", [system_check_cmd,refresh_process_watcher_cmd])
+
+    def buildSystemRebootCmdBlock(self, username):
+        reboot_cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
+        # no state refresh needed, outdated processes and reboot state is loaded during service startup
+        return self.buildCmdBlock(username, "system_reboot", [cmd])
+
+    def buildSystemRebootCmdBlockIfNecessary(self, username,params):
+        if self.system_update_watcher.isRebootNeeded():
+            return self.buildSystemRebootCmdBlock(username)
+        return None
 
     def buildRestartDaemonCmdBlock(self, username):
         cmd_daemon_restart = "{} update_service".format(self.cmd_service_restart)
@@ -58,21 +72,13 @@ class CmdBuilder:
 
         return None
 
-    def buildSystemRebootCmdBlock(self, username):
-        cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
-        post_cmd = self.buildSystemUpdateCheckCheckCmd("system_state")
-        return self.buildCmdBlock(username, "system_reboot", [cmd,post_cmd])
-
-    def buildSystemRebootCmdBlockIfNecessary(self, username,params):
-        if self.system_update_watcher.isRebootNeeded():
-            return self.buildSystemRebootCmdBlock(username)
-        return None
-
     def buildRestartServiceCmdBlock(self, username, services):
         self.cmd_service_restart_with_services = "{} {}".format(self.cmd_service_restart, services.replace(","," "))
-        cmd = self.buildCmd(self.cmd_service_restart_with_services, interaction=None,cwd=None,env=None)
-        post_cmd = self.buildSystemUpdateCheckCheckCmd("system_state")
-        return self.buildCmdBlock(username, "service_restart", [cmd,post_cmd])
+        
+        restart_service_cmd = self.buildCmd(self.cmd_service_restart_with_services, interaction=None,cwd=None,env=None)
+        refresh_process_watcher_cmd = self.buildProcessWatcherFunction(True)
+        
+        return self.buildCmdBlock(username, "service_restart", [restart_service_cmd,refresh_process_watcher_cmd])
 
     def buildRestartServiceCmdBlockIfNecessary(self, username,params):
         outdated_services = self.process_watcher.getOutdatedServices()
@@ -84,11 +90,11 @@ class CmdBuilder:
     def buildInstallSystemUpdateCmdBlock(self, username):
         pre_cmd = self.buildFunction("dependency_watcher.checkSmartserverRoles")
 
-        cmd = self.buildCmd(self.cmd_install_system_updates, interaction=None,cwd=None,env=None)
+        install_system_updates_cmd = self.buildCmd(self.cmd_install_system_updates, interaction=None,cwd=None,env=None)
+        refresh_process_watcher_cmd = self.buildProcessWatcherFunction(False)
+        system_check_cmd = self.buildSystemUpdateCheckCheckCmd("system_update")
 
-        post_cmd = self.buildSystemUpdateCheckCheckCmd("system")
-
-        return self.buildCmdBlock(username, "system_update", [pre_cmd,cmd,post_cmd])
+        return self.buildCmdBlock(username, "system_update", [install_system_updates_cmd,refresh_process_watcher_cmd,system_check_cmd])
 
     def buildInstallSystemUpdateCmdBlockIfNecessary(self, username,params):
         updates = self.system_update_watcher.getSystemUpdates()

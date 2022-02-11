@@ -15,9 +15,13 @@ import subprocess
 
 from config import config
 
-limit_config = None
-if len(sys.argv) >= 2:
-    limit_config = sys.argv[1]
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver.argsparser import ArgsParser
+
+
+args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()) }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
 
 last_states = {}
 if os.path.isfile(config.software_version_state_file):
@@ -39,7 +43,7 @@ for config_file in files:
     with open(config_file) as json_data:
         job_config = json.load(json_data)
         
-        if limit_config != None and limit_config != job_config['name']:
+        if args_values["limit"] != None and args_values["limit"] != job_config['name']:
             continue
           
         print("  - '{}'".format(job_config['name']), end='')
@@ -105,8 +109,8 @@ for config_file in files:
             
         current_states['states'].append(current_state)
             
-if limit_config == None:
-    if config.software_check_email and len(update_message_r) > 0:
+if args_values["limit"] == None:
+    if args_values["notification"] and config.software_check_email and len(update_message_r) > 0:
         message_r = []
         message_r.append("There are new updates")
         for message in update_message_r:

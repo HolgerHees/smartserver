@@ -14,8 +14,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
     ret.getLastFullRefresh = function(last_data_modified)
     {
         let last_update = 0;
-        if( last_update == 0 || last_data_modified["system_state"] < last_update ) last_update = last_data_modified["system_state"];
-        if( last_update == 0 || last_data_modified["system_updates"] < last_update ) last_update = last_data_modified["system_state"];
+        if( last_update == 0 || last_data_modified["system_reboot"] < last_update ) last_update = last_data_modified["system_reboot"];
+        if( last_update == 0 || last_data_modified["system_updates"] < last_update ) last_update = last_data_modified["system_updates"];
         if( last_update == 0 || last_data_modified["smartserver_changes"] < last_update ) last_update = last_data_modified["smartserver_changes"];
       
         let date = null;

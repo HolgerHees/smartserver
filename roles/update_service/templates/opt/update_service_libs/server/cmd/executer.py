@@ -24,7 +24,8 @@ class CmdExecuter:
     cmd_processlist = "/usr/bin/ps -alx"
 
     process_mapping = {
-        "system_update_check": "system_update_check",
+        "software_update_check": "software_check",
+        "system_update_check": "system_check",
         "systemctl": "service_restart",
         "rpm": "system_update",
         "yum": "system_update",
@@ -136,7 +137,7 @@ class CmdExecuter:
     def runFunction(self,cmd_type, _cmd, lf):
         name = _cmd["function"]
       
-        msg = u"Start function '{}' - '{}'".format(cmd_type, name)
+        msg = u"Run function '{}' - '{}'".format(cmd_type, name)
         self.logger.info(msg)
         lf.write(u"{}\n".format(msg))
 
@@ -200,6 +201,9 @@ class CmdExecuter:
         cmd_type = cmd_block["cmd_type"]
         try:
             for _cmd in cmd_block["cmds"]:
+                if exit_status == 0:
+                    lf.getFile().write("\n")
+                    
                 if "function" in _cmd:
                     step = _cmd["function"]
                     exit_status = self.runFunction(cmd_type,_cmd,lf)

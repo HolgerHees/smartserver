@@ -15,7 +15,7 @@
             > 0.0
         for: 0s
         annotations:
-            logurl: "https://{{server_domain}}/?ref=admin|tools|grafana_logs"
+            logurl: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
       - alert: alert
         expr: |
             sum by (group,log)(
@@ -29,5 +29,5 @@
             > 0.0
         for: 0s
         annotations:
-            logurl: "https://{{server_domain}}/?ref=admin|tools|grafana_logs"
+            logurl: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
 

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, "/opt/shared/python")
 
-from smartserver.file_watcher import FileWatcher
+from smartserver.filewatcher import FileWatcher
 
 class Server():
     def __init__(self,logger, name):

@@ -11,6 +11,66 @@ import timeit
 class Processlist():
     # credits goes to https://raw.githubusercontent.com/rpm-software-management/yum-utils/master/needs-restarting.py
     @staticmethod
+    def _getUserMap():
+        user_map = {}
+        fname = '/etc/passwd'
+        try:
+            with open(fname, 'r') as f:
+                lines = f.readlines()
+        except (IOError, OSError) as e:
+            return files
+
+        for line in lines:
+            columns = line.split(":",3)
+            user_map[columns[2]] = columns[0]
+
+        return user_map
+
+    @staticmethod
+    def _getGroupMap():
+        group_map = {}
+        fname = '/etc/group'
+        try:
+            with open(fname, 'r') as f:
+                lines = f.readlines()
+        except (IOError, OSError) as e:
+            return files
+
+        for line in lines:
+            columns = line.split(":",3)
+            group_map[columns[2]] = columns[0]
+
+        return group_map
+
+    @staticmethod
+    def _getPPID(pid):
+        fname = '/proc/%s/stat' % pid
+        try:
+            with open(fname, 'r') as f:
+                return f.read().split(" ")[3]
+        except (IOError, OSError) as e:
+            return None
+
+    @staticmethod
+    def _getUID(pid):
+        fname = '/proc/%s' % pid
+        try:
+            stat_info = os.stat(fname)
+            uid = stat_info.st_uid
+            return str(uid)
+        except Exception as e:
+            return None
+
+    @staticmethod
+    def _getComm(pid):
+        fname = '/proc/%s/comm' % pid
+        try:
+            with open(fname, 'r') as f:
+                return f.read().strip()
+        except (IOError, OSError) as e:
+            return None
+
+    @staticmethod
     def _getService(pid):
         fname = '/proc/%s/cgroup' % pid
         try:
@@ -22,10 +82,10 @@ class Processlist():
         for line in groups:
             line = line.replace('\n', '')
             hid, hsub, cgroup = line.split(':')
-            if hsub == 'name=systemd':
-                name = cgroup.split('/')[-1]
+            if cgroup.startswith("/system.slice/"):
+                name = cgroup[14:]
                 if name.endswith('.service'):
-                    return name
+                    return name[:-8]
         return None
 
     @staticmethod
@@ -64,22 +124,22 @@ class Processlist():
     #    pids = [line.strip() for line in lines]
     #    return pids
         
-    @staticmethod
-    def getProcesslist():
-        result = subprocess.run([ "/usr/bin/ps", "-axo", "pid,ppid,uid,user,comm,unit" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-        lines = result.stdout.decode("utf-8").split("\n")
-        processes = {}
-        for line in lines:
-            if not line:
-               continue
+    #@staticmethod
+    #def getProcesslist():
+    #    result = subprocess.run([ "/usr/bin/ps", "-axo", "pid,ppid,uid,user,comm,unit" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+    #    lines = result.stdout.decode("utf-8").split("\n")
+    #    processes = {}
+    #    for line in lines:
+    #        if not line:
+    #           continue
             
-            columns = line.split(" ")
-            columns = [column for column in columns if column ]
-            if columns[5] == "-":
-                columns[5] = ""
-            pid = columns.pop(0)
-            processes[pid] = columns
-        return processes
+    #        columns = line.split(" ")
+    #        columns = [column for column in columns if column ]
+    #        if columns[5] == "-":
+    #            columns[5] = ""
+    #        pid = columns.pop(0)
+    #        processes[pid] = columns
+    #    return processes
 
     @staticmethod
     def getOutdatedProcessIds():
@@ -93,25 +153,32 @@ class Processlist():
         for pid in Processlist.getProcessIds():
             for fn in Processlist._getOpenFiles(pid):
                 # if the file is deleted 
-                if fn.find('(deleted)') != -1: 
+                if re.search('^(?!.*/tmp/|/var/|/run/).*\(deleted\)$', fn):
+                #if fn.find('(deleted)') != -1:
                     outdated_pids.add(pid)
                     break
                   
-        processes = Processlist.getProcesslist()
-        
-        outdated = []
-        for pid in outdated_pids:
-            if pid not in processes:
-                continue
-              
-            process_details = processes[pid]
-            ppid, uid, user, comm, unit = process_details
-            _unit = unit.rsplit(".",1)
-            if len(_unit) == 1 or _unit[1] != "service":
-                unit = ""
-            else:
-                unit = _unit[0]
-                      
-            outdated.append({"pid": pid, "ppid": ppid, "uid": uid, "user": user, "command": comm, "service": unit})
+        outdated = {}
+        if len(outdated_pids) > 0:
+            user_map = Processlist._getUserMap()
+            for pid in outdated_pids:
+                ppid = Processlist._getPPID(pid)
+                if ppid is None:
+                    continue
+
+                uid = Processlist._getUID(pid)
+                if uid is None:
+                    continue
+                user = user_map[uid] if uid in user_map else uid
+
+                comm = Processlist._getComm(pid)
+                if comm is None:
+                    continue
+                
+                unit = Processlist._getService(pid)
+                if unit is None:
+                    unit = ""
+
+                outdated[pid] = {"pid": pid, "ppid": ppid, "uid": uid, "user": user, "command": comm, "service": unit}
             
         return outdated
