@@ -31,4 +31,4 @@ class OperatingSystem(Os):
           
     def getRebootState(self):
         result = subprocess.run([ "/usr/bin/zypper", "needs-rebooting" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        return result.returncode == 1
+        return result.returncode != 0

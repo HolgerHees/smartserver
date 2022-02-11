@@ -1,5 +1,5 @@
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import sys
 
@@ -20,7 +20,7 @@ class ProcessWatcher():
         self.operating_system = operating_system
         
         self.is_running = True
-        self.loop_counter = 0
+        self.last_refresh = datetime.now() - timedelta(hours=24) # to force a full refresh
         
         self.is_reboot_needed_by_core_update = False
         self.system_reboot_modified = 0
@@ -35,20 +35,6 @@ class ProcessWatcher():
         self.thread = threading.Thread(target=self.checkProcesses, args=())
         self.thread.start()
         
-    def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
-        
-    def refresh(self):
-        with self.condition:
-            self.loop_iteration = 0
-            self.condition.notifyAll()
-
-    def cleanup(self):
-        with self.condition:
-            self.condition.notifyAll()
-
     def process(self, outdated_processes):
         is_reboot_needed = False
         for pid in outdated_processes:
@@ -82,36 +68,53 @@ class ProcessWatcher():
     def checkProcesses(self):  
         with self.condition:
             while self.is_running:
-                if self.loop_counter == 0:
-                    self.logger.info("Refresh outdated processlist & reboot state")
-
-                    is_reboot_needed_by_core_update = self.operating_system.getRebootState()
-                    if self.is_reboot_needed_by_core_update != is_reboot_needed_by_core_update:
-                        self.is_reboot_needed_by_core_update = is_reboot_needed_by_core_update
-                        self.system_reboot_modified = round(datetime.timestamp(datetime.now()),3)
-
-                    outdated_processes = Processlist.getOutdatedProcessIds()
-                    if outdated_processes.keys() != self.outdated_processes.keys():
-                        self.logger.info("new outdated processe(s)")
-                        self.process(outdated_processes)
-                    
-                    self.loop_counter = 60 # => 15 min
+                if ( datetime.now() - self.last_refresh ).total_seconds() > 900:
+                    self._refresh()
                 else:
                     #self.logger.info("clean outdated processlist")
-                    if len(self.outdated_processes) > 0:    
-                        #self.logger.info("sleep")
-                        #self.logger.info("wakeup")
+                    self._cleanup()
 
-                        processIds = Processlist.getProcessIds()
-                        outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processIds}
-                        
-                        if len(self.outdated_processes) != len(outdated_processes):
-                            self.logger.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(outdated_processes) ))
-                            self.process(outdated_processes)
-
-                self.loop_counter -= 1
-                            
                 self.condition.wait(15)
+        
+    def terminate(self):
+        with self.condition:
+            self.is_running = False
+            self.condition.notifyAll()
+        
+    def refresh(self):
+        with self.condition:
+            self._refresh()
+
+    def cleanup(self):
+        with self.condition:
+            self._cleanup()
+
+    def _refresh(self):
+        self.logger.info("Refresh outdated processlist & reboot state")
+
+        is_reboot_needed_by_core_update = self.operating_system.getRebootState()
+        if self.is_reboot_needed_by_core_update != is_reboot_needed_by_core_update:
+            self.is_reboot_needed_by_core_update = is_reboot_needed_by_core_update
+            self.system_reboot_modified = round(datetime.timestamp(datetime.now()),3)
+
+        outdated_processes = Processlist.getOutdatedProcessIds()
+        if outdated_processes.keys() != self.outdated_processes.keys():
+            self.logger.info("new outdated processe(s)")
+            self.process(outdated_processes)
+
+        self.last_refresh = datetime.now()
+        
+    def _cleanup(self):
+        if len(self.outdated_processes) == 0:    
+            return
+          
+        processIds = Processlist.getProcessIds()
+        outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processIds}
+        
+        if len(self.outdated_processes) != len(outdated_processes):
+            self.logger.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(outdated_processes) ))
+            self.process(outdated_processes)
+
           
     def getOudatedProcesses(self):
         return list(self.outdated_processes.values())

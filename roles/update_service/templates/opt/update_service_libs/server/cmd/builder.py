@@ -42,7 +42,7 @@ class CmdBuilder:
         return self.buildCmdBlock(username, "software_check", [cmd])
 
     def buildSystemUpdateCheckCheckCmd(self, check_type):
-        cmd = u"{} {}".format(self.cmd_system_update_check, check_type if check_type else "")
+        cmd = u"{}{}".format(self.cmd_system_update_check, " --limit={}".format(check_type) if check_type else "")
         return self.buildCmd(cmd, interaction=None,cwd=None,env=None)
       
     def buildSystemCheckCmdBlock(self, username):
@@ -129,5 +129,5 @@ class CmdBuilder:
         if len(outdated_roles) > 0 or len(smartserver_changes) > 0:
             tags = outdated_roles if len(smartserver_changes) == 0 else None
             password = params["password"] if "password" in params else None
-            return self.buildDeploymentSmartserverUpdateCmdBlock(username, password, tags, False)
+            return self.buildDeploymentSmartserverUpdateCmdBlock(username, password, tags)
         return None
