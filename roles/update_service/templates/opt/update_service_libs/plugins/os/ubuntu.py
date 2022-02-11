@@ -7,8 +7,8 @@ from plugins.os.os import Os
 
 
 class OperatingSystem(Os):
-    def getSystemUpdateCmd(self):
-        return "apt-get upgrade"
+    def getSystemUpdateCmds(self):
+        return [ "/usr/bin/apt-get update -y", "/usr/bin/apt-get dist-upgrade -y" ]
       
     def getRebootRequiredPackages(self):
         return []
@@ -28,15 +28,13 @@ class OperatingSystem(Os):
             #print(columns)
             #print(len(columns))
             
-            if len(columns) != 4:
+            if len(columns) != 6:
                 continue
             
             name, repo = columns[0].split("/")
             _repo = repo.split(",")
 
-            updates.append({'repository': _repo[0], 'name': name, 'current': None, 'update': columns[1], "arch": columns[2] })
-
-        #print(updates)
+            updates.append({'repository': _repo[0], 'name': name, 'current': columns[5][:-1], 'update': columns[1], "arch": columns[2] })
 
         return updates
           

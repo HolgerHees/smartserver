@@ -6,8 +6,8 @@ from plugins.os.os import Os
 
 
 class OperatingSystem(Os):
-    def getSystemUpdateCmd(self):
-        return "/usr/bin/dnf update -y"
+    def getSystemUpdateCmds(self):
+        return [ "/usr/bin/dnf update -y" ]
 
     def getRebootRequiredPackages(self):
         return []

@@ -6,8 +6,8 @@ from plugins.os.os import Os
 
 
 class OperatingSystem(Os):
-    def getSystemUpdateCmd(self):
-        return "/usr/bin/zypper dup -y"
+    def getSystemUpdateCmds(self):
+        return [ "/usr/bin/zypper dup -y" ]
       
     def getRebootRequiredPackages(self):
         return ["wicked","wicked-service"]

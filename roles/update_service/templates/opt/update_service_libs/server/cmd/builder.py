@@ -5,7 +5,7 @@ class CmdBuilder:
     def __init__(self,logger,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, operating_system):
         self.logger = logger
         
-        self.cmd_install_system_updates = operating_system.getSystemUpdateCmd()
+        self.system_update_cmds = operating_system.getSystemUpdateCmds()
         
         self.dependency_watcher = dependency_watcher
         self.process_watcher = process_watcher
@@ -90,11 +90,14 @@ class CmdBuilder:
     def buildInstallSystemUpdateCmdBlock(self, username):
         pre_cmd = self.buildFunction("dependency_watcher.checkSmartserverRoles")
 
-        install_system_updates_cmd = self.buildCmd(self.cmd_install_system_updates, interaction=None,cwd=None,env=None)
-        refresh_process_watcher_cmd = self.buildProcessWatcherFunction(False)
-        system_check_cmd = self.buildSystemUpdateCheckCheckCmd("system_update")
+        cmds = []
+        for cmd in self.system_update_cmds:
+            cmds.append( self.buildCmd(cmd, interaction=None,cwd=None,env=None) )
+            
+        cmds.append( self.buildProcessWatcherFunction(False) )
+        cmds.append( self.buildSystemUpdateCheckCheckCmd("system_update") )
 
-        return self.buildCmdBlock(username, "system_update", [install_system_updates_cmd,refresh_process_watcher_cmd,system_check_cmd])
+        return self.buildCmdBlock(username, "system_update", cmds)
 
     def buildInstallSystemUpdateCmdBlockIfNecessary(self, username,params):
         updates = self.system_update_watcher.getSystemUpdates()
