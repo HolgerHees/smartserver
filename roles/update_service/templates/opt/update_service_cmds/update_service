@@ -231,7 +231,7 @@ class Handler(Server):
         with open(file_name, 'a') as f:
             lf = LogFile(f)
             lf.getFile().write("\n")
-            lf.write("The command crashed.\n")
+            lf.write("The command crashed, because logfile was still marked as running.\n")
 
         os.rename(file_name, file_name.replace("-running-","-crashed-"))
         
@@ -253,7 +253,7 @@ class Handler(Server):
             else:
                 msg = "The command was successful.\n"
         else:
-            msg = "The command crashed.\n"
+            msg = "The command crashed, because logfile was too old.\n"
             flag = "crashed"
 
         with open(file_name, 'a') as f:
