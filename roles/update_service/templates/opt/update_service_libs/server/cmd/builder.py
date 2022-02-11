@@ -51,7 +51,7 @@ class CmdBuilder:
         return self.buildCmdBlock(username, "system_check", [system_check_cmd,refresh_process_watcher_cmd])
 
     def buildSystemRebootCmdBlock(self, username):
-        reboot_cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
+        cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
         # no state refresh needed, outdated processes and reboot state is loaded during service startup
         return self.buildCmdBlock(username, "system_reboot", [cmd])
 
