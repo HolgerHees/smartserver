@@ -118,7 +118,7 @@ class CmdBuilder:
                 cmd_deploy_system = "{} --tags \"{}\"".format(cmd_deploy_system,",".join(tags)) 
             cmd_deploy_system = "{} server.yml".format(cmd_deploy_system)
 
-            cmd = self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.git_directory,env={"ANSIBLE_FORCE_COLOR": "1"})
+            cmd = self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1"})
             post_cmd = self.buildSystemUpdateCheckCheckCmd("deployment_update")
             clean_cmd = self.buildCmd(self.cmd_container_cleanup, interaction=None,cwd=None,env=None)
             return self.buildCmdBlock(username, "deployment_update", [cmd,post_cmd,clean_cmd])

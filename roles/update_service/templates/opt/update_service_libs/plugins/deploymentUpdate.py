@@ -32,8 +32,8 @@ class DeploymentUpdate:
             smartserver_code = "missing"
         else:
             # git add files (intent to add)  
-            subprocess.run([ "git", "-C", self.config.git_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-            result = subprocess.run([ "git", "-C", self.config.git_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            subprocess.run([ "git", "-C", self.config.deployment_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            result = subprocess.run([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
             uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
 
             deployment_stat = os.stat(self.config.deployment_state_file)
@@ -71,12 +71,12 @@ class DeploymentUpdate:
                 
             last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
             #last_deployment = "2020-01-20 14:02:00.651984+00:00"
-            #print( " ".join([ "git", "-C", self.config.git_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-            result = subprocess.run([ "git", "-C", self.config.git_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
+            result = subprocess.run([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
             ref = result.stdout.decode("utf-8").strip()
             
-            #print( " ".join([ "git", "-C", self.config.git_directory, "diff-index", "--name-status", ref ]))
-            result = subprocess.run([ "git", "-C", self.config.git_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
+            result = subprocess.run([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
 
             lines = uncommitted_changes + committed_changes
@@ -90,7 +90,7 @@ class DeploymentUpdate:
                 flag, path = line
                 
                 if flag != "D":
-                    file_stat = os.stat("{}/{}".format(self.config.git_directory,path))
+                    file_stat = os.stat("{}/{}".format(self.config.deployment_directory,path))
                     file_mtime = file_stat.st_mtime
                     
                     if file_mtime > deployment_mtime:
