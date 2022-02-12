@@ -181,21 +181,26 @@ mx.UpdateServiceHelper = (function( ret ) {
         else element.innerHTML = "";
     }
     
+    function cleanTime(time)
+    {
+        return time.substring(0,time.length - 3);
+    }
+    
     ret.formatDate = function(date)
     {
         if( date )
         {
             if( date.toLocaleDateString() == (new Date()).toLocaleDateString() )
             {
-                return [ mx.I18N.get("Today, {}").fill(date.toLocaleTimeString()), "today" ];
+                return [ mx.I18N.get("Today, {}").fill(cleanTime(date.toLocaleTimeString())), "today" ];
             }
             else if( date.toLocaleDateString() == ( new Date(new Date().getTime() - 24*60*60*1000) ).toLocaleDateString() )
             {
-                return [ mx.I18N.get("Yesterday, {}").fill(date.toLocaleTimeString()), "yesterday" ];
+                return [ mx.I18N.get("Yesterday, {}").fill(cleanTime(date.toLocaleTimeString())), "yesterday" ];
             }
             else
             {
-                return [ date.toLocaleString(), "other" ];
+                return [ cleanTime(date.toLocaleString()), "other" ];
             }
         }
         else

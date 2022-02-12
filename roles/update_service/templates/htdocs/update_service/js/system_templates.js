@@ -293,7 +293,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         if( code )
         {
             let date = new Date(changed_data["smartserver_pull"] * 1000);
-            let lastPullFormatted = date.toLocaleString();
+            const [ lastPullFormatted, type ] = mx.UpdateServiceHelper.formatDate(date);
           
             [colorClass,updateMsg] = startserverChangeInfoCodes[code];
             
