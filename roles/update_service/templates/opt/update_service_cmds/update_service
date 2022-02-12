@@ -35,17 +35,6 @@ watched_data_files = [
   config.software_version_state_file
 ]
 
-cmd_mapping = {
-    "software_check": "software check",
-    "system_check": "system check",
-    "daemon_restart": "daemon restart",
-    "service_restart": "service restart",
-    "system_reboot": "system reboot",
-    "system_update": "system update",
-    "deployment_update": "deployment update",
-}
-
-
 class Handler(Server):
     def __init__(self,app):
         self.logger = app.logger
@@ -117,7 +106,7 @@ class Handler(Server):
             "status": 0, 
             "job_is_running": running_type is not None, 
             "job_running_type": running_type, 
-            "job_cmd_name": cmd_mapping[cmd_type] if cmd_type is not None else "", 
+            "job_cmd_type": cmd_type, 
             "job_started": current_job_started.isoformat() if current_job_started is not None else None
         }
         

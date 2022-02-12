@@ -25,7 +25,7 @@ class CmdExecuter:
 
     process_mapping = {
         "software_update_check": "software_check",
-        "system_update_check": "system_check",
+        "system_update_check": "update_check",
         "systemctl": "service_restart",
         "rpm": "system_update",
         "yum": "system_update",

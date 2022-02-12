@@ -10,6 +10,42 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "uncommitted": ["red","Git pull skipped because there are uncommitted changes"],
         "missing": ["red","Git pull skipped because deployment status is unknown"],
     };
+    
+    let active_local_cmd_type_map = {
+        "daemon_restart": "A local daemon restart is running",
+        "software_check": "A local software check is running",
+        "update_check": "A local update check is running",
+        "service_restart": "A local service restart is running",
+        "system_update": "A local system update is running",
+        "deployment_update": "A local smartserver update is running"
+    }
+    
+    let active_service_cmd_type_map = {
+        "daemon_restart": "A {1}daemon restart{2} is running since {3} {4}",
+        "software_check": "A {1}software check{2} is running since {3} {4}",
+        "update_check": "A {1}update check{2} is running since {3} {4}",
+        "service_restart": "A {1}service restart{2} is running since {3} {4}",
+        "system_update": "A {1}system update{2} is running since {3} {4}",
+        "deployment_update": "A {1}smartserver update{2} is running since {3} {4}"
+    }
+    
+    let last_cmd_type_map = {
+        "daemon_restart": "Last {1}daemon restart{2} {3} after {4} {5}",
+        "software_check": "Last {1}software check{2} {3} after {4} {5}",
+        "update_check": "Last {1}update check{2} {3} after {4} {5}",
+        "service_restart": "Last {1}service restart{2} {3} after {4} {5}",
+        "system_update": "Last {1}system update{2} {3} after {4} {5}",
+        "deployment_update": "Last {1}smartserver update{2} {3} after {4} {5}"
+    };
+
+    let cmd_type_map = {
+        "daemon_restart": "daemon restart",
+        "software_check": "software check",
+        "update_check": "update check",
+        "service_restart": "service restart",
+        "system_update": "system update",
+        "deployment_update": "smartserver update"
+    };
 
     ret.getLastFullRefresh = function(last_data_modified)
     {
@@ -41,7 +77,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             msg = mx.I18N.get("Please press 'Refresh' to check for updates for the first time");         
         }
         
-        return [ date, dateFormatted, msg ];
+        return [ date, msg ];
     }
     
     ret.getSystemOutdatedDetails = function(last_data_modified, changed_data)
@@ -95,10 +131,6 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
           
         }
-        else
-        {
-            processHeaderMsg = "<div class=\"info\">" + mx.I18N.get("There are no outdated processes running") + "</div>";
-        }
 
         let roleDetailsMsg = "";
         let roleHeaderMsg = "";
@@ -133,16 +165,6 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
           
         }
-        else
-        {
-            roleHeaderMsg = "<div class=\"info\">" + mx.I18N.get("There are no outdated roles") + "</div>";
-        }
-        
-        if( !processDetailsMsg && !roleDetailsMsg )
-        {
-            processHeaderMsg = "<div class=\"info\">" + mx.I18N.get("There are no outdated processes or roles running") + "</div>";
-            roleHeaderMsg = "";
-        }
 
         return [processDetailsMsg, processHeaderMsg, roleDetailsMsg, roleHeaderMsg, roleCount ];
     }
@@ -172,21 +194,21 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return msg;
     }
     
-    ret.getSystemUpdateDetails = function(last_data_modified, changed_data)
+    ret.getSystemUpdateDetails = function(last_data_modified, changed_data, last_full_update)
     {
         let detailsMsg = "";
         let headerMsg = "";
         let updateCount = changed_data["system_updates"].length;
         
-        let date = last_data_modified["system_updates"] ? new Date(last_data_modified["system_updates"] * 1000) : null;
-        
-        const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+        //let date = last_data_modified["system_updates"] ? new Date(last_data_modified["system_updates"] * 1000) : null;
+        //if( last_full_update.getTime() == date.getTime() ) date = null;
+        //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
         
         if( updateCount > 0 )
         {
             let plural = updateCount > 1;
           
-            let i18n_main_msg = plural ? "{} updates available" : "{} update available";
+            let i18n_main_msg = plural ? "There are {} system updates available" : "There is {} system update available";
             
             mx.I18N.get(i18n_main_msg).fill(updateCount)
 
@@ -217,26 +239,27 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("No updates available") + "</div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no system updates available") + "</div>";
         }
       
-        return [ updateCount, dateFormatted, detailsMsg, headerMsg ];
+        return [ updateCount, detailsMsg, headerMsg ];
     }
     
-    ret.getSmartserverChangeDetails = function(last_data_modified, changed_data)
+    ret.getSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update)
     {
         let detailsMsg = "";
         let headerMsg = "";
         let updateCount = changed_data["smartserver_changes"].length;
         
-        let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
-        const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+        //let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
+        //if( last_full_update.getTime() == date.getTime() ) date = null;
+        //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
       
         if( updateCount > 0 )
         {
             let plural = updateCount > 1;
           
-            let i18n_main_msg = plural ? "{} updates available" : "{} update available";
+            let i18n_main_msg = plural ? "There are {} smartserver updates available" : "There is {} smartserver update available";
             
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
 
@@ -256,10 +279,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("No updates available") + "</div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no smartserver updates available") + "</div>";
         }
       
-        return [ updateCount, dateFormatted, detailsMsg, headerMsg ];
+        return [ updateCount, detailsMsg, headerMsg ];
     }
     
     ret.getSmartserverChangeState = function(last_data_modified, changed_data)
@@ -282,6 +305,16 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return msg;
     }
     
+    ret.getActiveServiceJobName = function(cmd_type)
+    {
+        return mx.I18N.get(active_service_cmd_type_map[cmd_type]);
+    }
+    
+    ret.getActiveLocalJobName = function(cmd_type)
+    {
+        return mx.I18N.get(active_local_cmd_type_map[cmd_type]);
+    }
+
     ret.getJobDetails = function(last_data_modified, changed_data)
     {
         let detailsMsg = "";
@@ -299,12 +332,17 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 last_job = changed_data["jobs"][0];
             }
             
-            let action_msg = "<div class=\"detailView\" onclick=\"mx.UNCore.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">" + last_job["type"] + "</div>";
+            let action_msg_1 = "<div class=\"detailView\" onclick=\"mx.UNCore.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">"
+            let action_msg_2 = "</div>";
             
-            let state_msg = last_job["state"] == "success" ? "was successful" : last_job["state"];
+            let state_msg = mx.I18N.get(last_job["state"] == "success" ? "was successful" : last_job["state"]);
             let color = last_job["state"] == "failed" || last_job["state"] == "crashed" ? " red" : "";
             
-            headerMsg = "<div class=\"info" + color + "\">" + mx.I18N.get("Last '{1}' {2} after {3} seconds").fill({"1": action_msg, "2": state_msg, "3": Math.round( last_job["duration"] ) });
+            let last_job_sentence = mx.I18N.get(last_cmd_type_map[last_job["type"]]);
+            let duration = Math.round( last_job["duration"] );
+            let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": state_msg, "4": duration, "5": mx.I18N.get( duration == 1 ? "second" : "seconds" ) });
+          
+            headerMsg = "<div class=\"info" + color + "\">" + msg;
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'lastRunningJobsDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
@@ -322,7 +360,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
                 detailsMsg += "<div class=\"row\" onclick=\"mx.UNCore.openDetails(this,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')\">";
                 detailsMsg += "<div class=\"state " + job["state"] + "\"></div>";
-                detailsMsg += "<div>" + job["type"] + "</div>";
+                detailsMsg += "<div>" + mx.I18N.get(cmd_type_map[job["type"]]) + "</div>";
                 detailsMsg += "<div>" + job["user"] + "</div>";
                 detailsMsg += "<div>" + mx.Logfile.formatState(job["state"]) + "</div>";
                 detailsMsg += "<div>" + mx.Logfile.formatDuration( job["duration"].split(".")[0] ) + "</div>";
@@ -381,7 +419,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( reasons );
-            if( isTimeout ) msg += "<div class=\"sub\">" + mx.I18N.get("Currently disabled because it is only possible max. 5 minutes after a system status refresh") + "</div>";
+            if( isTimeout ) msg += "<div class=\"sub\">" + mx.I18N.get("Disabled because it is only possible max. 5 minutes after a system status refresh") + "</div>";
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive";
             if( isTimeout ) msg += " disabled blocked";
             

@@ -32,7 +32,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
         
         let action = "<div class=\"detailView\" onclick=\"document.location.href='../system/'\">" + mx.I18N.get("Software check") + "</div>";
         
-        document.body.innerHTML = "<div class=\"is_running\">" + mx.I18N.get("{1} is running since {2} seconds").fill({"1": action, "2": duration}) + " seconds</div>";
+        document.body.innerHTML = "<div class=\"is_running\">" + mx.I18N.get("{1} is running since {2} seconds").fill({"1": action, "2": duration, "3": mx.I18N.get( duration == 1 ? "second" : "seconds" ) }) + " seconds</div>";
     }
     
     ret.processData = function(last_data_modified, changed_data)

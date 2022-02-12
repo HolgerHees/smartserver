@@ -41,14 +41,14 @@ class CmdBuilder:
         cmd = self.buildSoftwareVersionCheckCmd(None)
         return self.buildCmdBlock(username, "software_check", [cmd])
 
-    def buildSystemUpdateCheckCheckCmd(self, check_type):
+    def buildSystemUpdateCheckCmd(self, check_type):
         cmd = u"{}{}".format(self.cmd_system_update_check, " --limit={}".format(check_type) if check_type else "")
         return self.buildCmd(cmd, interaction=None,cwd=None,env=None)
       
     def buildSystemCheckCmdBlock(self, username):
-        system_check_cmd = self.buildSystemUpdateCheckCheckCmd(None)
+        system_check_cmd = self.buildSystemUpdateCheckCmd(None)
         refresh_process_watcher_cmd = self.buildProcessWatcherFunction(False)
-        return self.buildCmdBlock(username, "system_check", [system_check_cmd,refresh_process_watcher_cmd])
+        return self.buildCmdBlock(username, "update_check", [system_check_cmd,refresh_process_watcher_cmd])
 
     def buildSystemRebootCmdBlock(self, username):
         cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
@@ -95,7 +95,7 @@ class CmdBuilder:
             cmds.append( self.buildCmd(cmd, interaction=None,cwd=None,env=None) )
             
         cmds.append( self.buildProcessWatcherFunction(False) )
-        cmds.append( self.buildSystemUpdateCheckCheckCmd("system_update") )
+        cmds.append( self.buildSystemUpdateCheckCmd("system_update") )
 
         return self.buildCmdBlock(username, "system_update", cmds)
 
@@ -119,7 +119,7 @@ class CmdBuilder:
             cmd_deploy_system = "{} server.yml".format(cmd_deploy_system)
 
             cmd = self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1"})
-            post_cmd = self.buildSystemUpdateCheckCheckCmd("deployment_update")
+            post_cmd = self.buildSystemUpdateCheckCmd("deployment_update")
             clean_cmd = self.buildCmd(self.cmd_container_cleanup, interaction=None,cwd=None,env=None)
             return self.buildCmdBlock(username, "deployment_update", [cmd,post_cmd,clean_cmd])
         else:

@@ -1,13 +1,21 @@
 {
   "index": {
-    "Daemon status": "Daemon Status",
+    "second": "Sekunde",
+    "seconds": "Sekunden",
+    
+    "Service Error": "Service Fehler",
+    "Service is currently not available": "Service ist aktuell nicht verfügbar",
+    "Service is restarting": "Service wir neu gestartet",
+
+    
+    "System status": "System Status",
+    "Updates": "Updates",
+
+    
     "Daemon was updated and needs to restart": "Daemon wurde aktualisiert und muss neu gestartet werden",
     "Restart daemon": "Daemon neu starten",
     "Stop": "Stop",
     "Search updates": "Updates suchen",
-    "System status": "System Status",
-    "System updates": "System Updates",
-    "Smartserver updates": "Smartserver Updates",
     "Show": "Anzeigen",
     "Hide": "Ausblenden",
     "Today, {}": "Heute, {}",
@@ -15,11 +23,42 @@
     "Last update search on {}": "Letzte Suche nach Updates war am {}",
     "Last update search was {}": "Letzte Suche nach Updates war {}",
     "Please press 'Refresh' to check for updates for the first time": "Bitte drücke 'Aktualisieren' um das erste mal nach Updates zu suchen",
-    "Currently a '{1}' is running since {2} seconds": "Aktuell läuft seit {2} Sekunden ein '{1}'",
-    "Currently a '{}' is running": "Aktuell läuft ein '{}'",
-    "Currently a local started '{}' is running": "Aktuell läuft ein lokaler '{}'",
-    "No update process is running": "Aktuell läuft kein Update Prozess",
 
+    "No service process is running": "Aktuell läuft kein Service Prozess",
+
+    "A local daemon restart is running": "Es läuft ein lokaler Daemon Neustart",
+    "A local software check is running": "Es läuft eine lokale Software Suche",
+    "A local update check is running": "Es läuft eine lokale Update Suche",
+    "A local service restart is running": "Es läuft ein lokaler Service Neustart",
+    "A local system update is running": "Es läuft ein lokales System Update",
+    "A local smartserver update is running": "Es läuft ein lokales Smartserver Update",
+
+    "A {1}daemon restart{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}Daemon Neustart{2}",
+    "A {1}software check{2} is running since {3} {4}": "Es läuft seit {3} {4} eine {1}Software Suche{2}",
+    "A {1}update check{2} is running since {3} {4}": "Es läuft seit {3} {4} eine {1}Update Suche{2}",
+    "A {1}service restart{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}Service Neustart{2}",
+    "A {1}system update{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}System Update{2}",
+    "A {1}smartserver update{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}Smartserver Update{2}",
+
+    "Last {1}daemon restart{2} {3} after {4} {5}": "Letzter {1}Daemon Neustart{2} nach {4} {5} {3}",
+    "Last {1}software check{2} {3} after {4} {5}": "Letzte {1}Software Suche{2} nach {4} {5} {3}",
+    "Last {1}update check{2} {3} after {4} {5}": "Letzte {1}Update Suche{2} nach {4} {5} {3}",
+    "Last {1}service restart{2} {3} after {4} {5}": "Letzter {1}Service Neustart{2} nach {4} {5} {3}",
+    "Last {1}system update{2} {3} after {4} {5}": "Letztes {1}System Update{2} nach {4} {5} {3}",
+    "Last {1}smartserver update{2} {3} after {4} {5}": "Letztes {1}Smartserver Update{2} nach {4} {5} {3}",
+    
+    "daemon restart": "Daemon Neustart",
+    "software check": "Software Suche",
+    "update check": "Update Suche",
+    "service restart": "Service Neustart",
+    "system update": "System Update",
+    "smartserver update": "Smartserver Update",
+
+    "was successful": "erfolgreich beendet",
+    "failed": "fehlgeschlagen",
+    "stopped": "gestoppt",
+    "crashed": "abgestürzt",
+    
     "Continue": "Weiter",
     "Cancel": "Abbrechen",
     "Are you sure?": "Bist du sicher?",
@@ -42,12 +81,8 @@
     "You want to kill current running job?": "Du möchtest den aktuellen Job abbrechen?",
     "You want to <span class='important'>restart update daemon</span>?": "Du möchtest den <span class='important'>Update Daemon neu starten</span>?",
     
-    "was successful": "war erfolgreich",
-    "was stopped": "wurde gestoppt",
-    "failed": "war fehlerhaft",
     "User": "Benutzer",
     
-    "Last '{1}' {2} after {3} seconds": "Letzter '{1}' {2} nach {3} Sekunden",
     "Job": "Job",
     "State": "Status",
     "Duration": "Laufzeit",
@@ -65,19 +100,22 @@
     "Command": "Befehl",
     "Service": "Dienst",
     "Restart": "Neustart",
-    "There are no outdated processes running": "Es laufen keine veralteten Prozesse",
     "{} overwritten smartserver roles": "{} überschriebene Smartserver Rollen",
     "{} overwritten smartserver role": "{} überschriebene Smartserver Rolle",
     "through a system update which affects these roles": "durch ein System Update welche diese Rollen beeinflusst",
     "through a system update which affects these role": "durch ein System Update welches diese Rolle beeinflusst",
-    "There are no outdated roles": "Es gibt keine veralteten Rollen",
     "Deploy all": "Alle deployen",
     "Role": "Rolle",
-    "There are no outdated processes or roles running": "Es laufen keine veralteten Prozesse oder Rollen",
     
-    "{} updates available": "{} Updates verfügbar",
-    "{} update available": "{} Update verfügbar",
-    "No updates available": "Keine Updates verfügbar",
+    
+    "There are no system updates available": "Es sind keine System Updates verfügbar",
+    "There are {} system updates available": "Es sind {} System Updates verfügbar",
+    "There is {} system update available": "Es ist {} System Update verfügbar",
+
+    "There are no smartserver updates available": "Es sind keine Smartserver Updates verfügbar",
+    "There are {} smartserver updates available": "Es sind {} Smartserver Updates verfügbar",
+    "There is {} smartserver update available": "Es ist {} Smartserver Update verfügbar",
+
     "Install": "Installieren",
 
     "Name": "Name",
@@ -91,10 +129,11 @@
     "There are {1} {2} and {3} {4} update(s) available": "Es sind {1} {2} und {3} {4} Update(s) verfügbar",
     "There are {1} {2} updates available": "Es sind {1} {2} Updates verfügbar",
     "There is {1} {2} update available": "Es ist {1} {2} Update verfügbar",
+    
     "system": "System",
     "smartserver": "Smartserver",
     "Install all": "Alles installieren",
-    "Currently disabled because it is only possible max. 5 minutes after a system status refresh": "Aktuell deaktiviert da die letzte System Status Aktualisierung mehr als 5 Minuten her ist",
+    "Disabled because it is only possible max. 5 minutes after a system status refresh": "Deaktiviert da die letzte System Status Aktualisierung mehr als 5 Minuten her ist",
     
     "Reboot needed": "Reboot notwendig",
     "It is necessary because of {1} and {2}": "Ist wegen {1} und {2} notwendig",
@@ -115,10 +154,6 @@
     "No software versions have been checked so far": "Es wurden bisher keine Software Versionen überprüft",
     "Start initial run": "Starte initiale Überprüfung",
     "Software check": "Versions Überprüfung",
-    "{1} is running since {2} seconds": "{1} läuft seit {2} Sekunden",
-    
-    "Service Error": "Service Fehler",
-    "Service is currently not available": "Service ist aktuell nicht verfügbar",
-    "Service is restarting": "Service wir neu gestartet"
+    "{1} is running since {2} {3}": "{1} läuft seit {2} {3}"
   }
 }
