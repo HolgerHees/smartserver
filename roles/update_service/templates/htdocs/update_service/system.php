@@ -692,8 +692,6 @@ if( !Auth::hasGroup("admin") )
     <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button kill red" onclick="mx.UNCore.actionKillProcess(this)" data-i18n="Stop"></div></div></div>
     <div class="action" id="lastRunningJobsHeader"></div>
     <div class="list form table logfileBox" id="lastRunningJobsDetails"></div>
-</div>
-<div class="widget">
     <div class="action" id="systemRebootState"></div>
     <div class="action" id="systemStateHeader"></div>
     <div class="list form table" id="systemStateDetails"></div>
@@ -701,7 +699,7 @@ if( !Auth::hasGroup("admin") )
     <div class="list form table" id="roleStateDetails"></div>
 </div>
 <div class="widget">
-    <div class="header"><div data-i18n="Updates"></div><div></div></div>
+    <div class="header"><div data-i18n="Update Status"></div><div></div></div>
 
     <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" onclick="mx.UNCore.actionRefreshState(this)" data-i18n="Search updates"></div></div></div>
     
