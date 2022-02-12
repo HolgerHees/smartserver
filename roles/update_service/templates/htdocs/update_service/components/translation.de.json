@@ -20,7 +20,7 @@
     "Hide": "Ausblenden",
     "Today, {}": "Heute, {}",
     "Yesterday, {}": "Gestern, {}",
-    "Last update search on {}": "Letzte Suche nach Updates war am {}",
+    "Last update search was on {}": "Letzte Suche nach Updates war am {}",
     "Last update search was {}": "Letzte Suche nach Updates war {}",
     "Please press 'Refresh' to check for updates for the first time": "Bitte drücke 'Aktualisieren' um das erste mal nach Updates zu suchen",
 
@@ -143,9 +143,10 @@
     "Reboot system": "System Neustart",
     
     "Last git pull was on {}": "Letzter git pull war am {}",
+    "Last git pull was {}": "Letzter git pull war {}",
     "Git pull skipped because CI tests failed": "Git pull übersprungen weil CI Tests fehlerhaft waren",
     "Git pull skipped because CI tests are currently running": "Git pull übersprungen weil aktuell CI Tests laufen",
-    "Git pulled and all remote ci succeeded": "Git pull und alle CI Tests erfolgreich",
+    "Git pulled and all remote CI tests successful": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
     "Git pull skipped because there are uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
     "Git pull skipped because deployment status is unknown": "Git pull übersprungen weil der Deployment Status unbekannt ist",

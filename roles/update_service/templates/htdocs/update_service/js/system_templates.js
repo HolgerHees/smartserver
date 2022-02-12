@@ -65,7 +65,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
             if( dateType == "other" )
             {
-                msg = mx.I18N.get("Last update search on {}").fill( dateFormatted );
+                msg = mx.I18N.get("Last update search was on {}").fill( dateFormatted );
             }
             else
             {
@@ -291,14 +291,25 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let msg = "";
         
         if( code )
-        {
-            let date = new Date(changed_data["smartserver_pull"] * 1000);
-            const [ lastPullFormatted, type ] = mx.UpdateServiceHelper.formatDate(date);
-          
+        {           
             [colorClass,updateMsg] = startserverChangeInfoCodes[code];
             
             msg = "<div class=\"info " + colorClass + "\">" + mx.I18N.get(updateMsg);
-            if( code != "missing" ) msg += "<div class=\"sub\">" + mx.I18N.get("Last git pull was on {}").fill( lastPullFormatted ) + "</div>";
+            if( code != "missing" ) 
+            {
+                let date = new Date(changed_data["smartserver_pull"] * 1000);
+                const [ lastPullFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+                if( dateType == "other" )
+                {
+                    subMsg = mx.I18N.get("Last git pull was on {}").fill( lastPullFormatted );
+                }
+                else
+                {
+                    subMsg = mx.I18N.get("Last git pull was {}").fill( lastPullFormatted );
+                }
+              
+                msg += "<div class=\"sub\">" + subMsg + "</div>";
+            }
             msg += "</div>";
         }
 
