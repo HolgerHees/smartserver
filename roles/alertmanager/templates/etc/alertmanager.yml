@@ -33,6 +33,10 @@ route:
       receiver: dummy
     - matchers:
       - group="apache"
+      - log=~".*/update_service/api.php.*500.*"
+      receiver: dummy
+    - matchers:
+      - group="apache"
       - log=~".*/cgi-bin/.%2e/.*"
       receiver: dummy
 

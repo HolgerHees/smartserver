@@ -177,8 +177,31 @@ mx.UpdateServiceHelper = (function( ret ) {
     ret.setLastCheckedContent = function(dateFormatted,id)
     {
         var element = mx.$("#" + id);
-        if( dateFormatted ) element.innerHTML = "(" + mx.I18N.get("checked on") + " " + dateFormatted + ")";
-        else element.innerHTML = "(" + mx.I18N.get("never checked") + ")";
+        if( dateFormatted ) element.innerHTML = "(" + dateFormatted + ")";
+        else element.innerHTML = "";
+    }
+    
+    ret.formatDate = function(date)
+    {
+        if( date )
+        {
+            if( date.toLocaleDateString() == (new Date()).toLocaleDateString() )
+            {
+                return [ mx.I18N.get("Today, {}").fill(date.toLocaleTimeString()), "today" ];
+            }
+            else if( date.toLocaleDateString() == ( new Date(new Date().getTime() - 24*60*60*1000) ).toLocaleDateString() )
+            {
+                return [ mx.I18N.get("Yesterday, {}").fill(date.toLocaleTimeString()), "yesterday" ];
+            }
+            else
+            {
+                return [ date.toLocaleString(), "other" ];
+            }
+        }
+        else
+        {
+            return [ null, null ];
+        }
     }
         
     return ret;

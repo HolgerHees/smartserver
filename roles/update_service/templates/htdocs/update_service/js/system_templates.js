@@ -19,19 +19,29 @@ mx.UpdateServiceTemplates = (function( ret ) {
         if( last_update == 0 || last_data_modified["smartserver_changes"] < last_update ) last_update = last_data_modified["smartserver_changes"];
       
         let date = null;
+        let dateFormatted = null;
+        let dateType = null;
         let msg = "";
         
         if( last_update > 0 )
         {
             date = new Date(last_update * 1000);
-            msg = mx.I18N.get("Last full refresh on {}").fill( date.toLocaleString() );
+            [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+            if( dateType == "other" )
+            {
+                msg = mx.I18N.get("Last update search on {}").fill( dateFormatted );
+            }
+            else
+            {
+                msg = mx.I18N.get("Last update search was {}").fill( dateFormatted );
+            }
         }
         else
         { 
             msg = mx.I18N.get("Please press 'Refresh' to check for updates for the first time");         
         }
         
-        return [ date, msg ];
+        return [ date, dateFormatted, msg ];
     }
     
     ret.getSystemOutdatedDetails = function(last_data_modified, changed_data)
@@ -139,9 +149,6 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
     ret.getSystemStateDetails = function(last_data_modified, changed_data)
     {
-        let date = last_data_modified["system_state"] ? new Date(last_data_modified["system_state"] * 1000) : null;;
-        let lastUpdateDateFormatted = date ? date.toLocaleString() : null;
-        
         let msg = "";
 
         if( changed_data["is_reboot_needed"]["all"] )
@@ -162,7 +169,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UNCore.actionRebootSystem(this)\">" + mx.I18N.get("Reboot system") + "</div></div>";
         }
         
-        return [ msg, lastUpdateDateFormatted ];
+        return msg;
     }
     
     ret.getSystemUpdateDetails = function(last_data_modified, changed_data)
@@ -172,8 +179,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let updateCount = changed_data["system_updates"].length;
         
         let date = last_data_modified["system_updates"] ? new Date(last_data_modified["system_updates"] * 1000) : null;
-        let lastUpdateDateFormatted = date ? date.toLocaleString() : null;
-      
+        
+        const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+        
         if( updateCount > 0 )
         {
             let plural = updateCount > 1;
@@ -212,7 +220,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get("No updates available") + "</div>";
         }
       
-        return [ updateCount, lastUpdateDateFormatted, detailsMsg, headerMsg ];
+        return [ updateCount, dateFormatted, detailsMsg, headerMsg ];
     }
     
     ret.getSmartserverChangeDetails = function(last_data_modified, changed_data)
@@ -222,7 +230,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let updateCount = changed_data["smartserver_changes"].length;
         
         let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
-        let lastUpdateDateFormatted = date ? date.toLocaleString() : null;
+        const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
       
         if( updateCount > 0 )
         {
@@ -251,7 +259,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get("No updates available") + "</div>";
         }
       
-        return [ updateCount, lastUpdateDateFormatted, detailsMsg, headerMsg ];
+        return [ updateCount, dateFormatted, detailsMsg, headerMsg ];
     }
     
     ret.getSmartserverChangeState = function(last_data_modified, changed_data)

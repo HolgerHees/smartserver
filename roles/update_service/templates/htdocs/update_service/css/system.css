@@ -10,16 +10,20 @@ body.system div.info,
 body.system div.header div:first-child {
   color: var(--light-menu-text);
 }
-body.system div.action:hover {
-  background-color: var(--light-menu-hover-bg);
-  border-radius: 4px;
+@media (hover: hover) {
+  body.system div.action:hover {
+    background-color: var(--light-menu-hover-bg);
+    border-radius: 4px;
+  }
 }
 body.dark.system div.info,
 body.dark.system div.header div:first-child {
   color: var(--dark-menu-text);
 }
-body.dark.system div.action:hover {
-  background-color: var(--dark-menu-hover-bg);
+@media (hover: hover) {
+  body.dark.system div.action:hover {
+    background-color: var(--dark-menu-hover-bg);
+  }
 }
 body.system div.info.green,
 body.system div.header.green {
@@ -152,10 +156,11 @@ body.system div.detailView {
   display: inline-block;
   color: #1976d2;
 }
-body.system div.detailView:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  body.system div.detailView:hover {
+    text-decoration: underline;
+  }
 }
-
 body.system div.form.table > div.row > div.indexLogDate {
   white-space: nowrap;
 }

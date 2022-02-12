@@ -75,6 +75,10 @@ body.software .tooltip .hover {
   background-color: #f2f2f2;
 }
 
+body.dark.software .tooltip .hover {
+  background-color: #333;
+}
+
 /* Show the tooltip text when you mouse over the tooltip container */
 body.software .tooltip:hover .hover {
   visibility: visible;

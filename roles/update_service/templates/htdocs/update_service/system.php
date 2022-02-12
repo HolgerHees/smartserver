@@ -60,7 +60,7 @@ if( !Auth::hasGroup("admin") )
             
             if( changed_data.hasOwnProperty("deployment_tags") ) deploymentTags = changed_data["deployment_tags"];
                  
-            const [ lastUpdateDate, lastUpdateMsg ] = mx.UpdateServiceTemplates.getLastFullRefresh(last_data_modified);
+            const [ lastUpdateDate, lastUpdateDateFormatted, lastUpdateMsg ] = mx.UpdateServiceTemplates.getLastFullRefresh(last_data_modified);
             let lastUpdateDateElement = mx.$("#lastUpdateDateFormatted");
             if( lastUpdateMsg != lastUpdateDateElement.innerHTML ) 
             {
@@ -82,10 +82,8 @@ if( !Auth::hasGroup("admin") )
             
             if( changed_data.hasOwnProperty("is_reboot_needed") )
             {
-                const [rebootNeededDetails, lastUpdateDateFormatted] = mx.UpdateServiceTemplates.getSystemStateDetails(last_data_modified, changed_data)
+                const rebootNeededDetails = mx.UpdateServiceTemplates.getSystemStateDetails(last_data_modified, changed_data)
                 
-                mx.UpdateServiceHelper.setLastCheckedContent(lastUpdateDateFormatted,"systemStateDateFormatted");
-
                 let rebootNeededElement = mx.$("#systemRebootState");
                 rebootNeededElement.innerHTML = rebootNeededDetails;
                 rebootNeededElement.style.display = rebootNeededDetails ? "" : "None";
@@ -98,7 +96,7 @@ if( !Auth::hasGroup("admin") )
                 updateBehaviorChanged = true;
                 
                 mx.UpdateServiceHelper.setTableContent(systemUpdateDetails,"systemUpdateDetails",systemUpdateHeader,"systemUpdateHeader")
-                mx.UpdateServiceHelper.setLastCheckedContent(systemUpdateDateFormatted,"systemUpdateDateFormatted");
+                mx.UpdateServiceHelper.setLastCheckedContent(lastUpdateDateFormatted == systemUpdateDateFormatted ? "" : systemUpdateDateFormatted,"systemUpdateDateFormatted");
             }
             
             if( changed_data.hasOwnProperty("smartserver_changes") )
@@ -108,7 +106,7 @@ if( !Auth::hasGroup("admin") )
                 updateBehaviorChanged = true;
 
                 mx.UpdateServiceHelper.setTableContent(smartserverChangeDetails,"smartserverChangeDetails",smartserverChangeHeader,"smartserverChangeHeader")
-                mx.UpdateServiceHelper.setLastCheckedContent(smartserverChangeDateFormatted,"smartserverChangeDateFormatted");
+                mx.UpdateServiceHelper.setLastCheckedContent(lastUpdateDateFormatted == smartserverChangeDateFormatted ? "" : smartserverChangeDateFormatted,"smartserverChangeDateFormatted");
             }
             
             if( changed_data.hasOwnProperty("smartserver_code") )
@@ -712,8 +710,8 @@ if( !Auth::hasGroup("admin") )
     <div class="list form table logfileBox" id="lastRunningJobsDetails"></div>
 </div>
 <div class="widget">
-    <div class="header"><div data-i18n="System status"></div><div id="systemStateDateFormatted"></div></div>
-    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" onclick="mx.UNCore.actionRefreshState(this)" data-i18n="Refresh"></div></div></div>
+    <div class="header"><div data-i18n="System status"></div><div></div></div>
+    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" onclick="mx.UNCore.actionRefreshState(this)" data-i18n="Search updates"></div></div></div>
     <div class="action" id="systemRebootState"></div>
     <div class="action" id="systemStateHeader"></div>
     <div class="list form table" id="systemStateDetails"></div>
