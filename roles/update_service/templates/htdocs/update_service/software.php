@@ -84,7 +84,7 @@ mx.SNCore = (function( ret ) {
             }
             else
             {
-                if( this.status != 0 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
+                if( this.status != 0 && this.status != 401 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, 15000);
             }
         };
