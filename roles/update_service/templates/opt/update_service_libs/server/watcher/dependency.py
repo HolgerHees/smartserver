@@ -1,22 +1,23 @@
 import glob
 import os
 import json
-from datetime import datetime
 import pyinotify
 
 from pathlib import Path
 
 from config import config
 
+from server.watcher import watcher
 
-class DependencyWatcher(): 
+
+class DependencyWatcher(watcher.Watcher): 
     def __init__(self, logger, system_update_watcher ):
         self.logger = logger
         
         self.system_update_watcher = system_update_watcher
         
         self.outdated_roles = {}
-        self.last_modified = 0
+        self.last_modified = self.getStartupTimestamp()
 
         self.initOutdatedRoles()
         
@@ -38,7 +39,7 @@ class DependencyWatcher():
         self.postProcess()
         
     def postProcess(self):
-        self.last_modified = round(datetime.timestamp(datetime.now()),3)
+        self.last_modified = self.getNowAsTimestamp()
             
     def getOutdatedRoles(self):
         return list(self.outdated_roles.keys())

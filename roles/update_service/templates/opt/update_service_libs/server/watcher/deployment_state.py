@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from config import config
 
 from server.watcher import watcher
@@ -12,7 +10,7 @@ class DeploymentStateWatcher(watcher.Watcher):
         self.logger = logger
         
         self.state = {}
-        self.last_modified = 0
+        self.last_modified = self.getStartupTimestamp()
         
         self.initDeploymentState(False)
         
@@ -21,7 +19,7 @@ class DeploymentStateWatcher(watcher.Watcher):
 
     def initDeploymentState(self,shouldRetry):
         self.state = self.readJsonFile(config.deployment_state_file,shouldRetry,{})
-        self.last_modified = round(datetime.timestamp(datetime.now()),3)
+        self.last_modified = self.getNowAsTimestamp()
     
     def hasEncryptedValut(self):
         return self.state["has_encrypted_vault"] if "has_encrypted_vault" in self.state else False

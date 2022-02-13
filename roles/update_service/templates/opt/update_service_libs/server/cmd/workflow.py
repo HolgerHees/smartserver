@@ -146,8 +146,8 @@ class CmdWorkflow:
                         self.logger.info("Waiting for 30s of inactivity.{} Waiting since {}s".format(cmd_msg,round(waiting_time)))
                         
                     time.sleep(1)
-                else:
-                    can_proceed = True
+            else:
+                can_proceed = True
                     
             if can_proceed:
                 # system reboot has only one cmd, means after reboot 'cmds' is empty

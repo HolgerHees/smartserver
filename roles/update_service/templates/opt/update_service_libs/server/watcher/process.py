@@ -7,9 +7,12 @@ sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.processlist import Processlist
 
+from server.watcher import watcher
 
-class ProcessWatcher(): 
+class ProcessWatcher(watcher.Watcher): 
     def __init__(self, logger, operating_system ):
+        super().__init__(logger)
+      
         self.logger = logger
         
         self.reboot_required_services = []
@@ -23,13 +26,13 @@ class ProcessWatcher():
         self.last_refresh = datetime.now() - timedelta(hours=24) # to force a full refresh
         
         self.is_reboot_needed_by_core_update = False
-        self.system_reboot_modified = 0
+        self.system_reboot_modified = self.getStartupTimestamp()
         
         self.is_reboot_needed_by_outdated_processes = False
         self.is_update_service_outdated = False
         self.outdated_services = []
         self.outdated_processes = {}
-        self.oudated_processes_modified = 0
+        self.oudated_processes_modified = self.getStartupTimestamp()
         
         self.condition = threading.Condition()
         self.thread = threading.Thread(target=self.checkProcesses, args=())
@@ -63,7 +66,7 @@ class ProcessWatcher():
         
         self.is_update_service_outdated = is_update_service_outdated
         self.is_reboot_needed_by_outdated_processes = is_reboot_needed
-        self.oudated_processes_modified = round(datetime.timestamp(datetime.now()),3)
+        self.oudated_processes_modified = self.getNowAsTimestamp()
 
     def checkProcesses(self):  
         with self.condition:
@@ -95,7 +98,7 @@ class ProcessWatcher():
         is_reboot_needed_by_core_update = self.operating_system.getRebootState()
         if self.is_reboot_needed_by_core_update != is_reboot_needed_by_core_update:
             self.is_reboot_needed_by_core_update = is_reboot_needed_by_core_update
-            self.system_reboot_modified = round(datetime.timestamp(datetime.now()),3)
+            self.system_reboot_modified = self.getNowAsTimestamp()
 
         outdated_processes = Processlist.getOutdatedProcessIds()
         if outdated_processes.keys() != self.outdated_processes.keys():

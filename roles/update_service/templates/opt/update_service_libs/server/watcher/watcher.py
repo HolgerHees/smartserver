@@ -1,11 +1,17 @@
 import os
 import json
 import time
-
+from datetime import datetime
 
 class Watcher:
     def __init__(self, logger):
         self.logger = logger
+        
+    def getStartupTimestamp(self):
+        return round(self.getNowAsTimestamp() - 0.1,3)
+
+    def getNowAsTimestamp(self):
+        return round(datetime.timestamp(datetime.now()),3)
 
     def readJsonFile(self,path,shouldRetry,default):
         return self._readJsonFile(path, 5 if shouldRetry else 0, default)
