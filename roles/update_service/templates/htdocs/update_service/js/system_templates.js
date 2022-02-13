@@ -5,13 +5,14 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let startserverChangeInfoCodes = {
         "failed": ["red","Git pull skipped because CI tests failed"],
         "pending": ["yellow","Git pull skipped because CI tests are currently running"],
-        "pulled_tested": ["green", "Git pulled and all remote ci succeeded"],
+        "pulled_tested": ["green", "Git pulled and all remote CI succeeded"],
         "pulled": ["green", "Git pulled"],
         "uncommitted": ["red","Git pull skipped because there are uncommitted changes"],
         "missing": ["red","Git pull skipped because deployment status is unknown"],
     };
     
     let active_local_cmd_type_map = {
+        "system_reboot": "A local system reboot is running",
         "daemon_restart": "A local daemon restart is running",
         "software_check": "A local software check is running",
         "update_check": "A local update check is running",
@@ -21,6 +22,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
     }
     
     let active_service_cmd_type_map = {
+        "system_reboot": "A {1}system reboot{2} is running since {3} {4}",
         "daemon_restart": "A {1}daemon restart{2} is running since {3} {4}",
         "software_check": "A {1}software check{2} is running since {3} {4}",
         "update_check": "A {1}update check{2} is running since {3} {4}",
@@ -30,6 +32,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
     }
     
     let last_cmd_type_map = {
+        "system_reboot": "Last {1}system reboot{2} {3} after {4} {5}",
         "daemon_restart": "Last {1}daemon restart{2} {3} after {4} {5}",
         "software_check": "Last {1}software check{2} {3} after {4} {5}",
         "update_check": "Last {1}update check{2} {3} after {4} {5}",
@@ -39,6 +42,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
     };
 
     let cmd_type_map = {
+        "system_reboot": "system reboot",
         "daemon_restart": "daemon restart",
         "software_check": "software check",
         "update_check": "update check",
@@ -175,16 +179,16 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
         if( changed_data["is_reboot_needed"]["all"] )
         { 
-            msg = "<div class=\"info red\">" + mx.I18N.get("Reboot needed");
+            msg = "<div class=\"info red\">" + mx.I18N.get("Reboot necessary");
             
             let reasons = {};
-            if( changed_data["is_reboot_needed"]["os"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("installed system updates");
+            if( changed_data["is_reboot_needed"]["core"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("installed system updates");
             if( changed_data["is_reboot_needed"]["outdated"] ) reasons["2"] = mx.I18N.get("outdated processes");
                              
             let reasonKeys = Object.keys(reasons);
             let isMultiReason = reasonKeys.length > 1;
             
-            let infoMsg = isMultiReason ? "Is needed because of {1} and {2}" : "Is needed because of {}";
+            let infoMsg = isMultiReason ? "Is necessary because of {1} and {2}" : "Is necessary because of {}";
 
             msg += "<div class=\"sub\">" + mx.I18N.get(infoMsg).fill( isMultiReason ? reasons : reasons[reasonKeys[0]] ) + "</div>";
             
@@ -331,17 +335,21 @@ mx.UpdateServiceTemplates = (function( ret ) {
         let detailsMsg = "";
         let headerMsg = "";
         
-        let count = changed_data["jobs"].length
-      
-        if( count > 0 )
+        let jobs = changed_data["jobs"];
+        let last_job = null;
+        
+        if( jobs.length > 0 )
         {
-            let last_job = changed_data["jobs"][0];
+            jobs = jobs.sort(function(a,b){ return a["timestamp"] == b["timestamp"] ? 0 : ( a["timestamp"] < b["timestamp"] ? 1 : -1 ); });
+          
+            last_job = jobs[0];
             
-            if( last_job["state"] == "running" )
-            {
-                changed_data["jobs"].shift();
-                last_job = changed_data["jobs"][0];
-            }
+            if( last_job["state"] == "running" ) jobs.shift();
+        }
+        
+        if( jobs.length > 0 )
+        {
+            last_job = jobs[0];
             
             let action_msg_1 = "<div class=\"detailView\" onclick=\"mx.UNCore.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">"
             let action_msg_2 = "</div>";
@@ -364,9 +372,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
             detailsMsg += "<div>" + mx.I18N.get("Duration") + "</div>";
             detailsMsg += "<div>" + mx.I18N.get("Date") + "</div>";
             detailsMsg += "</div>";
-            for( index in changed_data["jobs"])
+            for( index in jobs)
             {
-                let job = changed_data["jobs"][index];
+                let job = jobs[index];
                 let date = new Date(job["timestamp"] * 1000);
 
                 detailsMsg += "<div class=\"row\" onclick=\"mx.UNCore.openDetails(this,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')\">";

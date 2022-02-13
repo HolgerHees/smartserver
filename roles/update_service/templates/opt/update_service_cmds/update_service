@@ -179,7 +179,7 @@ class Handler(Server):
             return self.buildSuccessResult(None, None, state_type)
               
     def runWorkflow(self, workflow, state_type, checkGlobalRunning ):
-        is_success = self.cmd_workflow.runWorkflow( workflow, state_type, checkGlobalRunning )
+        is_success = self.cmd_workflow.runWorkflow( workflow, checkGlobalRunning )
         if is_success :
             return self.getState(state_type)
         else:

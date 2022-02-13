@@ -699,7 +699,7 @@ if( !Auth::hasGroup("admin") )
     <div class="list form table" id="roleStateDetails"></div>
 </div>
 <div class="widget">
-    <div class="header"><div data-i18n="Update Status"></div><div></div></div>
+    <div class="header"><div data-i18n="Update status"></div><div></div></div>
 
     <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" onclick="mx.UNCore.actionRefreshState(this)" data-i18n="Search updates"></div></div></div>
     

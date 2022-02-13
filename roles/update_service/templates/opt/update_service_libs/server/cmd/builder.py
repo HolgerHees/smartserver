@@ -130,7 +130,7 @@ class CmdBuilder:
         outdated_roles = self.dependency_watcher.getOutdatedRoles()
         
         if len(outdated_roles) > 0 or len(smartserver_changes) > 0:
-            tags = outdated_roles if len(smartserver_changes) == 0 else None
+            tags = outdated_roles if len(smartserver_changes) == 0 else []
             password = params["password"] if "password" in params else None
             return self.buildDeploymentSmartserverUpdateCmdBlock(username, password, tags)
         return None

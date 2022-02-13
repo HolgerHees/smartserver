@@ -26,6 +26,7 @@
 
     "No service process is running": "Aktuell läuft kein Service Prozess",
 
+    "A local system reboot is running": "Es läuft ein lokaler Server Neustart",
     "A local daemon restart is running": "Es läuft ein lokaler Daemon Neustart",
     "A local software check is running": "Es läuft eine lokale Software Suche",
     "A local update check is running": "Es läuft eine lokale Update Suche",
@@ -33,6 +34,7 @@
     "A local system update is running": "Es läuft ein lokales System Update",
     "A local smartserver update is running": "Es läuft ein lokales Smartserver Update",
 
+    "A {1}system reboot{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}Server Neustart{2}",
     "A {1}daemon restart{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}Daemon Neustart{2}",
     "A {1}software check{2} is running since {3} {4}": "Es läuft seit {3} {4} eine {1}Software Suche{2}",
     "A {1}update check{2} is running since {3} {4}": "Es läuft seit {3} {4} eine {1}Update Suche{2}",
@@ -40,6 +42,7 @@
     "A {1}system update{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}System Update{2}",
     "A {1}smartserver update{2} is running since {3} {4}": "Es läuft seit {3} {4} ein {1}Smartserver Update{2}",
 
+    "Last {1}system reboot{2} {3} after {4} {5}": "Letzter {1}Server Neustart{2} nach {4} {5} {3}",
     "Last {1}daemon restart{2} {3} after {4} {5}": "Letzter {1}Daemon Neustart{2} nach {4} {5} {3}",
     "Last {1}software check{2} {3} after {4} {5}": "Letzte {1}Software Suche{2} nach {4} {5} {3}",
     "Last {1}update check{2} {3} after {4} {5}": "Letzte {1}Update Suche{2} nach {4} {5} {3}",
@@ -47,6 +50,7 @@
     "Last {1}system update{2} {3} after {4} {5}": "Letztes {1}System Update{2} nach {4} {5} {3}",
     "Last {1}smartserver update{2} {3} after {4} {5}": "Letztes {1}Smartserver Update{2} nach {4} {5} {3}",
     
+    "system reboot": "Server Neustart",
     "daemon restart": "Daemon Neustart",
     "software check": "Software Suche",
     "update check": "Update Suche",
@@ -135,9 +139,9 @@
     "Install all": "Alles installieren",
     "Disabled because it is only possible max. 5 minutes after a system status refresh": "Deaktiviert da die letzte System Status Aktualisierung mehr als 5 Minuten her ist",
     
-    "Reboot needed": "Reboot notwendig",
-    "It is necessary because of {1} and {2}": "Ist wegen {1} und {2} notwendig",
-    "Is needed because of {}": "Ist wegen {} notwendig",
+    "Reboot necessary": "Reboot notwendig",
+    "Is necessary because of {1} and {2}": "Ist wegen {1} und {2} notwendig",
+    "Is necessary because of {}": "Ist wegen {} notwendig",
     "installed system updates": "installierter System updates",
     "outdated processes": "veralteter Prozesse",
     "Reboot system": "System Neustart",

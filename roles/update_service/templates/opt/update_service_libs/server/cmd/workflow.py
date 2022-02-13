@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timezone
 
 from config import config
+from server.cmd.executer import CmdExecuter
 
 sys.path.insert(0, "/opt/shared/python")
 
@@ -34,17 +35,13 @@ class CmdWorkflow:
 
     def _handleRunningStates(self):
         for name in glob.glob(u"{}*-*-running-*-*.log".format(config.job_log_folder)):
-            log_mtime = os.stat(name).st_mtime
-            log_modified_time = datetime.fromtimestamp(log_mtime, tz=timezone.utc)
-            file_age = datetime.timestamp(datetime.now()) - datetime.timestamp(log_modified_time)
-
             name_parts = os.path.basename(name).split("-")
             
             result = False
             if name_parts[3] in [ "daemon_restart", "system_reboot" ]:
-                result = self._checkWorkflow(name,file_age,MAX_DAEMON_RESTART_TIME,name_parts[0],name_parts[3])
+                result = self._checkWorkflow(name,name_parts[0],name_parts[3])
                 if type(result) != bool:
-                    self._handleWorkflow(result,name,name_parts[0],name_parts[3] == "system_reboot")
+                    self._handleWorkflow(result,name,name_parts[0])
             else:
                 result = self._handleCrash(name)
 
@@ -66,8 +63,16 @@ class CmdWorkflow:
         
         return False
 
-    def _checkWorkflow(self,file_name,file_age,max_file_age,start_time_str,expected_workflow):
-        is_success = file_age < max_file_age
+    def _checkWorkflow(self,log_file_name,start_time_str,expected_workflow):
+        is_system_reboot = expected_workflow == "system_reboot"
+
+        log_mtime = os.stat(log_file_name).st_mtime
+        log_modified_time = datetime.fromtimestamp(log_mtime, tz=timezone.utc)
+        log_file_age = datetime.timestamp(datetime.now()) - datetime.timestamp(log_modified_time)
+        
+        max_log_file_age = MAX_SYSTEM_REBOOT_TIME if is_system_reboot else MAX_DAEMON_RESTART_TIME
+        is_success = log_file_age < max_log_file_age
+        
         flag = "success"
         if is_success:
             if os.path.isfile(config.deployment_workflow_file):
@@ -85,32 +90,29 @@ class CmdWorkflow:
             msg = "The command crashed, because logfile was too old.\n"
             flag = "crashed"
 
-        with open(file_name, 'a') as f:
+        with open(log_file_name, 'a') as f:
             lf = LogFile(f)
             lf.getFile().write("\n")
             lf.write(msg)
-        os.rename(file_name, file_name.replace("-running-", "-{}-".format(flag)))
+        os.rename(log_file_name, log_file_name.replace("-running-", "-{}-".format(flag)))
         
         return is_success
 
-    def _handleWorkflow(self,workflow,file_name,start_time_str,wait_for_inactivity):
-        thread = threading.Thread(target=self._proceedWorkflow, args=(workflow, file_name, start_time_str, wait_for_inactivity))
+    def _handleWorkflow(self,workflow,log_file_name,start_time_str):
+        thread = threading.Thread(target=self._proceedWorkflow, args=(workflow, log_file_name, start_time_str ))
         thread.start()
 
-    def _proceedWorkflow(self,workflow, file_name, start_time_str, wait_for_inactivity):
-        min_inactivity_time = MIN_PROCESS_INACTIVITY_TIME
-        max_waiting_time = MAX_STARTUP_WAITING_TIME
-        
+    def _proceedWorkflow(self,workflow, log_file_name, start_time_str):
         start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
 
         exit_code = 1
-        with open(file_name, 'a') as f:
+        with open(log_file_name, 'a') as f:
             cmd_block = workflow.pop(0)
 
-            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,file_name)
+            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,log_file_name)
             lf = LogFile(f)
 
-            if wait_for_inactivity:
+            if cmd_block["cmd_type"] == "system_reboot":
                 can_proceed = False
                 waiting_start = datetime.timestamp(datetime.now())
                 last_seen_cmd_type = waiting_start
@@ -126,11 +128,11 @@ class CmdWorkflow:
                             last_seen_cmd_type = now
                             last_cmd_type = active_cmd_type
 
-                        if inactivity_time > min_inactivity_time:
+                        if inactivity_time > MIN_PROCESS_INACTIVITY_TIME:
                             can_proceed = True
                             break
 
-                        if waiting_time > max_waiting_time:
+                        if waiting_time > MAX_STARTUP_WAITING_TIME:
                             lf.getFile().write("\n")
                             lf.write("Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
                             break
@@ -148,14 +150,15 @@ class CmdWorkflow:
                     can_proceed = True
                     
             if can_proceed:
-                exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf)
+                # system reboot has only one cmd, means after reboot 'cmds' is empty
+                exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if len(cmd_block["cmds"]) > 0 else 0
                  
-        self.cmd_executer.finishRun(file_name,exit_code,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
+        self.cmd_executer.finishRun(log_file_name,exit_code,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
                       
         if exit_code == 0:
             self.runWorkflow(workflow, True)
         
-    def runWorkflow(self, workflow, state_type, checkGlobalRunning ):
+    def runWorkflow(self, workflow, checkGlobalRunning ):
         isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
         if not isRunning :
             thread = threading.Thread(target=self._runWorkflow, args=(workflow, checkGlobalRunning ))
@@ -187,12 +190,10 @@ class CmdWorkflow:
             if is_interuptable_workflow:
                 first_cmd = cmd_block["cmds"].pop(0)
 
-                if len(cmd_block["cmds"]) > 0:
-                    workflow.insert(0,cmd_block)
+                workflow.insert(0,cmd_block)
                     
-                if len(workflow) > 0:
-                    with open(config.deployment_workflow_file, 'w') as f:
-                        json.dump(workflow, f)
+                with open(config.deployment_workflow_file, 'w') as f:
+                    json.dump(workflow, f)
                     
                 cmd_block = self.cmd_builder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
 
