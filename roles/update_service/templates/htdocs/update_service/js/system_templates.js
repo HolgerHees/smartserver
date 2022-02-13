@@ -5,7 +5,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let startserverChangeInfoCodes = {
         "failed": ["red","Git pull skipped because CI tests failed"],
         "pending": ["yellow","Git pull skipped because CI tests are currently running"],
-        "pulled_tested": ["green", "Git pulled and all remote CI succeeded"],
+        "pulled_tested": ["green", "Git pulled and all CI tests successful"],
         "pulled": ["green", "Git pulled"],
         "uncommitted": ["red","Git pull skipped because there are uncommitted changes"],
         "missing": ["red","Git pull skipped because deployment status is unknown"],

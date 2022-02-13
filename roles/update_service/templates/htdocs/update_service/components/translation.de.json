@@ -150,7 +150,7 @@
     "Last git pull was {}": "Letzter git pull war {}",
     "Git pull skipped because CI tests failed": "Git pull übersprungen weil CI Tests fehlerhaft waren",
     "Git pull skipped because CI tests are currently running": "Git pull übersprungen weil aktuell CI Tests laufen",
-    "Git pulled and all remote CI tests successful": "Git pull und alle CI Tests erfolgreich",
+    "Git pulled and all CI tests successful": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
     "Git pull skipped because there are uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
     "Git pull skipped because deployment status is unknown": "Git pull übersprungen weil der Deployment Status unbekannt ist",

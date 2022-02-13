@@ -15,8 +15,10 @@ sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.logfile import LogFile
 
+from server.watcher import watcher
 
-class CmdExecuter: 
+
+class CmdExecuter(watcher.Watcher): 
     START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
     env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
@@ -36,10 +38,12 @@ class CmdExecuter:
     }
 
     def __init__(self,logger,handler):
+        super().__init__(logger)
+      
         self.logger = logger
         self.handler = handler
         
-        self.last_jobs_modified = round(datetime.timestamp(datetime.now()),3)
+        self.last_jobs_modified = self.getStartupTimestamp()
         
         self.killed_job = False
         self.killed_logfile = None
@@ -117,7 +121,7 @@ class CmdExecuter:
             return True
 
     def unlock(self, exit_code):
-        self.last_jobs_modified = round(datetime.timestamp(datetime.now()),3)
+        self.last_jobs_modified = self.getNowAsTimestamp()
 
         self.current_cmd_type = None
         self.current_started = None
