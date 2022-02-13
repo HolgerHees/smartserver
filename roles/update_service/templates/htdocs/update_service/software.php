@@ -114,7 +114,7 @@ mx.SNCore = (function( ret ) {
                     mx.UpdateServiceHelper.handleServerError(response["message"]);
                 }
             }
-            else if( this.status == 500 ) 
+            else if( this.status == 503 ) 
             {
                 mx.UpdateServiceHelper.handleServerNotAvailable();
             }

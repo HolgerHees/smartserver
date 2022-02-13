@@ -264,7 +264,7 @@ if( !Auth::hasGroup("admin") )
                         mx.UpdateServiceHelper.handleServerError(response["message"])
                     }
                 }
-                else if( this.status == 500 ) 
+                else if( this.status == 503 ) 
                 {
                     mx.UpdateServiceHelper.handleServerNotAvailable();
                     refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, mx.UpdateServiceHelper.isRestarting() ? 1000 : 15000 );
