@@ -117,7 +117,7 @@ class CmdExecuter:
             return True
 
     def unlock(self, exit_code):
-        self.last_jobs_modified = datetime.timestamp(datetime.now())
+        self.last_jobs_modified = round(datetime.timestamp(datetime.now()),3)
 
         self.current_cmd_type = None
         self.current_started = None
