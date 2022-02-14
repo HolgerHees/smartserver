@@ -93,7 +93,7 @@ class Handler(Server):
             git_hashes = {}
             for name in running_jobs:
                 details = job.getLogFileDetails(name)
-                if self.job_is_running:
+                if self.job_is_running and self.state is not None:
                     if details["config"] == self.state["config"] and details["deployment"] == self.state["deployment"] and details["git_hash"] == self.state["git_hash"]:
                         continue
                       
@@ -103,7 +103,7 @@ class Handler(Server):
                     
                 git_hashes[details["git_hash"]].append(details["deployment"])
                             
-            if config.access_token != "":
+            if config.access_token != "" and self.state is not None:
                 # process git hashes
                 for git_hash in git_hashes: 
                     self.logger.info("Clean states of git hash '{}'".format(git_hash))

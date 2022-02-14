@@ -1,7 +1,7 @@
 import os
 
 def getData(status_file):
-    data = ["","","",""]
+    data = ["","","","",""]
     if os.path.isfile(status_file):
         with open(status_file, 'r') as f:
             data = f.readline().strip().split(":")
