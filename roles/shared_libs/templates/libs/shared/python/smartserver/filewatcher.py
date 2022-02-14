@@ -60,7 +60,7 @@ class FileWatcher(pyinotify.ProcessEvent):
         parent = os.path.dirname(path)
         if parent not in self.watched_parents:
             self.watched_parents[parent] = True
-            self.wm.add_watch(parent, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO, rec=False, auto_add=True)
+            self.wm.add_watch(parent, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO, rec=False, auto_add=False)
             
         if os.path.exists(path):
             self.addPath(path)
@@ -76,10 +76,10 @@ class FileWatcher(pyinotify.ProcessEvent):
         isfile = os.path.isfile(path)
         if isfile:
             self.watched_files[path] = True
-            self.wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE, rec=False, auto_add=True)
+            self.wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE, rec=False, auto_add=False)
         else:
             self.watched_directories[path] = True
-            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE, rec=True, auto_add=True)
+            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE, rec=False, auto_add=False)
             
     def getModifiedTime(self,path):
         return self.modified_time[path.rstrip("/")]
