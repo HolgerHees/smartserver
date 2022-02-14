@@ -36,8 +36,8 @@ watched_data_files = [
 
 
 class Handler(Server):
-    def __init__(self, app):
-        self.logger = app.logger
+    def __init__(self, logger):
+        self.logger = logger
         
         log.setLogger(self.logger)
 
@@ -53,29 +53,39 @@ class Handler(Server):
         thread = threading.Thread(target=self._jobWatcher, args=())
         thread.start()
         
+    def terminate(self):
+        self.terminated = True
+        super().terminate()
+
     def _isJobRunning(self):
         return service.getPid() is not None
       
     def _jobWatcher(self):
         self._cleanJobs()
 
+        counter = 0
         while not self.terminated:
-            if self.hasFileChanged(config.status_file):
-                self.state = status.getState(config.status_file)
-                self.confirmFileChanged(config.status_file)
-                self.job_is_running = True
-            else:
-                job_is_running = self._isJobRunning()
-                if self.job_is_running != job_is_running:
-                    if not job_is_running and self.state["status"] == "running":
-                        self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
-                        status.setState(config.status_file,u"crashed")
-                        
-                        self._cleanJobs()
+            if counter % 15 if self.job_is_running else 60 == 0:
+                if self.hasFileChanged(config.status_file):
+                    self.state = status.getState(config.status_file)
+                    self.confirmFileChanged(config.status_file)
+                    self.job_is_running = True
+                else:
+                    job_is_running = self._isJobRunning()
+                    if self.job_is_running != job_is_running:
+                        if not job_is_running and self.state["status"] == "running":
+                            self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
+                            status.setState(config.status_file,u"crashed")
+                            
+                            self._cleanJobs()
 
-                    self.job_is_running = job_is_running
+                        self.job_is_running = job_is_running
+                        
+                counter = 0
           
-            time.sleep( 15 if self.job_is_running else 60 )
+            counter += 1
+            
+            time.sleep( 1 )
       
     def _cleanJobs(self):
         running_jobs = glob.glob(u"{}*-*-running-*-*.log".format(config.log_dir))
@@ -117,9 +127,6 @@ class Handler(Server):
             "job_is_running": self.job_is_running
         })
       
-    def terminate(self):
-        self.terminated = True
-      
 app = Flask(__name__)
 
 @app.route('/state/', methods = ['POST'])
@@ -136,5 +143,9 @@ def state():
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
-    handler = Handler(app)
-    app.run(debug=False, use_reloader=False, host=config.service_ip, port='8506')
+    handler = Handler(app.logger)
+
+    def handleServer():
+        app.run(debug=False, use_reloader=False, host=config.service_ip, port='8506')
+        
+    handler.start(handleServer)

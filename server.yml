@@ -158,10 +158,10 @@
 
     - { import_role: { name: openhab, tasks_from: create_users, handlers_from: empty }, tags: [ 'openhab', 'openhab_users' ] }   # create openhab users
 
-    - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running
-
     - { import_role: { name: update_service, tasks_from: collect_deployment_tags, handlers_from: empty }, tags: [ 'all', 'collect_deployment_tags', 'confirm' ], when: "update_service_system_check_enabled" } # get ansible tags, used in update daemon webui
 
     - { import_role: { name: update_service, tasks_from: confirm_deployment, handlers_from: empty }, tags: [ 'all', 'confirm_deployment', 'confirm' ], when: "update_service_system_check_enabled" } # set confirm date
 
     - { import_role: { name: update_service, tasks_from: confirm_roles, handlers_from: empty }, tags: [ 'always' ], when: "update_service_system_check_enabled" } # removes outdated role state files
+
+    - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running

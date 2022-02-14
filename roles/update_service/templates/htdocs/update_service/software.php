@@ -49,7 +49,7 @@ mx.SNCore = (function( ret ) {
             refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
         }
 
-        if( state["job_is_running"] && state["job_cmd_name"] == "software check" ) mx.SoftwareVersionsTemplates.setLoadingGear(state["job_started"]);
+        if( state["job_is_running"] && state["job_cmd_type"] == "software_check" ) mx.SoftwareVersionsTemplates.setLoadingGear(state["job_started"]);
         else if( Object.keys(state["changed_data"]).length > 0 ) mx.SoftwareVersionsTemplates.processData(state["last_data_modified"], state["changed_data"] );
     }
     

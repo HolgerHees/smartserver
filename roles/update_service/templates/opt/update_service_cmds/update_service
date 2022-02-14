@@ -5,11 +5,9 @@ from flask import Flask, request, make_response
 import logging
 
 import glob
-
 import json
 import sys
 import os
-
 import importlib
 
 from config import config
@@ -36,8 +34,8 @@ watched_data_files = [
 ]
 
 class Handler(Server):
-    def __init__(self,app):
-        self.logger = app.logger
+    def __init__(self,logger):
+        self.logger = logger
         
         super().__init__(self.logger, "update_service" )
            
@@ -69,6 +67,7 @@ class Handler(Server):
         
     def terminate(self):
         self.process_watcher.terminate()
+        super().terminate()
 
     def prepareTestWorkflow(self,cmd_block):
         for cmd in cmd_block["cmds"]:
@@ -257,9 +256,9 @@ def killProcess():
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
-    handler = Handler(app)
-    try:
+    handler = Handler(app.logger)
+
+    def handleServer():
         app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')
-    except Exception as e:
-        handler.terminate()
-        raise e
+        
+    handler.start(handleServer)

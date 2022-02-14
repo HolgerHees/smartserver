@@ -11,8 +11,9 @@ class FileWatcher(pyinotify.ProcessEvent):
         self.callback = callback
 
         wm = pyinotify.WatchManager()
-        notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self)
-        notifier.start()
+        self.notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self)
+        self.notifier.daemon = True
+        self.notifier.start()
 
         self.wm = wm
         
@@ -82,3 +83,6 @@ class FileWatcher(pyinotify.ProcessEvent):
             
     def getModifiedTime(self,path):
         return self.modified_time[path.rstrip("/")]
+      
+    def terminate(self):
+        self.notifier.stop()
