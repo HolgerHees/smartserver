@@ -21,14 +21,8 @@ class DeploymentStateWatcher(watcher.Watcher):
         self.state = self.readJsonFile(config.deployment_state_file,shouldRetry,{})
         self.last_modified = self.getNowAsTimestamp()
     
-    def hasEncryptedValut(self):
+    def hasEncryptedVault(self):
         return self.state["has_encrypted_vault"] if "has_encrypted_vault" in self.state else False
       
-    def getConfig(self):
-        return self.state["config"] if "config" in self.state else None
-
-    def getServer(self):
-        return self.state["server"] if "server" in self.state else None
-
     def getLastModifiedAsTimestamp(self):
         return self.last_modified

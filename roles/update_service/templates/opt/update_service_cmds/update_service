@@ -132,7 +132,7 @@ class Handler(Server):
             if self.checkLastDataModified("outdated_roles",last_data_modified):
                 changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
             if self.checkLastDataModified("deployment_state",last_data_modified):
-                changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedValut()
+                changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedVault()
             if self.checkLastDataModified("deployment_tags",last_data_modified):
                 changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
 
@@ -195,8 +195,13 @@ def refreshSoftwareVersionCheck():
 def state():     
     return handler.getState(request.form['type'])
   
-@app.route('/refreshSystemCheck/', methods = ['POST'])
+@app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
+    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(request.form['username'],request.form["type"])
+    return handler.runWorkflow([ cmd ], "update", True );
+
+@app.route('/refreshSystemCheck/', methods = ['POST'])
+def refreshSystemCheck():
     cmd = handler.cmd_builder.buildSystemCheckCmdBlock(request.form['username'])
     return handler.runWorkflow([ cmd ], "update", True );
 

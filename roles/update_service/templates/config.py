@@ -20,7 +20,10 @@ deployment_tags_file = "{}deployment.tags".format(target_dir)
 
 deployment_workflow_file = "{{global_tmp}}update_service.workflow".format(target_dir)
 
+deployment_config_path = "{{deployment_config_path}}"
+deployment_inventory_path = "{{deployment_inventory_path}}"
 deployment_directory = "{{deployment_path}}"
+
 git_remote = "{{vault_deployment_config_git}}"
 
 global_config = { 

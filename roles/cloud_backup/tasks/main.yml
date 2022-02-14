@@ -27,7 +27,7 @@
     - {name: 'influxdb', src: '{{backup_path}}influxdb'}
     - {name: 'openhab', src: '{{backup_path}}openhab'}
     - {name: 'potd', src: '{{htdocs_path}}img/potd'}
-    - {name: '{{project_name}}', src: '{{deployment_path}}'}
+    - {name: '{{project_name}}', src: '{{deployment_config_path}}'}
 
 - name: set nextcloud backup links
   file:

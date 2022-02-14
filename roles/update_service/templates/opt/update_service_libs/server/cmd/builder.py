@@ -45,6 +45,10 @@ class CmdBuilder:
         cmd = u"{}{}".format(self.cmd_system_update_check, " --limit={}".format(check_type) if check_type else "")
         return self.buildCmd(cmd, interaction=None,cwd=None,env=None)
       
+    def buildSystemUpdateCheckBlock(self, username, check_type):
+        system_check_cmd = self.buildSystemUpdateCheckCmd(check_type)
+        return self.buildCmdBlock(username, "update_check", [system_check_cmd])
+
     def buildSystemCheckCmdBlock(self, username):
         system_check_cmd = self.buildSystemUpdateCheckCmd(None)
         refresh_process_watcher_cmd = self.buildProcessWatcherFunction(False)

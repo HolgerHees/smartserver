@@ -244,7 +244,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no system updates available") + "</div>";
         }
-      
+        
+        //headerMsg += "<div class=\"form button icon icon-ccw exclusive\" onclick=\"mx.UNCore.actionRefreshUpdateState(this,'system_update')\"></div>";
+        
         return [ updateCount, detailsMsg, headerMsg ];
     }
     
@@ -282,9 +284,11 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no smartserver updates available") + "</div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no smartserver updates available") + "</div><div class=\"buttons\">";
         }
-      
+        
+        //headerMsg += "<div class=\"form button icon icon-ccw exclusive\" onclick=\"mx.UNCore.actionRefreshUpdateState(this,'deployment_update')\"></div>";
+        
         return [ updateCount, detailsMsg, headerMsg ];
     }
     

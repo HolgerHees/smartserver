@@ -597,7 +597,7 @@ if( !Auth::hasGroup("admin") )
         ret.actionDeployUpdates = function(btn)
         {
             var tag = btn.dataset.tag;
-            parameter = tag ? { "tags": tag } : null  
+            parameter = tag ? { "tags": tag } : null;
             updateDialog("deployment",btn,parameter,function(parameter){
                 runAction(btn, 'deploySmartserverUpdates', parameter); 
             });
@@ -627,6 +627,11 @@ if( !Auth::hasGroup("admin") )
             confirmAction(btn,'installSystemUpdates',null,mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
         }
         
+        ret.actionRefreshUpdateState = function(btn,type)
+        { 
+            confirmAction(btn,'refreshSystemUpdateCheck', { "type": type });
+        }
+
         ret.actionRefreshState = function(btn)
         { 
             confirmAction(btn,'refreshSystemCheck');
