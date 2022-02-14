@@ -110,9 +110,8 @@ class CmdBuilder:
         return None
 
     def buildDeploymentSmartserverUpdateCmdBlock(self, username, password, tags):
-        deployment_config = self.deployment_state_watcher.getConfig()
-        if deployment_config is not None:
-            cmd_deploy_system = "ansible-playbook -i config/{}/{}".format(deployment_config,self.deployment_state_watcher.getServer())
+        if not self.deployment_state_watcher.hasEncryptedVault() or password:
+            cmd_deploy_system = "ansible-playbook -i {}".format(config.deployment_inventory_path)
             if password:
                 cmd_deploy_system = "{} --ask-vault-pass".format(cmd_deploy_system) 
                 interaction = {"Vault password:": "{}\n".format(password)}
