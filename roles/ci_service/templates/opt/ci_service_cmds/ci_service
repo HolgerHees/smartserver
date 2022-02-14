@@ -49,12 +49,15 @@ class Handler(Server):
         self.job_is_running = self._isJobRunning()
         
         self.initWatchedFiles( watched_data_files )
+        
+        self.loop_event = threading.Event()
 
         thread = threading.Thread(target=self._jobWatcher, args=())
         thread.start()
         
     def terminate(self):
         self.terminated = True
+        self.loop_event.set()
         super().terminate()
 
     def _isJobRunning(self):
@@ -63,29 +66,23 @@ class Handler(Server):
     def _jobWatcher(self):
         self._cleanJobs()
 
-        counter = 0
         while not self.terminated:
-            if counter % 15 if self.job_is_running else 60 == 0:
-                if self.hasFileChanged(config.status_file):
-                    self.state = status.getState(config.status_file)
-                    self.confirmFileChanged(config.status_file)
-                    self.job_is_running = True
-                else:
-                    job_is_running = self._isJobRunning()
-                    if self.job_is_running != job_is_running:
-                        if not job_is_running and self.state["status"] == "running":
-                            self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
-                            status.setState(config.status_file,u"crashed")
-                            
-                            self._cleanJobs()
-
-                        self.job_is_running = job_is_running
+            if self.hasFileChanged(config.status_file):
+                self.state = status.getState(config.status_file)
+                self.confirmFileChanged(config.status_file)
+                self.job_is_running = True
+            else:
+                job_is_running = self._isJobRunning()
+                if self.job_is_running != job_is_running:
+                    if not job_is_running and self.state["status"] == "running":
+                        self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
+                        status.setState(config.status_file,u"crashed")
                         
-                counter = 0
-          
-            counter += 1
+                        self._cleanJobs()
+
+                    self.job_is_running = job_is_running
             
-            time.sleep( 1 )
+            self.loop_event.wait( 15 if self.job_is_running else 60 )
       
     def _cleanJobs(self):
         running_jobs = glob.glob(u"{}*-*-running-*-*.log".format(config.log_dir))
