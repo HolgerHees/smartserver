@@ -240,7 +240,7 @@ body.dark .autoCompleteLayer {
 }
 .form.button.buttonSelection > div.buttonSelectionLayer {
     bottom: 0;
-    right: 0;
+    right: -1;
     transform: translate(0, 99%);
     text-align: left;
     border-top: 1px solid #dadce0;
