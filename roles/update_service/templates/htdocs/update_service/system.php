@@ -668,8 +668,8 @@ if( !Auth::hasGroup("admin") )
             
             mx.Selectbutton.init({
                 values: [
-                    { "text": mx.I18N.get("Only system updates"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'system_update') } },
                     { "text": mx.I18N.get("Only smartserver updates"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'deployment_update') } },
+                    { "text": mx.I18N.get("Only system updates"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'system_update') } },
                     { "text": mx.I18N.get("Only outdated processes"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'process_update') } }
                 ],
                 selectors: {
