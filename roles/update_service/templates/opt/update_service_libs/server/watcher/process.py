@@ -60,7 +60,7 @@ class ProcessWatcher(watcher.Watcher):
             if service == "update_service":
                 is_update_service_outdated = True
             services.append(service)
-        self.outdated_services = services
+        self.outdated_services = list(set(services))
         
         self.outdated_processes = outdated_processes
         
