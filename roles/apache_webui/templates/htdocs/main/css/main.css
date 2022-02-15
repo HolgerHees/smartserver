@@ -1,11 +1,7 @@
 #app {
     height: 100%;
     box-sizing: border-box;
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-       -moz-user-select: none; /* Firefox */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+    user-select: none;
 }
 #page {
     display: flex;

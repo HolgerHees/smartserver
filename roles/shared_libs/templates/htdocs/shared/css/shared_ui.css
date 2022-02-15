@@ -12,6 +12,7 @@
   color: var(--light-button-text);
   display: inline-block;
   cursor: pointer;
+  user-select: none;
 }
 body.dark .form.button {
     color: var(--dark-button-text);
@@ -30,6 +31,7 @@ body.dark .form.button {
 }
 body.dark .form.button {
     background-color: var(--dark-button-bg);
+    border-color: #8a8c90;
 }
 body.dark .form.button:focus {
     outline: none;
@@ -229,6 +231,9 @@ body.dark .autoCompleteLayer {
     flex-direction: column;
     justify-content: center;
     border-left: 1px solid #dadce0;
+}
+body.dark .form.button.buttonSelection > div.buttonSelectionSelector {
+    border-color: #8a8c90;
 }
 .form.button.buttonSelection > div.buttonSelectionSelector.open > span.down,
 .form.button.buttonSelection > div.buttonSelectionSelector > span.up {
