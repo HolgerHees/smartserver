@@ -15,7 +15,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "system_reboot": "A local system reboot is running",
         "daemon_restart": "A local daemon restart is running",
         "software_check": "A local software check is running",
+
         "update_check": "A local update check is running",
+        "system_update_check": "A local system update check is running",
+        "deployment_update_check": "A local smartserver update check is running",
+        "process_check": "A local process check is running",
+
         "service_restart": "A local service restart is running",
         "system_update": "A local system update is running",
         "deployment_update": "A local smartserver update is running"
@@ -25,7 +30,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "system_reboot": "A {1}system reboot{2} is running since {3} {4}",
         "daemon_restart": "A {1}daemon restart{2} is running since {3} {4}",
         "software_check": "A {1}software check{2} is running since {3} {4}",
+
         "update_check": "A {1}update check{2} is running since {3} {4}",
+        "system_update_check": "A {1}system update check{2} is running since {3} {4}",
+        "deployment_update_check": "A {1}smartserver update check{2} is running since {3} {4}",
+        "process_check": "A {1}process check{2} is running since {3} {4}",
+
         "service_restart": "A {1}service restart{2} is running since {3} {4}",
         "system_update": "A {1}system update{2} is running since {3} {4}",
         "deployment_update": "A {1}smartserver update{2} is running since {3} {4}"
@@ -35,7 +45,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "system_reboot": "Last {1}system reboot{2} {3} after {4} {5}",
         "daemon_restart": "Last {1}daemon restart{2} {3} after {4} {5}",
         "software_check": "Last {1}software check{2} {3} after {4} {5}",
+
         "update_check": "Last {1}update check{2} {3} after {4} {5}",
+        "system_update_check": "Last {1}system update check{2} {3} after {4} {5}",
+        "deployment_update_check": "Last {1}smartserver update check{2} {3} after {4} {5}",
+        "process_check": "Last {1}process check{2} {3} after {4} {5}",
+
         "service_restart": "Last {1}service restart{2} {3} after {4} {5}",
         "system_update": "Last {1}system update{2} {3} after {4} {5}",
         "deployment_update": "Last {1}smartserver update{2} {3} after {4} {5}"
@@ -44,8 +59,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let cmd_type_map = {
         "system_reboot": "system reboot",
         "daemon_restart": "daemon restart",
+
         "software_check": "software check",
         "update_check": "update check",
+        "system_update_check": "system update check",
+        "deployment_update_check": "smartserver update check",
+        "process_check": "process check",
+
         "service_restart": "service restart",
         "system_update": "system update",
         "deployment_update": "smartserver update"

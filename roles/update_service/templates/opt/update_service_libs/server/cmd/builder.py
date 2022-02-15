@@ -18,6 +18,13 @@ class CmdBuilder:
         self.cmd_request_reboot = "reboot"
         self.cmd_check_reboot = "runlevel | grep \"6\""
         self.cmd_container_cleanup = "/opt/docker/cleanup -q"
+        
+        self.cmd_type_check_type_mapping = {
+            None:             "update_check",
+            "system_update":  "system_update_check",
+            "deployment_update":  "deployment_update_check",
+            "process_update":  "process_check"
+        }
 
     def buildCmd(self, cmd, interaction, cwd, env ):
         return { "cmd": cmd, "interaction": interaction, "cwd": cwd, "env": env }
@@ -47,10 +54,11 @@ class CmdBuilder:
       
     def buildSystemUpdateCheckBlock(self, username, check_type):
         cmds = []
-        cmds.append( self.buildSystemUpdateCheckCmd(check_type) )
-        if check_type is None:
+        if check_type != "process_update":
+            cmds.append( self.buildSystemUpdateCheckCmd(check_type) )
+        if check_type is None or check_type == "process_update":
             cmds.append( self.buildProcessWatcherFunction(False) )
-        return self.buildCmdBlock(username, "update_check", cmds)
+        return self.buildCmdBlock(username, self.cmd_type_check_type_mapping[check_type], cmds)
 
     def buildSystemRebootCmdBlock(self, username):
         cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)

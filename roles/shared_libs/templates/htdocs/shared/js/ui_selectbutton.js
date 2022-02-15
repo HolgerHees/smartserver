@@ -34,9 +34,6 @@ mx.Selectbutton = (function( ret ) {
    
     function createSelectbutton(options)
     {
-        console.log(options.elements.button);
-        console.log(options.values);
-        
         options.onBlur = function(event) { hide(event, options); }
 
         let text = options.elements.button.innerHTML;
@@ -62,7 +59,6 @@ mx.Selectbutton = (function( ret ) {
         for( let i = 0; i < options.values.length; i++ )
         {
             let value = options.values[i];
-            console.log(value);
             
             let element = document.createElement("div");
             element.innerHTML = value["text"];
