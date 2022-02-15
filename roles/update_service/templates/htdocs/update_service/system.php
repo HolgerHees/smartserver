@@ -375,7 +375,6 @@ if( !Auth::hasGroup("admin") )
             var passwordField = null;
             var passwordRemember = null;
             var passwordHint = null;
-            var tagField = null;
             var tagHint= null;
             var confirmField = null;
 
@@ -429,7 +428,6 @@ if( !Auth::hasGroup("admin") )
                     body += "<div class=\"row\">";
                     body += "  <div>" + mx.I18N.get("Tags") + ":</div>";
                     body += "  <div>";
-                    body += "    <div class=\"autoCompletionSelection\"></div>";
                     body += "    <input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div>";
                     body += "  </div>";
                     body += "</div>";
@@ -526,19 +524,17 @@ if( !Auth::hasGroup("admin") )
             
             if( hasTagField )
             {
-                tagField = dialog.getElement("input[name=\"tag\"]");
                 tagHint = dialog.getElement(".tag.hint");
                 confirmField = dialog.getElement("input[name=\"confirm\"]");    
 
                 var lastSelectedTags = localStorage.getItem("lastSelectedDeploymentTags");
                 
                 autocomplete = mx.Autocomplete.init({
-                    input: tagField,
                     values: deploymentTags,
                     top_values: lastSelectedTags ? lastSelectedTags.split(",") : [],
                     selected_values: [ "all" ],
                     selectors: {
-                        selectionLayer: ".autoCompletionSelection"
+                        input: "input[name=\"tag\"]"
                     }
                 });
                 dialog.addEventListener("destroy",autocomplete.destroy);
@@ -632,11 +628,6 @@ if( !Auth::hasGroup("admin") )
             confirmAction(btn,'refreshSystemUpdateCheck', { "type": type });
         }
 
-        ret.actionRefreshState = function(btn)
-        { 
-            confirmAction(btn,'refreshSystemCheck');
-        }
-        
         ret.actionKillProcess = function(btn)
         {
             confirmAction(btn,'killProcess',null,mx.I18N.get("You want to kill current running job?"),"red");
@@ -674,6 +665,17 @@ if( !Auth::hasGroup("admin") )
         ret.init = function()
         { 
             mx.I18N.process(document);
+            
+            mx.Selectbutton.init({
+                values: [
+                    { "text": mx.I18N.get("Only system updates"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'system_update') } },
+                    { "text": mx.I18N.get("Only smartserver updates"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'deployment_update') } },
+                    { "text": mx.I18N.get("Only outdated processes"), "onclick": function(){ mx.UNCore.actionRefreshUpdateState(this,'process_update') } }
+                ],
+                selectors: {
+                    button: "#searchUpdates"
+                }
+            });
           
             refreshDaemonState(null, function(){
                 window.setTimeout(function(){
@@ -706,7 +708,7 @@ if( !Auth::hasGroup("admin") )
 <div class="widget">
     <div class="header"><div data-i18n="Update status"></div><div></div></div>
 
-    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" onclick="mx.UNCore.actionRefreshState(this)" data-i18n="Search updates"></div></div></div>
+    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" id="searchUpdates" onclick="mx.UNCore.actionRefreshUpdateState(this)" data-i18n="Search updates"></div></div></div>
     
     <div class="action" id="systemUpdateHeader"></div>
     <div class="list form table" id="systemUpdateDetails"></div>

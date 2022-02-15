@@ -1,12 +1,11 @@
 mx.Autocomplete = (function( ret ) {
     var _options = {
-        input: null,
         values: [],
         top_values: [],
         show_term: false,
         selected_values: [],
         selectors: {
-            selectionLayer: null,
+            input: null,
         },
         activeIndex: -1,
         rowCount: 0,
@@ -18,7 +17,7 @@ mx.Autocomplete = (function( ret ) {
         options.elements.autocompleteLayer.style.display = "block";
         window.setTimeout(function(){ options.elements.autocompleteLayer.style.opacity = 1; }, 0);
 
-        options.input.addEventListener("keydown",options.onKeyDown);
+        options.elements.input.addEventListener("keydown",options.onKeyDown);
         window.addEventListener('click', options.onBlur);
     }
     
@@ -29,7 +28,7 @@ mx.Autocomplete = (function( ret ) {
         },"Autocomplete closed");
         options.elements.autocompleteLayer.style.opacity = "";
 
-        options.input.removeEventListener("keydown",options.onKeyDown);
+        options.elements.input.removeEventListener("keydown",options.onKeyDown);
         window.removeEventListener('click', options.onBlur);
     }
         
@@ -136,7 +135,7 @@ mx.Autocomplete = (function( ret ) {
     
     function buildValues(options,force)
     {
-        var term = options.input.value;
+        var term = options.elements.input.value;
         if( options.lastTerm == term && !force ) return;
         options.lastTerm = term;
         
@@ -188,7 +187,7 @@ mx.Autocomplete = (function( ret ) {
     
     function onBlur(event, options)
     {
-        if( event.target == options.input || event.target.parentNode == null ) return;
+        if( event.target == options.elements.input || event.target.parentNode == null ) return;
         hide(options);
     }
     
@@ -290,19 +289,23 @@ mx.Autocomplete = (function( ret ) {
     
     function createAutocomplete(options)
     {
+        options.elements.selectionLayer = document.createElement("div");
+        options.elements.selectionLayer.classList.add("autoCompletionSelection");
+        mx.Core.insertBefore(options.elements.selectionLayer,options.elements.input);
+
         options.elements.autocompleteLayer = document.createElement("div");
         options.elements.autocompleteLayer.classList.add("autocompleteLayer");
         options.elements.autocompleteLayer.innerHTML = "";
-        var positionInfo = options.input.getBoundingClientRect();
+        var positionInfo = options.elements.input.getBoundingClientRect();
         options.elements.autocompleteLayer.style.width = positionInfo.width + "px";
-        options.input.parentNode.appendChild(options.elements.autocompleteLayer);
+        mx.Core.insertAfter(options.elements.autocompleteLayer,options.elements.input);
         
         //options.autocompleteLayerRect = options.elements.autocompleteLayer.getBoundingClientRect();
         
         options.onFocus = function(event) { onFocus(event, options); }
-        options.input.addEventListener("focus",options.onFocus);
+        options.elements.input.addEventListener("focus",options.onFocus);
         options.onKeyUp = function(event) { onKeyUp(event, options); }
-        options.input.addEventListener("keyup",options.onKeyUp);
+        options.elements.input.addEventListener("keyup",options.onKeyUp);
 
         options.onKeyDown = function(event) { onKeyDown(event, options); }
         options.onBlur = function(event) { onBlur(event, options); }
@@ -345,9 +348,9 @@ mx.Autocomplete = (function( ret ) {
                 
                 window.removeEventListener('click', options.onBlur);
 
-                options.input.removeEventListener("focus", options.onFocus);
-                options.input.removeEventListener("keyup", options.onKeyUp);
-                options.input.removeEventListener("keydown", options.onKeyDown);
+                options.elements.input.removeEventListener("focus", options.onFocus);
+                options.elements.input.removeEventListener("keyup", options.onKeyUp);
+                options.elements.input.removeEventListener("keydown", options.onKeyDown);
 
                 options.elements.autocompleteLayer.remove();
             }

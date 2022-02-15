@@ -240,6 +240,23 @@ mx.Core = (function( ret ) {
 
         return { top: offsetTop, left: offsetLeft };
     };
+    
+    ret.insertBefore = function(element,ref_element)
+    {
+        ref_element.parentNode.insertBefore(element, ref_element);
+    }
+    
+    ret.insertAfter = function(element,ref_element)
+    {
+        if( ref_element.nextSibling )
+        {
+            ref_element.parentNode.insertBefore(element, ref_element.nextSibling);
+        }
+        else
+        {
+            ref_element.parentNode.appendChild(element);
+        }
+    }
 
     ret.OnDocReady = function()
     {

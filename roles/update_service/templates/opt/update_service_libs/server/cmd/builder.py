@@ -46,13 +46,11 @@ class CmdBuilder:
         return self.buildCmd(cmd, interaction=None,cwd=None,env=None)
       
     def buildSystemUpdateCheckBlock(self, username, check_type):
-        system_check_cmd = self.buildSystemUpdateCheckCmd(check_type)
-        return self.buildCmdBlock(username, "update_check", [system_check_cmd])
-
-    def buildSystemCheckCmdBlock(self, username):
-        system_check_cmd = self.buildSystemUpdateCheckCmd(None)
-        refresh_process_watcher_cmd = self.buildProcessWatcherFunction(False)
-        return self.buildCmdBlock(username, "update_check", [system_check_cmd,refresh_process_watcher_cmd])
+        cmds = []
+        cmds.append( self.buildSystemUpdateCheckCmd(check_type) )
+        if check_type is None:
+            cmds.append( self.buildProcessWatcherFunction(False) )
+        return self.buildCmdBlock(username, "update_check", cmds)
 
     def buildSystemRebootCmdBlock(self, username):
         cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)

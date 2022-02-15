@@ -54,6 +54,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
     ret.getLastFullRefresh = function(last_data_modified)
     {
         let last_update = 0;
+        if( last_update == 0 || last_data_modified["processes_refreshed"] < last_update ) last_update = last_data_modified["processes_refreshed"];
         if( last_update == 0 || last_data_modified["system_updates"] < last_update ) last_update = last_data_modified["system_updates"];
         if( last_update == 0 || last_data_modified["smartserver_changes"] < last_update ) last_update = last_data_modified["smartserver_changes"];
       
@@ -245,8 +246,6 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no system updates available") + "</div>";
         }
         
-        //headerMsg += "<div class=\"form button icon icon-ccw exclusive\" onclick=\"mx.UNCore.actionRefreshUpdateState(this,'system_update')\"></div>";
-        
         return [ updateCount, detailsMsg, headerMsg ];
     }
     
@@ -286,8 +285,6 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no smartserver updates available") + "</div><div class=\"buttons\">";
         }
-        
-        //headerMsg += "<div class=\"form button icon icon-ccw exclusive\" onclick=\"mx.UNCore.actionRefreshUpdateState(this,'deployment_update')\"></div>";
         
         return [ updateCount, detailsMsg, headerMsg ];
     }

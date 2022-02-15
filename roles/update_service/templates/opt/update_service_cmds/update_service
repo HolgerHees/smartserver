@@ -119,6 +119,7 @@ class Handler(Server):
         else:
             last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
             last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
+            last_data_modified["processes_refreshed"] = self.process_watcher.getLastRefreshAsTimestamp()
 
             last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
             last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
@@ -139,9 +140,9 @@ class Handler(Server):
             if self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
                 changed_data["is_reboot_needed"] = {
                     "all": self.system_update_watcher.isRebootNeeded(),
-                    "core": self.system_update_watcher.isRebootNeededByCoreUpdate(),
-                    "installed": self.system_update_watcher.isRebootNeededByInstalledPackages(),
-                    "outdated": self.system_update_watcher.isRebootNeededByOutdatedProcesses()
+                    "core": self.process_watcher.isRebootNeededByCoreUpdate(),
+                    "outdated": self.process_watcher.isRebootNeededByOutdatedProcesses(),
+                    "installed": self.system_update_watcher.isRebootNeededByInstalledPackages()
                 }
                 
             if self.checkLastDataModified("system_updates",last_data_modified):
@@ -197,12 +198,7 @@ def state():
   
 @app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
-    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(request.form['username'],request.form["type"])
-    return handler.runWorkflow([ cmd ], "update", True );
-
-@app.route('/refreshSystemCheck/', methods = ['POST'])
-def refreshSystemCheck():
-    cmd = handler.cmd_builder.buildSystemCheckCmdBlock(request.form['username'])
+    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(request.form['username'],request.form["type"] if "type" in request.form else None)
     return handler.runWorkflow([ cmd ], "update", True );
 
 @app.route('/restartService/', methods = ['POST'])

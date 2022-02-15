@@ -54,16 +54,10 @@ class SystemUpdateWatcher(watcher.Watcher):
             self.smartserver_pull = self.parseTime(self.states["smartserver_pull"]) if self.states["smartserver_pull"] else ""
         
     def isRebootNeeded(self):
-        return self.isRebootNeededByCoreUpdate() or self.isRebootNeededByOutdatedProcesses() or self.isRebootNeededByInstalledPackages()
+        return self.process_watcher.isRebootNeededByCoreUpdate() or self.process_watcher.isRebootNeededByOutdatedProcesses() or self.isRebootNeededByInstalledPackages()
         
-    def isRebootNeededByCoreUpdate(self):
-        return self.process_watcher.isRebootNeededByCoreUpdate()
-      
     def isRebootNeededByInstalledPackages(self):
         return len(self.installed_reboot_required_packages) > 0
-      
-    def isRebootNeededByOutdatedProcesses(self):
-        return self.process_watcher.isRebootNeededByOutdatedProcesses()
 
     def getSystemUpdatesLastModifiedAsTimestamp(self):
         return self.system_update_last_modified
