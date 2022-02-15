@@ -60,6 +60,8 @@ if( !Auth::hasGroup("admin") )
             
             if( changed_data.hasOwnProperty("deployment_tags") ) deploymentTags = changed_data["deployment_tags"];
                  
+            let updateBehaviorChanged = false;
+            
             const [ lastUpdateDate, lastUpdateMsg ] = mx.UpdateServiceTemplates.getLastFullRefresh(last_data_modified);
             let lastUpdateDateElement = mx.$("#lastUpdateDateFormatted");
             if( lastUpdateMsg != lastUpdateDateElement.innerHTML ) 
@@ -67,9 +69,9 @@ if( !Auth::hasGroup("admin") )
                 lastUpdateDateElement.innerHTML = lastUpdateMsg;
                 if( lastUpdateDate == null ) lastUpdateDateElement.classList.add("red");
                 else lastUpdateDateElement.classList.remove("red");
+                 
+                updateBehaviorChanged = true
             }
-            
-            let updateBehaviorChanged = false;
             
             if( changed_data.hasOwnProperty("outdated_processes") || changed_data.hasOwnProperty("outdated_roles") )
             {
