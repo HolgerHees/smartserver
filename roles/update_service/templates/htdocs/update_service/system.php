@@ -410,7 +410,7 @@ if( !Auth::hasGroup("admin") )
                     body += "<div class=\"row\">";
                     body += "  <div>" + mx.I18N.get("Password") + ":</div>";
                     body += "  <div>";
-                    body += "    <input name=\"password\" type=\"password\" autocomplete=\"off\"";
+                    body += "    <input name=\"password\" type=\"password\" autocomplete=\"on\"";
                     if( lastDeploymentPassword ) body += " value=\"" + lastDeploymentPassword + "\"";
                     body += "    >";
                     body += "    <div class=\"middle\"><input type=\"checkbox\" id=\"remember\" name=\"remember\"";
