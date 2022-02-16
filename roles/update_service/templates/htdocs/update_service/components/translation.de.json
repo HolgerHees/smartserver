@@ -46,7 +46,7 @@
     "{1}Update check{2} is running since {3} {4}": "{1}Update Suche{2} läuft seit {3} {4}",
     "{1}System update check{2} is running since {3} {4}": "{1}System Update Suche{2} läuft seit {3} {4}",
     "{1}Smartserver update check{2} is running since {3} {4}": "{1}Smartserver Update Suche{2} läuft seit {3} {4}",
-    "{1}Srocess check{2} is running since {3} {4}": "{1}Prozess Suche{2} läuft seit {3} {4}",
+    "{1}Process check{2} is running since {3} {4}": "{1}Prozess Suche{2} läuft seit {3} {4}",
     "{1}Service restart{2} is running since {3} {4}": "{1}Service Neustart{2} läuft seit {3} {4}",
     "{1}System update{2} is running since {3} {4}": "{1}System Update{2} läuft seit {3} {4}",
     "{1}Smartserver update{2} is running since {3} {4}": "{1}Smartserver Update{2} läuft seit {3} {4}",
