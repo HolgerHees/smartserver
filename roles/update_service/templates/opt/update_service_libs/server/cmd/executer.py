@@ -194,9 +194,9 @@ class CmdExecuter(watcher.Watcher):
         duration = str(delta)
         lf.getFile().write("\n")
         if exit_status == 0:
-            lf.write("The command '{}' exited with 0 (successful) after {} seconds.\n".format(cmd,duration))
+            lf.write("The command '{}' exited successful after {}.\n".format(cmd,duration))
         else:
-            lf.write("The command '{}' exited with {} (unsuccessful) after {} seconds.\n".format(cmd,exit_status,duration))
+            lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,exit_status,duration))
             
         return exit_status
       
