@@ -102,7 +102,12 @@ mx.UpdateServiceHelper = (function( ret ) {
 
     ret.setToogle = function(btnElement,detailElement)
     {
-        if( btnElement != null ) btnElement.innerText = detailElement.style.maxHeight ? mx.I18N.get("Hide") : mx.I18N.get("Show");
+        if( btnElement != null ) 
+        {
+            let text = detailElement.style.maxHeight ? mx.I18N.get("Hide") : mx.I18N.get("Show");
+            if( btnElement.childNodes.length > 0 ) btnElement.childNodes[0].nodeValue = text;
+            else btnElement.innerText = text;
+        }
     }
 
     ret.setScrollHeight = function(element)
