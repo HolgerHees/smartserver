@@ -18,15 +18,6 @@
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_service/config" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service/outdated_roles" }
-
-- name: prepare needed system_check folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
   when: "update_service_system_check_enabled|bool"
 

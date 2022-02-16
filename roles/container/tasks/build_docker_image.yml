@@ -16,14 +16,6 @@
 #    name: docker
 #    state: started
     
-- name: prepare build folder
-  file:
-    path: "{{global_build}}{{name}}/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-
 - name: check docker image exists
   shell: "docker images {{image_name}}:{{image_version}}"
   register: image_exists
@@ -38,6 +30,15 @@
     mode: 0600
   register: file_status
   with_items: "{{files}}"
+  
+- name: prepare build folder
+  file:
+    path: "{{global_build}}{{name}}/"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  when: "image_name not in image_exists.stdout or file_status.changed"
   
 # async docker build is used to show progress and prevent travisci killing our job because of inactivity
 - name: compose docker image => image does not exists
