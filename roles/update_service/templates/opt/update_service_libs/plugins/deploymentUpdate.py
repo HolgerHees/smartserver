@@ -56,8 +56,6 @@ class DeploymentUpdate:
                     
                     states = Counter(result.values())
                     
-                    print(states)
-                    
                     if "failure" in states:
                         smartserver_code = "failed"
                     elif "pending" in states or "success" not in states:

@@ -12,12 +12,15 @@ mx.Page = (function( ret ) {
         circle.style.left = ( event.clientX - (offsets.left + radius) ) + "px";
         circle.style.top = ( event.clientY - (offsets.top + radius) ) + "px";
         circle.classList.add("ripple"); 
-        
-        const ripple = button.getElementsByClassName("ripple")[0];
 
+        // cleanup for fast repeatedly clicks
+        const ripple = button.getElementsByClassName("ripple")[0];
         if (ripple) ripple.remove();
            
         button.appendChild(circle);
+        
+        // autocleanup. Otherwise the ripple effect happens again if an element is displayed "" => "none" => ""
+        window.setTimeout(function(){ circle.remove() },800); // => animation is 600ms
     }
     
     ret.refreshUI = function(rootElement)

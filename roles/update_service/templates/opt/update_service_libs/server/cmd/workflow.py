@@ -150,6 +150,8 @@ class CmdWorkflow:
                 can_proceed = True
                     
             if can_proceed:
+                self.cmd_executer.finishInterruptedCmd(lf, cmd_block["cmd_type"])
+                
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
                 exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if len(cmd_block["cmds"]) > 0 else 0
                  

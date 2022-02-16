@@ -137,7 +137,7 @@ class CmdExecuter(watcher.Watcher):
         os.rename(job_log_file, finished_log_file)
         self.current_logfile = finished_log_name
         self.unlock(exit_status)
-        
+
     def runFunction(self,cmd_type, _cmd, lf):
         name = _cmd["function"]
       
@@ -163,6 +163,8 @@ class CmdExecuter(watcher.Watcher):
         msg = u"Start cmd '{}' - '{}'".format(cmd_type, cmd)
         self.logger.info(msg)
         lf.write(u"{}\n".format(msg))
+        lf.getFile().write("\n")
+        lf.getFile().flush()
         
         if env is None:
             env = {}
@@ -194,12 +196,15 @@ class CmdExecuter(watcher.Watcher):
         duration = str(delta)
         lf.getFile().write("\n")
         if exit_status == 0:
-            lf.write("The command '{}' exited successful after {}.\n".format(cmd,duration))
+            lf.write("The command exited successful after {}\n".format(duration))
         else:
-            lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,exit_status,duration))
+            lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
             
         return exit_status
-      
+
+    def finishInterruptedCmd(self, lf, cmd_type):
+        lf.write("'{}' was successful\n".format(cmd_type))
+        
     def processCmdBlock(self,cmd_block,lf):
         exit_status = 1
         
