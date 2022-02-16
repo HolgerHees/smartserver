@@ -1,3 +1,10 @@
+/* INPUT */
+@media (pointer: coarse) {
+    input {
+        font-size: 16px;
+    }
+}
+
 /* BUTTON */
 .form.button {
   font-size: 16px;
@@ -317,8 +324,8 @@ body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
 }
 .autoCompleteLayer > div.row {
     display: block;
-    font-size: 12px;
-    padding: 2px;
+    font-size: 14px;
+    padding: 4px;
     cursor: pointer;
 }
 .autoCompleteLayer > div.row:hover {
@@ -344,8 +351,8 @@ body.dark .autoCompleteLayer > div:hover {
     display: flex;
     border-radius: 5px;
     border: 1px solid #dadce0;
-    font-size: 12px;
-    padding: 2px;
+    font-size: 14px;
+    padding: 4px;
     position: relative;
     background-color: #FFF;
     cursor: pointer;
@@ -370,12 +377,12 @@ body.dark .autoCompletionSelection > div {
 }
 @media (pointer: coarse) {
     .autoCompleteLayer > div.row {
-        font-size: 14px;
-        padding: 5px;
+        font-size: 16px;
+        padding: 10px;
     }
     .autoCompletionSelection > div {
-        font-size: 14px;
-        padding: 5px;
+        font-size: 15px;
+        padding: 6px;
     }
     .autoCompletionSelection > div > div.close {
         width: 16px;
