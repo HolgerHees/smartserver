@@ -3,9 +3,11 @@ div.form.table > div.row > div.subject {
   min-width:100px;
 }
 div.form.table > div.row > div.subject > div{
-  max-height: 43px;
-  overflow-y: hidden;
   line-height: 22px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 div.form.table > div.row > div > span.hash {
