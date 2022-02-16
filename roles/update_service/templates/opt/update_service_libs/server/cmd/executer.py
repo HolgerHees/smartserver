@@ -7,7 +7,7 @@ import glob
 import pexpect 
 from pexpect.exceptions import EOF, TIMEOUT
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from config import config
 
@@ -189,13 +189,14 @@ class CmdExecuter(watcher.Watcher):
 
         self.current_child.close()
         exit_status = self.current_child.exitstatus
-
-        duration = datetime.now() - start_time
+        delta = datetime.now() - start_time
+        delta = delta - timedelta(microseconds = delta.microseconds)
+        duration = str(delta)
         lf.getFile().write("\n")
         if exit_status == 0:
-            lf.write("The command '{}' exited with 0 (successful) after {}.\n".format(cmd,duration.total_seconds()))
+            lf.write("The command '{}' exited with 0 (successful) after {} seconds.\n".format(cmd,duration))
         else:
-            lf.write("The command '{}' exited with {} (unsuccessful) after {}.\n".format(cmd,exit_status,duration.total_seconds()))
+            lf.write("The command '{}' exited with {} (unsuccessful) after {} seconds.\n".format(cmd,exit_status,duration))
             
         return exit_status
       
