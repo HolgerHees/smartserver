@@ -11,34 +11,34 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "missing": ["red","Git pull skipped because deployment status is unknown"],
     };
     
-    let active_local_cmd_type_map = {
-        "system_reboot": "A local system reboot is running",
-        "daemon_restart": "A local daemon restart is running",
-        "software_check": "A local software check is running",
+    let active_manuell_cmd_type_map = {
+        "system_reboot": "A manually started system reboot is running",
+        "daemon_restart": "A manually started daemon restart is running",
+        "software_check": "A manually started software check is running",
 
-        "update_check": "A local update check is running",
-        "system_update_check": "A local system update check is running",
-        "deployment_update_check": "A local smartserver update check is running",
-        "process_check": "A local process check is running",
+        "update_check": "A manually started update check is running",
+        "system_update_check": "A manually started system update check is running",
+        "deployment_update_check": "A manually started smartserver update check is running",
+        "process_check": "A manually started process check is running",
 
-        "service_restart": "A local service restart is running",
-        "system_update": "A local system update is running",
-        "deployment_update": "A local smartserver update is running"
+        "service_restart": "A manually started service restart is running",
+        "system_update": "A manually started system update is running",
+        "deployment_update": "A manually started smartserver update is running"
     }
     
     let active_service_cmd_type_map = {
-        "system_reboot": "A {1}system reboot{2} is running since {3} {4}",
-        "daemon_restart": "A {1}daemon restart{2} is running since {3} {4}",
-        "software_check": "A {1}software check{2} is running since {3} {4}",
+        "system_reboot": "{1}System reboot{2} is running since {3} {4}",
+        "daemon_restart": "{1}Daemon restart{2} is running since {3} {4}",
+        "software_check": "{1}Software check{2} is running since {3} {4}",
 
-        "update_check": "A {1}update check{2} is running since {3} {4}",
-        "system_update_check": "A {1}system update check{2} is running since {3} {4}",
-        "deployment_update_check": "A {1}smartserver update check{2} is running since {3} {4}",
-        "process_check": "A {1}process check{2} is running since {3} {4}",
+        "update_check": "{1}Update check{2} is running since {3} {4}",
+        "system_update_check": "{1}System update check{2} is running since {3} {4}",
+        "deployment_update_check": "{1}Smartserver update check{2} is running since {3} {4}",
+        "process_check": "{1}Process check{2} is running since {3} {4}",
 
-        "service_restart": "A {1}service restart{2} is running since {3} {4}",
-        "system_update": "A {1}system update{2} is running since {3} {4}",
-        "deployment_update": "A {1}smartserver update{2} is running since {3} {4}"
+        "service_restart": "{1}Service restart{2} is running since {3} {4}",
+        "system_update": "{1}System update{2} is running since {3} {4}",
+        "deployment_update": "{1}Smartserver update{2} is running since {3} {4}"
     }
     
     let last_cmd_type_map = {
@@ -345,9 +345,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return mx.I18N.get(active_service_cmd_type_map[cmd_type]);
     }
     
-    ret.getActiveLocalJobName = function(cmd_type)
+    ret.getActiveManuellJobName = function(cmd_type)
     {
-        return mx.I18N.get(active_local_cmd_type_map[cmd_type]);
+        return mx.I18N.get(active_manuell_cmd_type_map[cmd_type]);
     }
 
     ret.getJobDetails = function(last_data_modified, changed_data)

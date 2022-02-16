@@ -77,6 +77,8 @@ function initPage()
         mx.Logfile.checkScrollPosition(e,body,goToControl,false);
     });
     mx.Logfile.checkScrollPosition(null,body,goToControl,false);
+
+    mx.Effects.init();
 }
 mx.OnDocReady.push( initPage );
 </script>

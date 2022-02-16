@@ -98,9 +98,8 @@ class CmdBuilder:
         return None
           
     def buildInstallSystemUpdateCmdBlock(self, username):
-        pre_cmd = self.buildFunction("dependency_watcher.checkSmartserverRoles")
-
         cmds = []
+        cmds.append( self.buildFunction("dependency_watcher.checkSmartserverRoles") )
         for cmd in self.system_update_cmds:
             cmds.append( self.buildCmd(cmd, interaction=None,cwd=None,env=None) )
             

@@ -13,6 +13,32 @@
   display: inline-block;
   cursor: pointer;
   user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+.form.button > span.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 600ms linear;
+}
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+.form.button > span.ripple {
+  background-color: var(--light-menu-active-bg);
+}
+.form.button.green > span.ripple {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+.form.button.yellow > span.ripple {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+.form.button.red > span.ripple {
+  background-color: rgba(255, 255, 255, 0.7);
 }
 body.dark .form.button {
     color: var(--dark-button-text);
@@ -40,9 +66,9 @@ body.dark .form.button:focus {
     opacity: 0.5;
 }
 .form.button:active:not(.disabled) {
+    /*box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);*/
     background-color: var(--light-button-active-bg);
     border-color: transparent;
-    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);
     -webkit-tap-highlight-color: transparent;
 }
 body.dark .form.button:active:not(.disabled) {
@@ -215,13 +241,13 @@ body.dark .autoCompleteLayer {
     border-color: #8a8c90;
 }
 /* SELECTIONBUTTON */
-.form.button.buttonSelection {
+div.buttonSelection {
     position: relative;
+}
+div.buttonSelection .form.button {
     padding-right: 40px;
 }
-.form.button.buttonSelection > div.buttonSelectionText {
-}
-.form.button.buttonSelection > div.buttonSelectionSelector {
+div.buttonSelection div.buttonSelectionSelector {
     position: absolute;
     right: 0;
     top: 0;
@@ -231,42 +257,44 @@ body.dark .autoCompleteLayer {
     flex-direction: column;
     justify-content: center;
     border-left: 1px solid #dadce0;
+    cursor: pointer;
+    padding-left: 2px;
 }
-body.dark .form.button.buttonSelection > div.buttonSelectionSelector {
+body.dark div.buttonSelection div.buttonSelectionSelector {
     border-color: #8a8c90;
 }
-.form.button.buttonSelection > div.buttonSelectionSelector.open > span.down,
-.form.button.buttonSelection > div.buttonSelectionSelector > span.up {
+div.buttonSelection div.buttonSelectionSelector.open > span.down,
+div.buttonSelection div.buttonSelectionSelector > span.up {
     display: none
 }
-.form.button.buttonSelection > div.buttonSelectionSelector > span.down,
-.form.button.buttonSelection > div.buttonSelectionSelector.open > span.up {
+div.buttonSelection div.buttonSelectionSelector > span.down,
+div.buttonSelection div.buttonSelectionSelector.open > span.up {
     display: block;
 }
-.form.button.buttonSelection > div.buttonSelectionLayer {
+div.buttonSelection > div.buttonSelectionLayer {
     bottom: 0;
-    right: -1;
-    transform: translate(0, 99%);
+    right: 0;
+    transform: translate(0, 98%);
     text-align: left;
     border-top: 1px solid #dadce0;
     border-top-left-radius: 4px;
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
 }
-body.dark .form.button.buttonSelection > div.buttonSelectionLayer {
+body.dark div.buttonSelection > div.buttonSelectionLayer {
     background-color: var(--dark-bg);
     border-color: #8a8c90;
 }
-.form.button.buttonSelection > div.buttonSelectionLayer > div {
+ div.buttonSelection > div.buttonSelectionLayer > div {
     display: block;
     padding: 5px;
     cursor: pointer;
 }
-.form.button.buttonSelection > div.buttonSelectionLayer > div:hover {
-    background-color: #f2f2f2;
+div.buttonSelection > div.buttonSelectionLayer > div:hover {
+    background-color: var(--light-menu-hover-bg);
 }
-body.dark .form.button.buttonSelection > div.buttonSelectionLayer > div:hover {
-    background-color: rgba(51,122,183,.20);
+body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
+    background-color: var(--dark-menu-hover-bg);
 }
 
 /* AUTOCOMPLETE */
@@ -281,7 +309,7 @@ body.dark .form.button.buttonSelection > div.buttonSelectionLayer > div:hover {
     cursor: pointer;
 }
 .autoCompleteLayer > div.row:hover {
-    background-color: #f2f2f2;
+    background-color: var(--light-menu-hover-bg);
 }
 .autoCompleteLayer > div.row.term {
     color: #666;
@@ -291,7 +319,7 @@ body.dark .form.button.buttonSelection > div.buttonSelectionLayer > div:hover {
   background-color: rgba(51,122,183,.20);
 }
 body.dark .autoCompleteLayer > div:hover {
-  background-color: rgba(51,122,183,.20);
+  background-color: var(--dark-menu-hover-bg);
 }
 .autoCompletionSelection {
     display: none;

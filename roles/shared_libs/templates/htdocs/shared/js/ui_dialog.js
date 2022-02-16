@@ -124,6 +124,10 @@ mx.Dialog = (function( ret ) {
             {
                 return options.elements.dialogLayer.querySelector(query);
             },
+            getRootElement: function()
+            {
+                return options.elements.dialogLayer;
+            },
             setInfo: function(info )
             {
                 setInfo(options,info);

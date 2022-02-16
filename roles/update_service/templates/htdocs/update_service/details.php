@@ -54,6 +54,14 @@ else
 <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
 <script src="/shared/js/logfile/logfile.js"></script>
 <script>
+mx.CICore = (function( ret ) {
+    ret.openOverview = function(event)
+    {
+        document.location = '../system/';
+    }
+    return ret;
+})( mx.CICore || {} );
+
 function initPage()
 {
     var body = mx.$('body');
@@ -77,14 +85,8 @@ function initPage()
         mx.Logfile.checkScrollPosition(e,body,goToControl,false);
     });
     mx.Logfile.checkScrollPosition(null,body,goToControl,false);
-    
-    mx.CICore = (function( ret ) {
-        ret.openOverview = function(event)
-        {
-            document.location = '../system/';
-        }
-        return ret;
-    })( mx.CICore || {} );
+       
+    mx.Effects.init();
 }
 mx.OnDocReady.push( initPage );
 </script>

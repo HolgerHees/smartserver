@@ -30,9 +30,12 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
         let now = new Date();
         let duration = Math.round( ( now.getTime() - date.getTime() )  / 1000 );
         
-        let action = "<div class=\"detailView\" onclick=\"document.location.href='../system/'\">" + mx.I18N.get("Software check") + "</div>";
+        let action_1 = "<div class=\"detailView\" onclick=\"document.location.href='../system/'\">";
+        let action_2 = "</div>";
         
-        document.body.innerHTML = "<div class=\"is_running\">" + mx.I18N.get("{1} is running since {2} seconds").fill({"1": action, "2": duration, "3": mx.I18N.get( duration == 1 ? "second" : "seconds" ) }) + " seconds</div>";
+        let msg = mx.I18N.get("{1}Software check{2} is running since {3} {4}").fill({"1": action_1, "2": action_2, "3": duration, "4": mx.I18N.get( duration == 1 ? "second" : "seconds" ) })
+        
+        document.body.innerHTML = "<div class=\"is_running\">" + msg + "</div>";
     }
     
     ret.processData = function(last_data_modified, changed_data)

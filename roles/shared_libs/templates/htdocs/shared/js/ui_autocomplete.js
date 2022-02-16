@@ -300,8 +300,6 @@ mx.Autocomplete = (function( ret ) {
         options.elements.autocompleteLayer.style.width = positionInfo.width + "px";
         mx.Core.insertAfter(options.elements.autocompleteLayer,options.elements.input);
         
-        //options.autocompleteLayerRect = options.elements.autocompleteLayer.getBoundingClientRect();
-        
         options.onFocus = function(event) { onFocus(event, options); }
         options.elements.input.addEventListener("focus",options.onFocus);
         options.onKeyUp = function(event) { onKeyUp(event, options); }

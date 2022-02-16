@@ -176,6 +176,8 @@ require "./shared/libs/ressources.php";
             }
             
             mx.$(".spacer").innerHTML = document.location.hostname;
+
+            mx.Effects.init();
         }
         
         mx.OnScriptReady.push( function(){

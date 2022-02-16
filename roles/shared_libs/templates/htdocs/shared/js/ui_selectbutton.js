@@ -36,13 +36,17 @@ mx.Selectbutton = (function( ret ) {
     {
         options.onBlur = function(event) { hide(event, options); }
 
-        let text = options.elements.button.innerHTML;
-        options.elements.button.innerHTML = ""
-        options.elements.button.classList.add("buttonSelection");
+        options.elements.container = document.createElement("div");
+        options.elements.container.classList.add("buttonSelection");
+        mx.Core.insertAfter(options.elements.container, options.elements.button );
+        options.elements.container.appendChild(options.elements.button);
+        
+        let text = options.elements.button.innerText;
+        options.elements.button.innerText = "";
         
         options.elements.buttonText = document.createElement("div");
         options.elements.buttonText.innerHTML = text;
-        options.elements.buttonText.classList.add("buttonSelectionText");
+        //options.elements.buttonText.classList.add("buttonSelectionText");
         options.elements.button.appendChild(options.elements.buttonText);
 
         options.elements.buttonSelector = document.createElement("div");
@@ -66,7 +70,7 @@ mx.Selectbutton = (function( ret ) {
             options.elements.buttonSelectionLayer.appendChild(element);
         }
         
-        options.elements.button.appendChild(options.elements.buttonSelectionLayer);
+        options.elements.container.appendChild(options.elements.buttonSelectionLayer);
     }
     
     ret.init = function(options)

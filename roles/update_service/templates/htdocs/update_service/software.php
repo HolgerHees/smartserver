@@ -51,6 +51,8 @@ mx.SNCore = (function( ret ) {
 
         if( state["job_is_running"] && state["job_cmd_type"] == "software_check" ) mx.SoftwareVersionsTemplates.setLoadingGear(state["job_started"]);
         else if( Object.keys(state["changed_data"]).length > 0 ) mx.SoftwareVersionsTemplates.processData(state["last_data_modified"], state["changed_data"] );
+             
+        mx.Effects.init();
     }
     
     function refreshDaemonState(last_data_modified,callback)
@@ -129,9 +131,7 @@ mx.SNCore = (function( ret ) {
         
     ret.init = function()
     { 
-        refreshDaemonState(null, function(){
-            console.log("done");
-        });            
+        refreshDaemonState(null, function(){});            
     }
     
     ret.openUrl = function(event,url)

@@ -195,7 +195,7 @@ mx.Panel = (function( ret ) {
         
         if( !options._.panelContainerWidth )
         {
-            options._.panelContainerWidth = mx.Core.getBoundingClientRect(options.elements.panelContainer).width;
+            options._.panelContainerWidth = options.elements.panelContainer.getBoundingClientRect().width;
         }
 
         // OPEN action is only active if the touch event is close to the left screen side
@@ -302,7 +302,7 @@ mx.Panel = (function( ret ) {
         options._.openEventTriggered = false;
 
         function resizeHandler(){
-            options._.panelContainerWidth = mx.Core.getBoundingClientRect(options.elements.panelContainer).width;
+            options._.panelContainerWidth = options.elements.panelContainer.getBoundingClientRect().width;
         }
         window.addEventListener("resize",resizeHandler);
 

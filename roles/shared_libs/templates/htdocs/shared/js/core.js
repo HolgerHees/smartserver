@@ -1,11 +1,11 @@
-mx.$ = function(selector)
+mx.$ = function(selector, rootElement)
 {
-    return document.querySelector(selector);
+    return (rootElement ? rootElement : document).querySelector(selector);
 };
 
-mx.$$ = function(selector)
+mx.$$ = function(selector, rootElement)
 {
-    return document.querySelectorAll(selector);
+    return (rootElement ? rootElement : document).querySelectorAll(selector);
 };
 
 mx.Core = (function( ret ) {

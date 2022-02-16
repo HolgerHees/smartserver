@@ -144,6 +144,8 @@ if( !Auth::hasGroup("admin") )
                     workflowTimer = window.setTimeout(setWorkflowMessage,timeout);
                 }
             }
+            
+            if( Object.keys(changed_data).length > 0 ) mx.Effects.init();
         }
         
         function handleDaemonState(state)
@@ -189,7 +191,7 @@ if( !Auth::hasGroup("admin") )
                 }
                 else
                 {
-                    msg = mx.UpdateServiceTemplates.getActiveLocalJobName(job_cmd_type);
+                    msg = mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
                     currentRunningActionsElement.style.display= ""
                 }
                 
@@ -353,6 +355,7 @@ if( !Auth::hasGroup("admin") )
                     destroy: true
                 });
                 dialog.open();
+                mx.Effects.init(dialog.getRootElement());
             }
             else
             {
@@ -516,6 +519,7 @@ if( !Auth::hasGroup("admin") )
                 destroy: true
             });
             dialog.open();
+            mx.Effects.init(dialog.getRootElement());
             
             if( hasPasswordField )
             {
