@@ -56,8 +56,7 @@ def modifyStoppedFile(log_dir, state_obj, branch):
             lf = LogFile(f)
             lf.write("Stopped after {}.\n".format(timedelta(seconds=duration)))
 
-        finished_log_file = deployment_log_file.replace("-running-","-stopped-")
-        finished_log_file = finished_log_file.replace("-failed-","-stopped-")
+        finished_log_file = re.sub("-[0-9]*-(running|failed)-","-{}-stopped-".format(duration),deployment_log_file)
 
         os.rename(deployment_log_file, finished_log_file)
         
