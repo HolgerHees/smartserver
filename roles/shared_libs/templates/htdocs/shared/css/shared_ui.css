@@ -287,16 +287,27 @@ body.dark div.buttonSelection > div.buttonSelectionLayer {
     border-color: #8a8c90;
     color: var(--dark-button-text);
 }
- div.buttonSelection > div.buttonSelectionLayer > div {
+div.buttonSelection > div.buttonSelectionLayer > div {
     display: block;
     padding: 5px;
     cursor: pointer;
-}
+}   
 div.buttonSelection > div.buttonSelectionLayer > div:hover {
     background-color: var(--light-menu-hover-bg);
 }
 body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
     background-color: var(--dark-menu-hover-bg);
+}
+@media (pointer: coarse) {
+    div.buttonSelection .form.button {
+        padding-right: 50px;
+    }
+    div.buttonSelection div.buttonSelectionSelector {
+        width: 35px;
+    }
+    div.buttonSelection > div.buttonSelectionLayer > div {
+        padding: 10px;
+    }
 }
 
 /* AUTOCOMPLETE */
@@ -356,4 +367,18 @@ body.dark .autoCompletionSelection > div {
     top: 0;
     bottom: 0;
     margin: auto;
+}
+@media (pointer: coarse) {
+    .autoCompleteLayer > div.row {
+        font-size: 14px;
+        padding: 5px;
+    }
+    .autoCompletionSelection > div {
+        font-size: 14px;
+        padding: 5px;
+    }
+    .autoCompletionSelection > div > div.close {
+        width: 16px;
+        height: 16px;
+    }
 }

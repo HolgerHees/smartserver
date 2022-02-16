@@ -42,7 +42,7 @@ class DeploymentUpdate:
 
             deployment_stat = os.stat(self.config.deployment_state_file)
             deployment_mtime = deployment_stat.st_mtime
-
+            
             if len(uncommitted_changes) == 1 and uncommitted_changes[0] == "":
                 can_pull = False
                 if "github" in self.config.git_remote:
@@ -85,16 +85,7 @@ class DeploymentUpdate:
             result = subprocess.run([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
             
-            files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
-            config_files = {}
-            for filename in files:
-                file_stat = os.stat(filename)
-                if file_stat.st_mtime > deployment_mtime:
-                    path = filename[len(config.deployment_directory)+1:]
-                    config_files[path] = {"flag": "M", "path": path}
-                
             lines = uncommitted_changes + committed_changes
-            
             lines = [ele.split("\t") for ele in lines]
             
             filtered_lines = {}
@@ -112,8 +103,15 @@ class DeploymentUpdate:
                         if path not in filtered_lines or flag == "A":
                             filtered_lines[path] = {"flag": flag, "path": path}
                             
-            filtered_values = filtered_lines.values()
-            lines = list(config_files.values()) + list(filtered_values)
+            files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
+            config_files = {}
+            for filename in files:
+                file_stat = os.stat(filename)
+                if file_stat.st_mtime > deployment_mtime:
+                    path = filename[len(config.deployment_directory)+1:]
+                    config_files[path] = {"flag": "M", "path": path}
+
+            lines = list(config_files.values()) + list(filtered_lines.values())
             
             smartserver_changes = lines
             

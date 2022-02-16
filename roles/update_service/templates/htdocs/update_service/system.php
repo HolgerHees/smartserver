@@ -145,7 +145,7 @@ if( !Auth::hasGroup("admin") )
                 }
             }
             
-            if( Object.keys(changed_data).length > 0 ) mx.Effects.init();
+            if( Object.keys(changed_data).length > 0 ) mx.Page.refreshUI();
         }
         
         function handleDaemonState(state)
@@ -355,7 +355,7 @@ if( !Auth::hasGroup("admin") )
                     destroy: true
                 });
                 dialog.open();
-                mx.Effects.init(dialog.getRootElement());
+                mx.Page.refreshUI(dialog.getRootElement());
             }
             else
             {
@@ -519,7 +519,7 @@ if( !Auth::hasGroup("admin") )
                 destroy: true
             });
             dialog.open();
-            mx.Effects.init(dialog.getRootElement());
+            mx.Page.refreshUI(dialog.getRootElement());
             
             if( hasPasswordField )
             {
@@ -691,7 +691,9 @@ if( !Auth::hasGroup("admin") )
                         if( element ) element.click();
                     });
                 },100);
-            });            
+            });
+
+            mx.Page.init();            
         }
         return ret;
     })( mx.UNCore || {} );

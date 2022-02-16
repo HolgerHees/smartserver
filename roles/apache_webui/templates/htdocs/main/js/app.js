@@ -1,4 +1,4 @@
-mx.Page = (function( ret ) {
+mx.App = (function( ret ) {
     ret.checkDeeplink = function(ref)
     {
         if( ref ) 
@@ -86,4 +86,4 @@ mx.Page = (function( ret ) {
     };
     
     return ret;
-})( mx.Page || {} ); 
+})( mx.App || {} ); 

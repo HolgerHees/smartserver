@@ -1,4 +1,4 @@
-mx.Effects = (function( ret ) {
+mx.Page = (function( ret ) {
     function createRipple(event) {
         const button = event.currentTarget;
         
@@ -20,9 +20,9 @@ mx.Effects = (function( ret ) {
         button.appendChild(circle);
     }
     
-    ret.init = function(rootElement)
+    ret.refreshUI = function(rootElement)
     {
-        const buttons = mx.$$(".form.button");
+        const buttons = mx.$$(".form.button",rootElement);
         for (const button of buttons) 
         {
             if( button.dataset.ripple ) continue;
@@ -30,7 +30,12 @@ mx.Effects = (function( ret ) {
             button.dataset.ripple = 1
             button.addEventListener("click", createRipple);
         }
+    }
+    
+    ret.init = function()
+    {
+        ret.refreshUI(document);
     };
 
     return ret;
-})( mx.Effects || {} );
+})( mx.Page || {} );

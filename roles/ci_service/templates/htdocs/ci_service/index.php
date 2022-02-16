@@ -33,7 +33,7 @@ function initPage()
     mx.CIList.init(mx.$$('div.row'),mx.$("div.table"), 'div.state', 'span.state','span.runtime');
     mx.CIList.startUpdateProcess();
     
-    mx.Effects.init();
+    mx.Page.init();
 }
 mx.OnDocReady.push( initPage );
 </script>

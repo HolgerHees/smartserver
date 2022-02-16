@@ -72,7 +72,7 @@ require "./shared/libs/ressources.php";
                 else mx.Actions.openHome();
             });
 
-            mx.Page.checkDeeplink(ref);
+            mx.App.checkDeeplink(ref);
 
             if( !mx.History.getActiveNavigation() ) mx.Actions.openHome();
 
@@ -105,12 +105,12 @@ require "./shared/libs/ressources.php";
                 mx.$('body').classList.add('desktop');
             }
             
-            mx.Page.initTheme();
+            mx.App.initTheme();
         }       
         
         function initPage()
         {
-            mx.Page.initInfoLayer();
+            mx.App.initInfoLayer();
         
             mx.Swipe.init();
                         
@@ -177,7 +177,7 @@ require "./shared/libs/ressources.php";
             
             mx.$(".spacer").innerHTML = document.location.hostname;
 
-            mx.Effects.init();
+            mx.Page.init();
         }
         
         mx.OnScriptReady.push( function(){
@@ -192,7 +192,7 @@ require "./shared/libs/ressources.php";
 </head>
 <body id="app">
 <script>
-    mx.Page = (function( ret ) {
+    mx.App = (function( ret ) {
         ret.initTheme = function()
         {
             var darkMql = window.matchMedia( ( demoMode ? '' : '(prefers-color-scheme: dark) and ' ) + '(max-width: 600px)');
@@ -208,9 +208,9 @@ require "./shared/libs/ressources.php";
         };
         
         return ret;
-    })( mx.Page || {} );
+    })( mx.App || {} );
     
-    mx.Page.initTheme();
+    mx.App.initTheme();
 </script>
 <div id="page" style="opacity:0;transition:opacity 300ms linear;">
     <div id="menu" class="c-panel">
