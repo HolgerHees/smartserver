@@ -135,7 +135,7 @@ mx.Autocomplete = (function( ret ) {
     
     function buildValues(options,force)
     {
-        var term = options.elements.input.value;
+        var term = options.elements.input.value.toLowerCase();
         if( options.lastTerm == term && !force ) return;
         options.lastTerm = term;
         
