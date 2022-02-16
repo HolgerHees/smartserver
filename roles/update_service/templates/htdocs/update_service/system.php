@@ -433,7 +433,7 @@ if( !Auth::hasGroup("admin") )
                     body += "<div class=\"row\">";
                     body += "  <div>" + mx.I18N.get("Tags") + ":</div>";
                     body += "  <div>";
-                    body += "    <input name=\"tag\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div>";
+                    body += "    <input name=\"tag\" autocomplete=\"off\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div>";
                     body += "  </div>";
                     body += "</div>";
                     body += "<div class=\"row\">";

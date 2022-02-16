@@ -191,10 +191,6 @@ mx.Autocomplete = (function( ret ) {
         hide(options);
     }
     
-    function cancelLongKeyPressedHandler(options)
-    {
-      
-    }
     
     function onKeyUp(event, options)
     {
@@ -250,6 +246,11 @@ mx.Autocomplete = (function( ret ) {
         {
             selectActiveRow(options);
         }
+        else if(event.keyCode == 27 )
+        {
+            hide(options);
+            options.elements.input.blur();
+        }
     }
 
     function selectActiveRow(options)
@@ -289,6 +290,8 @@ mx.Autocomplete = (function( ret ) {
     
     function createAutocomplete(options)
     {
+        options.elements.input.autocomplete = "off";
+        
         options.elements.selectionLayer = document.createElement("div");
         options.elements.selectionLayer.classList.add("autoCompletionSelection");
         mx.Core.insertBefore(options.elements.selectionLayer,options.elements.input);

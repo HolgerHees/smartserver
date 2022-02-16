@@ -69,6 +69,8 @@ for line in lines[0:-1]:
         images[image.name] = []
     images[image.name].append(image)
     
+cleaned = False
+
 for name in sorted(images):
     image_versions = sorted(images[name], reverse=True)
     
@@ -85,6 +87,10 @@ for name in sorted(images):
             continue
 
         print(u"\033[0;91mDELETED\033[0m   : '{}', '{}'".format(image_version.id,container_image))
+        
+        cleaned = True
 
         execCommand("docker image rm {}".format(image_version.id))
       
+if is_quite and not cleaned:
+    print(u"No images deleted")
