@@ -28,13 +28,13 @@ class CmdExecuter(watcher.Watcher):
     process_mapping = {
         "software_update_check": "software_check",
         "system_update_check": "update_check",
-        "systemctl": "service_restart",
+        "ansible-playbook": "deployment_update",
         "rpm": "system_update",
         "yum": "system_update",
         "apt": "system_update",
         "dnf": "system_update",
         "zypper": "system_update",
-        "ansible-playbook": "deployment_update",
+        "systemctl": "service_restart",
     }
 
     def __init__(self,logger,handler):
