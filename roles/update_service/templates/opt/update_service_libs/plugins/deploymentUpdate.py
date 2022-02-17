@@ -100,13 +100,14 @@ class DeploymentUpdate:
                     if file_mtime > deployment_mtime:
                         if path not in filtered_lines or flag == "A":
                             filtered_lines[path] = {"flag": flag, "path": path}
+            filtered_lines = dict(sorted(filtered_lines.items()))
                             
             files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
             config_files = {}
             for filename in files:
                 file_stat = os.stat(filename)
                 if file_stat.st_mtime > deployment_mtime:
-                    path = filename[len(config.deployment_directory)+1:]
+                    path = filename[len(config.deployment_directory):]
                     config_files[path] = {"flag": "M", "path": path}
 
             lines = list(config_files.values()) + list(filtered_lines.values())
