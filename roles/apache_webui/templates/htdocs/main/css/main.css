@@ -246,7 +246,7 @@ body.phone #menu #logo {
 #menu .group {
     margin-bottom: 5px;
 }
-#menu .group:first-child {
+#menu > .group:first-child {
     height: 56px;
     background-color: var(--light-panel-header-bg);
     display: flex;
@@ -254,7 +254,7 @@ body.phone #menu #logo {
     margin-bottom: 15px;
     justify-content: space-between;
 }
-body.dark #menu .group:first-child {
+body.dark #menu > .group:first-child {
     background-color: var(--dark-panel-header-bg);
 }
 #menu .logout {

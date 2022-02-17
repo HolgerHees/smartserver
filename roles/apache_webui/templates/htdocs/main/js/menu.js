@@ -1,7 +1,6 @@
 // mx.Menu needs to be defined in the beginning, because it is used during component initialisation
 mx.Menu = (function( ret ) {
     var menuGroups = {};
-    var submenuButtonTemplate = null;
     
     function processI18N( str, mainKey )
     {
@@ -162,7 +161,15 @@ mx.Menu = (function( ret ) {
             }
         }
 
-        let template = mx.$('#menuTemplate');
+        let groupTemplate = document.createElement("div");
+        groupTemplate.classList.add("group");
+        groupTemplate.innerHTML = '<div class="header"></div>';
+        
+        let rowTemplate = document.createElement("div");
+        rowTemplate.classList.add("row");
+        rowTemplate.innerHTML = '<div class="service button"><div></div><div></div></div><div class="submenu"></div>'
+
+        let menuElement = mx.$("#menu .main");
 
         let _menuGroups = sortMenu( menuGroups );
         for( index in _menuGroups )
@@ -196,14 +203,12 @@ mx.Menu = (function( ret ) {
             
             if( Object.values(subGroupStates).filter(value => value).length == 0 ) continue;
             
-            let menuDiv = template.cloneNode(true);
+            let menuDiv = groupTemplate.cloneNode(true);
             menuDiv.setAttribute('id',mainGroup['id']);
             menuDiv.querySelector('.header').innerHTML = mainGroup['title'];
             menuDiv.style.display = "";
-            template.parentNode.appendChild(menuDiv);
-
-            let rowTemplate = menuDiv.querySelector('.row');
-            menuDiv.removeChild(rowTemplate);
+            
+            menuElement.appendChild(menuDiv);
 
             for( index in _subGroups )
             {
@@ -212,7 +217,7 @@ mx.Menu = (function( ret ) {
                 if( !subGroupStates[subGroup['id']] ) continue;
 
                 let row = rowTemplate.cloneNode(true);
-                let button = row.querySelector(".service.button")
+                let button = row.querySelector(".button");
                 button.setAttribute("id", subGroup['uid'] );
                 button.setAttribute("onClick","mx.Actions.openMenuById(event,'" + subGroup['uid'] + "');");
                 //button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="/main/icons/' + subGroup['iconUrl'] + '"/>' : '';
@@ -224,21 +229,33 @@ mx.Menu = (function( ret ) {
                 
                 let submenu = row.querySelector(".submenu")
                 submenu.setAttribute("id", subGroup['uid'] + "-submenu" );
-
-                // We just need the last element stored in this global var
-                submenuButtonTemplate = submenu.querySelector(".service.button");
-                submenu.removeChild(submenuButtonTemplate);
             }
         }
     }
     
     function buildSubMenu(element, subGroup)
     {
+        //let currentIndex = 1;
+        let submenuButtonTemplate = document.createElement("div");
+        submenuButtonTemplate.classList.add("service");
+        submenuButtonTemplate.classList.add("button");
+        submenuButtonTemplate.innerHTML = "<div></div><div></div>";
+        
         for( entryKey in subGroup.getEntries() )
         {
             let entry = subGroup.getEntries()[entryKey];
             
             if( entry.getContentType() != "url" || !entry.getTitle() ) continue;
+            
+            /*let index = Math.floor(entry.getOrder()/100);
+            
+            if( currentIndex != index )
+            {
+                let separator = document.createElement("div");
+                separator.classList.add("separator");
+                element.appendChild(separator);
+                currentIndex = index;
+            }*/
             
             let submenuButton = submenuButtonTemplate.cloneNode(true);
             submenuButton.setAttribute("id", entry.getUId() );
