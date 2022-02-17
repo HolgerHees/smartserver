@@ -23,6 +23,9 @@
   position: relative;
   overflow: hidden;
 }
+.form.button.disabled {
+  cursor: default;
+}
 .form.button > span.ripple {
   position: absolute;
   border-radius: 50%;

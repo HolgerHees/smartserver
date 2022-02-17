@@ -190,8 +190,10 @@ mx.Panel = (function( ret ) {
         if( isTarget ) return;
 
         var offsetX = e.detail.clientX;
+        var offsetY = e.detail.clientY;
 
         options._.isOpen = isOpen(options);
+        options._.isScrolling = null;
         
         if( !options._.panelContainerWidth )
         {
@@ -206,7 +208,8 @@ mx.Panel = (function( ret ) {
         {
             initTopMargin(options);
 
-            options._.touchStartPosition = offsetX;
+            options._.touchStartPositionX = offsetX;
+            options._.touchStartPositionY = offsetY;
 
             if( isLeftPanel(options) )
             {
@@ -233,8 +236,13 @@ mx.Panel = (function( ret ) {
     function tapMove(options,e)
     {
         var offsetX = e.detail.clientX;
+        var offsetY = e.detail.clientY;
+        
+        if( options._.isScrolling == null && mx.Core.isTouchDevice() ) options._.isScrolling = Math.abs(offsetX - options._.touchStartPositionX ) < Math.abs(offsetY - options._.touchStartPositionY );
+        
+        if( options._.isScrolling ) return;
 
-        var diff = offsetX - options._.touchStartPosition + options._.referencePosition;
+        var diff = offsetX - options._.touchStartPositionX + options._.referencePosition;
 
         if( diff < 0 ) diff = 0;
         else if( diff > options._.panelContainerWidth ) diff = options._.panelContainerWidth;

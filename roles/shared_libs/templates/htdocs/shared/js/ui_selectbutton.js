@@ -52,7 +52,17 @@ mx.Selectbutton = (function( ret ) {
         options.elements.buttonSelector = document.createElement("div");
         options.elements.buttonSelector.innerHTML = "<span class=\"down icon-down-1\"></span><span class=\"up icon-up\"></span>";
         options.elements.buttonSelector.classList.add("buttonSelectionSelector");
-        options.elements.buttonSelector.onclick = function(event){ options.elements.buttonSelectionLayer.style.display ? hide(event, options) : show(event, options); };
+        options.elements.buttonSelector.onclick = function(event){ 
+            if( options.elements.buttonSelectionLayer.style.display )
+            {
+                hide(event, options);
+            }
+            else
+            {   
+                if( options.elements.button.classList.contains("disabled") ) return;
+                show(event, options); 
+            }
+        };
         options.elements.button.appendChild(options.elements.buttonSelector);
         
         options.elements.buttonSelectionLayer = document.createElement("div");

@@ -2,6 +2,8 @@ mx.Page = (function( ret ) {
     function createRipple(event) {
         const button = event.currentTarget;
         
+        if( button.classList.contains("disabled") ) return;
+        
         const circle = document.createElement("span");
         const diameter = Math.max(button.clientWidth, button.clientHeight);
         const radius = diameter / 2;

@@ -204,16 +204,6 @@ mx.Core = (function( ret ) {
         element.addEventListener("transitionend", handler);        // Standard syntax
     };
 
-    ret.getBoundingClientRect = function(element)
-    {
-        var elemRect = element.getBoundingClientRect();
-        var rect = { width: elemRect.width, height: elemRect.height };
-
-        Object.assign(rect, mx.Core.getOffsets(element));
-
-        return rect;
-    };
-
     ret.getOffsets = function(element)
     {
         // only taking care about inline style etc
