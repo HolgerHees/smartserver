@@ -250,6 +250,7 @@ body.phone #menu #logo {
     height: 56px;
     background-color: var(--light-panel-header-bg);
     display: flex;
+    padding-left: 0;
     margin-right: 0;
     margin-bottom: 15px;
     justify-content: space-between;
