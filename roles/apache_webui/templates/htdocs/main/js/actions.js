@@ -29,9 +29,9 @@ mx.Actions = (function( ret ) {
         {
             if( entry !== mx.History.getActiveNavigation() )
             {
-                if( entry.isEntry() )
+                if( entry.getType() == "entry" )
                 {
-                    activateMenu(entry.getSubGroup());
+                    mx.Menu.activateMenu(entry.getSubGroup());
                     mx.History.replaceEntry(entry,null);
                 }
                 else
@@ -41,13 +41,13 @@ mx.Actions = (function( ret ) {
             }
             else
             {
-                if( entry.isEntry() )
+                if( entry.getType() == "entry" )
                 {
-                    mx.History.replaceEntry(entry, (entry.getType() == "url" && entry.getUrl() == url) ? null : url );
+                    mx.History.replaceEntry(entry, (entry.getContentType() == "url" && entry.getUrl() == url) ? null : url );
                 }
                 else
                 {
-                    console.error("Should not happen " + entry.getId() );
+                    console.error("Should not happen " + entry.getType() );
                 }
             }
             
@@ -287,7 +287,7 @@ mx.Actions = (function( ret ) {
     {
         var submenu = mx.$('#content #submenu');
 
-        if( mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().isEntry() )
+        if( mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().getType() == "entry" )
         {
             submenu.style.opacity = "0";
             submenu.innerHTML = data;
@@ -307,21 +307,8 @@ mx.Actions = (function( ret ) {
                 submenu.style.opacity = "0";
             }, 100);
         }
-        
-        if( visualisationType != "desktop" ) menuPanel.close();
     }        
     
-    function activateMenu(subGroup)
-    {
-        mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
-        
-        if( subGroup )
-        {
-            var element = document.getElementById(subGroup.getMainGroup().getId() + '-' + subGroup.getId());
-            element.classList.add("active");
-        }
-    }
-
     ret.showError = function(errorType, parameter)
     {
         showError(errorType, parameter);
@@ -343,19 +330,27 @@ mx.Actions = (function( ret ) {
         setIFrameUrl(url);
     }
 
-    ret.openMenuById = function(event,mainGroupId,subGroupId)
+    ret.openMenuById = function(event,subGroupUId)
     {
+        [mainGroupId,subGroupId] = subGroupUId.split("-");
         menu = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId);
         mx.Actions.openMenu(menu,event);
     
     };
     ret.openMenu = function(subGroup,event)
     {
-        if( mx.History.getActiveNavigation() === subGroup && !isIFrameVisible() ) return;
+        let activeNavigation = mx.History.getActiveNavigation();
+        
+        if( activeNavigation === subGroup && !isIFrameVisible() ) 
+        {
+            if( visualisationType != "desktop" ) menuPanel.close();
+
+            return;
+        }
         
         if( subGroup.getEntries().length == 1 )
         {
-            mx.Actions.openEntryById(event,subGroup.getMainGroup().getId(),subGroup.getId(),subGroup.getEntries()[0].getId())
+            mx.Actions.openEntryById(event,subGroup.getEntries()[0].getUId())
             
             if( visualisationType != "desktop" ) menuPanel.close();
         }
@@ -363,16 +358,22 @@ mx.Actions = (function( ret ) {
         {
             showMenu();
         
-            mx.Menu.buildMenu( subGroup, setMenuEntries);
+            mx.Menu.buildContentSubMenu( subGroup, setMenuEntries);
+            
+            let submenuWasOpenBefore = activeNavigation && activeNavigation.getType() == "entry" && activeNavigation.getSubGroup() === subGroup;
 
-            activateMenu(subGroup);
-
+            mx.Menu.activateMenu(subGroup);
+            
             mx.History.addMenu(subGroup);
+
+            if( visualisationType != "desktop" && submenuWasOpenBefore ) menuPanel.close();
         }
+
     };
 
-    ret.openEntryById = function(event,mainGroupId,subGroupId,entryId)
+    ret.openEntryById = function(event,entryUId)
     {
+        [mainGroupId,subGroupId,entryId] = entryUId.split("-");
         var entry = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId).getEntry(entryId);
 
         if( (event && event.ctrlKey) || entry.getNewWindow() )
@@ -390,13 +391,15 @@ mx.Actions = (function( ret ) {
     {
         mx.History.addEntry( entry, url );
 
-        activateMenu(entry.getSubGroup());
+        mx.Menu.activateMenu(entry);
 
         var new_url = url ? url : entry.getUrl();
         
         //showIFrame();
         
         setIFrameUrl(new_url);
+
+        if( visualisationType != "desktop" ) menuPanel.close();
     };
 
     ret.openHome = function(event)
@@ -407,7 +410,7 @@ mx.Actions = (function( ret ) {
         
         if( !isActive )
         {
-            activateMenu(null);
+            mx.Menu.activateMenu(null);
             
             showMenu();
             
@@ -437,6 +440,8 @@ mx.Actions = (function( ret ) {
         if( !isActive ) 
         {
             setMenuEntries(message,[]);
+            
+            if( visualisationType != "desktop" ) menuPanel.close();
         }
         else 
         {

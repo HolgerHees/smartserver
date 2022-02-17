@@ -1,7 +1,8 @@
 // mx.Menu needs to be defined in the beginning, because it is used during component initialisation
 mx.Menu = (function( ret ) {
     var menuGroups = {};
-
+    var submenuButtonTemplate = null;
+    
     function processI18N( str, mainKey )
     {
         matches = str.matchAll(/{i18n_([^}]*)}/g);
@@ -13,7 +14,7 @@ mx.Menu = (function( ret ) {
 
     function sortMenu(entries)
     {
-        var keys = Object.keys(entries);
+        let keys = Object.keys(entries);
         
         keys.sort(function(a,b)
         {
@@ -22,7 +23,7 @@ mx.Menu = (function( ret ) {
             return 0;
         });
         
-        var result = {};
+        let result = {};
         
         for( key in keys )
         {
@@ -51,39 +52,43 @@ mx.Menu = (function( ret ) {
 
     ret.addMainGroup = function(mainGroupId,order,title)
     {
-        var mainGroup = menuGroups[mainGroupId] = {
+        let mainGroup = menuGroups[mainGroupId] = {
             id:mainGroupId,
+            uid: mainGroupId,
             order: order,
             title: title,
             subGroups: {},
             _: {
-                getId: function(){ return mainGroupId; },
+                getId: function(){ return mainGroup['id']; },
+                getUId: function(){ return mainGroup['uid']; },
+                getType: function(){ return "group"; },
                 getTitle: function(){ return mainGroup['title']; },
                 getSubGroup: function(subGroupId){ return mainGroup['subGroups'][subGroupId]['_']; },
                 //getSubGroups: function(){ return Object.values(mainGroup['subGroups']).map( entry => entry['_'] ); },
                 addSubGroup: function(subGroupId,order,title,iconUrl){
-                    var subGroup = mainGroup['subGroups'][subGroupId] = {
-                        id:subGroupId, order: order, title: title, iconUrl: iconUrl,
+                    let subGroup = mainGroup['subGroups'][subGroupId] = {
+                        id:subGroupId, uid: mainGroup['uid'] + "-" + subGroupId, order: order, title: title, iconUrl: iconUrl,
                         menuEntries: {},
                         _: {
-                            isEntry: function(){ return false; },
-                            getId: function(){ return subGroupId; },
+                            getId: function(){ return subGroup['id']; },
+                            getUId: function(){ return subGroup['uid']; },
+                            getType: function(){ return "subgroup"; },
                             getTitle: function(){ return subGroup['title']; },
                             getMainGroup: function(){ return mainGroup['_']; },
                             getEntry: function(entryId){ return subGroup['menuEntries'].hasOwnProperty(entryId) ? subGroup['menuEntries'][entryId]['_'] : null; },
                             getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
                             addUrl: function(entryId,url,usergroups,order,title,info,newWindow,iconUrl){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
-                                var entries = subGroup['menuEntries'];
-                                var entry = entries[entryId] = {
-                                    id: entryId, order:order,usergroups:usergroups,type:'url',url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
+                                let entries = subGroup['menuEntries'];
+                                let entry = entries[entryId] = {
+                                    id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'url',url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
                                     _: {
-                                        isEntry: function(){ return true; },
-                                        getType: function(){ return "url"; },
                                         getId: function(){ return entry['id']; },
+                                        getUId: function(){ return entry['uid']; },
+                                        getType: function(){ return "entry"; },
                                         getOrder: function(){ return entry['order']; },
                                         getUserGroups: function(){ return entry['usergroups']; },
-                                        getType: function(){ return entry['type']; },
+                                        getContentType: function(){ return entry['type']; },
                                         getSubGroup: function(){ return subGroup['_']; },
                                         getTitle: function(){ return entry['title']; },
                                         getInfo: function(){ return entry['info']; },
@@ -95,16 +100,16 @@ mx.Menu = (function( ret ) {
                             },
                             addHtml: function(entryId,html,callback,usergroups,order){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
-                                var entries = subGroup['menuEntries'];
-                                var entry = entries[entryId] = {
-                                    id: entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,
+                                let entries = subGroup['menuEntries'];
+                                let entry = entries[entryId] = {
+                                    id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,
                                     _: {
-                                        isEntry: function(){ return true; },
-                                        getType: function(){ return "html"; },
                                         getId: function(){ return entry['id']; },
+                                        getUId: function(){ return entry['uid']; },
+                                        getType: function(){ return "entry"; },
                                         getOrder: function(){ return entry['order']; },
                                         getUserGroups: function(){ return entry['usergroups']; },
-                                        getType: function(){ return entry['type']; },
+                                        getContentType: function(){ return entry['type']; },
                                         getSubGroup: function(){ return subGroup['_']; },
                                         getHtml: function(){ return entry['html']; },
                                         getCallback: function(){ return entry['callback']; }
@@ -120,80 +125,26 @@ mx.Menu = (function( ret ) {
 
         return mainGroup['_'];
     };
-
-    ret.buildMenu = function(subGroup, callback)
-    {
-        var entries = [];
-        var callbacks = [];
-
-        var menuEntries = subGroup.getEntries();
-        var currentIndex = 1;
-        
-        var lastOrder = Math.max.apply(Math, menuEntries.map(function(o) { return o.getOrder(); }));
-
-        var hasGroups = lastOrder && Math.floor(menuEntries[0].getOrder()/100) != Math.floor(lastOrder/100);
-        
-        if( hasGroups ) entries.push('<div class="group">')
-        
-        for(var i = 0; i < menuEntries.length; i++)
-        {
-            var entry = menuEntries[i];
-            
-            if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
-            {
-                continue;
-            }
-
-            var index = Math.floor(entry.getOrder()/100);
-            
-            if( currentIndex != index )
-            {
-                entries.push('</div><div class="group">');
-                currentIndex = index;
-            }
-            
-            if( entry.getType() == 'html' )
-            {
-                entries.push(entry.getHtml());
-                callbacks.push(entry.getCallback());
-            }
-            else
-            {
-                var html = '<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + subGroup.getMainGroup().getId() + '\',\'' + subGroup.getId() + '\',\'' + entry.getId() + '\')">';
-                html += '<div>';
-                if( entry.getIconUrl() ) html += '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + entry.getIconUrl() + '#icon" /></svg>';
-                //if( entry.getIconUrl() ) html += '<img src="/main/icons/' + entry.getIconUrl() + '"/>';
-                html += '<div>' + entry.getTitle() + '</div>';
-                html += '</div><div>' + entry.getInfo() + '</div></div>';
-                
-                entries.push(html);
-            }
-        }
-        
-        if( hasGroups ) entries.push('</div>')
-
-        callback(entries.join(""),callbacks);
-    };
-
-    ret.init = function()
+    
+    function buildMainMenu()
     {
         // needs to work with keys directly, because this is the post processing part of the data
         for( mainKey in menuGroups )
         {
-            var mainGroup = menuGroups[mainKey];
+            let mainGroup = menuGroups[mainKey];
             
-            var match = mainGroup['title'].match(/{i18n_([^}]*)}/);
+            let match = mainGroup['title'].match(/{i18n_([^}]*)}/);
             if( match !== null ) mainGroup['title'] = mainGroup['title'].replace(match[0],mx.I18N.get(match[1],mainKey));
 
             for( subKey in mainGroup['subGroups'] )
             {
-                var subGroup = mainGroup['subGroups'][subKey];
+                let subGroup = mainGroup['subGroups'][subKey];
 
                 subGroup['title'] = processI18N(subGroup['title'],mainKey);
 
                 for( entryKey in subGroup['menuEntries'] )
                 {
-                    var entry = subGroup['menuEntries'][entryKey];
+                    let entry = subGroup['menuEntries'][entryKey];
 
                     if( entry['type'] === 'url' )
                     {
@@ -211,27 +162,27 @@ mx.Menu = (function( ret ) {
             }
         }
 
-        var template = mx.$('#menuTemplate');
+        let template = mx.$('#menuTemplate');
 
-        var _menuGroups = sortMenu( menuGroups );
+        let _menuGroups = sortMenu( menuGroups );
         for( index in _menuGroups )
         {
-            var mainGroup = _menuGroups[index];
+            let mainGroup = _menuGroups[index];
             
             if( mainGroup['id'] == 'home' ) continue;
             
-            var subGroupStates = {}
+            let subGroupStates = {}
             
-            var _subGroups = sortMenu( mainGroup['subGroups'] );
+            let _subGroups = sortMenu( mainGroup['subGroups'] );
 
             for( index in _subGroups )
             {
-                var subGroup = _subGroups[index];
+                let subGroup = _subGroups[index];
                 
-                var hasEntries = false;
+                let hasEntries = false;
                 for( entryKey in subGroup['menuEntries'] )
                 {
-                    var entry = subGroup['menuEntries'][entryKey];
+                    let entry = subGroup['menuEntries'][entryKey];
                     
                     if( entry['usergroups'] && mx.User.memberOf( entry['usergroups'] ) )
                     {
@@ -245,39 +196,197 @@ mx.Menu = (function( ret ) {
             
             if( Object.values(subGroupStates).filter(value => value).length == 0 ) continue;
             
-            var menuDiv = template.cloneNode(true);
+            let menuDiv = template.cloneNode(true);
             menuDiv.setAttribute('id',mainGroup['id']);
             menuDiv.querySelector('.header').innerHTML = mainGroup['title'];
             menuDiv.style.display = "";
             template.parentNode.appendChild(menuDiv);
 
-            var buttonTemplate = menuDiv.querySelector('.service.button');
-            menuDiv.removeChild(buttonTemplate);
+            let rowTemplate = menuDiv.querySelector('.row');
+            menuDiv.removeChild(rowTemplate);
 
             for( index in _subGroups )
             {
-                var subGroup = _subGroups[index];
+                let subGroup = _subGroups[index];
                 
                 if( !subGroupStates[subGroup['id']] ) continue;
 
-                var button = buttonTemplate.cloneNode(true);
-                button.setAttribute("id", mainGroup['id'] + '-' + subGroup['id'] );
-                button.setAttribute("onClick","mx.Actions.openMenuById(event,'" + mainGroup['id'] + "','" + subGroup['id'] + "');");
+                let row = rowTemplate.cloneNode(true);
+                let button = row.querySelector(".service.button")
+                button.setAttribute("id", subGroup['uid'] );
+                button.setAttribute("onClick","mx.Actions.openMenuById(event,'" + subGroup['uid'] + "');");
                 //button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="/main/icons/' + subGroup['iconUrl'] + '"/>' : '';
                 button.firstChild.innerHTML = subGroup['iconUrl'] ? '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + subGroup['iconUrl'] + '#icon" /></svg>' : '';
                 button.lastChild.innerHTML = subGroup['title'];
-                menuDiv.appendChild(button);
+                menuDiv.appendChild(row);
 
                 subGroup['menuEntries'] = sortMenu( subGroup['menuEntries'] );
+                
+                let submenu = row.querySelector(".submenu")
+                submenu.setAttribute("id", subGroup['uid'] + "-submenu" );
+
+                // We just need the last element stored in this global var
+                submenuButtonTemplate = submenu.querySelector(".service.button");
+                submenu.removeChild(submenuButtonTemplate);
             }
         }
+    }
+    
+    function buildSubMenu(element, subGroup)
+    {
+        for( entryKey in subGroup.getEntries() )
+        {
+            let entry = subGroup.getEntries()[entryKey];
+            
+            if( entry.getContentType() != "url" || !entry.getTitle() ) continue;
+            
+            let submenuButton = submenuButtonTemplate.cloneNode(true);
+            submenuButton.setAttribute("id", entry.getUId() );
+            submenuButton.setAttribute("onClick","mx.Actions.openEntryById(event,'" + entry.getUId() + "');");
+            submenuButton.firstChild.innerHTML = entry.getIconUrl() ? '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + entry.getIconUrl() + '#icon" /></svg>' : '';
+            submenuButton.lastChild.innerHTML = entry.getTitle();
+            element.appendChild(submenuButton);
+        }
+    }
+
+    ret.buildContentSubMenu = function(subGroup, callback)
+    {
+        let entries = [];
+        let callbacks = [];
+
+        let menuEntries = subGroup.getEntries();
+        let currentIndex = 1;
+        
+        let lastOrder = Math.max.apply(Math, menuEntries.map(function(o) { return o.getOrder(); }));
+
+        let hasGroups = lastOrder && Math.floor(menuEntries[0].getOrder()/100) != Math.floor(lastOrder/100);
+        
+        if( hasGroups ) entries.push('<div class="group">')
+        
+        for(let i = 0; i < menuEntries.length; i++)
+        {
+            let entry = menuEntries[i];
+            
+            if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
+            {
+                continue;
+            }
+
+            let index = Math.floor(entry.getOrder()/100);
+            
+            if( currentIndex != index )
+            {
+                entries.push('</div><div class="group">');
+                currentIndex = index;
+            }
+            
+            if( entry.getContentType() == 'html' )
+            {
+                entries.push(entry.getHtml());
+                callbacks.push(entry.getCallback());
+            }
+            else if(entry.getTitle())
+            {
+                let html = '<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + entry.getUId() + '\')">';
+                html += '<div>';
+                if( entry.getIconUrl() ) html += '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + entry.getIconUrl() + '#icon" /></svg>';
+                //if( entry.getIconUrl() ) html += '<img src="/main/icons/' + entry.getIconUrl() + '"/>';
+                html += '<div>' + entry.getTitle() + '</div>';
+                html += '</div><div>' + entry.getInfo() + '</div></div>';
+                
+                entries.push(html);
+            }
+        }
+        
+        if( hasGroups ) entries.push('</div>')
+
+        callback(entries.join(""),callbacks);
+    };
+
+    ret.activateMenu = function(entry)
+    {
+        mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
+        
+        let activeElementId = null;
+        let activeSubmenuElementId = null;
+        
+        if( entry )
+        {
+            let subGroup = entry.getType() == "subgroup" ? entry : entry.getSubGroup()
+                        
+            if( subGroup.getEntries().length == 1 )
+            {
+                activeElementId = subGroup.getUId();
+            }
+            else
+            {
+                activeSubmenuElementId = subGroup.getUId() + "-submenu";
+                activeElementId = entry.getUId();
+                
+                let activeSubmenuElement = mx.$("#" + activeSubmenuElementId);
+
+                if( activeSubmenuElement.innerHTML == "" )
+                {
+                    buildSubMenu(activeSubmenuElement, subGroup);
+
+                    activeSubmenuElement.style.display = "block";
+                    window.setTimeout(function(){ 
+                        activeSubmenuElement.style.maxHeight = activeSubmenuElement.scrollHeight + "px";
+                        
+                        window.setTimeout(function(){
+                            let mainMenuElement = mx.$("#menu .main");
+                            let mainRect = mainMenuElement.getBoundingClientRect();
+                            let mainOffset = mx.Core.getOffsets(mainMenuElement);
+                            let mainBottomPos = mainRect.height + mainOffset.top + mainMenuElement.scrollTop;
+                            
+                            let rect = activeSubmenuElement.getBoundingClientRect();
+                            let offsets = mx.Core.getOffsets(activeSubmenuElement);
+                            let bottomPos = offsets.top + rect.height;
+                            
+                            if( bottomPos > mainBottomPos )
+                            {
+                                mainMenuElement.scrollTo({
+                                    top: mainMenuElement.scrollTop + ( bottomPos - mainBottomPos ) + 100,
+                                    behavior: 'smooth'
+                                });
+                            }
+                            
+                        },350);
+                    },0);
+                }
+            }
+        }
+
+        if( activeElementId)
+        {
+            let element = document.getElementById(activeElementId);
+            element.classList.add("active");
+        }
+        
+        mx.$$("#menu .group .submenu").forEach(function(element)
+        {
+            if( element.id != activeSubmenuElementId && element.style.display != "" )
+            {
+                element.style.maxHeight = "";
+                window.setTimeout(function(){ 
+                    element.style.display=""; 
+                    element.innerHTML = "";
+                },300);
+            }
+        });
+
+    }
+
+    ret.init = function()
+    {
+        buildMainMenu();
     };
 
     ret.addMainGroup('home', -1, 'Home').addSubGroup('home', -1, 'Home');
     ret.addMainGroup('workspace', 1000, '{i18n_Workspace}');
     ret.addMainGroup('automation', 2000, '{i18n_Automation}');
 
-    var mainGroup = ret.addMainGroup('admin', 3000, '{i18n_Admin}');
+    let mainGroup = ret.addMainGroup('admin', 3000, '{i18n_Admin}');
     mainGroup.addSubGroup('tools', 200, '{i18n_Tools}', 'core_tools.svg');
     mainGroup.addSubGroup('system', 300, '{i18n_System}', 'core_system.svg');
     mainGroup.addSubGroup('devices', 400, '{i18n_Devices}', 'core_devices.svg');

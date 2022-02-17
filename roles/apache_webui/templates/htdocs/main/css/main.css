@@ -18,6 +18,15 @@
     max-width: 80%;
     box-sizing: border-box;
     background-color: var(--light-bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+#menu .main {
+    flex-grow: 1;
+    overflow: auto;
+    /* for Firefox */
+    min-height: 0;
 }
 body.dark #menu {
     background-color: var(--dark-bg);
@@ -249,10 +258,10 @@ body.dark #menu .group:first-child {
     background-color: var(--dark-panel-header-bg);
 }
 #menu .logout {
-    position: absolute;
+    /*position: absolute;
     bottom: 0;
     left: 0;
-    right: 0;
+    right: 0;*/
     margin: 16px;
 } 
 #menu .header {
@@ -340,6 +349,15 @@ body.dark #menu .service.button:active {
 }
 body.dark #menu .service.button.active {
     background-color: var(--dark-menu-active-bg);
+}
+#menu .group .submenu {
+    max-height: 0;
+    transition: max-height 0.3s;
+    display: none;
+    overflow-y: hidden;
+}
+#menu .group .submenu .service div:first-child {
+    padding-left: 50px;
 }
 #background {
     background-repeat: no-repeat;

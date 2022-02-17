@@ -226,9 +226,14 @@ require "./shared/libs/ressources.php";
                 <svg style="fill:white;stroke:white;" transform="scale(1.0)" enable-background="new 0 0 91 91" id="Layer_1" version="1.1" viewBox="0 0 91 91" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><rect height="3.4" width="39.802" x="27.594" y="31.362"/><rect height="3.4" width="39.802" x="27.594" y="44.962"/><rect height="3.4" width="39.802" x="27.594" y="58.562"/></g></svg>
             </div>
         </div>
-        <div class="group" id="menuTemplate" style="display:none">
-            <div class="header"></div>
-            <div class="service button"><div></div><div></div></div>
+        <div class="main">
+            <div class="group" id="menuTemplate" style="display:none">
+                <div class="header"></div>
+                <div class="row">
+                    <div class="service button"><div></div><div></div></div>
+                    <div class="submenu"><div class="service button"><div></div><div></div></div></div>
+                </div>
+            </div>
         </div>
         <?php
             if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )
