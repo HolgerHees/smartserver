@@ -23,6 +23,11 @@
     "tap to resume": "klicke zum aktivieren",
     
     "Authentication failed. Please try again.": "Anmeldung fehlgeschlagen. Bitte melde dich erneut an.",
+
+    "The requested page was not found": "Die gesuchte Seite wurde nicht gefunden",
+    "Page: '{}'": "Seite: '{}'",
+    "Go to startpage": "Startseite öffnen",
+
     "There was a problem loading the content": "Es gab eine Problem beim Laden der Inhalte",
     "This can have several reasons": "Dies kann mehrere Gründe haben",
     "The application to be loaded had a problem.": "Die zu ladende Anwendung hatte ein Problem.",

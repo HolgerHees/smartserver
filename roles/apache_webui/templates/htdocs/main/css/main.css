@@ -208,6 +208,13 @@ body.dark #side #content #embedProgress svg {
     justify-content: space-between;
 }
 
+#side #content #embedError #notfoundError .actions,
+#side #content #embedError #notfoundError .head,
+#side #content #embedError #notfoundError .info {
+    display: block;
+    text-align: center;
+}
+
 #menu #logo {
     margin: 6px 6px 6px 2px;
     background-image:url(/main/img/marvinRightSmall.png);

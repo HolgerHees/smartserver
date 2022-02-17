@@ -2,11 +2,13 @@ mx.Actions = (function( ret ) {
     var sideElement = null;
     var inlineElement = null;
     var iframeElement = null;
-    var iframeProgressElement = null;
-    var iframeErrorElement = null;
-    
+    var progressElement = null;
+
     var iframeLoadingTimer = null;
     
+    var errorElement = null;
+    var activeErrorType = null;
+
     var demoMode = null;
     var menuPanel = null;
     var visualisationType = null;
@@ -39,9 +41,17 @@ mx.Actions = (function( ret ) {
             }
             else
             {
-              mx.History.replaceEntry(entry, entry.getUrl() == url ? null : url );
+                if( entry.isEntry() )
+                {
+                    mx.History.replaceEntry(entry, (entry.getType() == "url" && entry.getUrl() == url) ? null : url );
+                }
+                else
+                {
+                    console.error("Should not happen " + entry.getId() );
+                }
             }
             
+            //showError("loading"); 
             showIFrame();
         }
         else
@@ -98,7 +108,7 @@ mx.Actions = (function( ret ) {
         if( iframeElement.getAttribute("src") != url )
         {
             hideIFrame(true);
-            hideIFrameError();
+            hideError();
             showProgress();
             
             iframeElement.setAttribute('src', url );
@@ -112,7 +122,7 @@ mx.Actions = (function( ret ) {
                   loadHandler(url,"fallback");
               }
               catch {
-                  showIFrameError(); 
+                  showError("loading"); 
               }
             },10000);
             
@@ -125,33 +135,45 @@ mx.Actions = (function( ret ) {
         iframeElement.removeAttribute('src');
     }
     
-    function showIFrameError()
+    function showError(errorType, parameter)
     {
         hideIFrame();
         hideMenu();
         hideProgress();
 
-        if( iframeErrorElement.style.display != "" )
+        if( errorElement.style.display != "" || activeErrorType != errorType )
         {
-            //console.log("showIFrameError");
-          
-            iframeErrorElement.style.display = "";
+            //console.log("showError");
+
+            activeErrorType = errorType;
+            let id = errorType + "Error";
+            errorElement.style.display = "";
+            mx._$$(":scope > div",errorElement).forEach(function(element)
+            {
+                element.style.display = element.id == id ? "" : "none";
+            });
+            
+            if( errorType == "notfound" )
+            {
+                let head = mx._$(":scope > #" + id + " > .url",errorElement);
+                head.innerHTML = mx.I18N.get(head.dataset.i18n).fill(parameter);
+            }
         }
     }
     
-    function hideIFrameError()
+    function hideError()
     {
-        if( iframeErrorElement.style.display == "" )
+        if( errorElement.style.display == "" )
         {
-            //console.log("hideIFrameError");
+            //console.log("hideError");
           
-            iframeErrorElement.style.display = "none";
+            errorElement.style.display = "none";
         }
     }
     
     function showIFrame()
     {
-        hideIFrameError();
+        hideError();
         hideMenu();
         hideProgress();
 
@@ -184,21 +206,21 @@ mx.Actions = (function( ret ) {
     
     function showProgress()
     {
-        if( iframeProgressElement.style.display != "" )
+        if( progressElement.style.display != "" )
         {
             //console.log("showProgress");
 
-            iframeProgressElement.style.display = "";
+            progressElement.style.display = "";
         }
     }
 
     function hideProgress()
     {
-        if( iframeProgressElement.style.display == "" ) 
+        if( progressElement.style.display == "" ) 
         {
             //console.log("hideProgress");
           
-            iframeProgressElement.style.display = "none";
+            progressElement.style.display = "none";
         }
     }
     
@@ -238,7 +260,7 @@ mx.Actions = (function( ret ) {
 
         removeIFrameUrl();
         hideIFrame();
-        hideIFrameError();
+        hideError();
         hideProgress();
     }
     
@@ -298,6 +320,11 @@ mx.Actions = (function( ret ) {
             var element = document.getElementById(subGroup.getMainGroup().getId() + '-' + subGroup.getId());
             element.classList.add("active");
         }
+    }
+
+    ret.showError = function(errorType, parameter)
+    {
+        showError(errorType, parameter);
     }
 
     ret.showIFrame = function()
@@ -431,11 +458,9 @@ mx.Actions = (function( ret ) {
         menuPanel = _menuPanel;
         
         sideElement = mx.$("#side");
-        
         inlineElement = mx.$("#content #inline");
-        
-        iframeProgressElement = mx.$("#content #embedProgress");
-        iframeErrorElement = mx.$("#content #embedError");
+        errorElement = mx.$("#content #embedError");
+        progressElement = mx.$("#content #embedProgress");
 
         iframeElement = mx.$("#content #embed");
         iframeElement.addEventListener('load', iFrameLoadHandler);                

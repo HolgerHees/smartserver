@@ -70,7 +70,7 @@ mx.Menu = (function( ret ) {
                             getId: function(){ return subGroupId; },
                             getTitle: function(){ return subGroup['title']; },
                             getMainGroup: function(){ return mainGroup['_']; },
-                            getEntry: function(entryId){ return subGroup['menuEntries'][entryId]['_']; },
+                            getEntry: function(entryId){ return subGroup['menuEntries'].hasOwnProperty(entryId) ? subGroup['menuEntries'][entryId]['_'] : null; },
                             getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
                             addUrl: function(entryId,url,usergroups,order,title,info,newWindow,iconUrl){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
@@ -79,6 +79,7 @@ mx.Menu = (function( ret ) {
                                     id: entryId, order:order,usergroups:usergroups,type:'url',url:url,title:title,info:info,newWindow:newWindow, iconUrl: iconUrl,
                                     _: {
                                         isEntry: function(){ return true; },
+                                        getType: function(){ return "url"; },
                                         getId: function(){ return entry['id']; },
                                         getOrder: function(){ return entry['order']; },
                                         getUserGroups: function(){ return entry['usergroups']; },
@@ -99,6 +100,7 @@ mx.Menu = (function( ret ) {
                                     id: entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,
                                     _: {
                                         isEntry: function(){ return true; },
+                                        getType: function(){ return "html"; },
                                         getId: function(){ return entry['id']; },
                                         getOrder: function(){ return entry['order']; },
                                         getUserGroups: function(){ return entry['usergroups']; },

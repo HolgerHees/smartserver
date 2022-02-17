@@ -8,14 +8,23 @@ mx.App = (function( ret ) {
             if( parts.length > 2 )
             {
                 var entry = subMenuGroup.getEntry(parts[2]);
-                
-                mx.Actions.openEntry(entry, parts.length > 3 ? decodeURIComponent( parts[3] ) : null );
+                if( entry )
+                {
+                    mx.Actions.openEntry(entry, parts.length > 3 ? decodeURIComponent( parts[3] ) : null );
+                }
+                else
+                {
+                    mx.Actions.showError("notfound",ref);
+                }
             }
             else
             {
                 mx.Actions.openMenu(subMenuGroup);
             }
+            return true;
         }
+        
+        return false;
     };
     
     ret.initInfoLayer = function()

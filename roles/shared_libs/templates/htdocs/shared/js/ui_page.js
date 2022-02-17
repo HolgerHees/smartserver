@@ -25,7 +25,7 @@ mx.Page = (function( ret ) {
     
     ret.refreshUI = function(rootElement)
     {
-        const buttons = mx.$$(".form.button",rootElement);
+        const buttons = rootElement ? mx._$$(".form.button",rootElement) : mx.$$(".form.button");
         for (const button of buttons) 
         {
             if( button.dataset.ripple ) continue;

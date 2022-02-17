@@ -72,9 +72,11 @@ require "./shared/libs/ressources.php";
                 else mx.Actions.openHome();
             });
 
-            mx.App.checkDeeplink(ref);
-
-            if( !mx.History.getActiveNavigation() ) mx.Actions.openHome();
+            if( !mx.App.checkDeeplink(ref) )
+            {
+                //if( !mx.History.getActiveNavigation() ) 
+                mx.Actions.openHome();
+            }
 
             mx.$('#page').style.opacity = "1";
         }
@@ -253,7 +255,12 @@ require "./shared/libs/ressources.php";
             </div>
             <iframe id="embed" src="" frameborder="0" style="display:none"></iframe>
             <div id="embedError" style="display:none">
-              <div>
+              <div id="notfoundError">
+                <div class="head" data-i18n="The requested page was not found"></div>
+                <div class="info url" data-i18n="Page: '{}'"></div>
+                <div class="actions" ><div class="form button" onClick="mx.Actions.openHome()" data-i18n="Go to startpage"></div></div>
+            </div>
+              <div id="loadingError">
                 <div class="head" data-i18n="There was a problem loading the content"></div>
                 <div class="info" data-i18n="This can have several reasons"></div>
                 <div class="reason">
