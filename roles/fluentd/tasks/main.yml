@@ -41,14 +41,13 @@
   with_items:
     - fluentd
     - fluent-plugin-systemd
-#    - fluent-plugin-elasticsearch
-    - fluent-plugin-mail
-    - fluent-plugin-grep
-    - fluent-plugin-grepcounter
+#    - fluent-plugin-mail
+#    - fluent-plugin-grep
+#    - fluent-plugin-grepcounter
     - fluent-plugin-grafana-loki
     - fluent-plugin-record-modifier
     - fluent-plugin-rewrite-tag-filter
-    - oj
+#    - oj
   notify: "restart fluentd"
 
 - name: copy config and service
@@ -63,15 +62,6 @@
     - { mode: "u=rw,g=r,o=", path: "/etc/fluent/_.ansible.d/systemd.conf" }
     - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/fluentd.service" }
   notify: "restart fluentd"
-
-#- name: create cron job
-#  vars:
-#    name: "Fluentd elasticsearch index cleanup"
-#    cmd: "/usr/bin/curator_cli --host 127.0.0.1 delete_indices --ignore_empty_list --filter_list '\\''[{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":7},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"fluentd\"}]'\\'' > /dev/null"
-#    file: "ansible_fluentd"
-#    hour: "1"
-#    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
 
 # ***** FINALIZE *****
 - name: register systemd service watcher
