@@ -331,7 +331,7 @@ mx.Menu = (function( ret ) {
         {
             let subGroup = entry.getType() == "subgroup" ? entry : entry.getSubGroup()
                         
-            if( subGroup.getEntries().length == 1 )
+            if( subGroup.getEntries().length == 1 || subGroup.getEntries()[0].getContentType() != "url" )
             {
                 activeElementId = subGroup.getUId();
             }
@@ -370,6 +370,11 @@ mx.Menu = (function( ret ) {
                             
                         },350);
                     },0);
+                }
+                // needed to toggle submenu
+                else if( entry.getType() == "subgroup" )
+                {
+                    activeSubmenuElementId = null;
                 }
             }
         }

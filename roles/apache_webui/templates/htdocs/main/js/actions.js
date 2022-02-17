@@ -338,16 +338,7 @@ mx.Actions = (function( ret ) {
     
     };
     ret.openMenu = function(subGroup,event)
-    {
-        let activeNavigation = mx.History.getActiveNavigation();
-        
-        if( activeNavigation === subGroup && !isIFrameVisible() ) 
-        {
-            if( visualisationType != "desktop" ) menuPanel.close();
-
-            return;
-        }
-        
+    {       
         if( subGroup.getEntries().length == 1 )
         {
             mx.Actions.openEntryById(event,subGroup.getEntries()[0].getUId())
@@ -356,17 +347,20 @@ mx.Actions = (function( ret ) {
         }
         else
         {
-            showMenu();
-        
-            mx.Menu.buildContentSubMenu( subGroup, setMenuEntries);
+            if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
+            {
+                showMenu();
             
-            let submenuWasOpenBefore = activeNavigation && activeNavigation.getType() == "entry" && activeNavigation.getSubGroup() === subGroup;
+                mx.Menu.buildContentSubMenu( subGroup, setMenuEntries);
+                
+                //let submenuWasOpenBefore = activeNavigation && activeNavigation.getType() == "entry" && activeNavigation.getSubGroup() === subGroup;
+            
+                mx.History.addMenu(subGroup);
+            }
 
             mx.Menu.activateMenu(subGroup);
-            
-            mx.History.addMenu(subGroup);
 
-            if( visualisationType != "desktop" && submenuWasOpenBefore ) menuPanel.close();
+            //if( visualisationType != "desktop" && submenuWasOpenBefore ) menuPanel.close();
         }
 
     };
