@@ -49,6 +49,10 @@ button.primary:focus,
 :root {
     --color-primary: #1976D2;
 }
+#body-user #header
+{
+	background-color: var(--color-primary) !important;
+}
 #header {
     height: 56px !important;
     background-image: none !important;
