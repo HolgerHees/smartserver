@@ -45,9 +45,7 @@ class CmdWorkflow:
             else:
                 result = self._handleCrash(name)
 
-            if type(result) != bool:
-                self.logger.info("Proceed with job '{}'".format(name_parts[3]))
-            else:
+            if type(result) == bool:
                 self.logger.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
          
         if os.path.isfile(config.deployment_workflow_file):
@@ -112,7 +110,7 @@ class CmdWorkflow:
             self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,log_file_name)
             lf = LogFile(f)
 
-            if cmd_block["cmd_type"] == "system_reboot":
+            if cmd_block["cmd_type"] == "system_reboot" and len(cmd_block["cmds"]) > 0:
                 can_proceed = False
                 waiting_start = datetime.timestamp(datetime.now())
                 last_seen_cmd_type = waiting_start
@@ -150,10 +148,14 @@ class CmdWorkflow:
                 can_proceed = True
                     
             if can_proceed:
-                self.cmd_executer.finishInterruptedCmd(lf, cmd_block["cmd_type"])
+                has_cmds = len(cmd_block["cmds"]) > 0
+
+                self.logger.info("{} '{}'".format( "Proceed with" if has_cmds else "Finish job", cmd_block["cmd_type"]))
                 
+                self.cmd_executer.finishInterruptedCmd(lf, cmd_block["cmd_type"])
+            
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
-                exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if len(cmd_block["cmds"]) > 0 else 0
+                exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if has_cmds else 0
                  
         self.cmd_executer.finishRun(log_file_name,exit_code,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
                       
