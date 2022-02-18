@@ -14,8 +14,8 @@ def getPid(ppid,name):
     
     return m.group(0).strip().split(" ")[0] if m else ""
 
-def execCommand(cmd, cwd=None ):
-    return command.exec([ cmd ], shell=True, cwd=cwd )
+def execCommand(cmd, cwd=None, exitstatus_check=True ):
+    return command.exec([ cmd ], shell=True, cwd=cwd, exitstatus_check=exitstatus_check )
 
 def log( message, log_level = "info" ):
     message = message.replace("\"", "\\\"")

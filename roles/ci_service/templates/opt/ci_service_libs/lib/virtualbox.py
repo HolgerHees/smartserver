@@ -20,8 +20,8 @@ def destroyMachine(vid):
         if vid in machines:
             name = machines[vid]
             log.info(u"VM - vid: '{}', name: '{}' - destroyed.".format(vid,name))
-            helper.execCommand("VBoxManage controlvm \"{}\" poweroff".format(vid))
-            helper.execCommand("VBoxManage unregistervm --delete \"{}\"".format(vid))
+            helper.execCommand("VBoxManage controlvm \"{}\" poweroff".format(vid), exitstatus_check=False)
+            helper.execCommand("VBoxManage unregistervm --delete \"{}\"".format(vid), exitstatus_check=False)
             vmCleaned = True
         else:
             log.error(u"VM - vid: '{}' not found.".format(vid))
