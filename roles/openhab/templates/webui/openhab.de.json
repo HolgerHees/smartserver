@@ -3,7 +3,7 @@
     "Openhab": "Openhab"
   },
   "automation_openhab": {
-    "Control": "Control",
+    "Homecontrol": "Haussteuerung",
     "Basic UI": "Basic UI",
     "Administration": "Administration",
     "Main UI": "Main UI",
