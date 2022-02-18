@@ -458,7 +458,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( reasons );
-            if( isTimeout ) msg += "<div class=\"sub\">" + mx.I18N.get("Disabled because it is only possible max. 5 minutes after a system status refresh") + "</div>";
+            if( isTimeout ) msg += "<div class=\"sub\">" + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive";
             if( isTimeout ) msg += " disabled blocked";
             

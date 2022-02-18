@@ -152,7 +152,7 @@
     "system": "System",
     "smartserver": "Smartserver",
     "Install all": "Alles installieren",
-    "Disabled because it is only possible max. 5 minutes after a system status refresh": "Deaktiviert da die letzte System Status Aktualisierung mehr als 5 Minuten her ist",
+    "Disabled because the last update search was more than 5 minutes ago": "Deaktiviert da die letzte Update Suche mehr als 5 Minuten her ist",
     
     "Reboot necessary": "Reboot notwendig",
     "Is necessary because of {1} and {2}": "Ist wegen {1} und {2} notwendig",
