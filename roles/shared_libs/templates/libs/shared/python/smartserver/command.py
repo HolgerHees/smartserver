@@ -7,4 +7,4 @@ def exec( cmd, shell=False, check=False, stdout=subprocess.PIPE, stderr=subproce
     return result
  
 def sendEmail(email, subject, message):
-    execCommand( [ u"echo -e \"{}\" | mail -s \"{}\" {}".format(message, subject, email) ], shell=True )
+    exec( [ u"echo -e \"{}\" | mail -s \"{}\" {}".format(message, subject, email) ], shell=True )
