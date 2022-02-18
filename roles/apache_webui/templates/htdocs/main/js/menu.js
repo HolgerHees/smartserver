@@ -32,6 +32,17 @@ mx.Menu = (function( ret ) {
         return result;
     }
 
+    function filterAllowedEntries(entries)
+    {
+        return entries.filter(entry => entry.getUserGroups() && mx.User.memberOf( entry.getUserGroups() ));
+    }
+    
+    function filterMenuEntries(subGroup)
+    {
+        let entries = subGroup.getEntries();
+        return entries.length == 1 ? [] : entries.filter(entry => entry.getContentType() == 'url' && entry.getTitle() );
+    }
+
     ret.getMainGroup = function(mainGroupId)
     {
         if(mainGroupId in menuGroups)
@@ -75,7 +86,8 @@ mx.Menu = (function( ret ) {
                             getTitle: function(){ return subGroup['title']; },
                             getMainGroup: function(){ return mainGroup['_']; },
                             getEntry: function(entryId){ return subGroup['menuEntries'].hasOwnProperty(entryId) ? subGroup['menuEntries'][entryId]['_'] : null; },
-                            getEntries: function(){ return Object.values(subGroup['menuEntries']).map( entry => entry['_'] ); },
+                            getEntries: function(){ return filterAllowedEntries(Object.values(subGroup['menuEntries']).map( entry => entry['_'] )); },
+                            getMenuEntries: function(){ return filterMenuEntries(subGroup['_']) },
                             addUrl: function(entryId,url,usergroups,order,title,info,newWindow,iconUrl){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                 let entries = subGroup['menuEntries'];
@@ -221,7 +233,7 @@ mx.Menu = (function( ret ) {
                 button.setAttribute("id", subGroup['uid'] );
                 button.setAttribute("onClick","mx.Actions.openMenuById(event,'" + subGroup['uid'] + "');");
                 //button.firstChild.innerHTML = subGroup['iconUrl'] ? '<img src="/main/icons/' + subGroup['iconUrl'] + '"/>' : '';
-                button.firstChild.innerHTML = subGroup['iconUrl'] ? '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + subGroup['iconUrl'] + '#icon" /></svg>' : '';
+                button.firstChild.innerHTML = subGroup['iconUrl'] ? '<svg viewBox="0 0 16 16"><use xlink:href="/main/icons/' + subGroup['iconUrl'] + '#icon" /></svg>' : '';
                 button.lastChild.innerHTML = subGroup['title'];
                 menuDiv.appendChild(row);
 
@@ -241,11 +253,11 @@ mx.Menu = (function( ret ) {
         submenuButtonTemplate.classList.add("button");
         submenuButtonTemplate.innerHTML = "<div></div><div></div>";
         
-        for( entryKey in subGroup.getEntries() )
+        let menuEntries = subGroup.getMenuEntries();
+        
+        for( entryKey in menuEntries )
         {
             let entry = subGroup.getEntries()[entryKey];
-            
-            if( entry.getContentType() != "url" || !entry.getTitle() ) continue;
             
             /*let index = Math.floor(entry.getOrder()/100);
             
@@ -260,12 +272,12 @@ mx.Menu = (function( ret ) {
             let submenuButton = submenuButtonTemplate.cloneNode(true);
             submenuButton.setAttribute("id", entry.getUId() );
             submenuButton.setAttribute("onClick","mx.Actions.openEntryById(event,'" + entry.getUId() + "');");
-            submenuButton.firstChild.innerHTML = entry.getIconUrl() ? '<svg viewBox="0 0 20 20"><use xlink:href="/main/icons/' + entry.getIconUrl() + '#icon" /></svg>' : '';
+            submenuButton.firstChild.innerHTML = entry.getIconUrl() ? '<svg viewBox="0 0 16 16"><use xlink:href="/main/icons/' + entry.getIconUrl() + '#icon" /></svg>' : '';
             submenuButton.lastChild.innerHTML = entry.getTitle();
             element.appendChild(submenuButton);
         }
     }
-
+        
     ret.buildContentSubMenu = function(subGroup, callback)
     {
         let entries = [];
@@ -283,11 +295,6 @@ mx.Menu = (function( ret ) {
         for(let i = 0; i < menuEntries.length; i++)
         {
             let entry = menuEntries[i];
-            
-            if( !entry.getUserGroups() || !mx.User.memberOf( entry.getUserGroups() ) )
-            {
-                continue;
-            }
 
             let index = Math.floor(entry.getOrder()/100);
             
@@ -319,7 +326,7 @@ mx.Menu = (function( ret ) {
 
         callback(entries.join(""),callbacks);
     };
-
+    
     ret.activateMenu = function(entry)
     {
         mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
@@ -331,7 +338,7 @@ mx.Menu = (function( ret ) {
         {
             let subGroup = entry.getType() == "subgroup" ? entry : entry.getSubGroup()
                         
-            if( subGroup.getEntries().length == 1 || subGroup.getEntries()[0].getContentType() != "url" )
+            if( subGroup.getMenuEntries().length == 0 )
             {
                 activeElementId = subGroup.getUId();
             }

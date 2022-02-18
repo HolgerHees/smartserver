@@ -108,12 +108,32 @@ body.dark #side.iframe #header {
   background-color: var(--dark-panel-header-bg);
 
 }
+#app .button svg {
+    color: white;
+}
+body.dark #menu .button svg {
+    color: #CCC;
+}
+#menu .group.header .logout.button {
+    align-items: center;
+    display: none;
+}
+#menu .group.header .logout.button svg {
+    height: 40px;
+    width: 40px;
+    margin-left: 15px;
+}
+body.phone #menu .group.header .logout.button {
+    display: flex;
+}
 #app .burger.button svg {
     height: 56px;
     width: 56px;
 }
 #app .burger.button {
     transition: transform 400ms ease-out;
+    display: flex;
+    align-items: center;
 }
 #app .burger.button.open {
     transform: rotate(180deg);
@@ -122,6 +142,7 @@ body.dark #side.iframe #header {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    align-items: center;
     padding: 16px;
 }
 #app .alarm.button svg {
@@ -225,7 +246,7 @@ body.dark #side #content #embedProgress svg {
 }
 
 #menu #logo {
-    margin: 6px 6px 6px 2px;
+    margin: 4px;
     background-image:url(/main/img/marvinRightSmall.png);
     background-size: 44px 44px;
     height: 44px;
@@ -258,13 +279,16 @@ body.phone #menu #logo {
 body.dark #menu > .group:first-child {
     background-color: var(--dark-panel-header-bg);
 }
-#menu .logout {
+#menu .logout.form.button {
     /*position: absolute;
     bottom: 0;
     left: 0;
     right: 0;*/
     margin: 16px;
 } 
+body.phone #menu .logout.form.button {
+    display: none;
+}
 #menu .header {
     width: 100%;
     text-align: left;
@@ -290,10 +314,16 @@ body.phone #menu .header {
     padding: 10px 0px;
     margin: 5px 10px 0 0px;
     box-sizing: border-box;
+    align-items: center;
 }
 #menu .service div:first-child {
-    width: 20px;
-    padding: 1px 20px 2px 25px;
+    width: 16px;
+    height: 16px;
+    padding: 0 20px 2px 25px;
+}
+#menu .group .submenu .service div:first-child {
+    /*padding-left: 43px;*/
+    padding-left: 62px;
 }
 /*#menu .service div:first-child img {
     filter: invert(28%);
@@ -356,9 +386,6 @@ body.dark #menu .service.button.active {
     transition: max-height 0.3s;
     display: none;
     overflow-y: hidden;
-}
-#menu .group .submenu .service div:first-child {
-    padding-left: 50px;
 }
 #background {
     background-repeat: no-repeat;

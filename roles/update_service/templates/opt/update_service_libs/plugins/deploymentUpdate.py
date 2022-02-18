@@ -37,6 +37,10 @@ class DeploymentUpdate:
         else:
             # git add files (intent to add)  
             subprocess.run([ "git", "-C", self.config.deployment_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            
+            # calculates differences to ignore files touches
+            subprocess.run([ "git", "-C", self.config.deployment_directory, "status" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+
             result = subprocess.run([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
             uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
 

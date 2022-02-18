@@ -339,7 +339,8 @@ mx.Actions = (function( ret ) {
     };
     ret.openMenu = function(subGroup,event)
     {       
-        if( subGroup.getEntries().length == 1 )
+        let entries = subGroup.getEntries();
+        if( entries.length == 1 && entries[0].getContentType() == "url" )
         {
             mx.Actions.openEntryById(event,subGroup.getEntries()[0].getUId())
             
@@ -353,14 +354,12 @@ mx.Actions = (function( ret ) {
             
                 mx.Menu.buildContentSubMenu( subGroup, setMenuEntries);
                 
-                //let submenuWasOpenBefore = activeNavigation && activeNavigation.getType() == "entry" && activeNavigation.getSubGroup() === subGroup;
-            
                 mx.History.addMenu(subGroup);
             }
 
             mx.Menu.activateMenu(subGroup);
-
-            //if( visualisationType != "desktop" && submenuWasOpenBefore ) menuPanel.close();
+            
+            if( visualisationType != "desktop" && subGroup.getMenuEntries().length == 0 ) menuPanel.close();
         }
 
     };
