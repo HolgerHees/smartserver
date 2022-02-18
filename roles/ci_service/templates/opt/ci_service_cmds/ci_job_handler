@@ -18,6 +18,7 @@ from config import config
 sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.github import GitHub
+from smartserver import command
 
 import pexpect 
 
@@ -113,7 +114,7 @@ elif cmd == "start" or cmd == "restart":
                         body += "\n\n"
                         body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash)
                         
-                        helper.sendEmail("CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body)
+                        command.sendEmail("root", "CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body)
                         
                         is_failed_job = True
                         break

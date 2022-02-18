@@ -4,6 +4,10 @@ import sys
 
 from plugins.os.os import Os
 
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver import command
+
 
 class OperatingSystem(Os):
     def getSystemUpdateCmds(self):
@@ -16,7 +20,7 @@ class OperatingSystem(Os):
         return [r"^wicked.*$"]
 
     def getUpdates(self):
-        result = subprocess.run([ "/usr/bin/zypper list-updates" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        result = command.exec([ "/usr/bin/zypper", "list-updates" ])
         lines = result.stdout.decode("utf-8").strip().split("\n")
         lines = reversed(lines)
         updates = []
@@ -30,5 +34,5 @@ class OperatingSystem(Os):
         return updates
           
     def getRebootState(self):
-        result = subprocess.run([ "/usr/bin/zypper", "needs-rebooting" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        result = command.exec([ "/usr/bin/zypper", "needs-rebooting" ], exitstatus_check = False)
         return result.returncode != 0

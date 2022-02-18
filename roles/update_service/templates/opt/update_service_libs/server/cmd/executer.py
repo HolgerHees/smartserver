@@ -14,6 +14,7 @@ from config import config
 sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.logfile import LogFile
+from smartserver import command
 
 from server.watcher import watcher
 
@@ -268,7 +269,7 @@ class CmdExecuter(watcher.Watcher):
         return 0
 
     def getActiveCmdType(self):
-        result = subprocess.run([ CmdExecuter.cmd_processlist ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        result = command.exec([ CmdExecuter.cmd_processlist ], shell=True)
         stdout = result.stdout.decode("utf-8")
         active_cmd_type = None
         for term in CmdExecuter.process_mapping:

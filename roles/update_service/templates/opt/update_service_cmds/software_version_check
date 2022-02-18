@@ -18,6 +18,7 @@ from config import config
 sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.argsparser import ArgsParser
+from smartserver import command
 
 
 args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()) }
@@ -119,7 +120,7 @@ if args_values["limit"] == None:
         
         print("Send notification mail")
 
-        subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" {}".format("\n".join(message_r),"New component updates available",config.software_check_email) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        command.sendEmail(config.software_check_email, "New component updates available", "\n".join(message_r) )
 
     with open(config.software_version_state_file, 'w') as f:
         json.dump(current_states, f)

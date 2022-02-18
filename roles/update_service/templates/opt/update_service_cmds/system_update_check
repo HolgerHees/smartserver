@@ -16,7 +16,7 @@ from plugins.deploymentUpdate import DeploymentUpdate
 sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.argsparser import ArgsParser
-
+from smartserver import command
 
 args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()) }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -101,7 +101,7 @@ if args_values["limit"] is None and args_values["notification"] and config.updat
    
     print(u"Send notification mail")
 
-    subprocess.run([ u"echo -e \"{}\" | mail -s \"{}\" {}".format("\n".join(message_r),"New system updates available",config.update_check_email) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+    command.sendEmail(config.update_check_email, "New system updates available", "\n".join(message_r) )
   
 with open(config.system_update_state_file, 'w') as f:
     json.dump(state, f)

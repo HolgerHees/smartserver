@@ -14,6 +14,7 @@ from config import config
 sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.github import GitHub
+from smartserver import command
 
 class DeploymentUpdate:
     def __init__(self,config):
@@ -36,12 +37,8 @@ class DeploymentUpdate:
             smartserver_code = "missing"
         else:
             # git add files (intent to add)  
-            subprocess.run([ "git", "-C", self.config.deployment_directory, "add", "-N", "*" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-            
-            # calculates differences to ignore files touches
-            subprocess.run([ "git", "-C", self.config.deployment_directory, "status" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-
-            result = subprocess.run([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            command.exec([ "git", "add", "-N", "*" ], cwd=self.config.deployment_directory )
+            result = command.exec([ "git", "diff-index", "--name-status", "origin/master" ], cwd=self.config.deployment_directory )
             uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
 
             deployment_stat = os.stat(self.config.deployment_state_file)
@@ -50,7 +47,7 @@ class DeploymentUpdate:
             if len(uncommitted_changes) == 1 and uncommitted_changes[0] == "":
                 can_pull = False
                 if "github" in self.config.git_remote:
-                    result = subprocess.run([ "git", "ls-remote", self.config.git_remote ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+                    result = command.exec([ "git", "ls-remote", self.config.git_remote ], cwd=self.config.deployment_directory )
                     commits = result.stdout.decode("utf-8").strip().split("\n")
                     last_git_hash = commits[0].split("\t")[0]
 
@@ -72,7 +69,9 @@ class DeploymentUpdate:
                     smartserver_code = "pulled_untested"
                     
                 if can_pull:
-                    result = subprocess.run([ "git", "pull" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+                    result = command.exec([ "git", "pull" ], cwd=self.config.deployment_directory )
+                    if result.returncode != 0:
+                        raise Exception(result.stdout.decode("utf-8"))
                     smartserver_pull = update_time;
             else:
                 smartserver_code = "uncommitted"
@@ -80,13 +79,13 @@ class DeploymentUpdate:
             last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
             #last_deployment = "2020-01-20 14:02:00.651984+00:00"
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-            result = subprocess.run([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], cwd=self.config.deployment_directory )
             ref = result.stdout.decode("utf-8").strip()
             
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
-            result = subprocess.run([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            result = command.exec([ "git", "diff-index", "--name-status", ref ], cwd=self.config.deployment_directory )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
-            
+
             lines = uncommitted_changes + committed_changes
             lines = [ele.split("\t") for ele in lines]
             

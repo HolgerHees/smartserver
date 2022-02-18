@@ -1,8 +1,13 @@
 import urllib.request
 import json
 import subprocess
+import sys
 
 from helper.version import Version
+
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver import command
 
 import re
 
@@ -23,7 +28,7 @@ class Repository(Repo):
         
         if Repository.repositories is None:
             Repository.repositories = {}
-            result = subprocess.run([ "/usr/bin/docker image list" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+            result = command.exec([ "/usr/bin/docker", "image", "list" ] )
             lines = result.stdout.decode("utf-8").split("\n")
             for line in lines:
                 columns = line.split()

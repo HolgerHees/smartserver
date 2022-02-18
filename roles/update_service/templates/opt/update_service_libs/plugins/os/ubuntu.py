@@ -5,6 +5,10 @@ import os
 
 from plugins.os.os import Os
 
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver import command
+
 
 class OperatingSystem(Os):
     def getSystemUpdateCmds(self):
@@ -19,7 +23,7 @@ class OperatingSystem(Os):
     def getUpdates(self):
         #apt list --upgradable
       
-        result = subprocess.run([ "/usr/bin/apt list --upgradable" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        result = command.exec([ "/usr/bin/apt", "list", "--upgradable" ])
         lines = result.stdout.decode("utf-8").strip().split("\n")
         updates = []
         for line in lines:

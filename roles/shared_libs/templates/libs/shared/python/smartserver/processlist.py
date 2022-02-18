@@ -6,7 +6,7 @@ import os
 import glob
 
 import timeit
-
+import json
 
 class Processlist():
     # credits goes to https://raw.githubusercontent.com/rpm-software-management/yum-utils/master/needs-restarting.py
@@ -149,6 +149,16 @@ class Processlist():
         #result = subprocess.run([ "/usr/bin/lsof", "-t", "-n", "+aL1", "/" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
         #outdated_pids = result.stdout.decode("utf-8").strip().split("\n")
         
+        
+        #result = subprocess.run([ "/usr/bin/systemctl", "list-unit-files", "--state=enabled,disabled", "--no-pager", "--output=json" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        #if result.returncode != 0:
+        #    raise Exception(result.stdout.decode("utf-8"))
+        #json_data = json.loads(result.stdout.decode("utf-8"))
+        #valid_services = []
+        #for service in json_data:
+        #    if service['unit_file'].endswith('.service'):
+        #         valid_services.append(service['unit_file'][:-8])
+
         outdated_pids = set()
         for pid in Processlist.getProcessIds():
             for fn in Processlist._getOpenFiles(pid):
@@ -178,6 +188,12 @@ class Processlist():
                 unit = Processlist._getService(pid)
                 if unit is None:
                     unit = ""
+                else:
+                    result = subprocess.run([ "/usr/bin/systemctl", "show", unit, "--no-page" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    if result.returncode != 0:
+                        raise Exception(result.stdout.decode("utf-8"))
+                    if not re.search("UnitFileState=(enabled|disabled)", result.stdout.decode("utf-8")):
+                        unit = ""
 
                 outdated[pid] = {"pid": pid, "ppid": ppid, "uid": uid, "user": user, "command": comm, "service": unit}
             

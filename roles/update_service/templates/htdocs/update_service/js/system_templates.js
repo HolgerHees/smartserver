@@ -2,11 +2,11 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let outdatedProcessData = null;
     let outdatedRoleData = null;
   
-    let startserverChangeInfoCodes = {
+    let smartserverChangeInfoCodes = {
         "failed": ["red","Git pull skipped because CI tests failed"],
         "pending": ["yellow","Git pull skipped because CI tests are currently running"],
         "pulled_tested": ["green", "Git pulled and all CI tests successful"],
-        "pulled": ["green", "Git pulled"],
+        "pulled_untested": ["green", "Git pulled"],
         "uncommitted": ["red","Git pull skipped because there are uncommitted changes"],
         "missing": ["red","Git pull skipped because deployment status is unknown"],
     };
@@ -316,7 +316,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         
         if( code )
         {           
-            [colorClass,updateMsg] = startserverChangeInfoCodes[code];
+            [colorClass,updateMsg] = smartserverChangeInfoCodes[code];
             
             msg = "<div class=\"info " + colorClass + "\">" + mx.I18N.get(updateMsg);
             if( code != "missing" ) 

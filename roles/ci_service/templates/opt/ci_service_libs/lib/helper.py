@@ -1,8 +1,13 @@
 import subprocess
 import re
+import sys
+
+sys.path.insert(0, "/opt/shared/python")
+
+from smartserver import command
 
 def getPid(ppid,name):
-    result = subprocess.run([ "ps", "-f", "-o", "pid,cmd", "--ppid", str(ppid) ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+    result = command.exec([ "ps", "-f", "-o", "pid,cmd", "--ppid", str(ppid) ] )
     result = result.stdout.decode("utf-8")
 
     m = re.search(".*{}.*".format(name), result)
@@ -10,10 +15,7 @@ def getPid(ppid,name):
     return m.group(0).strip().split(" ")[0] if m else ""
 
 def execCommand(cmd, cwd=None ):
-    return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
-
-def sendEmail(subject,message):
-    execCommand( u"echo -e \"{}\" | mail -s \"{}\" root".format(message,subject) )
+    return command.exec([ cmd ], shell=True, cwd=cwd )
 
 def log( message, log_level = "info" ):
     message = message.replace("\"", "\\\"")
