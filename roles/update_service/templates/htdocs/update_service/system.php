@@ -28,7 +28,7 @@ if( !Auth::hasGroup("admin") )
 <script src="<?php echo Ressources::getJSPath('/update_service/'); ?>"></script>
 <script src="/shared/js/logfile/logfile.js"></script>
 </head>
-<body class="inline system">
+<body class="inline spacer system">
 <script>
     var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
     if( theme ) document.body.classList.add(theme);

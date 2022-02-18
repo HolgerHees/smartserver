@@ -83,5 +83,16 @@ body.dark {
     background-color: var(--dark-bg);
 } 
 body.inline {
-   padding: 0px 5px 0 5px;
+    /*padding: 0px 5px 0 5px;*/
+}
+body.inline.spacer {
+    padding: 5px;
+}
+body.inline.spacer-800 {
+    padding-top: 5px;
+}
+@media screen and (max-width: 800px) {
+    body.inline.spacer-800 {
+        padding-top: 0;
+    }
 }

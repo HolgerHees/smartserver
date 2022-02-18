@@ -24,7 +24,7 @@ if( !Auth::hasGroup("admin") )
 <script src="<?php echo Ressources::getComponentPath('/update_service/'); ?>"></script>
 <script src="<?php echo Ressources::getJSPath('/update_service/'); ?>"></script>
 </head>
-<body class="inline software">
+<body class="inline software spacer-800">
 <script>
 var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
 if( theme ) document.body.classList.add(theme);
