@@ -6,7 +6,6 @@ import logging
 
 import glob
 import json
-import sys
 import os
 import importlib
 
@@ -20,8 +19,6 @@ from server.watcher.system_update import SystemUpdateWatcher
 from server.watcher.deployment_state import DeploymentStateWatcher
 from server.watcher.deployment_tags import DeploymentTagsWatcher
 from server.watcher.software_version import SoftwareVersionWatcher
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.server import Server
 

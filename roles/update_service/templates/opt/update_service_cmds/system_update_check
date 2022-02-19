@@ -13,8 +13,6 @@ from config import config
 
 from plugins.deploymentUpdate import DeploymentUpdate
 
-sys.path.insert(0, "/opt/shared/python")
-
 from smartserver.argsparser import ArgsParser
 from smartserver import command
 

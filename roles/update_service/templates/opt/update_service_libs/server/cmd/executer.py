@@ -11,8 +11,6 @@ from datetime import datetime, timedelta
 
 from config import config
 
-sys.path.insert(0, "/opt/shared/python")
-
 from smartserver.logfile import LogFile
 from smartserver import command
 

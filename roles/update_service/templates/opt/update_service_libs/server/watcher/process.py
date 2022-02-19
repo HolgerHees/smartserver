@@ -1,9 +1,6 @@
 import threading
 from datetime import datetime, timedelta
 import re
-import sys
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.processlist import Processlist
 

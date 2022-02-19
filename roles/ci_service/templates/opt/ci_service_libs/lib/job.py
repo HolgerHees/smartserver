@@ -5,7 +5,6 @@ import pathlib
 import glob
 import os
 import re
-import sys
 
 import glob
 
@@ -16,8 +15,6 @@ from lib import helper
 from lib import virtualbox
 from lib import status
 from lib import log
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.logfile import LogFile
 

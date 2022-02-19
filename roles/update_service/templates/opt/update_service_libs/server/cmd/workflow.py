@@ -2,7 +2,6 @@ import glob
 
 import threading
 import json
-import sys
 import os
 import time
 
@@ -10,8 +9,6 @@ from datetime import datetime, timezone
 
 from config import config
 from server.cmd.executer import CmdExecuter
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.logfile import LogFile
 

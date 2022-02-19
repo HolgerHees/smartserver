@@ -9,7 +9,7 @@
     - {mode: "u=rwX,g=rX,o=", owner: "root", group: "root", path: "/opt/shared/" }
     - {mode: "u=rwX,g=rX,o=rX", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", path: "{{htdocs_path}}/shared/" }
 
-- name: synchronize libs
+- name: synchronize python libs
   synchronize:
     src: "templates/libs/shared"
     dest: "/opt/"
@@ -21,6 +21,24 @@
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"
+
+- name: synchronize python libs installer
+  synchronize:
+    src: "templates/install.py"
+    dest: "/opt/shared/python/"
+    archive: no
+    checksum: yes
+    group: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F750"
+  register: installer_state
+
+- name: install python libs
+  shell: "/opt/shared/python/install.py"
+  when: installer_state.changed
 
 - name: synchronize web libs
   synchronize:

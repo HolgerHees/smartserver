@@ -2,7 +2,6 @@ import os
 import subprocess
 import json
 import re
-import sys
 
 import glob
 
@@ -10,8 +9,6 @@ from datetime import datetime, timezone
 from collections import Counter
 
 from config import config
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.github import GitHub
 from smartserver import command

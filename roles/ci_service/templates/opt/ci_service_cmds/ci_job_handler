@@ -15,8 +15,6 @@ from lib import log
 
 from config import config
 
-sys.path.insert(0, "/opt/shared/python")
-
 from smartserver.github import GitHub
 from smartserver import command
 
@@ -33,18 +31,18 @@ if len(sys.argv) >= 2:
     cmd = sys.argv[1]
     
 if cmd == "status":
-    service.showRunningJobs()
+    service.showRunningJobs(config.lib_dir)
     exit(0)
 elif cmd == "clean":
     if len(sys.argv) == 3:
         vid = sys.argv[2]
-        service.cleanRunningJobs(vid)
+        service.cleanRunningJobs(vid,config.lib_dir)
         exit(0)
     else:
         log.error(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
         exit(1)
 elif cmd == "stop":
-    stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir,branch)
+    stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir,config.lib_dir,branch)
     if stopped_state_obj != None and config.access_token != "":
         log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
         GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")

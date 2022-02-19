@@ -15,8 +15,6 @@ import subprocess
 
 from config import config
 
-sys.path.insert(0, "/opt/shared/python")
-
 from smartserver.argsparser import ArgsParser
 from smartserver import command
 

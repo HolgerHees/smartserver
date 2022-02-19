@@ -8,15 +8,12 @@ import glob
 import signal
 
 import threading
-import sys
 import os
 import time
 
 import json
 
 from config import config
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver.server import Server
 from smartserver.github import GitHub
@@ -108,7 +105,7 @@ class Handler(Server):
                 for git_hash in git_hashes: 
                     self.logger.info("Clean states of git hash '{}'".format(git_hash))
                     GitHub.setState(repository_owner,config.access_token,git_hash,"error", self.state["deployment"],"Build crashed")
-                    GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")
+                    GitHub.cancelPendingStates(repository_owner, config.access_token, self.state["git_hash"], "Build skipped")
 
             # process logfiles
             for name in cleaned_running_jobs:

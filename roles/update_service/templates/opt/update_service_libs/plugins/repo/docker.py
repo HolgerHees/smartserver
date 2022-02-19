@@ -1,11 +1,8 @@
 import urllib.request
 import json
 import subprocess
-import sys
 
 from helper.version import Version
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver import command
 

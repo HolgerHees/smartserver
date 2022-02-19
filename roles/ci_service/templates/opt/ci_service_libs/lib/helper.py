@@ -1,8 +1,5 @@
 import subprocess
 import re
-import sys
-
-sys.path.insert(0, "/opt/shared/python")
 
 from smartserver import command
 
