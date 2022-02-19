@@ -1,5 +1,9 @@
 {
   "name": "{{server_name|capitalize}}",
+  "display": "fullscreen",
+  "theme_color": "#1976D2",
+  "background_color": "#FFFFFF",
+  "start_url": "/",
   "icons": [
     {
       "src": "/main/img/res/mipmap-mdpi/ic_launcher.png",
@@ -37,10 +41,5 @@
       "type": "image/png",
       "density": 4.0
     }
-  ],
-  "theme_color": "#1976D2",
-  "background_color": "#FFFFFF",
-  "start_url": "/",
-  "display": "fullscreen",
-  "orientation": "portrait"
+  ]
 }
