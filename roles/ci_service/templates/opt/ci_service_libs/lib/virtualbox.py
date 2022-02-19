@@ -33,7 +33,7 @@ def getMachineLeftovers(lib_dir, machines):
             leftovers[file] = "{}VirtualMachines/{}".format(lib_dir,file)
     return leftovers
  
-def destroyMachine(vid,lib_dir):
+def destroyMachine(vid):
     vmCleaned = False
     if vid != None:
         machines = getRegisteredMachines()
@@ -42,8 +42,6 @@ def destroyMachine(vid,lib_dir):
             log.info(u"VM - vid: '{}', name: '{}' - destroyed.".format(vid,name))
             helper.execCommand("VBoxManage controlvm \"{}\" poweroff".format(vid), exitstatus_check=False)
             helper.execCommand("VBoxManage unregistervm --delete \"{}\"".format(vid), exitstatus_check=False)
-            
-            "{}VirtualMachines".format(config.lib_dir)
             
             vmCleaned = True
         else:
