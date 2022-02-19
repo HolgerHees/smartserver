@@ -56,18 +56,16 @@ def showRunningJobs(lib_dir):
     else:
         log.info(u"No sub processes are running.")
 
-    virtualbox.checkMachines(True)
-    
-    virtualbox.checkMachineLeftovers(lib_dir, True)
+    virtualbox.checkMachines(lib_dir, True)
       
 def cleanRunningJobs(vid,lib_dir):
     if vid == "all":
         machines = virtualbox.getRegisteredMachines()
         for vid in machines.keys():
             virtualbox.destroyMachine(vid)
-        leftovers = virtualbox.getMachineLeftovers(lib_dir)
+        leftovers = virtualbox.getMachineLeftovers(lib_dir,machines)
         for leftover in leftovers:
-            virtualbox.destroyMachineLeftover(leftover,lib_dir)
+            virtualbox.destroyMachineLeftover(leftover,lib_dir,machines)
     else:
         virtualbox.destroyMachine(vid)
 
@@ -91,9 +89,7 @@ def stopRunningJob(status_file,log_dir,lib_dir,branch):
             log.info(u"Cleaning status file.")
         status.setVID(status_file,None)
         
-    virtualbox.checkMachines(False)
-
-    virtualbox.checkMachineLeftovers(lib_dir, False)
+    virtualbox.checkMachines(lib_dir, False)
 
     if cleaned:
         if state_obj != None:

@@ -21,6 +21,17 @@ def getRegisteredMachines():
             (name,vid) = line.split(" ")
             machines[vid] = name.strip("\"")
     return machines
+
+def getMachineLeftovers(lib_dir, machines):
+    machine_names = []
+    for vid,name in machines.items():
+        machine_names.append(name)
+
+    leftovers = {}
+    for file in os.listdir("{}VirtualMachines".format(lib_dir)):
+        if file not in machine_names:
+            leftovers[file] = "{}VirtualMachines/{}".format(lib_dir,file)
+    return leftovers
  
 def destroyMachine(vid,lib_dir):
     vmCleaned = False
@@ -39,7 +50,19 @@ def destroyMachine(vid,lib_dir):
             log.error(u"VM - vid: '{}' not found.".format(vid))
     return vmCleaned
 
-def checkMachines(show_info):
+def destroyMachineLeftover(leftover,lib_dir,machines):
+    leftoverCleaned = False
+    if leftover != None:
+        leftovers = getMachineLeftovers(lib_dir,machines)
+        if leftover in leftovers:
+            log.info(u"Leftover: '{}' cleaned.".format(leftover))
+            deltree(leftovers[leftover])
+            leftoverCleaned = True
+        else:
+            log.error(u"Leftover: '{}' not found.".format(leftover))
+    return leftoverCleaned
+
+def checkMachines(lib_dir, show_info):
     machines = getRegisteredMachines()
     if len(machines.keys()) > 0:
         if show_info:
@@ -50,33 +73,13 @@ def checkMachines(show_info):
             log.info(u"Some machines are still there.")
     elif show_info:
         log.info(u"No machines are registered.")
-
-def getMachineLeftovers(lib_dir):
-    files = os.listdir("{}VirtualMachines".format(lib_dir))
-    leftovers = {}
-    for file in files:
-        leftovers[file] = "{}VirtualMachines/{}".format(lib_dir,file)
-    return leftovers
-
-def destroyMachineLeftover(leftover,lib_dir):
-    leftoverCleaned = False
-    if leftover != None:
-        leftovers = getMachineLeftovers(lib_dir)
-        if leftover in leftovers:
-            log.info(u"Leftover: '{}' cleaned.".format(leftover))
-            deltree(leftovers[leftover])
-            leftoverCleaned = True
-        else:
-            log.error(u"Leftover: '{}' not found.".format(leftover))
-    return leftoverCleaned
-    
-def checkMachineLeftovers(lib_dir,show_info):
-    leftovers = getMachineLeftovers(lib_dir)
+        
+    leftovers = getMachineLeftovers(lib_dir, machines)
     if len(leftovers.keys()) > 0:
         if show_info:
             log.info(u"Following leftovers found.")
             for leftover in leftovers:
-                log.info(u"  directory: '{}', path: '{}'".format(leftover,leftovers[leftover]))
+                log.info(u"  LO - name: '{}', path: '{}'".format(leftover,leftovers[leftover]))
         else:
             log.info(u"Some leftovers are still there.")
     elif show_info:
