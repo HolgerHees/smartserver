@@ -83,8 +83,8 @@ require "./shared/libs/ressources.php";
 
         function checkVisualisationType()
         {
-            if( window.innerWidth < 600 ) visualisationType = "phone";
-            else if( window.innerWidth < 1024 ) visualisationType = "tablet";
+            if( window.innerWidth <= 600 ) visualisationType = "phone";
+            else if( window.innerWidth <= 1024 ) visualisationType = "tablet";
             else visualisationType = "desktop";
             
             mx.Actions.setVisualisationType(visualisationType);
@@ -143,7 +143,7 @@ require "./shared/libs/ressources.php";
             }
             var phoneMql = window.matchMedia('(max-width: 600px)');
             phoneMql.addListener(isPhoneListener);
-            isPhoneListener(phoneMql);
+            //isPhoneListener(phoneMql);
 
             var desktopMql = window.matchMedia('(min-width: 1024px)');
             function checkMenu(mql)
