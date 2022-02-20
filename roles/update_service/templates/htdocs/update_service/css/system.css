@@ -138,6 +138,9 @@ body.system div.info {
   flex-grow: 1; 
   font-size: 16px;
 }
+body.system div.info.big {
+  font-size: 22px;
+}
 body.system div.info .sub {
   color: #AAA;
   font-size: 13px;

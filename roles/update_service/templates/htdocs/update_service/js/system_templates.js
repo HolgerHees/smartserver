@@ -431,6 +431,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             msg += " green\" onclick=\"mx.UNCore.actionUpdateWorkflow(this)\">" + mx.I18N.get("Install all") + "</div></div>";
         }
+        else
+        {
+            msg = "<div class=\"info big\">" + mx.I18N.get("Everything up to date") + "</div>";
+        }
         
         return [ msg, timeout ];
     }

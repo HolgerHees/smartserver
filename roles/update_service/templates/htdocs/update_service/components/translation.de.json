@@ -135,6 +135,12 @@
     "{} smartserver updates available": "{} Smartserver Updates verfügbar",
     "{} smartserver update available": "{} Smartserver Update verfügbar",
 
+    "There are {} updates available": "Es sind {} Updates verfügbar",
+    "There is {} update available": "Es ist {} Update verfügbar",
+    "There is {} update available": "Es ist {} Update verfügbar",
+
+    "Everything up to date": "Alles auf dem neuesten Stand",
+
     "Install": "Installieren",
 
     "Name": "Name",
@@ -143,10 +149,7 @@
     "Arch": "Arch",
     
     "Flag": "Flag",
-    "File": "Datei",
-    
-    "There are {} updates available": "Es sind {} Updates verfügbar",
-    "There is {} update available": "Es ist {} Update verfügbar",
+    "File": "Datei",    
     
     "system": "System",
     "smartserver": "Smartserver",
