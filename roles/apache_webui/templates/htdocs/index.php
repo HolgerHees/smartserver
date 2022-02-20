@@ -84,7 +84,7 @@ require "./shared/libs/ressources.php";
         function checkVisualisationType()
         {
             if( window.innerWidth <= 600 ) visualisationType = "phone";
-            else if( window.innerWidth <= 1024 ) visualisationType = "tablet";
+            else if( window.innerWidth < 1024 ) visualisationType = "tablet";
             else visualisationType = "desktop";
             
             mx.Actions.setVisualisationType(visualisationType);

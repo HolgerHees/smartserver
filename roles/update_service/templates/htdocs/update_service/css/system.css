@@ -10,15 +10,6 @@ body.system.dark div.info,
 body.system.dark div.header div:first-child {
   color: var(--dark-menu-text);
 }
-@media (hover: hover) {
-  body.system div.action:hover {
-    background-color: var(--light-menu-hover-bg);
-    border-radius: 4px;
-  }
-  body.system.dark div.action:hover {
-    background-color: var(--dark-menu-hover-bg);
-  }
-}
 body.system div.info.green,
 body.system div.header.green {
   color: var(--color-green);
@@ -31,49 +22,127 @@ body.system div.info.red,
 body.system div.header.red {
   color: var(--color-red);
 }
+body.system div.table {
+  font-size: 16px;
+  overflow: auto;
+}
+
+body.system div.widget.summery {
+  margin-top: -5px;
+  padding-top: 0;
+  padding-bottom: 20px;
+}
+body.system div.summery,
 body.system div.widget {
   width: 100%;
   max-width: 800px;
   margin: auto;
   margin-top: 5px;
+  padding-top: 12px;
+  border: 1px solid #d2d2d2;
+  border-radius: 4px;
+  position: relative;
+  margin-top: 20px;
 }
-body.system div.widget:nth-of-type(1) {
-  margin-top: 0;
-}
-body.system div.table {
-  font-size: 16px;
-  overflow: auto;
+body.system div.summery {
+  border: none; 
 }
 body.system div.widget div.header {
-  padding-bottom: 5px;
+  transform: translateY(-50%);
+  margin-top: -12px;
+  margin-left: 10px;
+  background-color: var(--light-bg);
+  position: absolute;
+  padding: 0 5px 5px 5px;
   display: flex;
   align-items: center;
 }
-body.system div.widget div.header div:first-child {
+body.system div.widget.summery div.header {
+  position: relative;
+  transform: none;
+  margin-top: 0;
+  margin-left: 0;
+  background-color: none;
+  font-size: 30px;
+}
+body.system.dark div.widget div.header {
+    background-color: var(--dark-bg);
+}
+body.system div.widget div.header {
   font-size: 20px;
   font-weight: bold;
 }
-body.system div.widget div.header div:last-child {
-  color: #AAA;
-  font-size: 15px;
-  font-weight: normal;
-  padding-top: 2px;
-  padding-left: 5px;
-  white-space: nowrap;
-}
-body.system div.action {
-  margin: 5px 0 5px 10px;
+body.system div.widget div.action {
+  margin: 5px 0 5px 0;
   padding: 5px 5px 5px 5px;
   font-weight: normal;
   display: flex;
   align-items: center;
 }
+body.system div.widget div.list.form.table {
+  margin-bottom: 10px;
+  max-height: 0;
+  transition: max-height 0.3s;
+  display: none;
+  overflow-y: hidden;
+}
+body.system div.widget div.list.form.table > div.row > div {
+  border-left: none;
+  border-right: none;
+}
+body.system div.widget div.list.form.table div.row div.grow  {
+  width: 100%;
+  white-space: normal; 
+}
+
+@media (hover: hover) {
+  body.system div.widget div.action:hover {
+    background-color: var(--light-menu-hover-bg);
+  }
+  body.system.dark div.widget div.action:hover {
+    background-color: var(--dark-menu-hover-bg);
+  }
+}
+
+@media screen and (max-width: 600px) {
+  body.system.inline {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  body.system div.widget {
+    border: none;
+    margin-top: 60px;
+  }
+  body.system div.widget.summery {
+  padding-bottom: 0;
+  }
+  body.system div.widget div.header {
+    margin-left: 0;
+  }
+  body.system div.widget div.action {
+    margin: 10px 0 10px 0;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
 body.system div.info {
   flex-grow: 1; 
   font-size: 16px;
 }
 body.system div.info .sub {
   color: #AAA;
+  font-size: 13px;
+}
+body.system #smartserverChangeState .info {
   font-size: 13px;
 }
 body.system div.form.button {
@@ -95,19 +164,11 @@ body.system .hint.red,
 body.system .info.red {
     color: var(--color-red);
 }
-body.system div.list.form.table {
-  margin-left: 15px;
-  margin-right: 5px;
-  margin-bottom: 10px;
-  max-height: 0;
-  transition: max-height 0.3s;
-  display: none;
-  overflow-y: hidden;
-}
-body.system div.list.form.table div.row div.grow  {
-  width: 100%;
-  white-space: normal; 
-}
+
+
+
+
+
 
 body.system div.dialogLayer .confirmDialog {
   max-width: 350px;
@@ -148,6 +209,17 @@ body.system div.dialogLayer .spacer {
   display: block;
   margin: 5px 0 0 0;
 }
+
+
+
+
+
+
+
+
+
+
+
 body.system div.detailView {
   cursor: pointer;
   display: inline-block;
@@ -163,23 +235,4 @@ body.system div.form.table > div.row > div.indexLogDate {
 }
 body.system div.form.table.logfileBox {
   width: auto;
-}
-
-@media screen and (max-width: 600px) {
-  body.system.inline {
-    padding-left: 0;
-    padding-right: 0;
-  }
-  body.system div.widget div.header {
-    padding-left: 5px;
-    padding-right: 5px;
-  }
-  body.system div.action {
-    margin-left: 0;
-    margin-right: 0;
-  }
-  body.system div.list.form.table {
-    margin-left: 0;
-    margin-right: 0;
-  }
 }

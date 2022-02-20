@@ -8,14 +8,15 @@
     "Service is restarting": "Service wir neu gestartet",
 
     
-    "System status": "System Status",
-    "Update status": "Update Status",
+    "Updates": "Aktualisierungen",
+    "Status": "Status",
+    "Details": "Details",
 
     
     "Daemon was updated and needs to restart": "Daemon wurde aktualisiert und muss neu gestartet werden",
     "Restart daemon": "Daemon neu starten",
     "Stop": "Stop",
-    "Search updates": "Updates suchen",
+    "Check for updates": "Nach Updates suchen",
     "Only system updates": "Nur System Updates",
     "Only smartserver updates": "Nur Smartserver Updates",
     "Only outdated processes": "Nur veraltete Prozesse",
@@ -23,11 +24,10 @@
     "Hide": "Ausblenden",
     "Today, {}": "Heute, {}",
     "Yesterday, {}": "Gestern, {}",
-    "Last update search was on {}": "Letzte Suche nach Updates war am {}",
-    "Last update search was {}": "Letzte Suche nach Updates war {}",
+    "Last check: {}": "Letzte Überprüfung: {}",
     "Please press 'Refresh' to check for updates for the first time": "Bitte drücke 'Aktualisieren' um das erste mal nach Updates zu suchen",
 
-    "No service process is running": "Aktuell läuft kein Service Prozess",
+    "No update process is running": "Aktuell läuft kein Update Prozess",
 
     "A manually started system reboot is running": "Es läuft ein manuell gestarteter Server Neustart",
     "A manually started daemon restart is running": "Es läuft ein manuell gestarteter Daemon Neustart",
@@ -127,13 +127,13 @@
     "Role": "Rolle",
     
     
-    "There are no system updates available": "Es sind keine System Updates verfügbar",
-    "There are {} system updates available": "Es sind {} System Updates verfügbar",
-    "There is {} system update available": "Es ist {} System Update verfügbar",
+    "No system updates available": "Keine System Updates verfügbar",
+    "{} system updates available": "{} System Updates verfügbar",
+    "{} system update available": "{} System Update verfügbar",
 
-    "There are no smartserver updates available": "Es sind keine Smartserver Updates verfügbar",
-    "There are {} smartserver updates available": "Es sind {} Smartserver Updates verfügbar",
-    "There is {} smartserver update available": "Es ist {} Smartserver Update verfügbar",
+    "No smartserver updates available": "Keine Smartserver Updates verfügbar",
+    "{} smartserver updates available": "{} Smartserver Updates verfügbar",
+    "{} smartserver update available": "{} Smartserver Update verfügbar",
 
     "Install": "Installieren",
 
@@ -145,9 +145,8 @@
     "Flag": "Flag",
     "File": "Datei",
     
-    "There are {1} {2} and {3} {4} update(s) available": "Es sind {1} {2} und {3} {4} Update(s) verfügbar",
-    "There are {1} {2} updates available": "Es sind {1} {2} Updates verfügbar",
-    "There is {1} {2} update available": "Es ist {1} {2} Update verfügbar",
+    "There are {} updates available": "Es sind {} Updates verfügbar",
+    "There is {} update available": "Es ist {} Update verfügbar",
     
     "system": "System",
     "smartserver": "Smartserver",
@@ -161,13 +160,12 @@
     "outdated processes": "veralteter Prozesse",
     "Reboot system": "System Neustart",
     
-    "Last git pull was on {}": "Letzter git pull war am {}",
-    "Last git pull was {}": "Letzter git pull war {}",
-    "Git pull skipped because CI tests failed": "Git pull übersprungen weil CI Tests fehlerhaft waren",
-    "Git pull skipped because CI tests are currently running": "Git pull übersprungen weil aktuell CI Tests laufen",
+    "Last git pull: {}": "Letzter git pull: {}",
+    "Git pull skipped due to faulty CI tests": "Git pull übersprungen aufgrund fehlerhafter CI Tests",
+    "Git pull skipped due to ongoing CI testing": "Git pull übersprungen aufgrund laufender CI Tests",
     "Git pulled and all CI tests successful": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
-    "Git pull skipped because there are uncommitted changes": "Git pull übersprungen weil es nicht committete Änderungen gibt",
+    "Git pull skipped due to uncommitted changes": "Git pull übersprungen aufgrund nicht committeter Änderungen",
     "Git pull skipped because deployment status is unknown": "Git pull übersprungen weil der Deployment Status unbekannt ist",
     
     

@@ -204,7 +204,7 @@ if( !Auth::hasGroup("admin") )
                 currentRunningActionsElement.style.display="";
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
 
-                currentRunningStateElement.innerHTML = mx.I18N.get("No service process is running");
+                currentRunningStateElement.innerHTML = mx.I18N.get("No update process is running");
 
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
             }
@@ -700,30 +700,37 @@ if( !Auth::hasGroup("admin") )
     
     mx.OnDocReady.push( mx.UNCore.init );
 </script>
-<div class="widget">
-    <div class="header"><div data-i18n="System status"></div><div></div></div>
-    <div class="action" id="serverNeedsRestart"><div class="info red" data-i18n="Daemon was updated and needs to restart"></div><div class="buttons"><div class="form button restart red exclusive" onclick="mx.UNCore.actionRestartDaemon(this)" data-i18n="Restart daemon"></div></div></div>
+<div class="widget summery">
+    <div class="header"><div data-i18n="Updates"></div></div>
     <div class="action" id="updateWorkflow"></div>
+    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" id="searchUpdates" onclick="mx.UNCore.actionRefreshUpdateState(this)" data-i18n="Check for updates"></div></div></div>
+</div>
+<div class="widget">
+    <div class="header"><div data-i18n="Status"></div></div>
+
+    <div class="action" id="serverNeedsRestart"><div class="info red" data-i18n="Daemon was updated and needs to restart"></div><div class="buttons"><div class="form button restart red exclusive" onclick="mx.UNCore.actionRestartDaemon(this)" data-i18n="Restart daemon"></div></div></div>
+    
     <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button kill red" onclick="mx.UNCore.actionKillProcess(this)" data-i18n="Stop"></div></div></div>
     <div class="action" id="lastRunningJobsHeader"></div>
     <div class="list form table logfileBox" id="lastRunningJobsDetails"></div>
+
     <div class="action" id="systemRebootState"></div>
+    
     <div class="action" id="systemStateHeader"></div>
     <div class="list form table" id="systemStateDetails"></div>
+    
     <div class="action" id="roleStateHeader"></div>
     <div class="list form table" id="roleStateDetails"></div>
 </div>
 <div class="widget">
-    <div class="header"><div data-i18n="Update status"></div><div></div></div>
-
-    <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" id="searchUpdates" onclick="mx.UNCore.actionRefreshUpdateState(this)" data-i18n="Search updates"></div></div></div>
-    
+    <div class="header"><div data-i18n="Details"></div></div>
+   
     <div class="action" id="systemUpdateHeader"></div>
     <div class="list form table" id="systemUpdateDetails"></div>
 
-    <div class="action" id="smartserverChangeState"></div>
     <div class="action" id="smartserverChangeHeader"></div>
     <div class="list form table" id="smartserverChangeDetails"></div>
+    <div class="action" id="smartserverChangeState"></div>
 </div>
 <div class="error"></div>
 </body>

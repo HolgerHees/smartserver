@@ -3,11 +3,11 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let outdatedRoleData = null;
   
     let smartserverChangeInfoCodes = {
-        "failed": ["red","Git pull skipped because CI tests failed"],
-        "pending": ["yellow","Git pull skipped because CI tests are currently running"],
+        "failed": ["red","Git pull skipped due to faulty CI tests"],
+        "pending": ["yellow","Git pull skipped due to ongoing CI testing"],
         "pulled_tested": ["green", "Git pulled and all CI tests successful"],
         "pulled_untested": ["green", "Git pulled"],
-        "uncommitted": ["red","Git pull skipped because there are uncommitted changes"],
+        "uncommitted": ["red","Git pull skipped due to uncommitted changes"],
         "missing": ["red","Git pull skipped because deployment status is unknown"],
     };
     
@@ -87,14 +87,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             date = new Date(last_update * 1000);
             [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
-            if( dateType == "other" )
-            {
-                msg = mx.I18N.get("Last update search was on {}").fill( dateFormatted );
-            }
-            else
-            {
-                msg = mx.I18N.get("Last update search was {}").fill( dateFormatted );
-            }
+            msg = mx.I18N.get("Last check: {}").fill( dateFormatted );
         }
         else
         { 
@@ -232,7 +225,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             let plural = updateCount > 1;
           
-            let i18n_main_msg = plural ? "There are {} system updates available" : "There is {} system update available";
+            let i18n_main_msg = plural ? "{} system updates available" : "{} system update available";
             
             mx.I18N.get(i18n_main_msg).fill(updateCount)
 
@@ -263,7 +256,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no system updates available") + "</div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get("No system updates available") + "</div>";
         }
         
         return [ updateCount, detailsMsg, headerMsg ];
@@ -283,7 +276,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             let plural = updateCount > 1;
           
-            let i18n_main_msg = plural ? "There are {} smartserver updates available" : "There is {} smartserver update available";
+            let i18n_main_msg = plural ? "{} smartserver updates available" : "{} smartserver update available";
             
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
 
@@ -303,7 +296,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("There are no smartserver updates available") + "</div><div class=\"buttons\">";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div><div class=\"buttons\">";
         }
         
         return [ updateCount, detailsMsg, headerMsg ];
@@ -323,14 +316,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             {
                 let date = new Date(changed_data["smartserver_pull"] * 1000);
                 const [ lastPullFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
-                if( dateType == "other" )
-                {
-                    subMsg = mx.I18N.get("Last git pull was on {}").fill( lastPullFormatted );
-                }
-                else
-                {
-                    subMsg = mx.I18N.get("Last git pull was {}").fill( lastPullFormatted );
-                }
+                subMsg = mx.I18N.get("Last git pull: {}").fill( lastPullFormatted );
               
                 msg += "<div class=\"sub\">" + subMsg + "</div>";
             }
@@ -428,36 +414,17 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let isTimeout = duration > 300000;
             if( !isTimeout ) timeout = 300000 - duration;
             
-            let isMultiReason = systemUpdatesCount > 0 && smartserverChangeCount > 0;
-            
             let key = "";
-            if( isMultiReason )
+            if( systemUpdatesCount + smartserverChangeCount > 1 ) 
             {
-                key = "There are {1} {2} and {3} {4} update(s) available";
-            }
-            else if( systemUpdatesCount > 1 || smartserverChangeCount > 1 ) 
-            {
-                key = "There are {1} {2} updates available";
+                key = "There are {} updates available";
             }
             else
             {
-                key = "There is {1} {2} update available";
+                key = "There is {} update available";
             }
             
-            let reasons = {};
-            let index = 0;
-            if( systemUpdatesCount ) 
-            {
-                reasons[index+1] = systemUpdatesCount;
-                reasons[index+2] = mx.I18N.get("system");
-                index = 2;
-            }
-            if( smartserverChangeCount ){
-                reasons[index+1] = smartserverChangeCount;
-                reasons[index+2] = mx.I18N.get("smartserver");
-            }
-            
-            msg = "<div class=\"info\">" + mx.I18N.get(key).fill( reasons );
+            msg = "<div class=\"info\">" + mx.I18N.get(key).fill( systemUpdatesCount + smartserverChangeCount );
             if( isTimeout ) msg += "<div class=\"sub\">" + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive";
             if( isTimeout ) msg += " disabled blocked";
