@@ -15,6 +15,27 @@ mx.Selectbutton = (function( ret ) {
         
         options.elements.buttonSelector.classList.add("open");
         
+        let buttonRect = options.elements.button.getBoundingClientRect();
+        let selectionRect = options.elements.buttonSelectionLayer.getBoundingClientRect();
+        if( buttonRect.width -2 > selectionRect.width )
+        {
+            let diff = buttonRect.width - selectionRect.width;
+            if( diff > 19 ) diff = 19;
+            
+            options.elements.buttonSelectionLayer.childNodes.forEach(function(element)
+            {
+               element.style.paddingLeft = (diff + 5) + "px";
+            });
+            
+            options.elements.buttonSelectionLayer.style.width = buttonRect.width + "px";
+            options.elements.buttonSelectionLayer.style.boxSizing = "border-box";
+            
+            buttonRect = options.elements.button.getBoundingClientRect();
+            selectionRect = options.elements.buttonSelectionLayer.getBoundingClientRect();
+            //console.log(buttonRect);
+            //console.log(selectionRect);
+        }
+
         window.addEventListener('click', options.onBlur);
     }
     
@@ -67,9 +88,7 @@ mx.Selectbutton = (function( ret ) {
         
         options.elements.buttonSelectionLayer = document.createElement("div");
         options.elements.buttonSelectionLayer.classList.add("buttonSelectionLayer");
-        //var positionInfo = options.elements.button.getBoundingClientRect();
-        //options.elements.buttonSelectionLayer.style.width = ( positionInfo.width - 5 ) + "px";
-        
+                
         for( let i = 0; i < options.values.length; i++ )
         {
             let value = options.values[i];
