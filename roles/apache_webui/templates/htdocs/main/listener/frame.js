@@ -9,7 +9,7 @@ frameHandler = (function() {
         {
             function postMessage(type)
             {
-                window.top.postMessage({ type: type, url: document.location.href },'https://' + window.top.document.location.host); 
+                window.top.postMessage({ type: type, url: document.location.href, title: document.title },'https://' + window.top.document.location.host); 
             }
           
             head.setAttribute("frame-initialized", "true");

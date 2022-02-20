@@ -26,8 +26,7 @@ if( !Auth::hasGroup("admin") )
 </head>
 <body class="inline software spacer-800">
 <script>
-var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
-if( theme ) document.body.classList.add(theme);
+mx.OnScriptReady.push( mx.Page.initBody );
 
 mx.SNCore = (function( ret ) {
   
@@ -133,7 +132,7 @@ mx.SNCore = (function( ret ) {
     { 
         refreshDaemonState(null, function(){}); 
         
-        mx.Page.init();
+        mx.Page.init(mx.I18N.get("Software"));
     }
     
     ret.openUrl = function(event,url)

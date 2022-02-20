@@ -25,6 +25,12 @@ mx.Page = (function( ret ) {
         window.setTimeout(function(){ circle.remove() },800); // => animation is 600ms
     }
     
+    ret.initBody = function()
+    {
+        var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
+        if( theme ) document.body.classList.add(theme);
+    };
+
     ret.refreshUI = function(rootElement)
     {
         const buttons = rootElement ? mx._$$(".form.button",rootElement) : mx.$$(".form.button");
@@ -37,10 +43,14 @@ mx.Page = (function( ret ) {
         }
     }
     
-    ret.init = function()
+    ret.init = function(title)
     {
+        if( title && window.parent != window && window.parent == window.top && window.top.document.domain == document.domain ) 
+        {
+            window.top.postMessage({ type: "title", url: document.location.href, title: "" + title },'https://' + window.top.document.location.host); 
+        }
         ret.refreshUI(document);
     };
-
+    
     return ret;
 })( mx.Page || {} );

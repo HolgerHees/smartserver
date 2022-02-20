@@ -33,15 +33,14 @@ function initPage()
     mx.CIList.init(mx.$$('div.row'),mx.$("div.table"), 'div.state', 'span.state','span.runtime');
     mx.CIList.startUpdateProcess();
     
-    mx.Page.init();
+    mx.Page.init("CI Tests");
 }
 mx.OnDocReady.push( initPage );
 </script>
 </head>
 <body class="inline spacer-800">
 <script>
-    var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
-    if( theme ) document.body.classList.add(theme);
+    mx.OnScriptReady.push( mx.Page.initBody );
 </script>
 <div class="form table logfileBox">
 <?php

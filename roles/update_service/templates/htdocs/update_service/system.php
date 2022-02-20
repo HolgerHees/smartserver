@@ -30,9 +30,8 @@ if( !Auth::hasGroup("admin") )
 </head>
 <body class="inline spacer system">
 <script>
-    var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
-    if( theme ) document.body.classList.add(theme);
-    
+    mx.OnScriptReady.push( mx.Page.initBody );
+
     mx.UNCore = (function( ret ) {
         var job_is_running = null;
         var job_running_type = null;
@@ -694,7 +693,7 @@ if( !Auth::hasGroup("admin") )
                 },100);
             });
 
-            mx.Page.init();            
+            mx.Page.init(mx.I18N.get("Updates"));            
         }
         return ret;
     })( mx.UNCore || {} );
@@ -702,7 +701,6 @@ if( !Auth::hasGroup("admin") )
     mx.OnDocReady.push( mx.UNCore.init );
 </script>
 <div class="widget summery">
-    <div class="header"><div data-i18n="Updates"></div></div>
     <div class="action" id="updateWorkflow"></div>
     <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" id="searchUpdates" onclick="mx.UNCore.actionRefreshUpdateState(this)" data-i18n="Check for updates"></div></div></div>
 </div>

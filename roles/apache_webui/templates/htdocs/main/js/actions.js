@@ -12,6 +12,8 @@ mx.Actions = (function( ret ) {
     var demoMode = null;
     var menuPanel = null;
     var visualisationType = null;
+    
+    var titleUrl = null;
                           
     function loadHandler(url,type)
     {
@@ -63,12 +65,26 @@ mx.Actions = (function( ret ) {
     
     function iFrameListenerHandler(event)
     {
-        if( 'type' in event.data && [ 'load', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
+        if( 'type' in event.data && [ 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
         {
-            var url = event.data['url'];
-            url = url.split(':',2)[1];
-            if( url.indexOf("//" + window.location.host ) == 0 ) url = url.substr(window.location.host.length+2);
-            loadHandler(url,event.data['type']);
+            if( event.data['type'] == "title" )
+            {
+                document.title = event.data["title"];
+            }
+            else
+            {
+                var url = event.data['url'];
+                url = url.split(':',2)[1];
+                if( url.indexOf("//" + window.location.host ) == 0 ) url = url.substr(window.location.host.length+2);
+                loadHandler(url,event.data['type']);
+
+                if( titleUrl != event.data['url'] )
+                {
+                    document.title = event.data["title"];
+                }
+            }
+
+            titleUrl = event.data['url'];
         }
         else
         {
