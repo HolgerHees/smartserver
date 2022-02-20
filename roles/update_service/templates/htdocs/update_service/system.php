@@ -285,7 +285,8 @@ if( !Auth::hasGroup("admin") )
         
         function runAction(btn, action, parameter, response_callback)
         {
-            btn.classList.add("disabled");
+            // needs to be asynchrone to allow ripple effect
+            window.setTimeout(function() { btn.classList.add("disabled"); },0);
             
             var xhr = new XMLHttpRequest();
             xhr.open("POST", daemonApiUrl );
