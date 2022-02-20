@@ -103,7 +103,7 @@ elif cmd == "start" or cmd == "restart":
                         if config.access_token != "":
                             GitHub.setState(repository_owner,config.access_token,current_git_hash,"failure",deployment['os'],"Build failed")
                             
-                        log_url = "https://{}/ci_service/details/?datetime={}&config={}&os={}&branch={}&hash={}".format(config.server_host,start_time_str, deployment['config'],deployment['os'],branch,current_git_hash)
+                        log_url = "https://{}/ci_service/details/?config={}&os={}&branch={}&hash={}".format(config.server_host,deployment['config'],deployment['os'],branch,current_git_hash)
                         log_url = urllib.parse.quote_plus(log_url)
                         
                         body = "Reason: {}".format(error_reason)

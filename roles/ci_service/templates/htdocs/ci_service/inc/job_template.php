@@ -6,7 +6,7 @@ class JobTemplate
         $result = '<div id="' . $job->getHash() . '" data-state="' . $job->getState() . '" data-duration="' . $job->getDuration() . '" class="row"';
         if( $list_view ) 
         {
-          $result .= ' onClick="mx.CICore.openDetails(event,\''.$job->getDateTimeRaw().'\',\''.$job->getConfig().'\',\''.$job->getOs().'\',\''.$job->getBranch().'\',\''.$job->getGitHash().'\')"';
+          $result .= ' onClick="mx.CICore.openDetails(event,\''.$job->getConfig().'\',\''.$job->getOs().'\',\''.$job->getBranch().'\',\''.$job->getGitHash().'\')"';
         }
         else
         {

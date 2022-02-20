@@ -13,13 +13,12 @@ if( !Auth::hasGroup("admin") )
     HttpResponse::throwForbidden();
 }
 
-$datetime = isset($_GET['datetime']) ? $_GET['datetime'] : "";
 $config = isset($_GET['config']) ? $_GET['config'] : "";
 $os = isset($_GET['os']) ? $_GET['os'] : "";
 $branch = isset($_GET['branch']) ? $_GET['branch'] : "";
 $hash = isset($_GET['hash']) ? $_GET['hash'] : "";
 
-$matches = glob($log_folder . $datetime . '-*-' . $config . '-' . $os . '-' . $branch . '-' . $hash . '*.log' );
+$matches = glob($log_folder . '*-*-' . $config . '-' . $os . '-' . $branch . '-' . $hash . '*.log' );
 
 if( sizeof($matches) == 1 )
 {
