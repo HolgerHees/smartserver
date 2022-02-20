@@ -11,10 +11,16 @@ mx.Selectbutton = (function( ret ) {
         event.stopPropagation();
 
         options.elements.buttonSelectionLayer.style.display = "block";
-        window.setTimeout(function(){ options.elements.buttonSelectionLayer.style.opacity = 1; }, 0);
+
+        // reset
+        options.elements.buttonSelectionLayer.childNodes.forEach(function(element)
+        {
+            element.style.paddingLeft = "";
+        });
+        options.elements.buttonSelectionLayer.style.width = "";
+        options.elements.buttonSelectionLayer.style.boxSizing = "";
         
-        options.elements.buttonSelector.classList.add("open");
-        
+        // calculate size
         let buttonRect = options.elements.button.getBoundingClientRect();
         let selectionRect = options.elements.buttonSelectionLayer.getBoundingClientRect();
         if( buttonRect.width -2 > selectionRect.width )
@@ -35,6 +41,10 @@ mx.Selectbutton = (function( ret ) {
             //console.log(buttonRect);
             //console.log(selectionRect);
         }
+
+        window.setTimeout(function(){ options.elements.buttonSelectionLayer.style.opacity = 1; }, 0);
+
+        options.elements.buttonSelector.classList.add("open");
 
         window.addEventListener('click', options.onBlur);
     }
