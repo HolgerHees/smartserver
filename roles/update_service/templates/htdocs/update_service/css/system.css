@@ -28,11 +28,14 @@ body.system div.table {
 }
 
 body.system div.widget.summery {
-  margin-top: -5px;
+  margin-top: 0;
   padding-top: 0;
   padding-bottom: 20px;
 }
 
+body.system div.widget.summery .action:first-child {
+  margin-top: 0;
+}
 body.system div.summery,
 body.system div.widget {
   width: 100%;
@@ -114,9 +117,11 @@ body.system.phone.inline {
 }
 body.system.phone div.widget {
   border: none;
+  margin-top: 60px;
 }
 body.system.phone div.widget.summery {
-padding-bottom: 0;
+  padding-bottom: 0;
+  margin-top: 0;
 }
 body.system.phone div.widget div.header {
   margin-left: 0;
