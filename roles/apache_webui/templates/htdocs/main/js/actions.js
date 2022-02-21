@@ -142,7 +142,7 @@ mx.Actions = (function( ret ) {
             }
         },10000);
         
-        hideMenu();
+        hideMenuContent();
         //}
     }
 
@@ -154,7 +154,7 @@ mx.Actions = (function( ret ) {
     function showError(errorType, parameter)
     {
         hideIFrame();
-        hideMenu();
+        hideMenuContent();
         hideProgress();
 
         if( errorElement.style.display != "" || activeErrorType != errorType )
@@ -190,7 +190,7 @@ mx.Actions = (function( ret ) {
     function showIFrame()
     {
         hideError();
-        hideMenu();
+        hideMenuContent();
         hideProgress();
 
         if( iframeElement.style.display != "" )
@@ -247,13 +247,13 @@ mx.Actions = (function( ret ) {
         return iframeElement.style.display == "";
     }
     
-    function hideMenu()
+    function hideMenuContent()
     {
         mx.Timer.clean();
 
         if( inlineElement.style.display == "" )
         {
-            //console.log("hideMenu");
+            //console.log("hideMenuContent");
 
             //mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
             inlineElement.style.display = "none";
@@ -262,13 +262,13 @@ mx.Actions = (function( ret ) {
         }
     }
 
-    function showMenu()
+    function showMenuContent()
     {
         mx.Timer.clean();
 
         if( inlineElement.style.display != "" )
         {
-            //console.log("showMenu");
+            //console.log("showMenuContent");
             
             inlineElement.style.display = "";
             sideElement.classList.add("inline");
@@ -368,10 +368,10 @@ mx.Actions = (function( ret ) {
         {
             if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
             {
-                showMenu();
-            
-                mx.Menu.buildContentSubMenu( subGroup, setMenuEntries);
+                mx.Menu.buildContentSubMenu( subGroup, setMenuEntries); // prepare menu content
                 
+                showMenuContent(); // show menu content
+            
                 mx.History.addMenu(subGroup);
             }
 
@@ -419,15 +419,6 @@ mx.Actions = (function( ret ) {
         
         var isActive = ( mx.History.getActiveNavigation() === subGroup );
         
-        if( !isActive )
-        {
-            mx.Menu.activateMenu(null);
-            
-            showMenu();
-            
-            mx.History.addMenu(subGroup);
-        }
-
         var datetime = new Date();
         var h = datetime.getHours();
         var m = datetime.getMinutes();
@@ -448,15 +439,27 @@ mx.Actions = (function( ret ) {
         message += '<div class="imageTitle">' + mx.MainImage.getTitle() + '</div>';
         message += '</div>';
 
-        if( !isActive ) 
+        if( !isActive )
         {
-            setMenuEntries(message,[]);
+            mx.Menu.activateMenu(null); // colapse open submenu
             
+            setMenuEntries(message,[]); // prepare home content
+
+            showMenuContent(); // show menu content
+            
+            mx.History.addMenu(subGroup);
+        }
+        else
+        {
+            mx.$('#content #submenu').innerHTML = message;
+        }
+
+        if( !isActive ) 
+        {           
             if( visualisationType != "desktop" ) menuPanel.close();
         }
         else 
         {
-            mx.$('#content #submenu').innerHTML = message;
             if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
         }
 

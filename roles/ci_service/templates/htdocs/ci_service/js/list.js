@@ -10,7 +10,8 @@ mx.CIList = (function( ret ) {
     var duration = 0;
     
     var currentInterval = 0;
-
+    var updateTimer = null;
+    
     function refreshDuration(runtimeElement)
     {
         for( key in elementRunningDuration )

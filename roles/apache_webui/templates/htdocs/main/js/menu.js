@@ -393,8 +393,11 @@ mx.Menu = (function( ret ) {
         if( lastActiveElementId != activeElementId)
         {
             if(lastActiveElement) lastActiveElement.classList.remove("active");
-            let element = document.getElementById(activeElementId);
-            element.classList.add("active");
+            if( activeElementId ) // activeElementId is null for home
+            {
+                let element = document.getElementById(activeElementId);
+                element.classList.add("active");
+            }
         }
         
         mx.$$("#menu .group .submenu").forEach(function(element)
