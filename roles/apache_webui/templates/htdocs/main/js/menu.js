@@ -401,7 +401,6 @@ mx.Menu = (function( ret ) {
         {
             if( element.id != activeSubmenuElementId && element.style.display != "" )
             {
-                console.log("clean");
                 element.style.maxHeight = "";
                 window.setTimeout(function(){ 
                     element.style.display=""; 
