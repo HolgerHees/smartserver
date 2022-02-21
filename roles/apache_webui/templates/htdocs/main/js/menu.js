@@ -329,65 +329,70 @@ mx.Menu = (function( ret ) {
     
     ret.activateMenu = function(entry)
     {
-        mx.$$(".service.active").forEach(function(element){ element.classList.remove("active"); });
+        let lastActiveElement = mx.$(".service.active");
+        let lastActiveElementId = lastActiveElement ? lastActiveElement.id : null;
         
         let activeElementId = null;
         let activeSubmenuElementId = null;
+        let activeSubGroup = null;
         
         if( entry )
         {
-            let subGroup = entry.getType() == "subgroup" ? entry : entry.getSubGroup()
-                        
-            if( subGroup.getMenuEntries().length == 0 )
+            activeSubGroup = entry.getType() == "subgroup" ? entry : entry.getSubGroup()
+            if( activeSubGroup.getMenuEntries().length == 0 )
             {
-                activeElementId = subGroup.getUId();
+                activeElementId = activeSubGroup.getUId();
             }
             else
             {
-                activeSubmenuElementId = subGroup.getUId() + "-submenu";
+                activeSubmenuElementId = activeSubGroup.getUId() + "-submenu";
                 activeElementId = entry.getUId();
                 
-                let activeSubmenuElement = mx.$("#" + activeSubmenuElementId);
+            }
+        }
+        
+        if( activeSubmenuElementId )
+        {
+            let activeSubmenuElement = mx.$("#" + activeSubmenuElementId);
+            if( activeSubmenuElement.innerHTML == "" )
+            {
+                buildSubMenu(activeSubmenuElement, activeSubGroup);
 
-                if( activeSubmenuElement.innerHTML == "" )
-                {
-                    buildSubMenu(activeSubmenuElement, subGroup);
-
-                    activeSubmenuElement.style.display = "block";
-                    window.setTimeout(function(){ 
-                        activeSubmenuElement.style.maxHeight = activeSubmenuElement.scrollHeight + "px";
+                activeSubmenuElement.style.display = "block";
+                window.setTimeout(function(){ 
+                    activeSubmenuElement.style.maxHeight = activeSubmenuElement.scrollHeight + "px";
+                    
+                    window.setTimeout(function(){
+                        let mainMenuElement = mx.$("#menu .main");
+                        let mainRect = mainMenuElement.getBoundingClientRect();
+                        let mainOffset = mx.Core.getOffsets(mainMenuElement);
+                        let mainBottomPos = mainRect.height + mainOffset.top + mainMenuElement.scrollTop;
                         
-                        window.setTimeout(function(){
-                            let mainMenuElement = mx.$("#menu .main");
-                            let mainRect = mainMenuElement.getBoundingClientRect();
-                            let mainOffset = mx.Core.getOffsets(mainMenuElement);
-                            let mainBottomPos = mainRect.height + mainOffset.top + mainMenuElement.scrollTop;
-                            
-                            let rect = activeSubmenuElement.getBoundingClientRect();
-                            let offsets = mx.Core.getOffsets(activeSubmenuElement);
-                            let bottomPos = offsets.top + rect.height;
-                            
-                            if( bottomPos > mainBottomPos )
-                            {
-                                mainMenuElement.scrollTo({
-                                    top: mainMenuElement.scrollTop + ( bottomPos - mainBottomPos ) + 100,
-                                    behavior: 'smooth'
-                                });
-                            }
-                            
-                        },350);
-                    },0);
-                }
-                // needed to toggle submenu
-                else if( entry.getType() == "subgroup" )
-                {
-                    activeSubmenuElementId = null;
-                }
+                        let rect = activeSubmenuElement.getBoundingClientRect();
+                        let offsets = mx.Core.getOffsets(activeSubmenuElement);
+                        let bottomPos = offsets.top + rect.height;
+                        
+                        if( bottomPos > mainBottomPos )
+                        {
+                            mainMenuElement.scrollTo({
+                                top: mainMenuElement.scrollTop + ( bottomPos - mainBottomPos ) + 100,
+                                behavior: 'smooth'
+                            });
+                        }
+                        
+                    },350);
+                },0);
+            }
+            // needed to toggle submenu
+            else if( entry.getType() == "subgroup" && lastActiveElementId == activeElementId )
+            {
+                activeSubmenuElementId = null;
             }
         }
 
-        if( activeElementId)
+        if( lastActiveElementId != activeElementId)
         {
+            if(lastActiveElement) lastActiveElement.classList.remove("active");
             let element = document.getElementById(activeElementId);
             element.classList.add("active");
         }
@@ -396,6 +401,7 @@ mx.Menu = (function( ret ) {
         {
             if( element.id != activeSubmenuElementId && element.style.display != "" )
             {
+                console.log("clean");
                 element.style.maxHeight = "";
                 window.setTimeout(function(){ 
                     element.style.display=""; 
