@@ -92,7 +92,7 @@ mx.OnDocReady.push( initPage );
 </script>
 </head>
 <body>
-<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, mx.I18N.get("Job details")); } );</script>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, mx.I18N.get("Job details - <?php echo $cmd; ?>")); } );</script>
 <?php
     echo '<div class ="header form table logfileBox">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
 
