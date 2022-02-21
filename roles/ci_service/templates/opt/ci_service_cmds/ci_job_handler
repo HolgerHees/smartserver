@@ -60,6 +60,15 @@ elif cmd == "start" or cmd == "restart":
     current_git_hash = git.getHash(config.repository_dir)
 
     if processed_git_hash != current_git_hash or cmd == "restart":
+        if cmd == "restart":
+            if len(sys.argv) == 3:
+                start_os = sys.argv[2]
+            else:
+                log.error(u"Missing type:\n\nUsage: ./ci_service restart <os>|failed|all")
+                exit(1)
+        else:
+            start_os = "all"
+                
         status.setState(config.status_file,u"running")
         log.info(u"Check for commit '{}' started.".format(current_git_hash))
 
@@ -81,8 +90,12 @@ elif cmd == "start" or cmd == "restart":
                     # mark all non successful jobs as pending and clean others
                     _deployments = []
                     for deployment in deployments:
-                        if deployment['os'] in deployment_states and deployment_states[deployment['os']] == "success":
-                            continue
+                        if start_os != "all":
+                            if start_os == "failed":
+                                if deployment['os'] in deployment_states and deployment_states[deployment['os']] == "success":
+                                    continue
+                            elif start_os != deployment['os']:
+                                continue
 
                         GitHub.setState(repository_owner,config.access_token,current_git_hash,"pending",deployment['os'],"Build pending")
                         _deployments.append(deployment)
