@@ -32,6 +32,7 @@ body.system div.widget.summery {
   padding-top: 0;
   padding-bottom: 20px;
 }
+
 body.system div.summery,
 body.system div.widget {
   width: 100%;
@@ -104,29 +105,25 @@ body.system div.widget div.list.form.table div.row div.grow  {
   }
 }
 
-@media screen and (max-width: 600px) {
-  body.system.inline {
-    padding-left: 0;
-    padding-right: 0;
-  }
-  body.system div.widget {
-    border: none;
-    margin-top: 60px;
-  }
-  body.system div.widget.summery {
-  padding-bottom: 0;
-  }
-  body.system div.widget div.header {
-    margin-left: 0;
-  }
-  body.system div.widget div.action {
-    margin: 10px 0 10px 0;
-  }
+
+
+
+body.system.phone.inline {
+  padding-left: 0;
+  padding-right: 0;
 }
-
-
-
-
+body.system.phone div.widget {
+  border: none;
+}
+body.system.phone div.widget.summery {
+padding-bottom: 0;
+}
+body.system.phone div.widget div.header {
+  margin-left: 0;
+}
+body.system.phone div.widget div.action {
+  margin: 10px 0 10px 0;
+}
 
 
 

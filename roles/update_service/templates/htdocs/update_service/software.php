@@ -23,11 +23,7 @@ if( !Auth::hasGroup("admin") )
 <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
 <script src="<?php echo Ressources::getComponentPath('/update_service/'); ?>"></script>
 <script src="<?php echo Ressources::getJSPath('/update_service/'); ?>"></script>
-</head>
-<body class="inline software spacer-800">
 <script>
-mx.OnScriptReady.push( mx.Page.initBody );
-
 mx.SNCore = (function( ret ) {
   
     var daemonApiUrl = mx.Host.getBase() + '../api.php'; 
@@ -132,7 +128,7 @@ mx.SNCore = (function( ret ) {
     { 
         refreshDaemonState(null, function(){}); 
         
-        mx.Page.init(mx.I18N.get("Software"));
+        mx.Page.refreshUI();
     }
     
     ret.openUrl = function(event,url)
@@ -145,7 +141,12 @@ mx.SNCore = (function( ret ) {
 })( mx.SNCore || {} );
     
 mx.OnDocReady.push( mx.SNCore.init );
+
+
 </script>
+</head>
+<body class="software">
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer-800", mx.I18N.get("Software")); } );</script>
 <div class="list"></div>
 <div class="error"></div>
 </body>

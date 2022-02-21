@@ -27,11 +27,7 @@ if( !Auth::hasGroup("admin") )
 <script src="<?php echo Ressources::getComponentPath('/update_service/'); ?>"></script>
 <script src="<?php echo Ressources::getJSPath('/update_service/'); ?>"></script>
 <script src="/shared/js/logfile/logfile.js"></script>
-</head>
-<body class="inline spacer system">
 <script>
-    mx.OnScriptReady.push( mx.Page.initBody );
-
     mx.UNCore = (function( ret ) {
         var job_is_running = null;
         var job_running_type = null;
@@ -693,13 +689,16 @@ if( !Auth::hasGroup("admin") )
                 },100);
             });
 
-            mx.Page.init(mx.I18N.get("Updates"));            
+            mx.Page.refreshUI();            
         }
         return ret;
     })( mx.UNCore || {} );
     
     mx.OnDocReady.push( mx.UNCore.init );
 </script>
+</head>
+<body class="system">
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer", mx.I18N.get("Updates")); } );</script>
 <div class="widget summery">
     <div class="action" id="updateWorkflow"></div>
     <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" id="searchUpdates" onclick="mx.UNCore.actionRefreshUpdateState(this)" data-i18n="Check for updates"></div></div></div>

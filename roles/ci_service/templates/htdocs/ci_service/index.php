@@ -32,16 +32,13 @@ function initPage()
 {
     mx.CIList.init(mx.$$('div.row'),mx.$("div.table"), 'div.state', 'span.state','span.runtime');
     mx.CIList.startUpdateProcess();
-    
-    mx.Page.init("CI Tests");
+    mx.Page.refreshUI();
 }
 mx.OnDocReady.push( initPage );
 </script>
 </head>
-<body class="inline spacer-800">
-<script>
-    mx.OnScriptReady.push( mx.Page.initBody );
-</script>
+<body>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer-800", "CI Tests"); } );</script>
 <div class="form table logfileBox">
 <?php
 $jobs = Job::getJobs($log_folder);

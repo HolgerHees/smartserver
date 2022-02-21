@@ -77,15 +77,13 @@ function initPage()
     });
     mx.Logfile.checkScrollPosition(null,body,goToControl,false);
 
-    mx.Page.init("CI Test <?php echo $config . '-' . $os . '-' . $branch; ?>");
+    mx.Page.refreshUI();
 }
 mx.OnDocReady.push( initPage );
 </script>
 </head>
-<body class="inline">
-<script>
-    mx.OnScriptReady.push( mx.Page.initBody );
-</script>
+<body>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "CI Test <?php echo $config . '-' . $os . '-' . $branch; ?>"); } );</script>
 <?php
     echo '<div class ="header form table logfileBox">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
     

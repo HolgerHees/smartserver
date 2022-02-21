@@ -80,36 +80,33 @@ require "./shared/libs/ressources.php";
 
             mx.$('#page').style.opacity = "1";
         }
-
-        function checkVisualisationType()
+        
+        function deviceChanged(_visualisationType)
         {
-            if( window.innerWidth <= 600 ) visualisationType = "phone";
-            else if( window.innerWidth < 1024 ) visualisationType = "tablet";
-            else visualisationType = "desktop";
+            mx.App.initTheme();
             
-            mx.Actions.setVisualisationType(visualisationType);
+            mx.Actions.setVisualisationType(_visualisationType);
             
-            menuPanel.enableBackgroundLayer(visualisationType !== "desktop");
+            menuPanel.enableBackgroundLayer(_visualisationType !== "desktop");
 
-            if( visualisationType !== "desktop" )
+            if( _visualisationType === "desktop" ) 
             {
-                mx.$("#side").classList.add("fullsize");
-            }
-            
-            if( visualisationType === "phone" )
-            {
-                mx.$('body').classList.add('phone');
-                mx.$('body').classList.remove('desktop');
+                mx.$("#side").classList.remove("fullsize");
+                menuPanel.open();
             }
             else
             {
-                mx.$('body').classList.remove('phone');
-                mx.$('body').classList.add('desktop');
+                mx.$("#side").classList.add("fullsize");
+
+                if( visualisationType === "desktop" )
+                {
+                    menuPanel.close();
+                }
             }
-            
-            mx.App.initTheme();
-        }       
-        
+
+            visualisationType = _visualisationType;
+        }
+
         function initPage()
         {
             mx.App.initInfoLayer();
@@ -138,30 +135,7 @@ require "./shared/libs/ressources.php";
                 menuPanel.close();
             });
 
-            function isPhoneListener(mql){ 
-                checkVisualisationType(); 
-            }
-            var phoneMql = window.matchMedia('(max-width: 600px)');
-            phoneMql.addListener(isPhoneListener);
-            //isPhoneListener(phoneMql);
-
-            var desktopMql = window.matchMedia('(min-width: 1024px)');
-            function checkMenu(mql)
-            {
-                checkVisualisationType();
-
-                if( visualisationType === "desktop" ) 
-                {
-                    mx.$("#side").classList.remove("fullsize");
-                    menuPanel.open();
-                }
-                else 
-                {
-                    menuPanel.close();
-                }
-            }
-            desktopMql.addListener(checkMenu);
-            checkMenu(desktopMql);
+            mx.Page.initMain(deviceChanged);
 
             pageReady = true;
         
@@ -179,7 +153,7 @@ require "./shared/libs/ressources.php";
             
             mx.$(".spacer").innerHTML = document.location.hostname;
 
-            mx.Page.init();
+            mx.Page.refreshUI();
         }
         
         mx.OnScriptReady.push( function(){
