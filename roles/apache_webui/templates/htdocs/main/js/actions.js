@@ -121,29 +121,29 @@ mx.Actions = (function( ret ) {
     
     function setIFrameUrl(url)
     {
-        if( iframeElement.getAttribute("src") != url )
-        {
-            hideIFrame(true);
-            hideError();
-            showProgress();
-            
-            iframeElement.setAttribute('src', url );
+        //if( iframeElement.getAttribute("src") != url )
+        //{
+        hideIFrame(true);
+        hideError();
+        showProgress();
+        
+        iframeElement.setAttribute('src', url );
 
-            // is needed to show iframe content in case of a loading error.
-            // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
-            iframeLoadingTimer = setTimeout(function(){ 
-              try
-              {
-                  let url = iframeElement.contentWindow.location.href;
-                  loadHandler(url,"fallback");
-              }
-              catch {
-                  showError("loading"); 
-              }
-            },10000);
-            
-            hideMenu();
-        }
+        // is needed to show iframe content in case of a loading error.
+        // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
+        iframeLoadingTimer = setTimeout(function(){ 
+            try
+            {
+                let url = iframeElement.contentWindow.location.href;
+                loadHandler(url,"fallback");
+            }
+            catch {
+                showError("loading"); 
+            }
+        },10000);
+        
+        hideMenu();
+        //}
     }
 
     function removeIFrameUrl()
@@ -206,6 +206,8 @@ mx.Actions = (function( ret ) {
     
     function hideIFrame(immediately)
     {
+        document.title = "";
+        
         clearIFrameTimer();
             
         if( iframeElement.style.display == "" )
