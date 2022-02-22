@@ -198,7 +198,7 @@ class CmdExecuter(watcher.Watcher):
         delta = delta - timedelta(microseconds = delta.microseconds)
         duration = str(delta)
 
-        if self.isInterruptableJob(cmd_type)
+        if self.isInterruptableJob(cmd_type):
             if exit_status is None: # can happen if service process get killed as part of interruptable job
                 exit_status = 0
         else:
