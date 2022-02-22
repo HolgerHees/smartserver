@@ -196,7 +196,7 @@ class CmdExecuter(watcher.Watcher):
         delta = datetime.now() - start_time
         delta = delta - timedelta(microseconds = delta.microseconds)
         duration = str(delta)
-        if exit_status is None and self.isInterruptableJob(cmd_type):
+        if self.isInterruptableJob(cmd_type) and ( exit_status is None or exit_code == 0 ):
             exit_status = 0
         else:
             lf.getFile().write("\n")
