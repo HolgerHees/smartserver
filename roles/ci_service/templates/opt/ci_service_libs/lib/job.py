@@ -70,9 +70,6 @@ def getLogFileDetails(filename):
         "git_hash": data[6]
     }
   
-def getLogFiles(log_folder, config_name, os_name, branch, git_hash):
-    return glob.glob(u"{}*-*-*-{}-{}-{}-{}-*.log".format(log_folder,config_name,os_name,branch,git_hash))
-      
 def getLogFilename(log_folder, time_str, duration, state, config_name, os_name, branch, git_hash, author, subject ):
     return u"{}{}-{}-{}-{}-{}-{}-{}-{}-{}.log".format(log_folder,time_str,duration, state,config_name,os_name,branch, git_hash,author,subject)
   
