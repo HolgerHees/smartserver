@@ -35,7 +35,7 @@ class CmdWorkflow:
             name_parts = os.path.basename(name).split("-")
             
             result = False
-            if name_parts[3] in [ "daemon_restart", "system_reboot" ]:
+            if self.cmd_executer.isInterruptableJob(name_parts[3]):
                 result = self._checkWorkflow(name,name_parts[0],name_parts[3])
                 if type(result) != bool:
                     self._handleWorkflow(result,name,name_parts[0])
@@ -81,6 +81,7 @@ class CmdWorkflow:
                         is_success = False
             else:
                 msg = "The command was successful.\n"
+                self.logger.error("Missing workflow file. Can't continue workflow.");
         else:
             msg = "The command crashed, because logfile was too old.\n"
             flag = "crashed"
@@ -186,7 +187,7 @@ class CmdWorkflow:
                     self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
                     cmd_block = _cmd_block
 
-            is_interuptable_workflow = cmd_block["cmd_type"] in [ "system_reboot", "daemon_restart" ]
+            is_interuptable_workflow = self.cmd_executer.isInterruptableJob(cmd_block["cmd_type"])
 
             if is_interuptable_workflow:
                 first_cmd = cmd_block["cmds"].pop(0)

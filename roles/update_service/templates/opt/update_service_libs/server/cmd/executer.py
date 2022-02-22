@@ -52,6 +52,9 @@ class CmdExecuter(watcher.Watcher):
         self.current_logfile = None
         self.current_child = None
         
+    def isInterruptableJob(self,cmd_type):
+        return cmd_type in [ "system_reboot", "daemon_restart" ]
+    
     def getJobs(self):
         jobs = []
         
@@ -196,6 +199,8 @@ class CmdExecuter(watcher.Watcher):
         lf.getFile().write("\n")
         if exit_status == 0:
             lf.write("The command exited successful after {}\n".format(duration))
+        elif exit_status is None and self.isInterruptableJob(cmd_type):
+            exit_status = 0
         else:
             lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
             
