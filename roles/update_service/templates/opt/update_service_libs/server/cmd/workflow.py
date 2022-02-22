@@ -80,16 +80,17 @@ class CmdWorkflow:
                         flag = "failed"
                         is_success = False
             else:
-                msg = "The command was successful.\n"
-                self.logger.error("Missing workflow file. Can't continue workflow.");
+                msg = "Can't continue. Missing workflow file\n"
+                flag = "failed"
+                is_success = False
         else:
             msg = "The command crashed, because logfile was too old.\n"
             flag = "crashed"
 
         with open(log_file_name, 'a') as f:
             lf = LogFile(f)
-            lf.getFile().write("\n")
-            lf.write(msg)
+            self.cmd_executer.finishInterruptedCmd(lf, msg)
+            
         os.rename(log_file_name, log_file_name.replace("-running-", "-{}-".format(flag)))
         
         return is_success
@@ -129,8 +130,7 @@ class CmdWorkflow:
                             break
 
                         if waiting_time > MAX_STARTUP_WAITING_TIME:
-                            lf.getFile().write("\n")
-                            lf.write("Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
+                            self.cmd_executer.finishInterruptedCmd(lf, "Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
                             break
                       
                     if waiting_time % 15 == 0:
@@ -150,7 +150,7 @@ class CmdWorkflow:
 
                 self.logger.info("{} '{}'".format( "Proceed with" if has_cmds else "Finish job", cmd_block["cmd_type"]))
                 
-                self.cmd_executer.finishInterruptedCmd(lf, cmd_block["cmd_type"])
+                self.cmd_executer.finishInterruptedCmd(lf, "'{}' was successful\n".format(cmd_block["cmd_type"]))
             
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
                 exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if has_cmds else 0

@@ -207,9 +207,9 @@ class CmdExecuter(watcher.Watcher):
             
         return exit_status
 
-    def finishInterruptedCmd(self, lf, cmd_type):
-        lf.getFile().write("\n")
-        lf.write("'{}' was successful\n".format(cmd_type))
+    def finishInterruptedCmd(self, lf, msg ):
+        # no need for a newline for interruptable commands
+        lf.write(msg)
         
     def processCmdBlock(self,cmd_block,lf):
         exit_status = 1
