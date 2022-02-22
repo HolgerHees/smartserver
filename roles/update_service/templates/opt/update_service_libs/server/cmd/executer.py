@@ -196,17 +196,19 @@ class CmdExecuter(watcher.Watcher):
         delta = datetime.now() - start_time
         delta = delta - timedelta(microseconds = delta.microseconds)
         duration = str(delta)
-        lf.getFile().write("\n")
-        if exit_status == 0:
-            lf.write("The command exited successful after {}\n".format(duration))
-        elif exit_status is None and self.isInterruptableJob(cmd_type):
+        if exit_status is None and self.isInterruptableJob(cmd_type):
             exit_status = 0
         else:
-            lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
+            lf.getFile().write("\n")
+            if exit_status == 0:
+                lf.write("The command exited successful after {}\n".format(duration))
+            else:
+                lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
             
         return exit_status
 
     def finishInterruptedCmd(self, lf, cmd_type):
+        lf.getFile().write("\n")
         lf.write("'{}' was successful\n".format(cmd_type))
         
     def processCmdBlock(self,cmd_block,lf):
