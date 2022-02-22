@@ -193,17 +193,21 @@ class CmdExecuter(watcher.Watcher):
 
         self.current_child.close()
         exit_status = self.current_child.exitstatus
+
         delta = datetime.now() - start_time
         delta = delta - timedelta(microseconds = delta.microseconds)
         duration = str(delta)
-        if self.isInterruptableJob(cmd_type) and ( exit_status is None or exit_code == 0 ):
-            exit_status = 0
+
+        if self.isInterruptableJob(cmd_type)
+            if exit_status is None: # can happen if service process get killed as part of interruptable job
+                exit_status = 0
         else:
             lf.getFile().write("\n")
             if exit_status == 0:
                 lf.write("The command exited successful after {}\n".format(duration))
-            else:
-                lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
+
+        if exit_status != 0:
+            lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
             
         return exit_status
 
