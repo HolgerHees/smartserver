@@ -66,15 +66,6 @@ class Handler(Server):
         self.process_watcher.terminate()
         super().terminate()
 
-    def prepareTestWorkflow(self,cmd_block):
-        for cmd in cmd_block["cmds"]:
-            interaction = cmd["interaction"]
-            cmd["interaction"] = "****" if interaction else interaction
-            cmd["cmd"] = "/*" + cmd["cmd"] + "*/ => sleep 5"
-            self.logger.info(cmd)
-            cmd["interaction"] = interaction
-            cmd["cmd"] = "sleep 5"
-            
     def fileChangeTriggered(self, event):
         if event["path"] == config.outdated_roles_state_dir.rstrip("/"):
             self.dependency_watcher.notifyChange(event)

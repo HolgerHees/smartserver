@@ -76,11 +76,11 @@ class CmdWorkflow:
                     if workflow[0]["cmd_type"] == expected_workflow:
                         return workflow
                     else:
-                        msg = "Can't continue. Wrong first workflow. Expected: '{}' - Found: '{}'\n".format(expected_workflow,workflow[0]["cmd_type"])
+                        msg = "Can't continue with workflow. Wrong first workflow. Expected: '{}' - Found: '{}'\n".format(expected_workflow,workflow[0]["cmd_type"])
                         flag = "failed"
                         is_success = False
             else:
-                msg = "Can't continue. Missing workflow file\n"
+                msg = "Can't continue with workflow. Missing workflow file\n"
                 flag = "failed"
                 is_success = False
         else:
@@ -109,39 +109,41 @@ class CmdWorkflow:
             self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,log_file_name)
             lf = LogFile(f)
 
-            if cmd_block["cmd_type"] == "system_reboot" and len(cmd_block["cmds"]) > 0:
+            if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
                 can_proceed = False
                 waiting_start = datetime.timestamp(datetime.now())
-                last_seen_cmd_type = waiting_start
+                last_seen_time = waiting_start
+                last_log_time = waiting_start
                 last_cmd_type = None
+                self.logger.info("Waiting for {}s of inactivity to proceed".format(MIN_PROCESS_INACTIVITY_TIME))
                 while True:
                     now = datetime.timestamp(datetime.now())
+                    inactivity_time = now - last_seen_time
                     waiting_time = round(now - waiting_start)
-                    inactivity_time = now - last_seen_cmd_type
+                    
+                    active_cmd_type = self.cmd_executer.getActiveCmdType()
+                    if active_cmd_type != None:
+                        last_seen_time = now
+                        last_cmd_type = active_cmd_type
 
-                    if waiting_time % 2 == 0:
-                        active_cmd_type = self.cmd_executer.getActiveCmdType()
-                        if active_cmd_type != None:
-                            last_seen_cmd_type = now
-                            last_cmd_type = active_cmd_type
+                    if inactivity_time > MIN_PROCESS_INACTIVITY_TIME:
+                        can_proceed = True
+                        break
 
-                        if inactivity_time > MIN_PROCESS_INACTIVITY_TIME:
-                            can_proceed = True
-                            break
-
-                        if waiting_time > MAX_STARTUP_WAITING_TIME:
-                            self.cmd_executer.finishInterruptedCmd(lf, "Not able to proceed. There are still an '{}' running\n".format(last_cmd_type))
-                            break
+                    if waiting_time > MAX_STARTUP_WAITING_TIME:
+                        self.cmd_executer.finishInterruptedCmd(lf, "Not able to proceed due still running '{}'\n".format(last_cmd_type))
+                        break
                       
-                    if waiting_time % 15 == 0:
+                    if round(now - last_log_time) >= 15:
+                        last_log_time = now
                         if last_cmd_type != None:
-                            cmd_msg = " Last run of '{}' {}s ago.".format(last_cmd_type,round(inactivity_time))
+                            cmd_msg = " - Last run of '{}' {}s ago".format(last_cmd_type,round(inactivity_time))
                         else:
                             cmd_msg = ""
                       
-                        self.logger.info("Waiting for 30s of inactivity.{} Waiting since {}s".format(cmd_msg,round(waiting_time)))
+                        self.logger.info("Waiting since {}s for {}s of inactivity{}".format(round(waiting_time), MIN_PROCESS_INACTIVITY_TIME, cmd_msg))
                         
-                    time.sleep(1)
+                    time.sleep(2)
             else:
                 can_proceed = True
                     
@@ -157,8 +159,9 @@ class CmdWorkflow:
                  
         self.cmd_executer.finishRun(log_file_name,exit_code,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
                       
-        if exit_code == 0:
-            self.runWorkflow(workflow, True)
+        if exit_code == 0 and len(workflow) > 0:
+            if not self.runWorkflow(workflow, True):
+                self.logger.error("Can't continue with workflow due a still running process");
         
     def runWorkflow(self, workflow, checkGlobalRunning ):
         isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
@@ -200,7 +203,7 @@ class CmdWorkflow:
                 cmd_block = self.cmd_builder.buildCmdBlock(cmd_block["username"], cmd_block["cmd_type"], [first_cmd])
 
                 #if cmd_block["cmd_type"] == "system_reboot":
-                #    self.prepareTestWorkflow(cmd_block)
+                #    self._prepareTestWorkflow(cmd_block)
               
             isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
             if not isRunning and self.cmd_executer.lock(cmd_block["cmd_type"]):
@@ -226,3 +229,12 @@ class CmdWorkflow:
           
             if is_interuptable_workflow:
                 break
+
+    def _prepareTestWorkflow(self,cmd_block):
+        for cmd in cmd_block["cmds"]:
+            interaction = cmd["interaction"]
+            cmd["interaction"] = "****" if interaction else interaction
+            cmd["cmd"] = "/*" + cmd["cmd"] + "*/ => sleep 5"
+            self.logger.info(cmd)
+            cmd["interaction"] = interaction
+            cmd["cmd"] = "sleep 5"
