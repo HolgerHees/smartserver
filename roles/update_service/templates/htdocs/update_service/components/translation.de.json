@@ -166,8 +166,9 @@
     "Reboot system": "System Neustart",
     
     "Last git pull: {}": "Letzter git pull: {}",
-    "Git pull skipped due to faulty CI tests": "Git pull übersprungen aufgrund fehlerhafter CI Tests",
+    "Git pull skipped due to missing CI tests": "Git pull übersprungen aufgrund fehlender CI Tests",
     "Git pull skipped due to ongoing CI testing": "Git pull übersprungen aufgrund laufender CI Tests",
+    "Git pull skipped due to faulty CI tests": "Git pull übersprungen aufgrund fehlerhafter CI Tests",
     "Git pulled and all CI tests successful": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
     "Git pull skipped due to uncommitted changes": "Git pull übersprungen aufgrund nicht committeter Änderungen",

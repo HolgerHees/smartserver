@@ -63,17 +63,19 @@ if args_values["limit"] is None or args_values["limit"] == "deployment_update":
     
     state["smartserver_code"] = smartserver_code
     
-    if smartserver_code == "missing":
+    if smartserver_code == "missing_state":
         print( u"  - \033[1;31mgit check not possible (please run a full deployment first)\033[0m")
-    elif smartserver_code == "failed":
-        print( u"  - \033[1;31mskipped git pull (broken remote ci tests)\033[0m")
-    elif smartserver_code == "pending":
-        print( u"  - \033[1;33mskipped git pull (some remote ci pending)\033[0m")
-    elif smartserver_code == "uncommitted":
+    elif smartserver_code == "uncommitted_changes":
         print( u"  - \033[1;31mskipped git pull (has uncommitted changes)\033[0m")
-    elif smartserver_code == "pulled_ci":
+    elif smartserver_code == "ci_failed":
+        print( u"  - \033[1;31mskipped git pull (remote ci tests broken)\033[0m")
+    elif smartserver_code == "ci_pending":
+        print( u"  - \033[1;33mskipped git pull (remote ci tests pending)\033[0m")
+    elif smartserver_code == "ci_missing":
+        print( u"  - \033[1;31mskipped git pull (remote ci tests missing)\033[0m")
+    elif smartserver_code == "pulled_tested":
         print( u"  - \033[0;32mgit pulled (all remote ci succeeded)\033[0m")
-    elif smartserver_code == "pulled":
+    elif smartserver_code == "pulled_untested":
         print( u"  - \033[0;32mgit pulled\033[0m")
                         
     if smartserver_pull is not None:

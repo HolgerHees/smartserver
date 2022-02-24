@@ -3,12 +3,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let outdatedRoleData = null;
   
     let smartserverChangeInfoCodes = {
-        "failed": ["red","Git pull skipped due to faulty CI tests"],
-        "pending": ["yellow","Git pull skipped due to ongoing CI testing"],
+        "missing_state": ["red","Git pull skipped because deployment status is unknown"],
+        "uncommitted_changes": ["red","Git pull skipped due to uncommitted changes"],
+        "ci_missing": ["yellow","Git pull skipped due to missing CI tests"],
+        "ci_pending": ["yellow","Git pull skipped due to ongoing CI testing"],
+        "ci_failed": ["red","Git pull skipped due to faulty CI tests"],
         "pulled_tested": ["green", "Git pulled and all CI tests successful"],
-        "pulled_untested": ["green", "Git pulled"],
-        "uncommitted": ["red","Git pull skipped due to uncommitted changes"],
-        "missing": ["red","Git pull skipped because deployment status is unknown"],
+        "pulled_untested": ["green", "Git pulled"]
     };
     
     let active_manuell_cmd_type_map = {

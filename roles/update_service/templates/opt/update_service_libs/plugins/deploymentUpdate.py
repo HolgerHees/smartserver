@@ -31,7 +31,7 @@ class DeploymentUpdate:
         smartserver_changes = None
         
         if self.deployment_state is None:
-            smartserver_code = "missing"
+            smartserver_code = "missing_state"
         else:
             # git add files (intent to add)  
             command.exec([ "git", "add", "-N", "*" ], cwd=self.config.deployment_directory )
@@ -55,9 +55,11 @@ class DeploymentUpdate:
                     states = Counter(result.values())
                     
                     if "failure" in states:
-                        smartserver_code = "failed"
-                    elif "pending" in states or "success" not in states:
-                        smartserver_code = "pending"
+                        smartserver_code = "ci_failed"
+                    elif "pending" in states:
+                        smartserver_code = "ci_pending"
+                    elif "success" not in states:
+                        smartserver_code = "ci_missing"
                     else:
                         can_pull = True
                         smartserver_code = "pulled_tested"
@@ -71,7 +73,7 @@ class DeploymentUpdate:
                         raise Exception(result.stdout.decode("utf-8"))
                     smartserver_pull = update_time;
             else:
-                smartserver_code = "uncommitted"
+                smartserver_code = "uncommitted_changes"
                 
             last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
             #last_deployment = "2020-01-20 14:02:00.651984+00:00"
