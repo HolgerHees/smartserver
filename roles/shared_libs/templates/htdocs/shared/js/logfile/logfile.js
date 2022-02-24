@@ -176,7 +176,7 @@ mx.Logfile = (function( ret ) {
                 updateDetails(true);
             }
             
-            location.hash = '#autoscroll';
+            //location.hash = '#autoscroll';
         }
         else
         {
@@ -184,7 +184,7 @@ mx.Logfile = (function( ret ) {
         
             disableBottomScroll();
 
-            location.hash = location.hash.replace('#autoscroll','_');
+            //location.hash = location.hash.replace('#autoscroll','_');
         }
     }
 
@@ -240,10 +240,10 @@ mx.Logfile = (function( ret ) {
         
     ret.startUpdateProcess = function(position)
     {
-        if( location.hash == '#autoscroll' )
+        /*if( location.hash == '#autoscroll' )
         {
             enableBottomScroll();
-        }
+        }*/
         
         currentPosition = position;
         updateDetails(true);

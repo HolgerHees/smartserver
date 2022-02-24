@@ -48,7 +48,7 @@ mx.Page = (function( ret ) {
         
         if( callback ) callback(visualisationType);
     }
-    
+
     function initDeviceListener(callback)
     {
         var phoneMql = window.matchMedia('(max-width: 600px)');
@@ -82,9 +82,14 @@ mx.Page = (function( ret ) {
 
         initDeviceListener();
 
-        if( title && window.parent != window && window.parent == window.top && window.top.document.domain == document.domain ) 
+        if( title )
         {
-            window.top.postMessage({ type: "title", url: document.location.href, title: "" + title },'https://' + window.top.document.location.host); 
+            document.title = title;
+            
+            if( window.parent != window && window.parent == window.top && window.top.document.domain == document.domain ) 
+            {
+                window.top.postMessage({ type: "title", url: document.location.href, title: "" + title },'https://' + window.top.document.location.host); 
+            }
         }
     };
     
