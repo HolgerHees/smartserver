@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    phpmyadmin_version: '5.1.1'
+    phpmyadmin_version: '5.1.3'
   tags: [ 'update_notifier_configs' ]
   
 - name: check installation
