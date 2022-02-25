@@ -1,3 +1,6 @@
+<?php
+require "../shared/libs/ressources.php";
+?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -11,7 +14,9 @@
     <link href="css/main.css" rel="stylesheet"> 
 
     <script>var mx = { OnScriptReady: [], OnDocReady: [] };</script>
-    <script src="/ressources?type=js"></script>
+    
+    <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
+    
     <script src="js/gallery.js"></script>
 </head>
 <body>
