@@ -17,8 +17,6 @@ if( !Auth::hasGroup("admin") )
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="/main/fonts/css/animation.css">
-<link rel="stylesheet" href="/main/fonts/css/fontello.css">
 <link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
 <link href="<?php echo Ressources::getCSSPath('/update_service/'); ?>" rel="stylesheet">
 <link rel="stylesheet" href="/shared/css/logfile/logfile_box.css">

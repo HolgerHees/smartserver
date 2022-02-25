@@ -7,7 +7,6 @@ require "./shared/libs/ressources.php";
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/png" href="/main/img/res/mipmap-mdpi/ic_launcher.png" />
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"> 
     <link href="main/manifest.json" rel="manifest">
 
     <link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
