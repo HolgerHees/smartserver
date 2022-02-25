@@ -42,8 +42,8 @@
 
 - name: synchronize web libs
   synchronize:
-    src: "templates/htdocs/shared"
-    dest: "{{htdocs_path}}"
+    src: "templates/{{item.src}}"
+    dest: "{{htdocs_path}}{{item.dest}}"
     archive: no
     checksum: yes
     group: yes
@@ -52,3 +52,8 @@
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"
+  with_items:
+    - { src: "htdocs/shared", dest: "" }
+    - { src: "fonts/font", dest: "shared/" }
+    - { src: "fonts/css/animation.css", dest: "shared/css/animation.css" }
+    - { src: "fonts/css/fontello.css", dest: "shared/css/fontello.css" }

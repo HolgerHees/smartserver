@@ -15,7 +15,7 @@ class Ressources
             if( substr($name,-$len) === $suffix )
             {
                 $stream = fopen($path.$name, 'r');
-                echo stream_get_contents($stream);
+                echo trim(stream_get_contents($stream))."\n";
                 fclose($stream);
             }
         }
