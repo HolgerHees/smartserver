@@ -419,13 +419,11 @@ body.dark #background {
 #submenu .service.home .time, #submenu .slogan, #submenu .service.home .imageTitle {
     margin-left: auto;
     margin-right: auto;
-    font-weight: 500;
     text-shadow: 0 1px 5px rgba(0,0,0,.1);
 }
 #submenu .service.home .time {
     cursor: default;
     font-size: 1050%;
-    font-weight: 500;
     text-align:bottom;
     text-align:center;
 }
