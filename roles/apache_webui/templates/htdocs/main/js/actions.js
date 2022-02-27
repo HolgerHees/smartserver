@@ -436,7 +436,7 @@ mx.Actions = (function( ret ) {
         message = '<div class="service home">';
         message += '<div class="time">' + time + '</div>';
         message += '<div class="slogan">' + prefix + ', ' + mx.User.name + '.</div>';
-        message += '<div class="imageTitle">' + mx.MainImage.getTitle() + '</div>';
+        message += '<div class="bottom"><div class="image"><div class="imageCopyright">' + mx.MainImage.getCopyright() + '</div><div class="imageTitle">' + mx.MainImage.getTitle() + '</div></div></div>';
         message += '</div>';
 
         if( !isActive )

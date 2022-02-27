@@ -1,4 +1,5 @@
 :root {
+  /*--text-shadow-color: rgba(0,0,0,.6);*/
   --text-shadow-color: rgba(0,0,0,.6);
   --text-shadow-info-layer: 0 1px 2px var(--text-shadow-color);
   --text-shadow-home-main: 0 1px 2px var(--text-shadow-color);
@@ -429,10 +430,25 @@ body.dark #background {
     margin-right: auto;
     text-shadow: var(--text-shadow-home-main);
 }
-#submenu .service.home .imageTitle {
+#submenu .service.home .image {
     text-shadow: var(--text-shadow-home-info);
+    color: var(--light-content-image-text);
+    text-align: center;
+    font-size: 106.25%;
+    padding-top: 30px;
+    padding-bottom: 30px;
 }
-
+#submenu .service.home .image .imageCopyright {
+    opacity: 0;
+    transition: opacity 300ms linear;
+    padding-bottom: 10px;
+}
+#submenu .service.home .image:hover .imageCopyright {
+    opacity: 1;
+}
+body.dark #submenu .service.home .image {
+    color: var(--dark-content-image-text);
+}
 #submenu .service.home .time {
     cursor: default;
     font-size: 1050%;
@@ -450,17 +466,12 @@ body.phone #submenu .service.home .time {
     text-align:center;
     line-height: 1;
 }
-#submenu .service.home .imageTitle {
+#submenu .service.home .bottom {
     flex-grow: 1;
     display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    font-size: 106.25%;
-    line-height: 60px;
-    color: var(--light-content-image-text);
-}
-body.dark #submenu .service.home .imageTitle {
-    color: var(--dark-content-image-text);
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
 }
 body.nobackground #submenu {
     color: var(--light-content-nobackground-text);

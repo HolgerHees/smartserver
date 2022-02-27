@@ -41,6 +41,12 @@ require "./shared/libs/ressources.php";
             {
                 mx.$("#background").style.backgroundImage = "url(" + mx.MainImage.getUrl() + ")";
                 mx.$("#background").style.opacity = mx.darkLayout ? "0.7" : "1";
+                
+                let style = document.createElement('style');
+                style.appendChild(document.createTextNode(":root { --backgroundImageColor: " + mx.MainImage.getComplementaryColor() + "; --backgroundImageGray: " + mx.MainImage.getComplementaryGray() + "; }"));
+
+                let head = document.getElementsByTagName('head')[0];
+                head.appendChild(style);
             }
             else
             {

@@ -26,6 +26,9 @@ filename=$(basename -- "$url")
 filename="${filename%.*}"
 name="${filename%%_*}"
 
+# BING specific fix
+name=$(echo "$name" | sed "s/th?id=OHR.//")
+
 targetName="{{htdocs_path}}img/potd/"$date"_"$name".jpg"
 
 #url="$(curl 'https://www.bing.com/HPImageArchive.aspx?format=xml&idx=0&n=1&mkt=de-DE' -s | grep -oP '<urlBase>(.*)</urlBase>' | cut -d '>' -f 2 | cut -d '<' -f 1)"
@@ -39,10 +42,14 @@ then
     if [ -s "$targetName" ]
     then
         convert "$targetName" -set comment "$headline" "$targetName"
+        convert "$targetName" -set copyright "$copyright" "$targetName"
         convert "$targetName" -resize 1920x "{{htdocs_path}}img/potd/todayLandscape.jpg"
         convert "$targetName" -resize x1920 "{{htdocs_path}}img/potd/todayPortrait.jpg"
         
-        echo "$headline" > "{{htdocs_path}}img/potd/todayTitle.txt"
+        mainColor=$(convert "$targetName" -resize 1x1  txt:- | grep -oP '#[0-9A-Za-z]+')
+        mainGray=$(convert "$targetName" -colorspace gray -resize 1x1  txt:- | grep -oP '#[0-9A-Za-z]+')
+
+        printf "$headline\n$copyright\n$mainColor\n$mainGray" > "/dataDisk/htdocs/img/potd/todayTitle.txt"
 
         convert "{{htdocs_path}}img/potd/todayLandscape.jpg" -gravity Center -crop 1920x1080+0+0 -quality 80% "{{htdocs_path}}img/potd/todayLandscape.jpg"
         convert "{{htdocs_path}}img/potd/todayPortrait.jpg" -gravity Center -crop 1080x1920+0+0 -quality 80% "{{htdocs_path}}img/potd/todayPortrait.jpg"
