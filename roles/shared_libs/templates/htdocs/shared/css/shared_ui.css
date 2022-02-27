@@ -113,8 +113,7 @@ body.dark .form.button:active:not(.disabled) {
 }
 
 body.dark .form.button.green,
-body.dark .form.button.yellow,
-body.dark .form.button.red {
+body.dark .form.button.yellow {
     color: var(--light-button-text);
 }
 

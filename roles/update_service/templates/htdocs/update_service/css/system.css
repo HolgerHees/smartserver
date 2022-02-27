@@ -48,6 +48,9 @@ body.system div.widget {
   position: relative;
   margin-top: 20px;
 }
+body.system.dark div.widget {
+  border-color: #8a8c90; 
+}
 body.system div.summery {
   border: none; 
 }

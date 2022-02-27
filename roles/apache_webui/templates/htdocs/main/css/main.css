@@ -1,3 +1,11 @@
+:root {
+  --text-shadow-color: rgba(0,0,0,.6);
+  --text-shadow-info-layer: 0 1px 2px var(--text-shadow-color);
+  --text-shadow-home-main: 0 1px 2px var(--text-shadow-color);
+  --text-shadow-home-info: 0 1px 1px var(--text-shadow-color);
+  --text-shadow-service-button: 0 1px 2px var(--text-shadow-color);
+  --text-shadow-service-info: 0 1px 1px var(--text-shadow-color);
+}
 #app {
     height: 100%;
     box-sizing: border-box;
@@ -59,7 +67,7 @@ body.dark #menu {
     display: block;
     text-align: center;
     color: var(--info-panel-text);
-    text-shadow: 0 1px 5px rgba(0,0,0,.6);
+    text-shadow: var(--text-shadow-info-layer);
 }
 
 #info > div > span.info {
@@ -419,8 +427,12 @@ body.dark #background {
 #submenu .service.home .time, #submenu .slogan, #submenu .service.home .imageTitle {
     margin-left: auto;
     margin-right: auto;
-    text-shadow: 0 1px 5px rgba(0,0,0,.1);
+    text-shadow: var(--text-shadow-home-main);
 }
+#submenu .service.home .imageTitle {
+    text-shadow: var(--text-shadow-home-info);
+}
+
 #submenu .service.home .time {
     cursor: default;
     font-size: 1050%;
@@ -522,7 +534,7 @@ body.dark #submenu {
 }
 #submenu .service.button > div:first-child {
     font-size: 10vw;
-    text-shadow: 0 1px 5px rgba(0,0,0,.6);
+    text-shadow: var(--text-shadow-service-button);
 }
 @media screen and (min-width: 601px) {
     #submenu .service.button > div:first-child {
@@ -539,7 +551,7 @@ body.dark.nobackground #submenu .service.button div:last-child {
     color: var(--light-content-background-info);
     font-size: 112.5%;
     font-weight: 300;
-    text-shadow: 0 1px 2px rgba(0,0,0,.6);
+    text-shadow: var(--text-shadow-service-info);
     padding-left: 40px;
 }
 body.dark #submenu .service.button > div:last-child {
