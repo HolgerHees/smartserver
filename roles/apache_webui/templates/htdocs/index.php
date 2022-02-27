@@ -43,7 +43,13 @@ require "./shared/libs/ressources.php";
                 mx.$("#background").style.opacity = mx.darkLayout ? "0.7" : "1";
                 
                 let style = document.createElement('style');
-                style.appendChild(document.createTextNode(":root { --backgroundImageColor: " + mx.MainImage.getComplementaryColor() + "; --backgroundImageGray: " + mx.MainImage.getComplementaryGray() + "; }"));
+                let css = ":root {";
+                css += " --backgroundImageColor: " + mx.MainImage.getColor() + ";"
+                css += " --backgroundImageComplementaryColor: " + mx.MainImage.getComplementaryColor() + ";"
+                css += " --backgroundImageGray: " + mx.MainImage.getGray() + ";"
+                css += " --backgroundImageComplementaryGray: " + mx.MainImage.getComplementaryGray() + ";"
+                css += " }"
+                style.appendChild(document.createTextNode(css));
 
                 let head = document.getElementsByTagName('head')[0];
                 head.appendChild(style);

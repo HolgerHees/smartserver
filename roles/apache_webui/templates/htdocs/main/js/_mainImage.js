@@ -6,70 +6,29 @@ mx.MainImage = (function( ret ) {
     var url = "";
     var finishCallback;
     
-    function RGB2HSV(color) 
-    {
-        let parsed = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
-        let rgb = { r: parseInt(parsed[1], 16), g: parseInt(parsed[2], 16), b: parseInt(parsed[3], 16) };
-
-        hsv = new Object();
-    	max=max3(rgb.r,rgb.g,rgb.b);
-    	dif=max-min3(rgb.r,rgb.g,rgb.b);
-    	hsv.saturation=(max==0.0)?0:(100*dif/max);
-    	if( hsv.saturation==0 ) hsv.hue=0;
-     	else if( rgb.r==max ) hsv.hue=60.0*(rgb.g-rgb.b)/dif;
-    	else if( rgb.g==max ) hsv.hue=120.0+60.0*(rgb.b-rgb.r)/dif;
-    	else if( rgb.b==max ) hsv.hue=240.0+60.0*(rgb.r-rgb.g)/dif;
-    	if( hsv.hue<0.0 ) hsv.hue+=360.0;
-    	hsv.value=Math.round(max*100/255);
-    	hsv.hue=Math.round(hsv.hue);
-    	hsv.saturation=Math.round(hsv.saturation);
-    	return hsv;
-    }
-    
-    function HSV2RGB(hsv) 
-    {
-    	var rgb=new Object();
-    	if( hsv.saturation==0 ) 
-        {
-    		rgb.r=rgb.g=rgb.b=Math.round(hsv.value*2.55);
-    	}
-    	else 
-        {
-    		hsv.hue/=60;
-    		hsv.saturation/=100;
-    		hsv.value/=100;
-    		i=Math.floor(hsv.hue);
-    		f=hsv.hue-i;
-    		p=hsv.value*(1-hsv.saturation);
-    		q=hsv.value*(1-hsv.saturation*f);
-    		t=hsv.value*(1-hsv.saturation*(1-f));
-    		switch(i) {
-                case 0: rgb.r=hsv.value; rgb.g=t; rgb.b=p; break;
-                case 1: rgb.r=q; rgb.g=hsv.value; rgb.b=p; break;
-                case 2: rgb.r=p; rgb.g=hsv.value; rgb.b=t; break;
-                case 3: rgb.r=p; rgb.g=q; rgb.b=hsv.value; break;
-                case 4: rgb.r=t; rgb.g=p; rgb.b=hsv.value; break;
-                default: rgb.r=hsv.value; rgb.g=p; rgb.b=q;
-    		}
-    		rgb.r=Math.round(rgb.r*255);
-    		rgb.g=Math.round(rgb.g*255);
-    		rgb.b=Math.round(rgb.b*255);
-    	}
-    	
-    	return "#" + rgb.r.toString(16) + rgb.g.toString(16) + rgb.b.toString(16);
+    function invertColor(hex) {
+        if (hex.indexOf('#') === 0) {
+            hex = hex.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        if (hex.length !== 6) {
+            throw new Error('Invalid HEX color.');
+        }
+        // invert color components
+        var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+            g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+            b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+        // pad each with zeros and return
+        return '#' + padZero(r) + padZero(g) + padZero(b);
     }
 
-    function HueShift(h,s) 
-    { 
-        h+=s; while (h>=360.0) h-=360.0; while (h<0.0) h+=360.0; return h; 
-    }
-    function min3(a,b,c) 
-    { 
-        return (a<b)?((a<c)?a:c):((b<c)?b:c); 
-    } 
-    function max3(a,b,c) 
-    { 
-        return (a>b)?((a>c)?a:c):((b>c)?b:c); 
+    function padZero(str, len) {
+        len = len || 2;
+        var zeros = new Array(len).join('0');
+        return (zeros + str).slice(-len);
     }
     
     function loadImage(imageUrl,finishCallback)
@@ -136,18 +95,30 @@ mx.MainImage = (function( ret ) {
         return copyright;
     };
 
+    ret.getColor = function()
+    {
+        return mainColor;
+    }
+    
     ret.getComplementaryColor = function()
     {
-        let hsv=RGB2HSV(mainColor);
-        hsv.hue=HueShift(hsv.hue,180.0);
-        return HSV2RGB(hsv);
+        return invertColor(mainColor);
+        //let hsv=RGB2HSV(mainColor);
+        //hsv.hue=HueShift(hsv.hue,180.0);
+        //return invertColor(mainColor);
     };
+
+    ret.getGray = function()
+    {
+        return mainGray;
+    }
 
     ret.getComplementaryGray = function()
     {
-        let hsv=RGB2HSV(mainGray);
-        hsv.hue=HueShift(hsv.hue,180.0);
-        return HSV2RGB(hsv);
+        return invertColor(mainGray);
+        //let hsv=RGB2HSV(mainGray);
+        //hsv.hue=HueShift(hsv.hue,180.0);
+        //return HSV2RGB(hsv);
     };
 
     ret.init = function(imageUrl,titleUrl,finishCallback)

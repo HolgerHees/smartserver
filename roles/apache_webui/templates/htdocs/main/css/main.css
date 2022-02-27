@@ -1,11 +1,60 @@
 :root {
-  /*--text-shadow-color: rgba(0,0,0,.6);*/
-  --text-shadow-color: rgba(0,0,0,.6);
-  --text-shadow-info-layer: 0 1px 2px var(--text-shadow-color);
-  --text-shadow-home-main: 0 1px 2px var(--text-shadow-color);
-  --text-shadow-home-info: 0 1px 1px var(--text-shadow-color);
-  --text-shadow-service-button: 0 1px 2px var(--text-shadow-color);
-  --text-shadow-service-info: 0 1px 1px var(--text-shadow-color);
+  --light-header-bg: rgba(85,118,210,0.3);
+  --dark-header-bg: rgba(25,118,210,0.3);
+  
+  --light-fullsize-header-bg: rgba(0,0,0,0.7);
+  --dark-fullsize-header-bg: rgba(0,0,0,0.7);
+  
+  --light-panel-header-bg: #1976D2;
+  --dark-panel-header-bg: rgba(25,118,210,0.3);
+
+  --light-menu-headline-color: #1976D2;
+  --light-menu-border-color: #1976D2;
+  --dark-menu-headline-color: #e7e9ec;
+  --dark-menu-border-color: #383a3e;
+
+  --light-content-nobackground-text: #111;
+  --light-content-background-text: white;
+  --light-content-nobackground-info: rgba(40,40,40,.9);
+  --light-content-background-info: rgba(255,255,255,.9);
+  --light-content-hover-bg: rgba(255,255,255,0.2);
+  --light-content-active-text: #444;
+  --light-content-active-bg: rgba(51,122,183,.12);
+  --dark-content-nobackground-text: #bbb;
+  --dark-content-background-text: #fff;
+  --dark-content-nobackground-info: rgba(255,255,255,.3);
+  --dark-content-background-info: rgba(255,255,255,.9);
+  --dark-content-hover-bg: rgba(255,255,255,0.2);
+  --dark-content-active-text: #444;
+  --dark-content-active-bg: rgba(51,122,183,.12);
+
+  --alarm-button-default: white;
+  --alarm-button-warn: #fe7d37;
+  --alarm-button-error: #db4437;
+  --alarm-button-disabled: #db4437;
+  
+  --image-watcher-text: yellow;
+  --image-watcher-bg: black;
+
+  --menu-panel-layer: black;
+  --info-panel-layer: rgba(0,0,0,0);
+  --info-panel-text: white;
+  
+  --light-embed-progress: #555;
+  --dark-embed-progress: #777;
+  
+  /*--submenu-text-color: rgba(255,255,255,.85);*/
+  /*--submenu-text-color: var(--backgroundImageGray);
+  --submenu-svg-color: var(--backgroundImageComplementaryGray);*/
+  --submenu-text-color: #fff;
+  --submenu-svg-color: #fff;
+  /*--submenu-shadow-color: rgba(0,0,0,.6);*/
+  --submenu-shadow-color: var(--backgroundImageComplementaryGray);
+  --submenu-shadow-info-layer: 0 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-home-main: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-home-info: 1px 1px 1px var(--submenu-shadow-color);
+  --submenu-shadow-service-button: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-service-info: 1px 1px 1px var(--submenu-shadow-color);
 }
 #app {
     height: 100%;
@@ -68,7 +117,7 @@ body.dark #menu {
     display: block;
     text-align: center;
     color: var(--info-panel-text);
-    text-shadow: var(--text-shadow-info-layer);
+    text-shadow: var(--submenu-shadow-info-layer);
 }
 
 #info > div > span.info {
@@ -428,11 +477,10 @@ body.dark #background {
 #submenu .service.home .time, #submenu .slogan, #submenu .service.home .imageTitle {
     margin-left: auto;
     margin-right: auto;
-    text-shadow: var(--text-shadow-home-main);
+    text-shadow: var(--submenu-shadow-home-main);
 }
 #submenu .service.home .image {
-    text-shadow: var(--text-shadow-home-info);
-    color: var(--light-content-image-text);
+    text-shadow: var(--submenu-shadow-home-info);
     text-align: center;
     font-size: 106.25%;
     padding-top: 30px;
@@ -445,9 +493,6 @@ body.dark #background {
 }
 #submenu .service.home .image:hover .imageCopyright {
     opacity: 1;
-}
-body.dark #submenu .service.home .image {
-    color: var(--dark-content-image-text);
 }
 #submenu .service.home .time {
     cursor: default;
@@ -480,7 +525,7 @@ body.dark.nobackground #submenu {
     color: var(--dark-content-nobackground-text);
 }
 #submenu {
-    color: var(--light-content-background-text);
+    color: var(--submenu-text-color);
     height: 100%;
     width: 100%;
     flex-grow: 1;
@@ -536,7 +581,7 @@ body.dark #submenu {
     margin-right: 10px;
 }*/
 #submenu .service.button > div:first-child svg {
-    fill: #FFF;
+    fill: var(--submenu-svg-color);
     height: 30px;
     margin-right: 10px;
 }
@@ -545,7 +590,7 @@ body.dark #submenu {
 }
 #submenu .service.button > div:first-child {
     font-size: 10vw;
-    text-shadow: var(--text-shadow-service-button);
+    text-shadow: var(--submenu-shadow-service-button);
 }
 @media screen and (min-width: 601px) {
     #submenu .service.button > div:first-child {
@@ -559,14 +604,10 @@ body.dark.nobackground #submenu .service.button div:last-child {
     color: var(--dark-content-nobackground-info);
 }
 #submenu .service.button > div:last-child {
-    color: var(--light-content-background-info);
     font-size: 112.5%;
     font-weight: 300;
-    text-shadow: var(--text-shadow-service-info);
+    text-shadow: var(--submenu-shadow-service-info);
     padding-left: 40px;
-}
-body.dark #submenu .service.button > div:last-child {
-    color: var(--dark-content-background-info);
 }
 @media (hover: hover) {
   #submenu .service.button:hover {

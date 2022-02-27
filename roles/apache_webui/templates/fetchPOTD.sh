@@ -42,7 +42,8 @@ then
     if [ -s "$targetName" ]
     then
         convert "$targetName" -set comment "$headline" "$targetName"
-        convert "$targetName" -set copyright "$copyright" "$targetName"
+        exiftool -copyright="$copyright" "$targetName" -overwrite_original > /dev/null
+        
         convert "$targetName" -resize 1920x "{{htdocs_path}}img/potd/todayLandscape.jpg"
         convert "$targetName" -resize x1920 "{{htdocs_path}}img/potd/todayPortrait.jpg"
         
