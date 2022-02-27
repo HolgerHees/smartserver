@@ -34,7 +34,7 @@
   --submenu-text-color: white;
   --submenu-icon-color: white;
   /*--submenu-shadow-color: rgba(0,0,0,.6);*/
-  --submenu-shadow-color: var(--backgroundImageComplementaryColor);
+  --submenu-shadow-color: var(--bgComplementaryColor);
   --submenu-shadow-info-layer: 0 1px 2px var(--submenu-shadow-color);
   --submenu-shadow-home-main: 1px 1px 2px var(--submenu-shadow-color);
   --submenu-shadow-home-info: 1px 1px 2px var(--submenu-shadow-color);
@@ -47,15 +47,15 @@
   --light-content-nobackground-info: rgba(40,40,40,.9);
   --light-content-background-info: rgba(255,255,255,.9);
   /*--light-content-hover-bg: rgba(255,255,255,0.2);*/
-  --light-content-hover-bg: var(--backgroundImageHoverColor);
-  --light-content-active-bg: var(--backgroundImageActiveColor);
+  --light-content-hover-bg: var(--light-menu-hover-bg);
+  --light-content-active-bg: var(--light-menu-active-bg);
   --dark-content-nobackground-text: #bbb;
   --dark-content-background-text: #fff;
   --dark-content-nobackground-info: rgba(255,255,255,.3);
   --dark-content-background-info: rgba(255,255,255,.9);
   /*--dark-content-hover-bg: rgba(255,255,255,0.2);*/
-  --dark-content-hover-bg: var(--backgroundImageHoverColor);
-  --dark-content-active-bg: var(--backgroundImageActiveColor);
+  --dark-content-hover-bg: var(--dark-menu-hover-bg);
+  --dark-content-active-bg: var(--dark-menu-active-bg);
 }
 #app {
     height: 100%;
