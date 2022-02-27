@@ -44,10 +44,14 @@ require "./shared/libs/ressources.php";
                 
                 let style = document.createElement('style');
                 let css = ":root {";
-                css += " --backgroundImageColor: " + mx.MainImage.getColor() + ";"
-                css += " --backgroundImageComplementaryColor: " + mx.MainImage.getComplementaryColor() + ";"
-                css += " --backgroundImageGray: " + mx.MainImage.getGray() + ";"
-                css += " --backgroundImageComplementaryGray: " + mx.MainImage.getComplementaryGray() + ";"
+                //css += " --backgroundImageColor: " + mx.MainImage.getColor() + ";"
+                //css += " --backgroundImageComplementaryColor: " + mx.MainImage.getComplementaryColor() + ";"
+                //css += " --backgroundImageHoverColor: " + mx.MainImage.getComplementaryColor() + "20;"
+                //css += " --backgroundImageActiveColor: " + mx.MainImage.getComplementaryColor() + "20;"
+                css += " --backgroundImageColor: " + mx.MainImage.getGray() + ";"
+                css += " --backgroundImageHoverColor: " + mx.MainImage.getComplementaryGray() + "20;"
+                css += " --backgroundImageActiveColor: " + mx.MainImage.getComplementaryGray() + "50;"
+                css += " --backgroundImageComplementaryColor: " + mx.MainImage.getComplementaryGray() + ";"
                 css += " }"
                 style.appendChild(document.createTextNode(css));
 

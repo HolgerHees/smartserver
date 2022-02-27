@@ -13,21 +13,6 @@
   --dark-menu-headline-color: #e7e9ec;
   --dark-menu-border-color: #383a3e;
 
-  --light-content-nobackground-text: #111;
-  --light-content-background-text: white;
-  --light-content-nobackground-info: rgba(40,40,40,.9);
-  --light-content-background-info: rgba(255,255,255,.9);
-  --light-content-hover-bg: rgba(255,255,255,0.2);
-  --light-content-active-text: #444;
-  --light-content-active-bg: rgba(51,122,183,.12);
-  --dark-content-nobackground-text: #bbb;
-  --dark-content-background-text: #fff;
-  --dark-content-nobackground-info: rgba(255,255,255,.3);
-  --dark-content-background-info: rgba(255,255,255,.9);
-  --dark-content-hover-bg: rgba(255,255,255,0.2);
-  --dark-content-active-text: #444;
-  --dark-content-active-bg: rgba(51,122,183,.12);
-
   --alarm-button-default: white;
   --alarm-button-warn: #fe7d37;
   --alarm-button-error: #db4437;
@@ -45,16 +30,32 @@
   
   /*--submenu-text-color: rgba(255,255,255,.85);*/
   /*--submenu-text-color: var(--backgroundImageGray);
-  --submenu-svg-color: var(--backgroundImageComplementaryGray);*/
-  --submenu-text-color: #fff;
-  --submenu-svg-color: #fff;
+  --submenu-icon-color: var(--backgroundImageComplementaryGray);*/
+  --submenu-text-color: white;
+  --submenu-icon-color: white;
   /*--submenu-shadow-color: rgba(0,0,0,.6);*/
-  --submenu-shadow-color: var(--backgroundImageComplementaryGray);
+  --submenu-shadow-color: var(--backgroundImageComplementaryColor);
   --submenu-shadow-info-layer: 0 1px 2px var(--submenu-shadow-color);
   --submenu-shadow-home-main: 1px 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-home-info: 1px 1px 1px var(--submenu-shadow-color);
+  --submenu-shadow-home-info: 1px 1px 2px var(--submenu-shadow-color);
   --submenu-shadow-service-button: 1px 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-service-info: 1px 1px 1px var(--submenu-shadow-color);
+  --submenu-shadow-service-icon: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-service-info: 1px 1px 2px var(--submenu-shadow-color);
+
+  --light-content-nobackground-text: #111;
+  --light-content-background-text: white;
+  --light-content-nobackground-info: rgba(40,40,40,.9);
+  --light-content-background-info: rgba(255,255,255,.9);
+  /*--light-content-hover-bg: rgba(255,255,255,0.2);*/
+  --light-content-hover-bg: var(--backgroundImageHoverColor);
+  --light-content-active-bg: var(--backgroundImageActiveColor);
+  --dark-content-nobackground-text: #bbb;
+  --dark-content-background-text: #fff;
+  --dark-content-nobackground-info: rgba(255,255,255,.3);
+  --dark-content-background-info: rgba(255,255,255,.9);
+  /*--dark-content-hover-bg: rgba(255,255,255,0.2);*/
+  --dark-content-hover-bg: var(--backgroundImageHoverColor);
+  --dark-content-active-bg: var(--backgroundImageActiveColor);
 }
 #app {
     height: 100%;
@@ -474,7 +475,7 @@ body.dark #background {
 #submenu .service.home:active {
     background-color: transparent;
 }
-#submenu .service.home .time, #submenu .slogan, #submenu .service.home .imageTitle {
+#submenu .service.home .time, #submenu .slogan {
     margin-left: auto;
     margin-right: auto;
     text-shadow: var(--submenu-shadow-home-main);
@@ -581,9 +582,10 @@ body.dark #submenu {
     margin-right: 10px;
 }*/
 #submenu .service.button > div:first-child svg {
-    fill: var(--submenu-svg-color);
+    fill: var(--submenu-icon-color);
     height: 30px;
     margin-right: 10px;
+    filter: drop-shadow(var(--submenu-shadow-service-icon))
 }
 #submenu .service.button > div:first-child div {
     margin-top: -10px;
@@ -604,8 +606,7 @@ body.dark.nobackground #submenu .service.button div:last-child {
     color: var(--dark-content-nobackground-info);
 }
 #submenu .service.button > div:last-child {
-    font-size: 112.5%;
-    font-weight: 300;
+    font-size: 106.25%;
     text-shadow: var(--submenu-shadow-service-info);
     padding-left: 40px;
 }
@@ -618,12 +619,11 @@ body.dark.nobackground #submenu .service.button div:last-child {
   }
 }
 #submenu .service.button:active {
-    color: var(--light-content-active-text);
+    filter: brightness(90%);
     background-color: var(--light-content-active-bg);
     -webkit-tap-highlight-color: transparent;
 }
 body.dark #submenu .service.button:active {
-    color: var(--dark-content-active-text);
     background-color: var(--dark-content-active-bg);
 }
 #submenu .service.imageWatcher {
