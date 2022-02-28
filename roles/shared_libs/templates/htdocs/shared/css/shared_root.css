@@ -8,16 +8,17 @@
   --light-button-active-bg: #e8e8e9;
   --dark-button-text: #fff;
   --dark-button-bg: #202124;
-  --dark-button-hover-bg: rgba(25,118,210,0.12);
-  --dark-button-active-bg: rgba(25,118,210,0.3);
+  --dark-button-hover-bg: #1976d21F;
+  --dark-button-active-bg: #1976d24D;
 
   --light-menu-text: #111;
   --dark-menu-text: #fff;
   
-  --light-menu-hover-bg: rgba(51,122,183,.12);
-  --light-menu-active-bg: rgba(51,122,183,.22);
-  --dark-menu-hover-bg: rgba(51,122,183,.20);
-  --dark-menu-active-bg: rgba(51,122,183,.30);
+  --menu-main-bg: #337ab7;
+  --light-menu-hover-bg: #337ab71F;
+  --light-menu-active-bg: #337ab738;
+  --dark-menu-hover-bg: #337ab733;
+  --dark-menu-active-bg: #337ab74D;
  
   --color-red: #ff7479;
   --color-yellow: #ffd768;

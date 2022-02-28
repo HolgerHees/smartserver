@@ -1,12 +1,12 @@
 :root {
-  --light-header-bg: rgba(85,118,210,0.3);
-  --dark-header-bg: rgba(25,118,210,0.3);
+  --light-header-bg: #5576d24D;
+  --dark-header-bg: #1976d24D;
   
-  --light-fullsize-header-bg: rgba(0,0,0,0.7);
-  --dark-fullsize-header-bg: rgba(0,0,0,0.7);
+  --light-fullsize-header-bg: #000000B3;
+  --dark-fullsize-header-bg: #000000B3;
   
   --light-panel-header-bg: #1976D2;
-  --dark-panel-header-bg: rgba(25,118,210,0.3);
+  --dark-panel-header-bg: #1976d24D;
 
   --light-menu-headline-color: #1976D2;
   --light-menu-border-color: #1976D2;
@@ -22,19 +22,15 @@
   --image-watcher-bg: black;
 
   --menu-panel-layer: black;
-  --info-panel-layer: rgba(0,0,0,0);
+  --info-panel-layer: black;
   --info-panel-text: white;
   
   --light-embed-progress: #555;
   --dark-embed-progress: #777;
   
-  /*--submenu-text-color: rgba(255,255,255,.85);*/
-  /*--submenu-text-color: var(--backgroundImageGray);
-  --submenu-icon-color: var(--backgroundImageComplementaryGray);*/
   --submenu-text-color: white;
   --submenu-icon-color: white;
-  /*--submenu-shadow-color: rgba(0,0,0,.6);*/
-  --submenu-shadow-color: var(--bgComplementaryColor);
+  --submenu-shadow-color: var(--bgBasedShadowColor);
   --submenu-shadow-info-layer: 0 1px 2px var(--submenu-shadow-color);
   --submenu-shadow-home-main: 1px 1px 2px var(--submenu-shadow-color);
   --submenu-shadow-home-info: 1px 1px 2px var(--submenu-shadow-color);
@@ -44,18 +40,16 @@
 
   --light-content-nobackground-text: #111;
   --light-content-background-text: white;
-  --light-content-nobackground-info: rgba(40,40,40,.9);
-  --light-content-background-info: rgba(255,255,255,.9);
-  /*--light-content-hover-bg: rgba(255,255,255,0.2);*/
-  --light-content-hover-bg: var(--light-menu-hover-bg);
-  --light-content-active-bg: var(--light-menu-active-bg);
+  --light-content-nobackground-info: #282828E6;
+  --light-content-background-info: #ffffffE6;
+  --light-content-hover-bg: var(--bgBasedHoverColor);
+  --light-content-active-bg: var(--bgBasedActiveColor);
   --dark-content-nobackground-text: #bbb;
   --dark-content-background-text: #fff;
-  --dark-content-nobackground-info: rgba(255,255,255,.3);
-  --dark-content-background-info: rgba(255,255,255,.9);
-  /*--dark-content-hover-bg: rgba(255,255,255,0.2);*/
-  --dark-content-hover-bg: var(--dark-menu-hover-bg);
-  --dark-content-active-bg: var(--dark-menu-active-bg);
+  --dark-content-nobackground-info: #ffffff4D;
+  --dark-content-background-info: #ffffffE6;
+  --dark-content-hover-bg: var(--bgBasedHoverColor);
+  --dark-content-active-bg: var(--bgBasedActiveColor);
 }
 #app {
     height: 100%;
