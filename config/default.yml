@@ -39,6 +39,7 @@ default_variables: {
     # used in generic optional role 'wireguard_mobile'
     mobile_vpn_internal_port: { "default": "51828" },             # the port, used on your server
     mobile_vpn_public_port: {},                                   # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+    mobile_vpn_public_domain: { "default": "public.{{server_domain}}" },
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     
     cloud_vpn: { "default": None },                               # used in generic optional role 'wirguard_cloud'
