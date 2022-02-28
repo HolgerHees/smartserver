@@ -82,15 +82,8 @@ mx.Page = (function( ret ) {
 
         initDeviceListener();
 
-        if( title )
-        {
-            document.title = title;
-            
-            if( window.parent != window && window.parent == window.top && window.top.document.domain == document.domain ) 
-            {
-                window.top.postMessage({ type: "title", url: document.location.href, title: "" + title },'https://' + window.top.document.location.host); 
-            }
-        }
+        //console.log("init frame");
+        if( title ) document.title = title;
     };
     
     ret.initMain = function(callback)
