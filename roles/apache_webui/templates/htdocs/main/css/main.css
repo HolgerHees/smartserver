@@ -8,36 +8,17 @@
   --light-panel-header-bg: #1976D2;
   --dark-panel-header-bg: #1976d24D;
 
+  --light-menu-header-button-svg: white;
+  --dark-menu-header-button-svg: #CCC;
+
   --light-menu-headline-color: #1976D2;
   --light-menu-border-color: #1976D2;
   --dark-menu-headline-color: #e7e9ec;
   --dark-menu-border-color: #383a3e;
 
-  --alarm-button-default: white;
-  --alarm-button-warn: #fe7d37;
-  --alarm-button-error: #db4437;
-  --alarm-button-disabled: #db4437;
-  
-  --image-watcher-text: yellow;
-  --image-watcher-bg: black;
-
-  --menu-panel-layer: black;
-  --info-panel-layer: black;
-  --info-panel-text: white;
-  
   --light-embed-progress: #555;
   --dark-embed-progress: #777;
   
-  --submenu-text-color: white;
-  --submenu-icon-color: white;
-  --submenu-shadow-color: var(--bgBasedShadowColor);
-  --submenu-shadow-info-layer: 0 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-home-main: 1px 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-home-info: 1px 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-service-button: 1px 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-service-icon: 1px 1px 2px var(--submenu-shadow-color);
-  --submenu-shadow-service-info: 1px 1px 2px var(--submenu-shadow-color);
-
   --light-content-nobackground-text: #111;
   --light-content-background-text: white;
   --light-content-nobackground-info: #282828E6;
@@ -50,7 +31,77 @@
   --dark-content-background-info: #ffffffE6;
   --dark-content-hover-bg: var(--bgBasedHoverColor);
   --dark-content-active-bg: var(--bgBasedActiveColor);
+
+  --light-submenu-text-color: white;
+  --dark-submenu-text-color: white;
+
+  --submenu-icon-color: white;
+  --submenu-shadow-color: var(--bgBasedShadowColor);
+  --submenu-shadow-info-layer: 0 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-home-main: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-home-info: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-service-button: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-service-icon: 1px 1px 2px var(--submenu-shadow-color);
+  --submenu-shadow-service-info: 1px 1px 2px var(--submenu-shadow-color);
+
+  --alarm-button-default: white;
+  --alarm-button-warn: #fe7d37;
+  --alarm-button-error: #db4437;
+  --alarm-button-disabled: #db4437;
+  
+  --image-watcher-text: yellow;
+  --image-watcher-bg: black;
+
+  --menu-panel-layer: black;
+  --info-panel-layer: black;
+  --info-panel-text: white;  
 }
+
+:root body {
+  --header-bg: var(--light-header-bg);
+  
+  --fullsize-header-bg: var(--light-fullsize-header-bg);
+  
+  --panel-header-bg: var(--light-panel-header-bg);
+
+  --menu-header-button-svg: var(--light-menu-header-button-svg);
+  --menu-headline-color: var(--light-menu-headline-color);
+  --menu-border-color: var(--light-menu-border-color);
+
+  --embed-progress: var(--light-embed-progress);
+  
+  --content-nobackground-text: var(--light-content-nobackground-text);
+  --content-background-text: var(--light-content-background-text);
+  --content-nobackground-info: var(--light-content-nobackground-info);
+  --content-background-info: var(--light-content-background-info);
+  --content-hover-bg: var(--light-content-hover-bg);
+  --content-active-bg: var(--light-content-active-bg);
+
+  --submenu-text-color: var(--light-submenu-text-color);
+}
+:root body.dark {
+  --header-bg: var(--dark-header-bg);
+  
+  --fullsize-header-bg: var(--dark-fullsize-header-bg);
+  
+  --panel-header-bg: var(--dark-panel-header-bg);
+
+  --menu-header-button-svg: var(--dark-menu-header-button-svg);
+  --menu-headline-color: var(--dark-menu-headline-color);
+  --menu-border-color: var(--dark-menu-border-color);
+
+  --embed-progress: var(--dark-embed-progress);
+  
+  --content-nobackground-text: var(--dark-content-nobackground-text);
+  --content-background-text: var(--dark-content-background-text);
+  --content-nobackground-info: var(--dark-content-nobackground-info);
+  --content-background-info: var(--dark-content-background-info);
+  --content-hover-bg: var(--dark-content-hover-bg);
+  --content-active-bg: var(--dark-content-active-bg);
+
+  --submenu-text-color: var(--dark-submenu-text-color);
+}
+
 #app {
     height: 100%;
     box-sizing: border-box;
@@ -70,7 +121,7 @@
     padding: 0;
     max-width: 80%;
     box-sizing: border-box;
-    background-color: var(--light-bg);
+    background-color: var(--bg);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -80,9 +131,6 @@
     overflow: auto;
     /* for Firefox */
     min-height: 0;
-}
-body.dark #menu {
-    background-color: var(--dark-bg);
 }
 #layer {
     background-color: var(--menu-panel-layer);
@@ -145,27 +193,20 @@ body.dark #menu {
     align-content: stretch; /* Extra space in Cross Axis */
 }
 #side #header {
-    background-color: var(--light-header-bg);
+    background-color: var(--header-bg);
     display: flex;
     flex-direction:row;   
     justify-content: space-between;
 }
-body.dark #side #header {
-    background-color: var(--dark-header-bg);
-}
 #side.iframe #header {
-  background-color: var(--light-panel-header-bg);
-
-}
-body.dark #side.iframe #header {
-  background-color: var(--dark-panel-header-bg);
+  background-color: var(--panel-header-bg);
 
 }
 #app .button svg {
-    color: white;
+    color: var(--button-svg);
 }
-body.dark #menu .button svg {
-    color: #CCC;
+#menu .group.header .button svg {
+    color: var(--menu-header-button-svg);
 }
 #menu .group.header .logout.button {
     align-items: center;
@@ -250,10 +291,7 @@ body.phone #menu .group.header .logout.button {
     height: 80px;
     width: 80px;
     margin: auto;
-    color: var(--light-embed-progress);
-}
-body.dark #side #content #embedProgress svg {
-    color: var(--dark-embed-progress);
+    color: var(--embed-progress);
 }
 #side #content #embedError {
     height: 100%;
@@ -322,15 +360,12 @@ body.phone #menu #logo {
 }
 #menu > .group:first-child {
     height: 56px;
-    background-color: var(--light-panel-header-bg);
+    background-color: var(--panel-header-bg);
     display: flex;
     padding-left: 0;
     margin-right: 0;
     margin-bottom: 15px;
     justify-content: space-between;
-}
-body.dark #menu > .group:first-child {
-    background-color: var(--dark-panel-header-bg);
 }
 #menu .logout.form.button {
     /*position: absolute;
@@ -349,12 +384,8 @@ body.phone #menu .logout.form.button {
     margin: 0 0 0 0;
     padding: 2px 2px 2px 25px;
     box-sizing: border-box;
-    border-bottom: 1px solid var(--light-menu-headline-color);
-    color: var(--light-menu-border-color);
-}
-body.dark #menu .header {
-    color: var(--dark-menu-headline-color);
-    border-bottom: 1px solid var(--dark-menu-border-color);
+    border-bottom: 1px solid var(--menu-border-color);
+    color: var(--menu-headline-color);
 }
 body.phone #menu .header {
     font-size: 14px;
@@ -383,22 +414,13 @@ body.phone #menu .header {
     width: 100%;
 }*/
 #menu .service div:first-child svg {
-    fill: var(--light-menu-text);
+    fill: var(--menu-text);
     height: 100%;
     width: 100%;
 }
-/*body.dark #menu .service div:first-child img {
-    filter: invert(100%);
-}*/
-body.dark #menu .service div:first-child svg {
-    fill: var(--dark-menu-text);
-}
 #menu .service div:last-child {
-    color: var(--light-menu-text);
+    color: var(--menu-text);
     font-size: 16px;
-}
-body.dark #menu .service div:last-child {
-    color: var(--dark-menu-text);
 }
 #menu .service, #submenu .service {
     transition: background-color 200ms ease-out; 
@@ -414,25 +436,16 @@ body.dark #menu .service div:last-child {
 }
 @media (hover: hover) {
   #menu .service.button:hover {
-      background-color: var(--light-menu-hover-bg);
-  }
-  body.dark #menu .service.button:hover {
-      background-color: var(--dark-menu-hover-bg);
+      background-color: var(--menu-hover-bg);
   }
 }
 #menu .service.button:active {
-    background-color: var(--light-menu-active-bg);
+    background-color: var(--menu-active-bg);
     -webkit-tap-highlight-color: transparent;
 }
-body.dark #menu .service.button:active {
-    background-color: var(--dark-menu-active-bg);
-}
 #menu .service.button.active {
-    background-color: var(--light-menu-active-bg);
+    background-color: var(--menu-active-bg);
     color: #1976D2;
-}
-body.dark #menu .service.button.active {
-    background-color: var(--dark-menu-active-bg);
 }
 #menu .group .submenu {
     max-height: 0;
@@ -514,10 +527,7 @@ body.phone #submenu .service.home .time {
     justify-content: end;
 }
 body.nobackground #submenu {
-    color: var(--light-content-nobackground-text);
-}
-body.dark.nobackground #submenu {
-    color: var(--dark-content-nobackground-text);
+    color: var(--content-nobackground-text);
 }
 #submenu {
     color: var(--submenu-text-color);
@@ -528,9 +538,6 @@ body.dark.nobackground #submenu {
     flex-direction: column;
     padding-top: 5vh;
     box-sizing: border-box;
-}
-body.dark #submenu {
-    color: var(--dark-content-background-text);
 }
 #submenu .group {
   position: relative;
@@ -549,7 +556,7 @@ body.dark #submenu {
     width: 80%;
     max-width: 400px;
     height: 1px;
-    border-bottom: 2px dashed var(--light-content-background-text);
+    border-bottom: 2px dashed var(--content-background-text);
     opacity: 0.4;
 }
 #submenu .group:last-child:after {
@@ -594,10 +601,7 @@ body.dark #submenu {
     }
 }
 body.nobackground #submenu .service.button div:last-child {
-    color: var(--light-content-nobackground-info);
-}
-body.dark.nobackground #submenu .service.button div:last-child {
-    color: var(--dark-content-nobackground-info);
+    color: var(--content-nobackground-info);
 }
 #submenu .service.button > div:last-child {
     font-size: 106.25%;
@@ -606,19 +610,13 @@ body.dark.nobackground #submenu .service.button div:last-child {
 }
 @media (hover: hover) {
   #submenu .service.button:hover {
-      background-color: var(--light-content-hover-bg);
-  }
-  body.dark #submenu .service.button:hover {
-      background-color: var(--dark-content-hover-bg);
+      background-color: var(--content-hover-bg);
   }
 }
 #submenu .service.button:active {
     filter: brightness(90%);
-    background-color: var(--light-content-active-bg);
+    background-color: var(--content-active-bg);
     -webkit-tap-highlight-color: transparent;
-}
-body.dark #submenu .service.button:active {
-    background-color: var(--dark-content-active-bg);
 }
 #submenu .service.imageWatcher {
     display:flex;
@@ -692,12 +690,9 @@ body.desktop #side #header {
 body.desktop #side.fullsize #header {
     display:inline-block;
     width: 56px;
-    background-color: var(--light-fullsize-header-bg);
+    background-color: var(--fullsize-header-bg);
     position: absolute;
     z-index: 1000;
-}
-body.dark.desktop #side.fullsize #header {
-    background-color: var(--dark-fullsize-header-bg);
 }
 body.desktop #side.fullsize .alarm.button {
     padding: 16px 6px;

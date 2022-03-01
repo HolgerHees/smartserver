@@ -4,11 +4,7 @@ body.system #serverNeedsRestart,
 }
 body.system div.info,
 body.system div.header div:first-child {
-  color: var(--light-menu-text);
-}
-body.system.dark div.info,
-body.system.dark div.header div:first-child {
-  color: var(--dark-menu-text);
+  color: var(--menu-text);
 }
 body.system div.info.green,
 body.system div.header.green {
@@ -43,13 +39,10 @@ body.system div.widget {
   margin: auto;
   margin-top: 5px;
   padding-top: 12px;
-  border: 1px solid #d2d2d2;
+  border: var(--widget-border);
   border-radius: 4px;
   position: relative;
   margin-top: 20px;
-}
-body.system.dark div.widget {
-  border-color: #8a8c90; 
 }
 body.system div.summery {
   border: none; 
@@ -58,7 +51,7 @@ body.system div.widget div.header {
   transform: translateY(-50%);
   margin-top: -12px;
   margin-left: 10px;
-  background-color: var(--light-bg);
+  background-color: var(--bg);
   position: absolute;
   padding: 0 5px 5px 5px;
   display: flex;
@@ -71,9 +64,6 @@ body.system div.widget.summery div.header {
   margin-left: 0;
   background-color: none;
   font-size: 30px;
-}
-body.system.dark div.widget div.header {
-    background-color: var(--dark-bg);
 }
 body.system div.widget div.header {
   font-size: 20px;
@@ -104,10 +94,7 @@ body.system div.widget div.list.form.table div.row div.grow  {
 
 @media (hover: hover) {
   body.system div.widget div.action:hover {
-    background-color: var(--light-menu-hover-bg);
-  }
-  body.system.dark div.widget div.action:hover {
-    background-color: var(--dark-menu-hover-bg);
+    background-color: var(--menu-hover-bg);
   }
 }
 

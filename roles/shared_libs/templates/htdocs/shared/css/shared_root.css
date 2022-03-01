@@ -6,23 +6,73 @@
   --light-button-bg: white;
   --light-button-hover-bg: #f7f8f8;
   --light-button-active-bg: #e8e8e9;
+  --light-button-border: 1px solid #dadce0;
   --dark-button-text: #fff;
   --dark-button-bg: #202124;
   --dark-button-hover-bg: #1976d21F;
   --dark-button-active-bg: #1976d24D;
+  --dark-button-border: 1px solid #8a8c90;
+
+  --light-widget-border: 1px solid #dadce0;
+  --dark-widget-border: 1px solid #8a8c90;
+
+  --light-table-border: 1px solid #dadce0;
+  --dark-table-border: 1px solid #8a8c90;
 
   --light-menu-text: #111;
   --dark-menu-text: #fff;
   
-  --menu-main-bg: #337ab7;
   --light-menu-hover-bg: #337ab71F;
   --light-menu-active-bg: #337ab738;
   --dark-menu-hover-bg: #337ab733;
   --dark-menu-active-bg: #337ab74D;
+  
+  --light-content-text: #111;
+  --dark-content-text: #fff;
+
+  --light-content-hover-bg: #f2f2f2;
+  --dark-content-hover-bg: rgba(51,122,183,.20);
  
+  --light-tooltip-bg: #f2f2f2;
+  --dark-tooltip-bg: #333;
+
+  --button-svg: white;
+
   --color-red: #ff7479;
   --color-yellow: #ffd768;
   --color-green: #b5ce69;
+}
+:root body {
+  --bg: var(--light-bg);
+  --button-text: var(--light-button-text);
+  --button-bg: var(--light-button-bg);
+  --button-hover-bg: var(--light-button-hover-bg);
+  --button-active-bg: var(--light-button-active-bg);
+  --button-border: var(--light-button-border);
+  --widget-border: var(--light-widget-border);
+  --table-border: var(--light-table-border);
+  --menu-text: var(--light-menu-text);
+  --menu-hover-bg: var(--light-menu-hover-bg);
+  --menu-active-bg: var(--light-menu-active-bg);
+  --content-text: var(--light-content-text);
+  --content-hover-bg: var(--light-content-hover-bg);
+  --tooltip-bg: var(--light-tooltip-bg);
+}
+:root body.dark {
+  --bg: var(--dark-bg);
+  --button-text: var(--dark-button-text);
+  --button-bg: var(--dark-button-bg);
+  --button-hover-bg: var(--dark-button-hover-bg);
+  --button-active-bg: var(--dark-button-active-bg);
+  --button-border: var(--dark-button-border);
+  --widget-border: var(--dark-widget-border);
+  --table-border: var(--dark-table-border);
+  --menu-text: var(--dark-menu-text);
+  --menu-hover-bg: var(--dark-menu-hover-bg);
+  --menu-active-bg: var(--dark-menu-active-bg);
+  --content-text: var(--dark-content-text);
+  --content-hover-bg: var(--dark-content-hover-bg);
+  --tooltip-bg: var(--dark-tooltip-bg);
 }
 @font-face {
   font-family: 'Open Sans';

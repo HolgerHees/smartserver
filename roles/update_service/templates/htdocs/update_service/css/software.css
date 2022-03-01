@@ -17,8 +17,7 @@ body.software div.form.table > div.row > div:first-child {
     min-width: 5px;
     padding: 2px;
 }
-body.software div.form.table > div.row > div:first-child,
-body.dark body.software div.form.table > div.row > div:first-child {
+body.software div.form.table > div.row > div:first-child {
     color: #666;
 }
 body.software div.form.table > div.row:first-child > div:first-child {
@@ -72,11 +71,7 @@ body.software .tooltip .hover {
   position: absolute;
   z-index: 1;
   
-  background-color: #f2f2f2;
-}
-
-body.dark.software .tooltip .hover {
-  background-color: #333;
+  background-color: var(--tooltip-bg);
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */

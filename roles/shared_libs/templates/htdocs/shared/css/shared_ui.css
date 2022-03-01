@@ -8,7 +8,7 @@
 /* BUTTON */
 .form.button {
   font-size: 16px;
-  border: 1px solid #dadce0;
+  border: var(--button-border);
   border-radius: 4px;
   letter-spacing: .15px;
   outline: 0;
@@ -16,15 +16,20 @@
   text-align: center;
   text-decoration: none;
   white-space: normal;
-  color: var(--light-button-text);
   display: inline-block;
   cursor: pointer;
   user-select: none;
   position: relative;
   overflow: hidden;
+  color: var(--button-text);
+  background-color: var(--button-bg);
+}
+body.dark .form.button:focus {
+    outline: none;
 }
 .form.button.disabled {
-  cursor: default;
+    cursor: default;
+    opacity: 0.5;
 }
 .form.button > span.ripple {
   position: absolute;
@@ -39,7 +44,7 @@
   }
 }
 .form.button > span.ripple {
-  background-color: var(--light-menu-active-bg);
+  background-color: var(--menu-active-bg);
 }
 .form.button.green > span.ripple {
   background-color: rgba(255, 255, 255, 0.7);
@@ -50,39 +55,16 @@
 .form.button.red > span.ripple {
   background-color: rgba(255, 255, 255, 0.7);
 }
-body.dark .form.button {
-    color: var(--dark-button-text);
-}
 @media (hover: hover) {
     .form.button:hover:not(.disabled) {
-        background-color: var(--light-button-hover-bg);
+        background-color: var(--button-hover-bg);
     }
-    body.dark .form.button:hover:not(.disabled) {
-        background-color: var(--dark-button-hover-bg);
-    }
-}
-.form.button {
-    background-color: var(--light-button-bg);
-  
-}
-body.dark .form.button {
-    background-color: var(--dark-button-bg);
-    border-color: #8a8c90;
-}
-body.dark .form.button:focus {
-    outline: none;
-}
-.form.button.disabled {
-    opacity: 0.5;
 }
 .form.button:active:not(.disabled) {
     /*box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15);*/
-    background-color: var(--light-button-active-bg);
+    background-color: var(--button-active-bg);
     border-color: transparent;
     -webkit-tap-highlight-color: transparent;
-}
-body.dark .form.button:active:not(.disabled) {
-    background-color: var(--dark-button-active-bg);
 }
 .form.button.red {
     background-color: var(--color-red) !important;
@@ -119,23 +101,17 @@ body.dark .form.button.yellow {
 
 /* TABLE */
 div.form.table {
-  border-top: 1px solid #d2d2d2;
+  border-top: var(--table-border);
 }
 div.form.table > div.row > div:first-child {
-  border-left: 1px solid #d2d2d2;
+  border-left: var(--table-border);
 } 
 div.form.table > div.row > div:last-child {
-  border-right: 1px solid #d2d2d2;
+  border-right: var(--table-border);
 } 
 div.form.table > div.row > div {
-  border-bottom: 1px solid #d2d2d2;
+  border-bottom: var(--table-border);
 } 
-body.dark div.form.table > div.row > div:first-child,
-body.dark div.form.table > div.row > div:last-child,
-body.dark div.form.table > div.row > div,
-body.dark div.form.table {
-  border-color: #8a8c90;
-}
 div.form.table {
   font-size: 16px;
   overflow: auto;
@@ -144,20 +120,14 @@ div.form.table > div.row {
   display: table-row;
 }
 div.form.table > div.row:hover {
-  background-color: #f2f2f2;
-}
-body.dark div.form.table > div.row:hover {
-  background-color: rgba(51,122,183,.20);
+  background-color: var(--content-hover-bg);
 }
 div.form.table > div.row > div {
   display: table-cell;
   padding: 10px;
   text-align: left;
-  color: #333;
+  color: var(--content-text);
   white-space: nowrap;
-}
-body.dark div.form.table > div.row > div {
-  color: #eee;
 }
 
 /* DIALOG */
@@ -181,17 +151,13 @@ body.dark div.form.table > div.row > div {
 }
 
 .dialogLayer .box {
-    background-color: var(--light-bg);
+    background-color: var(--bg);
     border-radius: 8px;
-    border: 1px solid #dadce0;
+    border: var(--widget-border);
     display: block;
     width: 80%;
     margin: 0 auto;
     padding: 15px;
-}
-body.dark .dialogLayer .box {
-    background-color: var(--dark-bg);
-    border: 1px solid #8a8c90;
 }
 .dialogLayer .box .header {
     font-size: 20px;
@@ -200,11 +166,7 @@ body.dark .dialogLayer .box {
 }
 .dialogLayer .box .header,
 .dialogLayer .box .body {
-    color: var(--light-menu-text);
-}
-body.dark .dialogLayer .box .header,
-body.dark .dialogLayer .box .body {
-    color: var(--dark-menu-text);
+    color: var(--menu-text);
 }
 .dialogLayer .box .info > div,
 .dialogLayer .box .body {
@@ -234,20 +196,15 @@ body.dark .dialogLayer .box .body {
     opacity: 0;
     position: absolute;
     z-index: 100001;
-    background-color: var(--light-bg);
+    background-color: var(--bg);
     max-height: 200px;
     overflow-y: auto;
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
-    border-left: 1px solid #dadce0;
-    border-right: 1px solid #dadce0;
-    border-bottom: 1px solid #dadce0;
+    border-left: var(--widget-border);
+    border-right: var(--widget-border);
+    border-bottom: var(--widget-border);
     transition: opacity 100ms linear;
-}
-body.dark .buttonSelectionLayer,
-body.dark .autoCompleteLayer {
-    background-color: var(--dark-bg);
-    border-color: #8a8c90;
 }
 /* SELECTIONBUTTON */
 div.buttonSelection {
@@ -265,12 +222,9 @@ div.buttonSelection div.buttonSelectionSelector {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-left: 1px solid #dadce0;
+    border-left: var(--widget-border);
     cursor: pointer;
     padding-left: 2px;
-}
-body.dark div.buttonSelection div.buttonSelectionSelector {
-    border-color: #8a8c90;
 }
 div.buttonSelection div.buttonSelectionSelector.open > span.down,
 div.buttonSelection div.buttonSelectionSelector > span.up {
@@ -285,16 +239,12 @@ div.buttonSelection > div.buttonSelectionLayer {
     right: 0;
     transform: translate(0, 98%);
     text-align: left;
-    border-top: 1px solid #dadce0;
+    color: var(--button-text);
+    background-color: var(--bg);
+    border-top: var(--widget-border);
     border-top-left-radius: 4px;
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
-    color: var(--light-button-text);
-}
-body.dark div.buttonSelection > div.buttonSelectionLayer {
-    background-color: var(--dark-bg);
-    border-color: #8a8c90;
-    color: var(--dark-button-text);
 }
 div.buttonSelection > div.buttonSelectionLayer > div {
     display: block;
@@ -302,10 +252,7 @@ div.buttonSelection > div.buttonSelectionLayer > div {
     cursor: pointer;
 }   
 div.buttonSelection > div.buttonSelectionLayer > div:hover {
-    background-color: var(--light-menu-hover-bg);
-}
-body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
-    background-color: var(--dark-menu-hover-bg);
+    background-color: var(--menu-hover-bg);
 }
 @media (pointer: coarse) {
     div.buttonSelection .form.button {
@@ -322,7 +269,7 @@ body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
 /* AUTOCOMPLETE */
 .autoCompleteLayer > div.separator {
     height: 1px;
-    border-bottom: 1px solid #dadce0;
+    border-bottom: var(--widget-border);
 }
 .autoCompleteLayer > div.row {
     display: block;
@@ -331,7 +278,7 @@ body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
     cursor: pointer;
 }
 .autoCompleteLayer > div.row:hover {
-    background-color: var(--light-menu-hover-bg);
+    background-color: var(--menu-hover-bg);
 }
 .autoCompleteLayer > div.row.term {
     color: #666;
@@ -339,9 +286,6 @@ body.dark div.buttonSelection > div.buttonSelectionLayer > div:hover {
 }
 .autoCompleteLayer > div.row.active {
   background-color: rgba(51,122,183,.20);
-}
-body.dark .autoCompleteLayer > div:hover {
-  background-color: var(--dark-menu-hover-bg);
 }
 .autoCompletionSelection {
     display: none;
@@ -352,17 +296,13 @@ body.dark .autoCompleteLayer > div:hover {
 .autoCompletionSelection > div {
     display: flex;
     border-radius: 5px;
-    border: 1px solid #dadce0;
+    border: var(--widget-border);
     font-size: 14px;
     padding: 4px;
     position: relative;
-    background-color: #FFF;
+    background-color: var(--bg);
     cursor: pointer;
     line-height: 15px;
-}
-body.dark .autoCompletionSelection > div {
-    background-color: var(--dark-bg);
-    border-color: #d2d2d2;
 }
 .autoCompletionSelection > div > div.value {
     margin-right: 18px;
