@@ -86,13 +86,10 @@ html {
     box-sizing: border-box;
 }
 body {
-    background-color: var(--light-bg);
+    background-color: var(--bg);
     font-family: 'Open Sans', sans-serif;
     margin: 0;
 }
-body.dark {
-    background-color: var(--dark-bg);
-} 
 body.inline {
     /*padding: 0px 5px 0 5px;*/
 }
