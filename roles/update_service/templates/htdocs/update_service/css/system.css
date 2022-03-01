@@ -4,7 +4,7 @@ body.system #serverNeedsRestart,
 }
 body.system div.info,
 body.system div.header div:first-child {
-  color: var(--menu-text);
+  color: var(--content-text);
 }
 body.system div.info.green,
 body.system div.header.green {
@@ -94,7 +94,7 @@ body.system div.widget div.list.form.table div.row div.grow  {
 
 @media (hover: hover) {
   body.system div.widget div.action:hover {
-    background-color: var(--menu-hover-bg);
+    background-color: var(--content-hover-bg);
   }
 }
 
