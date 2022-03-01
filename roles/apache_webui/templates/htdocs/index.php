@@ -57,19 +57,23 @@ require "./shared/libs/ressources.php";
                     minActiveLevel = parseInt("4D",16);
                 }
 
-                let maxHoverLevel = minHoverLevel + 122;
+                let maxHoverLevel = minHoverLevel + 80;
                 let activeLevelDiff = minActiveLevel - minHoverLevel;
                 
                 let bgLuminance = mx.MainImage.getLuminance();
                 if( bgLuminance < 1 ) bgLuminance = 1;
                 let hvLuminance = mx.MainImage.getLuminance(mainHover);
                 if( hvLuminance < 1 ) hvLuminance = 1;
-                let contrast = Math.abs(bgLuminance - hvLuminance);
-                if( contrast > 150 ) contrast = 150;
                 
-                //console.log(bgLuminance);
-                //console.log(hvLuminance);
-                //console.log(contrast);
+                let contrast = Math.abs(bgLuminance - hvLuminance);
+                if( contrast < 10 ) 
+                {
+                    mainHover = mx.MainImage.getComplementaryGray();
+                    let hvLuminance = mx.MainImage.getLuminance(mainHover);
+                    if( hvLuminance < 1 ) hvLuminance = 1;
+                }
+
+                if( contrast > 150 ) contrast = 150;
                 
                 //150 => minHoverLevel
                 //0 => maxHoverLevel
@@ -77,9 +81,14 @@ require "./shared/libs/ressources.php";
                 //150 => -diff
                 //contrast => x
                 let diff = Math.abs( minHoverLevel - maxHoverLevel );
-                let hoverLevel = Math.round( ( (contrast * ( diff * -1 ) ) / 150 ) + diff );
+                let hoverLevel = Math.round( ( (contrast * ( diff * -1 ) ) / 150 ) + diff ) + minHoverLevel;
                 let activeLevel = hoverLevel + activeLevelDiff;
                 
+                //console.log(bgLuminance);
+                //console.log(hvLuminance);
+                //console.log(contrast);
+                //console.log(hoverLevel);
+
                 let style = document.createElement('style');
                 let css = ":root {";
                 css += " --bgBasedShadowColor: " + mx.MainImage.getComplementaryGray() + ";"
