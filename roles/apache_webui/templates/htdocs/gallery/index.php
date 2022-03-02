@@ -44,7 +44,6 @@ require "../shared/libs/ressources.php";
         mx.Gallery.init(<?php echo $height; ?>,<?php echo $width; ?>,'<?php echo $sub_folder; ?>')
     });
 </script>
-<div class="tooltip"><span class="text"></span><span class="arrow"></span></div>
 <div class="slots"><?php echo Template::getSlots($starttime,$endtime,$images); ?></div>
 <div id="gallery">
   <div class="layer"></div>

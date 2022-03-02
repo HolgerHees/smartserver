@@ -13,9 +13,6 @@ mx.Gallery = (function( ret ) {
     
     var slotOverview = null;
 
-    var tooltip = null;
-    var tooltipArrow = null;
-    
     var gallery = null;
     var galleryPreviousButton = null;
     var galleryNextButton = null;
@@ -61,37 +58,37 @@ mx.Gallery = (function( ret ) {
     {
         if( !slotTooltipElement.dataset.count )
         {
-            tooltip.classList.remove("active");
+            mx.Tooltip.hide();
         }
         else
-        {
-            tooltip.classList.add("active");
-            tooltip.querySelector(".text").innerHTML = slotTooltipElement.dataset.formattedtime + "<br>" + slotTooltipElement.dataset.count + " Bilder";
-            
+        {            
+            let text = slotTooltipElement.dataset.formattedtime + "<br>" + slotTooltipElement.dataset.count + " Bilder";
+            mx.Tooltip.setText(text);
+
             var slotOverviewRect = slotOverview.getBoundingClientRect();
             var slotRect = slotTooltipElement.getBoundingClientRect();
-            var tooltipRect = tooltip.getBoundingClientRect();
-            var tooltipArrowRect = tooltipArrow.getBoundingClientRect();
+            var tooltipRect = mx.Tooltip.getRootElementRect();
+            var tooltipArrowRect = mx.Tooltip.getArrowElementRect();
             
             var pos = ( slotRect.left + slotRect.width / 2 - tooltipRect.width / 2 )
             if( pos < 2 )
             {
                 pos = 2;
                 var center = slotRect.left + slotRect.width / 2;
-                tooltipArrow.style.left = ( center - pos - tooltipArrowRect.width / 2 + 1) + "px";
+                arrowLeft = ( center - pos - tooltipArrowRect.width / 2 + 1) + "px";
             }
             else if( pos + tooltipRect.width > slotOverviewRect.width )
             {
                 pos = slotOverviewRect.width - 2 - tooltipRect.width;
                 var center = slotRect.left + slotRect.width / 2;
-                tooltipArrow.style.left = ( center - pos - tooltipArrowRect.width / 2 + 1) + "px";
+                arrowLeft = ( center - pos - tooltipArrowRect.width / 2 + 1) + "px";
             }
             else
             {
-                tooltipArrow.style.left = "calc(50% - " + (tooltipArrowRect.width / 2 - 1) + "px)";
+                arrowLeft = "calc(50% - " + (tooltipArrowRect.width / 2 - 1) + "px)";
             }
-              
-            tooltip.style.cssText = "left: " + pos + "px; top: 0px;";
+            
+            mx.Tooltip.show(pos, 0, arrowLeft);
         }
     }
     
@@ -730,9 +727,6 @@ mx.Gallery = (function( ret ) {
         
         slotOverview = document.querySelector(".slots");
 
-        tooltip = document.querySelector(".tooltip");
-        tooltipArrow = tooltip.querySelector(".arrow");
-        
         gallery = document.querySelector("#gallery");
         galleryPreviousButton = gallery.querySelector(".button.previous");
         galleryNextButton = gallery.querySelector(".button.next");
