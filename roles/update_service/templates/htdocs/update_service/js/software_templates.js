@@ -94,7 +94,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 
                     let latestDate = new Date( state["current"]["date"] );
 
-                    content += "<div class=\"tooltip\">" + formatVersion(state["current"]["version"]) + " <span class=\"hover\">Version " + formatVersion(state["current"]["version"]) + " from " + formatDatetime(latestDate) + "</span></div>";
+                    content += "<div data-tooltip=\"Version " + formatVersion(state["current"]["version"]) + " from " + formatDatetime(latestDate) + "\">" + formatVersion(state["current"]["version"]) + "</div>";
 
                     let upgradesHTML = "";
                     let lastUpdate = "";
@@ -160,13 +160,12 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                             }
                         }
                         
-                        lastUpdate = "<span class=\"default\">" + lastUpdate + "</span>";
-                        lastUpdateDetails = "<span class=\"hover\">" +  formatDatetime(latestDate) + "</span>";
+                        lastUpdateDetails = " data-tooltip=\"" + formatDatetime(latestDate) + "\"";
                     }
                     
                     content += "<div>" + upgradesHTML + "</div>";
                 
-                    content += "<div class=\"software tooltip lastUpdate\">" + lastUpdate + lastUpdateDetails + "</div>";
+                    content += "<div class=\"software lastUpdate\"" + lastUpdateDetails + ">" + lastUpdate + "</div>";
                     
                     content += "</div>";
                 }
@@ -175,6 +174,8 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
             content += "</div>";
                 
             document.body.querySelector(".list").innerHTML = content;
+            
+            mx.Tooltip.init();
         }
     }
     

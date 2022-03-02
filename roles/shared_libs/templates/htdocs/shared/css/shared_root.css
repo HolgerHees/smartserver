@@ -33,8 +33,10 @@
   --light-content-hover-bg: #f2f2f2;
   --dark-content-hover-bg: rgba(51,122,183,.20);
  
-  --light-tooltip-bg: #f2f2f2;
-  --dark-tooltip-bg: #333;
+  --light-tooltip-bg: white;
+  --light-tooltip-shadow: #666;
+  --dark-tooltip-bg: #202124;
+  --dark-tooltip-shadow: #666;
 
   --button-svg: white;
 
@@ -57,6 +59,7 @@
   --content-text: var(--light-content-text);
   --content-hover-bg: var(--light-content-hover-bg);
   --tooltip-bg: var(--light-tooltip-bg);
+  --tooltip-shadow: var(--light-tooltip-shadow);
 }
 :root body.dark {
   --bg: var(--dark-bg);
@@ -73,6 +76,7 @@
   --content-text: var(--dark-content-text);
   --content-hover-bg: var(--dark-content-hover-bg);
   --tooltip-bg: var(--dark-tooltip-bg);
+  --tooltip-shadow: var(--dark-tooltip-shadow);
 }
 @font-face {
   font-family: 'Open Sans';
@@ -103,4 +107,8 @@ body.inline.spacer-800 {
     body.inline.spacer-800 {
         padding-top: 0;
     }
+}
+
+body * {
+  -webkit-tap-highlight-color: transparent;  
 }

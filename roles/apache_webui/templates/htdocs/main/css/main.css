@@ -342,7 +342,6 @@ body.phone #menu .group.header .logout.button {
     background-size: 44px 44px;
     height: 44px;
     width: 44px;
-    -webkit-tap-highlight-color: transparent;
 }
 body.phone #menu #logo {
     margin-left: 14px;
@@ -441,7 +440,6 @@ body.phone #menu .header {
 }
 #menu .service.button:active {
     background-color: var(--menu-active-bg);
-    -webkit-tap-highlight-color: transparent;
 }
 #menu .service.button.active {
     background-color: var(--menu-active-bg);
@@ -616,7 +614,6 @@ body.nobackground #submenu .service.button div:last-child {
 #submenu .service.button:active {
     filter: brightness(90%);
     background-color: var(--content-active-bg);
-    -webkit-tap-highlight-color: transparent;
 }
 #submenu .service.imageWatcher {
     display:flex;

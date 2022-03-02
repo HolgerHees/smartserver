@@ -17,6 +17,7 @@ require "../shared/libs/ressources.php";
     <script src="<?php echo Ressources::getJSPath('/gallery/'); ?>"></script>
 </head>
 <body>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "Gallery"); } );</script>
 <?php
     include "inc/Image.php";
     include "inc/Folder.php";

@@ -61,41 +61,23 @@ body.dark .slots > div.slot.active > div.bar {
   top: 0;
 }
 .tooltip {
-  visibility: hidden;
-  opacity: 0;
   color: white;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 5px;
-  position: fixed;
-  z-index: 300;
+  border: none;
   width: 100px;
   height: 56px;
-  box-sizing: border-box;
-  transition: opacity 0.3s;
-  white-space: nowrap;
   background-color: #1976D2;
-  pointer-events: none;
+  box-shadow: none;
 }
 .tooltip > .arrow {
-  display: inline-block;
-  position: absolute;
-  top: calc(100% - 3px);
-  width: 6px;
-  height: 6px;
   border: 1px solid white;
   border-width: 0 1px 1px 0;
-  -webkit-transform: rotate(45deg);
-  -moz-transform: rotate(45deg);
-  transform: rotate(45deg);
   background-color: #1976D2;
+  box-shadow: none;
 }
 body.dark .tooltip, body.dark .tooltip > .arrow {
   background-color: #1d3a58;
 }
-
 .tooltip.active {
-  visibility: visible;
   opacity: 1;
 }  
 #gallery {
