@@ -7,3 +7,13 @@
     mode: 0640
   notify: "restart fluentd"
   tags: ['fluentd_conf']
+
+- name: "copy fluentd config '{{config_file | basename}}'"
+  template:
+    src: "{{config_file}}"
+    dest: "{{global_etc}}fluent/_.ansible.d/{{config_file | basename}}"
+    owner: root
+    group: root
+    mode: 0640
+#  notify: "restart fluentd"
+  tags: ['fluentd_conf']

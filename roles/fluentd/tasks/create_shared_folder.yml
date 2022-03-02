@@ -8,3 +8,5 @@
   with_items:
     - "/etc/fluent/"
     - "/etc/fluent/_.ansible.d"
+    - "{{global_etc}}/fluent/"
+    - "{{global_etc}}/fluent/_.ansible.d"

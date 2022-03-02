@@ -16,5 +16,8 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
                   $buildDeps \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem
+ 
+#RUN locale-gen en_US.UTF-8
+#ENV LANG en_US.UTF-8
 
 #USER fluent
