@@ -1,3 +1,86 @@
+#- name: set version
+#  set_fact:
+#    fluentd_version: '1.14.5-debian-1.0'
+#  tags: [ 'update_notifier_configs' ]    
+  
+#- name: copy config and service
+#  template:
+#    src: "templates/etc/fluent/{{item}}"
+#    dest: "{{ global_etc }}fluent/{{item}}"
+#    owner: root
+#    group: root
+#    mode: "u=rw,g=r,o="
+#  with_items:
+#    - "fluent.conf"
+#    - "_.ansible.d/systemd.conf"
+#  notify: "restart fluentd"
+
+#- name: build docker image
+#  vars:
+#    name: "fluentd"
+#    image_name: "custom_fluentd"
+#    image_version: "{{fluentd_version}}"
+#    files:
+#      - roles/fluentd/templates/container/Dockerfile
+#  import_tasks: roles/container/tasks/build_docker_image.yml
+
+#- name: create docker network
+#  docker_network:
+#    name: fluentd
+#    internal: yes
+#    ipam_config:
+#      - subnet: "{{docker_fluentd_ip.split('.')[:3] | join('.')}}.0/24"
+#        gateway: "{{docker_fluentd_ip.split('.')[:3] | join('.')}}.1"
+#    connected:
+#      - loki
+#    appends: yes
+#  tags: [ 'loki' ]
+
+#- name: create docker container
+#  docker_container:
+#    name: fluentd
+#    image: "custom_fluentd:{{fluentd_version}}"
+#    state: present
+#    user: "root:root"
+#    env:
+#      TZ: "{{timezone}}"
+#    log_driver: journald
+#    log_options:
+#      tag: fluentd
+#    container_default_behavior: "compatibility"
+#    network_mode: "default"
+#    networks:
+#      - name: "fluentd"
+#        ipv4_address: "{{docker_fluentd_ip}}"
+#    networks_cli_compatible: yes
+#    volumes:
+#      - '{{ global_etc }}fluent:/fluentd/etc/:z'
+#      - '{{ global_log }}:{{ global_log }}:z'
+#      - '{{ "/run" if is_suse else "/var" }}/log/journal:/var/log/journal:z'
+#  notify: "restart fluentd"
+    
+#- name: add container name
+#  vars:
+#    host_name: "fluentd"
+#    host_ip_address: "{{docker_fluentd_ip}}"
+#  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+#- name: create systemd service
+#  vars:
+#    container_name: "fluentd"
+#  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+#- name: register update notifier
+#  vars:
+#    name: "fluentd"
+#    type: "docker"
+#    url: "https://fluentbit.io/announcements/"
+#    config: {
+#      repository: "fluent",
+#      pattern: "^v([0-9\\.]+)-debian-([0-9\\.]+)$"
+#    }
+#  import_tasks: roles/update_service/tasks/add_software.yml
+  
 - name: install required packages => is_fedora
   yum:
     name: [

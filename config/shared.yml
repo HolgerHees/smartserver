@@ -49,7 +49,7 @@ docker_telegraf_ip:               "172.30.4.200"
 docker_prometheus_ip:             "172.30.5.200"
 docker_alertmanager_ip:           "172.30.6.200"
 docker_loki_ip:                   "172.30.7.200"
-#docker_openhab_ip:                "172.30.4.200"
+#docker_fluentd_ip:                "172.30.8.200"
 
 # 0 => production, 1 => production
 netgroup:                         "{{server_ip_r[2]}}"
