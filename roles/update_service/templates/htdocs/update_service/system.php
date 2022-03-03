@@ -181,11 +181,14 @@ if( !Auth::hasGroup("admin") )
                         currentRunningActionsElement.style.display= "";
                         currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
                     }
+                    currentRunningStateElement.classList.remove("red");
                 }
                 else
                 {
                     msg = mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
                     currentRunningActionsElement.style.display= ""
+
+                    currentRunningStateElement.classList.add("red");
                 }
                 
                 currentRunningStateElement.innerHTML = msg;
@@ -194,6 +197,8 @@ if( !Auth::hasGroup("admin") )
             }
             else
             {
+                currentRunningStateElement.classList.remove("red");
+
                 currentRunningActionsElement.style.display="";
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
 
