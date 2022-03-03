@@ -40,9 +40,11 @@
 
       , zip
       , unzip
-#      , gcc
-#      , make
       , git
+
+#      , gcc
+      , make
+
       , sshpass
       
       , python3-flask
@@ -77,9 +79,11 @@
       , rsync              
       , zip
       , unzip
-#      , gcc
-#      , make
       , git
+
+#      , gcc
+      , make
+
       , sshpass
       
       , python3-flask
@@ -110,9 +114,12 @@
       , rsync              # used for ansible synchronize
       , zip                # used for ansible unarchive mobule
       , unzip              # used for ansible unarchive mobule
-#      , gcc                # used for ansible gem module => to build native extension
-#      , make               # used for ansible gem module => to build native extension
+      
       , git                # used for ansible git module
+
+#      , gcc                # used for ansible gem module => to build native extension
+      , make               # used for installing ferm
+      
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
       , python3-Flask      # used for daemon services like update_service and ci_service
