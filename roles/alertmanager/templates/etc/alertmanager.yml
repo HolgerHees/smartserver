@@ -28,6 +28,10 @@ route:
       - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
       receiver: dummy
     - matchers:
+      - group="loki"
+      - log=~".*error processing request.*context canceled.*"
+      receiver: dummy
+    - matchers:
       - group="apache"
       - log=~".*/grafana/api/live/ws.*Mobile.*"
       receiver: dummy
