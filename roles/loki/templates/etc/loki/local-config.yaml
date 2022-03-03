@@ -3,6 +3,14 @@ auth_enabled: false
 server:
   http_listen_port: 3100
 
+# used to reduce amount of "context canceled" log messages
+frontend:
+  address: 127.0.0.1
+    
+# used to reduce amount of "context canceled" log messages
+query_range:
+  parallelise_shardable_queries: false
+
 ingester:
   lifecycler:
     address: 127.0.0.1
