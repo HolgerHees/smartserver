@@ -28,18 +28,6 @@ route:
       - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
       receiver: dummy
     - matchers:
-      - group="loki"
-      - log=~".*duplicate proto type registered.*"
-      receiver: dummy
-    - matchers:
-      - group="loki"
-      - log=~".*context canceled.*"
-      receiver: dummy
-    - matchers:
-      - group="loki"
-      - log=~".*about finished query.*"
-      receiver: dummy
-    - matchers:
       - group="grafana"
       - log=~".*abort Handler.*"
       receiver: dummy
