@@ -24,7 +24,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Loki",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -130,7 +133,10 @@
       }
     },
     {
-      "datasource": "Loki",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -182,7 +188,10 @@
             "ERROR"
           ]
         },
-        "datasource": "Loki",
+        "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
         "definition": "label_values(level)",
         "description": null,
         "error": null,
@@ -214,7 +223,10 @@
             "$__all"
           ]
         },
-        "datasource": "Loki",
+        "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
         "definition": "label_values(group)",
         "description": null,
         "error": null,

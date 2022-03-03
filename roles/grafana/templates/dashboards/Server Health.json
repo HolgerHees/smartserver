@@ -24,7 +24,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -267,7 +270,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -471,7 +477,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -637,7 +646,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -803,7 +815,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1044,7 +1059,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1248,7 +1266,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1452,7 +1473,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "OpentsdbInfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -1665,7 +1689,10 @@
           "text": "autogen",
           "value": "autogen"
         },
-        "datasource": "OpentsdbInfluxDB",
+        "datasource": {
+        "type": "influxdb",
+        "uid": "opentsdb_influxdb"
+      },
         "definition": "SHOW RETENTION POLICIES on \"opentsdb\" ",
         "description": null,
         "error": null,
