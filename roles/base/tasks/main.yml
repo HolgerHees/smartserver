@@ -40,8 +40,8 @@
 
       , zip
       , unzip
-      , gcc
-      , make
+#      , gcc
+#      , make
       , git
       , sshpass
       
@@ -54,7 +54,7 @@
       
       , python3-libselinux # used by ansible on fedora
       , policycoreutils-python-utils # needed to modify selinux permission (docker & apache)
-      , redhat-rpm-config  # used by ansible gem mobule
+#      , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
   when: is_fedora|bool
@@ -77,8 +77,8 @@
       , rsync              
       , zip
       , unzip
-      , gcc
-      , make
+#      , gcc
+#      , make
       , git
       , sshpass
       
@@ -110,8 +110,8 @@
       , rsync              # used for ansible synchronize
       , zip                # used for ansible unarchive mobule
       , unzip              # used for ansible unarchive mobule
-      , gcc                # used for ansible gem module => to build native extension
-      , make               # used for ansible gem module => to build native extension
+#      , gcc                # used for ansible gem module => to build native extension
+#      , make               # used for ansible gem module => to build native extension
       , git                # used for ansible git module
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 

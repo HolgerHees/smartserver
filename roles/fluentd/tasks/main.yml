@@ -1,19 +1,20 @@
 - name: set version
   set_fact:
     fluentd_version: '1.14.5-debian-1.0'
+    grafana_loki_version: '1.2.18'
   tags: [ 'update_notifier_configs' ]    
   
 - name: copy config and service
   template:
-    src: "templates/etc/fluent/{{item}}"
-    dest: "{{ global_etc }}fluent/{{item}}"
+    src: "templates/etc/fluentd/{{item}}"
+    dest: "{{ global_etc }}fluentd/{{item}}"
     owner: root
     group: root
     mode: "u=rw,g=r,o="
   with_items:
     - "fluent.conf"
     - "_.ansible.d/systemd.conf"
-#  notify: "restart fluentd"
+  notify: "restart fluentd"
 
 - name: build docker image
   vars:
@@ -22,6 +23,7 @@
     image_version: "{{fluentd_version}}"
     files:
       - roles/fluentd/templates/container/Dockerfile
+      - roles/fluentd/templates/container/patches/out_loki.rb
   import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: create docker network
@@ -44,7 +46,6 @@
     user: "root:root"
     env:
       TZ: "{{timezone}}"
-      LANG: "en_US.UTF-8"
     log_driver: journald
     log_options:
       tag: fluentd
@@ -55,125 +56,32 @@
         ipv4_address: "{{docker_fluentd_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{ global_etc }}fluent:/fluentd/etc/:z'
+      - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
       - '{{ "/run" if is_suse else "/var" }}/log/journal:{{ "/run" if is_suse else "/var" }}/log/journal:z'
-#  notify: "restart fluentd"
+  notify: "restart fluentd"
     
-#- name: add container name
-#  vars:
-#    host_name: "fluentd"
-#    host_ip_address: "{{docker_fluentd_ip}}"
-#  import_tasks: roles/network/tasks/add_to_hosts.yml
+- name: add container name
+  vars:
+    host_name: "fluentd"
+    host_ip_address: "{{docker_fluentd_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
 
-#- name: create systemd service
-#  vars:
-#    container_name: "fluentd"
-#  import_tasks: roles/container/tasks/add_docker_service.yml
+- name: create systemd service
+  vars:
+    container_name: "fluentd"
+  import_tasks: roles/container/tasks/add_docker_service.yml
   
-#- name: register update notifier
-#  vars:
-#    name: "fluentd"
-#    type: "docker"
-#    url: "https://fluentbit.io/announcements/"
-#    config: {
-#      repository: "fluent",
-#      pattern: "^v([0-9\\.]+)-debian-([0-9\\.]+)$"
-#    }
-#  import_tasks: roles/update_service/tasks/add_software.yml
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-- name: install required packages => is_fedora
-  yum:
-    name: [
-      ruby-devel
-      , hostname
-    ]
-    state: present
-  when: is_fedora|bool
-  
-- name: install required packages => is_ubuntu
-  apt:
-    name: [
-      ruby-all-dev
-      , hostname
-    ]
-    state: present
-  when: is_ubuntu|bool
-
-- name: install required packages => is_suse
-  zypper:
-    name: [
-      ruby-devel
-      , hostname
-    ]
-    state: present
-  when: is_suse|bool
-  
-- name: prepare needed folder
-  file:
-    path: '{{global_log}}fluentd/'
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-
-- name: install
-  gem:
-    name: '{{ item }}'
-    state: present
-    user_install: no
-  with_items:
-    - fluentd
-    - fluent-plugin-systemd
-#    - fluent-plugin-mail
-#    - fluent-plugin-grep
-#    - fluent-plugin-grepcounter
-    - fluent-plugin-grafana-loki
-    - fluent-plugin-record-modifier
-    - fluent-plugin-rewrite-tag-filter
-#    - oj
-  notify: "restart fluentd"
-
-- name: detect patch location
-  shell: "gem which \"fluent/plugin/out_loki.rb\""
-  register: gem_location
-  changed_when: no
-  
-- name: synchronize patches
-  synchronize:
-    src: "templates/patches/out_loki.rb"
-    dest: "{{gem_location.stdout}}"
-    archive: no
-    checksum: yes
-    group: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown=root:root"
-      - "--chmod=F644"
-  notify: "restart fluentd"
-  
-- name: copy config and service
-  template:
-    src: "templates{{item.path}}"
-    dest: "{{item.path}}"
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rw,g=r,o=", path: "/etc/fluent/fluent.conf" }
-    - { mode: "u=rw,g=r,o=", path: "/etc/fluent/_.ansible.d/systemd.conf" }
-    - { mode: "u=rw,g=r,o=r", path: "/etc/systemd/system/fluentd.service" }
-  notify: "restart fluentd"
+- name: register update notifier
+  vars:
+    name: "fluentd"
+    type: "docker"
+    url: "https://fluentbit.io/announcements/"
+    config: {
+      repository: "fluent",
+      pattern: "^v([0-9\\.]+)-debian.*$"
+    }
+  import_tasks: roles/update_service/tasks/add_software.yml
 
 # ***** FINALIZE *****
 - name: register systemd service watcher
