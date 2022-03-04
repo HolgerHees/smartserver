@@ -166,9 +166,9 @@
     database: "opentsdb"
     retentions: 
       - { retention: "14d" }
-      - { retention: "60d", name: "060d", interval: "10s", every: "6h" }
-      - { retention: "360d", name: "360d", interval: "1m", every: "12h" }
-      - { retention: "0", name: "999d", interval: "5m", every: "1d" }
+      - { retention: "90d", name: "090d", interval: "5m", every: "6h" }
+      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
+      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
     backup: yes
   import_tasks: roles/influxdb/tasks/add_bucket.yml
   
