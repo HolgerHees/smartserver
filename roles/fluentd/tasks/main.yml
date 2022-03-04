@@ -76,7 +76,7 @@
   vars:
     name: "fluentd"
     type: "docker"
-    url: "https://fluentbit.io/announcements/"
+    url: "https://github.com/fluent/fluentd/blob/master/CHANGELOG.md"
     config: {
       repository: "fluent/fluentd",
       pattern: "^v([0-9\\.]+)-debian.*$"
