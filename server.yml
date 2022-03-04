@@ -73,7 +73,7 @@
 
     - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
 
-    - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # settup allowed ssh user
+    - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # setup allowed ssh user
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
