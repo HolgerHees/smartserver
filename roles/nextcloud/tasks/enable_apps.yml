@@ -106,6 +106,8 @@
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
       - { app: "previewgenerator", name: "heightSizes", value: "256" }
       
+      - { app: "text", name: "workspace_available", value: "0" }
+      
 - name: prepare app configs
   set_fact:
     prepared_app_configs: "{{ prepared_app_configs | default([]) + [ { 'app': item.app, 'name': item.name, 'value': item.value | replace(\"'\", \"\\'\" ) | replace('\"', '\\\\\\\"') } ] }}"
