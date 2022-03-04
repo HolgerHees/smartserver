@@ -78,7 +78,7 @@
     type: "docker"
     url: "https://fluentbit.io/announcements/"
     config: {
-      repository: "fluent",
+      repository: "fluent/fluentd",
       pattern: "^v([0-9\\.]+)-debian.*$"
     }
   import_tasks: roles/update_service/tasks/add_software.yml
