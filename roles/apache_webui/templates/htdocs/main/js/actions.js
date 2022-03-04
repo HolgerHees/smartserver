@@ -13,8 +13,11 @@ mx.Actions = (function( ret ) {
     var menuPanel = null;
     var visualisationType = null;
     
-    var titleUrl = null;
-                          
+    function setTitle(title)
+    {
+        document.title = title;
+    }
+    
     function loadHandler(url,type)
     {
         /*if( type == 'replaceState' )
@@ -67,24 +70,15 @@ mx.Actions = (function( ret ) {
     {
         if( 'type' in event.data && [ 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
         {
-            if( event.data['type'] == "title" )
-            {
-                document.title = event.data["title"];
-            }
-            else
+            setTitle(event.data["title"]);
+
+            if( event.data['type'] != "title" )
             {
                 var url = event.data['url'];
                 url = url.split(':',2)[1];
                 if( url.indexOf("//" + window.location.host ) == 0 ) url = url.substr(window.location.host.length+2);
                 loadHandler(url,event.data['type']);
-
-                if( titleUrl != event.data['url'] )
-                {
-                    document.title = event.data["title"];
-                }
             }
-
-            titleUrl = event.data['url'];
         }
         else
         {
@@ -119,8 +113,10 @@ mx.Actions = (function( ret ) {
         }
     }
     
-    function setIFrameUrl(url)
+    function setIFrameUrl(url, title)
     {
+        setTitle( title ? title : "");
+
         //if( iframeElement.getAttribute("src") != url )
         //{
         hideIFrame(true);
@@ -153,6 +149,8 @@ mx.Actions = (function( ret ) {
     
     function showError(errorType, parameter)
     {
+        setTitle(mx.I18N.get("Error"));
+
         hideIFrame();
         hideMenuContent();
         hideProgress();
@@ -206,8 +204,6 @@ mx.Actions = (function( ret ) {
     
     function hideIFrame(immediately)
     {
-        document.title = "";
-        
         clearIFrameTimer();
             
         if( iframeElement.style.display == "" )
@@ -366,6 +362,8 @@ mx.Actions = (function( ret ) {
         }
         else
         {
+            setTitle(subGroup.getTitle());
+
             if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
             {
                 mx.Menu.buildContentSubMenu( subGroup, setMenuEntries); // prepare menu content
@@ -408,7 +406,7 @@ mx.Actions = (function( ret ) {
         
         //showIFrame();
         
-        setIFrameUrl(new_url);
+        setIFrameUrl(new_url, entry.getTitle());
 
         if( visualisationType != "desktop" ) menuPanel.close();
     };
@@ -416,6 +414,8 @@ mx.Actions = (function( ret ) {
     ret.openHome = function(event)
     {
         var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
+        
+        setTitle(subGroup.getTitle());
         
         var isActive = ( mx.History.getActiveNavigation() === subGroup );
         

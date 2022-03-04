@@ -35,6 +35,8 @@
     "The subdomain's SSL certificate was not accepted.": "Das SSL Zertifikat der Subdomain wurde nicht akzeptiert.",
     "Click <span class='important' onclick='mx.Actions.openFrameInNewWindow()'>'Open in a new window'</span> and confirm the certificate there.": "<span class='important' onclick='mx.Actions.openFrameInNewWindow()'>'Im neuem Fenster öffnen'</span> klicken und dort das Zertifikat bestätigen.",
     "Show anyway": "Trotzdem anzeigen",
-    "Open in new window": "Im neuem Fenster öffnen"
+    "Open in new window": "Im neuem Fenster öffnen",
+    
+    "Error": "Fehler"
   }
 }
