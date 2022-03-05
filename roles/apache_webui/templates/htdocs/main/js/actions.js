@@ -258,8 +258,16 @@ mx.Actions = (function( ret ) {
         }
     }
 
-    function showMenuContent()
+    function _fadeInMenu(submenu)
     {
+        submenu.style.transition = "opacity 200ms linear";
+        window.setTimeout( function(){submenu.style.opacity = "";},0);
+    }
+
+    function showMenuContent(content, title)
+    {
+        setTitle(title);
+        
         mx.Timer.clean();
 
         if( inlineElement.style.display != "" )
@@ -276,36 +284,14 @@ mx.Actions = (function( ret ) {
         hideIFrame();
         hideError();
         hideProgress();
-    }
-    
-    function fadeInMenu(submenu,callbacks)
-    {
-        submenu.style.transition = "opacity 200ms linear";
-        window.setTimeout( function()
-        {
-            mx.Core.waitForTransitionEnd(submenu,function()
-            {
-                if( callbacks.length > 0 ) 
-                {
-                    callbacks.forEach(function(callback)
-                    {
-                        callback();
-                    });
-                }
-            },"setSubMenu2");
-            submenu.style.opacity = "";
-        },0);
-    }
 
-    function setMenuEntries(data,callbacks)
-    {
         var submenu = mx.$('#content #submenu');
 
         if( mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().getType() == "entry" )
         {
             submenu.style.opacity = "0";
-            submenu.innerHTML = data;
-            fadeInMenu(submenu,callbacks);
+            submenu.innerHTML = content;
+            _fadeInMenu(submenu);
         }
         else
         {
@@ -314,14 +300,14 @@ mx.Actions = (function( ret ) {
             {
                 mx.Core.waitForTransitionEnd(submenu,function()
                 {
-                    submenu.innerHTML = data;
-                    fadeInMenu(submenu,callbacks);
+                    submenu.innerHTML = content;
+                    _fadeInMenu(submenu);
                     
                 },"setSubMenu1");
                 submenu.style.opacity = "0";
             }, 100);
         }
-    }        
+    }
     
     ret.showError = function(errorType, parameter)
     {
@@ -343,42 +329,6 @@ mx.Actions = (function( ret ) {
     {
         setIFrameUrl(url);
     }
-
-    ret.openMenuById = function(event,subGroupUId)
-    {
-        [mainGroupId,subGroupId] = subGroupUId.split("-");
-        menu = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId);
-        mx.Actions.openMenu(menu,event);
-    
-    };
-    ret.openMenu = function(subGroup,event)
-    {       
-        let entries = subGroup.getEntries();
-        if( entries.length == 1 && entries[0].getContentType() == "url" )
-        {
-            mx.Actions.openEntryById(event,subGroup.getEntries()[0].getUId())
-            
-            if( visualisationType != "desktop" ) menuPanel.close();
-        }
-        else
-        {
-            setTitle(subGroup.getTitle());
-
-            if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
-            {
-                mx.Menu.buildContentSubMenu( subGroup, setMenuEntries); // prepare menu content
-                
-                showMenuContent(); // show menu content
-            
-                mx.History.addMenu(subGroup);
-            }
-
-            mx.Menu.activateMenu(subGroup);
-            
-            if( visualisationType != "desktop" && subGroup.getMenuEntries().length == 0 ) menuPanel.close();
-        }
-
-    };
 
     ret.openEntryById = function(event,entryUId)
     {
@@ -411,11 +361,44 @@ mx.Actions = (function( ret ) {
         if( visualisationType != "desktop" ) menuPanel.close();
     };
 
+    ret.openMenuById = function(event,subGroupUId)
+    {
+        [mainGroupId,subGroupId] = subGroupUId.split("-");
+        menu = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId);
+        mx.Actions.openMenu(menu,event);
+    
+    };
+    ret.openMenu = function(subGroup,event)
+    {       
+        let entries = subGroup.getEntries();
+        if( entries.length == 1 && entries[0].getContentType() == "url" )
+        {
+            mx.Actions.openEntryById(event,subGroup.getEntries()[0].getUId())
+            
+            if( visualisationType != "desktop" ) menuPanel.close();
+        }
+        else
+        {
+            if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
+            {
+                let content = mx.Menu.buildContentSubMenu( subGroup); // prepare menu content
+                
+                showMenuContent(content, subGroup.getTitle());
+            
+                mx.History.addMenu(subGroup);
+            }
+
+            // should always be called to expand/collapse submenu
+            mx.Menu.activateMenu(subGroup);
+            
+            if( visualisationType != "desktop" && subGroup.getMenuEntries().length == 0 ) menuPanel.close();
+        }
+
+    };
+
     ret.openHome = function(event)
     {
         var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
-        
-        setTitle(subGroup.getTitle());
         
         var isActive = ( mx.History.getActiveNavigation() === subGroup );
         
@@ -433,25 +416,23 @@ mx.Actions = (function( ret ) {
         else if(h >  12) prefix = mx.I18N.get('Good Afternoon');
         else prefix = mx.I18N.get('Good Morning');
 
-        message = '<div class="service home">';
-        message += '<div class="time">' + time + '</div>';
-        message += '<div class="slogan">' + prefix + ', ' + mx.User.name + '.</div>';
-        message += '<div class="bottom"><div class="image"><div class="imageCopyright">' + mx.MainImage.getCopyright() + '</div><div class="imageTitle">' + mx.MainImage.getTitle() + '</div></div></div>';
-        message += '</div>';
+        content = '<div class="service home">';
+        content += '<div class="time">' + time + '</div>';
+        content += '<div class="slogan">' + prefix + ', ' + mx.User.name + '.</div>';
+        content += '<div class="bottom"><div class="image"><div class="imageCopyright">' + mx.MainImage.getCopyright() + '</div><div class="imageTitle">' + mx.MainImage.getTitle() + '</div></div></div>';
+        content += '</div>';
 
-        if( !isActive )
+        if( !isActive || isIFrameVisible() )
         {
-            mx.Menu.activateMenu(null); // colapse open submenu
-            
-            setMenuEntries(message,[]); // prepare home content
-
-            showMenuContent(); // show menu content
+            showMenuContent(content, subGroup.getTitle());
             
             mx.History.addMenu(subGroup);
+
+            mx.Menu.activateMenu(null); // collapse open submenu
         }
         else
         {
-            mx.$('#content #submenu').innerHTML = message;
+            mx.$('#content #submenu').innerHTML = content;
         }
 
         if( !isActive ) 

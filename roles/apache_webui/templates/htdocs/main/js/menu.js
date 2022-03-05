@@ -278,7 +278,7 @@ mx.Menu = (function( ret ) {
         }
     }
         
-    ret.buildContentSubMenu = function(subGroup, callback)
+    ret.buildContentSubMenu = function(subGroup)
     {
         let entries = [];
         let callbacks = [];
@@ -324,7 +324,7 @@ mx.Menu = (function( ret ) {
         
         if( hasGroups ) entries.push('</div>')
 
-        callback(entries.join(""),callbacks);
+        return entries.join("");
     };
     
     ret.activateMenu = function(entry)
