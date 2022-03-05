@@ -549,6 +549,7 @@ if( !Auth::hasGroup("admin") )
                 let lastIncludesAll = true;
                 function selectionHandler(event)
                 {
+                    //console.log(event);
                     let values = autocomplete.getSelectedValues();
                     values = [...values];
                     
@@ -564,7 +565,7 @@ if( !Auth::hasGroup("admin") )
                                     if( value != "all" )
                                     {
                                         autocomplete.removeValueFromSelection(value);
-                                        console.log(value);
+                                        //console.log(value);
                                     }
                                 }
                                 confirmField.checked = true;
@@ -585,6 +586,10 @@ if( !Auth::hasGroup("admin") )
                     }
                     else
                     {
+                        if( !event["detail"]["added"] && event["detail"]["value"] == "all" )
+                        {
+                            confirmField.checked = false;
+                        }
                         confirmField.disabled = false;
                     }
                     //if( autocomplete.getSelectedValues().length>0 ) confirmField.checked = false;
