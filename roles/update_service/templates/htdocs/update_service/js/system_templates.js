@@ -237,10 +237,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let update = changed_data["system_updates"][0];
             let has_current = update["current"] != null;
             
-            detailsMsg += "<div>" + mx.I18N.get("Name") + "</div>";
-            if( has_current ) detailsMsg += "<div>" + mx.I18N.get("Current") + "</div>";
-            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("Update") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("Arch") + "</div>";
+            detailsMsg += "<div>" + mx.I18N.get("Name","table") + "</div>";
+            if( has_current ) detailsMsg += "<div>" + mx.I18N.get("Current","table") + "</div>";
+            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("Update","table") + "</div>";
+            detailsMsg += "<div>" + mx.I18N.get("Arch","table") + "</div>";
             detailsMsg += "</div>";
             
             for( index in changed_data["system_updates"] )
@@ -282,8 +282,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
-            detailsMsg += "<div>" + mx.I18N.get("Flag") + "</div>";
-            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("File") + "</div>";
+            detailsMsg += "<div>" + mx.I18N.get("Flag","table") + "</div>";
+            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("File","table") + "</div>";
             detailsMsg += "</div>";
             for( index in changed_data["smartserver_changes"] )
             {

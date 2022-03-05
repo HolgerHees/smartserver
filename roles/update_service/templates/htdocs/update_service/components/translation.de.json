@@ -7,13 +7,12 @@
     "Service is currently not available": "Service ist aktuell nicht verfügbar",
     "Service is restarting": "Service wir neu gestartet",
 
-    "Updates": "Aktualisierungen",
+    "Update": "Aktualisierung",
     "Job details": "Job details",
     "Software": "Software",
     
     "Status": "Status",
     "Details": "Details",
-
     
     "Daemon was updated and needs to restart": "Daemon wurde aktualisiert und muss neu gestartet werden",
     "Restart daemon": "Daemon neu starten",
@@ -144,15 +143,7 @@
     "Everything up to date": "Alles auf dem neuesten Stand",
 
     "Install": "Installieren",
-
-    "Name": "Name",
-    "Current": "Aktuell",
-    "Update": "Update",
-    "Arch": "Arch",
-    
-    "Flag": "Flag",
-    "File": "Datei",    
-    
+  
     "system": "System",
     "smartserver": "Smartserver",
     "Install all": "Alles installieren",
@@ -179,5 +170,14 @@
     "Start initial run": "Starte initiale Überprüfung",
     "Software check": "Versions Überprüfung",
     "{1} is running since {2} {3}": "{1} läuft seit {2} {3}"
+  },
+  "table": {
+    "Name": "Name",
+    "Current": "Aktuell",
+    "Update": "Update",
+    "Arch": "Arch",
+    
+    "Flag": "Flag",
+    "File": "Datei"    
   }
 }

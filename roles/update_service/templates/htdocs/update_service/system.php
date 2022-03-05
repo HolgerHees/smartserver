@@ -701,7 +701,7 @@ if( !Auth::hasGroup("admin") )
 </script>
 </head>
 <body class="system">
-<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer", mx.I18N.get("Updates")); } );</script>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer", mx.I18N.get("Update")); } );</script>
 <div class="widget summery">
     <div class="action" id="updateWorkflow"></div>
     <div class="action"><div class="info" id="lastUpdateDateFormatted"></div><div class="buttons"><div class="form button exclusive" id="searchUpdates" onclick="mx.UNCore.actionRefreshUpdateState(this)" data-i18n="Check for updates"></div></div></div>

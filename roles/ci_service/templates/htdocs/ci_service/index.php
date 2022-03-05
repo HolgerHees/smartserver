@@ -36,7 +36,7 @@ mx.OnDocReady.push( initPage );
 </script>
 </head>
 <body>
-<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer-800", "CI Tests"); } );</script>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer-800", "CI Service"); } );</script>
 <div class="form table logfileBox">
 <?php
 $jobs = Job::getJobs($log_folder);
