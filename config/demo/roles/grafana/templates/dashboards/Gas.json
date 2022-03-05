@@ -25,7 +25,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -56,16 +59,7 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "WeatherStation_Temperature.mean"
-        },
-        {
-          "alias": "Aussentemperatur",
-          "fill": 0,
-          "yaxis": 2
-        }
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -87,10 +81,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Gas_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Gas_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -160,7 +154,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 2,
       "fill": 1,
       "gridPos": {
@@ -191,16 +188,7 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "WeatherStation_Temperature.mean"
-        },
-        {
-          "alias": "Aussentemperatur",
-          "fill": 0,
-          "yaxis": 2
-        }
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -222,10 +210,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Gas_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Gas_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -293,7 +281,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 2,
       "fill": 1,
       "gridPos": {
@@ -345,7 +336,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Gas_Current_Consumption",
+          "measurement": "pGF_Utilityroom_Gas_Current_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -360,7 +351,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -415,7 +406,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -447,16 +441,7 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "WeatherStation_Temperature.mean"
-        },
-        {
-          "alias": "Aussentemperatur",
-          "fill": 0,
-          "yaxis": 2
-        }
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -478,10 +463,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Gas_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Gas_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -552,7 +537,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 2,
       "fill": 1,
       "gridPos": {
@@ -584,16 +572,7 @@
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "WeatherStation_Temperature.mean"
-        },
-        {
-          "alias": "Aussentemperatur",
-          "fill": 0,
-          "yaxis": 2
-        }
-      ],
+      "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -615,10 +594,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Gas_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Gas_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Gas_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -686,7 +665,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 2,
       "fill": 1,
       "gridPos": {
@@ -737,7 +719,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Gas_Current_Consumption",
+          "measurement": "pGF_Utilityroom_Gas_Current_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -752,7 +734,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],

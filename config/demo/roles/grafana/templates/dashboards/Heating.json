@@ -22,7 +22,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 1,
       "fieldConfig": {
         "defaults": {
@@ -85,7 +88,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Outdoor",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Outdoor",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -100,7 +103,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -122,7 +125,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "WeatherStation_Temperature",
+          "measurement": "pOutdoor_WeatherStation_Temperature",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -137,7 +140,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -192,7 +195,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 1,
       "fieldConfig": {
         "defaults": {
@@ -255,7 +261,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Livingroom",
+          "measurement": "pGF_Livingroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -270,7 +276,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -293,7 +299,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Bedroom",
+          "measurement": "pFF_Bedroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -308,7 +314,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -363,7 +369,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -424,7 +433,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Power",
+          "measurement": "pGF_Utilityroom_Heating_Power",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -439,7 +448,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -492,7 +501,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -553,7 +565,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Outdoor",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Outdoor",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -568,7 +580,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -591,7 +603,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Outdoor_Subdued",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Outdoor_Subdued",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -606,7 +618,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -629,7 +641,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Offset_Target",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Offset_Target",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -644,7 +656,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -667,7 +679,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Offset",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Offset",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -682,7 +694,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -705,7 +717,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Wather_Storage",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Wather_Storage",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "E",
@@ -720,7 +732,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -743,7 +755,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Pipe_Out",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Pipe_Out",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "F",
@@ -758,7 +770,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -781,7 +793,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Pipe_In",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Pipe_In",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "G",
@@ -796,7 +808,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -851,7 +863,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -912,7 +927,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Circuit_Pump_Speed",
+          "measurement": "pGF_Utilityroom_Heating_Circuit_Pump_Speed",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -927,7 +942,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -981,7 +996,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fieldConfig": {
         "defaults": {
@@ -1044,10 +1062,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Starts_Current_Daily",
+          "measurement": "pGF_Utilityroom_Heating_Burner_Starts_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Starts_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Heating_Burner_Starts_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1116,7 +1134,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fieldConfig": {
         "defaults": {
@@ -1179,10 +1200,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Starts_Current_Daily",
+          "measurement": "pGF_Utilityroom_Heating_Burner_Starts_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Starts_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Heating_Burner_Starts_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1251,7 +1272,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fieldConfig": {
         "defaults": {
@@ -1314,10 +1338,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Hours_Current_Daily",
+          "measurement": "pGF_Utilityroom_Heating_Burner_Hours_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Hours_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Heating_Burner_Hours_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1386,7 +1410,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fieldConfig": {
         "defaults": {
@@ -1449,10 +1476,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Burner_Hours_Current_Daily",
+          "measurement": "pGF_Utilityroom_Heating_Burner_Hours_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Burner_Hours_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Heating_Burner_Hours_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",

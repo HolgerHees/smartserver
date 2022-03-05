@@ -8,25 +8,35 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 1,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "links": []
         },
         "overrides": []
       },
@@ -55,9 +65,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "8.3.3",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -83,7 +94,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Livingroom",
+          "measurement": "pGF_Livingroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "F",
@@ -98,7 +109,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -121,7 +132,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Boxroom",
+          "measurement": "pGF_Boxroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -136,7 +147,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -159,7 +170,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Floor",
+          "measurement": "pGF_Corridor_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -174,7 +185,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -197,7 +208,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_GuestWC",
+          "measurement": "pGF_Guesttoilet_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -212,7 +223,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -235,7 +246,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Guestroom",
+          "measurement": "pGF_Guestroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "E",
@@ -250,7 +261,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -273,7 +284,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Utilityroom",
+          "measurement": "pGF_Utilityroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "G",
@@ -288,7 +299,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -305,12 +316,12 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_FF_Garage",
+          "measurement": "pGF_Garage_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -325,7 +336,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -333,9 +344,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Erdgeschoss Temperatur",
       "tooltip": {
         "shared": true,
@@ -344,9 +353,7 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
@@ -354,25 +361,18 @@
         {
           "$$hashKey": "object:772",
           "format": "celsius",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:773",
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -380,10 +380,13 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "links": []
         },
         "overrides": []
       },
@@ -412,9 +415,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "8.3.3",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -440,7 +444,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_Livingroom",
+          "measurement": "pGF_Livingroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "F",
@@ -455,7 +459,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -478,7 +482,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_Boxroom",
+          "measurement": "pGF_Boxroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -493,7 +497,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -516,7 +520,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_Floor",
+          "measurement": "pGF_Corridor_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -531,7 +535,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -554,7 +558,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_GuestWC",
+          "measurement": "pGF_Guesttoilet_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -569,7 +573,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -592,7 +596,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_Guestroom",
+          "measurement": "pGF_Guestroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "E",
@@ -607,7 +611,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -630,7 +634,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_Utilityroom",
+          "measurement": "pGF_Utilityroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "G",
@@ -645,7 +649,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -662,12 +666,12 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_FF_Garage",
+          "measurement": "pGF_Garage_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -682,7 +686,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -690,9 +694,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Erdgeschoss Feuchtigkeit",
       "tooltip": {
         "shared": true,
@@ -701,9 +703,7 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
@@ -711,25 +711,18 @@
         {
           "$$hashKey": "object:1057",
           "format": "percent",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:1058",
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -737,11 +730,14 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 1,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "links": []
         },
         "overrides": []
       },
@@ -770,9 +766,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "8.3.3",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -798,7 +795,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Bedroom",
+          "measurement": "pFF_Bedroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "F",
@@ -813,7 +810,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -836,7 +833,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Dressingroom",
+          "measurement": "pFF_Dressingroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "E",
@@ -851,7 +848,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -874,7 +871,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Child1",
+          "measurement": "pFF_Child1_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -889,7 +886,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -912,7 +909,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Child2",
+          "measurement": "pFF_Child2_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -927,7 +924,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -950,7 +947,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Bathroom",
+          "measurement": "pFF_Bathroom_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -965,7 +962,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -988,7 +985,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Floor",
+          "measurement": "pFF_Corridor_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "G",
@@ -1003,7 +1000,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1026,7 +1023,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Temperature_SF_Attic",
+          "measurement": "pFF_Attic_Air_Sensor_Temperature_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -1041,7 +1038,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1049,9 +1046,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Obergeschoss Temperatur",
       "tooltip": {
         "shared": true,
@@ -1060,33 +1055,24 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "celsius",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -1094,10 +1080,13 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "links": []
         },
         "overrides": []
       },
@@ -1126,9 +1115,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "8.3.3",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1154,7 +1144,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Bedroom",
+          "measurement": "pFF_Bedroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "F",
@@ -1169,7 +1159,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1192,7 +1182,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Dressingroom",
+          "measurement": "pFF_Dressingroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "E",
@@ -1207,7 +1197,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1230,7 +1220,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Child1",
+          "measurement": "pFF_Child1_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -1245,7 +1235,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1268,7 +1258,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Child2",
+          "measurement": "pFF_Child2_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -1283,7 +1273,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1306,7 +1296,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Bathroom",
+          "measurement": "pFF_Bathroom_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -1321,7 +1311,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1344,7 +1334,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Floor",
+          "measurement": "pFF_Corridor_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "G",
@@ -1359,7 +1349,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1382,7 +1372,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Humidity_SF_Attic",
+          "measurement": "pFF_Attic_Air_Sensor_Humidity_Value",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -1397,7 +1387,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1405,9 +1395,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Obergeschoss Feuchtigkeit",
       "tooltip": {
         "shared": true,
@@ -1416,45 +1404,284 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "percent",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
+      "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 8,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.3.3",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Abstellkammer",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "pGF_Boxroom_Air_Sensor_CO2_Value",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "max"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Erdgeschoss CO2",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:772",
+          "format": "ppm",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:773",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
+      "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 9,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.3.3",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Abstellkammer",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "pGF_Dressingroom_Air_Sensor_CO2_Value",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "max"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "Obergeschoss CO2",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "mode": "time",
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:772",
+          "format": "ppm",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:773",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
       }
     }
   ],
   "refresh": false,
-  "schemaVersion": 25,
+  "schemaVersion": 34,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-1y",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {
@@ -1485,5 +1712,6 @@
   "timezone": "",
   "title": "Temperaturen & Feuchtigkeit",
   "uid": "temperatures",
-  "version": 2
+  "version": 6,
+  "weekStart": ""
 }

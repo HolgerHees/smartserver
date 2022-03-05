@@ -23,7 +23,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -77,10 +80,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Solar_Power_Current_Daily",
+          "measurement": "pGF_Utilityroom_Heating_Solar_Power_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Solar_Power_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Heating_Solar_Power_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -147,7 +150,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -201,10 +207,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Solar_Power_Current_Daily",
+          "measurement": "pGF_Utilityroom_Heating_Solar_Power_Current_Daily",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Heating_Solar_Power_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Heating_Solar_Power_Current_Daily\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -271,7 +277,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -324,7 +333,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Solar_Power_Current5Min",
+          "measurement": "pGF_Utilityroom_Heating_Solar_Power_Current5Min",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -339,7 +348,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -392,7 +401,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fill": 1,
       "fillGradient": 0,
@@ -446,7 +458,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Solar_Pump_State",
+          "measurement": "pGF_Utilityroom_Heating_Solar_Pump_State",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -461,7 +473,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -515,7 +527,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
@@ -567,7 +582,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Wather_Storage",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Wather_Storage",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -582,7 +597,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -605,7 +620,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Solar_Collector",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Solar_Collector",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -620,7 +635,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -643,7 +658,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Heating_Temperature_Solar_Storage",
+          "measurement": "pGF_Utilityroom_Heating_Temperature_Solar_Storage",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -658,7 +673,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],

@@ -23,7 +23,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -75,10 +78,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -146,7 +149,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -199,10 +205,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -270,7 +276,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -323,10 +332,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -394,7 +403,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -447,10 +459,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Supply\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -518,7 +530,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -570,10 +585,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -641,7 +656,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -694,10 +712,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -765,7 +783,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -818,10 +839,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -889,7 +910,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -943,10 +967,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Demand\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1014,7 +1038,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -1066,10 +1093,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1107,7 +1134,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Garage_Solar_Inverter_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1121,7 +1148,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -1175,7 +1202,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -1228,10 +1258,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1269,7 +1299,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Garage_Solar_Inverter_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1283,7 +1313,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -1337,7 +1367,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fill": 1,
       "gridPos": {
@@ -1387,7 +1420,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -1402,7 +1435,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
@@ -1455,7 +1488,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -1508,10 +1544,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1549,7 +1585,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Garage_Solar_Inverter_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1563,7 +1599,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -1617,7 +1653,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": null,
       "fill": 1,
       "gridPos": {
@@ -1671,10 +1710,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Daily_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Daily_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Utilityroom_Electricity_Current_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -1712,7 +1751,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"Solar_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
+          "query": "SELECT last(\"value\") FROM \"pGF_Garage_Solar_Inverter_Daily_Consumption\" WHERE $timeFilter GROUP BY time(1d) fill(none) tz('Europe/Berlin')",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -1726,7 +1765,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -1780,7 +1819,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "InfluxDB",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "openhab_influxdb"
+      },
       "decimals": 0,
       "fill": 1,
       "gridPos": {
@@ -1831,7 +1873,7 @@
               "type": "fill"
             }
           ],
-          "measurement": "Electricity_Current_Consumption",
+          "measurement": "pGF_Utilityroom_Electricity_Current_Consumption",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -1846,7 +1888,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "max"
               }
             ]
           ],
