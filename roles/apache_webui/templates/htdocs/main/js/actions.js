@@ -258,13 +258,25 @@ mx.Actions = (function( ret ) {
         }
     }
 
-    function _fadeInMenu(submenu)
+    function _fadeInMenu(submenu, callbacks)
     {
         submenu.style.transition = "opacity 200ms linear";
-        window.setTimeout( function(){submenu.style.opacity = "";},0);
+        window.setTimeout( function(){
+            mx.Core.waitForTransitionEnd(submenu,function()
+            {
+                if( callbacks.length > 0 ) 
+                {
+                    callbacks.forEach(function(callback)
+                    {
+                        callback();
+                    });
+                }
+            },"setSubMenu2");
+            submenu.style.opacity = "";
+        },0);
     }
 
-    function showMenuContent(content, title)
+    function showMenuContent(content, callbacks, title)
     {
         setTitle(title);
         
@@ -291,7 +303,7 @@ mx.Actions = (function( ret ) {
         {
             submenu.style.opacity = "0";
             submenu.innerHTML = content;
-            _fadeInMenu(submenu);
+            _fadeInMenu(submenu, callbacks);
         }
         else
         {
@@ -301,7 +313,7 @@ mx.Actions = (function( ret ) {
                 mx.Core.waitForTransitionEnd(submenu,function()
                 {
                     submenu.innerHTML = content;
-                    _fadeInMenu(submenu);
+                    _fadeInMenu(submenu, callbacks);
                     
                 },"setSubMenu1");
                 submenu.style.opacity = "0";
@@ -381,9 +393,9 @@ mx.Actions = (function( ret ) {
         {
             if( mx.History.getActiveNavigation() !== subGroup || isIFrameVisible() )
             {
-                let content = mx.Menu.buildContentSubMenu( subGroup); // prepare menu content
+                let data = mx.Menu.buildContentSubMenu( subGroup); // prepare menu content
                 
-                showMenuContent(content, subGroup.getTitle());
+                showMenuContent(data['content'], data['callbacks'], subGroup.getTitle());
             
                 mx.History.addMenu(subGroup);
             }
@@ -424,7 +436,7 @@ mx.Actions = (function( ret ) {
 
         if( !isActive || isIFrameVisible() )
         {
-            showMenuContent(content, subGroup.getTitle());
+            showMenuContent( content, [], subGroup.getTitle());
             
             mx.History.addMenu(subGroup);
 

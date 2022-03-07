@@ -324,7 +324,7 @@ mx.Menu = (function( ret ) {
         
         if( hasGroups ) entries.push('</div>')
 
-        return entries.join("");
+        return { 'content': entries.join(""), 'callbacks': callbacks };
     };
     
     ret.activateMenu = function(entry)
