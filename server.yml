@@ -133,7 +133,7 @@
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
     - { import_role: { name: device_ping }, tags: [ 'device_ping' ] }                            # ping mobile device service
 
-    - { import_role: { name: cron_backup_rsync }, tags: [ 'cron_backup_rsync' ] }                # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
+    - { import_role: { name: rsync_backup }, tags: [ 'rsync_backup' ] }                          # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 

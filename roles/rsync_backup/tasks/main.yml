@@ -28,7 +28,7 @@
   vars:
     name: "DataDisk RSync Backup"
     cmd: "systemd-run -p CPUQuota=\"30\\%\" -p IOReadBandwidthMax=\"{{data_path}} 10M\" -p IOReadIOPSMax=\"{{data_path}} 80\" -p IOWriteBandwidthMax=\"{{data_path}} 10M\" -p IOWriteIOPSMax=\"{{data_path}} 80\" -p IOReadBandwidthMax=\"{{backup_path}}dataDisk/ 10M\" -p IOReadIOPSMax=\"{{backup_path}}dataDisk/ 80\" -p IOWriteBandwidthMax=\"{{backup_path}}dataDisk/ 10M\" -p IOWriteIOPSMax=\"{{backup_path}}dataDisk/ 80\" --quiet --scope /usr/bin/rsync --quiet -av --one-file-system --delete {{data_path}} {{backup_path}}dataDisk/ --exclude=var --exclude=tmp"
-    file: "ansible_cron_backup_rsync"
+    file: "ansible_rsync_backup"
     hour: "5"
     minute: "0"
   import_tasks: roles/cron/tasks/add_cronjob.yml
