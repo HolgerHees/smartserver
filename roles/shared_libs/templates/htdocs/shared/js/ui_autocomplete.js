@@ -94,6 +94,9 @@ mx.Autocomplete = (function( ret ) {
 
     function selectValue(options, value, element)
     {
+        options.elements.input.value = "";
+        options.elements.input.focus();
+        
         addValueToSelection(options,value);
         
         options.selected_values.push(value);
@@ -195,22 +198,20 @@ mx.Autocomplete = (function( ret ) {
     function onKeyUp(event, options)
     {
         //console.log(event.keyCode);
-        if( event.keyCode == 38 || event.keyCode == 40 || event.keyCode == 13 )
+        if( event.keyCode == 38 || event.keyCode == 40 || event.keyCode == 13 || event.keyCode == 27 )
         {
             options.isUpKeyDown = false;
             options.isDownKeyDown = false;
             return;
         }
-        else 
-        {
-            buildValues(options,false);
-        }
+
+        buildValues(options,false);
     }
     
     function onKeyDown(event, options)
     {
         //console.log(event.keyCode);
-        if( event.keyCode == 38 )
+        if( event.keyCode == 38 ) // cursor up
         {
             options.isUpKeyDown = true;
             function longPressedKeyHandler(){ 
@@ -226,7 +227,7 @@ mx.Autocomplete = (function( ret ) {
             options.activeIndex -= 1;
             hightlightRow(options,true);
         }
-        else if( event.keyCode == 40 )
+        else if( event.keyCode == 40 ) // cursor down
         {
             options.isDownKeyDown = true;
             function longPressedKeyHandler(){ 
@@ -242,22 +243,17 @@ mx.Autocomplete = (function( ret ) {
             options.activeIndex += 1;
             hightlightRow(options,false);
         }
-        else if( event.keyCode == 13 )
+        else if( event.keyCode == 13 ) // enter
         {
-            selectActiveRow(options);
+            var element = options.visibleRows[options.activeIndex];
+            var value = element.dataset.value;
+            selectValue(options, value, element);
         }
-        else if(event.keyCode == 27 )
+        else if(event.keyCode == 27 ) // esc
         {
             hide(options);
             options.elements.input.blur();
         }
-    }
-
-    function selectActiveRow(options)
-    {
-        var element = options.visibleRows[options.activeIndex];
-        var value = element.dataset.value;
-        selectValue(options, value, element);
     }
     
     function hightlightRow(options,is_up)
