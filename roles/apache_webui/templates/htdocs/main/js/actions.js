@@ -66,7 +66,7 @@ mx.Actions = (function( ret ) {
         
     }
     
-    function iFrameListenerHandler(event)
+    function iFrameMessageEventHandler(event)
     {
         if( 'type' in event.data && [ 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
         {
@@ -87,7 +87,7 @@ mx.Actions = (function( ret ) {
         //console.log("iFrameListenerHandler");
     }
     
-    function iFrameLoadHandler(e)
+    function iFrameLoadEventHandler(e)
     {
         try
         {
@@ -123,21 +123,27 @@ mx.Actions = (function( ret ) {
         hideError();
         showProgress();
         
-        iframeElement.setAttribute('src', url );
-
         // is needed to show iframe content in case of a loading error.
         // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
         iframeLoadingTimer = setTimeout(function(){ 
             try
             {
                 let url = iframeElement.contentWindow.location.href;
-                loadHandler(url,"fallback");
+                if( url != "about:blank" )
+                {
+                    loadHandler(url,"fallback");
+                    return;
+                }
             }
-            catch {
-                showError("loading"); 
+            catch (e) {
+                //console.log(e);
             }
+
+            showError("loading"); 
         },10000);
         
+        iframeElement.setAttribute('src', url );
+
         hideMenuContent();
         //}
     }
@@ -145,6 +151,39 @@ mx.Actions = (function( ret ) {
     function removeIFrameUrl()
     {
         iframeElement.removeAttribute('src');
+    }
+       
+    function showIFrame()
+    {
+        hideError();
+        hideMenuContent();
+        hideProgress();
+
+        clearIFrameTimer();
+
+        if( iframeElement.style.display != "" )
+        {
+            //console.log("showIFrame");
+          
+            iframeElement.style.display = "";
+            window.setTimeout(function(){ iframeElement.style.opacity = 1; }, 0);
+        }
+    }
+    
+    function hideIFrame(immediately)
+    {
+        clearIFrameTimer();
+            
+        if( iframeElement.style.display == "" )
+        {
+            //console.log("hideIFrame");
+          
+            if( immediately ) iframeElement.style.display = "none";
+            else mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"hideIFrame");
+            iframeElement.style.opacity = "";
+        }
+        
+        //hideProgress();
     }
     
     function showError(errorType, parameter)
@@ -184,40 +223,7 @@ mx.Actions = (function( ret ) {
             errorElement.style.display = "none";
         }
     }
-    
-    function showIFrame()
-    {
-        hideError();
-        hideMenuContent();
-        hideProgress();
 
-        if( iframeElement.style.display != "" )
-        {
-            //console.log("showIFrame");
-          
-            clearIFrameTimer();
-
-            iframeElement.style.display = "";
-            window.setTimeout(function(){ iframeElement.style.opacity = 1; }, 0);
-        }
-    }
-    
-    function hideIFrame(immediately)
-    {
-        clearIFrameTimer();
-            
-        if( iframeElement.style.display == "" )
-        {
-            //console.log("hideIFrame");
-          
-            if( immediately ) iframeElement.style.display = "none";
-            else mx.Core.waitForTransitionEnd(iframeElement,function(){ iframeElement.style.display = "none"; },"hideIFrame");
-            iframeElement.style.opacity = "";
-        }
-        
-        //hideProgress();
-    }
-    
     function showProgress()
     {
         if( progressElement.style.display != "" )
@@ -475,9 +481,9 @@ mx.Actions = (function( ret ) {
         progressElement = mx.$("#content #embedProgress");
 
         iframeElement = mx.$("#content #embed");
-        iframeElement.addEventListener('load', iFrameLoadHandler);                
+        iframeElement.addEventListener('load', iFrameLoadEventHandler);                
         
-        window.addEventListener("message", iFrameListenerHandler);
+        window.addEventListener("message", iFrameMessageEventHandler);
     }
 
     return ret;
