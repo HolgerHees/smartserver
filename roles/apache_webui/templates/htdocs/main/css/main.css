@@ -439,6 +439,14 @@ body.phone #menu .header {
       background-color: var(--menu-hover-bg);
   }
 }
+#menu .separator {
+    height: 1px;
+    border-bottom: 2px dotted var(--menu-text);
+    opacity: 0.2;
+    width: 16px;
+    margin-top: 5px;
+    margin-left: 62px;
+}
 #menu .service.button:active {
     background-color: var(--menu-active-bg);
 }

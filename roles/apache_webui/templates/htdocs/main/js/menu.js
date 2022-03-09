@@ -247,7 +247,7 @@ mx.Menu = (function( ret ) {
     
     function buildSubMenu(element, subGroup)
     {
-        //let currentIndex = 1;
+        let currentIndex = -1;
         let submenuButtonTemplate = document.createElement("div");
         submenuButtonTemplate.classList.add("service");
         submenuButtonTemplate.classList.add("button");
@@ -259,15 +259,18 @@ mx.Menu = (function( ret ) {
         {
             let entry = subGroup.getEntries()[entryKey];
             
-            /*let index = Math.floor(entry.getOrder()/100);
+            let index = Math.floor(entry.getOrder()/100);
             
             if( currentIndex != index )
             {
-                let separator = document.createElement("div");
-                separator.classList.add("separator");
-                element.appendChild(separator);
+                if( currentIndex != -1 )
+                {
+                    let separator = document.createElement("div");
+                    separator.classList.add("separator");
+                    element.appendChild(separator);
+                }
                 currentIndex = index;
-            }*/
+            }
             
             let submenuButton = submenuButtonTemplate.cloneNode(true);
             submenuButton.setAttribute("id", entry.getUId() );
