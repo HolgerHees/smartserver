@@ -61,9 +61,10 @@ class CmdBuilder:
         return self.buildCmdBlock(username, self.cmd_type_check_type_mapping[check_type], cmds)
 
     def buildSystemRebootCmdBlock(self, username):
-        cmd = self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None)
-        # no state refresh needed, outdated processes and reboot state is loaded during service startup
-        return self.buildCmdBlock(username, "system_reboot", [cmd])
+        cmds = []
+        cmds.append( self.buildCmd(self.cmd_request_reboot, interaction=None,cwd=None,env=None) )
+        cmds.append( self.buildProcessWatcherFunction(False) ) # needs to be refreshed, because sometimes reboot state is still true right after reboot
+        return self.buildCmdBlock(username, "system_reboot", cmds)
 
     def buildSystemRebootCmdBlockIfNecessary(self, username,params):
         if self.system_update_watcher.isRebootNeeded():
@@ -71,9 +72,9 @@ class CmdBuilder:
         return None
 
     def buildRestartDaemonCmdBlock(self, username):
-        cmd_daemon_restart = "{} update_service".format(self.cmd_service_restart)
-        cmd = self.buildCmd(cmd_daemon_restart, interaction=None,cwd=None,env=None)
-        return self.buildCmdBlock(username, "daemon_restart", [cmd])
+        cmds = []
+        cmds.append( self.buildCmd("{} update_service".format(self.cmd_service_restart), interaction=None,cwd=None,env=None) )
+        return self.buildCmdBlock(username, "daemon_restart", cmds)
 
     def buildRestartDaemonCmdBlockIfNecessary(self, username,params):
         is_update_service_oudated = self.process_watcher.isUpdateServiceOutdated()
@@ -83,12 +84,10 @@ class CmdBuilder:
         return None
 
     def buildRestartServiceCmdBlock(self, username, services):
-        self.cmd_service_restart_with_services = "{} {}".format(self.cmd_service_restart, services.replace(","," "))
-        
-        restart_service_cmd = self.buildCmd(self.cmd_service_restart_with_services, interaction=None,cwd=None,env=None)
-        refresh_process_watcher_cmd = self.buildProcessWatcherFunction(True)
-        
-        return self.buildCmdBlock(username, "service_restart", [restart_service_cmd,refresh_process_watcher_cmd])
+        cmds = []
+        cmds.append( self.buildCmd("{} {}".format(self.cmd_service_restart, services.replace(","," ")), interaction=None,cwd=None,env=None) )
+        cmds.append( self.buildProcessWatcherFunction(True) )
+        return self.buildCmdBlock(username, "service_restart", cmds)
 
     def buildRestartServiceCmdBlockIfNecessary(self, username,params):
         outdated_services = self.process_watcher.getOutdatedServices()
@@ -102,10 +101,8 @@ class CmdBuilder:
         cmds.append( self.buildFunction("dependency_watcher.checkSmartserverRoles") )
         for cmd in self.system_update_cmds:
             cmds.append( self.buildCmd(cmd, interaction=None,cwd=None,env=None) )
-            
         cmds.append( self.buildProcessWatcherFunction(False) )
         cmds.append( self.buildSystemUpdateCheckCmd("system_update") )
-
         return self.buildCmdBlock(username, "system_update", cmds)
 
     def buildInstallSystemUpdateCmdBlockIfNecessary(self, username,params):
@@ -126,10 +123,11 @@ class CmdBuilder:
                 cmd_deploy_system = "{} --tags \"{}\"".format(cmd_deploy_system,",".join(tags)) 
             cmd_deploy_system = "{} server.yml".format(cmd_deploy_system)
 
-            cmd = self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1"})
-            post_cmd = self.buildSystemUpdateCheckCmd("deployment_update")
-            clean_cmd = self.buildCmd(self.cmd_container_cleanup, interaction=None,cwd=None,env=None)
-            return self.buildCmdBlock(username, "deployment_update", [cmd,post_cmd,clean_cmd])
+            cmds = []
+            cmds.append( self.buildCmd(cmd_deploy_system, interaction=interaction,cwd=config.deployment_directory,env={"ANSIBLE_FORCE_COLOR": "1"}) )
+            cmds.append( self.buildSystemUpdateCheckCmd("deployment_update") )
+            cmds.append( self.buildCmd(self.cmd_container_cleanup, interaction=None,cwd=None,env=None) )
+            return self.buildCmdBlock(username, "deployment_update", cmds)
         else:
             return None
 
