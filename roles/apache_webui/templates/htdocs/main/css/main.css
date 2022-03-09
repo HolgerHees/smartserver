@@ -18,8 +18,6 @@
   --dark-menu-border-color: #383a3e;
   --dark-menu-separator: #ffffff80;
 
-  --menu-text: var(--content-text);
-
   --light-embed-progress: #555;
   --dark-embed-progress: #777;
   
@@ -84,6 +82,8 @@
   --content-active-bg: var(--light-content-active-bg);
 
   --submenu-text-color: var(--light-submenu-text-color);
+
+  --menu-text: var(--content-text);
 }
 :root body.dark {
   --header-bg: var(--dark-header-bg);
