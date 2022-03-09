@@ -13,24 +13,20 @@
 
   --light-menu-headline-color: #1976D2;
   --light-menu-border-color: #1976D2;
-  --light-menu-separator: #11111140;
+  --light-menu-separator: #11111145;
   --dark-menu-headline-color: #e7e9ec;
-  --dark-menu-border-color: #383a3e;
-  --dark-menu-separator: #ffffff80;
+  --dark-menu-border-color: #54565c;
+  --dark-menu-separator: #ffffff90;
 
   --light-embed-progress: #555;
   --dark-embed-progress: #777;
   
   --light-content-nobackground-text: #111;
   --light-content-background-text: white;
-  --light-content-nobackground-info: #282828E6;
-  --light-content-background-info: #ffffffE6;
   --light-content-hover-bg: var(--bgBasedHoverColor);
   --light-content-active-bg: var(--bgBasedActiveColor);
   --dark-content-nobackground-text: #bbb;
   --dark-content-background-text: #fff;
-  --dark-content-nobackground-info: #ffffff4D;
-  --dark-content-background-info: #ffffffE6;
   --dark-content-hover-bg: var(--bgBasedHoverColor);
   --dark-content-active-bg: var(--bgBasedActiveColor);
 
@@ -76,8 +72,6 @@
   
   --content-nobackground-text: var(--light-content-nobackground-text);
   --content-background-text: var(--light-content-background-text);
-  --content-nobackground-info: var(--light-content-nobackground-info);
-  --content-background-info: var(--light-content-background-info);
   --content-hover-bg: var(--light-content-hover-bg);
   --content-active-bg: var(--light-content-active-bg);
 
@@ -383,7 +377,7 @@ body.phone #menu #logo {
 body.phone #menu .logout.form.button {
     display: none;
 }
-#menu .header {
+#menu .main .header {
     width: 100%;
     text-align: left;
     font-size: 18px;
@@ -613,7 +607,7 @@ body.nobackground #submenu {
     }
 }
 body.nobackground #submenu .service.button div:last-child {
-    color: var(--content-nobackground-info);
+    color: var(--content-nobackground-text);
 }
 #submenu .service.button > div:last-child {
     font-size: 106.25%;
