@@ -36,7 +36,7 @@ mx.Actions = (function( ret ) {
             {
                 if( entry.getType() == "entry" )
                 {
-                    mx.Menu.activateMenu(entry.getSubGroup());
+                    mx.Menu.activateMenu(entry);
                     mx.History.replaceEntry(entry,null);
                 }
                 else
