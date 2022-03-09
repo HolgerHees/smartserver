@@ -11,8 +11,24 @@
     group: root
     mode: 0750
   with_items:
+    - '{{ global_etc }}mysql'
     - '{{ global_lib }}mysql'
     - '{{backup_path}}mysql'
+
+- name: synchronize config
+  synchronize:
+    src: "templates/etc/mysql/"
+    dest: "{{ global_etc }}mysql/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=999:root"
+      - "--chmod=D750,F640"
+  notify: "restart mysql"
 
 - name: check started docker
   systemd:
@@ -35,6 +51,7 @@
     log_options:
       tag: mysql
     volumes:
+      - '{{ global_etc }}mysql:/etc/mysql:z'
       - '{{ global_lib }}mysql:/var/lib/mysql:z'
       - '{{backup_path}}mysql:/var/lib/mysql_backup:z'
     container_default_behavior: "compatibility"
