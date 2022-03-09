@@ -165,7 +165,7 @@ div.form.table > div.row > div {
 }
 .dialogLayer .box .header,
 .dialogLayer .box .body {
-    color: var(--menu-text);
+    color: var(--content-text);
 }
 .dialogLayer .box .info > div,
 .dialogLayer .box .body {

@@ -19,9 +19,6 @@
   --light-table-border: 1px solid #dadce0;
   --dark-table-border: 1px solid #8a8c90;
 
-  --light-menu-text: #111;
-  --dark-menu-text: #fff;
-  
   --light-menu-hover-bg: #337ab71F;
   --light-menu-active-bg: #337ab738;
   --dark-menu-hover-bg: #337ab733;
@@ -53,7 +50,6 @@
   --button-border: var(--light-button-border);
   --widget-border: var(--light-widget-border);
   --table-border: var(--light-table-border);
-  --menu-text: var(--light-menu-text);
   --menu-hover-bg: var(--light-menu-hover-bg);
   --menu-active-bg: var(--light-menu-active-bg);
   --content-text: var(--light-content-text);
@@ -70,7 +66,6 @@
   --button-border: var(--dark-button-border);
   --widget-border: var(--dark-widget-border);
   --table-border: var(--dark-table-border);
-  --menu-text: var(--dark-menu-text);
   --menu-hover-bg: var(--dark-menu-hover-bg);
   --menu-active-bg: var(--dark-menu-active-bg);
   --content-text: var(--dark-content-text);

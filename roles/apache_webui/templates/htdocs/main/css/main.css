@@ -13,8 +13,12 @@
 
   --light-menu-headline-color: #1976D2;
   --light-menu-border-color: #1976D2;
+  --light-menu-separator: #11111140;
   --dark-menu-headline-color: #e7e9ec;
   --dark-menu-border-color: #383a3e;
+  --dark-menu-separator: #ffffff80;
+
+  --menu-text: var(--content-text);
 
   --light-embed-progress: #555;
   --dark-embed-progress: #777;
@@ -68,6 +72,7 @@
   --menu-header-button-svg: var(--light-menu-header-button-svg);
   --menu-headline-color: var(--light-menu-headline-color);
   --menu-border-color: var(--light-menu-border-color);
+  --menu-separator-color: var(--light-menu-separator);
 
   --embed-progress: var(--light-embed-progress);
   
@@ -90,6 +95,7 @@
   --menu-header-button-svg: var(--dark-menu-header-button-svg);
   --menu-headline-color: var(--dark-menu-headline-color);
   --menu-border-color: var(--dark-menu-border-color);
+  --menu-separator-color: var(--dark-menu-separator);
 
   --embed-progress: var(--dark-embed-progress);
   
@@ -441,8 +447,7 @@ body.phone #menu .header {
 }
 #menu .separator {
     height: 1px;
-    border-bottom: 2px dotted var(--menu-text);
-    opacity: 0.2;
+    border-bottom: 2px dotted var(--menu-separator-color);
     width: 16px;
     margin-top: 5px;
     margin-left: 62px;
