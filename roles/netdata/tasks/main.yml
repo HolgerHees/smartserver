@@ -126,6 +126,8 @@
       - "--chmod=D750,F640"
       
 - name: copy config
+  vars:
+    netdata_container: no
   template:
     src: "templates/{{item}}"
     dest: "/etc/netdata/{{item}}"

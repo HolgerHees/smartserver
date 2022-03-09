@@ -162,3 +162,5 @@
     - { import_role: { name: update_service, tasks_from: confirm_roles, handlers_from: empty }, tags: [ 'always' ], when: "update_service_system_check_enabled" } # removes outdated role state files
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running
+
+    - { import_role: { name: netdata, tasks_from: main_container, handlers_from: empty }, tags: [ 'netdata_container' ] }
