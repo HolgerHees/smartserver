@@ -211,7 +211,7 @@ class CmdExecuter(watcher.Watcher):
             
         return exit_status
 
-    def finishInterruptedCmd(self, lf, msg ):
+    def logInterruptedCmd(self, lf, msg ):
         # no need for a newline for interruptable commands
         lf.write(msg)
         

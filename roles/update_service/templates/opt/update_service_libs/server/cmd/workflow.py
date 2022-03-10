@@ -16,7 +16,7 @@ MAX_DAEMON_RESTART_TIME = 30
 MAX_SYSTEM_REBOOT_TIME = 600
 
 MIN_PROCESS_INACTIVITY_TIME = 30
-MAX_STARTUP_WAITING_TIME = 300
+MAX_STARTUP_WAITING_TIME = 1200
 
 
 class CmdWorkflow: 
@@ -110,12 +110,15 @@ class CmdWorkflow:
             lf = LogFile(f)
 
             if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
+                msg = "Waiting for {}s of inactivity to proceed".format(MIN_PROCESS_INACTIVITY_TIME)
+                self.logger.info(msg)
+                self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
+
                 can_proceed = False
                 waiting_start = datetime.timestamp(datetime.now())
                 last_seen_time = waiting_start
                 last_log_time = waiting_start
                 last_cmd_type = None
-                self.logger.info("Waiting for {}s of inactivity to proceed".format(MIN_PROCESS_INACTIVITY_TIME))
                 while True:
                     now = datetime.timestamp(datetime.now())
                     inactivity_time = now - last_seen_time
@@ -131,7 +134,9 @@ class CmdWorkflow:
                         break
 
                     if waiting_time > MAX_STARTUP_WAITING_TIME:
-                        self.cmd_executer.finishInterruptedCmd(lf, "Not able to proceed due still running '{}'\n".format(last_cmd_type))
+                        msg = "Not able to proceed due still running '{}'".format(last_cmd_type)
+                        self.logger.info(msg)
+                        self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                         break
                       
                     if round(now - last_log_time) >= 15:
@@ -141,7 +146,9 @@ class CmdWorkflow:
                         else:
                             cmd_msg = ""
                       
-                        self.logger.info("Waiting since {}s for {}s of inactivity{}".format(round(waiting_time), MIN_PROCESS_INACTIVITY_TIME, cmd_msg))
+                        msg = "Waiting since {}s for {}s of inactivity{}".format(round(waiting_time), MIN_PROCESS_INACTIVITY_TIME, cmd_msg)
+                        self.logger.info(msg)
+                        self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                         
                     time.sleep(2)
             else:
@@ -151,8 +158,7 @@ class CmdWorkflow:
                 has_cmds = len(cmd_block["cmds"]) > 0
 
                 self.logger.info("{} '{}'".format( "Proceed with" if has_cmds else "Finish job", cmd_block["cmd_type"]))
-                
-                self.cmd_executer.finishInterruptedCmd(lf, "'{}' was successful\n".format(cmd_block["cmd_type"]))
+                self.cmd_executer.logInterruptedCmd(lf, "'{}' was successful\n".format(cmd_block["cmd_type"]))
             
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
                 exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if has_cmds else 0
