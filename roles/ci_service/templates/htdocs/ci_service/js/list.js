@@ -144,14 +144,7 @@ mx.CIList = (function( ret ) {
                 }
                 else 
                 {
-                    try 
-                    {
-                        updateTimer = window.top.mx.State.handleRequestError(this.status,url,updateList);
-                    }
-                    catch
-                    {
-                        updateTimer = window.setTimeout(updateList, 10000);
-                    }
+                    updateTimer = mx.Page.handleRequestError(this.status,url,updateList,10000);
                 }
             };
             

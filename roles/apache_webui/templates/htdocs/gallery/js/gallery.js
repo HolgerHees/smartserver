@@ -656,14 +656,7 @@ mx.Gallery = (function( ret ) {
             }
             else 
             {
-                try 
-                {
-                    window.top.mx.State.handleRequestError(this.status,url,updateList);
-                }
-                catch
-                {
-                    updateTimer = window.setTimeout(updateList, 60000);
-                }
+                updateTimer = mx.Page.handleRequestError(this.status,url,updateList,60000);
             }
         };
         

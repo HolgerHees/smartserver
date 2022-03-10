@@ -78,7 +78,7 @@ mx.Alarms = (function( ret ) {
                 mx.$$(buttonSelector).forEach(function(element){ element.classList.add("disabled") });
                 alarmIsWorking = false;
 
-                mx.State.handleRequestError(this.status,url,loadAlerts);
+                mx.Page.handleRequestError(this.status,url,loadAlerts);
             }
         };
         xhr.send();

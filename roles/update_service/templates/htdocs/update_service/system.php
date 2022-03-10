@@ -274,14 +274,7 @@ if( !Auth::hasGroup("admin") )
                         if( this.status != 0 && this.status != 401 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                     }
                     
-                    try 
-                    {
-                        refreshDaemonStateTimer = window.top.mx.State.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
-                    }
-                    catch
-                    {
-                        refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
-                    }
+                    refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
                 }
             };
             

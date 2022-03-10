@@ -59,6 +59,18 @@ mx.Page = (function( ret ) {
         deviceListener(callback);
     }
     
+    ret.handleRequestError = function(status,url,callback,timeout)
+    {
+        try 
+        {
+            return window.top.mx.State.handleRequestError(status,url,callback, timeout);
+        }
+        catch
+        {
+            return window.setTimeout(callback, timeout);
+        }
+    }
+    
     ret.refreshUI = function(rootElement)
     {
         const buttons = rootElement ? mx._$$(".form.button",rootElement) : mx.$$(".form.button");

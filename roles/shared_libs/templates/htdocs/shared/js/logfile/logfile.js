@@ -126,14 +126,7 @@ mx.Logfile = (function( ret ) {
                 }
                 else 
                 {
-                    try 
-                    {
-                        updateTimer = window.top.mx.State.handleRequestError(this.status,url,updateDetails);
-                    }
-                    catch
-                    {
-                        updateTimer = window.setTimeout(updateDetails,5000);
-                    }
+                    updateTimer = mx.Page.handleRequestError(this.status,url,updateDetails,5000);
                 }
             };
             xhr.send();

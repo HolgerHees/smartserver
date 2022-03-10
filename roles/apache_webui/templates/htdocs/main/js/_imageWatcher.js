@@ -32,7 +32,7 @@ mx.ImageWatcher = (function( ret ) {
             }
             else
             {
-                mx.State.handleRequestError(this.status,src,function(){refreshImage(container);});
+                mx.Page.handleRequestError(this.status,src,function(){refreshImage(container);});
             }
         };
         xhr.send();
