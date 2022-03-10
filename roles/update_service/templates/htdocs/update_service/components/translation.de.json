@@ -171,6 +171,10 @@
     "Software check": "Versions Überprüfung",
     "{1} is running since {2} {3}": "{1} läuft seit {2} {3}"
   },
+  "flags": {
+    "Warning": "Warnung",
+    "Error": "Fehler"
+  },
   "table": {
     "Name": "Name",
     "Current": "Aktuell",

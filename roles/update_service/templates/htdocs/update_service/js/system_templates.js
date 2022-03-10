@@ -362,13 +362,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let action_msg_2 = "</div>";
             
             let state_msg = mx.I18N.get(last_job["state"] == "success" ? "was successful" : last_job["state"]);
-            let color = last_job["state"] == "failed" || last_job["state"] == "crashed" ? " red" : "";
+            let prefix = last_job["state"] == "failed" || last_job["state"] == "crashed" ? "<span class=\"flag red\">" + mx.I18N.get("Error","flags") + ":</span> " : "";
             
             let last_job_sentence = mx.I18N.get(last_cmd_type_map[last_job["type"]]);
             let duration = Math.round( last_job["duration"] );
             let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": state_msg, "4": duration, "5": mx.I18N.get( duration == 1 ? "second" : "seconds" ) });
           
-            headerMsg = "<div class=\"info" + color + "\">" + msg;
+            headerMsg = "<div class=\"info\">" + prefix + msg;
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'lastRunningJobsDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";

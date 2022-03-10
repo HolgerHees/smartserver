@@ -147,23 +147,24 @@ body.system div.form.button {
 body.system div.buttons {
   white-space: nowrap;
 }
+body.system span.green,
 body.system .hint.green,
 body.system .info.green {
     color: var(--color-green);
 }
+body.system span.yellow,
 body.system .hint.yellow,
 body.system .info.yellow {
     color: var(--color-yellow);
 }
+body.system span.red,
 body.system .hint.red,
 body.system .info.red {
     color: var(--color-red);
 }
-
-
-
-
-
+body.system span.flag {
+    font-weight: bold;
+}
 
 body.system div.dialogLayer .confirmDialog {
   max-width: 350px;
