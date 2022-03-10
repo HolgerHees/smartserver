@@ -128,7 +128,7 @@ mx.Logfile = (function( ret ) {
                 {
                     try 
                     {
-                        window.top.mx.State.handleRequestError(this.status,url,updateDetails);
+                        updateTimer = window.top.mx.State.handleRequestError(this.status,url,updateDetails);
                     }
                     catch
                     {

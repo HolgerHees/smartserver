@@ -146,7 +146,7 @@ mx.CIList = (function( ret ) {
                 {
                     try 
                     {
-                        window.top.mx.State.handleRequestError(this.status,url,updateList);
+                        updateTimer = window.top.mx.State.handleRequestError(this.status,url,updateList);
                     }
                     catch
                     {
