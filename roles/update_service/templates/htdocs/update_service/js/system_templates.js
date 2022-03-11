@@ -228,7 +228,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             mx.I18N.get(i18n_main_msg).fill(updateCount)
 
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UNCore.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
             
@@ -277,7 +277,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
           
             let i18n_main_msg = plural ? "{} smartserver updates available" : "{} smartserver update available";
             
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
             detailsMsg += "<div>" + mx.I18N.get("Flag","table") + "</div>";
@@ -404,14 +404,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
     ret.getWorkflow = function(systemUpdatesCount, smartserverChangeCount, lastUpdateDate)
     {
         msg = "";
-        timeout = -1;
         
         if( systemUpdatesCount > 0 || smartserverChangeCount > 0 )
         {
             let duration = (new Date()).getTime() - lastUpdateDate.getTime();
-            
-            let isTimeout = duration > 300000;
-            if( !isTimeout ) timeout = 300000 - duration;
             
             let key = "";
             if( systemUpdatesCount + smartserverChangeCount > 1 ) 
@@ -424,18 +420,14 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( systemUpdatesCount + smartserverChangeCount );
-            if( isTimeout ) msg += "<div class=\"sub\"><span class=\"icon-info-circled yellow\"></span> " + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
-            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive";
-            if( isTimeout ) msg += " disabled blocked";
-            
-            msg += " green\" onclick=\"mx.UNCore.actionUpdateWorkflow(this)\">" + mx.I18N.get("Install all") + "</div></div>";
+            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionUpdateWorkflow(this)\">" + mx.I18N.get("Install all") + "</div></div>";
         }
         else
         {
             msg = "<div class=\"info big\">" + mx.I18N.get("Everything up to date") + "</div>";
         }
         
-        return [ msg, timeout ];
+        return msg;
     }
     
     return ret;

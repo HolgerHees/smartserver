@@ -32,16 +32,20 @@ if( !Auth::hasGroup("admin") )
         var job_cmd_type = null;
         var job_started = null;
         
+        var last_data_modified = null;
+        
+        var updateJobStarted = false;
+        
         var systemUpdatesCount = 0;
-        var smartserverChangeCount = 0;
+        var systemUpdatesHash = "";
+        var smartserverChangesCount = 0;
+        var smartserverChangesHash = "";
         
         var hasEncryptedVault = false;
         
         var refreshDaemonStateTimer = 0;
         
         var deploymentTags = [];
-        
-        var workflowTimer = 0;
         
         var dialog = null;
         
@@ -86,8 +90,8 @@ if( !Auth::hasGroup("admin") )
 
             if( changed_data.hasOwnProperty("system_updates") )
             {
-                const [ _systemUpdateCount, systemUpdateDetails, systemUpdateHeader ] = mx.UpdateServiceTemplates.getSystemUpdateDetails(last_data_modified, changed_data, lastUpdateDate);
-                systemUpdatesCount = _systemUpdateCount
+                const [ _systemUpdatesCount, systemUpdateDetails, systemUpdateHeader ] = mx.UpdateServiceTemplates.getSystemUpdateDetails(last_data_modified, changed_data, lastUpdateDate);
+                systemUpdatesCount = _systemUpdatesCount;
                 updateBehaviorChanged = true;
                 
                 mx.UpdateServiceHelper.setTableContent(systemUpdateDetails,"systemUpdateDetails",systemUpdateHeader,"systemUpdateHeader")
@@ -95,8 +99,8 @@ if( !Auth::hasGroup("admin") )
             
             if( changed_data.hasOwnProperty("smartserver_changes") )
             {
-                const [ _smartserverChangeCount, smartserverChangeDetails, smartserverChangeHeader ] = mx.UpdateServiceTemplates.getSmartserverChangeDetails(last_data_modified, changed_data, lastUpdateDate);
-                smartserverChangeCount = _smartserverChangeCount
+                const [ _smartserverChangesCount, smartserverChangeDetails, smartserverChangeHeader ] = mx.UpdateServiceTemplates.getSmartserverChangeDetails(last_data_modified, changed_data, lastUpdateDate);
+                smartserverChangesCount = _smartserverChangesCount;
                 updateBehaviorChanged = true;
 
                 mx.UpdateServiceHelper.setTableContent(smartserverChangeDetails,"smartserverChangeDetails",smartserverChangeHeader,"smartserverChangeHeader")
@@ -118,23 +122,48 @@ if( !Auth::hasGroup("admin") )
 
             if( updateBehaviorChanged )
             {
-                function setWorkflowMessage()
-                {
-                    window.clearTimeout(workflowTimer);
-
-                    const [updateWorkflowContent, timeout ] = mx.UpdateServiceTemplates.getWorkflow(systemUpdatesCount, smartserverChangeCount, lastUpdateDate);
+                let updateWorkflowContent = mx.UpdateServiceTemplates.getWorkflow(systemUpdatesCount, smartserverChangesCount, lastUpdateDate);
                     
-                    var updateWorkflowElement = mx.$("#updateWorkflow");
-                    updateWorkflowElement.innerHTML = updateWorkflowContent;
-                    updateWorkflowElement.style.display = updateWorkflowContent ? "" : "None";
-                    
-                    return timeout;
-                }
-                
-                let timeout = setWorkflowMessage();
-                if( timeout >= 0 )
+                var updateWorkflowElement = mx.$("#updateWorkflow");
+                updateWorkflowElement.innerHTML = updateWorkflowContent;
+                updateWorkflowElement.style.display = updateWorkflowContent ? "" : "None";
+            }
+            
+            let updateHashChanged = false;
+            let updateHashRefreshed = false;
+            if( changed_data.hasOwnProperty("system_updates_hash") )
+            {
+                updateHashRefreshed = true;
+                if( systemUpdatesHash != changed_data["system_updates_hash"] ) updateHashChanged = true;
+                systemUpdatesHash = changed_data["system_updates_hash"];
+            }
+            if( changed_data.hasOwnProperty("smartserver_changes_hash") )
+            {
+                updateHashRefreshed = true;
+                if( smartserverChangesHash != changed_data["smartserver_changes_hash"] ) updateHashChanged = true;
+                smartserverChangesHash = changed_data["smartserver_changes_hash"];
+            }
+            
+            //console.log(changed_data );
+            //console.log(updateJobStarted + " " + updateHashRefreshed + " " + updateHashChanged );
+            
+            if( updateJobStarted && updateHashRefreshed )
+            {
+                updateJobStarted = false;
+                if( updateHashChanged )
                 {
-                    workflowTimer = window.setTimeout(setWorkflowMessage,timeout);
+                    let infoDialog = mx.Dialog.init({
+                        id: "stoppedUpdate",
+                        title: mx.I18N.get("Installation stopped!"),
+                        body: mx.I18N.get("Further updates have appeared.<span class='spacer'></span>Please check whether you also want to install these updates and restart the installation process if necessary."),
+                        buttons: [
+                            { "text": mx.I18N.get("Ok") },
+                        ],
+                        class: "confirmDialog",
+                        destroy: true
+                    });
+                    infoDialog.open();
+                    mx.Page.refreshUI(infoDialog.getRootElement());
                 }
             }
             
@@ -153,6 +182,8 @@ if( !Auth::hasGroup("admin") )
             job_running_type = state["job_running_type"];
             job_cmd_type = state["job_cmd_type"];
             job_started = state["job_started"];
+            
+            last_data_modified = state["last_data_modified"];
             
             var msg = "";
             var currentRunningStateElement = mx.$("#currentRunningState");
@@ -190,7 +221,7 @@ if( !Auth::hasGroup("admin") )
                 
                 currentRunningStateElement.innerHTML = msg;
                 
-                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 1000);
+                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, null) }, 1000);
             }
             else
             {
@@ -199,10 +230,10 @@ if( !Auth::hasGroup("admin") )
 
                 currentRunningStateElement.innerHTML = mx.I18N.get("No update process is running");
 
-                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
+                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(last_data_modified, null) }, 5000);
             }
            
-            if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
+            if( Object.keys(state["changed_data"]).length > 0 ) processData(last_data_modified, state["changed_data"]);
                  
             if( dialog != null && dialog.getId() != "killProcess" ) 
             { 
@@ -283,6 +314,11 @@ if( !Auth::hasGroup("admin") )
         
         function runAction(btn, action, parameter, response_callback)
         {
+            if( !parameter ) parameter = {};
+            parameter["last_data_modified"] = last_data_modified;
+
+            updateJobStarted = parameter.hasOwnProperty("system_updates_hash") || parameter.hasOwnProperty("smartserver_changes_hash");
+            
             // needs to be asynchrone to allow ripple effect
             window.setTimeout(function() { btn.classList.add("disabled"); },0);
             
@@ -394,18 +430,35 @@ if( !Auth::hasGroup("admin") )
                 {
                     body += mx.I18N.get("You want to <span class='important'>deploy smartserver updates</span>?");            
                 }
+                body += "<br>";
             }
             else
             {
-                body += mx.I18N.get("You want to <span class='important'>update everything</span>?<span class='spacer'></span>This includes <span class='important'>a system restart</span>, if necessary.");            
+                body += mx.I18N.get("You want to <span class='important'>update everything</span>? This includes the following steps:");     
+                
+                body += "<ul>";
+                body += "<li>" + mx.I18N.get("Check for updates again") + "</li>";
+                if( systemUpdatesCount > 0 )
+                {
+                    body += "<li>" + mx.I18N.get("Installation of system updates") + "</li>";
+                    body += "<li>" + mx.I18N.get("Reboot if necessary") + "</li>";
+                    body += "<li>" + mx.I18N.get("Restart services if necessary") + "</li>";
+                }
+                if( smartserverChangesCount > 0 )
+                {
+                    body += "<li>" + mx.I18N.get("Installation of smart server updates") + "</li>";
+                }
+                body += "</ul>";
             }
+            
+            //body += "<br>";
             
             let hasPasswordField = hasEncryptedVault;
             let hasTagField = type == "deployment" && !has_tags;
             
             if( hasPasswordField || hasTagField )
             {
-                body += "<br><br><div class=\"form table\">";
+                body += "<br><div class=\"form table\">";
                 
                 if( hasEncryptedVault )
                 {
@@ -451,7 +504,7 @@ if( !Auth::hasGroup("admin") )
                     body += "</div>"; // => table close
                 }
             }
-                
+            
             var autocomplete = null;
             dialog = mx.Dialog.init({
                 title: mx.I18N.get("Are you sure?"),
@@ -508,6 +561,9 @@ if( !Auth::hasGroup("admin") )
                         if( !hasErrors )
                         {
                             dialog.close(); 
+                            
+                            if( args.hasOwnProperty("system_updates_hash") ) parameter["system_updates_hash"] = args["system_updates_hash"];
+                            if( args.hasOwnProperty("smartserver_changes_hash") ) parameter["smartserver_changes_hash"] = args["smartserver_changes_hash"];
                             
                             callback(parameter);
                         }
@@ -600,6 +656,20 @@ if( !Auth::hasGroup("admin") )
             }
         }
         
+        ret.actionUpdateWorkflow = function(btn)
+        {
+            let parameter = { "system_updates_hash": systemUpdatesHash, "smartserver_changes_hash": smartserverChangesHash };
+            updateDialog("all",btn,parameter,function(parameter){
+                runAction(btn, 'updateWorkflow', parameter); 
+            });
+        }
+        
+        ret.actionInstallUpdates = function(btn)
+        { 
+            let parameter = { "system_updates_hash": systemUpdatesHash };
+            confirmAction(btn,'installSystemUpdates',parameter,mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
+        }
+        
         ret.actionDeployUpdates = function(btn)
         {
             var tag = btn.dataset.tag;
@@ -609,13 +679,11 @@ if( !Auth::hasGroup("admin") )
             });
         }
         
-        ret.actionUpdateWorkflow = function(btn)
-        {
-            updateDialog("all",btn,null,function(parameter){
-                runAction(btn, 'updateWorkflow', parameter); 
-            });
+        ret.actionRefreshUpdateState = function(btn,type)
+        { 
+            confirmAction(btn,'refreshSystemUpdateCheck', { "type": type });
         }
-        
+
         ret.actionRebootSystem = function(btn)
         {
             confirmAction(btn,'systemReboot',null,mx.I18N.get("You want to <span class='important'>reboot your system</span>?"),"red");          
@@ -628,16 +696,6 @@ if( !Auth::hasGroup("admin") )
             confirmAction(btn,'restartService',{'service': service}, mx.I18N.get("You want to <span class='important'>restart '{}'</span>?").fill(msg),"yellow");
         }
         
-        ret.actionInstallUpdates = function(btn)
-        { 
-            confirmAction(btn,'installSystemUpdates',null,mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
-        }
-        
-        ret.actionRefreshUpdateState = function(btn,type)
-        { 
-            confirmAction(btn,'refreshSystemUpdateCheck', { "type": type });
-        }
-
         ret.actionKillProcess = function(btn)
         {
             confirmAction(btn,'killProcess',null,mx.I18N.get("You want to kill current running job?"),"red");

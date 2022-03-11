@@ -87,7 +87,18 @@
     "all outdated roles": "alle veralteten Rollen",
     "You want to <span class='important'>redeploy '{}'</span>?": "Du möchtest '{}' neu deployen?",
     "You want to <span class='important'>deploy smartserver updates</span>?": "Du möchtest <span class='important'>Smartserver Updates deployen</span>?",
-    "You want to <span class='important'>update everything</span>?<span class='spacer'></span>This includes <span class='important'>a system restart</span>, if necessary.": "Du möchtest <span class='important'>alles aktualisieren</span>?<span class='spacer'></span>Dies beinhaltet einen <span class='important'>System Neustart</span>, falls erforderlich.",
+
+    "You want to <span class='important'>update everything</span>? This includes the following steps:": "Du möchtest <span class='important'>alles aktualisieren</span>? Dabei werden folgende Schritte ausgeführt:",
+    "Check for updates again": "Erneute Suche nach Updates",
+    "Installation of system updates": "Installation von System Updates",
+    "Reboot if necessary": "Reboot, falls erforderlich",
+    "Restart services if necessary": "Neustart von Diensten, falls erforderlich",
+    "Installation of smart server updates": "Installation von Smartserver Updates",
+    
+    "Installation stopped!": "Installation gestoppt!",
+    "Further updates have appeared.<span class='spacer'></span>Please check whether you also want to install these updates and restart the installation process if necessary.": "Es sind weitere Updates aufgetaucht.<span class='spacer'></span>Bitte überprüfe ob du diese Updates auch installieren möchtest und starte gegebenenfalls den Installations Prozess erneut.",
+    "Ok": "Ok",
+
     "Password": "Password",
     "Remember": "merken",
     "Please enter a password": "Bitte gib ein Passwort ein",
@@ -147,7 +158,6 @@
     "system": "System",
     "smartserver": "Smartserver",
     "Install all": "Alles installieren",
-    "Disabled because the last update search was more than 5 minutes ago": "Deaktiviert da die letzte Update Suche mehr als 5 Minuten her ist",
     
     "Reboot necessary because of {1} and {2}": "Reboot wegen {1} und {2} notwendig",
     "Reboot necessary because of {}": "Reboot wegen {} notwendig",

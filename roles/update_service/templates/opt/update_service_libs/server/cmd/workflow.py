@@ -89,7 +89,7 @@ class CmdWorkflow:
 
         with open(log_file_name, 'a') as f:
             lf = LogFile(f)
-            self.cmd_executer.finishInterruptedCmd(lf, msg)
+            self.cmd_executer.logInterruptedCmd(lf, msg)
             
         os.rename(log_file_name, log_file_name.replace("-running-", "-{}-".format(flag)))
         
@@ -192,6 +192,11 @@ class CmdWorkflow:
                 if _cmd_block is None:
                     self.logger.info("Skip workflow function '{}'".format(cmd_block["function"]))
                     continue
+                elif type(_cmd_block) == bool:
+                    if _cmd_block:
+                        continue
+                    else:
+                        break
                 else:
                     self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
                     cmd_block = _cmd_block

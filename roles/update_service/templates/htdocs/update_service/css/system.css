@@ -170,6 +170,10 @@ body.system div.dialogLayer .confirmDialog {
   max-width: 350px;
 }
 
+body.system div.dialogLayer .confirmDialog ul {
+  margin-bottom: 0;
+  padding-left: 15px;
+}
 body.system div.dialogLayer .confirmDialog .table {
   max-width: 100%;
 }
@@ -203,7 +207,7 @@ body.system div.dialogLayer .important {
 }
 body.system div.dialogLayer .spacer {
   display: block;
-  margin: 5px 0 0 0;
+  margin: 10px 0 0 0;
 }
 
 

@@ -140,3 +140,18 @@ class CmdBuilder:
             password = params["password"] if "password" in params else None
             return self.buildDeploymentSmartserverUpdateCmdBlock(username, password, tags)
         return None
+    
+    def validateUpdateHashes(self,username,params):
+        if params["system_updates_hash"]:
+            #self.logger.info(params["system_updates_hash"])
+            #self.logger.info(self.system_update_watcher.getSystemUpdatesHash())
+            if params["system_updates_hash"] != self.system_update_watcher.getSystemUpdatesHash():
+                return False
+
+        if params["smartserver_changes_hash"]:
+            #self.logger.info(params["smartserver_changes_hash"])
+            #self.logger.info(self.system_update_watcher.getSmartserverChangesHash())
+            if params["smartserver_changes_hash"] != self.system_update_watcher.getSmartserverChangesHash():
+                return False
+
+        return True
