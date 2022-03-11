@@ -162,9 +162,6 @@ body.system .hint.red,
 body.system .info.red {
     color: var(--color-red);
 }
-body.system span.flag {
-    font-weight: bold;
-}
 
 body.system div.dialogLayer .confirmDialog {
   max-width: 350px;

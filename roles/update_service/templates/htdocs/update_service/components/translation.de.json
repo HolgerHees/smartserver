@@ -157,12 +157,12 @@
     "Reboot system": "System Neustart",
     
     "Last git pull: {}": "Letzter git pull: {}",
-    "Git pull skipped due to missing CI tests": "Git pull übersprungen aufgrund fehlender CI Tests",
-    "Git pull skipped due to ongoing CI testing": "Git pull übersprungen aufgrund laufender CI Tests",
-    "Git pull skipped due to faulty CI tests": "Git pull übersprungen aufgrund fehlerhafter CI Tests",
+    "Git pull skipped due to missing CI tests": "Git pull aufgrund fehlender CI Tests übersprungen",
+    "Git pull skipped due to ongoing CI testing": "Git pull aufgrund laufender CI Tests übersprungen",
+    "Git pull skipped due to faulty CI tests": "Git pull aufgrund fehlerhafter CI Tests übersprungen",
     "Git pulled and all CI tests successful": "Git pull und alle CI Tests erfolgreich",
     "Git pulled": "Git pulled",
-    "Git pull skipped due to uncommitted changes": "Git pull übersprungen aufgrund nicht committeter Änderungen",
+    "Git pull skipped due to uncommitted changes": "Git pull aufgrund nicht committeter Änderungen übersprungen",
     "Git pull skipped because deployment status is unknown": "Git pull übersprungen weil der Deployment Status unbekannt ist",
     
     
@@ -170,10 +170,6 @@
     "Start initial run": "Starte initiale Überprüfung",
     "Software check": "Versions Überprüfung",
     "{1} is running since {2} {3}": "{1} läuft seit {2} {3}"
-  },
-  "flags": {
-    "Warning": "Warnung",
-    "Error": "Fehler"
   },
   "table": {
     "Name": "Name",

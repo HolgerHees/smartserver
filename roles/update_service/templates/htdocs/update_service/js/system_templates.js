@@ -3,13 +3,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let outdatedRoleData = null;
   
     let smartserverChangeInfoCodes = {
-        "missing_state": ["red","Git pull skipped because deployment status is unknown"],
-        "uncommitted_changes": ["red","Git pull skipped due to uncommitted changes"],
-        "ci_missing": ["yellow","Git pull skipped due to missing CI tests"],
-        "ci_pending": ["yellow","Git pull skipped due to ongoing CI testing"],
-        "ci_failed": ["red","Git pull skipped due to faulty CI tests"],
-        "pulled_tested": ["green", "Git pulled and all CI tests successful"],
-        "pulled_untested": ["green", "Git pulled"]
+        "missing_state": ["icon-attention red","Git pull skipped because deployment status is unknown"],
+        "uncommitted_changes": ["icon-attention red","Git pull skipped due to uncommitted changes"],
+        "ci_missing": ["icon-attention yellow","Git pull skipped due to missing CI tests"],
+        "ci_pending": ["icon-attention yellow","Git pull skipped due to ongoing CI testing"],
+        "ci_failed": ["icon-attention red","Git pull skipped due to faulty CI tests"],
+        "pulled_tested": ["icon-ok green", "Git pulled and all CI tests successful"],
+        "pulled_untested": ["icon-ok green", "Git pulled"]
     };
     
     let active_manuell_cmd_type_map = {
@@ -193,7 +193,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
         if( changed_data["is_reboot_needed"]["all"] )
         { 
-            msg = "<div class=\"info red\">" + mx.I18N.get("Reboot necessary");
+            msg = "<div class=\"info\"><span class=\"icon-attention red\"></span> " + mx.I18N.get("Reboot necessary");
             
             let reasons = {};
             if( changed_data["is_reboot_needed"]["core"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("installed system updates");
@@ -310,18 +310,18 @@ mx.UpdateServiceTemplates = (function( ret ) {
         
         if( code )
         {           
-            [colorClass,updateMsg] = smartserverChangeInfoCodes[code];
+            [iconClass,updateMsg] = smartserverChangeInfoCodes[code];
             
-            msg = "<div class=\"info " + colorClass + "\">" + mx.I18N.get(updateMsg);
+            msg = "<div class=\"info\"><div class=\"sub\"><span class=\"" + iconClass + "\"></span> " + mx.I18N.get(updateMsg);
             if( code != "missing" ) 
             {
                 let date = new Date(changed_data["smartserver_pull"] * 1000);
                 const [ lastPullFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
                 subMsg = mx.I18N.get("Last git pull: {}").fill( lastPullFormatted );
               
-                msg += "<div class=\"sub\">" + subMsg + "</div>";
+                msg += " • " + subMsg;
             }
-            msg += "</div>";
+            msg += "</div></div>";
         }
 
         return msg;
@@ -362,13 +362,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let action_msg_2 = "</div>";
             
             let state_msg = mx.I18N.get(last_job["state"] == "success" ? "was successful" : last_job["state"]);
-            let prefix = last_job["state"] == "failed" || last_job["state"] == "crashed" ? "<span class=\"flag red\">" + mx.I18N.get("Error","flags") + ":</span> " : "";
+            let icon = last_job["state"] == "failed" || last_job["state"] == "crashed" ? "icon-attention red" : "icon-ok green";
             
             let last_job_sentence = mx.I18N.get(last_cmd_type_map[last_job["type"]]);
             let duration = Math.round( last_job["duration"] );
             let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": state_msg, "4": duration, "5": mx.I18N.get( duration == 1 ? "second" : "seconds" ) });
           
-            headerMsg = "<div class=\"info\">" + prefix + msg;
+            headerMsg = "<div class=\"info\"><span class=\"" + icon + "\"></span> " + msg;
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'lastRunningJobsDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
@@ -426,7 +426,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( systemUpdatesCount + smartserverChangeCount );
-            if( isTimeout ) msg += "<div class=\"sub\">" + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
+            if( isTimeout ) msg += "<div class=\"sub\"><span class=\"icon-attention yellow\"></span> " + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive";
             if( isTimeout ) msg += " disabled blocked";
             

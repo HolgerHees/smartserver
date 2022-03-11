@@ -184,7 +184,7 @@ if( !Auth::hasGroup("admin") )
                 }
                 else
                 {
-                    msg = "<span class=\"flag red\">" + mx.I18N.get("Warning","flags") + ":</span> " + mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
+                    msg = "<span class=\"icon-attention yellow\"></span> " + mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
                     currentRunningActionsElement.style.display= ""
                 }
                 

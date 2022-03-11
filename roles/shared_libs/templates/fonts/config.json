@@ -131,6 +131,12 @@
       "css": "stop",
       "code": 59407,
       "src": "typicons"
+    },
+    {
+      "uid": "15ba51cbb4d05e6fb88f03a31a7c711c",
+      "css": "info-circled-alt",
+      "code": 61574,
+      "src": "mfglabs"
     }
   ]
 }
