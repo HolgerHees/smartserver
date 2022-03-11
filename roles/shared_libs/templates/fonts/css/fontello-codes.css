@@ -16,9 +16,9 @@
 .icon-play:before { content: '\e80e'; } /* '' */
 .icon-stop:before { content: '\e80f'; } /* '' */
 .icon-attention:before { content: '\e810'; } /* '' */
-.icon-attention-circled:before { content: '\e811'; } /* '' */
+.icon-info-circled:before { content: '\e811'; } /* '' */
+.icon-help-circled:before { content: '\e812'; } /* '' */
 .icon-spin2:before { content: '\e831'; } /* '' */
-.icon-info-circled-alt:before { content: '\f086'; } /* '' */
 .icon-desktop:before { content: '\f108'; } /* '' */
 .icon-calendar-empty:before { content: '\f133'; } /* '' */
 .icon-down:before { content: '\f175'; } /* '' */
