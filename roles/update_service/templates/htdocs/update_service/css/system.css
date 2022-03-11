@@ -134,12 +134,15 @@ body.system div.info.big {
   font-size: 22px;
 }
 body.system div.info .sub {
-  color: #AAA;
+  color: #999;
   font-size: 13px;
+  display: flex;
+  align-items: center;
 }
-body.system #smartserverChangeState .info {
+/*body.system div.info .sub span[class^="icon-"] {
   font-size: 13px;
-}
+}*/
+
 body.system div.form.button {
   margin-left: 5px;
   white-space: nowrap;

@@ -149,10 +149,9 @@
     "Install all": "Alles installieren",
     "Disabled because the last update search was more than 5 minutes ago": "Deaktiviert da die letzte Update Suche mehr als 5 Minuten her ist",
     
-    "Reboot necessary": "Reboot notwendig",
-    "Is necessary because of {1} and {2}": "Ist wegen {1} und {2} notwendig",
-    "Is necessary because of {}": "Ist wegen {} notwendig",
-    "installed system updates": "installierter System updates",
+    "Reboot necessary because of {1} and {2}": "Reboot wegen {1} und {2} notwendig",
+    "Reboot necessary because of {}": "Reboot wegen {} notwendig",
+    "system updates": "System Updates",
     "outdated processes": "veralteter Prozesse",
     "Reboot system": "System Neustart",
     

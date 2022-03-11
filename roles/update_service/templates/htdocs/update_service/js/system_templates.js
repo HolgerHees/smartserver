@@ -5,8 +5,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
     let smartserverChangeInfoCodes = {
         "missing_state": ["icon-attention red","Git pull skipped because deployment status is unknown"],
         "uncommitted_changes": ["icon-attention red","Git pull skipped due to uncommitted changes"],
-        "ci_missing": ["icon-attention yellow","Git pull skipped due to missing CI tests"],
-        "ci_pending": ["icon-attention yellow","Git pull skipped due to ongoing CI testing"],
+        "ci_missing": ["icon-info-circled yellow","Git pull skipped due to missing CI tests"],
+        "ci_pending": ["icon-info-circled yellow","Git pull skipped due to ongoing CI testing"],
         "ci_failed": ["icon-attention red","Git pull skipped due to faulty CI tests"],
         "pulled_tested": ["icon-ok green", "Git pulled and all CI tests successful"],
         "pulled_untested": ["icon-ok green", "Git pulled"]
@@ -193,18 +193,16 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
         if( changed_data["is_reboot_needed"]["all"] )
         { 
-            msg = "<div class=\"info\"><span class=\"icon-attention red\"></span> " + mx.I18N.get("Reboot necessary");
-            
             let reasons = {};
-            if( changed_data["is_reboot_needed"]["core"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("installed system updates");
+            if( changed_data["is_reboot_needed"]["core"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("system updates");
             if( changed_data["is_reboot_needed"]["outdated"] ) reasons["2"] = mx.I18N.get("outdated processes");
                              
             let reasonKeys = Object.keys(reasons);
             let isMultiReason = reasonKeys.length > 1;
             
-            let infoMsg = isMultiReason ? "Is necessary because of {1} and {2}" : "Is necessary because of {}";
+            let infoMsg = isMultiReason ? "Reboot necessary because of {1} and {2}" : "Reboot necessary because of {}";
 
-            msg += "<div class=\"sub\">" + mx.I18N.get(infoMsg).fill( isMultiReason ? reasons : reasons[reasonKeys[0]] ) + "</div>";
+            msg = "<div class=\"info\"><span class=\"icon-attention red\"></span> " + mx.I18N.get(infoMsg).fill( isMultiReason ? reasons : reasons[reasonKeys[0]] );
             
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UNCore.actionRebootSystem(this)\">" + mx.I18N.get("Reboot system") + "</div></div>";
         }
@@ -426,7 +424,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( systemUpdatesCount + smartserverChangeCount );
-            if( isTimeout ) msg += "<div class=\"sub\"><span class=\"icon-attention yellow\"></span> " + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
+            if( isTimeout ) msg += "<div class=\"sub\"><span class=\"icon-info-circled yellow\"></span> " + mx.I18N.get("Disabled because the last update search was more than 5 minutes ago") + "</div>";
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive";
             if( isTimeout ) msg += " disabled blocked";
             
