@@ -88,7 +88,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             date = new Date(last_update * 1000);
             [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
-            msg = mx.I18N.get("Last check: {}").fill( dateFormatted );
+            msg = mx.I18N.get("Last check: {}").fill( dateFormatted ).toString().replace(": ", ": <span class='nobr'>") + "</span>";
         }
         else
         { 
@@ -310,16 +310,16 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {           
             [iconClass,updateMsg] = smartserverChangeInfoCodes[code];
             
-            msg = "<div class=\"info\"><div class=\"sub\"><span class=\"" + iconClass + "\"></span> " + mx.I18N.get(updateMsg);
+            msg = "<div class=\"info\"><div class=\"sub\"><span class=\"" + iconClass + "\"></span> <span style='overflow:hidden;'><span class='nobr' style='margin-right: 8px;'>" + mx.I18N.get(updateMsg);
             if( code != "missing" ) 
             {
                 let date = new Date(changed_data["smartserver_pull"] * 1000);
                 const [ lastPullFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
                 subMsg = mx.I18N.get("Last git pull: {}").fill( lastPullFormatted );
               
-                msg += " • " + subMsg;
+                msg += "</span> <span class='nobr' style='margin-left: -8px;'>• " + subMsg;
             }
-            msg += "</div></div>";
+            msg += "</span></span></div></div>";
         }
 
         return msg;

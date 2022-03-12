@@ -142,6 +142,9 @@ body.system div.info .sub {
 /*body.system div.info .sub span[class^="icon-"] {
   font-size: 13px;
 }*/
+body.system div.info .nobr {
+  white-space: nowrap;
+}
 
 body.system div.form.button {
   margin-left: 5px;
