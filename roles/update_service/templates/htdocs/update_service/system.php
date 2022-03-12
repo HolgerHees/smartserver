@@ -78,10 +78,7 @@ if( !Auth::hasGroup("admin") )
             if( changed_data.hasOwnProperty("is_reboot_needed") )
             {
                 const rebootNeededDetails = mx.UpdateServiceTemplates.getSystemStateDetails(last_data_modified, changed_data)
-                
-                let rebootNeededElement = mx.$("#systemRebootState");
-                rebootNeededElement.innerHTML = rebootNeededDetails;
-                rebootNeededElement.style.display = rebootNeededDetails ? "" : "None";
+                mx.UpdateServiceHelper.setElementContent(rebootNeededDetails,"systemRebootState");
             }
 
             if( changed_data.hasOwnProperty("system_updates") )
@@ -105,9 +102,7 @@ if( !Auth::hasGroup("admin") )
             if( changed_data.hasOwnProperty("smartserver_code") )
             {
                 const smartserverChangeState = mx.UpdateServiceTemplates.getSmartserverChangeState(last_data_modified, changed_data);
-                let smartserverChangeStateElement = mx.$("#smartserverChangeState");
-                smartserverChangeStateElement.style.display = smartserverChangeState ? "" : "None";
-                smartserverChangeStateElement.innerHTML = smartserverChangeState;
+                mx.UpdateServiceHelper.setElementContent(smartserverChangeState,"smartserverChangeState");
             }
             
             if( changed_data.hasOwnProperty("jobs") )
@@ -119,10 +114,8 @@ if( !Auth::hasGroup("admin") )
             if( updateBehaviorChanged )
             {
                 let updateWorkflowContent = mx.UpdateServiceTemplates.getWorkflow(systemUpdatesCount, smartserverChangesCount, lastUpdateDate);
-                    
-                var updateWorkflowElement = mx.$("#updateWorkflow");
-                updateWorkflowElement.innerHTML = updateWorkflowContent;
-                updateWorkflowElement.style.display = updateWorkflowContent ? "" : "None";
+                  
+                mx.UpdateServiceHelper.setElementContent(updateWorkflowContent,"updateWorkflow");
             }
             
             let systemUpdatesHashChanged = false;
@@ -221,8 +214,6 @@ if( !Auth::hasGroup("admin") )
                     currentRunningActionsElement.style.display= ""
                 }
                 
-                currentRunningStateElement.innerHTML = msg;
-                
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 1000);
             }
             else
@@ -232,7 +223,6 @@ if( !Auth::hasGroup("admin") )
 
                 if( state["workflow_state"] )
                 {
-                    let msg = ""
                     switch (state["workflow_state"]) {
                         case 'killed':
                             msg = mx.I18N.get("Last process was killed")
@@ -256,16 +246,19 @@ if( !Auth::hasGroup("admin") )
                             }
                             break;
                     }
-                    currentRunningStateElement.innerHTML = "<span class=\"icon-attention red\"></span> " + msg;
+
+                    msg = "<span class=\"icon-attention red\"></span> " + msg;
                 }
                 else
                 {
-                    currentRunningStateElement.innerHTML = mx.I18N.get("No update process is running");
+                    msg = mx.I18N.get("No update process is running");
                 }
 
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
             }
            
+            if( currentRunningStateElement.innerHTML != msg )  currentRunningStateElement.innerHTML = msg;
+
             if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
                  
             if( mx.UpdateServiceActions.getDialog() != null )

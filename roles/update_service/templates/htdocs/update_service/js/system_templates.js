@@ -295,7 +295,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div><div class=\"buttons\">";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div>";
         }
         
         return [ updateCount, detailsMsg, headerMsg ];
