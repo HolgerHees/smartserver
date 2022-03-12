@@ -1,3 +1,5 @@
+import os
+
 from config import config
 
 from server.watcher import watcher
@@ -19,7 +21,7 @@ class DeploymentTagsWatcher(watcher.Watcher):
 
     def initDeploymentTags(self,shouldRetry):
         self.tags = self.readJsonFile(config.deployment_tags_file,shouldRetry,[])
-        self.last_modified = self.getNowAsTimestamp()
+        self.last_modified = round(os.path.getmtime(config.deployment_tags_file),3)
       
     def getLastModifiedAsTimestamp(self):
         return self.last_modified

@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import importlib
+from datetime import datetime
 
 from config import config
 from server.cmd.builder import CmdBuilder
@@ -52,6 +53,8 @@ class Handler(Server):
         
         self.service_base_path = os.path.dirname(__file__)
         self.service_need_restart = False
+        
+        self.startup_timestamp = round(datetime.timestamp(datetime.now()),3)
 
         watched_data_files.append(__file__)
         files = glob.glob("{}**/**/*.py".format(self.service_base_path), recursive = True)
@@ -99,11 +102,15 @@ class Handler(Server):
         }
         
         last_data_modified = {}
+        last_data_modified["startup"] = self.startup_timestamp;
+
         changed_data = {}
         
+        force = "startup" not in request.form or float(request.form["startup"]) < last_data_modified["startup"]
+
         if state_type == "software":
             last_data_modified["software"] = self.software_versions_watcher.getLastModifiedAsTimestamp()
-            if self.checkLastDataModified("software",last_data_modified):
+            if force or self.checkLastDataModified("software",last_data_modified):
                 changed_data["software"] = self.software_versions_watcher.getSoftwareVersions()
         else:
             last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
@@ -117,16 +124,16 @@ class Handler(Server):
             last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
             last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
             
-            if self.checkLastDataModified("outdated_processes",last_data_modified):
+            if force or self.checkLastDataModified("outdated_processes",last_data_modified):
                 changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
-            if self.checkLastDataModified("outdated_roles",last_data_modified):
+            if force or self.checkLastDataModified("outdated_roles",last_data_modified):
                 changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
-            if self.checkLastDataModified("deployment_state",last_data_modified):
+            if force or self.checkLastDataModified("deployment_state",last_data_modified):
                 changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedVault()
-            if self.checkLastDataModified("deployment_tags",last_data_modified):
+            if force or self.checkLastDataModified("deployment_tags",last_data_modified):
                 changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
 
-            if self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
+            if force or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
                 changed_data["is_reboot_needed"] = {
                     "all": self.system_update_watcher.isRebootNeeded(),
                     "core": self.process_watcher.isRebootNeededByCoreUpdate(),
@@ -134,15 +141,15 @@ class Handler(Server):
                     "installed": self.system_update_watcher.isRebootNeededByInstalledPackages()
                 }
                 
-            if self.checkLastDataModified("system_updates",last_data_modified):
+            if force or self.checkLastDataModified("system_updates",last_data_modified):
                 changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
                 changed_data["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
-            if self.checkLastDataModified("smartserver_changes",last_data_modified):
+            if force or self.checkLastDataModified("smartserver_changes",last_data_modified):
                 changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
                 changed_data["smartserver_changes_hash"] = self.system_update_watcher.getSmartserverChangesHash()
                 changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
                 changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
-            if self.checkLastDataModified("jobs",last_data_modified):
+            if force or self.checkLastDataModified("jobs",last_data_modified):
                 changed_data["jobs"] = self.cmd_executer.getJobs()
                 
             result["job_logfile"] = self.cmd_executer.getCurrentJobLogfile()
