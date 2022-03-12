@@ -121,7 +121,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let i18n_info_msg = plural ? "through a system update which affects these processes" : "through a system update which affects these process";
             
             processHeaderMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(processCount) + "<div class=\"sub\">" + mx.I18N.get(i18n_info_msg) + "</div></div><div class=\"buttons\">";
-            if( services.length > 0) processHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UNCore.actionRestartServices(this)\" data-service=\"" + services.join(",") + "\">" + mx.I18N.get("Restart all") + "</div>";
+            if( services.length > 0) processHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionRestartServices(this)\" data-service=\"" + services.join(",") + "\">" + mx.I18N.get("Restart all") + "</div>";
             processHeaderMsg += "<div class=\"form button toggle\" id=\"systemProcesses\" onclick=\"mx.UNCore.toggle(this,'systemStateDetails')\"></div></div>";
 
             processDetailsMsg = "<div class=\"row\">";
@@ -144,7 +144,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 processDetailsMsg += "<div>" + process["user"] + "</div>";
                 processDetailsMsg += "<div>" + process["command"] + "</div>";
                 processDetailsMsg += "<div>" + process["service"] + "</div>";
-                processDetailsMsg += "<div>" + ( process["service"] ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UNCore.actionRestartServices(this)\" data-service=\"" + process["service"] + "\">" + mx.I18N.get("Restart") + "</div>" : "" ) + "</div>";
+                processDetailsMsg += "<div>" + ( process["service"] ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionRestartServices(this)\" data-service=\"" + process["service"] + "\">" + mx.I18N.get("Restart") + "</div>" : "" ) + "</div>";
                 processDetailsMsg += "</div>";
             }
           
@@ -165,7 +165,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let i18n_info_msg = plural ? "through a system update which affects these roles" : "through a system update which affects these role";
             
             roleHeaderMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(roleCount) + "<div class=\"sub\">" + mx.I18N.get(i18n_info_msg) + "</div></div><div class=\"buttons\">";
-            roleHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UNCore.actionDeployUpdates(this)\" data-tag=\"" + outdatedRoleData.join(",") + "\">" + mx.I18N.get("Install all") + "</div>";
+            roleHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\" data-tag=\"" + outdatedRoleData.join(",") + "\">" + mx.I18N.get("Install all") + "</div>";
             roleHeaderMsg += "<div class=\"form button toggle\" id=\"smartserverRoles\" onclick=\"mx.UNCore.toggle(this,'roleStateDetails')\"></div></div>";
 
             roleDetailsMsg = "<div class=\"row\">";
@@ -178,7 +178,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 
                 roleDetailsMsg += "<div class=\"row\">";
                 roleDetailsMsg += "<div>" + role + "</div>";
-                roleDetailsMsg += "<div>" + ( role ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UNCore.actionDeployUpdates(this)\" data-tag=\"" + role + "\">" + mx.I18N.get("Install") + "</div>" : "" ) + "</div>";
+                roleDetailsMsg += "<div>" + ( role ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\" data-tag=\"" + role + "\">" + mx.I18N.get("Install") + "</div>" : "" ) + "</div>";
                 roleDetailsMsg += "</div>";
             }
           
@@ -204,7 +204,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
             msg = "<div class=\"info\"><span class=\"icon-attention red\"></span> " + mx.I18N.get(infoMsg).fill( isMultiReason ? reasons : reasons[reasonKeys[0]] );
             
-            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UNCore.actionRebootSystem(this)\">" + mx.I18N.get("Reboot system") + "</div></div>";
+            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UpdateServiceActions.actionRebootSystem(this)\">" + mx.I18N.get("Reboot system") + "</div></div>";
         }
         
         return msg;
@@ -228,7 +228,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             mx.I18N.get(i18n_main_msg).fill(updateCount)
 
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UNCore.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
             
@@ -277,7 +277,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
           
             let i18n_main_msg = plural ? "{} smartserver updates available" : "{} smartserver update available";
             
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UNCore.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
             detailsMsg += "<div>" + mx.I18N.get("Flag","table") + "</div>";
@@ -420,7 +420,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( systemUpdatesCount + smartserverChangeCount );
-            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UNCore.actionUpdateWorkflow(this)\">" + mx.I18N.get("Install all") + "</div></div>";
+            msg += "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UpdateServiceActions.actionUpdateWorkflow(this)\">" + mx.I18N.get("Install all") + "</div></div>";
         }
         else
         {

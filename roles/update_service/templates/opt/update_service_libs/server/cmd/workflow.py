@@ -25,6 +25,8 @@ class CmdWorkflow:
         self.handler = handler
         self.cmd_executer = cmd_executer
         self.cmd_builder = cmd_builder
+        
+        self.workflow_state = None
 
     def handleRunningStates(self):
         thread = threading.Thread(target=self._handleRunningStates, args=())
@@ -181,6 +183,8 @@ class CmdWorkflow:
             return False
 
     def _runWorkflow(self, workflow, checkGlobalRunning):   
+        self.workflow_state = None
+
         while len(workflow) > 0:
             cmd_block = workflow.pop(0)
             if "function" in cmd_block:
@@ -196,7 +200,11 @@ class CmdWorkflow:
                     if _cmd_block:
                         continue
                     else:
+                        self.workflow_state = "stopped"
                         break
+                elif type(_cmd_block) == str:
+                    self.workflow_state = _cmd_block
+                    break
                 else:
                     self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
                     cmd_block = _cmd_block
@@ -222,7 +230,7 @@ class CmdWorkflow:
             else:
                 exit_code = -1
                 
-            if exit_code != 0:
+            if exit_code != 0 or self.workflow_state is not None:
                 if os.path.isfile(config.deployment_workflow_file):
                     os.unlink(config.deployment_workflow_file)
                     
@@ -240,7 +248,14 @@ class CmdWorkflow:
           
             if is_interuptable_workflow:
                 break
-
+            
+    def killWorkflow(self):
+        self.cmd_executer.killProcess()
+        self.workflow_state = "killed"
+        
+    def getWorkflowState(self):
+        return self.workflow_state
+        
     def _prepareTestWorkflow(self,cmd_block):
         for cmd in cmd_block["cmds"]:
             interaction = cmd["interaction"]

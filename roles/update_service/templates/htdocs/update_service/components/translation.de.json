@@ -29,6 +29,11 @@
     "Please press 'Refresh' to check for updates for the first time": "Bitte drücke 'Aktualisieren' um das erste mal nach Updates zu suchen",
 
     "No update process is running": "Aktuell läuft kein Update Prozess",
+    "Last process was killed": "Der letzter Prozess wurde beendet",
+    "Last process was stopped": "Der letzter Prozess wurde angehalten",
+    "Last process was stopped, because of new system and smartserver updates": "Der letzte Prozess wurde angehalten weil es neue System und Smartserver Updates gab",
+    "Last process was stopped, because of new system updates": "Der letzte Prozess wurde angehalten weil es neue System Updates gab",
+    "Last process was stopped, because of new smartserver updates": "Der letzte Prozess wurde angehalten weil es neue Smartserver Updates gab",
 
     "A manually started system reboot is running": "Es läuft ein manuell gestarteter Server Neustart",
     "A manually started daemon restart is running": "Es läuft ein manuell gestarteter Daemon Neustart",
@@ -95,10 +100,13 @@
     "Restart services if necessary": "Neustart von Diensten, falls erforderlich",
     "Installation of smart server updates": "Installation von Smartserver Updates",
     
-    "Installation stopped!": "Installation gestoppt!",
-    "Further updates have appeared.<span class='spacer'></span>Please check whether you also want to install these updates and restart the installation process if necessary.": "Es sind weitere Updates aufgetaucht.<span class='spacer'></span>Bitte überprüfe ob du diese Updates auch installieren möchtest und starte gegebenenfalls den Installations Prozess erneut.",
+    "Installation stopped!": "Installation angehalten!",
+    "There are new system and smartserver update available!": "Es sind neue System und Smartserver Updates aufgetaucht!",
+    "There are new system update available!": "Es sind neue System Updates aufgetaucht!",
+    "There are new smartserver update available!": "Es sind neue Smartserver Updates aufgetaucht!",
+    "Please check whether you want to install these updates and restart the installation process if necessary.": "Bitte überprüfe ob du diese Updates installieren möchtest und starte gegebenenfalls den Installations Prozess erneut.",
     "Ok": "Ok",
-
+    
     "Password": "Password",
     "Remember": "merken",
     "Please enter a password": "Bitte gib ein Passwort ein",

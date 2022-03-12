@@ -94,7 +94,8 @@ class Handler(Server):
             "job_is_running": running_type is not None, 
             "job_running_type": running_type, 
             "job_cmd_type": cmd_type, 
-            "job_started": current_job_started.isoformat() if current_job_started is not None else None
+            "job_started": current_job_started.isoformat() if current_job_started is not None else None,
+            "workflow_state": self.cmd_workflow.getWorkflowState()
         }
         
         last_data_modified = {}
@@ -248,7 +249,7 @@ def updateWorkflow():
 
 @app.route('/killProcess/', methods = ['POST'])
 def killProcess():
-    handler.cmd_executer.killProcess()
+    handler.cmd_workflow.killWorkflow()
     return handler.getState("update")
 
 if __name__ == '__main__':
