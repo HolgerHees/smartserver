@@ -50,14 +50,14 @@ class DeploymentUpdate:
             deployment_stat = os.stat(self.config.deployment_state_file)
             deployment_mtime = deployment_stat.st_mtime
             
+            repository_owner = GitHub.getRepositoryOwner(self.config.git_remote) if "github" in self.config.git_remote else None
+
             if len(uncommitted_changes) == 1 and uncommitted_changes[0] == "":
                 can_pull = False
                 if "github" in self.config.git_remote:
                     result = command.exec([ "git", "ls-remote", self.config.git_remote ], cwd=self.config.deployment_directory )
                     commits = result.stdout.decode("utf-8").strip().split("\n")
                     last_git_hash = commits[0].split("\t")[0]
-
-                    repository_owner = GitHub.getRepositoryOwner(self.config.git_remote)
 
                     result = GitHub.getStates(repository_owner,last_git_hash)
                     
@@ -85,7 +85,7 @@ class DeploymentUpdate:
                 smartserver_code = "uncommitted_changes"
                 
             last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
-            last_deployment = datetime.strptime("2022-03-13 00:00:00 +0100","%Y-%m-%d %H:%M:%S %z")
+            #last_deployment = datetime.strptime("2022-03-13 00:00:00 +0100","%Y-%m-%d %H:%M:%S %z")
             
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
             result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], cwd=self.config.deployment_directory )
@@ -111,7 +111,8 @@ class DeploymentUpdate:
                 if len(line) > 6 and line[:6] == "commit":
                     if current_commit is not None:
                         current_date = "{}T{}.000000{}:{}".format(current_date[:10],current_date[11:19],current_date[20:23],current_date[23:])
-                        commits[current_commit] = {"date": current_date, "message": "\n".join(current_messages), "files": current_files }
+                        url = "https://github.com/{}/commit/{}".format(repository_owner,current_commit) if repository_owner is not None else None
+                        commits[current_commit] = {"date": current_date, "message": "\n".join(current_messages), "files": current_files, "url": url }
                     current_commit = line[6:].strip().split(" ",1)[0]
                     current_date = None
                     current_messages = []
@@ -132,17 +133,21 @@ class DeploymentUpdate:
 
                 current_files.append( line.split("\t") )
                 
+            #print(last_deployment)
             #print(commits)
             
             filtered_commits = []
             for commit in commits:
                 files = []
+                deleted_files = []
                 for file in commits[commit]["files"]:
                     flag, path = file
                     if self.filterPath( flag, path, deployment_mtime ):
                         files.append( {"flag": flag, "path": path} )
+                    elif flag == "D":
+                        deleted_files.append(path)
                         
-                if len(files) == len(commits[commit]["files"]):
+                if len(files) + len(deleted_files) == len(commits[commit]["files"]):
                     commits[commit]["files"] = files
                     filtered_commits.append(commits[commit])
 

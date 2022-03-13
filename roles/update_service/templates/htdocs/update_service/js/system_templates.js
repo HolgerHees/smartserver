@@ -287,12 +287,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
             {
                 let change = changed_data["smartserver_changes"][index];
                 
-                let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] + " • " : "";
+                let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
-                let msg = prefix + change["message"]
+                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<a href=\"" + change["url"] + "\" target=\"_blank\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</a>" : "" );
                 
                 detailsMsg += "<div class=\"row\">";
-                detailsMsg += "<div></div><div><span style=\"margin-left: -50px; font-weight:600;\">" + msg + "</span></div>";
+                detailsMsg += "<div></div><div><span style=\"margin-left: -50px;\">" + msg + "</span></div>";
                 detailsMsg += "</div>";
                 
                 for( _index in change["files"] )
