@@ -33,6 +33,11 @@ class DeploymentUpdate:
             if file_mtime > deployment_mtime:
                 return True
         return False
+    
+    def prepareCommit(self,current_date,current_commit,current_messages,current_files,repository_owner):
+        current_date = "{}T{}.000000{}:{}".format(current_date[:10],current_date[11:19],current_date[20:23],current_date[23:])
+        url = "https://github.com/{}/commit/{}".format(repository_owner,current_commit) if repository_owner is not None else None
+        return {"date": current_date, "message": "\n".join(current_messages), "files": current_files, "url": url }
 
     def process(self, update_time):
         smartserver_code = None
@@ -94,6 +99,7 @@ class DeploymentUpdate:
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
             #result = command.exec([ "git", "diff-index", "--name-status", ref ], cwd=self.config.deployment_directory )
             #committed_changes = result.stdout.decode("utf-8").strip().split("\n")
+            #print(committed_changes)
 
             # prepare commit messages
             result = command.exec([ "git", "log", "--name-status", "--date=iso", str(ref) +  "..origin/master" ], cwd=self.config.deployment_directory )
@@ -110,9 +116,7 @@ class DeploymentUpdate:
 
                 if len(line) > 6 and line[:6] == "commit":
                     if current_commit is not None:
-                        current_date = "{}T{}.000000{}:{}".format(current_date[:10],current_date[11:19],current_date[20:23],current_date[23:])
-                        url = "https://github.com/{}/commit/{}".format(repository_owner,current_commit) if repository_owner is not None else None
-                        commits[current_commit] = {"date": current_date, "message": "\n".join(current_messages), "files": current_files, "url": url }
+                        commits[current_commit] = self.prepareCommit(current_date,current_commit,current_messages,current_files,repository_owner)
                     current_commit = line[6:].strip().split(" ",1)[0]
                     current_date = None
                     current_messages = []
@@ -133,6 +137,11 @@ class DeploymentUpdate:
 
                 current_files.append( line.split("\t") )
                 
+            if current_commit is not None:
+                commits[current_commit] = self.prepareCommit(current_date,current_commit,current_messages,current_files,repository_owner)
+            
+            #print(commits)
+            
             #print(last_deployment)
             #print(commits)
             
