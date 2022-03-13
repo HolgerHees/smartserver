@@ -21,7 +21,7 @@ args_values = ArgsParser.parse(args_cfg,sys.argv)
    
 update_time = "{}".format(datetime.now().astimezone().isoformat())
 
-state_template = {"last_system_update": update_time, "system_updates": [], "last_smartserver_update": update_time, "smartserver_code": "", "smartserver_changes": [], "smartserver_pull": None }
+state_template = {"last_system_update": update_time, "system_updates": [], "last_smartserver_update": update_time, "smartserver_code": "", "smartserver_changes": [], "smartserver_logs": [], "smartserver_pull": None }
 last_states = {}
 if os.path.isfile(config.system_update_state_file):
     with open(config.system_update_state_file, 'r') as f:
@@ -59,7 +59,7 @@ if args_values["limit"] is None or args_values["limit"] == "deployment_update":
 
     deploymentUpdate = DeploymentUpdate(config)
     
-    (smartserver_code, smartserver_pull, smartserver_changes) = deploymentUpdate.process(update_time)
+    (smartserver_code, smartserver_pull, smartserver_changes, smartserver_logs) = deploymentUpdate.process(update_time)
     
     state["smartserver_code"] = smartserver_code
     
@@ -90,6 +90,9 @@ if args_values["limit"] is None or args_values["limit"] == "deployment_update":
 
         if len(last_states["smartserver_changes"]) != len(state["smartserver_changes"]):
             update_message_r.append(u"smartserver has {} updates".format(len(state["smartserver_changes"])))
+
+    if smartserver_logs is not None:
+        state["smartserver_logs"] = smartserver_logs
 # ****************************************************************
 
 if args_values["limit"] is None and args_values["notification"] and config.update_check_email and len(update_message_r) > 0:

@@ -84,6 +84,21 @@ class DeploymentUpdate:
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
             result = command.exec([ "git", "diff-index", "--name-status", ref ], cwd=self.config.deployment_directory )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
+            
+            #result = command.exec([ "git", "log", "--date=iso", "--pretty=%ad%x09%s", str(ref) +  "..origin/master" ], cwd=self.config.deployment_directory )
+            #commit_messages = result.stdout.decode("utf-8").strip().split("\n")
+            commit_lines = []
+            #for line in commit_messages:
+            #    data = line.split("\t",1)
+            #    print(data[0])
+            #    datetimeStr = data[0]#"{}{}".format(data[0][0:-3],data[0][-2:])
+            #    commit_datetime = datetime.strptime(datetimeStr,"%Y-%m-%d %H:%M:%S %z")
+            #    if commit_datetime > last_deployment:
+            #        commit_lines.append(data[1])
+                
+            #print(last_deployment)
+            #print(commit_lines)
+            #print(committed_changes)
 
             lines = uncommitted_changes + committed_changes
             lines = [ele.split("\t") for ele in lines]
@@ -116,5 +131,5 @@ class DeploymentUpdate:
             
             smartserver_changes = lines
             
-        return smartserver_code, smartserver_pull, smartserver_changes
+        return smartserver_code, smartserver_pull, smartserver_changes, commit_lines
 
