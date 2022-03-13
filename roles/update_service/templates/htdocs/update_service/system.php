@@ -421,7 +421,7 @@ if( !Auth::hasGroup("admin") )
 <div class="widget">
     <div class="header"><div data-i18n="Status"></div></div>
 
-    <div class="action" id="serverNeedsRestart"><div class="info red" data-i18n="Daemon was updated and needs to restart"></div><div class="buttons"><div class="form button restart red exclusive" onclick="mx.UpdateServiceActions.actionRestartDaemon(this)" data-i18n="Restart daemon"></div></div></div>
+    <div class="action" id="serverNeedsRestart"><div class="info"><span class="icon-attention red"></span> <span data-i18n="Daemon was updated and needs to restart"></span></div><div class="buttons"><div class="form button restart red exclusive" onclick="mx.UpdateServiceActions.actionRestartDaemon(this)" data-i18n="Restart daemon"></div></div></div>
     
     <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button kill red" onclick="mx.UpdateServiceActions.actionKillProcess(this)" data-i18n="Stop"></div></div></div>
     <div class="action" id="lastRunningJobsHeader"></div>

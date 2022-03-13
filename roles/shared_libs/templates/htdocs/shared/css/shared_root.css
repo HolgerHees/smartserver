@@ -19,10 +19,10 @@
   --light-table-border: 1px solid #dadce0;
   --dark-table-border: 1px solid #8a8c90;
 
-  --light-menu-hover-bg: #337ab71F;
+  --light-menu-hover-bg: #337ab71f;
   --light-menu-active-bg: #337ab738;
   --dark-menu-hover-bg: #337ab733;
-  --dark-menu-active-bg: #337ab74D;
+  --dark-menu-active-bg: #337ab74d;
   
   --light-content-text: #111;
   --dark-content-text: #fff;
@@ -37,9 +37,13 @@
 
   --button-svg: white;
 
-  --color-red: #ff7479;
-  --color-yellow: #ffc936;
-  --color-green: #b5ce69;
+  --light-color-red: #ff7479;
+  --light-color-yellow: #ffc936;
+  --light-color-green: #b5ce69;
+
+  --dark-color-red: #c13d48;
+  --dark-color-yellow: #e0ae0e;
+  --dark-color-green: #99b24f;
 }
 :root body {
   --bg: var(--light-bg);
@@ -56,6 +60,10 @@
   --content-hover-bg: var(--light-content-hover-bg);
   --tooltip-bg: var(--light-tooltip-bg);
   --tooltip-shadow: var(--light-tooltip-shadow);
+
+  --color-red: var(--light-color-red);
+  --color-yellow: var(--light-color-yellow);
+  --color-green: var(--light-color-green);
 }
 :root body.dark {
   --bg: var(--dark-bg);
@@ -72,6 +80,10 @@
   --content-hover-bg: var(--dark-content-hover-bg);
   --tooltip-bg: var(--dark-tooltip-bg);
   --tooltip-shadow: var(--dark-tooltip-shadow);
+
+  --color-red: var(--dark-color-red);
+  --color-yellow: var(--dark-color-yellow);
+  --color-green: var(--dark-color-green);
 }
 @font-face {
   font-family: 'Open Sans';

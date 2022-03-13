@@ -18,7 +18,7 @@ body.software div.form.table > div.row > div:first-child {
     padding: 2px;
 }
 body.software div.form.table > div.row > div:first-child {
-    color: #666;
+    color: var(--button-text);
 }
 body.software div.form.table > div.row:first-child > div:first-child {
     background-color: #aaa;

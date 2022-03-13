@@ -93,11 +93,6 @@ body.dark .form.button:focus {
     filter: brightness(0.8);
 }
 
-body.dark .form.button.green,
-body.dark .form.button.yellow {
-    color: var(--light-button-text);
-}
-
 /* TABLE */
 div.form.table {
   border-top: var(--table-border);

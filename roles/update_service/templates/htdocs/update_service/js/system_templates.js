@@ -394,7 +394,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            $last_running_jobs_msg = "<div class=\"info green\">" + mx.I18N.get("No job history available") + "</div>";
+            $last_running_jobs_msg = "<div class=\"info\">" + mx.I18N.get("No job history available") + "</div>";
             $last_running_jobs_details_msg = "";
         }
         
