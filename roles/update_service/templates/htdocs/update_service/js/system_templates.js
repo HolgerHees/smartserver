@@ -286,11 +286,23 @@ mx.UpdateServiceTemplates = (function( ret ) {
             for( index in changed_data["smartserver_changes"] )
             {
                 let change = changed_data["smartserver_changes"][index];
-
+                
+                let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] + " • " : "";
+                
+                let msg = prefix + change["message"]
+                
                 detailsMsg += "<div class=\"row\">";
-                detailsMsg += "<div>" + change["flag"] + "</div>";
-                detailsMsg += "<div>" + change["path"] + "</div>";
+                detailsMsg += "<div></div><div><span style=\"margin-left: -50px; font-weight:600;\">" + msg + "</span></div>";
                 detailsMsg += "</div>";
+                
+                for( _index in change["files"] )
+                {
+                    let file = change["files"][_index];
+                    detailsMsg += "<div class=\"row\">";
+                    detailsMsg += "<div>" + file["flag"] + "</div>";
+                    detailsMsg += "<div>" + file["path"] + "</div>";
+                    detailsMsg += "</div>";
+                }
             }
         }
         else

@@ -25,15 +25,13 @@ class DeploymentUpdate:
                 except JSONDecodeError:
                     pass
       
-    def filterPath( self, flag, path, deployment_mtime, filtered_lines ):
+    def filterPath( self, flag, path, deployment_mtime ):
         if flag != "D":
             file_stat = os.stat("{}/{}".format(self.config.deployment_directory,path))
             file_mtime = file_stat.st_mtime
             
             if file_mtime > deployment_mtime:
-                if path not in filtered_lines or flag == "A":
-                    filtered_lines[path] = {"flag": flag, "path": path}
-                    return True
+                return True
         return False
 
     def process(self, update_time):
@@ -104,7 +102,7 @@ class DeploymentUpdate:
             commits = {}
             current_commit = None
             current_date = None
-            current_message = []
+            current_messages = []
             current_files = []
             for line in committed_changes:
                 if len(line) == 0:
@@ -112,10 +110,11 @@ class DeploymentUpdate:
 
                 if len(line) > 6 and line[:6] == "commit":
                     if current_commit is not None:
-                        commits[current_commit] = {"date": current_date, "messages": current_message, "files": current_files }
+                        current_date = "{}T{}.000000{}:{}".format(current_date[:10],current_date[11:19],current_date[20:23],current_date[23:])
+                        commits[current_commit] = {"date": current_date, "message": "\n".join(current_messages), "files": current_files }
                     current_commit = line[6:].strip().split(" ",1)[0]
                     current_date = None
-                    current_message = []
+                    current_messages = []
                     current_files = []
                     continue
                 elif current_commit is None:
@@ -128,23 +127,24 @@ class DeploymentUpdate:
                     continue
                                 
                 if line[0] == " ":
-                    current_message.append(line.strip())
+                    current_messages.append(line.strip())
                     continue
 
                 current_files.append( line.split("\t") )
                 
             #print(commits)
             
-            filtered_lines = {}
-            filtered_commit_messages = []
+            filtered_commits = []
             for commit in commits:
+                files = []
                 for file in commits[commit]["files"]:
                     flag, path = file
-                    
-                    success = self.filterPath( flag, path, deployment_mtime, filtered_lines )
-                    if success:
-                        date = "{}T{}.000000{}:{}".format(commits[commit]["date"][:10],commits[commit]["date"][11:19],commits[commit]["date"][20:23],commits[commit]["date"][23:])
-                        filtered_commit_messages.append({"date": date, "message": "\n".join(commits[commit]["messages"]) })
+                    if self.filterPath( flag, path, deployment_mtime ):
+                        files.append( {"flag": flag, "path": path} )
+                        
+                if len(files) == len(commits[commit]["files"]):
+                    commits[commit]["files"] = files
+                    filtered_commits.append(commits[commit])
 
             #print(commits)
             #print(filtered_commit_messages)
@@ -153,14 +153,15 @@ class DeploymentUpdate:
             #print(commit_lines)
             #print(committed_changes)
 
+            filtered_files = {}
             lines = [ele.split("\t") for ele in uncommitted_changes]
             for line in lines:
                 if len(line) == 1:
                     continue
                 flag, path = line
-                self.filterPath( flag, path, deployment_mtime, filtered_lines )
-
-            filtered_lines = dict(sorted(filtered_lines.items()))
+                if self.filterPath( flag, path, deployment_mtime ):
+                    if path not in filtered_files or flag == "A":
+                        filtered_files[path] = {"flag": flag, "path": path}
                             
             files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
             config_files = {}
@@ -170,8 +171,12 @@ class DeploymentUpdate:
                     path = filename[len(config.deployment_directory):]
                     config_files[path] = {"flag": "M", "path": path}
 
-            lines = list(config_files.values()) + list(filtered_lines.values())
+            lines = list(config_files.values()) + list(filtered_files.values())
             
-            smartserver_changes = lines
+            if len(lines) > 0:
+                filtered_files = dict(sorted(filtered_files.items()))
+                filtered_commits.insert(0,{"date": None, "message": "uncommitted", "files": lines})
+
+            smartserver_changes = filtered_commits
             
-        return smartserver_code, smartserver_pull, smartserver_changes, filtered_commit_messages
+        return smartserver_code, smartserver_pull, smartserver_changes
