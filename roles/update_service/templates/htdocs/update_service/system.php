@@ -191,7 +191,7 @@ if( !Auth::hasGroup("admin") )
                     var logfile_name = logfile.substring(0,logfile.length - 4);
                     var data = logfile_name.split("-");
 
-                    action_msg_1 = "<div class=\"detailView\" onClick=\"mx.UNCore.openDetails(this,'" + data[0] + "','" + data[3] + "','" + data[4] + "')\">";
+                    action_msg_1 = "<div class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + data[0] + "','" + data[3] + "','" + data[4] + "')\">";
                     action_msg_2 = "</div>";
                 
                     var runtime = Math.round( ( (new Date()).getTime() - Date.parse(job_started) ) / 1000 );
