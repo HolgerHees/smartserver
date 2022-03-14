@@ -183,6 +183,7 @@ if( !Auth::hasGroup("admin") )
             var msg = "";
             var currentRunningStateElement = mx.$("#currentRunningState");
             var currentRunningActionsElement = mx.$("#currentRunningActions");
+            
             if( job_is_running )
             {
                 var logfile = state["job_logfile"];
@@ -191,8 +192,8 @@ if( !Auth::hasGroup("admin") )
                     var logfile_name = logfile.substring(0,logfile.length - 4);
                     var data = logfile_name.split("-");
 
-                    action_msg_1 = "<div class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + data[0] + "','" + data[3] + "','" + data[4] + "')\">";
-                    action_msg_2 = "</div>";
+                    action_msg_1 = "<span class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + data[0] + "','" + data[3] + "','" + data[4] + "')\">";
+                    action_msg_2 = "</span>";
                 
                     var runtime = Math.round( ( (new Date()).getTime() - Date.parse(job_started) ) / 1000 );
                     
