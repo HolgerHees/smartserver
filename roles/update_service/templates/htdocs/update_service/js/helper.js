@@ -242,6 +242,6 @@ mx.UpdateServiceHelper = (function( ret ) {
             return [ null, null ];
         }
     }
-        
+    
     return ret;
 })( mx.UpdateServiceHelper || {} ); 

@@ -90,11 +90,6 @@ mx.UpdateServiceActions = (function( ret ) {
         }
     }
 
-    ret.openDetails = function(event,datetime,cmd,username)
-    {
-        document.location = '../details/?datetime=' + datetime + '&cmd=' + cmd + '&username=' + username;
-    }
-
     function updateDialog(type, btn, args, callback )
     {
         if( btn.classList.contains("disabled") ) 
@@ -407,6 +402,17 @@ mx.UpdateServiceActions = (function( ret ) {
         });*/
     }
     
+    ret.openDetails = function(event,datetime,cmd,username)
+    {
+        document.location = '../details/?datetime=' + datetime + '&cmd=' + cmd + '&username=' + username;
+    }
+
+    ret.openGitCommit = function(event,url)
+    {
+        event.stopPropagation();
+        window.open(url);
+    }
+
     ret.getDialog = function()
     {
         return dialog;

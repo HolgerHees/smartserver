@@ -289,7 +289,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 
                 let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
-                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<a href=\"" + change["url"] + "\" target=\"_blank\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</a>" : "" );
+                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<span class=\"gitCommit\" mx.UpdateServiceActions.openGitCommit('" + change["url"] + "')\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</span>" : "" );
                 
                 detailsMsg += "<div class=\"row\">";
                 detailsMsg += "<div></div><div><span style=\"margin-left: -50px;\">" + msg + "</span></div>";
@@ -368,8 +368,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             last_job = jobs[0];
             
-            let action_msg_1 = "<div class=\"detailView\" onclick=\"mx.UpdateServiceActions.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">"
-            let action_msg_2 = "</div>";
+            let action_msg_1 = "<span class=\"detailView\" onclick=\"mx.UpdateServiceActions.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">"
+            let action_msg_2 = "</span>";
             
             let state_msg = mx.I18N.get(last_job["state"] == "success" ? "was successful" : last_job["state"]);
             let icon = last_job["state"] == "failed" || last_job["state"] == "crashed" ? "icon-attention red" : "icon-ok green";

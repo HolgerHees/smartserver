@@ -234,17 +234,14 @@ body.system div.dialogLayer .spacer {
 
 
 
-
-
-
-
-body.system div.detailView {
+body.system span.gitCommit,
+body.system span.detailView {
   cursor: pointer;
-  display: inline-block;
   color: #1976d2;
 }
 @media (hover: hover) {
-  body.system div.detailView:hover {
+  body.system span.gitCommit:hover,
+  body.system span.detailView:hover {
     text-decoration: underline;
   }
 }
