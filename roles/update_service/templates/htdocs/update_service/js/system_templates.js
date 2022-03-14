@@ -289,7 +289,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 
                 let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
-                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<span class=\"gitCommit\" onClick=\"mx.UpdateServiceActions.openGitCommit('" + change["url"] + "')\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</span>" : "" );
+                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<span class=\"gitCommit\" onclick=\"mx.UpdateServiceActions.openGitCommit(event,'" + change["url"] + "')\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</span>" : "" );
                 
                 detailsMsg += "<div class=\"row\">";
                 detailsMsg += "<div></div><div><span style=\"margin-left: -50px;\">" + msg + "</span></div>";
@@ -368,7 +368,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         {
             last_job = jobs[0];
             
-            let action_msg_1 = "<span class=\"detailView\" onclick=\"mx.UpdateServiceActions.openDetails(this,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">"
+            let action_msg_1 = "<span class=\"detailView\" onclick=\"mx.UpdateServiceActions.openDetails(event,'" + last_job["start"] + "','" + last_job["type"] + "','" + last_job["user"] + "')\">"
             let action_msg_2 = "</span>";
             
             let state_msg = mx.I18N.get(last_job["state"] == "success" ? "was successful" : last_job["state"]);
@@ -394,7 +394,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 let job = jobs[index];
                 let date = new Date(job["timestamp"] * 1000);
 
-                detailsMsg += "<div class=\"row\" onclick=\"mx.UpdateServiceActions.openDetails(this,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')\">";
+                detailsMsg += "<div class=\"row\" onclick=\"mx.UpdateServiceActions.openDetails(event,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')\">";
                 detailsMsg += "<div class=\"state " + job["state"] + "\"></div>";
                 detailsMsg += "<div>" + mx.I18N.get(cmd_type_map[job["type"]]) + "</div>";
                 detailsMsg += "<div>" + job["user"] + "</div>";
