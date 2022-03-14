@@ -31,7 +31,7 @@ body.dark .form.button:focus {
     cursor: default;
     opacity: 0.5;
 }
-.form.button > span.ripple {
+.form.button span.ripple {
   position: absolute;
   border-radius: 50%;
   transform: scale(0);
@@ -43,16 +43,16 @@ body.dark .form.button:focus {
     opacity: 0;
   }
 }
-.form.button > span.ripple {
+.form.button span.ripple {
   background-color: var(--menu-active-bg);
 }
-.form.button.green > span.ripple {
+.form.button.green span.ripple {
   background-color: rgba(255, 255, 255, 0.7);
 }
-.form.button.yellow > span.ripple {
+.form.button.yellow span.ripple {
   background-color: rgba(255, 255, 255, 0.7);
 }
-.form.button.red > span.ripple {
+.form.button.red span.ripple {
   background-color: rgba(255, 255, 255, 0.7);
 }
 @media (hover: hover) {
@@ -212,14 +212,15 @@ div.buttonSelection div.buttonSelectionSelector {
     right: 0;
     top: 0;
     bottom: 0;
+    padding: 13px 1px 13px 1px;
     width: 25px;
+    /*width: 27px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: center;*/
     border-left: var(--widget-border);
     cursor: pointer;
-    padding-left: 1px;
-    padding-right: 1px;
+    overflow: hidden;
 }
 div.buttonSelection div.buttonSelectionSelector > span:before {
     transition: transform 100ms linear;

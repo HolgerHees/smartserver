@@ -27,6 +27,17 @@ mx.Page = (function( ret ) {
         window.setTimeout(function(){ circle.remove() },800); // => animation is 600ms
     }
     
+    function initRipple(elements)
+    {
+        for (const element of elements) 
+        {
+            if( element.dataset.ripple ) continue;
+
+            element.dataset.ripple = 1
+            element.addEventListener("click", createRipple);
+        }
+    }
+
     function deviceListener(callback)
     {
         if( window.innerWidth <= 600 ) visualisationType = "phone";
@@ -70,17 +81,11 @@ mx.Page = (function( ret ) {
             return window.setTimeout(callback, timeout);
         }
     }
-    
+        
     ret.refreshUI = function(rootElement)
     {
-        const buttons = rootElement ? mx._$$(".form.button",rootElement) : mx.$$(".form.button");
-        for (const button of buttons) 
-        {
-            if( button.dataset.ripple ) continue;
-
-            button.dataset.ripple = 1
-            button.addEventListener("click", createRipple);
-        }
+        initRipple(rootElement ? mx._$$(".form.button",rootElement) : mx.$$(".form.button"));
+        initRipple(rootElement ? mx._$$(".form.button .buttonSelectionSelector",rootElement) : mx.$$(".form.button .buttonSelectionSelector"));
     }
     
     ret.initFrame = function(spacer_cls, title)
