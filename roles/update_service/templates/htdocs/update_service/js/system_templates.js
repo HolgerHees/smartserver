@@ -289,7 +289,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 
                 let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
-                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<span class=\"gitCommit\" mx.UpdateServiceActions.openGitCommit('" + change["url"] + "')\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</span>" : "" );
+                let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<span class=\"gitCommit\" onClick=\"mx.UpdateServiceActions.openGitCommit('" + change["url"] + "')\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</span>" : "" );
                 
                 detailsMsg += "<div class=\"row\">";
                 detailsMsg += "<div></div><div><span style=\"margin-left: -50px;\">" + msg + "</span></div>";
