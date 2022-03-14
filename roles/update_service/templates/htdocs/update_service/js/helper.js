@@ -104,9 +104,9 @@ mx.UpdateServiceHelper = (function( ret ) {
     {
         if( btnElement != null ) 
         {
-            let text = detailElement.style.maxHeight ? mx.I18N.get("Hide") : mx.I18N.get("Show");
-            if( btnElement.childNodes.length > 0 ) btnElement.childNodes[0].nodeValue = text;
-            else btnElement.innerText = text;
+            let icon = detailElement.style.maxHeight ? "icon-play up" : "icon-play down";
+            if( btnElement.childNodes.length > 0 ) btnElement.childNodes[0].className = icon;
+            else btnElement.innerHTML = "<span class=\"" + icon + "\"></span>";
         }
     }
 

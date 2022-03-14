@@ -49,7 +49,8 @@ class DeploymentUpdate:
         else:
             # git add files (intent to add)  
             command.exec([ "git", "add", "-N", "*" ], cwd=self.config.deployment_directory )
-            result = command.exec([ "git", "diff-index", "--name-status", "origin/master" ], cwd=self.config.deployment_directory )
+            #result = command.exec([ "git", "diff-index", "--name-status", "origin/master" ], cwd=self.config.deployment_directory )
+            result = command.exec([ "git", "status", "--porcelain" ], cwd=self.config.deployment_directory )
             uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
 
             deployment_stat = os.stat(self.config.deployment_state_file)
@@ -93,7 +94,7 @@ class DeploymentUpdate:
             #last_deployment = datetime.strptime("2022-03-13 00:00:00 +0100","%Y-%m-%d %H:%M:%S %z")
             
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-            result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployment), "origin/master" ], cwd=self.config.deployment_directory )
+            result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployment), "HEAD" ], cwd=self.config.deployment_directory )
             ref = result.stdout.decode("utf-8").strip()
             
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
@@ -102,7 +103,7 @@ class DeploymentUpdate:
             #print(committed_changes)
 
             # prepare commit messages
-            result = command.exec([ "git", "log", "--name-status", "--date=iso", str(ref) +  "..origin/master" ], cwd=self.config.deployment_directory )
+            result = command.exec([ "git", "log", "--name-status", "--date=iso", str(ref) +  "..HEAD" ], cwd=self.config.deployment_directory )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
             
             commits = {}
@@ -168,7 +169,8 @@ class DeploymentUpdate:
             #print(committed_changes)
 
             filtered_files = {}
-            lines = [ele.split("\t") for ele in uncommitted_changes]
+            #lines = [ele.split("\t") for ele in uncommitted_changes]
+            lines = [ele.strip().split(" ",1) for ele in uncommitted_changes]
             for line in lines:
                 if len(line) == 1:
                     continue

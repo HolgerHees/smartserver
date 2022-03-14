@@ -228,6 +228,12 @@ div.buttonSelection div.buttonSelectionSelector > span.down,
 div.buttonSelection div.buttonSelectionSelector.open > span.up {
     display: block;
 }
+div.buttonSelection div.buttonSelectionSelector > span.up:before {
+  transform: rotate(-90deg);
+}
+div.buttonSelection div.buttonSelectionSelector > span.down:before {
+  transform: rotate(90deg);
+}
 div.buttonSelection > div.buttonSelectionLayer {
     bottom: 0;
     right: 0;
