@@ -54,6 +54,8 @@
   --info-panel-layer: black;
   --info-panel-text: white;  
   --info-panel-shadow: 0 1px 2px #00000099;
+  
+  --app-header-button-svg: white;
 }
 
 :root body {
@@ -203,8 +205,8 @@
   background-color: var(--panel-header-bg);
 
 }
-#app .button svg {
-    color: var(--button-svg);
+#side #header .button svg {
+    color: var(--app-header-button-svg);
 }
 #menu .group.header .button svg {
     color: var(--menu-header-button-svg);

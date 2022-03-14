@@ -35,8 +35,6 @@
   --dark-tooltip-bg: #202124;
   --dark-tooltip-shadow: #666;
 
-  --button-svg: white;
-
   --light-color-red: #ff7479;
   --light-color-yellow: #ffc936;
   --light-color-green: #b5ce69;
@@ -44,6 +42,8 @@
   --dark-color-red: #c13d48;
   --dark-color-yellow: #e0ae0e;
   --dark-color-green: #99b24f;
+  
+  --link-color: #1976d2;
 }
 :root body {
   --bg: var(--light-bg);

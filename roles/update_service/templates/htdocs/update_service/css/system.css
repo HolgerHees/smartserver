@@ -237,7 +237,7 @@ body.system div.dialogLayer .spacer {
 body.system span.gitCommit,
 body.system span.detailView {
   cursor: pointer;
-  color: #1976d2;
+  color: var(--link-color);
 }
 @media (hover: hover) {
   body.system span.gitCommit:hover,
