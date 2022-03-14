@@ -153,15 +153,15 @@ body.system div.form.button {
 body.system div.buttons {
   white-space: nowrap;
 }
+body.system div.buttons .button.toggle {
+  padding: 13px 1px 13px 1px;
+  width: 25px;
+}
 body.system div.buttons .button.toggle span.up:before {
   transform: rotate(-90deg);
 }
 body.system div.buttons .button.toggle span.down:before {
   transform: rotate(90deg);
-}
-body.system div.buttons .button.toggle {
-  padding: 13px 0 13px 1px;
-  width: 25px;
 }
 @media (pointer: coarse) {
   body.system div.buttons .button.toggle {
