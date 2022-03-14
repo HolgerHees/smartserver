@@ -218,7 +218,7 @@ div.buttonSelection div.buttonSelectionSelector {
     justify-content: center;
     border-left: var(--widget-border);
     cursor: pointer;
-    padding-left: 2px;
+    padding-left: 1px;
 }
 div.buttonSelection div.buttonSelectionSelector.open > span.down,
 div.buttonSelection div.buttonSelectionSelector > span.up {
