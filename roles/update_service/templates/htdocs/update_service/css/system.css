@@ -157,11 +157,13 @@ body.system div.buttons .button.toggle {
   padding: 13px 1px 13px 1px;
   width: 25px;
 }
-body.system div.buttons .button.toggle span.up:before {
-  transform: rotate(-90deg);
+
+body.system div.buttons .button.toggle span.icon-play:before {
+    transition: transform 100ms linear;
+    transform: rotate(90deg);
 }
-body.system div.buttons .button.toggle span.down:before {
-  transform: rotate(90deg);
+body.system div.buttons .button.toggle span.icon-play.open:before {
+    transform: rotate(-90deg);
 }
 @media (pointer: coarse) {
   body.system div.buttons .button.toggle {

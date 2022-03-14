@@ -366,7 +366,8 @@ if( !Auth::hasGroup("admin") )
             if( element.style.maxHeight )
             {
                 element.style.maxHeight = "";
-                window.setTimeout(function(){ element.style.display=""; mx.UpdateServiceHelper.setToogle(btn,element); },300);
+                mx.UpdateServiceHelper.setToogle(btn,element);
+                window.setTimeout(function(){ element.style.display=""; },300);
             }
             else
             {

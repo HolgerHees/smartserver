@@ -104,7 +104,7 @@ mx.UpdateServiceHelper = (function( ret ) {
     {
         if( btnElement != null ) 
         {
-            let icon = detailElement.style.maxHeight ? "icon-play up" : "icon-play down";
+            let icon = detailElement.style.maxHeight ? "icon-play open" : "icon-play";
             if( btnElement.childNodes.length > 0 ) btnElement.childNodes[0].className = icon;
             else btnElement.innerHTML = "<span class=\"" + icon + "\"></span>";
         }

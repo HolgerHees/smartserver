@@ -81,7 +81,7 @@ mx.Selectbutton = (function( ret ) {
         options.elements.button.appendChild(options.elements.buttonText);
 
         options.elements.buttonSelector = document.createElement("div");
-        options.elements.buttonSelector.innerHTML = "<span class=\"down icon-play\"></span><span class=\"up icon-play\"></span>";
+        options.elements.buttonSelector.innerHTML = "<span class=\"icon-play\"></span>";
         options.elements.buttonSelector.classList.add("buttonSelectionSelector");
         options.elements.buttonSelector.onclick = function(event){ 
             if( options.elements.buttonSelectionLayer.style.display )

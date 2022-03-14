@@ -221,19 +221,12 @@ div.buttonSelection div.buttonSelectionSelector {
     padding-left: 1px;
     padding-right: 1px;
 }
-div.buttonSelection div.buttonSelectionSelector.open > span.down,
-div.buttonSelection div.buttonSelectionSelector > span.up {
-    display: none
+div.buttonSelection div.buttonSelectionSelector > span:before {
+    transition: transform 100ms linear;
+    transform: rotate(90deg);
 }
-div.buttonSelection div.buttonSelectionSelector > span.down,
-div.buttonSelection div.buttonSelectionSelector.open > span.up {
-    display: block;
-}
-div.buttonSelection div.buttonSelectionSelector > span.up:before {
-  transform: rotate(-90deg);
-}
-div.buttonSelection div.buttonSelectionSelector > span.down:before {
-  transform: rotate(90deg);
+div.buttonSelection div.buttonSelectionSelector.open > span:before {
+    transform: rotate(-90deg);
 }
 div.buttonSelection > div.buttonSelectionLayer {
     bottom: 0;
