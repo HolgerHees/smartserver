@@ -312,14 +312,21 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            rows = smartserverChangesData;
+            rows = [];
+            for( index in smartserverChangesData )
+            {
+                let change = smartserverChangesData[index];
+                
+                rows.push( [ change["date"] ? new Date(change["date"]) : new Date(), change ] );
+            }
+            
             rows.sort(function(first, second) {
-                return reverse ? new Date(first["date"]) < new Date(second["date"]) : new Date(first["date"]) > new Date(second["date"]);
+                return reverse ? first[0] < second[0] : first[0] > second[0];
             });
             
             for( index in rows )
             {
-                let change = rows[index];
+                let change = rows[index][1];
                 
                 let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
@@ -340,14 +347,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
             }
         }
         
-        console.log("build");
-        
         return detailsMsg;
     }
     
     ret.sortSSC = function(type)
     {
-        let smartserverChangeDetails = buildSSC(type, smartserverChangesType != type ? false : !smartserverChangesIsReverse);
+        let smartserverChangeDetails = buildSSC(type, smartserverChangesType != type ? ( type == 'files' ? false : true ) : !smartserverChangesIsReverse);
         mx.UpdateServiceHelper.setTableData(smartserverChangeDetails,"smartserverChangeDetails","smartserverChangeHeader");
     }
     
@@ -370,7 +375,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
             
             smartserverChangesData = changed_data["smartserver_changes"];
-            detailsMsg = buildSSC('commits',false);
+            detailsMsg = buildSSC('commits',true);
         }
         else
         {
