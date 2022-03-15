@@ -42,13 +42,14 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
     {
         if( changed_data.hasOwnProperty("software") )
         {   
-            let content = "";
+            let listElement = document.body.querySelector(".list");
             
             if( !changed_data["software"].hasOwnProperty("states") )
             {
-                content += "<div class=\"not_available\">";
+                let content = "<div class=\"not_available\">";
                 content += mx.I18N.get("No software versions have been checked so far") + "<br><br><div class=\"form button\" onclick=\"mx.SNCore.startSoftwareCheck()\">" + mx.I18N.get("Start initial run") + "</div></div>";
               
+                listElement.innerHTML = content;
             }
             else
             {
@@ -82,7 +83,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
 
                     let columns = []
 
-                    columns.push({"value": "<span class=\"" + icon + "\"></span>", "class": "typeLink", "onclick": "mx.SNCore.openUrl(event,'" + state["url"] + "')" });
+                    columns.push({"value": "<span class=\"" + icon + "\"></span>", "class": "typeLink", "onclick": function(){ mx.SNCore.openUrl(event,state["url"]); } });
                     columns.push({"value": state["name"] });
 
                     let latestDate = new Date( state["current"]["date"] );
@@ -157,7 +158,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                     }
                     
                     columns.push({"value": upgradesHTML });
-                    columns.push({"value": lastUpdate, "class": "software lastUpdate", "data": {"tooltip": lastUpdateTooltip}});
+                    columns.push({"value": lastUpdate, "class": "software lastUpdate", "data": lastUpdateTooltip ? {"tooltip": lastUpdateTooltip} : null });
     
                     rows.push({
                         "class": cls,
@@ -179,10 +180,9 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 let tableElement = document.createElement("div");
                 table.build(tableElement);
                 
-                content = tableElement.outerHTML;
+                listElement.innerHTML = "";
+                listElement.appendChild(tableElement);
             }
-                
-            document.body.querySelector(".list").innerHTML = content;
             
             mx.Tooltip.init();
         }
