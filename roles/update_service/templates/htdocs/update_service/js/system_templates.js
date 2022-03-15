@@ -288,7 +288,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 for( _index in change["files"] )
                 {
                     let file = change["files"][_index];
-                    files[file['path']] = file;
+                    if( !files.hasOwnProperty(file['path']) || file["flag"] == "A" )
+                    {
+                        files[file['path']] = file;
+                    }
                 }
             }
             
