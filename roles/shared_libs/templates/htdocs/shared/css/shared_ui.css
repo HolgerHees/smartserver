@@ -290,6 +290,7 @@ div.buttonSelection > div.buttonSelectionLayer > div:hover {
     font-size: 14px;
     padding: 4px;
     cursor: pointer;
+    text-align: left;
 }
 .autoCompleteLayer > div.row:hover {
     background-color: var(--menu-hover-bg);
