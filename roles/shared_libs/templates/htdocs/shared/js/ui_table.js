@@ -21,8 +21,6 @@ mx.Table = (function( ret ) {
             if( options["sort"] ) cls.push("sort");
             
             content += "<div";
-            if( options["sort"] ) content += " onclick=\"" + options["sort"]["callback"] + "('" + column["sort"]["value"] + "'," + ( options["sort"]["reverse"] ? 'false' : 'true' ) + ")\"";
-
             if( cls.length ) content += " class=\"" + cls.join(" ") + "\"";
             content += ">";
             if( column["value"] ) content += column["value"];
@@ -40,7 +38,6 @@ mx.Table = (function( ret ) {
             if( row["class"] ) cls.push(row["class"]);
             if( cls.length ) content += " " + cls.join(" ");
             content += "\"";
-            if( row["onclick"] ) content += "onclick=\"" + row["onclick"] + "\"";
             content += ">";
 
             row["columns"].forEach(function(column,i)
@@ -67,6 +64,26 @@ mx.Table = (function( ret ) {
         });
         
         tableElement.innerHTML = content;
+        
+        options["rows"].forEach(function(row,i)
+        {
+            if( !row["onclick"] ) return;
+            
+            tableElement.childNodes[i+1].addEventListener("click",function()
+            {
+                row["onclick"]();
+            });
+        });
+        
+        options["header"].forEach(function(column,i)
+        {
+            if( !options["sort"] ) return;
+
+            tableElement.childNodes[0].childNodes[i].addEventListener("click",function()
+            {
+                options["sort"]["callback"](column["sort"]["value"],!options["sort"]["reverse"]);
+            });
+        });
     }
 
     ret.init = function(options)

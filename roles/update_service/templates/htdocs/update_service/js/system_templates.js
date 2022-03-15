@@ -323,23 +323,18 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return updateCount;
     }
     
-    var smartserverChangesData = null;
-    var smartserverChangesHeaderElement = null;
-    var smartserverChangesTableElement = null;
-    var smartserverChangesIsReverse = false;
-    var smartserverChangesType = null;
-    function buildSSC(type,reverse)
+    var smartserverChangesSortType = null;
+    function buildSSC(type, reverse, headerElement, tableElement, data)
     {
-        smartserverChangesIsReverse = reverse;
-        smartserverChangesType = type;
+        smartserverChangesSortType = type;
                
         let rows = [];
         if( type == 'files' )
         {
             let files = {}
-            for( index in smartserverChangesData )
+            for( index in data )
             {
-                let change = smartserverChangesData[index];
+                let change = data[index];
                 for( _index in change["files"] )
                 {
                     let file = change["files"][_index];
@@ -366,9 +361,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
         else
         {
             let _rows = [];
-            for( index in smartserverChangesData )
+            for( index in data )
             {
-                let change = smartserverChangesData[index];
+                let change = data[index];
                 
                 _rows.push( [ change["date"] ? new Date(change["date"]) : new Date(), change ] );
             }
@@ -402,7 +397,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         
         let table = mx.Table.init( {
             "class": "list",
-            "sort": { "value": type, "reverse": reverse, "callback": "mx.UpdateServiceTemplates.sortSSC" },
+            "sort": { "value": type, "reverse": reverse, "callback": function(type,reverse){ mx.UpdateServiceTemplates.sortSSC(type, reverse , headerElement, tableElement, data) } },
             "header": [
                 { "value": mx.I18N.get("Flag","table"), "sort": { "value": "commits", "reverse": true } },
                 { "value": mx.I18N.get("File","table"), "grow": true, "align": "left", "sort": { "value": "files" } }
@@ -413,14 +408,14 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return table;            
     }
     
-    ret.sortSSC = function(type,reverse)
+    ret.sortSSC = function(type, reverse, headerElement, tableElement, data)
     {
-        let table = buildSSC(type, smartserverChangesType != type ? ( type == 'files' ? false : true ) : !smartserverChangesIsReverse);
+        let table = buildSSC(type, smartserverChangesSortType != type ? ( type == 'files' ? false : true ) : reverse, headerElement, tableElement, data);
         
-        table.build(smartserverChangesTableElement);
-        smartserverChangesTableElement.style.display = "";
+        table.build(tableElement);
+        tableElement.style.display = "";
         
-        mx.UpdateServiceHelper.initTable(smartserverChangesHeaderElement,smartserverChangesTableElement);
+        mx.UpdateServiceHelper.initTable(headerElement,tableElement);
     }
     
     ret.setSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update, header_id, table_id)
@@ -442,10 +437,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
             
-            smartserverChangesData = changed_data["smartserver_changes"];
-            smartserverChangesHeaderElement = headerElement;
-            smartserverChangesTableElement = tableElement;
-            let table = buildSSC('commits',true);
+            let table = buildSSC('commits',true, headerElement, tableElement, changed_data["smartserver_changes"]);
 
             headerElement.innerHTML = headerMsg;
 
@@ -544,7 +536,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             {
                 let date = new Date(job["timestamp"] * 1000);
                 rows.push({
-                    "onclick": "mx.UpdateServiceActions.openDetails(event,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')",
+                    "onclick": function(event){ mx.UpdateServiceActions.openDetails(event,job["start"],job["type"],last_job["user"]); },
                     "columns": [
                         { "class": "state " + job["state"] },
                         { "value": mx.I18N.get(cmd_type_map[job["type"]]) },
