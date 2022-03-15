@@ -68,54 +68,39 @@ if( !Auth::hasGroup("admin") )
             
             if( changed_data.hasOwnProperty("outdated_processes") || changed_data.hasOwnProperty("outdated_roles") )
             {
-                const [ processDetails, processHeader, rolesDetails, rolesHeader, roleCount ] = mx.UpdateServiceTemplates.getSystemOutdatedDetails(last_data_modified, changed_data);
-                
-                mx.UpdateServiceHelper.setTableContent(processDetails,"systemStateDetails", processHeader, "systemStateHeader");
-                
-                mx.UpdateServiceHelper.setTableContent(rolesDetails,"roleStateDetails",rolesHeader,"roleStateHeader")
+                mx.UpdateServiceTemplates.setSystemOutdatedDetails(last_data_modified, changed_data, "#systemStateHeader", "#systemStateDetails", "#roleStateHeader", "#roleStateDetails" );
             }
             
             if( changed_data.hasOwnProperty("is_reboot_needed") )
             {
-                const rebootNeededDetails = mx.UpdateServiceTemplates.getSystemStateDetails(last_data_modified, changed_data)
-                mx.UpdateServiceHelper.setElementContent(rebootNeededDetails,"systemRebootState");
+                mx.UpdateServiceTemplates.setSystemStateDetails(last_data_modified, changed_data,"#systemRebootState")
             }
 
             if( changed_data.hasOwnProperty("system_updates") )
             {
-                const [ _systemUpdatesCount, systemUpdateDetails, systemUpdateHeader ] = mx.UpdateServiceTemplates.getSystemUpdateDetails(last_data_modified, changed_data, lastUpdateDate);
-                systemUpdatesCount = _systemUpdatesCount;
+                systemUpdatesCount = mx.UpdateServiceTemplates.setSystemUpdateDetails(last_data_modified, changed_data, lastUpdateDate, "#systemUpdateHeader", "#systemUpdateDetails");
                 updateBehaviorChanged = true;
-                
-                mx.UpdateServiceHelper.setTableContent(systemUpdateDetails,"systemUpdateDetails",systemUpdateHeader,"systemUpdateHeader")
             }
             
             if( changed_data.hasOwnProperty("smartserver_changes") )
             {
-                const [ _smartserverChangesCount, smartserverChangeDetails, smartserverChangeHeader ] = mx.UpdateServiceTemplates.getSmartserverChangeDetails(last_data_modified, changed_data, lastUpdateDate);
-                smartserverChangesCount = _smartserverChangesCount;
+                smartserverChangesCount = mx.UpdateServiceTemplates.setSmartserverChangeDetails(last_data_modified, changed_data, lastUpdateDate, "#smartserverChangeHeader", "#smartserverChangeDetails");
                 updateBehaviorChanged = true;
-
-                mx.UpdateServiceHelper.setTableContent(smartserverChangeDetails,"smartserverChangeDetails",smartserverChangeHeader,"smartserverChangeHeader")
             }
             
             if( changed_data.hasOwnProperty("smartserver_code") )
             {
-                const smartserverChangeState = mx.UpdateServiceTemplates.getSmartserverChangeState(last_data_modified, changed_data);
-                mx.UpdateServiceHelper.setElementContent(smartserverChangeState,"smartserverChangeState");
+                mx.UpdateServiceTemplates.setSmartserverChangeState(last_data_modified, changed_data, "#smartserverChangeState");
             }
             
             if( changed_data.hasOwnProperty("jobs") )
             {
-                const [ jobDetails, jobHeader ] = mx.UpdateServiceTemplates.getJobDetails(last_data_modified, changed_data);
-                mx.UpdateServiceHelper.setTableContent(jobDetails,"lastRunningJobsDetails",jobHeader,"lastRunningJobsHeader");
+                mx.UpdateServiceTemplates.setJobDetails(last_data_modified, changed_data, "#lastRunningJobsHeader", "#lastRunningJobsDetails");
             }
 
             if( updateBehaviorChanged )
             {
-                let updateWorkflowContent = mx.UpdateServiceTemplates.getWorkflow(systemUpdatesCount, smartserverChangesCount, lastUpdateDate);
-                  
-                mx.UpdateServiceHelper.setElementContent(updateWorkflowContent,"updateWorkflow");
+                mx.UpdateServiceTemplates.setWorkflow(systemUpdatesCount, smartserverChangesCount, lastUpdateDate, "#updateWorkflow");
             }
             
             let systemUpdatesHashChanged = false;
@@ -427,24 +412,24 @@ if( !Auth::hasGroup("admin") )
     
     <div class="action"><div class="info" id="currentRunningState"></div><div class="buttons" id="currentRunningActions"><div class="form button kill red" onclick="mx.UpdateServiceActions.actionKillProcess(this)" data-i18n="Stop"></div></div></div>
     <div class="action" id="lastRunningJobsHeader"></div>
-    <div class="list form table logfileBox" id="lastRunningJobsDetails"></div>
+    <div id="lastRunningJobsDetails"></div>
 
     <div class="action" id="systemRebootState"></div>
     
     <div class="action" id="systemStateHeader"></div>
-    <div class="list form table" id="systemStateDetails"></div>
+    <div id="systemStateDetails"></div>
     
     <div class="action" id="roleStateHeader"></div>
-    <div class="list form table" id="roleStateDetails"></div>
+    <div id="roleStateDetails"></div>
 </div>
 <div class="widget">
     <div class="header"><div data-i18n="Details"></div></div>
    
     <div class="action" id="systemUpdateHeader"></div>
-    <div class="list form table" id="systemUpdateDetails"></div>
+    <div id="systemUpdateDetails"></div>
 
     <div class="action" id="smartserverChangeHeader"></div>
-    <div class="list form table" id="smartserverChangeDetails"></div>
+    <div id="smartserverChangeDetails"></div>
     <div class="action" id="smartserverChangeState"></div>
 </div>
 <div class="error"></div>

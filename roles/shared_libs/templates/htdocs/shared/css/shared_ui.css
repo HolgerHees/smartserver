@@ -103,8 +103,15 @@ div.form.table > div.row > div:first-child {
 div.form.table > div.row > div:last-child {
   border-right: var(--table-border);
 } 
+div.form.table > div.row > div.right-align,
+div.form.table > div.row > div:last-child {
+  text-align: right;
+}
+div.form.table > div.row > div.left-align,
 div.form.table > div.row > div {
   border-bottom: var(--table-border);
+  text-align: left;
+  vertical-align:middle;
 } 
 div.form.table {
   font-size: 16px;
@@ -122,8 +129,20 @@ div.form.table > div.row > div {
   text-align: left;
   color: var(--content-text);
   white-space: nowrap;
+  width: 1%;
 }
-
+div.form.table > div.row > div.grow {
+  width: auto;
+  white-space: normal; 
+}
+div.form.table > div.row:first-child > div.sort > span {
+    padding-top: 3px;
+    margin-left: -2px;
+    margin-right: -20px;
+}
+div.form.table > div.row:first-child > div.sort {
+    cursor: pointer;
+}
 /* DIALOG */
 .dialogLayer {
     background-color: var(--info-panel-layer);

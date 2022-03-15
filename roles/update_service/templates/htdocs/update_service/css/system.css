@@ -2,16 +2,6 @@ body.system #serverNeedsRestart,
 #currentRunningActions {
   display:none;
 }
-
-body.system #smartserverChangeDetails > div.row:first-child > div > span {
-    position: absolute;
-    padding-top: 3px;
-}
-
-body.system #smartserverChangeDetails > div.row:first-child > div {
-    cursor: pointer;
-}
-
 body.system div.info,
 body.system div.header div:first-child {
   color: var(--content-text);
@@ -97,11 +87,6 @@ body.system div.widget div.list.form.table > div.row > div {
   border-left: none;
   border-right: none;
 }
-body.system div.widget div.list.form.table div.row div.grow  {
-  width: 100%;
-  white-space: normal; 
-}
-
 @media (hover: hover) {
   body.system div.widget div.action:hover {
     background-color: var(--content-hover-bg);

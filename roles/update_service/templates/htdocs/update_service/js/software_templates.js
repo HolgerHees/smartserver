@@ -47,7 +47,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
             if( !changed_data["software"].hasOwnProperty("states") )
             {
                 content += "<div class=\"not_available\">";
-                content += mx.I18N.get("No software versions have been checked so far") + "<br><br><div class=\"form button\" onclick=\"mx.SNCore.startSoftwareCheck()\">" + mx.I18N.get("Start initial run") + "</div>";
+                content += mx.I18N.get("No software versions have been checked so far") + "<br><br><div class=\"form button\" onclick=\"mx.SNCore.startSoftwareCheck()\">" + mx.I18N.get("Start initial run") + "</div></div>";
               
             }
             else
@@ -57,17 +57,9 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
               
                 let states = changed_data["software"]["states"];
               
-                content += "<div class=\"form table\">";
-                content += "<div class=\"row\">";
-                content += "<div>" + states.length + "</div>";
-                content += "<div>Name</div>";
-                content += "<div>Version</div>";
-                content += "<div>Updates</div>";
-                content += "<div>" + lastUpdateDateFormatted + "</div>";
-                content += "</div>";
-                
                 states = states.sort(function(a,b){ return a["name"].localeCompare(b["name"]); });
                 
+                let rows = [];
                 for( let index in states)
                 { 
                     let state = states[index];
@@ -88,17 +80,18 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                     
                     let icon = state["type"] in stateIcons ? stateIcons[state["type"]] : "";
 
-                    content += "<div class=\"row " + cls + "\">";
-                    content += "<div class=\"typeLink\" onClick=\"mx.SNCore.openUrl(event,'" + state["url"] + "')\"><span class=\"" + icon + "\"></span></div>";
-                    content += "<div>" + state["name"] + "</div>";
-                
+                    let columns = []
+
+                    columns.push({"value": "<span class=\"" + icon + "\"></span>", "class": "typeLink", "onclick": "mx.SNCore.openUrl(event,'" + state["url"] + "')" });
+                    columns.push({"value": state["name"] });
+
                     let latestDate = new Date( state["current"]["date"] );
 
-                    content += "<div data-tooltip=\"Version " + formatVersion(state["current"]["version"]) + " from " + formatDatetime(latestDate) + "\">" + formatVersion(state["current"]["version"]) + "</div>";
+                    columns.push({"value": formatVersion(state["current"]["version"]), "data": {"tooltip": "Version " + formatVersion(state["current"]["version"]) + " from " + formatDatetime(latestDate)} });
 
                     let upgradesHTML = "";
                     let lastUpdate = "";
-                    let lastUpdateDetails = "";
+                    let lastUpdateTooltip = "";
                     
                     if( state["updates"].length > 0)
                     {
@@ -160,18 +153,34 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                             }
                         }
                         
-                        lastUpdateDetails = " data-tooltip=\"" + formatDatetime(latestDate) + "\"";
+                        lastUpdateTooltip = formatDatetime(latestDate);
                     }
                     
-                    content += "<div>" + upgradesHTML + "</div>";
-                
-                    content += "<div class=\"software lastUpdate\"" + lastUpdateDetails + ">" + lastUpdate + "</div>";
-                    
-                    content += "</div>";
+                    columns.push({"value": upgradesHTML });
+                    columns.push({"value": lastUpdate, "class": "software lastUpdate", "data": {"tooltip": lastUpdateTooltip}});
+    
+                    rows.push({
+                        "class": cls,
+                        "columns": columns
+                    });
                 }
-            }
                 
-            content += "</div>";
+                let table = mx.Table.init( {
+                    "header": [
+                        { "value": states.length },
+                        { "value": "Name" },
+                        { "value": "Version" },
+                        { "value": "Updates" },
+                        { "value": lastUpdateDateFormatted }
+                    ],
+                    "rows": rows
+                });
+                
+                let tableElement = document.createElement("div");
+                table.build(tableElement);
+                
+                content = tableElement.outerHTML;
+            }
                 
             document.body.querySelector(".list").innerHTML = content;
             

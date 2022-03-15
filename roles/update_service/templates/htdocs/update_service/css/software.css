@@ -5,9 +5,9 @@ body.software div.is_running {
 }
 
 body.software div.form.table {
-  width: 100%;
-  max-width: 800px;
-  margin: auto;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
 }
 body.software div.form.table > div.row:first-child > div {
     font-weight: bold;
@@ -51,7 +51,7 @@ body.software div.currentBranch {
 }
 
 body.software div.detailView {
-  cursor: pointer;
-  display: inline-block;
-  color: #1976d2;
+    cursor: pointer;
+    display: inline-block;
+    color: #1976d2;
 }

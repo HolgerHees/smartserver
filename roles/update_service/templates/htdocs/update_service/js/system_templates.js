@@ -98,12 +98,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return [ date, msg ];
     }
     
-    ret.getSystemOutdatedDetails = function(last_data_modified, changed_data)
+    ret.setSystemOutdatedDetails = function(last_data_modified, changed_data, process_header_id, process_table_id, role_header_id, role_table_id )
     {
-        let processHeaderMsg = "";
-        let processDetailsMsg = "";
+        let processHeaderElement = mx.$(process_header_id);
+        let processTableElement = mx.$(process_table_id);
 
         outdatedProcessData = changed_data.hasOwnProperty("outdated_processes") ? changed_data["outdated_processes"] : outdatedProcessData;
+        //outdatedProcessData = [ {'pid': 1, 'ppid': 2, 'uid': 3, 'user': 4, 'command': 5, 'service' : 6 } ];
         
         let processCount = outdatedProcessData.length;
 
@@ -124,37 +125,59 @@ mx.UpdateServiceTemplates = (function( ret ) {
             if( services.length > 0) processHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionRestartServices(this)\" data-service=\"" + services.join(",") + "\">" + mx.I18N.get("Restart all") + "</div>";
             processHeaderMsg += "<div class=\"form button toggle\" id=\"systemProcesses\" onclick=\"mx.UNCore.toggle(this,'systemStateDetails')\"></div></div>";
 
-            processDetailsMsg = "<div class=\"row\">";
-            processDetailsMsg += "<div>" + mx.I18N.get("PID") + "</div>";
-            processDetailsMsg += "<div>" + mx.I18N.get("PPID") + "</div>";
-            processDetailsMsg += "<div>" + mx.I18N.get("UID") + "</div>";
-            processDetailsMsg += "<div>" + mx.I18N.get("User") + "</div>";
-            processDetailsMsg += "<div class=\"grow\">" + mx.I18N.get("Command") + "</div>";
-            processDetailsMsg += "<div class=\"grow\">" + mx.I18N.get("Service") + "</div>";
-            processDetailsMsg += "<div></div>";
-            processDetailsMsg += "</div>";
-            for( index in outdatedProcessData )
+            let rows = [];
+            outdatedProcessData.forEach(function(process)
             {
-                let process = outdatedProcessData[index];
+                rows.push({
+                    "columns": [
+                        { "value": process["pid"] },
+                        { "value": process["ppid"] },
+                        { "value": process["uid"] },
+                        { "value": process["user"] },
+                        { "value": process["command"] },
+                        { "value": process["service"] },
+                        { "value": ( process["service"] ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionRestartServices(this)\" data-service=\"" + process["service"] + "\">" + mx.I18N.get("Restart") + "</div>" : "" ) }
+                    ]
+                });
+            });
 
-                processDetailsMsg += "<div class=\"row\">";
-                processDetailsMsg += "<div>" + process["pid"] + "</div>";
-                processDetailsMsg += "<div>" + process["ppid"] + "</div>";
-                processDetailsMsg += "<div>" + process["uid"] + "</div>";
-                processDetailsMsg += "<div>" + process["user"] + "</div>";
-                processDetailsMsg += "<div>" + process["command"] + "</div>";
-                processDetailsMsg += "<div>" + process["service"] + "</div>";
-                processDetailsMsg += "<div>" + ( process["service"] ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionRestartServices(this)\" data-service=\"" + process["service"] + "\">" + mx.I18N.get("Restart") + "</div>" : "" ) + "</div>";
-                processDetailsMsg += "</div>";
-            }
-          
+            let table = mx.Table.init( {
+                "class": "list",
+                "header": [
+                    { "value": mx.I18N.get("PID") },
+                    { "value": mx.I18N.get("PPID") },
+                    { "value": mx.I18N.get("UID") },
+                    { "value": mx.I18N.get("User") },
+                    { "value": mx.I18N.get("Command"), "grow": true },
+                    { "value": mx.I18N.get("Service" ) },
+                    { "value": "" },
+                ],
+                "rows": rows
+            });
+            
+            processHeaderElement.innerHTML = processHeaderMsg;
+            processHeaderElement.style.display = "";
+            
+            table.build(processTableElement);
+            processTableElement.style.display = "";
+            
+            mx.UpdateServiceHelper.initTable(processHeaderElement,processTableElement);
         }
-
-        let roleDetailsMsg = "";
-        let roleHeaderMsg = "";
-      
-        outdatedRoleData = changed_data.hasOwnProperty("outdated_roles") ? changed_data["outdated_roles"] : outdatedRoleData;
+        else
+        {
+            processHeaderElement.innerHTML = "";
+            processHeaderElement.style.display = "none";
+            processTableElement.innerHTML = "";
+            processTableElement.style.display = "none";
+        }
         
+
+        outdatedRoleData = changed_data.hasOwnProperty("outdated_roles") ? changed_data["outdated_roles"] : outdatedRoleData;
+        //outdatedRoleData = [ "test" ];
+        
+        let roleHeaderElement = mx.$(role_header_id);
+        let roleTableElement = mx.$(role_table_id);
+
         let roleCount = outdatedRoleData.length;
 
         if( roleCount > 0 )
@@ -168,29 +191,47 @@ mx.UpdateServiceTemplates = (function( ret ) {
             roleHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\" data-tag=\"" + outdatedRoleData.join(",") + "\">" + mx.I18N.get("Install all") + "</div>";
             roleHeaderMsg += "<div class=\"form button toggle\" id=\"smartserverRoles\" onclick=\"mx.UNCore.toggle(this,'roleStateDetails')\"></div></div>";
 
-            roleDetailsMsg = "<div class=\"row\">";
-                roleDetailsMsg += "<div class=\"grow\">" + mx.I18N.get("Role") + "</div>";
-                roleDetailsMsg += "<div></div>";
-                roleDetailsMsg += "</div>";
-            for( index in outdatedRoleData )
+            let rows = [];
+            outdatedRoleData.forEach(function(role)
             {
-                let role = outdatedRoleData[index];
-                
-                roleDetailsMsg += "<div class=\"row\">";
-                roleDetailsMsg += "<div>" + role + "</div>";
-                roleDetailsMsg += "<div>" + ( role ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\" data-tag=\"" + role + "\">" + mx.I18N.get("Install") + "</div>" : "" ) + "</div>";
-                roleDetailsMsg += "</div>";
-            }
-          
-        }
+                rows.push({
+                    "columns": [
+                        { "value": role },
+                        { "value": ( role ? "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\" data-tag=\"" + role + "\">" + mx.I18N.get("Install") + "</div>" : "" ) }
+                    ]
+                });
+            });
 
-        return [processDetailsMsg, processHeaderMsg, roleDetailsMsg, roleHeaderMsg, roleCount ];
+            let table = mx.Table.init( {
+                "class": "list",
+                "header": [
+                    { "value": mx.I18N.get("Role"), "grow": true },
+                    { "value": "" },
+                ],
+                "rows": rows
+            });
+            
+            roleHeaderElement.innerHTML = roleHeaderMsg;
+            roleHeaderElement.style.display = "";
+            
+            table.build(roleTableElement);
+            roleTableElement.style.display = "";
+            
+            mx.UpdateServiceHelper.initTable(roleHeaderElement,roleTableElement);
+        }
+        else
+        {
+            roleHeaderElement.innerHTML = "";
+            roleHeaderElement.style.display = "none";
+            roleTableElement.innerHTML = "";
+            roleTableElement.style.display = "none";
+        }
     }
 
-    ret.getSystemStateDetails = function(last_data_modified, changed_data)
+    ret.setSystemStateDetails = function(last_data_modified, changed_data, element_id)
     {
-        let msg = "";
-
+        let element = mx.$(element_id);
+        
         if( changed_data["is_reboot_needed"]["all"] )
         { 
             let reasons = {};
@@ -205,15 +246,23 @@ mx.UpdateServiceTemplates = (function( ret ) {
             msg = "<div class=\"info\"><span class=\"icon-attention red\"></span> " + mx.I18N.get(infoMsg).fill( isMultiReason ? reasons : reasons[reasonKeys[0]] );
             
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive red\" onclick=\"mx.UpdateServiceActions.actionRebootSystem(this)\">" + mx.I18N.get("Reboot system") + "</div></div>";
+            
+            element.innerHTML = msg;
+            element.style.display = "";
         }
-        
-        return msg;
+        else
+        {
+            element.innerHTML = "";
+            element.style.display = "none";
+        }
     }
     
-    ret.getSystemUpdateDetails = function(last_data_modified, changed_data, last_full_update)
+    ret.setSystemUpdateDetails = function(last_data_modified, changed_data, last_full_update, header_id, table_id)
     {
-        let detailsMsg = "";
-        let headerMsg = "";
+        let headerElement = mx.$(header_id);
+        let tableElement = mx.$(table_id);
+
+        //changed_data["system_updates"] = [ { 'name': 1, 'current': 2, 'update': 3, 'arch': 4 } ];
         let updateCount = changed_data["system_updates"].length;
         
         //let date = last_data_modified["system_updates"] ? new Date(last_data_modified["system_updates"] * 1000) : null;
@@ -235,49 +284,55 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let update = changed_data["system_updates"][0];
             let has_current = update["current"] != null;
             
-            detailsMsg += "<div>" + mx.I18N.get("Name","table") + "</div>";
-            if( has_current ) detailsMsg += "<div>" + mx.I18N.get("Current","table") + "</div>";
-            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("Update","table") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("Arch","table") + "</div>";
-            detailsMsg += "</div>";
-            
-            for( index in changed_data["system_updates"] )
+            let rows = [];
+            changed_data["system_updates"].forEach(function(update)
             {
-                let update = changed_data["system_updates"][index];
+                let columns = [ { "value": update["name"] } ];
+                if( has_current ) columns.push({ "value": update["current"] });
+                columns.push({ "value": update["update"] });
+                columns.push({ "value": update["arch"] });
+                
+                rows.push({"columns": columns});
+            });
+            
+            let headerColumns = [{ "value": mx.I18N.get("Name","table") }];
+            if( has_current ) headerColumns.push({ "value": mx.I18N.get("Current","table") });
+            headerColumns.push({ "value": mx.I18N.get("Update","table"), "grow": true });
+            headerColumns.push({ "value": mx.I18N.get("Arch","table") });
 
-                detailsMsg += "<div class=\"row\">";
-                detailsMsg += "<div>" + update["name"] + "</div>";
-                if( has_current ) detailsMsg += "<div>" + update["current"] + "</div>";
-                detailsMsg += "<div>" + update["update"] + "</div>";
-                detailsMsg += "<div>" + update["arch"] + "</div>";
-                detailsMsg += "</div>";
-            }
+            let table = mx.Table.init( {
+                "class": "list",
+                "header": headerColumns,
+                "rows": rows
+            });
+            
+            headerElement.innerHTML = headerMsg;
+
+            table.build(tableElement);
+            tableElement.style.display = "";
+            
+            mx.UpdateServiceHelper.initTable(headerElement,tableElement);
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("No system updates available") + "</div>";
+            headerElement.innerHTML = "<div class=\"info\">" + mx.I18N.get("No system updates available") + "</div>";
+            tableElement.innerHTML = "";
+            tableElement.style.display = "none";
         }
         
-        return [ updateCount, detailsMsg, headerMsg ];
+        return updateCount;
     }
     
     var smartserverChangesData = null;
+    var smartserverChangesHeaderElement = null;
+    var smartserverChangesTableElement = null;
     var smartserverChangesIsReverse = false;
     var smartserverChangesType = null;
     function buildSSC(type,reverse)
     {
         smartserverChangesIsReverse = reverse;
         smartserverChangesType = type;
-        
-        detailsMsg = "<div class=\"row\" data-type=\"" + type + "\">";
-        detailsMsg += "<div onclick=\"mx.UpdateServiceTemplates.sortSSC('commits')\">" + mx.I18N.get("Flag","table");
-        if( type == "commits" ) detailsMsg += "<span class=\"" + ( reverse ? "icon-up": "icon-down-1" ) + "\"></span> ";
-        detailsMsg += "</div>";
-        detailsMsg += "<div onclick=\"mx.UpdateServiceTemplates.sortSSC('files')\" class=\"grow\">" + mx.I18N.get("File","table");
-        if( type == "files" ) detailsMsg += "<span class=\"" + ( reverse ? "icon-up": "icon-down-1" ) + "\"></span> ";
-        detailsMsg += "</div>";
-        detailsMsg += "</div>";
-        
+               
         let rows = [];
         if( type == 'files' )
         {
@@ -298,77 +353,87 @@ mx.UpdateServiceTemplates = (function( ret ) {
             var keys = Object.keys(files);
             keys = keys.sort();
             if( reverse ) keys = keys.reverse();
-            
+                
             for (var i=0; i<keys.length; i++) 
             {
-                rows.push(files[keys[i]]);
-            }
-            
-            for( index in rows )
-            {
-                let file = rows[index];
-                detailsMsg += "<div class=\"row\">";
-                detailsMsg += "<div>" + file["flag"] + "</div>";
-                detailsMsg += "<div>" + file["path"] + "</div>";
-                detailsMsg += "</div>";
+                let file = files[keys[i]];
+                rows.push({ "columns": [
+                    { "value": file["flag"] },
+                    { "value": file["path"], "align": "left" } 
+                ]});
             }
         }
         else
         {
-            rows = [];
+            let _rows = [];
             for( index in smartserverChangesData )
             {
                 let change = smartserverChangesData[index];
                 
-                rows.push( [ change["date"] ? new Date(change["date"]) : new Date(), change ] );
+                _rows.push( [ change["date"] ? new Date(change["date"]) : new Date(), change ] );
             }
             
-            rows.sort(function(first, second) {
+            _rows.sort(function(first, second) {
                 return reverse ? first[0] < second[0] : first[0] > second[0];
             });
             
-            for( index in rows )
+            _rows.forEach(function(_row)
             {
-                let change = rows[index][1];
-                
+                let change = _row[1];
+
                 let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
                 let msg = "<span style=\"font-weight:600;\">" + prefix + "</span> • " + ( change["url"] ? "<span class=\"gitCommit\" onclick=\"mx.UpdateServiceActions.openGitCommit(event,'" + change["url"] + "')\">" : "" ) + change["message"].split("\n")[0] + ( change["url"] ? "</span>" : "" );
                 
-                detailsMsg += "<div class=\"row\">";
-                detailsMsg += "<div></div><div><span style=\"margin-left: -50px;\">" + msg + "</span></div>";
-                detailsMsg += "</div>";
+                rows.push({ "columns": [ 
+                    { "value": "" }, 
+                    { "value": "<span style=\"margin-left: -50px;\">" + msg + "</span>", "align": "left" }
+                ]});
                 
-                for( _index in change["files"] )
+                change["files"].forEach(function(file)
                 {
-                    let file = change["files"][_index];
-                    detailsMsg += "<div class=\"row\">";
-                    detailsMsg += "<div>" + file["flag"] + "</div>";
-                    detailsMsg += "<div>" + file["path"] + "</div>";
-                    detailsMsg += "</div>";
-                }
-            }
+                    rows.push({ "columns": [ 
+                        { "value": file["flag"] }, 
+                        { "value": file["path"], "align": "left" }
+                    ]});
+                });
+            });
         }
         
-        return detailsMsg;
+        let table = mx.Table.init( {
+            "class": "list",
+            "sort": { "value": type, "reverse": reverse, "callback": "mx.UpdateServiceTemplates.sortSSC" },
+            "header": [
+                { "value": mx.I18N.get("Flag","table"), "sort": { "value": "commits", "reverse": true } },
+                { "value": mx.I18N.get("File","table"), "grow": true, "align": "left", "sort": { "value": "files" } }
+            ],
+            "rows": rows
+        });
+        
+        return table;            
     }
     
-    ret.sortSSC = function(type)
+    ret.sortSSC = function(type,reverse)
     {
-        let smartserverChangeDetails = buildSSC(type, smartserverChangesType != type ? ( type == 'files' ? false : true ) : !smartserverChangesIsReverse);
-        mx.UpdateServiceHelper.setTableData(smartserverChangeDetails,"smartserverChangeDetails","smartserverChangeHeader");
+        let table = buildSSC(type, smartserverChangesType != type ? ( type == 'files' ? false : true ) : !smartserverChangesIsReverse);
+        
+        table.build(smartserverChangesTableElement);
+        smartserverChangesTableElement.style.display = "";
+        
+        mx.UpdateServiceHelper.initTable(smartserverChangesHeaderElement,smartserverChangesTableElement);
     }
     
-    ret.getSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update)
+    ret.setSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update, header_id, table_id)
     {
-        let detailsMsg = "";
-        let headerMsg = "";
         let updateCount = changed_data["smartserver_changes"].length;
         
         //let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
         //if( last_full_update.getTime() == date.getTime() ) date = null;
         //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
       
+        let headerElement = mx.$(header_id);
+        let tableElement = mx.$(table_id);
+
         if( updateCount > 0 )
         {
             let plural = updateCount > 1;
@@ -378,20 +443,32 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
             
             smartserverChangesData = changed_data["smartserver_changes"];
-            detailsMsg = buildSSC('commits',true);
+            smartserverChangesHeaderElement = headerElement;
+            smartserverChangesTableElement = tableElement;
+            let table = buildSSC('commits',true);
+
+            headerElement.innerHTML = headerMsg;
+
+            table.build(tableElement);
+            tableElement.style.display = "";
+            
+            mx.UpdateServiceHelper.initTable(headerElement,tableElement);
         }
         else
         {
-            headerMsg = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div>";
+            headerElement.innerHTML = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div>";
+            tableElement.innerHTML = "";
+            tableElement.style.display = "none";
         }
         
-        return [ updateCount, detailsMsg, headerMsg ];
+        return updateCount;
     }
     
-    ret.getSmartserverChangeState = function(last_data_modified, changed_data)
+    ret.setSmartserverChangeState = function(last_data_modified, changed_data, element_id)
     {
+        let element = mx.$(element_id);
+        
         let code = changed_data["smartserver_code"];
-        let msg = "";
         
         if( code )
         {           
@@ -407,9 +484,15 @@ mx.UpdateServiceTemplates = (function( ret ) {
                 msg += "</span> <span class='nobr' style='margin-left: -8px;'>• " + subMsg;
             }
             msg += "</span></span></div></div>";
+            
+            element.innerHTML = msg;
+            element.style.display = "";
         }
-
-        return msg;
+        else
+        {
+            element.innerHTML = "";
+            element.style.display = "none";
+        }
     }
     
     ret.getActiveServiceJobName = function(cmd_type)
@@ -422,13 +505,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return mx.I18N.get(active_manuell_cmd_type_map[cmd_type]);
     }
 
-    ret.getJobDetails = function(last_data_modified, changed_data)
-    {
-        let detailsMsg = "";
-        let headerMsg = "";
-        
+    ret.setJobDetails = function(last_data_modified, changed_data, header_id, table_id)
+    {        
         let jobs = changed_data["jobs"];
         let last_job = null;
+        
+        let headerElement = mx.$(header_id);
+        let tableElement = mx.$(table_id);
         
         if( jobs.length > 0 )
         {
@@ -456,41 +539,54 @@ mx.UpdateServiceTemplates = (function( ret ) {
             headerMsg = "<div class=\"info\"><span class=\"" + icon + "\"></span> " + msg;
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'lastRunningJobsDetails')\"></div></div>";
 
-            detailsMsg = "<div class=\"row\">";
-            detailsMsg += "<div></div>";
-            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("Job") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("User") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("State") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("Duration") + "</div>";
-            detailsMsg += "<div>" + mx.I18N.get("Date") + "</div>";
-            detailsMsg += "</div>";
-            for( index in jobs)
+            let rows = [];
+            jobs.forEach(function(job)
             {
-                let job = jobs[index];
                 let date = new Date(job["timestamp"] * 1000);
+                rows.push({
+                    "onclick": "mx.UpdateServiceActions.openDetails(event,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')",
+                    "columns": [
+                        { "class": "state " + job["state"] },
+                        { "value": mx.I18N.get(cmd_type_map[job["type"]]) },
+                        { "value": job["user"] },
+                        { "value": mx.Logfile.formatState(job["state"]) },
+                        { "value": mx.Logfile.formatDuration( job["duration"].split(".")[0] ) },
+                        { "value": date.toLocaleString(), "class": "indexLogDate" },
+                    ]
+                });
+            });
 
-                detailsMsg += "<div class=\"row\" onclick=\"mx.UpdateServiceActions.openDetails(event,'" + job["start"] + "','" + job["type"] + "','" + last_job["user"] + "')\">";
-                detailsMsg += "<div class=\"state " + job["state"] + "\"></div>";
-                detailsMsg += "<div>" + mx.I18N.get(cmd_type_map[job["type"]]) + "</div>";
-                detailsMsg += "<div>" + job["user"] + "</div>";
-                detailsMsg += "<div>" + mx.Logfile.formatState(job["state"]) + "</div>";
-                detailsMsg += "<div>" + mx.Logfile.formatDuration( job["duration"].split(".")[0] ) + "</div>";
-                detailsMsg += "<div class=\"indexLogDate\">" + date.toLocaleString() + "</div>";
-                detailsMsg += "</div>";
-            }
+            let table = mx.Table.init( {
+                "class": "list logfileBox",
+                "header": [
+                    { "value": "" },
+                    { "value": mx.I18N.get("Job"), "grow": true },
+                    { "value": mx.I18N.get("User") },
+                    { "value": mx.I18N.get("State") },
+                    { "value": mx.I18N.get("Duration") },
+                    { "value": mx.I18N.get("Date" ) }
+                ],
+                "rows": rows
+            });
+            
+            headerElement.innerHTML = headerMsg;
+
+            table.build(tableElement);
+            tableElement.style.display = "";
+            
+            mx.UpdateServiceHelper.initTable(headerElement,tableElement)
         }
         else
         {
-            $last_running_jobs_msg = "<div class=\"info\">" + mx.I18N.get("No job history available") + "</div>";
-            $last_running_jobs_details_msg = "";
+            headerElement.innerHTML = "<div class=\"info\">" + mx.I18N.get("No job history available") + "</div>";
+            tableElement.innerHTML = "";
+            tableElement.style.display = "none";
         }
-        
-        return [detailsMsg, headerMsg];
     }
     
-    ret.getWorkflow = function(systemUpdatesCount, smartserverChangeCount, lastUpdateDate)
+    ret.setWorkflow = function(systemUpdatesCount, smartserverChangeCount, lastUpdateDate, element_id)
     {
-        msg = "";
+        let element = mx.$(element_id);
         
         if( systemUpdatesCount > 0 || smartserverChangeCount > 0 )
         {
@@ -508,13 +604,13 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             msg = "<div class=\"info\">" + mx.I18N.get(key).fill( systemUpdatesCount + smartserverChangeCount );
             msg += "</div><div class=\"buttons\"><div class=\"form button exclusive green\" onclick=\"mx.UpdateServiceActions.actionUpdateWorkflow(this)\">" + mx.I18N.get("Install all") + "</div></div>";
+            
+            element.innerHTML = msg;
         }
         else
         {
-            msg = "<div class=\"info big\">" + mx.I18N.get("Everything up to date") + "</div>";
+            element.innerHTML = "<div class=\"info big\">" + mx.I18N.get("Everything up to date") + "</div>";
         }
-        
-        return msg;
     }
     
     return ret;

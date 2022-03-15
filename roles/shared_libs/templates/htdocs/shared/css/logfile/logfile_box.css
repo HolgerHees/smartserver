@@ -9,18 +9,8 @@ div.form.table.logfileBox > div.row {
   cursor: pointer;
 }
 div.form.table.logfileBox > div.row > div {
-  padding: 10px;
-  text-align: left;
   vertical-align: top;
-  display: table-cell;
-  color: var(--content-text);
   white-space: normal;
-}
-div.form.table.logfileBox > div.row > div {
-  width: 1%;
-}
-div.form.table.logfileBox > div.row > div:last-child {
-  text-align: right;
 }
 div.form.table.logfileBox > div.row > div:first-child {
   width: 5px;
