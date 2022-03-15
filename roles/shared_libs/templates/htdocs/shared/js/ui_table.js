@@ -67,19 +67,24 @@ mx.Table = (function( ret ) {
         
         options["rows"].forEach(function(row,i)
         {
-            if( !row["onclick"] ) return;
+            let rowElement = tableElement.childNodes[i+1];
             
-            tableElement.childNodes[i+1].addEventListener("click",function()
+            if( row["onclick"] ) rowElement.addEventListener("click",row["onclick"]);
+            
+            row["columns"].forEach(function(column,j)
             {
-                row["onclick"]();
+                if( !column["onclick"] ) return;
+
+                rowElement.childNodes[j].addEventListener("click",column["onclick"]);
             });
         });
         
+        let headerElement = tableElement.childNodes[0];
         options["header"].forEach(function(column,i)
         {
             if( !options["sort"] ) return;
 
-            tableElement.childNodes[0].childNodes[i].addEventListener("click",function()
+            headerElement.childNodes[i].addEventListener("click",function()
             {
                 options["sort"]["callback"](column["sort"]["value"],!options["sort"]["reverse"]);
             });
