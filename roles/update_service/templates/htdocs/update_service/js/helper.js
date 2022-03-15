@@ -169,10 +169,35 @@ mx.UpdateServiceHelper = (function( ret ) {
         }
     }
     
+    ret.setTableData = function(tableContent, tableId, headerId)
+    {
+        var tableElement = mx.$("#" + tableId);
+        if( !tableContent )
+        {
+            if( tableElement.style.display != "none" )
+            {
+                tableElement.dataset.content = "";
+                tableElement.innerHTML = "";
+                tableElement.style.display = "none";
+            }
+        }
+        else
+        {
+            if( tableElement.dataset.content != tableContent )
+            {
+                tableElement.dataset.content = tableContent;
+                tableElement.innerHTML = tableContent
+                tableElement.style.display = "";
+            }
+        }
+
+        mx.UpdateServiceHelper.setToogle(mx.$("#" + headerId + " .form.button.toggle"),tableElement);
+        fixScrollHeight(tableElement);
+    }
+    
     ret.setTableContent = function(tableContent, tableId, headerContent, headerId)
     {
         var headerElement = mx.$("#" + headerId);
-        var tableElement = mx.$("#" + tableId);
         if( !headerContent )
         {
             if( headerElement.style.display != "none" )
@@ -180,12 +205,6 @@ mx.UpdateServiceHelper = (function( ret ) {
                 headerElement.dataset.content = "";
                 headerElement.innerHTML = "";
                 headerElement.style.display = "none";
-            }
-            if( tableElement.style.display != "none" )
-            {
-                tableElement.dataset.content = "";
-                tableElement.innerHTML = "";
-                tableElement.style.display = "none";
             }
         }
         else
@@ -196,16 +215,9 @@ mx.UpdateServiceHelper = (function( ret ) {
                 headerElement.innerHTML = headerContent;
                 headerElement.style.display = "";
             }
-            if( tableElement.dataset.content != tableContent )
-            {
-                tableElement.dataset.content = tableContent;
-                tableElement.innerHTML = tableContent
-                tableElement.style.display = "";
-            }
-            
-            mx.UpdateServiceHelper.setToogle(mx.$("#" + headerId + " .form.button.toggle"),tableElement);
-            fixScrollHeight(tableElement);
         }
+        
+        mx.UpdateServiceHelper.setTableData(tableContent, tableId, headerId);
     }
 
     ret.setLastCheckedContent = function(dateFormatted,id)

@@ -261,31 +261,65 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return [ updateCount, detailsMsg, headerMsg ];
     }
     
-    ret.getSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update)
+    var smartserverChangesData = null;
+    var smartserverChangesIsReverse = false;
+    var smartserverChangesType = null;
+    function buildSSC(type,reverse)
     {
-        let detailsMsg = "";
-        let headerMsg = "";
-        let updateCount = changed_data["smartserver_changes"].length;
+        smartserverChangesIsReverse = reverse;
+        smartserverChangesType = type;
         
-        //let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
-        //if( last_full_update.getTime() == date.getTime() ) date = null;
-        //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
-      
-        if( updateCount > 0 )
+        detailsMsg = "<div class=\"row\" data-type=\"" + type + "\">";
+        detailsMsg += "<div onclick=\"mx.UpdateServiceTemplates.sortSSC('commits')\">" + mx.I18N.get("Flag","table");
+        if( type == "commits" ) detailsMsg += "<span class=\"" + ( reverse ? "icon-up": "icon-down-1" ) + "\"></span> ";
+        detailsMsg += "</div>";
+        detailsMsg += "<div onclick=\"mx.UpdateServiceTemplates.sortSSC('files')\" class=\"grow\">" + mx.I18N.get("File","table");
+        if( type == "files" ) detailsMsg += "<span class=\"" + ( reverse ? "icon-up": "icon-down-1" ) + "\"></span> ";
+        detailsMsg += "</div>";
+        detailsMsg += "</div>";
+        
+        let rows = [];
+        if( type == 'files' )
         {
-            let plural = updateCount > 1;
-          
-            let i18n_main_msg = plural ? "{} smartserver updates available" : "{} smartserver update available";
-            
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
-
-            detailsMsg = "<div class=\"row\">";
-            detailsMsg += "<div>" + mx.I18N.get("Flag","table") + "</div>";
-            detailsMsg += "<div class=\"grow\">" + mx.I18N.get("File","table") + "</div>";
-            detailsMsg += "</div>";
-            for( index in changed_data["smartserver_changes"] )
+            let files = {}
+            for( index in smartserverChangesData )
             {
-                let change = changed_data["smartserver_changes"][index];
+                let change = smartserverChangesData[index];
+                for( _index in change["files"] )
+                {
+                    let file = change["files"][_index];
+                    files[file['path']] = file;
+                }
+            }
+            
+            var keys = Object.keys(files);
+            keys = keys.sort();
+            if( reverse ) keys = keys.reverse();
+            
+            for (var i=0; i<keys.length; i++) 
+            {
+                rows.push(files[keys[i]]);
+            }
+            
+            for( index in rows )
+            {
+                let file = rows[index];
+                detailsMsg += "<div class=\"row\">";
+                detailsMsg += "<div>" + file["flag"] + "</div>";
+                detailsMsg += "<div>" + file["path"] + "</div>";
+                detailsMsg += "</div>";
+            }
+        }
+        else
+        {
+            rows = smartserverChangesData;
+            rows.sort(function(first, second) {
+                return reverse ? new Date(first["date"]) < new Date(second["date"]) : new Date(first["date"]) > new Date(second["date"]);
+            });
+            
+            for( index in rows )
+            {
+                let change = rows[index];
                 
                 let prefix = change["date"] ? mx.UpdateServiceHelper.formatDate(new Date(change["date"]))[0] : "Aktuell";
                 
@@ -304,6 +338,39 @@ mx.UpdateServiceTemplates = (function( ret ) {
                     detailsMsg += "</div>";
                 }
             }
+        }
+        
+        console.log("build");
+        
+        return detailsMsg;
+    }
+    
+    ret.sortSSC = function(type)
+    {
+        let smartserverChangeDetails = buildSSC(type, smartserverChangesType != type ? false : !smartserverChangesIsReverse);
+        mx.UpdateServiceHelper.setTableData(smartserverChangeDetails,"smartserverChangeDetails","smartserverChangeHeader");
+    }
+    
+    ret.getSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update)
+    {
+        let detailsMsg = "";
+        let headerMsg = "";
+        let updateCount = changed_data["smartserver_changes"].length;
+        
+        //let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
+        //if( last_full_update.getTime() == date.getTime() ) date = null;
+        //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+      
+        if( updateCount > 0 )
+        {
+            let plural = updateCount > 1;
+          
+            let i18n_main_msg = plural ? "{} smartserver updates available" : "{} smartserver update available";
+            
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
+            
+            smartserverChangesData = changed_data["smartserver_changes"];
+            detailsMsg = buildSSC('commits',false);
         }
         else
         {

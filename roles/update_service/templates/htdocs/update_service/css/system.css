@@ -2,6 +2,16 @@ body.system #serverNeedsRestart,
 #currentRunningActions {
   display:none;
 }
+
+body.system #smartserverChangeDetails > div.row:first-child > div > span {
+    position: absolute;
+    padding-top: 3px;
+}
+
+body.system #smartserverChangeDetails > div.row:first-child > div {
+    cursor: pointer;
+}
+
 body.system div.info,
 body.system div.header div:first-child {
   color: var(--content-text);
