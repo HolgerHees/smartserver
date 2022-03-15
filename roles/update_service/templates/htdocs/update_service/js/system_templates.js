@@ -123,7 +123,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             processHeaderMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(processCount) + "<div class=\"sub\">" + mx.I18N.get(i18n_info_msg) + "</div></div><div class=\"buttons\">";
             if( services.length > 0) processHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionRestartServices(this)\" data-service=\"" + services.join(",") + "\">" + mx.I18N.get("Restart all") + "</div>";
-            processHeaderMsg += "<div class=\"form button toggle\" id=\"systemProcesses\" onclick=\"mx.UNCore.toggle(this,'systemStateDetails')\"></div></div>";
+            processHeaderMsg += "<div class=\"form button toggle\" id=\"systemProcesses\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'systemStateDetails')\"></div></div>";
 
             let rows = [];
             outdatedProcessData.forEach(function(process)
@@ -189,7 +189,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             roleHeaderMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(roleCount) + "<div class=\"sub\">" + mx.I18N.get(i18n_info_msg) + "</div></div><div class=\"buttons\">";
             roleHeaderMsg += "<div class=\"form button exclusive yellow\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\" data-tag=\"" + outdatedRoleData.join(",") + "\">" + mx.I18N.get("Install all") + "</div>";
-            roleHeaderMsg += "<div class=\"form button toggle\" id=\"smartserverRoles\" onclick=\"mx.UNCore.toggle(this,'roleStateDetails')\"></div></div>";
+            roleHeaderMsg += "<div class=\"form button toggle\" id=\"smartserverRoles\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'roleStateDetails')\"></div></div>";
 
             let rows = [];
             outdatedRoleData.forEach(function(role)
@@ -277,7 +277,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             mx.I18N.get(i18n_main_msg).fill(updateCount)
 
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'systemUpdateDetails')\"></div></div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionInstallUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'systemUpdateDetails')\"></div></div>";
 
             detailsMsg = "<div class=\"row\">";
             
@@ -435,7 +435,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
           
             let i18n_main_msg = plural ? "{} smartserver updates available" : "{} smartserver update available";
             
-            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'smartserverChangeDetails')\"></div></div>";
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'smartserverChangeDetails')\"></div></div>";
             
             let table = buildSSC('commits',true, headerElement, tableElement, changed_data["smartserver_changes"]);
 
@@ -529,7 +529,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": state_msg, "4": duration, "5": mx.I18N.get( duration == 1 ? "second" : "seconds" ) });
           
             headerMsg = "<div class=\"info\"><span class=\"" + icon + "\"></span> " + msg;
-            headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UNCore.toggle(this,'lastRunningJobsDetails')\"></div></div>";
+            headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'lastRunningJobsDetails')\"></div></div>";
 
             let rows = [];
             jobs.forEach(function(job)

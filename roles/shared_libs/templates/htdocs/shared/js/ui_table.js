@@ -2,8 +2,8 @@ mx.Table = (function( ret ) {
     var _options = {
         "class": null,
         "sort": null, //{ "value": null, "reverse": null, "callback": null },
-        "header": [], // { "class": null, "grow": false, "sort": null, "value": null }
-        "rows": [] // { "class": null, "onclick": null, "columns": [ { "class": null, "value": null, "data": {} } ] }
+        "header": [], // { "class": null, "grow": false, "align": null, "sort": null, "value": null }
+        "rows": [] // { "class": null, "onclick": null, "columns": [ { "class": null, "align": null, "onclick": null, "value": null, "data": {} } ] }
     };
     
     function build(options,tableElement)

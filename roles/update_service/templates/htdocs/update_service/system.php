@@ -346,25 +346,6 @@ if( !Auth::hasGroup("admin") )
         
         ret.handleDaemonState = function(state){ handleDaemonState(state); }
         
-        ret.toggle = function(btn,id)
-        {
-            var element = mx.$("#"+id);
-            if( element.style.maxHeight )
-            {
-                element.style.maxHeight = "";
-                mx.UpdateServiceHelper.setToogle(btn,element);
-                window.setTimeout(function(){ element.style.display=""; },300);
-            }
-            else
-            {
-                element.style.display = "block";
-                window.setTimeout(function(){ 
-                    mx.UpdateServiceHelper.setScrollHeight(element);
-                    mx.UpdateServiceHelper.setToogle(btn,element); 
-                },0);
-            }
-        }
-
         ret.init = function()
         { 
             mx.I18N.process(document);
