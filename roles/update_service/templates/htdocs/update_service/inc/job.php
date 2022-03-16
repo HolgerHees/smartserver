@@ -4,14 +4,8 @@ class Job {
     private $datetime_raw = null;
     private $duration = 0;
     private $state = "";
-    private $config = "";
-    private $os = "";
-    private $branch = "";
-    private $git_hash = "";
-    private $author = "";
-    private $subject = "";
-    private $bytes = 0;
-    private $content = [];
+    private $username = "";
+    private $cmd = "";
     
     public function __construct($filename) {
         $data = explode("-",$filename);

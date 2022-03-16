@@ -170,11 +170,13 @@ class DeploymentUpdate:
 
             filtered_files = {}
             #lines = [ele.split("\t") for ele in uncommitted_changes]
-            lines = [ele.strip().split(" ",1) for ele in uncommitted_changes]
-            for line in lines:
+            #lines = [ele.strip().split(" ",1) for ele in uncommitted_changes]
+            for line in uncommitted_changes:
                 if len(line) == 1:
                     continue
-                flag, path = line
+                flag = line[:1]
+                path = line[1:].strip()
+                
                 if self.filterPath( flag, path, deployment_mtime ):
                     if path not in filtered_files or flag == "A":
                         filtered_files[path] = {"flag": flag, "path": path}

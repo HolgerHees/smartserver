@@ -2,8 +2,9 @@ mx.Table = (function( ret ) {
     var _options = {
         "class": null,
         "sort": null, //{ "value": null, "reverse": null, "callback": null },
+        "data": null,
         "header": [], // { "class": null, "grow": false, "align": null, "sort": null, "value": null }
-        "rows": [] // { "class": null, "onclick": null, "columns": [ { "class": null, "align": null, "onclick": null, "value": null, "data": {} } ] }
+        "rows": [] // { "class": null, "onclick": null, "columns": [ { "class": null, "align": null, "onclick": null, "value": null, "data": null } ] }
     };
     
     function build(options,tableElement)
@@ -38,12 +39,19 @@ mx.Table = (function( ret ) {
             if( row["class"] ) cls.push(row["class"]);
             if( cls.length ) content += " " + cls.join(" ");
             content += "\"";
+            if( row["data"] )
+            {
+                Object.keys(row["data"]).forEach(function(key)
+                {
+                    content += " data-" + key + "=\"" + row["data"][key] + "\"";
+                });
+            }
             content += ">";
 
             row["columns"].forEach(function(column,i)
             {
                 let cls = [];
-                if( options["header"][i]["grow"] ) cls.push("grow");
+                if( column["grow"] || ( options["header"].length > 0 && options["header"][i]["grow"] ) ) cls.push("grow");
                 if( column["class"] ) cls.push(column["class"]);
                 if( column["align"] ) cls.push(column["align"] == "left" ? "left-align" : "right-align");
 

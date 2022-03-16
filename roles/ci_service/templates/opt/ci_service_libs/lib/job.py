@@ -64,10 +64,15 @@ def getLogFileDetails(filename):
     data = os.path.basename(filename).split("-")
     
     return {
+        "date": data[0],
+        "duration": data[1],
         "state": data[2],
         "config": data[3],
         "deployment": data[4],
-        "git_hash": data[6]
+        "branch": data[5],
+        "git_hash": data[6],
+        "author": data[7],
+        "subject": data[8]
     }
   
 def getLogFilename(log_folder, time_str, duration, state, config_name, os_name, branch, git_hash, author, subject ):

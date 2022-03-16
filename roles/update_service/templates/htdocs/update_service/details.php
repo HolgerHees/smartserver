@@ -5,7 +5,6 @@ require "../shared/libs/auth.php";
 require "../shared/libs/i18n.php";
 require "../shared/libs/ressources.php";
 
-require "inc/job_template.php";
 require "inc/job.php";
 
 require "config.php";
@@ -92,7 +91,20 @@ mx.OnDocReady.push( initPage );
 <body>
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, mx.I18N.get("Job details - <?php echo $cmd; ?>")); } );</script>
 <?php
-    echo '<div class ="header form table logfileBox">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
+    echo '<div class ="header form table logfileBox">
+    
+    <div id="' . $job->getHash() . '" data-state="' . $job->getState() . '" data-duration="' . $job->getDuration() . '" class="row" onClick="mx.CICore.openOverview(event)">
+    <div class="state ' . $job->getState() . '"></div>
+    
+    <div class="cmd" >' . $job->getCmd() . '</div>
+    <div class="username" >' . $job->getUsername() . '</div>
+
+    <div>' . LogFile::formatState($job->getState()) . '</div>
+    
+    <div><span class="runtime icon-clock">' . explode(".",LogFile::formatDuration($job->getDuration()))[0] . '</span><span class="datetime icon-calendar-empty">' . $job->getDateTime()->format('d.m.Y H:i:s') . '</span></div>
+    </div>
+
+    </div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
 
     echo '<div class="log">';
     

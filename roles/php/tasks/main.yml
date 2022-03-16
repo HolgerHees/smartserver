@@ -52,7 +52,6 @@
       netdata: "{{server_ip}}" # fix to make netdata reachable
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
-      - '{{global_log}}:{{global_log}}:z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
       - '{{ftp_path}}:{{ftp_path}}:z'                             # needed by apache_gallery

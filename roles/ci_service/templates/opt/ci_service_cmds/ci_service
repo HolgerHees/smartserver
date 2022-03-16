@@ -2,35 +2,21 @@
 
 from flask import Flask, request, make_response
 import logging
-
-import glob
-
-import signal
-
-import threading
-import os
-import time
+from datetime import datetime
 
 import json
 
 from config import config
 
 from smartserver.server import Server
-from smartserver.github import GitHub
 
-from lib import helper
-from lib import status
-from lib import service
-from lib import job
-from lib import git
 from lib import log
-
-repository_owner = GitHub.getRepositoryOwner(config.repository_url)
+from lib import job_watcher
 
 watched_data_files = [
-    config.status_file
+    config.status_file,
+    config.log_dir
 ]
-
 
 class Handler(Server):
     def __init__(self, logger):
@@ -40,86 +26,41 @@ class Handler(Server):
 
         super().__init__(self.logger, "ci_service")
         
-        self.terminated = False
+        self.startup_timestamp = round(datetime.timestamp(datetime.now()),3)
         
-        self.state = status.getState(config.status_file)
-        self.job_is_running = self._isJobRunning()
-        
-        self.initWatchedFiles( watched_data_files )
-        
-        self.loop_event = threading.Event()
+        self.job_watcher = job_watcher.JobWatcher(self.logger, self)
 
-        thread = threading.Thread(target=self._jobWatcher, args=())
-        thread.start()
+        self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
         
+    def fileChangeTriggered(self, event):
+        if event["path"] == config.log_dir.rstrip("/"):
+            self.job_watcher.changedJobs(event)
+        elif event["path"] == config.status_file:
+            self.job_watcher.changedState(event)
+    
     def terminate(self):
-        self.terminated = True
-        self.loop_event.set()
+        self.job_watcher.terminate()
         super().terminate()
-
-    def _isJobRunning(self):
-        return service.getPid() is not None
-      
-    def _jobWatcher(self):
-        self._cleanJobs()
-
-        while not self.terminated:
-            if self.hasFileChanged(config.status_file):
-                self.state = status.getState(config.status_file)
-                self.confirmFileChanged(config.status_file)
-                self.job_is_running = True
-            else:
-                job_is_running = self._isJobRunning()
-                if self.job_is_running != job_is_running:
-                    if not job_is_running and self.state["status"] == "running":
-                        self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
-                        status.setState(config.status_file,u"crashed")
-                        
-                        self._cleanJobs()
-
-                    self.job_is_running = job_is_running
-            
-            self.loop_event.wait( 15 if self.job_is_running else 60 )
-      
-    def _cleanJobs(self):
-        running_jobs = glob.glob(u"{}*-*-running-*-*.log".format(config.log_dir))
-        if len(running_jobs) > 0:
-            cleaned_running_jobs = []
-            
-            # collect git hashes and logfiles
-            git_hashes = {}
-            for name in running_jobs:
-                details = job.getLogFileDetails(name)
-                if self.job_is_running and self.state is not None:
-                    if details["config"] == self.state["config"] and details["deployment"] == self.state["deployment"] and details["git_hash"] == self.state["git_hash"]:
-                        continue
-                      
-                cleaned_running_jobs.append(name)
-                if details["git_hash"] not in git_hashes:
-                    git_hashes[details["git_hash"]] = []
-                    
-                git_hashes[details["git_hash"]].append(details["deployment"])
-                            
-            if config.access_token != "" and self.state is not None:
-                # process git hashes
-                for git_hash in git_hashes: 
-                    self.logger.info("Clean states of git hash '{}'".format(git_hash))
-                    GitHub.setState(repository_owner,config.access_token,git_hash,"error", self.state["deployment"],"Build crashed")
-                    GitHub.cancelPendingStates(repository_owner, config.access_token, self.state["git_hash"], "Build skipped")
-
-            # process logfiles
-            for name in cleaned_running_jobs:
-                self.logger.info("Clean file '{}'".format(name))
-                os.rename(name, name.replace("-running-","-crashed-"))
-            
-            if service.getPid() is not None:
-                service.cleanRunningJobs("all")
-          
+                
     def getState(self):
-        return json.dumps({ 
-            "status": 0,
-            "job_is_running": self.job_is_running
-        })
+        
+        last_data_modified = {}
+        last_data_modified["startup"] = self.startup_timestamp;
+        last_data_modified["jobs"] = self.job_watcher.getLastRefreshAsTimestamp()
+        changed_data = {}
+        
+        force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
+                
+        if force or "last_data_modified[jobs]" not in request.form or float(request.form["last_data_modified[jobs]"]) < last_data_modified["jobs"]:
+            changed_data["jobs"] = self.job_watcher.getJobs()
+
+        result = { 
+            "status": 0, 
+            "last_data_modified": last_data_modified,
+            "changed_data": changed_data
+        }
+
+        return json.dumps(result)
       
 app = Flask(__name__)
 

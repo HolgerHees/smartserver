@@ -264,6 +264,6 @@ if __name__ == '__main__':
     handler = Handler(app.logger)
 
     def handleServer():
-        app.run(debug=False, use_reloader=False, host=config.service_ip, port='8505')
+        app.run(debug=False, use_reloader=False, host=config.service_ip, port=config.service_port)
         
     handler.start(handleServer)

@@ -5,7 +5,6 @@ require "../shared/libs/auth.php";
 require "../shared/libs/ressources.php";
 
 require "inc/job.php";
-require "inc/job_template.php";
 require "config.php";
 
 if( !Auth::hasGroup("admin") )
@@ -84,7 +83,22 @@ mx.OnDocReady.push( initPage );
 <body>
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "CI Test - <?php echo $config . '-' . $os . '-' . $branch; ?>"); } );</script>
 <?php
-    echo '<div class ="header form table logfileBox">' . JobTemplate::getDetails($job,false) . '</div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
+    echo '<div class ="header form table logfileBox">
+
+    <div id="' . $job->getHash() . '" data-state="' . $job->getState() . '" data-duration="' . $job->getDuration() . '" class="row" onClick="mx.CICore.openOverview(event)">
+    <div class="state ' . $job->getState() . '"></div>
+    <div><span class="icon-down branch">' . $job->getBranch() . '</span><span class="username">' . $job->getAuthor(). '<span></div>
+    <div class="subject"><div>' . $job->getSubject() . '</div></div>
+        
+    <div>' . $job->getConfig() . '</div>
+    <div>' . $job->getOs() . '</div>
+
+    <div>' . LogFile::formatState($job->getState()) . '<span class="hash icon-resize-horizontal" onClick="mx.CICore.openGitCommit(event,\'https://github.com/HolgerHees/smartserver/commit/'.$job->getGitHash().'\');"><span>' . substr($job->getGitHash(),0,7) . '</span><span class="icon-export"></span></span></div>
+    
+    <div><span class="runtime icon-clock">' . LogFile::formatDuration($job->getDuration()) . '</span><span class="datetime icon-calendar-empty">' . $job->getDateTime()->format('d.m.Y H:i:s') . '</span></div>
+    </div>
+
+    </div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
     
     foreach( $logfile->getLines() as $line )
     {

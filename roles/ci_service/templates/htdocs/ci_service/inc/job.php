@@ -39,31 +39,6 @@ class Job {
         }
     }
     
-    public static function getJobs($log_folder)
-    {
-        $files = scandir($log_folder);
-        $jobs = [];
-        foreach( $files as $file )
-        {
-            if( $file == '.' or $file == '..' || is_dir($log_folder.$file) )
-            {
-                continue;
-            }
-            
-            $job = new Job($file);
-            
-            $jobs[] = $job;
-        }
-
-        usort( $jobs, function( $job1, $job2 )
-        {
-            if( $job1->getDateTime()->getTimestamp() > $job2->getDateTime()->getTimestamp() ) return -1;
-            if( $job1->getDateTime()->getTimestamp() < $job2->getDateTime()->getTimestamp() ) return 1;
-            return 0;
-        });
-        return $jobs;
-    }
-       
     public function getHash()
     {
         return md5($this->datetime_raw.':'.$this->config.':'.$this->os.':'.$this->branch.':'.$this->git_hash);
