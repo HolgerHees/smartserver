@@ -80,7 +80,7 @@ function initPage()
                     runtimeElement.innerHTML = mx.Logfile.formatDuration(duration);
                     window.setTimeout(counter,1000);
                 }
-                window.setTimeout(counter,1000);
+                counter();
             });
         }
     }
