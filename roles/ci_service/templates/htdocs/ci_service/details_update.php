@@ -2,7 +2,6 @@
 require "../shared/libs/logfile.php";
 
 require "inc/job.php";
-require "inc/job_template.php";
 require "config.php";
 
 require "../shared/libs/http.php";

@@ -174,6 +174,7 @@ class DeploymentUpdate:
             for line in uncommitted_changes:
                 if len(line) == 1:
                     continue
+                line = line.strip()
                 flag = line[:1]
                 path = line[1:].strip()
                 

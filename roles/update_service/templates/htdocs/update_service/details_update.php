@@ -5,7 +5,6 @@ require "../shared/libs/auth.php";
 require "../shared/libs/i18n.php";
 
 require "inc/job.php";
-require "inc/job_template.php";
 
 require "config.php";
 
