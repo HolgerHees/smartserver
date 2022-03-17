@@ -3,6 +3,7 @@ import os
 import subprocess
 import traceback
 import glob
+import threading
 
 import pexpect 
 from pexpect.exceptions import EOF, TIMEOUT
@@ -22,7 +23,7 @@ class CmdExecuter(watcher.Watcher):
 
     env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
 
-    cmd_processlist = "/usr/bin/ps -alx"
+    cmd_processlist = "/usr/bin/pgrep"
 
     process_mapping = {
         "software_update_check": "software_check",
@@ -54,6 +55,20 @@ class CmdExecuter(watcher.Watcher):
         self.jobs = []
         self.initJobs()
         
+        self.active_cmd_type = None
+        self.active_cmd_type_refreshed = None
+        self.active_cmd_type_requested = datetime.now() - timedelta(hours=1)
+
+        self.is_running = True
+        self.condition = threading.Condition()
+        self.thread = threading.Thread(target=self._checkActiveCmdTypes, args=())
+        self.thread.start()
+
+    def terminate(self):
+        with self.condition:
+            self.is_running = False
+            self.condition.notifyAll()
+            
     def isInterruptableJob(self,cmd_type):
         return cmd_type in [ "system_reboot", "daemon_restart" ]
     
@@ -287,13 +302,35 @@ class CmdExecuter(watcher.Watcher):
             returncode = subprocess.call(['sudo', 'kill', str(child.pid)])
             return returncode
         return 0
-
-    def getActiveCmdType(self):
-        result = command.exec([ CmdExecuter.cmd_processlist ], shell=True)
-        stdout = result.stdout.decode("utf-8")
+    
+    def _checkActiveCmdTypes(self):
+        with self.condition:
+            while self.is_running:
+                self._refreshActiveCmdType()
+                self.condition.wait( 1 if (datetime.now() - self.active_cmd_type_requested).total_seconds() < 10 else 60)
+                
+    def _refreshActiveCmdType(self):
         active_cmd_type = None
-        for term in CmdExecuter.process_mapping:
-            if "{} ".format(term) in stdout:
-                active_cmd_type = CmdExecuter.process_mapping[term]
-                break
-        return active_cmd_type
+        
+        result = command.exec( [CmdExecuter.cmd_processlist , "-fa", "{} ".format(" |".join( CmdExecuter.process_mapping.keys())) ], exitstatus_check = False )
+        if result.returncode == 0:
+            stdout = result.stdout.decode("utf-8")
+            
+            active_cmd_type = None
+            for term in CmdExecuter.process_mapping:
+                if "{} ".format(term) in stdout:
+                    active_cmd_type = CmdExecuter.process_mapping[term]
+                    break
+
+        self.active_cmd_type = active_cmd_type
+        self.active_cmd_type_refreshed = datetime.now()
+
+    def getActiveCmdType(self, refresh = True):
+        self.active_cmd_type_requested = datetime.now()
+        if refresh:
+            self._refreshActiveCmdType()
+        else:
+            if (self.active_cmd_type_requested - self.active_cmd_type_refreshed).total_seconds() > 2:
+                with self.condition:
+                    self.condition.notifyAll()
+        return self.active_cmd_type
