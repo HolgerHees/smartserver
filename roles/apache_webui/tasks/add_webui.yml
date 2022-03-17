@@ -17,13 +17,19 @@
   with_items: "{{i18n_files | default([])}}"
   tags: ['apache_webui_configs']
 
-- name: "copy icons for '{{name}}'"
-  template:
+- name: "synchronize icons for '{{name}}'"
+  synchronize:
     src: "{{item}}"
     dest: "{{htdocs_path}}main/icons/{{item | basename}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0644
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
   with_items: "{{icons | default([])}}"
   tags: ['apache_webui_configs']
 
