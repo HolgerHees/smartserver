@@ -296,6 +296,7 @@
     usergroup: "user"
     additional_users:
       - "{{vault_nextcloud_admin_username}}"
+    additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 
