@@ -15,7 +15,9 @@ mx.UpdateServiceActions = (function( ret ) {
         window.setTimeout(function() { btn.classList.add("disabled"); },0);
         
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl );
+        xhr.open("POST", daemonApiUrl + action + "/" );
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
             if (this.readyState != 4) return;
@@ -50,7 +52,8 @@ mx.UpdateServiceActions = (function( ret ) {
                 }
             }
         };
-        xhr.send(JSON.stringify({"action": action, "parameter": parameter }));
+        
+        xhr.send(mx.Core.encodeDict(parameter));
     }
     
     function dialogClose()

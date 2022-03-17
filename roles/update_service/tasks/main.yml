@@ -80,20 +80,10 @@
     icons: [ 'templates/webui/icons/update_software_logo.svg', 'templates/webui/icons/update_system_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
   
-- name: deny everything except php service
+- name: copy apache api config
   vars:
-    name: "update_service.php"
-    rule: "proto tcp dport 8505 saddr !{{docker_php_ip}}"
-    is_drop: yes
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
-  
-- name: allow update_service php service
-  vars:
-    name: "update_service.php"
-    rule: "proto tcp dport 8505 saddr {{docker_php_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
+    config_file: "templates/etc/apache2/_.ansible.conf.d/update_service_api.conf"
+  import_tasks: roles/apache/tasks/add_config.yml
 
 - name: create version check cron job
   vars:

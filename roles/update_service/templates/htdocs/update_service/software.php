@@ -24,7 +24,7 @@ if( !Auth::hasGroup("admin") )
 <script>
 mx.SNCore = (function( ret ) {
   
-    var daemonApiUrl = mx.Host.getBase() + '../api.php'; 
+    var daemonApiUrl = mx.Host.getBase() + '../api/'; 
     var refreshDaemonStateTimer = 0;
         
     function handleDaemonState(state)
@@ -51,7 +51,9 @@ mx.SNCore = (function( ret ) {
     function refreshDaemonState(last_data_modified,callback)
     {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl);
+        xhr.open("POST", daemonApiUrl + "state/" );
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
             if (this.readyState != 4) return;
@@ -88,13 +90,15 @@ mx.SNCore = (function( ret ) {
             }
         };
         
-        xhr.send(JSON.stringify({"action": "state", "parameter": { "type": "software", "last_data_modified": last_data_modified }}));
+        xhr.send(mx.Core.encodeDict( { "type": "software", "last_data_modified": last_data_modified } ));
     }
     
     ret.startSoftwareCheck = function()
     {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl);
+        xhr.open("POST", daemonApiUrl + "refreshSoftwareVersionCheck/" );
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
             if (this.readyState != 4) return;
@@ -123,7 +127,7 @@ mx.SNCore = (function( ret ) {
             }
         };
         
-        xhr.send(JSON.stringify({"action": "refreshSoftwareVersionCheck"}));
+        xhr.send();
     }
         
     ret.init = function()

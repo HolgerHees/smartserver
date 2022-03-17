@@ -1,7 +1,7 @@
 - name: "copy apache config '{{config_file | basename}}'"
   template:
     src: "{{config_file}}"
-    dest: "{{global_etc}}apache2/_.ansible.conf.d/{{config_file | basename}}"
+    dest: "{{global_etc}}apache2/_.ansible.conf.d/custom_{{config_file | basename}}"
     owner: root
     group: root
     mode: 0644

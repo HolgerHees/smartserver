@@ -278,7 +278,7 @@
     username: "{{vault_nextcloud_admin_username}}"
     password: "{{vault_nextcloud_admin_password}}"
     fullname: "Nextcloud System User"
-    usergroups: ["nextcloudadmin"]
+    usergroups: []
   import_tasks: roles/user/tasks/add_web_user.yml
   tags: [ 'user' ]
 
@@ -294,6 +294,8 @@
   vars:
     sub_domain: "nextcloud"
     usergroup: "user"
+    additional_users:
+      - "{{vault_nextcloud_admin_username}}"
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   import_tasks: roles/apache/tasks/add_vhost.yml
 

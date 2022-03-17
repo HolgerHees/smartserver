@@ -45,7 +45,7 @@ if( !Auth::hasGroup("admin") )
 
         var refreshDaemonStateTimer = 0;
         
-        var daemonApiUrl = mx.Host.getBase() + '../api.php'; 
+        var daemonApiUrl = mx.Host.getBase() + '../api/'; 
 
         function processData(last_data_modified, changed_data)
         {
@@ -287,7 +287,11 @@ if( !Auth::hasGroup("admin") )
         function refreshDaemonState(last_data_modified,callback)
         {
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", daemonApiUrl);
+            xhr.open("POST", daemonApiUrl + "state/" );
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            
+            //application/x-www-form-urlencoded
+            
             xhr.withCredentials = true;
             xhr.onreadystatechange = function() {
                 if (this.readyState != 4) return;
@@ -325,7 +329,7 @@ if( !Auth::hasGroup("admin") )
                 }
             };
             
-            xhr.send(JSON.stringify({"action": "state", "parameter": { "type": "update", "last_data_modified": last_data_modified }}));
+            xhr.send(mx.Core.encodeDict( { "type": "update", "last_data_modified": last_data_modified } ));
         }
         
         ret.setUpdateJobStarted = function( _updateJobStarted ){ updateJobStarted = _updateJobStarted; }

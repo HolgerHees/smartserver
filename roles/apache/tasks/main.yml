@@ -148,10 +148,23 @@
   vars:
     enable_stapeling: "{{ssl_certificate != 'selfsigned'}}"
   with_items:
-    - _.ansible.vhost.d/auth/additionals.inc
+    - _.ansible.auth/required_env.inc
     - _.ansible.vhost.d/auth/basic.inc
     - _.ansible.vhost.d/auth/form1.inc
     - _.ansible.vhost.d/auth/openidc1.inc
+  notify: "restart apache2"
+  tags: ['user']
+
+- name: copy auth users
+  template:
+    src: "templates/etc/apache2/_.ansible.auth/required.inc"
+    dest: "{{global_etc}}apache2/_.ansible.auth/required_{{item}}.inc"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  with_items:
+    - "admin"
+    - "user"
   notify: "restart apache2"
   tags: ['user']
 

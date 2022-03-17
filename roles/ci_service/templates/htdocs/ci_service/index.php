@@ -25,7 +25,7 @@ if( !Auth::hasGroup("admin") )
 <script>
 function initPage()
 {
-    var daemonApiUrl = mx.Host.getBase() + 'api.php'; 
+    var daemonApiUrl = mx.Host.getBase() + 'api/'; 
     var refreshDaemonStateTimer = null;
     
     function processData(last_data_modified, changed_data)
@@ -97,7 +97,9 @@ function initPage()
     function refreshDaemonState(last_data_modified, callback)
     {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl);
+        xhr.open("POST", daemonApiUrl + "state/" );
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
             if (this.readyState != 4) return;
@@ -116,7 +118,7 @@ function initPage()
             }
         };
         
-        xhr.send(JSON.stringify({"action": "state", "parameter": { "type": "update", "last_data_modified": last_data_modified }}));
+        xhr.send(mx.Core.encodeDict( { "last_data_modified": last_data_modified } ));
     }
     
     refreshDaemonState(null, function(){

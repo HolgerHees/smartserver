@@ -65,6 +65,7 @@
   with_items:
     - { "chmod": "D750,F640", "path": "ci_service_libs/" }
     - { "chmod": "D750,F750", "path": "ci_service_cmds/" }
+  notify: "restart ci_service"
 
 - name: copy service config
   template:
@@ -73,6 +74,7 @@
     owner: root
     group: root
     mode: 0750
+  notify: "restart ci_service"
 
 - name: synchronize webui
   synchronize:
@@ -106,20 +108,10 @@
     icons: [ 'templates/webui/icons/ci_service_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
-- name: deny everything except php service
+- name: copy apache api config
   vars:
-    name: "ci_service.php"
-    rule: "proto tcp dport 8506 saddr !{{docker_php_ip}}"
-    is_drop: yes
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
-  
-- name: allow ci_service php service
-  vars:
-    name: "ci_service.php"
-    rule: "proto tcp dport 8506 saddr {{docker_php_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
-  tags: [ 'firewall_config' ]
+    config_file: "templates/etc/apache2/_.ansible.conf.d/ci_service_api.conf"
+  import_tasks: roles/apache/tasks/add_config.yml
 
 - name: create check cron job
   vars:

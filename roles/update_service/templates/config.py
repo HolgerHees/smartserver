@@ -3,7 +3,7 @@ update_check_email = {{ "'" + update_service_system_check_email + "'" if update_
 
 server_host = "{{server_domain}}"
 
-service_ip = "{{server_name}}"
+service_ip = "127.0.0.1"
 service_port = "8505"
 
 target_dir = "{{global_lib}}update_service/"
