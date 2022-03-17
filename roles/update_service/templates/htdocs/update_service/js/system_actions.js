@@ -42,7 +42,7 @@ mx.UpdateServiceActions = (function( ret ) {
                         mx.UpdateServiceHelper.handleServerError(response["message"]);
                     }
                 }
-                else if( this.status == 503 ) 
+                else if( this.status == 0 || this.status == 503 ) 
                 {
                     mx.UpdateServiceHelper.handleServerNotAvailable();
                 }
@@ -374,7 +374,7 @@ mx.UpdateServiceActions = (function( ret ) {
     
     ret.actionRefreshUpdateState = function(btn,type)
     { 
-        confirmAction(btn,'refreshSystemUpdateCheck', { "type": type });
+        confirmAction(btn,'refreshSystemUpdateCheck', type ? { "type": type } : {} );
     }
 
     ret.actionRebootSystem = function(btn)
