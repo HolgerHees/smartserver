@@ -25,12 +25,12 @@ class DeploymentUpdate:
                 except JSONDecodeError:
                     pass
       
-    def filterPath( self, flag, path, deployment_mtime ):
+    def filterPath( self, flag, path, max_mtime ):
         if flag != "D":
             file_stat = os.stat("{}/{}".format(self.config.deployment_directory,path))
             file_mtime = file_stat.st_mtime
             
-            if file_mtime > deployment_mtime:
+            if file_mtime > max_mtime:
                 return True
         return False
     
@@ -53,9 +53,6 @@ class DeploymentUpdate:
             result = command.exec([ "git", "status", "--porcelain" ], cwd=self.config.deployment_directory )
             uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
 
-            deployment_stat = os.stat(self.config.deployment_state_file)
-            deployment_mtime = deployment_stat.st_mtime
-            
             last_deployment_state = {}
             if os.path.isfile(config.deployment_state_file):
                 with open(config.deployment_state_file, 'r') as f:
@@ -95,13 +92,11 @@ class DeploymentUpdate:
             else:
                 smartserver_code = "uncommitted_changes"
                 
-            last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
-            #last_deployment = datetime.strptime("2022-03-13 00:00:00 +0100","%Y-%m-%d %H:%M:%S %z")
+            last_deployment_as_string = "{}{}".format(last_deployment_state["deployment_date"][0:-3],last_deployment_state["deployment_date"][-2:])
+            last_deployment = datetime.strptime(last_deployment_as_string,"%Y-%m-%dT%H:%M:%S.%f%z")
             
-            last_git_pull_as_string = "{}{}".format(last_deployment_state["git_date"][0:-9],last_deployment_state["git_date"][-6:])
-            #print(last_deployment_state["git_date"])
-            #print(datetimeStr)
-            last_git_pull = datetime.strptime(last_git_pull_as_string,"%Y-%m-%d %H:%M:%S.%f %z")
+            last_git_pull_as_string = "{}{}".format(last_deployment_state["git_date"][0:-3],last_deployment_state["git_date"][-2:])
+            last_git_pull = datetime.strptime(last_git_pull_as_string,"%Y-%m-%dT%H:%M:%S.%f%z")
             
             #print(last_deployment)
             #print(last_git_pull)

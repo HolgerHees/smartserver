@@ -5,18 +5,12 @@
 
 - name: "confirm deployment"
   vars:
-    git_date: "{{git_fetch_result.stdout}}"
+    deployment_date: "{{ ansible_date_time.iso8601_micro[0:-1]}}+00:00"
+    git_date: "{{git_fetch_result.stdout[0:10]}}T{{git_fetch_result.stdout[11:26]}}{{git_fetch_result.stdout[30:33]}}:{{git_fetch_result.stdout[33:35]}}"
   template:
     src: "templates/deployment.state"
     dest: "{{global_lib}}update_service/deployment.state"
     owner: root
     group: root
     mode: 0644
-
-- name: "touch deployment"
-  ansible.builtin.file:
-    dest: "{{global_lib}}update_service/deployment.state"
-    owner: root
-    group: root
-    mode: 0644
-    state: touch
+#2022-03-17 16:19:34.330117269 +0100

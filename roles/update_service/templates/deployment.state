@@ -1,1 +1,1 @@
-{"has_encrypted_vault":{{'true' if has_encrypted_vault else 'false'}}, "git_date": "{{git_date}}"} 
+{"has_encrypted_vault":{{'true' if has_encrypted_vault else 'false'}}, "deployment_date": "{{deployment_date}}", "git_date": "{{git_date}}"} 
