@@ -32,9 +32,7 @@ function initPage()
     {
         if( changed_data.hasOwnProperty("jobs") )
         {
-            changed_data["jobs"].sort(function(first, second) {
-                return first['timestamp'] < second['timestamp'];
-            });
+            changed_data["jobs"].sort(function(a,b){ return a["timestamp"] == b["timestamp"] ? 0 : ( a["timestamp"] < b["timestamp"] ? 1 : -1 ); });
             
             let rows = [];
             changed_data["jobs"].forEach(function(job)
