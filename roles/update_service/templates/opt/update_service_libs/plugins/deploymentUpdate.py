@@ -89,28 +89,23 @@ class DeploymentUpdate:
                     if result.returncode != 0:
                         raise Exception(result.stdout.decode("utf-8"))
                     smartserver_pull = update_time;
+                    last_smartserver_pull_as_string = smartserver_pull
             else:
                 smartserver_code = "uncommitted_changes"
                 
             last_deployment_as_string = "{}{}".format(last_deployment_state["deployment_date"][0:-3],last_deployment_state["deployment_date"][-2:])
             last_deployment = datetime.strptime(last_deployment_as_string,"%Y-%m-%dT%H:%M:%S.%f%z")
             
-            last_git_pull_as_string = "{}{}".format(last_deployment_state["git_date"][0:-3],last_deployment_state["git_date"][-2:])
-            last_git_pull = datetime.strptime(last_git_pull_as_string,"%Y-%m-%dT%H:%M:%S.%f%z")
-            
-            #print(last_deployment)
-            #print(last_git_pull)
-            
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-            result = command.exec([ "git", "rev-list", "-1", "--before", str(last_git_pull), "HEAD" ], cwd=self.config.deployment_directory )
-            ref = result.stdout.decode("utf-8").strip()
+            #result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployed_git), "HEAD" ], cwd=self.config.deployment_directory )
+            #ref = result.stdout.decode("utf-8").strip()
             
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
             #result = command.exec([ "git", "diff-index", "--name-status", ref ], cwd=self.config.deployment_directory )
             #committed_changes = result.stdout.decode("utf-8").strip().split("\n")
 
             # prepare commit messages
-            result = command.exec([ "git", "log", "--name-status", "--date=iso", str(ref) +  "..HEAD" ], cwd=self.config.deployment_directory )
+            result = command.exec([ "git", "log", "--name-status", "--date=iso", last_deployment_state["git_hash"] +  "..HEAD" ], cwd=self.config.deployment_directory )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
             #print(committed_changes)
             
@@ -160,7 +155,7 @@ class DeploymentUpdate:
                 deleted_files = []
                 for file in commits[commit]["files"]:
                     flag, path = file
-                    if self.filterPath( flag, path, last_git_pull.timestamp() ):
+                    if self.filterPath( flag, path, last_deployed_git.timestamp() ):
                         files.append( {"flag": flag, "path": path} )
                     elif flag == "D":
                         deleted_files.append(path)

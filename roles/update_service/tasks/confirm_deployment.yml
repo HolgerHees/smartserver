@@ -1,12 +1,12 @@
 - name: "fetch last git pull date"
-  shell: "stat -c %y .git/FETCH_HEAD"
+  shell: "git rev-parse HEAD"
   changed_when: no
   register: git_fetch_result
 
 - name: "confirm deployment"
   vars:
     deployment_date: "{{ ansible_date_time.iso8601_micro[0:-1]}}+00:00"
-    git_date: "{{git_fetch_result.stdout[0:10]}}T{{git_fetch_result.stdout[11:26]}}{{git_fetch_result.stdout[30:33]}}:{{git_fetch_result.stdout[33:35]}}"
+    git_hash: "{{git_fetch_result.stdout}}"
   template:
     src: "templates/deployment.state"
     dest: "{{global_lib}}update_service/deployment.state"
