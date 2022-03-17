@@ -72,7 +72,7 @@ def getLogFileDetails(filename):
         "branch": data[5],
         "git_hash": data[6],
         "author": data[7],
-        "subject": data[8]
+        "subject": data[8][:-4]
     }
   
 def getLogFilename(log_folder, time_str, duration, state, config_name, os_name, branch, git_hash, author, subject ):

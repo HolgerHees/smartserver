@@ -69,9 +69,10 @@ class JobWatcher():
         running_jobs = {}
         for name in jobs:
             details = job.getLogFileDetails(name)
-            subject = details["subject"].replace("_", " ")
+            subject = details["subject"]
             if subject[-1:] == "_":
                 subject = u"{}...".format(subject[:-1])
+            subject = subject.replace("_", " ")
             all_jobs.append({
                 "author": details["author"].replace("_", " "),
                 "branch": details["branch"],
