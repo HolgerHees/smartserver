@@ -1,9 +1,0 @@
-    <Location />
-        <RequireAny>
-            Require user {{vault_nextcloud_admin_username}}
-{% for username in userdata %}{% if usergroup in userdata[username].groups %}
-            Require user {{username}}
-{% endif %}{% endfor %}
-            Include /etc/apache2/_.ansible.vhost.d/auth/additionals.inc
-        </RequireAny>
-    </Location>
