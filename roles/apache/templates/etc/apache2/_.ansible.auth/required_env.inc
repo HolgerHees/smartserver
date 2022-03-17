@@ -1,13 +1,13 @@
 {% if vault_openid_connect_url != 'None' %}
 RewriteCond %{ENV:OIDC_CLAIM_email} !^$
-RewriteRule ^ - [E=REMOTE_USERNAME:${lookupUser:%{ENV:OIDC_CLAIM_email}},E=REMOTE_USERGROUP:${lookupGroup:%{ENV:OIDC_CLAIM_email}},E=REMOTE_USERFULLNAME:${lookupFullname:%{ENV:OIDC_CLAIM_email}}]
+RewriteRule ^ - [E=REMOTE_USERNAME:${lookupUser:%{ENV:OIDC_CLAIM_email}},E=REMOTE_USERGROUP:${lookupGroup:%{ENV:OIDC_CLAIM_email}},E=REMOTE_USERFULLNAME:${lookupFullname:%{ENV:OIDC_CLAIM_email}},NS]
 {% endif %}
 
 RewriteCond %{LA-U:REMOTE_USER} !^$
 {% if vault_openid_connect_url != 'None' %}
 RewriteCond %{ENV:OIDC_CLAIM_email} ^$
 {% endif %}
-RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_USER},E=REMOTE_USERGROUP:${lookupGroup:%{REMOTE_USER}},E=REMOTE_USERFULLNAME:${lookupFullname:%{REMOTE_USER}}]
+RewriteRule ^ - [E=REMOTE_USERNAME:%{REMOTE_USER},E=REMOTE_USERGROUP:${lookupGroup:%{REMOTE_USER}},E=REMOTE_USERFULLNAME:${lookupFullname:%{REMOTE_USER}},NS]
 
 RequestHeader set X-Forwarded-User %{REMOTE_USERNAME}e env=REMOTE_USERNAME
 RequestHeader unset X-Forwarded-User env=!REMOTE_USERNAME

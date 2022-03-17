@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 from flask import Flask, request, make_response
+from werkzeug.serving import WSGIRequestHandler
+
 import logging
 from datetime import datetime
 
@@ -81,6 +83,7 @@ if __name__ == '__main__':
     handler = Handler(app.logger)
 
     def handleServer():
-        app.run(debug=False, use_reloader=False, host=config.service_ip, port='8506')
+        WSGIRequestHandler.protocol_version = "HTTP/1.1"
+        app.run(debug=False, use_reloader=False, threaded=True, host=config.service_ip, port='8506')
         
     handler.start(handleServer)

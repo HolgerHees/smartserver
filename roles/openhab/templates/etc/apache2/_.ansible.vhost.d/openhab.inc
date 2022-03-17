@@ -8,7 +8,6 @@ Alias /weather "{{htdocs_path}}weather"
 
   ProxyPass http://openhab:8080/
   ProxyPassReverse http://openhab:8080/
-  ProxyPreserveHost on
   RequestHeader set X-Forwarded-Proto "https" env=HTTPS
   
   Header add Set-Cookie "X-OPENHAB-AUTH-HEADER=true;path=/;Secure"
@@ -24,7 +23,6 @@ Alias /weather "{{htdocs_path}}weather"
 </Location>
 
 <Location /loki>
-  ProxyPreserveHost On
   ProxyPass http://loki:3100 retry=0
   ProxyPassReverse http://loki:3100
 </Location>
@@ -33,11 +31,10 @@ Alias /weather "{{htdocs_path}}weather"
   RewriteCond %{HTTP:Upgrade} =websocket [NC]
   RewriteRule /api/live/(.*) ws://grafana:3000/api/live/$1 [P,L]
   
-  ProxyPreserveHost On
   ProxyPass http://grafana:3000
   ProxyPassReverse http://grafana:3000
-  RequestHeader set Authorization "Basic YWRtaW46YWRtaW4="
-  
+
+  RequestHeader set Authorization "Basic {{ (vault_grafana_app_username + ':' + vault_grafana_app_password) | b64encode }}"
   RequestHeader set Origin "https://{{server_domain}}"
 </Location>
 
