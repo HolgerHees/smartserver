@@ -315,14 +315,14 @@ if( !Auth::hasGroup("admin") )
                 else
                 {
                     let timeout = 15000;
-                    if( this.status == 503 ) 
+                    if( this.status == 0 || this.status == 503 ) 
                     {
                         mx.UpdateServiceHelper.handleServerNotAvailable();
                         timeout = mx.UpdateServiceHelper.isRestarting() ? 1000 : 15000;
                     }
                     else
                     {
-                        if( this.status != 0 && this.status != 401 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
+                        if( this.status != 401 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
                     }
                     
                     refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);

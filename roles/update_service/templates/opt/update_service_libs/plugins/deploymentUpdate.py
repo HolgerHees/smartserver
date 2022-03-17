@@ -100,11 +100,11 @@ class DeploymentUpdate:
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
             #result = command.exec([ "git", "diff-index", "--name-status", ref ], cwd=self.config.deployment_directory )
             #committed_changes = result.stdout.decode("utf-8").strip().split("\n")
-            #print(committed_changes)
 
             # prepare commit messages
             result = command.exec([ "git", "log", "--name-status", "--date=iso", str(ref) +  "..HEAD" ], cwd=self.config.deployment_directory )
             committed_changes = result.stdout.decode("utf-8").strip().split("\n")
+            #print(committed_changes)
             
             commits = {}
             current_commit = None
@@ -157,12 +157,12 @@ class DeploymentUpdate:
                     elif flag == "D":
                         deleted_files.append(path)
                         
-                if len(files) + len(deleted_files) == len(commits[commit]["files"]):
-                    commits[commit]["files"] = files
-                    filtered_commits.append(commits[commit])
+                #if len(files) + len(deleted_files) == len(commits[commit]["files"]):
+                commits[commit]["files"] = files
+                filtered_commits.append(commits[commit])
 
             #print(commits)
-            #print(filtered_commit_messages)
+            #print(filtered_commits)
             #print(filtered_lines)
             #print(last_deployment)
             #print(commit_lines)

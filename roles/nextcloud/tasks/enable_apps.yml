@@ -77,6 +77,7 @@
     app_configs:
       - { app: "user_saml", name: "type", value: "environment-variable" }
       - { app: "user_saml", name: "general-uid_mapping", value: "REMOTE_USERNAME" }
+      - { app: "user_saml", name: "saml-attribute-mapping-displayName_mapping", value: "REMOTE_USERFULLNAME" }
 
       - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
       - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
