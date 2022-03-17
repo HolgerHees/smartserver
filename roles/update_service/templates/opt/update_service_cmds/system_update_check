@@ -59,7 +59,7 @@ if args_values["limit"] is None or args_values["limit"] == "deployment_update":
 
     deploymentUpdate = DeploymentUpdate(config)
     
-    (smartserver_code, smartserver_pull, smartserver_changes) = deploymentUpdate.process(update_time)
+    (smartserver_code, smartserver_pull, smartserver_changes) = deploymentUpdate.process()
     
     state["smartserver_code"] = smartserver_code
     

@@ -39,7 +39,7 @@ class DeploymentUpdate:
         url = "https://github.com/{}/commit/{}".format(repository_owner,current_commit) if repository_owner is not None else None
         return {"date": current_date, "message": "\n".join(current_messages), "files": current_files, "url": url }
 
-    def process(self, update_time):
+    def process(self):
         smartserver_code = None
         smartserver_pull = None
         smartserver_changes = None
@@ -88,14 +88,16 @@ class DeploymentUpdate:
                     result = command.exec([ "git", "pull" ], cwd=self.config.deployment_directory )
                     if result.returncode != 0:
                         raise Exception(result.stdout.decode("utf-8"))
-                    smartserver_pull = update_time;
-                    last_smartserver_pull_as_string = smartserver_pull
             else:
                 smartserver_code = "uncommitted_changes"
                 
+            result = command.exec([ "stat", "-c", "%y", ".git/FETCH_HEAD" ], cwd=self.config.deployment_directory )
+            last_git_pull = result.stdout.decode("utf-8").strip()
+            smartserver_pull = "{}T{}{}:{}".format(last_git_pull[0:10],last_git_pull[11:26],last_git_pull[-5:-2],last_git_pull[-2:])
+
             last_deployment_as_string = "{}{}".format(last_deployment_state["deployment_date"][0:-3],last_deployment_state["deployment_date"][-2:])
             last_deployment = datetime.strptime(last_deployment_as_string,"%Y-%m-%dT%H:%M:%S.%f%z")
-            
+                        
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
             #result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployed_git), "HEAD" ], cwd=self.config.deployment_directory )
             #ref = result.stdout.decode("utf-8").strip()
