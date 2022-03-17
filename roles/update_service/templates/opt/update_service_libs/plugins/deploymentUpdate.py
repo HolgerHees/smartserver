@@ -56,6 +56,11 @@ class DeploymentUpdate:
             deployment_stat = os.stat(self.config.deployment_state_file)
             deployment_mtime = deployment_stat.st_mtime
             
+            last_deployment_state = {}
+            if os.path.isfile(config.deployment_state_file):
+                with open(config.deployment_state_file, 'r') as f:
+                    last_deployment_state = json.load(f)
+            
             repository_owner = GitHub.getRepositoryOwner(self.config.git_remote) if "github" in self.config.git_remote else None
 
             if len(uncommitted_changes) == 1 and uncommitted_changes[0] == "":
@@ -93,8 +98,16 @@ class DeploymentUpdate:
             last_deployment = datetime.fromtimestamp(deployment_mtime, tz=timezone.utc)
             #last_deployment = datetime.strptime("2022-03-13 00:00:00 +0100","%Y-%m-%d %H:%M:%S %z")
             
+            last_git_pull_as_string = "{}{}".format(last_deployment_state["git_date"][0:-9],last_deployment_state["git_date"][-6:])
+            #print(last_deployment_state["git_date"])
+            #print(datetimeStr)
+            last_git_pull = datetime.strptime(last_git_pull_as_string,"%Y-%m-%d %H:%M:%S.%f %z")
+            
+            #print(last_deployment)
+            #print(last_git_pull)
+            
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "rev-list", "-1", "--before", str(last_deployment), "origin/master" ]))
-            result = command.exec([ "git", "rev-list", "-1", "--before", str(last_deployment), "HEAD" ], cwd=self.config.deployment_directory )
+            result = command.exec([ "git", "rev-list", "-1", "--before", str(last_git_pull), "HEAD" ], cwd=self.config.deployment_directory )
             ref = result.stdout.decode("utf-8").strip()
             
             #print( " ".join([ "git", "-C", self.config.deployment_directory, "diff-index", "--name-status", ref ]))
@@ -152,7 +165,7 @@ class DeploymentUpdate:
                 deleted_files = []
                 for file in commits[commit]["files"]:
                     flag, path = file
-                    if self.filterPath( flag, path, deployment_mtime ):
+                    if self.filterPath( flag, path, last_git_pull.timestamp() ):
                         files.append( {"flag": flag, "path": path} )
                     elif flag == "D":
                         deleted_files.append(path)
@@ -178,7 +191,7 @@ class DeploymentUpdate:
                 flag = line[:1]
                 path = line[1:].strip()
                 
-                if self.filterPath( flag, path, deployment_mtime ):
+                if self.filterPath( flag, path, last_deployment.timestamp() ):
                     if path not in filtered_files or flag == "A":
                         filtered_files[path] = {"flag": flag, "path": path}
                             
@@ -186,7 +199,7 @@ class DeploymentUpdate:
             config_files = {}
             for filename in files:
                 file_stat = os.stat(filename)
-                if file_stat.st_mtime > deployment_mtime:
+                if file_stat.st_mtime > last_deployment.timestamp():
                     path = filename[len(config.deployment_directory):]
                     config_files[path] = {"flag": "M", "path": path}
 

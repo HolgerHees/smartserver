@@ -1,4 +1,11 @@
+- name: "fetch last git pull date"
+  shell: "stat -c %y .git/FETCH_HEAD"
+  changed_when: no
+  register: git_fetch_result
+
 - name: "confirm deployment"
+  vars:
+    git_date: "{{git_fetch_result.stdout}}"
   template:
     src: "templates/deployment.state"
     dest: "{{global_lib}}update_service/deployment.state"
