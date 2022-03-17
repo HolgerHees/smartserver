@@ -155,11 +155,10 @@ class DeploymentUpdate:
                 deleted_files = []
                 for file in commits[commit]["files"]:
                     flag, path = file
-                    if self.filterPath( flag, path, last_deployed_git.timestamp() ):
-                        files.append( {"flag": flag, "path": path} )
-                    elif flag == "D":
+                    if flag == "D":
                         deleted_files.append(path)
-                        
+                    else:
+                        files.append( {"flag": flag, "path": path} )
                 #if len(files) + len(deleted_files) == len(commits[commit]["files"]):
                 commits[commit]["files"] = files
                 filtered_commits.append(commits[commit])
