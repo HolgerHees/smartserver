@@ -313,7 +313,7 @@ class CmdExecuter(watcher.Watcher):
         active_cmd_type = None
         
         result = command.exec( [CmdExecuter.cmd_processlist , "-fa", "{} ".format(" |".join( CmdExecuter.process_mapping.keys())) ], exitstatus_check = False )
-        if result.returncode == 0:
+        if result.returncode == 0 and not self.isDaemonJobRunning():
             stdout = result.stdout.decode("utf-8")
             
             active_cmd_type = None
