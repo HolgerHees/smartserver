@@ -360,7 +360,7 @@ mx.UpdateServiceActions = (function( ret ) {
     
     ret.actionInstallUpdates = function(btn)
     { 
-        confirmAction(btn,'installSystemUpdates',btn,mx.UNCore.getUpdateHashes(),mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
+        confirmAction(btn,'installSystemUpdates',mx.UNCore.getUpdateHashes(),mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
     }
     
     ret.actionDeployUpdates = function(btn)
