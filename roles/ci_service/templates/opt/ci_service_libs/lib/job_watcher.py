@@ -103,9 +103,8 @@ class JobWatcher():
         while not self.terminated:
             if service.getPid() is None:
                 last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
-
                 job_is_running = self.isJobRunning()
-                if job_is_running and last_seen_job_activity_diff > 4:
+                if job_is_running and last_seen_job_activity_diff > 5:
                     self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
                     self._cleanState(status)
                 else:
@@ -113,11 +112,10 @@ class JobWatcher():
             else:
                 self.last_seen_job_activity = datetime.now()
                 last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
-
                 self._cleanJobs()
             
             with self.condition:
-                self.condition.wait( 5 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600 )
+                self.condition.wait( 2 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600 )
                 
     def _cleanState(self, status):
         self.lock.acquire()

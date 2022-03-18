@@ -11,9 +11,7 @@ from lib import virtualbox
 from lib import log
 
 def getPid():
-    #vagrantPID = helper.getPid(1,"vagrant")
-    pid = helper.getPid(1,"/usr/bin/python3.*ci_job_handler")
-    return pid if pid != "" else None
+    return helper.getPid(1,"/usr/bin/python3.*ci_job_handler")
 
 skipped_names = [
     "grep",
