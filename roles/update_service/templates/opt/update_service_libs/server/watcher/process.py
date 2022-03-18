@@ -138,4 +138,4 @@ class ProcessWatcher(watcher.Watcher):
         return self.system_reboot_modified
 
     def getLastRefreshAsTimestamp(self):
-        return round(datetime.timestamp(self.last_refresh),3)
+        return round(self.last_refresh.timestamp(),3)

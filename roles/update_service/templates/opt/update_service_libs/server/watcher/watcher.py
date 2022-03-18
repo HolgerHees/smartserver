@@ -11,7 +11,7 @@ class Watcher:
         return round(self.getNowAsTimestamp() - 0.1,3)
 
     def getNowAsTimestamp(self):
-        return round(datetime.timestamp(datetime.now()),3)
+        return round(datetime.now().timestamp(),3)
 
     def readJsonFile(self,path,shouldRetry,default):
         return self._readJsonFile(path, 5 if shouldRetry else 0, default)

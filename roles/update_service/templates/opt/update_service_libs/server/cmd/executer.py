@@ -83,7 +83,7 @@ class CmdExecuter(watcher.Watcher):
             data = filename.split("-")
             
             job = {}
-            job["timestamp"] = datetime.timestamp(datetime.strptime(data[0],"%Y.%m.%d_%H.%M.%S"));
+            job["timestamp"] = datetime.strptime(data[0],"%Y.%m.%d_%H.%M.%S").timestamp();
             job["start"] = data[0];
             job["duration"] = data[1];
             job["state"] = data[2];

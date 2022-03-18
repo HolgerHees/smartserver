@@ -65,7 +65,7 @@ class CmdWorkflow:
 
         log_mtime = os.stat(log_file_name).st_mtime
         log_modified_time = datetime.fromtimestamp(log_mtime, tz=timezone.utc)
-        log_file_age = datetime.timestamp(datetime.now()) - datetime.timestamp(log_modified_time)
+        log_file_age = datetime.now().timestamp() - log_modified_time.timestamp()
         
         max_log_file_age = MAX_SYSTEM_REBOOT_TIME if is_system_reboot else MAX_DAEMON_RESTART_TIME
         is_success = log_file_age < max_log_file_age
@@ -117,12 +117,12 @@ class CmdWorkflow:
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
 
                 can_proceed = False
-                waiting_start = datetime.timestamp(datetime.now())
+                waiting_start = datetime.now().timestamp()
                 last_seen_time = waiting_start
                 last_log_time = waiting_start
                 last_cmd_type = None
                 while True:
-                    now = datetime.timestamp(datetime.now())
+                    now = datetime.now().timestamp()
                     inactivity_time = now - last_seen_time
                     waiting_time = round(now - waiting_start)
                     

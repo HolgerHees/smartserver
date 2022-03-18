@@ -55,7 +55,7 @@ class Handler(Server):
         self.service_base_path = os.path.dirname(__file__)
         self.service_need_restart = False
         
-        self.startup_timestamp = round(datetime.timestamp(datetime.now()),3)
+        self.startup_timestamp = round(datetime.now().timestamp(),3)
 
         watched_data_files.append(__file__)
         files = glob.glob("{}**/**/*.py".format(self.service_base_path), recursive = True)

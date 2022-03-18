@@ -28,9 +28,9 @@ class Handler(Server):
 
         super().__init__(self.logger, "ci_service")
         
-        self.startup_timestamp = round(datetime.timestamp(datetime.now()),3)
+        self.startup_timestamp = round(datetime.now().timestamp(),3)
         
-        self.job_watcher = job_watcher.JobWatcher(self.logger, self)
+        self.job_watcher = job_watcher.JobWatcher(self.logger)
 
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
         

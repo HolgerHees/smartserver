@@ -44,12 +44,12 @@ class FileWatcher(pyinotify.ProcessEvent):
 
         elif event.path in self.watched_directories:
             if event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO ):
-                self.modified_time[event.path] = datetime.timestamp(datetime.now())
+                self.modified_time[event.path] = datetime.now().timestamp()
                 self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname })
       
         elif event.path in self.watched_files:
             if event.mask & pyinotify.IN_CLOSE_WRITE:
-                self.modified_time[event.path] = datetime.timestamp(datetime.now())
+                self.modified_time[event.path] = datetime.now().timestamp()
                 self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname })
             else:
                 pass

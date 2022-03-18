@@ -36,7 +36,7 @@ class SystemUpdateWatcher(watcher.Watcher):
     def parseTime(self, datetimeStr):
         datetimeStr = "{}{}".format(datetimeStr[0:-3],datetimeStr[-2:])
         datetimeObj = datetime.strptime(datetimeStr,"%Y-%m-%dT%H:%M:%S.%f%z")
-        timestamp = round(datetime.timestamp(datetimeObj),3)
+        timestamp = round(datetimeObj.timestamp(),3)
         return timestamp
 
     def initSystemState(self,shouldRetry):

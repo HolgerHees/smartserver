@@ -2,7 +2,7 @@ import threading
 import glob
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from smartserver.github import GitHub
 
@@ -16,9 +16,8 @@ from lib import status
 repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 
 class JobWatcher(): 
-    def __init__(self, logger, handler ):
+    def __init__(self, logger ):
         self.logger = logger
-        self.handler = handler
         
         self.terminated = False
         self.state = None
@@ -28,6 +27,8 @@ class JobWatcher():
         self.running_jobs = {}
         self.last_mtime = 0
         self.initJobs()
+        
+        self.job_last_running = datetime.now() - timedelta(hours=1)
         
         self.condition = threading.Condition()
         self.lock = threading.Lock()
@@ -83,15 +84,13 @@ class JobWatcher():
                 "state": details["state"],
                 "subject": subject,
                 "date": details["date"],
-                "timestamp": datetime.timestamp(datetime.strptime(details["date"],"%Y.%m.%d_%H.%M.%S"))
+                "timestamp": datetime.strptime(details["date"],"%Y.%m.%d_%H.%M.%S").timestamp()
             })
             if details["state"] == "running":
                 running_jobs[name] = details
         self.all_jobs = all_jobs
         self.running_jobs = running_jobs
-        self.last_mtime = round(datetime.timestamp(datetime.now()),3)
-        
-        self.logger.info(self.last_mtime)
+        self.last_mtime = round(datetime.now().timestamp(),3)
                         
     def isJobRunning(self):
         return self.state is not None and self.state["status"] == "running";
@@ -100,15 +99,23 @@ class JobWatcher():
         self._cleanJobs()
 
         while not self.terminated:
-            job_is_running = self.isJobRunning()
-            if job_is_running and service.getPid() is None and datetime.timestamp(datetime.now()) - self.handler.getFileModificationTime(config.status_file) > 3:
-                self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
-                self._cleanState(status)
+            if service.getPid() is None:
+                job_last_running_diff = ( datetime.now() - self.job_last_running ).total_seconds()
+
+                job_is_running = self.isJobRunning()
+                if job_is_running and job_last_running_diff > 4:
+                    self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
+                    self._cleanState(status)
+                else:
+                    self._cleanJobs()
             else:
+                self.job_last_running = datetime.now()
+                job_last_running_diff = ( datetime.now() - self.job_last_running ).total_seconds()
+
                 self._cleanJobs()
             
             with self.condition:
-                self.condition.wait( 5 if len(self.running_jobs) > 0 or job_is_running else 600 )
+                self.condition.wait( 5 if ( len(self.running_jobs) > 0 or job_last_running_diff < 15 ) else 600 )
                 
     def _cleanState(self, status):
         self.lock.acquire()
