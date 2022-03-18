@@ -28,7 +28,7 @@ class JobWatcher():
         self.last_mtime = 0
         self.initJobs()
         
-        self.job_last_running = datetime.now() - timedelta(hours=1)
+        self.last_seen_job_activity = datetime.now() - timedelta(hours=1)
         
         self.condition = threading.Condition()
         self.lock = threading.Lock()
@@ -45,6 +45,7 @@ class JobWatcher():
         self.lock.acquire()
         try:
             self.logger.info("Job changed")
+            self.last_seen_job_activity = datetime.now()
             self.initJobs()
         finally:
             self.lock.release()
@@ -55,6 +56,7 @@ class JobWatcher():
         self.lock.acquire()
         try:
             self.logger.info("State changed")
+            self.last_seen_job_activity = datetime.now()
             self.initState()
         finally:
             self.lock.release()
@@ -100,22 +102,22 @@ class JobWatcher():
 
         while not self.terminated:
             if service.getPid() is None:
-                job_last_running_diff = ( datetime.now() - self.job_last_running ).total_seconds()
+                last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
 
                 job_is_running = self.isJobRunning()
-                if job_is_running and job_last_running_diff > 4:
+                if job_is_running and last_seen_job_activity_diff > 4:
                     self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
                     self._cleanState(status)
                 else:
                     self._cleanJobs()
             else:
-                self.job_last_running = datetime.now()
-                job_last_running_diff = ( datetime.now() - self.job_last_running ).total_seconds()
+                self.last_seen_job_activity = datetime.now()
+                last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
 
                 self._cleanJobs()
             
             with self.condition:
-                self.condition.wait( 5 if ( len(self.running_jobs) > 0 or job_last_running_diff < 15 ) else 600 )
+                self.condition.wait( 5 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600 )
                 
     def _cleanState(self, status):
         self.lock.acquire()
