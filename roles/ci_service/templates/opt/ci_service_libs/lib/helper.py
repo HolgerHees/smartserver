@@ -5,7 +5,6 @@ from smartserver import command
 from smartserver import processlist
 
 def getPid(ppid,name):
-    
     result = command.exec([ "pgrep", "-fP", str(ppid), name ], exitstatus_check = False )
     if result.returncode == 0:
         return result.stdout.decode("utf-8").strip()
