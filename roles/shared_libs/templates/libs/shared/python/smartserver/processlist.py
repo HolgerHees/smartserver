@@ -123,14 +123,37 @@ class Processlist():
         return files
 
     @staticmethod
-    def getProcessIds():
-        pids = []
-        for fn in glob.glob('/proc/[0123456789]*'):
-            pids.append(os.path.basename(fn))
-        return pids
+    def getPids(pattern=None,ppid=None):
+        if pattern is not None:
+            cmd = [ "/usr/bin/pgrep" ]
+            if ppid is None:
+                cmd.append("-f")
+            else:
+                cmd.append("-fP")
+                cmd.append(str(ppid))
+            cmd.append(pattern)
+            
+            result = subprocess.run(cmd, shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+            if result.returncode == 0:
+                return result.stdout.decode().strip().split("\n")
+            else:
+                return None
+        else:
+            pids = []
+            for fn in glob.glob('/proc/[0123456789]*'):
+                pids.append(os.path.basename(fn))
+            return pids
 
+    @staticmethod
+    def checkPid(pid):
+        return os.path.exists('/proc/%s' % pid)
+
+    @staticmethod
+    def getCmdLine(pid):
+        return Processlist._getCmdline(pid)
+        
     #@staticmethod
-    #def getProcessIds():
+    #def getPids():
     #    result = subprocess.run([ "/usr/bin/ps", "-axo", "pid" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
     #    lines = result.stdout.decode("utf-8").split("\n")
     #    pids = [line.strip() for line in lines]
@@ -172,7 +195,7 @@ class Processlist():
         #         valid_services.append(service['unit_file'][:-8])
 
         outdated_pids = set()
-        for pid in Processlist.getProcessIds():
+        for pid in Processlist.getPids():
             for fn in Processlist._getOpenFiles(pid):
                 # if the file is deleted 
                 if re.search('^(?!.*/tmp/|/var/|/run/).*\(deleted\)$', fn):

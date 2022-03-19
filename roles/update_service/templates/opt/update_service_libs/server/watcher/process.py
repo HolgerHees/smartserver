@@ -108,7 +108,7 @@ class ProcessWatcher(watcher.Watcher):
         if len(self.outdated_processes) == 0:    
             return
           
-        processIds = Processlist.getProcessIds()
+        processIds = Processlist.getPids()
         outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processIds}
         
         if len(self.outdated_processes) != len(outdated_processes):

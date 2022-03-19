@@ -10,8 +10,15 @@ from lib import status
 from lib import virtualbox
 from lib import log
 
+from smartserver import processlist
+
+
+def checkPid(pid):
+    return processlist.Processlist.checkPid(pid)
+
 def getPid():
-    return helper.getPid(1,"/usr/bin/python3.*ci_job_handler")
+    pids = processlist.Processlist.getPids("/usr/bin/python3.*ci_job_handler",1)
+    return pids[0] if pids is not None else None
 
 skipped_names = [
     "grep",

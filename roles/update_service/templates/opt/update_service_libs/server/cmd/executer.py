@@ -17,6 +17,7 @@ from config import config
 
 from smartserver.logfile import LogFile
 from smartserver import command
+from smartserver import processlist
 
 from server.watcher import watcher
 
@@ -25,8 +26,6 @@ class CmdExecuter(watcher.Watcher):
     START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
     env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
-
-    cmd_processlist = "/usr/bin/pgrep"
 
     process_mapping = {
         "software_update_check": "software_check",
@@ -59,6 +58,7 @@ class CmdExecuter(watcher.Watcher):
         self.initJobs()
         
         self.external_cmd_type = None
+        self.external_cmd_type_pid = None
         self.external_cmd_type_refreshed = None
         self.external_cmd_type_requested = datetime.now() - timedelta(hours=1)
 
@@ -312,20 +312,31 @@ class CmdExecuter(watcher.Watcher):
                 self._refreshExternalCmdType()
                 self.condition.wait( 1 if (datetime.now() - self.external_cmd_type_requested).total_seconds() < 10 else 60)
                 
-    def _refreshExternalCmdType(self):
-        active_cmd_type = None
-        
-        result = command.exec( [CmdExecuter.cmd_processlist , "-fa", "{} ".format(" |".join( CmdExecuter.process_mapping.keys())) ], exitstatus_check = False )
-        if result.returncode == 0 and not self.isDaemonJobRunning():
-            stdout = result.stdout.decode("utf-8")
-            
-            active_cmd_type = None
-            for term in CmdExecuter.process_mapping:
-                if "{} ".format(term) in stdout:
-                    active_cmd_type = CmdExecuter.process_mapping[term]
-                    break
+    def _refreshExternalCmdType(self): 
+        if not self.isDaemonJobRunning():
+            if self.external_cmd_type_pid is None or not processlist.Processlist.checkPid(self.external_cmd_type_pid):
+                external_cmd_type = None
+                external_cmd_type_pid = None
+                pids = processlist.Processlist.getPids(" |".join( CmdExecuter.process_mapping.keys()))
+                if pids is not None:
+                    for pid in pids:
+                        cmdline = processlist.Processlist.getCmdLine(pid)
+                        if cmdline is not None:
+                            for term in CmdExecuter.process_mapping:
+                                if "{} ".format(term) in cmdline:
+                                    external_cmd_type_pid = pid
+                                    external_cmd_type = CmdExecuter.process_mapping[term]
+                                    break
+                            if external_cmd_type is not None:
+                                break
                 
-        self.external_cmd_type = active_cmd_type
+                    
+                self.external_cmd_type = external_cmd_type
+                self.external_cmd_type_pid = external_cmd_type_pid
+        else:
+            self.external_cmd_type = None
+            self.external_cmd_type_pid = None
+        
         self.external_cmd_type_refreshed = datetime.now()
 
     def getExternalCmdType(self, refresh = True):

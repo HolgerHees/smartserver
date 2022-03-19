@@ -15,6 +15,7 @@ from lib import status
 
 repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 
+
 class JobWatcher(): 
     def __init__(self, logger ):
         self.logger = logger
@@ -29,6 +30,7 @@ class JobWatcher():
         self.initJobs()
         
         self.last_seen_job_activity = datetime.now() - timedelta(hours=1)
+        self.job_activity_pid = None
         
         self.condition = threading.Condition()
         self.lock = threading.Lock()
@@ -101,7 +103,10 @@ class JobWatcher():
         self._cleanJobs()
 
         while not self.terminated:
-            if service.getPid() is None:
+            if self.job_activity_pid is None or not service.checkPid(self.job_activity_pid):
+                self.job_activity_pid = service.getPid()
+            
+            if self.job_activity_pid is None:
                 last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
                 job_is_running = self.isJobRunning()
                 if job_is_running and last_seen_job_activity_diff > 5:
@@ -115,7 +120,7 @@ class JobWatcher():
                 self._cleanJobs()
             
             with self.condition:
-                self.condition.wait( 2 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600 )
+                self.condition.wait( 1 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600 )
                 
     def _cleanState(self, status):
         self.lock.acquire()
