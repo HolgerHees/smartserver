@@ -169,12 +169,12 @@ class Handler(Server):
         })
      
     def getState(self, state_type):
-        active_cmd_type = self.cmd_executer.getActiveCmdType(False)
-        
         if self.cmd_executer.isDaemonJobRunning():
             return self.buildSuccessResult("daemon",self.cmd_executer.getCurrentJobCmdType(), state_type)
-        elif active_cmd_type:
-            return self.buildSuccessResult("manual",active_cmd_type, state_type)
+
+        external_cmd_type = self.cmd_executer.getExternalCmdType(False)
+        if external_cmd_type:
+            return self.buildSuccessResult("manual",external_cmd_type, state_type)
         else:
             return self.buildSuccessResult(None, None, state_type)
               

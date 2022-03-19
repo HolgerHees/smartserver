@@ -9,6 +9,9 @@ import timeit
 import json
 
 class Processlist():
+    ppids = {}
+    pids = {}
+
     # credits goes to https://raw.githubusercontent.com/rpm-software-management/yum-utils/master/needs-restarting.py
     @staticmethod
     def _getUserMap():
@@ -71,6 +74,15 @@ class Processlist():
             return None
 
     @staticmethod
+    def _getCmdline(pid):
+        fname = '/proc/%s/cmdline' % pid
+        try:
+            with open(fname, 'rb') as f:
+                return f.read().replace(b'\0', b' ').decode().strip()
+        except (IOError, OSError) as e:
+            return None
+
+    @staticmethod
     def _getService(pid):
         fname = '/proc/%s/cgroup' % pid
         try:
@@ -109,6 +121,46 @@ class Processlist():
             if filename not in files:
                 files.append(filename)
         return files
+
+    @staticmethod
+    def _getRelevantPids(ppid=None):
+        _pids = Processlist.getProcessIds()
+        
+        _new_pids = _pids - Processlist.pids.keys()
+        
+        for _pid in _new_pids:
+            _cmdline = Processlist._getCmdline(_pid)
+            _ppid = Processlist._getPPID(_pid)
+            
+            Processlist.pids[_pid] = [_cmdline,_ppid]
+            
+            if _ppid not in Processlist.ppids:
+                Processlist.ppids[_ppid] = {}
+            Processlist.ppids[_ppid][_pid] = [_cmdline,_ppid]
+            
+        _old_pids = Processlist.pids.keys() - _pids
+        for _pid in _old_pids:
+            del Processlist.ppids[Processlist.pids[_pid][1]][_pid]
+            del Processlist.pids[_pid]
+            
+        return Processlist.pids if ppid is None else Processlist.ppids[str(ppid)]
+
+    @staticmethod
+    def getPid(name,ppid=None):
+        relevant_pids = Processlist._getRelevantPids(ppid)
+        for pid in relevant_pids:
+            if re.search(name,relevant_pids[pid][0]):
+                return pid
+        
+        return None
+        
+    @staticmethod
+    def getProcessCmdLines():
+        relevant_pids = Processlist._getRelevantPids()
+        result = {}
+        for pid in relevant_pids:
+            result[pid] = relevant_pids[pid][0]
+        return result
 
     @staticmethod
     def getProcessIds():

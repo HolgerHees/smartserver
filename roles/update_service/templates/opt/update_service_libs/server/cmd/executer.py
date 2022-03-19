@@ -5,6 +5,9 @@ import traceback
 import glob
 import threading
 
+
+import time
+
 import pexpect 
 from pexpect.exceptions import EOF, TIMEOUT
 
@@ -14,6 +17,7 @@ from config import config
 
 from smartserver.logfile import LogFile
 from smartserver import command
+from smartserver import processlist
 
 from server.watcher import watcher
 
@@ -22,8 +26,6 @@ class CmdExecuter(watcher.Watcher):
     START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
     env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
-
-    cmd_processlist = "/usr/bin/pgrep"
 
     process_mapping = {
         "software_update_check": "software_check",
@@ -55,13 +57,13 @@ class CmdExecuter(watcher.Watcher):
         self.jobs = []
         self.initJobs()
         
-        self.active_cmd_type = None
-        self.active_cmd_type_refreshed = None
-        self.active_cmd_type_requested = datetime.now() - timedelta(hours=1)
+        self.external_cmd_type = None
+        self.external_cmd_type_refreshed = None
+        self.external_cmd_type_requested = datetime.now() - timedelta(hours=1)
 
         self.is_running = True
         self.condition = threading.Condition()
-        self.thread = threading.Thread(target=self._checkActiveCmdTypes, args=())
+        self.thread = threading.Thread(target=self._checkExternalCmdTypes, args=())
         self.thread.start()
 
     def terminate(self):
@@ -115,7 +117,7 @@ class CmdExecuter(watcher.Watcher):
         return self.current_cmd_type
       
     def isRunning(self):
-        return self.isDaemonJobRunning() or self.getActiveCmdType() != None
+        return self.isDaemonJobRunning() or self.getExternalCmdType() != None
       
     def isDaemonJobRunning(self):
         return self.current_started != None
@@ -303,34 +305,32 @@ class CmdExecuter(watcher.Watcher):
             return returncode
         return 0
     
-    def _checkActiveCmdTypes(self):
+    def _checkExternalCmdTypes(self):
         with self.condition:
             while self.is_running:
-                self._refreshActiveCmdType()
-                self.condition.wait( 1 if (datetime.now() - self.active_cmd_type_requested).total_seconds() < 10 else 60)
+                self._refreshExternalCmdType()
+                self.condition.wait( 1 if (datetime.now() - self.external_cmd_type_requested).total_seconds() < 10 else 60)
                 
-    def _refreshActiveCmdType(self):
+    def _refreshExternalCmdType(self):
         active_cmd_type = None
-        
-        result = command.exec( [CmdExecuter.cmd_processlist , "-fa", "{} ".format(" |".join( CmdExecuter.process_mapping.keys())) ], exitstatus_check = False )
-        if result.returncode == 0 and not self.isDaemonJobRunning():
-            stdout = result.stdout.decode("utf-8")
-            
-            active_cmd_type = None
+        cmdlines = processlist.Processlist.getProcessCmdLines()
+        for cmdline in cmdlines.values():
             for term in CmdExecuter.process_mapping:
-                if "{} ".format(term) in stdout:
+                if "{} ".format(term) in cmdline:
                     active_cmd_type = CmdExecuter.process_mapping[term]
                     break
+            if active_cmd_type is not None:
+                break
+                
+        self.external_cmd_type = active_cmd_type
+        self.external_cmd_type_refreshed = datetime.now()
 
-        self.active_cmd_type = active_cmd_type
-        self.active_cmd_type_refreshed = datetime.now()
-
-    def getActiveCmdType(self, refresh = True):
-        self.active_cmd_type_requested = datetime.now()
+    def getExternalCmdType(self, refresh = True):
+        self.external_cmd_type_requested = datetime.now()
         if refresh:
-            self._refreshActiveCmdType()
+            self._refreshExternalCmdType()
         else:
-            if (self.active_cmd_type_requested - self.active_cmd_type_refreshed).total_seconds() > 2:
+            if (self.external_cmd_type_requested - self.external_cmd_type_refreshed).total_seconds() > 2:
                 with self.condition:
                     self.condition.notifyAll()
-        return self.active_cmd_type
+        return self.external_cmd_type

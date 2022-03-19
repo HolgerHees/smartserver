@@ -126,7 +126,7 @@ class CmdWorkflow:
                     inactivity_time = now - last_seen_time
                     waiting_time = round(now - waiting_start)
                     
-                    active_cmd_type = self.cmd_executer.getActiveCmdType()
+                    active_cmd_type = self.cmd_executer.getExternalCmdType()
                     if active_cmd_type != None:
                         last_seen_time = now
                         last_cmd_type = active_cmd_type
