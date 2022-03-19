@@ -26,6 +26,8 @@ class CmdExecuter(watcher.Watcher):
 
     env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
 
+    cmd_processlist = "/usr/bin/pgrep"
+
     process_mapping = {
         "software_update_check": "software_check",
         "system_update_check": "update_check",
@@ -312,6 +314,7 @@ class CmdExecuter(watcher.Watcher):
                 
     def _refreshExternalCmdType(self):
         active_cmd_type = None
+        
         result = command.exec( [CmdExecuter.cmd_processlist , "-fa", "{} ".format(" |".join( CmdExecuter.process_mapping.keys())) ], exitstatus_check = False )
         if result.returncode == 0 and not self.isDaemonJobRunning():
             stdout = result.stdout.decode("utf-8")
