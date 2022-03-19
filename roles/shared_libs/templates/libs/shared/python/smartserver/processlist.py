@@ -123,46 +123,6 @@ class Processlist():
         return files
 
     @staticmethod
-    def _getRelevantPids(ppid=None):
-        _pids = Processlist.getProcessIds()
-        
-        _new_pids = _pids - Processlist.pids.keys()
-        
-        for _pid in _new_pids:
-            _cmdline = Processlist._getCmdline(_pid)
-            _ppid = Processlist._getPPID(_pid)
-            
-            Processlist.pids[_pid] = [_cmdline,_ppid]
-            
-            if _ppid not in Processlist.ppids:
-                Processlist.ppids[_ppid] = {}
-            Processlist.ppids[_ppid][_pid] = [_cmdline,_ppid]
-            
-        _old_pids = Processlist.pids.keys() - _pids
-        for _pid in _old_pids:
-            del Processlist.ppids[Processlist.pids[_pid][1]][_pid]
-            del Processlist.pids[_pid]
-            
-        return Processlist.pids if ppid is None else Processlist.ppids[str(ppid)]
-
-    @staticmethod
-    def getPid(name,ppid=None):
-        relevant_pids = Processlist._getRelevantPids(ppid)
-        for pid in relevant_pids:
-            if re.search(name,relevant_pids[pid][0]):
-                return pid
-        
-        return None
-        
-    @staticmethod
-    def getProcessCmdLines():
-        relevant_pids = Processlist._getRelevantPids()
-        result = {}
-        for pid in relevant_pids:
-            result[pid] = relevant_pids[pid][0]
-        return result
-
-    @staticmethod
     def getProcessIds():
         pids = []
         for fn in glob.glob('/proc/[0123456789]*'):

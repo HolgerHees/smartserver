@@ -17,7 +17,6 @@ from config import config
 
 from smartserver.logfile import LogFile
 from smartserver import command
-from smartserver import processlist
 
 from server.watcher import watcher
 
@@ -313,14 +312,15 @@ class CmdExecuter(watcher.Watcher):
                 
     def _refreshExternalCmdType(self):
         active_cmd_type = None
-        cmdlines = processlist.Processlist.getProcessCmdLines()
-        for cmdline in cmdlines.values():
+        result = command.exec( [CmdExecuter.cmd_processlist , "-fa", "{} ".format(" |".join( CmdExecuter.process_mapping.keys())) ], exitstatus_check = False )
+        if result.returncode == 0 and not self.isDaemonJobRunning():
+            stdout = result.stdout.decode("utf-8")
+            
+            active_cmd_type = None
             for term in CmdExecuter.process_mapping:
-                if "{} ".format(term) in cmdline:
+                if "{} ".format(term) in stdout:
                     active_cmd_type = CmdExecuter.process_mapping[term]
                     break
-            if active_cmd_type is not None:
-                break
                 
         self.external_cmd_type = active_cmd_type
         self.external_cmd_type_refreshed = datetime.now()
