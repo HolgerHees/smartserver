@@ -99,4 +99,4 @@ dlna_volumes:                    "{
 }"
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.15.1"
+alpine_version:                   "3.15.2"
