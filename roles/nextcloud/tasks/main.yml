@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '23.0.2'
+    nextcloud_version: '23.0.3'
   tags: [ 'update_notifier_configs', 'user' ]
 
 # ***** PREPARE FOLDER *****
