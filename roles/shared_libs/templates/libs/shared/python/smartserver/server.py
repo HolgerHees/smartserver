@@ -34,7 +34,7 @@ class Server():
             # Works only in Linux
             self._lock_socket.bind("\0{}".format(name))
         except socket.error:
-            return
+            raise Exception("Service '{}' already running".format(name))
 
     def start(self, callback):
         try:
