@@ -5,5 +5,5 @@
     owner: root
     group: root
     mode: 0640
-#  notify: "restart fluentd"
+  notify: "restart fluentd"
   tags: ['fluentd_conf']
