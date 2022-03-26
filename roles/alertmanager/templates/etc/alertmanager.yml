@@ -23,6 +23,10 @@ route:
     - matchers:
       - group="crony"
       receiver: dummy
+    - matchers:
+      - group="sshd"
+      - log=~".*Failed to release session.*"
+      receiver: dummy
 #    - matchers:
 #      - group="php"
 #      - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
