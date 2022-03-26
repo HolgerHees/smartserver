@@ -51,6 +51,7 @@
       - "--config.file=/etc/alertmanager/alertmanager.yml"
       - "--storage.path=/alertmanager"
       - "--web.external-url=https://alertmanager.{{server_domain}}/"
+      - "--log.format=json"
     log_driver: journald
     log_options:
       tag: alertmanager
