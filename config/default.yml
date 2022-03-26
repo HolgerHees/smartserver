@@ -137,7 +137,6 @@ default_variables: {
     "vault_onlyoffice_mysql_password": {},
 
     "vault_grafana_app_username": { "default": "admin" },
-    "vault_grafana_app_password": {},                             # e.g. "lksjdls" => used 
 
     "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
     "vault_deployment_token_git": { "default": None },            # only needed if you enable "ci_service"

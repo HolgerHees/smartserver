@@ -29,8 +29,6 @@ vault_nextcloud_admin_password: "default123"
 vault_onlyoffice_shared_key: "qwe0983yxcxy435"
 vault_onlyoffice_mysql_password: "default123"
 
-vault_grafana_app_password: "admin"
-
 vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
 vault_openhab_mysql_password: "default123"
 

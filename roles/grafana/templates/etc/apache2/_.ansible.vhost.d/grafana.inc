@@ -4,6 +4,7 @@
 
   ProxyPass http://grafana:3000/
   ProxyPassReverse http://grafana:3000/
-  RequestHeader set Authorization "Basic {{ (vault_grafana_app_username + ':' + vault_grafana_app_password) | b64encode }}"
+  RequestHeader unset Authorization
+  RequestHeader set X-WEBAUTH-USER "{{vault_grafana_app_username}}"
 </Location>
 
