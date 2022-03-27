@@ -45,6 +45,12 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--log.format=json"
     log_driver: journald
     log_options:
       tag: prometheus
