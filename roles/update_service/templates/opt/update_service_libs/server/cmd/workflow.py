@@ -228,6 +228,7 @@ class CmdWorkflow:
             if not isRunning and self.cmd_executer.lock(cmd_block["cmd_type"]):
                 exit_code = self.cmd_executer.runCmdBlock(cmd_block)
             else:
+                self.cmd_executer.interruptedCmdBlock(cmd_block)
                 exit_code = -1
                 
             if exit_code != 0 or self.workflow_state is not None:

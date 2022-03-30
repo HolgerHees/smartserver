@@ -247,6 +247,7 @@ class CmdExecuter(watcher.Watcher):
     def processCmdBlock(self,cmd_block,lf):
         exit_status = 1
         
+        step = None
         cmd_type = cmd_block["cmd_type"]
         try:
             for _cmd in cmd_block["cmds"]:
@@ -274,19 +275,15 @@ class CmdExecuter(watcher.Watcher):
             
         return exit_status
 
-  
     def runCmdBlock(self, cmd_block):
         username = cmd_block["username"]
         cmd_type = cmd_block["cmd_type"]
-        
-        start_time = datetime.now()
-        start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
-        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,"running", cmd_type,username)
-        job_log_file = u"{}{}".format(config.job_log_folder,job_log_name)
+
         exit_status = 1
+        
+        [start_time, start_time_str, job_log_name, job_log_file] = self._initLogFilename(cmd_type, username)
         with open(job_log_file, 'w') as f:
             self.current_logfile = job_log_name
-            step = None
 
             lf = LogFile(f)
             
@@ -298,6 +295,28 @@ class CmdExecuter(watcher.Watcher):
 
         return exit_status
  
+    def interruptedCmdBlock(self, cmd_block):
+        username = cmd_block["username"]
+        cmd_type = cmd_block["cmd_type"]
+        
+        [_, _, _, job_log_file] = self._initLogFilename(cmd_type, username)
+        with open(job_log_file, 'w') as f:
+            lf = LogFile(f)
+            if self.external_cmd_type is not None:
+                lf.write("The command '{}' was interupted by external cmd '{}'.\n".format(self.external_cmd_type))
+            else:
+                lf.write("The command '{}' was interupted{}.\n")
+
+        self.initJobs()
+        
+    def _initLogFilename(self, cmd_type, username):
+        start_time = datetime.now()
+        start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
+        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,"failed", cmd_type,username)
+        job_log_file = u"{}{}".format(config.job_log_folder,job_log_name)
+        
+        return [start_time, start_time_str, job_log_name, job_log_file]
+
     def killProcess(self):
         child = self.current_child
         if child is not None:
