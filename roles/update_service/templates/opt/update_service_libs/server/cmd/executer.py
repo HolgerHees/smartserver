@@ -281,7 +281,7 @@ class CmdExecuter(watcher.Watcher):
 
         exit_status = 1
         
-        [start_time, start_time_str, job_log_name, job_log_file] = self._initLogFilename(cmd_type, username)
+        [start_time, start_time_str, job_log_name, job_log_file] = self._initLogFilename(cmd_type, username, "running")
         with open(job_log_file, 'w') as f:
             self.current_logfile = job_log_name
 
@@ -299,7 +299,7 @@ class CmdExecuter(watcher.Watcher):
         username = cmd_block["username"]
         cmd_type = cmd_block["cmd_type"]
         
-        [_, _, _, job_log_file] = self._initLogFilename(cmd_type, username)
+        [_, _, _, job_log_file] = self._initLogFilename(cmd_type, username,"failed")
         with open(job_log_file, 'w') as f:
             lf = LogFile(f)
             if self.external_cmd_type is not None:
@@ -309,10 +309,10 @@ class CmdExecuter(watcher.Watcher):
 
         self.initJobs()
         
-    def _initLogFilename(self, cmd_type, username):
+    def _initLogFilename(self, cmd_type, username, type):
         start_time = datetime.now()
         start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
-        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,"failed", cmd_type,username)
+        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,type, cmd_type,username)
         job_log_file = u"{}{}".format(config.job_log_folder,job_log_name)
         
         return [start_time, start_time_str, job_log_name, job_log_file]
