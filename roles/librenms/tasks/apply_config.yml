@@ -9,7 +9,7 @@
   import_tasks: roles/apache/tasks/wait_until_ready.yml
 
 - name: add devices
-  shell: "docker exec librenms sh -c \"lnms device:add --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.snmp_host}}\""
+  shell: "docker exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.snmp_host}}\""
   register: device_register_result
   changed_when: "device_register_result.rc != 2"
   failed_when: "device_register_result.rc != 0 and device_register_result.rc != 2"
