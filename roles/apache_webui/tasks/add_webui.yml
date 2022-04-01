@@ -5,7 +5,7 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
-  tags: ['apache_webui_configs']
+  tags: ['apache_webui_config']
 
 - name: "copy i18n file for '{{name}}'"
   template:
@@ -15,7 +15,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0644
   with_items: "{{i18n_files | default([])}}"
-  tags: ['apache_webui_configs']
+  tags: ['apache_webui_config']
 
 - name: "synchronize icons for '{{name}}'"
   synchronize:
@@ -31,7 +31,7 @@
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"
   with_items: "{{icons | default([])}}"
-  tags: ['apache_webui_configs']
+  tags: ['apache_webui_config']
 
 - name: "copy js listener for '{{name}}'"
   template:
@@ -41,7 +41,7 @@
     group: "{{system_groups['www'].name}}"
     mode: 0644
   when: "listener is defined"
-  tags: ['apache_webui_configs']
+  tags: ['apache_webui_config']
 
 - name: "copy apache subdomain listener for '{{name}}'"
   copy:
@@ -52,4 +52,4 @@
     mode: 0644
   when: "listener is defined"
   notify: "restart apache2"
-  tags: ['apache_webui_configs']
+  tags: ['apache_webui_config']

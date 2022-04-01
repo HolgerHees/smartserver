@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     java_version: '8.252.09.1'
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
 
 - name: install archive
   unarchive:

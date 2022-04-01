@@ -18,7 +18,7 @@
     #jython_script_version: "f09f63eba986833fead2c363bbd56e34106fed12"
     # stable version from 15.10.2020
     jython_script_version: "5e6bee796f5ffcc60d277619965e621a9ba652b2"
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
 
 #- name: get gid from "dialout"
 #  shell: "getent group dialout | cut -d: -f3"
@@ -183,7 +183,7 @@
   register: habpanel_result
   changed_when: no
   failed_when: no
-  tags: [ 'apache_webui_configs' ]
+  tags: [ 'apache_webui_config' ]
    
 - name: copy habpanel config => habpanel_result.rc == 0
   copy:
@@ -597,7 +597,7 @@
     group: root
     mode: 0644
   notify: "restart apache2"
-  tags: ['apache_conf']
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:

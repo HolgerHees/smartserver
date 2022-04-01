@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     rclone_version: "1.58.0"
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
   
 # FOLDER
 - name: prepare needed cloud folder

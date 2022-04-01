@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     adminer_version: '4.7.7'
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
   
 - name: check installation
   stat:

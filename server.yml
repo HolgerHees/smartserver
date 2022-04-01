@@ -36,19 +36,19 @@
 
     # needed by all roles which needs to register their own vhost
     # search for "import_tasks: roles/apache/tasks/add_vhost.yml" to see which ones
-    - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache', "apache_conf" ] }    # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
+    - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache', "apache_config" ] }    # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
 
     # needed by all roles which needs to register menu entries in the web ui like
     # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones
-    - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_configs", ] }    # creates {{htdocs_path}}main/components
+    - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_config", ] }    # creates {{htdocs_path}}main/components
 
     - { import_role: { name: nextcloud, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'nextcloud', 'php' ] }
 
     - { import_role: { name: openhab_toolbox, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_toolbox', 'php', 'apache' ] }
 
-    - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher', "systemd_watcher_configs" ] }
+    - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher', "systemd_watcher_config" ] }
     
-    - { import_role: { name: update_service, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_service', "update_system_configs", "update_notifier_configs" ] }
+    - { import_role: { name: update_service, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_service', "update_system_config", "update_notifier_config" ] }
 
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages

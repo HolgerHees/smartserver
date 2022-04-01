@@ -1,7 +1,7 @@
 - name: set ferm version
   set_fact:
     ferm_version: "2.6"
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
 
 - name: prepare needed folder
   file:

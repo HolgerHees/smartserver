@@ -2,7 +2,7 @@
   set_fact:
     grafana_version: '8.4.5'
     natel_discrete_plugin_version: "0.1.1"
-  tags: [ 'update_notifier_configs' ]    
+  tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
   file:

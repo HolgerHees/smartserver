@@ -2,7 +2,7 @@
   set_fact:
     fluentd_version: '1.14.5-debian-1.0'
     grafana_loki_version: '1.2.18'
-  tags: [ 'update_notifier_configs' ]    
+  tags: [ 'update_notifier_config' ]    
   
 - name: copy config and service
   template:

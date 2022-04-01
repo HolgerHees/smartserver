@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     redis_version: '6.2.6'
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
   
 - name: check started docker
   systemd:

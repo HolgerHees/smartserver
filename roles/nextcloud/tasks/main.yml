@@ -2,7 +2,7 @@
 - name: set version
   set_fact:
     nextcloud_version: '23.0.3'
-  tags: [ 'update_notifier_configs', 'user' ]
+  tags: [ 'update_notifier_config', 'user' ]
 
 # ***** PREPARE FOLDER *****
 - name: prepare needed folder

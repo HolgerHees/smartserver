@@ -2,7 +2,7 @@
   set_fact:
     #elastalert_version: '325f1dfe7a45f3ca2a2cc00127ab71fcd4f9cead' # => master of 25.11. 'v0.2.1'
     elastalert_version: 'v0.2.4'
-  tags: [ 'update_notifier_configs' ]    
+  tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
   file:

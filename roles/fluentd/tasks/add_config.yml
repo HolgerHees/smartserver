@@ -6,4 +6,4 @@
     group: root
     mode: 0640
   notify: "restart fluentd"
-  tags: ['fluentd_conf']
+  tags: ['fluentd_config']

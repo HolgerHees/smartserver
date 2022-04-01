@@ -5,4 +5,4 @@
     owner: root
     group: root
     mode: 0644
-  tags: ['systemd_watcher_configs']
+  tags: ['systemd_watcher_config']

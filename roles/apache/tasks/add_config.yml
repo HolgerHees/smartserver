@@ -6,5 +6,5 @@
     group: root
     mode: 0644
   notify: "restart apache2"
-  tags: ['apache_conf']
+  tags: ['apache_config']
 

@@ -13,7 +13,7 @@
     openhab_group: "{{system_groups['openhab'].name}}"
 #    openhab_user: "root"
 #    openhab_group: "root"
-  tags: [ 'update_notifier_configs' ]
+  tags: [ 'update_notifier_config' ]
 
 - name: prepare needed config folder
   file:
@@ -172,7 +172,7 @@
   register: habpanel_result
   changed_when: no
   failed_when: no
-  tags: [ 'apache_webui_configs' ]
+  tags: [ 'apache_webui_config' ]
    
 - name: synchronize habpanel config => habpanel_result.rc == 0
   synchronize:
@@ -503,7 +503,7 @@
 #    group: root
 #    mode: 0644
 #  notify: "restart apache2"
-#  tags: ['apache_conf']
+#  tags: ['apache_config']
 
 - name: create cleanup cron job
   vars:
