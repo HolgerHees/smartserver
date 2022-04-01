@@ -1,0 +1,8 @@
+- name: restart librenms
+  systemd:
+    name: librenms
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart librenms"

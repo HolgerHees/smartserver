@@ -118,6 +118,8 @@
     - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring
 #    - { import_role: { name: netdata, tasks_from: main_container, handlers_from: empty }, tags: [ 'netdata_container' ] }
 
+    - { import_role: { name: librenms }, tags: [ 'librenms' ], when: "librenms_devices is defined" } # network monitoring
+
     - { import_role: { name: grafana }, tags: [ 'grafana' ] }                                    # graphical dashboards                                              [docker,user:root]
 
     - { import_role: { name: mysql_phpmyadmin }, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
@@ -150,7 +152,9 @@
 
     - { import_role: { name: pihole, tasks_from: whitelist, handlers_from: empty }, tags: [ 'pihole' ] }   # add whitelist entries
 
-    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud', 'nextcloud_apps' ] }   # ENABLE NEXTCLOUD APPS needs a running system (php, database, redis ...)
+    - { import_role: { name: librenms, tasks_from: apply_config, handlers_from: empty }, tags: [ 'librenms', 'librenms_config' ] }   # apply librenms configs
+
+    - { import_role: { name: nextcloud, tasks_from: enable_apps, handlers_from: empty }, tags: [ 'nextcloud', 'nextcloud_apps' ] }   # enable nextcloud apps needs a running system (php, database, redis ...)
 
     - { import_role: { name: influxdb, tasks_from: create_users, handlers_from: empty }, tags: [ 'influxdb', 'influxdb_users' ] }   # create influxdb users
 

@@ -1,0 +1,156 @@
+- name: set version
+  set_fact:
+    librenms_version: '22.3.0'
+  tags: [ 'update_notifier_configs' ]    
+
+- name: prepare needed folder
+  file:
+    path: '{{item.path}}'
+    state: directory
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
+    mode: "{{item.mode}}"
+  with_items:
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}librenms" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rwx,o=", path: "{{global_log}}librenms" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms/alert-templates" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms/monitoring-plugins" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms/plugins" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rwx,o=", path: "{{global_lib}}librenms/rrd" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms/weathermap" }
+
+- name: synchronize configs
+  synchronize:
+    src: "templates/etc/librenms/"
+    dest: "{{global_etc}}librenms/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=1000:1000"
+      - "--chmod=D755,F644"
+      
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+#- name: create docker network
+#  docker_network:
+#    name: librenms
+#    ipam_config:
+#      - subnet: "{{docker_librenms_ip.split('.')[:3] | join('.')}}.0/24"
+#        gateway: "{{docker_librenms_ip.split('.')[:3] | join('.')}}.1"
+#    connected:
+#      - mysql
+#      - redis
+#    appends: yes
+#  tags: [ 'mysql', 'redis' ]
+
+- name: create docker container
+  docker_container:
+    name: librenms
+    image: "librenms/librenms:{{librenms_version}}"
+    state: present
+#    recreate: true
+    env:
+#      OBSERVIUM_ADMIN_USER: "admin"
+#      OBSERVIUM_ADMIN_PASS: "admin"
+      DB_HOST: "mysql"
+      DB_USER: "{{vault_librenms_mysql_username}}"
+      DB_PASSWORD: "{{vault_librenms_mysql_password}}"
+      DB_NAME: "librenms"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_DB: "1"
+#      APP_URL: "https://librenms.{{server_domain}}/"
+#      LIBRENMS_BASE_URL: "https://librenms.{{server_domain}}/"
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: librenms
+    container_default_behavior: "compatibility"
+    network_mode: "host"
+    volumes:
+      - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:z'
+      - '{{global_etc}}librenms:/data/config:z'
+      - '{{global_log}}librenms:/data/logs:z'
+      - '{{global_lib}}librenms/alert-templates:/data/alert-templates:z'
+      - '{{global_lib}}librenms/monitoring-plugins:/data/monitoring-plugins:z'
+      - '{{global_lib}}librenms/plugins:/data/plugins:z'
+      - '{{global_lib}}librenms/rrd:/data/rrd:z'
+      - '{{global_lib}}librenms/weathermap:/data/weathermap:z'
+    exposed_ports:
+     - "8000"
+  notify: "restart librenms"
+
+#- name: add container name
+#  vars:
+#    host_name: "librenms"
+#    host_ip_address: "{{docker_librenms_ip}}"
+#  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** MYSQL DATABASE ****
+- name: create database
+  vars:
+    database: "librenms"
+    username: "{{vault_librenms_mysql_username}}"
+    password: "{{vault_librenms_mysql_password}}"
+    backup: yes
+  import_tasks: roles/mysql/tasks/add_database.yml
+  
+# ***** FINALIZE *****
+#- name: allow librenms service
+#  vars:
+#    name: "librenms"
+#    rule: "outerface {{main_network_interface}} saddr {{docker_librenms_ip}} daddr {{server_network}}/24"
+#    is_docker: True
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
+
+- name: register webui
+  vars:
+    name: "librenms"
+    js_file: "templates/webui/librenms.js"
+    i18n_files: [ { language: "de", file: "templates/webui/librenms.de.json" } ]
+    icons: [ 'templates/webui/icons/librenms_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "librenms"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/librenms.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/librenms.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "librenms"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+- name: register update notifier
+  vars:
+    name: "librenms"
+    type: "docker"
+    url: "https://github.com/librenms/librenms/releases"
+    config: {
+      repository: "librenms",
+      pattern: "^([0-9\\.]+)$"
+    }
+  import_tasks: roles/update_service/tasks/add_software.yml
+
+- name: trigger librenms handler
+  vars:
+    notify: "restart librenms"
+    service: "librenms.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
+
