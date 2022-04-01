@@ -144,6 +144,20 @@ default_variables: {
     "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
     "vault_openhab_mysql_password": {},
+    
+    
+    librenms_devices: { "default": None },                          # used for librenms
+    # [
+    #  {
+    #    snmp_host: "192.168.7.100",
+    #    snmp_method: "v2c",
+    #    snmp_community_string: "public"
+    #  }
+    # ]
+    "vault_librenms_mysql_username": { "default": "librenms" },
+    "vault_librenms_mysql_password": { 
+        condition: "librenms_devices"
+    },
 }
 
 
