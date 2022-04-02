@@ -143,7 +143,7 @@
     type: "docker"
     url: "https://github.com/librenms/librenms/releases"
     config: {
-      repository: "librenms",
+      repository: "librenms/librenms",
       pattern: "^([0-9\\.]+)$"
     }
   import_tasks: roles/update_service/tasks/add_software.yml
