@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    pihole_version: '2022.02.1'
+    pihole_version: '2022.04'
   tags: [ 'update_notifier_config' ]
   
 - name: prepare needed folder
@@ -80,7 +80,7 @@
     url: "https://github.com/pi-hole/docker-pi-hole/releases"
     config: {
       repository: "pihole/pihole",
-      pattern: "^20([0-9\\.]+)$"
+      pattern: "^(20[0-9\\.]+)$"
     }
   import_tasks: roles/update_service/tasks/add_software.yml
 
