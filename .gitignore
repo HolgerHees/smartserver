@@ -2,7 +2,8 @@
 .vscode/
 config/*
 !config/demo/
-!config/shared.yml
+!config/pre_shared.yml
+!config/post_shared.yml
 !config/default.yml
 ansible.cfg
 *.retry
