@@ -61,6 +61,8 @@ class DeploymentUpdate:
             repository_owner = GitHub.getRepositoryOwner(self.config.git_remote) if "github" in self.config.git_remote else None
 
             if len(uncommitted_changes) == 1 and uncommitted_changes[0] == "":
+                uncommitted_changes = []
+
                 can_pull = False
                 if "github" in self.config.git_remote:
                     result = command.exec([ "git", "ls-remote", self.config.git_remote ], cwd=self.config.deployment_directory )
@@ -178,6 +180,7 @@ class DeploymentUpdate:
             for line in uncommitted_changes:
                 if len(line) == 1:
                     continue
+                
                 line = line.strip()
                 flag = line[:1]
                 path = line[1:].strip()
@@ -197,7 +200,6 @@ class DeploymentUpdate:
             lines = list(config_files.values()) + list(filtered_files.values())
             
             if len(lines) > 0:
-                filtered_files = dict(sorted(filtered_files.items()))
                 filtered_commits.insert(0,{"date": None, "message": "uncommitted", "files": lines})
 
             smartserver_changes = filtered_commits
