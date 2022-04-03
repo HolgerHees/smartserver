@@ -146,7 +146,7 @@ default_variables: {
     "vault_openhab_mysql_password": {},
     
     
-    librenms_devices: { "default": None },                          # used for librenms
+    librenms_devices: { "default": None },                        # used for librenms
     # [
     #  {
     #    snmp_host: "192.168.7.100",
