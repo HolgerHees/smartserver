@@ -23,6 +23,8 @@ default_variables: {
     "production_ip":  {},                                         # "192.168.7.50" your server ip
     "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
 
+    "intern_networks": { "default": [ "{{server_network}}" ] },
+
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
     "pihole_ip":      { "default": None },                        # pihole ip address from same network as your server ip => 'None' means disabled
@@ -146,7 +148,7 @@ default_variables: {
     "vault_openhab_mysql_password": {},
     
     
-    librenms_devices: { "default": None },                        # used for librenms
+    "librenms_devices": { "default": None },                        # used for librenms
     # [
     #  {
     #    snmp_host: "192.168.7.100",

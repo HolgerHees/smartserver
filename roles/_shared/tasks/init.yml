@@ -48,6 +48,11 @@
   failed_when: no
   register: "vault_check_result"
   
+# load shared variables
+- name: load shared vars
+  include_vars: "config/pre_shared.yml"
+  tags: always
+
 # load initial environment variables
 - name: load default vars
   include_vars: "config/default.yml"
@@ -117,7 +122,7 @@
   
 # load shared variables
 - name: load shared vars
-  include_vars: "config/shared.yml"
+  include_vars: "config/post_shared.yml"
   tags: always
 
   

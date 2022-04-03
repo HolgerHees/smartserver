@@ -19,7 +19,7 @@
           - "net:        {{main_network_interface}}"
           - "server:     {{server_ip}}"
           - "gateway:    {{server_gateway}}{{ ' (' + default_gateway + ')' if server_gateway != default_gateway else ''}}"
-          - "network:    {{server_network}}/24"
+          - "network:    {{intern_networks | join(',') }}"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'None'}}"
           - "arpha:      {{server_arpa}}"
           - "-------------------------------------------------------------"

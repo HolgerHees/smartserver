@@ -14,7 +14,6 @@
   changed_when: "device_register_result.rc != 2"
   failed_when: "device_register_result.rc != 0 and device_register_result.rc != 2"
   with_items: "{{librenms_devices}}"
-
   
 - name: create discovery all cron job
   vars:

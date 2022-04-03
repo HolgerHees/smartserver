@@ -296,7 +296,7 @@
     driver_options:
       parent: '{{main_network_interface}}'
     ipam_config:
-      - subnet: '{{server_network}}/24'
+      - subnet: '{{server_network}}'
         gateway: '{{server_gateway}}'
         
 # ***** FINALIZE *****

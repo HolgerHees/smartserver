@@ -2,7 +2,9 @@ domain (ip ip6) {
     table filter {
         chain INPUT {
             # internal ip's can connect to host
-            saddr {{server_network}}/24 ACCEPT;
+{% for network in intern_networks %}
+            saddr {{network}} ACCEPT;
+{% endfor %}
 {% if not default_gateway.startswith(server_subnet) %}            
             # ansible ip can connect to host
             saddr {{default_gateway}} ACCEPT;
@@ -12,7 +14,9 @@ domain (ip ip6) {
         }
         chain DOCKER-USER {
             # internal ip's can forward to containers
-            saddr {{server_network}}/24 ACCEPT;
+{% for network in intern_networks %}
+            saddr {{network}} ACCEPT;
+{% endfor %}
 {% if not default_gateway.startswith(server_subnet) %}
             # ansible ip can forward to containers
             saddr {{default_gateway}} ACCEPT;
@@ -22,7 +26,9 @@ domain (ip ip6) {
             saddr {{vpn_mobile_network}}/24 daddr {{macvlan_range}} ACCEPT;
 {% endif %}
             # mobile vpn ip's can forward to internet
-            saddr {{vpn_mobile_network}}/24 daddr !{{server_network}}/24 ACCEPT;
+{% for network in intern_networks %}
+            saddr {{vpn_mobile_network}}/24 daddr !{{network}} ACCEPT;
+{% endfor %}
         }
     }
 } 

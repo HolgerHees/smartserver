@@ -12,6 +12,7 @@
     mode: "{{item.mode}}"
   with_items:
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}librenms" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}librenms/nginx" }
     - { user: "1000", group: "1000", mode: "u=rwx,g=rwx,o=", path: "{{global_log}}librenms" }
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms" }
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms/alert-templates" }
@@ -20,20 +21,31 @@
     - { user: "1000", group: "1000", mode: "u=rwx,g=rwx,o=", path: "{{global_lib}}librenms/rrd" }
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_lib}}librenms/weathermap" }
 
-- name: synchronize configs
-  synchronize:
-    src: "templates/etc/librenms/"
-    dest: "{{global_etc}}librenms/"
-    archive: no
-    checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown=1000:1000"
-      - "--chmod=D755,F644"
+#- name: synchronize configs
+#  synchronize:
+#    src: "templates/etc/librenms/"
+#    dest: "{{global_etc}}librenms/"
+#    archive: no
+#    checksum: yes
+#    group: yes
+#    owner: yes
+#    perms: yes
+#    recursive: yes
+#    rsync_opts:
+#      - "--chown=1000:1000"
+#      - "--chmod=D755,F644"
       
+- name: copy config
+  template:
+    src: "templates/etc/librenms/{{item}}"
+    dest: "{{global_etc}}librenms/{{item}}"
+    owner: "1000"
+    group: "1000"
+    mode: 0644
+  with_items:
+    - "nginx/nginx.conf"
+    - "config.php"
+
 - name: check started docker
   systemd:
     name: docker
@@ -104,10 +116,20 @@
   import_tasks: roles/mysql/tasks/add_database.yml
   
 # ***** FINALIZE *****
+#- name: prepare ferm rules
+#  set_fact:
+#    librenms_ferm_rules: |
+#      [
+#      {% for network in intern_networks %}
+#        "outerface {{main_network_interface}} saddr {{docker_postfix_ip}} daddr {{network}}"
+#      {% endfor %}
+#      ]
+#  tags: [ 'firewall_config' ]
+  
 #- name: allow librenms service
 #  vars:
 #    name: "librenms"
-#    rule: "outerface {{main_network_interface}} saddr {{docker_librenms_ip}} daddr {{server_network}}/24"
+#    rules: "{{librenms_ferm_rules}}"
 #    is_docker: True
 #  import_tasks: roles/firewall/tasks/allow_service.yml
 #  tags: [ 'firewall_config' ]
