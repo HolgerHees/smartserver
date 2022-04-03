@@ -17,6 +17,7 @@ MAX_SYSTEM_REBOOT_TIME = 600
 
 MIN_PROCESS_INACTIVITY_TIME = 30
 MAX_STARTUP_WAITING_TIME = 1200
+MAX_WORKFLOW_WAITING_TIME = 300
 
 
 class CmdWorkflow: 
@@ -100,6 +101,57 @@ class CmdWorkflow:
     def _handleWorkflow(self,workflow,log_file_name,start_time_str):
         thread = threading.Thread(target=self._proceedWorkflow, args=(workflow, log_file_name, start_time_str ))
         thread.start()
+        
+    def _checkRunning(self, check_global_running):
+        return self.cmd_executer.isRunning() if check_global_running else self.cmd_executer.isDaemonJobRunning()
+        
+    def _waitToProceed(self, lf, check_global_running, min_process_inactivity_time, max_startup_waiting_time ):
+        if not self._checkRunning(check_global_running):
+            return True
+        
+        msg = "Waiting for {}s of inactivity to proceed".format(min_process_inactivity_time)
+        self.logger.info(msg)
+        self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
+
+        can_proceed = False
+        waiting_start = datetime.now().timestamp()
+        last_seen_time = waiting_start
+        last_log_time = waiting_start
+        last_cmd_type = None
+        while True:
+            now = datetime.now().timestamp()
+            inactivity_time = now - last_seen_time
+            waiting_time = round(now - waiting_start)
+            
+            if self._checkRunning(check_global_running):
+                external_cmd_type = self.executer.getExternalCmdType()
+                last_seen_time = now
+                last_cmd_type = external_cmd_type if external_cmd_type is not None else self.executer.getCurrentJobCmdType()
+
+            if inactivity_time > min_process_inactivity_time:
+                can_proceed = True
+                break
+
+            if waiting_time > max_startup_waiting_time:
+                msg = "Not able to proceed due still running '{}'".format(last_cmd_type)
+                self.logger.info(msg)
+                self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
+                break
+                
+            if round(now - last_log_time) >= 15:
+                last_log_time = now
+                if last_cmd_type != None:
+                    cmd_msg = " - Last run of '{}' {}s ago".format(last_cmd_type,round(inactivity_time))
+                else:
+                    cmd_msg = ""
+                
+                msg = "Waiting since {}s for {}s of inactivity{}".format(round(waiting_time), min_process_inactivity_time, cmd_msg)
+                self.logger.info(msg)
+                self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
+                
+            time.sleep(2)
+            
+        return can_proceed
 
     def _proceedWorkflow(self,workflow, log_file_name, start_time_str):
         start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
@@ -112,47 +164,7 @@ class CmdWorkflow:
             lf = LogFile(f)
 
             if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
-                msg = "Waiting for {}s of inactivity to proceed".format(MIN_PROCESS_INACTIVITY_TIME)
-                self.logger.info(msg)
-                self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
-
-                can_proceed = False
-                waiting_start = datetime.now().timestamp()
-                last_seen_time = waiting_start
-                last_log_time = waiting_start
-                last_cmd_type = None
-                while True:
-                    now = datetime.now().timestamp()
-                    inactivity_time = now - last_seen_time
-                    waiting_time = round(now - waiting_start)
-                    
-                    active_cmd_type = self.cmd_executer.getExternalCmdType()
-                    if active_cmd_type != None:
-                        last_seen_time = now
-                        last_cmd_type = active_cmd_type
-
-                    if inactivity_time > MIN_PROCESS_INACTIVITY_TIME:
-                        can_proceed = True
-                        break
-
-                    if waiting_time > MAX_STARTUP_WAITING_TIME:
-                        msg = "Not able to proceed due still running '{}'".format(last_cmd_type)
-                        self.logger.info(msg)
-                        self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
-                        break
-                      
-                    if round(now - last_log_time) >= 15:
-                        last_log_time = now
-                        if last_cmd_type != None:
-                            cmd_msg = " - Last run of '{}' {}s ago".format(last_cmd_type,round(inactivity_time))
-                        else:
-                            cmd_msg = ""
-                      
-                        msg = "Waiting since {}s for {}s of inactivity{}".format(round(waiting_time), MIN_PROCESS_INACTIVITY_TIME, cmd_msg)
-                        self.logger.info(msg)
-                        self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
-                        
-                    time.sleep(2)
+                can_proceed = self._waitToProceed(lf, True, MIN_PROCESS_INACTIVITY_TIME, MAX_STARTUP_WAITING_TIME)
             else:
                 can_proceed = True
                     
@@ -165,28 +177,18 @@ class CmdWorkflow:
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
                 exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if has_cmds else 0
                  
-        self.cmd_executer.finishRun(log_file_name,exit_code,start_time,start_time_str,cmd_block["cmd_type"],cmd_block["username"])
+        self.cmd_executer.finishRun(log_file_name,exit_code,start_time,cmd_block["cmd_type"],cmd_block["username"])
                       
         if exit_code == 0 and len(workflow) > 0:
-            if not self.runWorkflow(workflow, True):
-                self.logger.error("Can't continue with workflow due a still running process");
+            self._runWorkflow( workflow, True )
         
-    def runWorkflow(self, workflow, checkGlobalRunning ):
-        isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
-        if not isRunning :
-            thread = threading.Thread(target=self._runWorkflow, args=(workflow, checkGlobalRunning ))
-            thread.start()
-            time.sleep(0.5)
-            
-            return True
-        else:
-            return False
-
-    def _runWorkflow(self, workflow, checkGlobalRunning):   
+    def _runWorkflow(self, workflow, check_global_running):   
         self.workflow_state = None
 
         while len(workflow) > 0:
             cmd_block = workflow.pop(0)
+            
+            # ***** ANALYSE *****
             if "function" in cmd_block:
                 function = self.handler
                 for part in cmd_block["function"].split("."):
@@ -209,6 +211,7 @@ class CmdWorkflow:
                     self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
                     cmd_block = _cmd_block
 
+            # ***** PREPARE *****
             is_interuptable_workflow = self.cmd_executer.isInterruptableJob(cmd_block["cmd_type"])
 
             if is_interuptable_workflow:
@@ -224,13 +227,29 @@ class CmdWorkflow:
                 #if cmd_block["cmd_type"] == "system_reboot":
                 #    self._prepareTestWorkflow(cmd_block)
               
-            isRunning = self.cmd_executer.isRunning() if checkGlobalRunning else self.cmd_executer.isDaemonJobRunning()
-            if not isRunning and self.cmd_executer.lock(cmd_block["cmd_type"]):
-                exit_code = self.cmd_executer.runCmdBlock(cmd_block)
-            else:
-                self.cmd_executer.interruptedCmdBlock(cmd_block)
-                exit_code = -1
+            # ***** RUN CMD *****
+            [start_time, job_log_name, job_log_file] = self.cmd_executer.initLogFilename(cmd_block)
+            with open(job_log_file, 'w') as f:
+                lf = LogFile(f)
+
+                can_proceed = self._waitToProceed(lf, check_global_running, MIN_PROCESS_INACTIVITY_TIME, MAX_WORKFLOW_WAITING_TIME)
+                finish_run = False
+                if can_proceed:
+                    if self.cmd_executer.lock(cmd_block["cmd_type"], job_log_name):
+                        exit_code = self.cmd_executer.processCmdBlock(cmd_block, lf)
+                        finish_run = cmd_block["cmd_type"] != "system_reboot"
+                    else:
+                        self.cmd_executer.logInterruptedCmd(lf, "'{}' not able to lock\n".format(cmd_block["cmd_type"]))
+                        exit_code = -1
+                        finish_run = True
+                else:
+                    exit_code = -1
+                    finish_run = True
+
+                if finish_run:
+                    self.cmd_executer.finishRun(job_log_file, exit_code, start_time, cmd_block["cmd_type"] ,cmd_block["username"])
                 
+            # ***** FINALIZE *****
             if exit_code != 0 or self.workflow_state is not None:
                 if os.path.isfile(config.deployment_workflow_file):
                     os.unlink(config.deployment_workflow_file)
@@ -249,6 +268,16 @@ class CmdWorkflow:
           
             if is_interuptable_workflow:
                 break
+
+    def runWorkflow(self, workflow, check_global_running ):
+        if not self._checkRunning(check_global_running):
+            thread = threading.Thread(target=self._runWorkflow, args=(workflow, check_global_running ))
+            thread.start()
+            time.sleep(0.5)
+            
+            return True
+        else:
+            return False
             
     def killWorkflow(self):
         self.cmd_executer.killProcess()

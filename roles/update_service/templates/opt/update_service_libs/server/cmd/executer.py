@@ -142,12 +142,14 @@ class CmdExecuter(watcher.Watcher):
         self.current_started = start_time
         self.current_logfile = file_name
         
-    def lock(self, cmd_type):
+    def lock(self, cmd_type, file_name):
         if self.current_started != None:
             return False
         else:
             self.current_cmd_type = cmd_type
             self.current_started = datetime.now()
+            self.current_logfile = file_name
+
             self.resetKilledJobState()
             return True
 
@@ -159,8 +161,9 @@ class CmdExecuter(watcher.Watcher):
         self.current_logfile = None
         self.current_child = None
 
-    def finishRun(self,job_log_file,exit_status,start_time,start_time_str,cmd_type,username):
+    def finishRun(self, job_log_file, exit_status, start_time, cmd_type, username):
         duration = datetime.now() - start_time
+        start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
         status_msg = "success" if exit_status == 0 else "failed"
         finished_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,round(duration.total_seconds(),1),status_msg, cmd_type,username)
         finished_log_file = u"{}{}".format(config.job_log_folder,finished_log_name)
@@ -168,6 +171,21 @@ class CmdExecuter(watcher.Watcher):
         os.rename(job_log_file, finished_log_file)
         self.current_logfile = finished_log_name
         self.unlock(exit_status)
+
+    def initLogFilename(self, cmd_block):
+        username = cmd_block["username"]
+        cmd_type = cmd_block["cmd_type"]
+        
+        start_time = datetime.now()
+        start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
+        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,"running", cmd_type,username)
+        job_log_file = u"{}{}".format(config.job_log_folder,job_log_name)
+        
+        return [start_time, job_log_name, job_log_file]
+
+    def logInterruptedCmd(self, lf, msg ):
+        # no need for a newline for interruptable commands
+        lf.write(msg)
 
     def runFunction(self,cmd_type, _cmd, lf):
         name = _cmd["function"]
@@ -239,10 +257,6 @@ class CmdExecuter(watcher.Watcher):
             lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
             
         return exit_status
-
-    def logInterruptedCmd(self, lf, msg ):
-        # no need for a newline for interruptable commands
-        lf.write(msg)
         
     def processCmdBlock(self,cmd_block,lf):
         exit_status = 1
@@ -274,48 +288,6 @@ class CmdExecuter(watcher.Watcher):
             lf.write("The command '{}' - '{}' exited with '{}: {}'.\n".format(cmd_type,step,type(e).__name__,ex_value))
             
         return exit_status
-
-    def runCmdBlock(self, cmd_block):
-        username = cmd_block["username"]
-        cmd_type = cmd_block["cmd_type"]
-
-        exit_status = 1
-        
-        [start_time, start_time_str, job_log_name, job_log_file] = self._initLogFilename(cmd_type, username, "running")
-        with open(job_log_file, 'w') as f:
-            self.current_logfile = job_log_name
-
-            lf = LogFile(f)
-            
-            exit_status = self.processCmdBlock(cmd_block,lf)
-                     
-        #if os.path.isfile(job_log_file):
-        if cmd_type != "system_reboot":
-            self.finishRun(job_log_file, exit_status,start_time,start_time_str,cmd_type,username)
-
-        return exit_status
- 
-    def interruptedCmdBlock(self, cmd_block):
-        username = cmd_block["username"]
-        cmd_type = cmd_block["cmd_type"]
-        
-        [_, _, _, job_log_file] = self._initLogFilename(cmd_type, username,"failed")
-        with open(job_log_file, 'w') as f:
-            lf = LogFile(f)
-            if self.external_cmd_type is not None:
-                lf.write("The command '{}' was interupted by external cmd '{}'.\n".format(self.external_cmd_type))
-            else:
-                lf.write("The command '{}' was interupted{}.\n")
-
-        self.initJobs()
-        
-    def _initLogFilename(self, cmd_type, username, type):
-        start_time = datetime.now()
-        start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
-        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,type, cmd_type,username)
-        job_log_file = u"{}{}".format(config.job_log_folder,job_log_name)
-        
-        return [start_time, start_time_str, job_log_name, job_log_file]
 
     def killProcess(self):
         child = self.current_child
