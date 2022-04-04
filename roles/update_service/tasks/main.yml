@@ -82,7 +82,7 @@
   
 - name: copy apache api config
   vars:
-    config_file: "templates/etc/apache2/_.ansible.conf.d/update_service_api.conf"
+    config_file: "templates/etc/apache2/_.ansible.conf.d/update_service.conf"
   import_tasks: roles/apache/tasks/add_config.yml
 
 - name: create version check cron job

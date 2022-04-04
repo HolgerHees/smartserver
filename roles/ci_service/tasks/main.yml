@@ -110,7 +110,7 @@
 
 - name: copy apache api config
   vars:
-    config_file: "templates/etc/apache2/_.ansible.conf.d/ci_service_api.conf"
+    config_file: "templates/etc/apache2/_.ansible.conf.d/ci_service.conf"
   import_tasks: roles/apache/tasks/add_config.yml
 
 - name: create check cron job
