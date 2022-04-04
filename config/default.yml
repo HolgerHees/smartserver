@@ -160,6 +160,10 @@ default_variables: {
     "vault_librenms_mysql_password": { 
         condition: "librenms_devices"
     },
+
+    "vault_librenms_api_token": { 
+        condition: "librenms_devices"
+    },
 }
 
 

@@ -1,17 +1,10 @@
 <?php
 require "../shared/libs/logfile.php";
-require "../shared/libs/http.php";
-require "../shared/libs/auth.php";
 require "../shared/libs/i18n.php";
 
 require "inc/job.php";
 
 require "config.php";
-
-if( !Auth::hasGroup("admin") )
-{
-    HttpResponse::throwForbidden();
-}
 
 $position = isset($_GET['position']) ? $_GET['position'] : 0;
 

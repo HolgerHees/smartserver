@@ -1,16 +1,8 @@
 <?php
-require "config.php";
-
-require "../shared/libs/http.php";
-require "../shared/libs/auth.php";
 require "../shared/libs/i18n.php";
 require "../shared/libs/ressources.php";
 
-if( !Auth::hasGroup("admin") )
-{
-    HttpResponse::throwForbidden();
-}
-
+require "config.php";
 ?>
 <html>
 <head>

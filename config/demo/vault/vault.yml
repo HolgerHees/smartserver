@@ -33,6 +33,7 @@ vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
 vault_openhab_mysql_password: "default123"
 
 vault_librenms_mysql_password: "default123"
+vault_librenms_api_token: "lasd6213k1jsl12nd098sdk2j3"
 
 # ****** OPTIONAL VARIABLES ******
 # variables are optional and only necessary if they are referenced in one of the optional roles or configurations

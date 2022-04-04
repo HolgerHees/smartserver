@@ -1,18 +1,10 @@
 <?php
-require "../shared/libs/logfile.php";
-require "../shared/libs/http.php";
-require "../shared/libs/auth.php";
 require "../shared/libs/i18n.php";
 require "../shared/libs/ressources.php";
 
 require "inc/job.php";
 
 require "config.php";
-
-if( !Auth::hasGroup("admin") )
-{
-    HttpResponse::throwForbidden();
-}
 ?>
 <html>
 <head>

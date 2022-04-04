@@ -1,16 +1,9 @@
 <?php
 require "../shared/libs/logfile.php";
-require "../shared/libs/http.php";
-require "../shared/libs/auth.php";
 require "../shared/libs/ressources.php";
 
 require "inc/job.php";
 require "config.php";
-
-if( !Auth::hasGroup("admin") )
-{
-    HttpResponse::throwForbidden();
-}
 
 $datetime = isset($_GET['datetime']) ? $_GET['datetime'] : "";
 $config = isset($_GET['config']) ? $_GET['config'] : "";

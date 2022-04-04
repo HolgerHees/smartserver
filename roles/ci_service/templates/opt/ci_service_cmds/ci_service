@@ -47,7 +47,7 @@ class Handler(Server):
     def getState(self):
         
         last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp;
+        last_data_modified["startup"] = self.startup_timestamp
         last_data_modified["jobs"] = self.job_watcher.getLastRefreshAsTimestamp()
         changed_data = {}
         

@@ -104,7 +104,7 @@ class Handler(Server):
         }
         
         last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp;
+        last_data_modified["startup"] = self.startup_timestamp
 
         changed_data = {}
         

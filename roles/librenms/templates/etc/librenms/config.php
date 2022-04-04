@@ -2,6 +2,10 @@
 $config['snmp']['community'] = array();
 $config['nets'] = array("{{intern_networks | join('\", \"')}}");
 
+$config['auth_mechanism'] = "http-auth";
+
+#$config['discovery_by_ip'] = true;
+
 /*$config['discovery_modules']['os']                   = false;
 $config['discovery_modules']['ports']                = false;
 $config['discovery_modules']['ports-stack']          = false;
