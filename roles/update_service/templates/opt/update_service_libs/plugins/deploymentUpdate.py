@@ -158,7 +158,8 @@ class DeploymentUpdate:
                 files = []
                 deleted_files = []
                 for file in commits[commit]["files"]:
-                    flag, path = file
+                    flag = file[0][0]
+                    path = file[-1]
                     if flag == "D":
                         deleted_files.append(path)
                     else:
