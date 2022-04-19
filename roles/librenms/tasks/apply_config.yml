@@ -9,14 +9,14 @@
   import_tasks: roles/apache/tasks/wait_until_ready.yml
 
 - name: add devices
-  shell: "docker exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.snmp_host}}\""
+  shell: "docker exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.host}}\""
   register: device_register_result
   changed_when: "device_register_result.rc != 2"
   failed_when: "device_register_result.rc != 0 and device_register_result.rc != 2"
   with_items: "{{librenms_devices}}"
   
 - name: set api token
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT INTO api_tokens (id,user_id,token_hash,description,disabled) VALUES (1,1,'{{vault_librenms_api_token}}','web app usage',0);\\\"\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO api_tokens (id,user_id,token_hash,description,disabled) VALUES (1,1,'{{vault_librenms_api_token}}','web app usage',0);\\\"\""
   changed_when: no
   
 - name: create discovery all cron job
@@ -43,7 +43,7 @@
     cmd: "docker exec librenms sh -c \"/opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 >> /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
-    minute: "*/5"
+    minute: "*/{{librenms_poller_interval}}"
   import_tasks: roles/cron/tasks/add_cronjob.yml
 
 - name: create daily cron job

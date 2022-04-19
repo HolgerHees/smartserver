@@ -39,6 +39,7 @@ docker_postfix_ip:                "172.16.0.201"
 docker_influxdb_ip:               "172.16.0.203"
 docker_mysql_ip:                  "172.16.0.205"
 docker_mosquitto_ip:              "172.16.0.206"
+docker_speedtest_ip:              "172.16.0.207"
 
 docker_default_network:           "172.17.0.0"
 
@@ -50,6 +51,7 @@ docker_prometheus_ip:             "172.30.5.200"
 docker_alertmanager_ip:           "172.30.6.200"
 docker_loki_ip:                   "172.30.7.200"
 docker_fluentd_ip:                "172.30.8.200"
+docker_librenms_ip:               "172.30.9.200"
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.15.3"
+alpine_version:                   "3.15.4"

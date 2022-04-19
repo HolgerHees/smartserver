@@ -379,6 +379,22 @@ div.buttonSelection > div.buttonSelectionLayer > div:hover {
   background-color: var(--tooltip-bg);
   box-shadow: 1px 1px 2px var(--tooltip-shadow);
 }
+.tooltip > .arrow.top {
+  top: -6px;
+  transform: rotate(225deg);
+  box-shadow: none;
+}
+
+.tooltip > .arrow.right {
+  right: -5px;
+  transform: rotate(-45deg);
+}
+
+.tooltip > .arrow.left {
+  left: -5px;
+  transform: rotate(135deg);
+  box-shadow: none;
+}
 
 .tooltip.active {
   visibility: visible;

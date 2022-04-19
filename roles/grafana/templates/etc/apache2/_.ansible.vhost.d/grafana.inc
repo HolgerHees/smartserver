@@ -1,7 +1,8 @@
-<Location />
-  RewriteCond %{HTTP:Upgrade} =websocket [NC]
-  RewriteRule /api/live/(.*) ws://grafana:3000/api/live/$1 [P,L]
+RewriteCond %{HTTP:Connection} Upgrade [NC]
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteRule /api/live/(.*) ws://grafana:3000/api/live/$1 [P,L]
 
+<Location />
   ProxyPass http://grafana:3000/
   ProxyPassReverse http://grafana:3000/
   RequestHeader unset Authorization

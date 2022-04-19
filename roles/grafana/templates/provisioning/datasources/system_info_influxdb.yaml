@@ -1,0 +1,23 @@
+apiVersion: 1
+
+#deleteDatasources:
+#  - name: SystemInfoInfluxDB
+#    orgId: 1
+
+datasources:
+  - name: SystemInfoInfluxDB
+    uid: "system_info_influxdb"
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://influxdb:8086
+    database: system_info
+    jsonData:
+      "defaultBucket": "default-bucket"
+      "organization": "default-org"
+      "version": "InfluxQL"
+      "httpHeaderName1": "Authorization"
+      "httpMode": "POST"
+    secureJsonData:
+      "httpHeaderValue1": "Token {{vault_influxdb_admin_token}}"
+    editable: false

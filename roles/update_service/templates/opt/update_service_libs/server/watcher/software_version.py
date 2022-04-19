@@ -4,11 +4,9 @@ from server.watcher import watcher
 
 
 class SoftwareVersionWatcher(watcher.Watcher): 
-    def __init__(self, logger ):
-        super().__init__(logger)
+    def __init__(self):
+        super().__init__()
       
-        self.logger = logger
-        
         self.software = {}
         self.last_modified = self.getStartupTimestamp()
         

@@ -55,7 +55,7 @@ mx.SNCore = (function( ret ) {
                 var response = JSON.parse(this.response);
                 if( response["status"] == "0" )
                 {
-                    mx.UpdateServiceHelper.confirmSuccess();
+                    mx.Error.confirmSuccess();
                     
                     handleDaemonState(response);
                     
@@ -63,7 +63,7 @@ mx.SNCore = (function( ret ) {
                 }
                 else
                 {
-                    mx.UpdateServiceHelper.handleServerError(response["message"]);
+                    mx.Error.handleServerError(response["message"]);
                 }
             }
             else
@@ -71,11 +71,11 @@ mx.SNCore = (function( ret ) {
                 let timeout = 15000;
                 if( this.status == 0 || this.status == 503 ) 
                 {
-                    mx.UpdateServiceHelper.handleServerNotAvailable();
+                    mx.Error.handleServerNotAvailable( mx.I18N.get( "Service is currently not available") );
                 }
                 else
                 {
-                    if( this.status != 401 ) mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
+                    if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
                 }
                 
                 refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
@@ -100,22 +100,22 @@ mx.SNCore = (function( ret ) {
                 var response = JSON.parse(this.response);
                 if( response["status"] == "0" )
                 {
-                    mx.UpdateServiceHelper.confirmSuccess();
+                    mx.Error.confirmSuccess();
                     
                     handleDaemonState(response);
                 }
                 else
                 {
-                    mx.UpdateServiceHelper.handleServerError(response["message"]);
+                    mx.Error.handleServerError(response["message"]);
                 }
             }
             else if( this.status == 503 ) 
             {
-                mx.UpdateServiceHelper.handleServerNotAvailable();
+                mx.Error.handleServerNotAvailable();
             }
             else
             {
-                mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
+                mx.Error.handleRequestError(this.status, this.statusText, this.response);
             }
         };
         

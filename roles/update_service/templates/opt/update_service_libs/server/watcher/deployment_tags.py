@@ -6,10 +6,8 @@ from server.watcher import watcher
 
 
 class DeploymentTagsWatcher(watcher.Watcher): 
-    def __init__(self, logger):
-        super().__init__(logger)
-      
-        self.logger = logger
+    def __init__(self):
+        super().__init__()
         
         self.tags = []
         self.last_modified = self.getStartupTimestamp()

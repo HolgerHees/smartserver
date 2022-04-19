@@ -1,0 +1,8 @@
+- name: restart speedtest
+  systemd:
+    name: speedtest
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart speedtest"

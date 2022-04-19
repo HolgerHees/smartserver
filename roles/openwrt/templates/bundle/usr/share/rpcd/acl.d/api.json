@@ -1,0 +1,11 @@
+{
+    "api": {
+        "description": "not quite as super user",
+        "read": {
+            "ubus": {
+                "hostapd*": [ "*" ],
+                "network*": [ "*" ]
+            },
+        }
+    }
+} 

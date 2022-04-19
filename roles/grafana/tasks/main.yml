@@ -69,6 +69,7 @@
   notify: "restart grafana"
   with_items:
     - "provisioning/datasources/opentsdb_influxdb.yaml"
+    - "provisioning/datasources/system_info_influxdb.yaml"
     - "provisioning/datasources/openhab_influxdb.yaml"
     - "provisioning/datasources/openhab_mysql.yaml"
     - "provisioning/datasources/prometheus.yaml"

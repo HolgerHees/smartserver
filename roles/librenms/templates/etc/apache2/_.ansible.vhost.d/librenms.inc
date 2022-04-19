@@ -1,6 +1,6 @@
 <Location />
-  ProxyPass http://localhost:8000/
-  ProxyPassReverse http://localhost:8000/
+  ProxyPass http://librenms:8000/
+  ProxyPassReverse http://librenms:8000/
 
   RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
   RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}

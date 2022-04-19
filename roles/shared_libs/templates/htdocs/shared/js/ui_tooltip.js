@@ -20,6 +20,11 @@ mx.Tooltip = (function( ret ) {
         return tooltip.getBoundingClientRect();
     }
 
+    ret.getRootElement = function()
+    {
+        return tooltip;
+    }
+
     ret.getArrowElementRect = function()
     {
         if( tooltip == null ) create();
@@ -41,14 +46,30 @@ mx.Tooltip = (function( ret ) {
         tooltipText.innerHTML = text;
     }
     
-    ret.show = function( tooltipLeft, tooltipTop, arrowLeft)
+    ret.show = function( tooltipLeft, tooltipTop, arrowOffset, arrowPosition)
     {
         if( tooltip == null ) create();
         
         tooltip.style.cssText = "left: " + tooltipLeft + "px; top: " + tooltipTop + "px;";
-        tooltipArrow.style.left = arrowLeft;
+        
+        if( !arrowPosition ) arrowPosition = "bottom";
+        
+        tooltipArrow.className = "arrow " + arrowPosition;
 
+        if( arrowPosition == "top" || arrowPosition == "bottom" )
+        {
+            tooltipArrow.style.left = arrowOffset;
+        }
+        else
+        {
+            tooltipArrow.style.top = arrowOffset;
+        }
         tooltip.classList.add("active");
+    }
+    
+    ret.toggle = function()
+    {
+        tooltip.classList.toggle("active");
     }
 
     ret.init = function()

@@ -1,0 +1,34 @@
+class Event():   
+    TYPE_GROUP = "group"
+    TYPE_DEVICE = "device"
+    TYPE_STAT = "stat"
+
+    ACTION_CREATE = "create"
+    ACTION_MODIFY = "modify"
+    ACTION_DELETE = "delete"
+
+    #ACTION_SKIP = "skip"
+
+    def __init__(self, type, action, object, details = [] ):
+        self.type = type
+        self.action = action
+        self.object = object
+        self.details = details
+        
+    #def getUID(self):
+    #    return "{}-{}-{}".format(self.type, self.action)
+
+    def getType(self):
+        return self.type
+        
+    def getAction(self):
+        return self.action;
+
+    def getObject(self):
+        return self.object
+    
+    def getDetails(self):
+        return self.details
+
+    def __repr__(self):
+        return "{}-{}".format(self.type, self.action)

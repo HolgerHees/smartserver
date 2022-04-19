@@ -1,0 +1,93 @@
+#!/usr/bin/python3
+
+from flask import Flask, request, make_response
+from werkzeug.serving import WSGIRequestHandler
+
+import logging
+import json
+
+from datetime import datetime
+
+from smartserver.server import Server
+
+from config import config
+from lib.watcher.arpscan import ArpScanner
+from lib.watcher.portscan import PortScanner
+from lib.watcher.librenms import LibreNMS
+from lib.watcher.openwrt import OpenWRT
+
+from lib.builder import Builder
+
+class Handler(Server):
+    def __init__(self,logger):
+        self.logger = logger
+        
+        super().__init__(self.logger, "system_service" )
+        
+        self.startup_timestamp = round(datetime.now().timestamp(),3)
+        
+        self.pipeline = []
+        self.builder = Builder(self.logger, config, self.pipeline )
+
+        self.pipeline.append(ArpScanner(self.logger, config, self ))
+        if len(config.openwrt_devices) > 0:
+            self.pipeline.append(OpenWRT(self.logger, config, self ))
+        if config.librenms_token:
+            self.pipeline.append(LibreNMS(self.logger, config, self ))
+        #self.pipeline.append(PortScanner(self.logger, config, self ))
+
+        for watcher in self.pipeline:
+            watcher.start()
+        
+    def terminate(self):
+        for watcher in self.pipeline:
+            watcher.terminate()
+
+        super().terminate()
+        
+    def notify(self, source_watcher, events):
+        self.builder.build(source_watcher, events)
+            
+    def getState(self):
+
+        last_data_modified = {}
+        last_data_modified["startup"] = self.startup_timestamp
+        last_data_modified["groups"] = self.builder.getLastGroupRefreshAsTimestamp()
+        last_data_modified["devices"] = self.builder.getLastDeviceRefreshAsTimestamp()
+        last_data_modified["stats"] = self.builder.getLastStatsRefreshAsTimestamp()
+        changed_data = {}
+        
+        force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
+                
+        if force or "last_data_modified[groups]" not in request.form or float(request.form["last_data_modified[groups]"]) < last_data_modified["groups"]:
+            changed_data["groups"] = self.builder.getGroups()
+
+        if force or "last_data_modified[devices]" not in request.form or float(request.form["last_data_modified[devices]"]) < last_data_modified["devices"]:
+            changed_data["devices"] = self.builder.getDevices()
+
+        if force or "last_data_modified[stats]" not in request.form or float(request.form["last_data_modified[stats]"]) < last_data_modified["stats"]:
+            changed_data["stats"] = self.builder.getStats()
+
+        result = { 
+            "status": 0, 
+            "last_data_modified": last_data_modified,
+            "changed_data": changed_data
+        }
+
+        return json.dumps(result)
+          
+app = Flask(__name__)
+
+@app.route('/state/', methods = ['POST'])
+def refreshSoftwareVersionCheck():
+    return handler.getState()
+
+if __name__ == '__main__':
+    app.logger.setLevel(logging.DEBUG)
+    handler = Handler(app.logger)
+
+    def handleServer():
+        WSGIRequestHandler.protocol_version = "HTTP/1.1"
+        app.run(debug=False, use_reloader=False, threaded=True, host=config.service_ip, port=config.service_port)
+        
+    handler.start(handleServer)

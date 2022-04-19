@@ -45,37 +45,43 @@
   with_items:
     - "nginx/nginx.conf"
     - "config.php"
+  notify: "restart librenms"
 
-- name: check started docker
-  systemd:
-    name: docker
-    state: started
+- name: build docker image
+  vars:
+    name: "librenms"
+    image_name: "custom_librenms"
+    image_version: "{{librenms_version}}"
+    files:
+      - roles/librenms/templates/container/Dockerfile
+      - roles/librenms/templates/container/patches/HttpAuthAuthorizer.php
+  import_tasks: roles/container/tasks/build_docker_image.yml
 
-#- name: create docker network
-#  docker_network:
-#    name: librenms
-#    ipam_config:
-#      - subnet: "{{docker_librenms_ip.split('.')[:3] | join('.')}}.0/24"
-#        gateway: "{{docker_librenms_ip.split('.')[:3] | join('.')}}.1"
-#    connected:
-#      - mysql
-#      - redis
-#    appends: yes
-#  tags: [ 'mysql', 'redis' ]
+- name: create docker network
+  docker_network:
+    name: librenms
+    ipam_config:
+      - subnet: "{{docker_librenms_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{docker_librenms_ip.split('.')[:3] | join('.')}}.1"
+    connected:
+      - mysql
+      - redis
+    appends: yes
+  tags: [ 'mysql', 'redis' ]
 
 - name: create docker container
   docker_container:
     name: librenms
-    image: "librenms/librenms:{{librenms_version}}"
+    image: "custom_librenms:{{librenms_version}}"
     state: present
 #    recreate: true
     env:
 #      OBSERVIUM_ADMIN_USER: "admin"
 #      OBSERVIUM_ADMIN_PASS: "admin"
       DB_HOST: "mysql"
-      DB_USER: "{{vault_librenms_mysql_username}}"
+      DB_USERNAME: "{{vault_librenms_mysql_username}}"
       DB_PASSWORD: "{{vault_librenms_mysql_password}}"
-      DB_NAME: "librenms"
+      DB_DATABASE: "librenms"
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
       REDIS_DB: "1"
@@ -86,7 +92,11 @@
     log_options:
       tag: librenms
     container_default_behavior: "compatibility"
-    network_mode: "host"
+    network_mode: "default"
+    networks: 
+      - name: "librenms"
+        ipv4_address: "{{docker_librenms_ip}}"
+    networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:z'
       - '{{global_etc}}librenms:/data/config:z'
@@ -100,11 +110,11 @@
      - "8000"
   notify: "restart librenms"
 
-#- name: add container name
-#  vars:
-#    host_name: "librenms"
-#    host_ip_address: "{{docker_librenms_ip}}"
-#  import_tasks: roles/network/tasks/add_to_hosts.yml
+- name: add container name
+  vars:
+    host_name: "librenms"
+    host_ip_address: "{{docker_librenms_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
 - name: create database
@@ -116,23 +126,23 @@
   import_tasks: roles/mysql/tasks/add_database.yml
   
 # ***** FINALIZE *****
-#- name: prepare ferm rules
-#  set_fact:
-#    librenms_ferm_rules: |
-#      [
-#      {% for network in intern_networks %}
-#        "outerface {{main_network_interface}} saddr {{docker_postfix_ip}} daddr {{network}}"
-#      {% endfor %}
-#      ]
-#  tags: [ 'firewall_config' ]
+- name: prepare ferm rules
+  set_fact:
+    librenms_ferm_rules: |
+      [
+      {% for network in intern_networks %}
+        "outerface {{main_network_interface}} saddr {{docker_librenms_ip}} daddr {{network}}"
+      {% endfor %}
+      ]
+  tags: [ 'firewall_config' ]
   
-#- name: allow librenms service
-#  vars:
-#    name: "librenms"
-#    rules: "{{librenms_ferm_rules}}"
-#    is_docker: True
-#  import_tasks: roles/firewall/tasks/allow_service.yml
-#  tags: [ 'firewall_config' ]
+- name: allow librenms service
+  vars:
+    name: "librenms"
+    rules: "{{librenms_ferm_rules}}"
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: register webui
   vars:

@@ -3,6 +3,8 @@ import pyinotify
 import os
 import sys
 import signal
+import traceback 
+import logging
 
 from datetime import datetime, timezone
 
@@ -14,17 +16,37 @@ class ShutdownException(Exception):
     pass
 
 class Server():
-    def __init__(self,logger, name):
-        self.logger = logger
-        
+    def initLogger(level):
+        #journal.JournalHandler(SYSLOG_IDENTIFIER="pulp-sync")
+        handler = logging.StreamHandler(sys.stdout)
+        is_daemon = not os.isatty(sys.stdin.fileno())
+        logging.basicConfig(
+            handlers = [handler],
+            level=level,
+            format= "[%(levelname)s] - %(module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s - %(message)s",
+            datefmt="%d.%m.%Y %H:%M:%S"
+        )
+
+    def __init__(self,name):
         self.filewatcher = None
 
         def shutdown(signum, frame):
-            self.logger.info("Shutdown initiated")
+            logging.info("Shutdown initiated")
             self.terminate()
+            
+        def exceptionHandler(type, value, tb):
+            logger = logging.getLogger()
+            logger.error("Uncaught exception: {0}".format(str(value)))
+            for line in traceback.TracebackException(type, value, tb).format(chain=True):
+                rows = line.split("\n")
+                for row in rows:
+                    if row == "":
+                        continue
+                    logger.error(row)
 
         signal.signal(signal.SIGTERM, shutdown)
         signal.signal(signal.SIGINT, shutdown)
+        sys.excepthook = exceptionHandler
 
         self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         try:
@@ -42,9 +64,9 @@ class Server():
         except ShutdownException as e:
             pass
         except Exception as e:
-            self.logger.error(str(e))
+            logging.error(traceback.format_exc())
 
-        self.logger.info("Stopped")
+        logging.info("Stopped")
 
     def terminate(self):
         if self.filewatcher is not None:
@@ -53,7 +75,7 @@ class Server():
           
     def initWatchedFiles(self, watched_data_files, callback = None ):
         if watched_data_files is not None and len(watched_data_files) > 0:
-            self.filewatcher = FileWatcher( self.logger, callback )
+            self.filewatcher = FileWatcher( logging, callback )
             
             self.watched_data_files = {}
             for watched_data_file in watched_data_files:

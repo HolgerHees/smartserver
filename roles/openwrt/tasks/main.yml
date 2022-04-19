@@ -1,0 +1,64 @@
+- name: prepare needed folder
+  file:
+    path: '{{item.path}}'
+    state: directory
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
+    mode: "{{item.mode}}"
+  with_items:
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt" }
+
+- name: synchronize configs
+  synchronize:
+    src: "templates/bundle/"
+    dest: "{{global_etc}}openwrt/bundle/default/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
+
+- name: synchronize deployment script
+  synchronize:
+    src: "templates/deploy.sh"
+    dest: "{{global_etc}}openwrt/bundle/deploy.sh"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F750"
+
+- name: check for custom openwrt configs
+  find:
+    paths: "{{config_path}}vault/openwrt/{{item.host}}"
+    file_type: "any"
+  register: custom_config_directory
+  with_items: "{{openwrt_devices}}"
+
+- name: copy custom openwrt configs
+  copy:
+    src: "{{config_path}}vault/openwrt/{{item.1.host}}/"
+    dest: "{{global_etc}}openwrt/bundle/{{item.1.host}}/"
+    owner: "root"
+    group: "root"
+    mode: "u=rwX,g=rX,o="
+  loop_control:
+    index_var: index
+  when: "custom_config_directory.results[index].matched > 0"
+  with_indexed_items: "{{openwrt_devices}}"
+
+- name: register webui
+  vars:
+    name: "openwrt"
+    js_file: "templates/webui/openwrt.js"
+    i18n_files: [ { language: "de", file: "templates/webui/openwrt.de.json" } ]
+    icons: [ 'templates/webui/icons/openwrt_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml

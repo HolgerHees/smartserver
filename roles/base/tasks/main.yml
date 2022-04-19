@@ -104,6 +104,7 @@
       , sysstat
       , iotop
       , smem               # useful tool to debug memory usage (including swap usage)
+      , arp-scan           # useful for network exploring
 
       , wireguard-tools
 

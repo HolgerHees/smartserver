@@ -1,9 +1,9 @@
 from config import config
+import logging
+
 
 class CmdBuilder: 
-    def __init__(self,logger,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, operating_system):
-        self.logger = logger
-        
+    def __init__(self,dependency_watcher,process_watcher,system_update_watcher,deployment_state_watcher, operating_system):
         self.system_update_cmds = operating_system.getSystemUpdateCmds()
         
         self.dependency_watcher = dependency_watcher
@@ -143,14 +143,14 @@ class CmdBuilder:
     def validateUpdateHashes(self,username,params):
         checks = []
         if params["system_updates_hash"]:
-            #self.logger.info(params["system_updates_hash"])
-            #self.logger.info(self.system_update_watcher.getSystemUpdatesHash())
+            #logging.info(params["system_updates_hash"])
+            #logging.info(self.system_update_watcher.getSystemUpdatesHash())
             if params["system_updates_hash"] != self.system_update_watcher.getSystemUpdatesHash():
                 checks.append("wrong_system_update_hash")
 
         if params["smartserver_changes_hash"]:
-            #self.logger.info(params["smartserver_changes_hash"])
-            #self.logger.info(self.system_update_watcher.getSmartserverChangesHash())
+            #logging.info(params["smartserver_changes_hash"])
+            #logging.info(self.system_update_watcher.getSmartserverChangesHash())
             if params["smartserver_changes_hash"] != self.system_update_watcher.getSmartserverChangesHash():
                 checks.append("wrong_smartserver_update_hash")
                 

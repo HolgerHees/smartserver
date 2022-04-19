@@ -1,6 +1,6 @@
 {
-  "admin_system": {
+  "admin_tools": {
     "LibreNMS": "LibreNMS",
-    "Network": "Netzwerk"
+    "SNMP": "SNMP"
   }
 }

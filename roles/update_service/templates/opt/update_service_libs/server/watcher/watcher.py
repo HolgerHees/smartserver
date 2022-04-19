@@ -2,10 +2,12 @@ import os
 import json
 import time
 from datetime import datetime
+import logging
+
 
 class Watcher:
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self):
+        pass
         
     def getStartupTimestamp(self):
         return round(self.getNowAsTimestamp() - 0.1,3)
@@ -26,6 +28,6 @@ class Watcher:
             if retries > 0:
                 time.sleep(0.1)
                 retries -= 1
-                self.logger.info("File was not ready. Retry {} in 100ms".format( 5 - retries))
+                logging.info("File was not ready. Retry {} in 100ms".format( 5 - retries))
                 return self.readJsonFile(path,retries,default)
             raise e

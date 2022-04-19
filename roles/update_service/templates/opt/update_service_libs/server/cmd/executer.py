@@ -4,7 +4,7 @@ import subprocess
 import traceback
 import glob
 import threading
-
+import logging
 
 import time
 
@@ -39,10 +39,9 @@ class CmdExecuter(watcher.Watcher):
         "systemctl": "service_restart",
     }
 
-    def __init__(self,logger,handler):
-        super().__init__(logger)
+    def __init__(self,handler):
+        super().__init__()
       
-        self.logger = logger
         self.handler = handler
         
         self.killed_job = False
@@ -191,7 +190,7 @@ class CmdExecuter(watcher.Watcher):
         name = _cmd["function"]
       
         msg = u"Run function '{}' - '{}'".format(cmd_type, name)
-        self.logger.info(msg)
+        logging.info(msg)
         lf.write(u"{}\n".format(msg))
 
         function = self.handler
@@ -210,7 +209,7 @@ class CmdExecuter(watcher.Watcher):
         env = _cmd["env"]
 
         msg = u"Start cmd '{}' - '{}'".format(cmd_type, cmd)
-        self.logger.info(msg)
+        logging.info(msg)
         lf.write(u"{}\n".format(msg))
         lf.getFile().write("\n")
         lf.getFile().flush()
@@ -279,11 +278,11 @@ class CmdExecuter(watcher.Watcher):
                     break
 
         except ValueError:
-            #self.logger.warn(traceback.format_exc())
+            #logging.warn(traceback.format_exc())
             pass
         except Exception as e:
             exit_status = 1
-            self.logger.error(traceback.format_exc())
+            logging.error(traceback.format_exc())
             ex_type, ex_value, ex_traceback = sys.exc_info()
             lf.write("The command '{}' - '{}' exited with '{}: {}'.\n".format(cmd_type,step,type(e).__name__,ex_value))
             

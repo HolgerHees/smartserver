@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('librenms', '//librenms.{host}/','admin', 111, '{i18n_Network}', '{i18n_LibreNMS}', false, 'librenms_logo.svg');
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('librenms', '//librenms.{host}/','admin', 350, '{i18n_SNMP}', '{i18n_LibreNMS}', false, 'librenms_logo.svg');

@@ -21,16 +21,14 @@ watched_data_files = [
 ]
 
 class Handler(Server):
-    def __init__(self, logger):
-        self.logger = logger
-        
-        log.setLogger(self.logger)
+    def __init__(self):
+        log.setLogger(logging)
 
-        super().__init__(self.logger, "ci_service")
+        super().__init__("ci_service")
         
         self.startup_timestamp = round(datetime.now().timestamp(),3)
         
-        self.job_watcher = job_watcher.JobWatcher(self.logger)
+        self.job_watcher = job_watcher.JobWatcher()
 
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
         
@@ -79,8 +77,8 @@ def state():
 #signal.signal(signal.SIGINT, cleanup)
 
 if __name__ == '__main__':
-    app.logger.setLevel(logging.DEBUG)
-    handler = Handler(app.logger)
+    Server.initLogger(logging.INFO)
+    handler = Handler()
 
     def handleServer():
         WSGIRequestHandler.protocol_version = "HTTP/1.1"

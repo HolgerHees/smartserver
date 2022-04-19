@@ -4,6 +4,7 @@ import threading
 import json
 import os
 import time
+import logging
 
 from datetime import datetime, timezone
 
@@ -21,8 +22,7 @@ MAX_WORKFLOW_WAITING_TIME = 300
 
 
 class CmdWorkflow: 
-    def __init__(self,logger, handler, cmd_executer, cmd_builder ):
-        self.logger = logger
+    def __init__(self,handler, cmd_executer, cmd_builder ):
         self.handler = handler
         self.cmd_executer = cmd_executer
         self.cmd_builder = cmd_builder
@@ -46,7 +46,7 @@ class CmdWorkflow:
                 result = self._handleCrash(name)
 
             if type(result) == bool:
-                self.logger.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
+                logging.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
          
         if os.path.isfile(config.deployment_workflow_file):
             os.unlink(config.deployment_workflow_file)
@@ -110,7 +110,7 @@ class CmdWorkflow:
             return True
         
         msg = "Waiting for {}s of inactivity to proceed".format(min_process_inactivity_time)
-        self.logger.info(msg)
+        logging.info(msg)
         self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
 
         can_proceed = False
@@ -124,9 +124,9 @@ class CmdWorkflow:
             waiting_time = round(now - waiting_start)
             
             if self._checkRunning(check_global_running):
-                external_cmd_type = self.executer.getExternalCmdType()
+                external_cmd_type = self.cmd_executer.getExternalCmdType()
                 last_seen_time = now
-                last_cmd_type = external_cmd_type if external_cmd_type is not None else self.executer.getCurrentJobCmdType()
+                last_cmd_type = external_cmd_type if external_cmd_type is not None else self.cmd_executer.getCurrentJobCmdType()
 
             if inactivity_time > min_process_inactivity_time:
                 can_proceed = True
@@ -134,7 +134,7 @@ class CmdWorkflow:
 
             if waiting_time > max_startup_waiting_time:
                 msg = "Not able to proceed due still running '{}'".format(last_cmd_type)
-                self.logger.info(msg)
+                logging.info(msg)
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                 break
                 
@@ -146,7 +146,7 @@ class CmdWorkflow:
                     cmd_msg = ""
                 
                 msg = "Waiting since {}s for {}s of inactivity{}".format(round(waiting_time), min_process_inactivity_time, cmd_msg)
-                self.logger.info(msg)
+                logging.info(msg)
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                 
             time.sleep(2)
@@ -171,7 +171,7 @@ class CmdWorkflow:
             if can_proceed:
                 has_cmds = len(cmd_block["cmds"]) > 0
 
-                self.logger.info("{} '{}'".format( "Proceed with" if has_cmds else "Finish job", cmd_block["cmd_type"]))
+                logging.info("{} '{}'".format( "Proceed with" if has_cmds else "Finish job", cmd_block["cmd_type"]))
                 self.cmd_executer.logInterruptedCmd(lf, "'{}' was successful\n".format(cmd_block["cmd_type"]))
             
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
@@ -196,7 +196,7 @@ class CmdWorkflow:
 
                 _cmd_block = function(cmd_block["username"], cmd_block["params"])
                 if _cmd_block is None:
-                    self.logger.info("Skip workflow function '{}'".format(cmd_block["function"]))
+                    logging.info("Skip workflow function '{}'".format(cmd_block["function"]))
                     continue
                 elif type(_cmd_block) == bool:
                     if _cmd_block:
@@ -208,7 +208,7 @@ class CmdWorkflow:
                     self.workflow_state = _cmd_block
                     break
                 else:
-                    self.logger.info("Run Workflow function '{}'".format(cmd_block["function"]))
+                    logging.info("Run Workflow function '{}'".format(cmd_block["function"]))
                     cmd_block = _cmd_block
 
             # ***** PREPARE *****
@@ -263,7 +263,7 @@ class CmdWorkflow:
                             os.rename(filename, filename.replace("-failed-","-stopped-"))
                         self.cmd_executer.resetKilledJobState()
                 else:
-                    self.logger.error("Command '{}' exited with code '{}'".format(cmd_block["cmd_type"],exit_code));
+                    logging.error("Command '{}' exited with code '{}'".format(cmd_block["cmd_type"],exit_code));
                 break
           
             if is_interuptable_workflow:
@@ -291,6 +291,6 @@ class CmdWorkflow:
             interaction = cmd["interaction"]
             cmd["interaction"] = "****" if interaction else interaction
             cmd["cmd"] = "/*" + cmd["cmd"] + "*/ => sleep 5"
-            self.logger.info(cmd)
+            logging.info(cmd)
             cmd["interaction"] = interaction
             cmd["cmd"] = "sleep 5"

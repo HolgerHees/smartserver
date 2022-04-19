@@ -33,41 +33,41 @@ default_variables: {
     "dlna_ip":        { "default": None },                        # dlna ip address from same network as your server ip => 'None' means disabled
 
     "dns_forward_ip_addresses": { "default": [ "8.8.8.8", "8.8.4.4" ] }, # used by dnsmasq
+    
     "fping_test_hosts": { "default": [ "8.8.8.8" ] },             # reachability check in netdata
 
     # used in main role 'apache' and can be an empty array []
-    authenticated_ip_addresses: { "default": [] },                # apache access always allowed for ipaddresses e.g. from wallmounted tablets
+    "authenticated_ip_addresses": { "default": [] },                # apache access always allowed for ipaddresses e.g. from wallmounted tablets
     
     # used in generic optional role 'wireguard_mobile'
-    mobile_vpn_internal_port: { "default": "51828" },             # the port, used on your server
-    mobile_vpn_public_port: {},                                   # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
-    mobile_vpn_public_domain: { "default": "public.{{server_domain}}" },
+    "mobile_vpn_internal_port": { "default": "51828" },             # the port, used on your server
+    "mobile_vpn_public_port": {},                                   # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+    "mobile_vpn_public_domain": { "default": "public.{{server_domain}}" },
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     
-    cloud_vpn: { "default": None },                               # used in generic optional role 'wirguard_cloud'
+    "cloud_vpn": { "default": None },                               # used in generic optional role 'wirguard_cloud'
 
     "userdata":       {
-        #"example": {
-        #    testuser1: { 
-        #        name: "Test User 1"                              # mandatory.
-        #        email: "test1@test.de"                           # mandatory.
-        #        groups: [ "admin", "user" ]                      # mandatory.
-        #        telegram_bot: {                                  # optional. used by openhab => reference to bot key in vault.yml
-        #          bot_testuser1                                  
-        #        },              
-        #        phone_device: {                                  # optional. used by device_ping role
-        #          ip: "{{server_subnet}}.69", 
-        #          timeout: 60 
-        #        },
-        #        vpn_gates: {                                     # optional. used by wireguard_mobile role
-        #          "phone": "{{vpn_mobile_subnet}}.11", 
-        #          "tablet": "{{vpn_mobile_subnet}}.12" 
-        #        },
-        #        media_dir: {                                     # optional. nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
-        #          "test_media": "/"                              
-        #        }
-        #    }        
-        #}
+        # *** EXAMPLE ***
+        # testuser1: { 
+        #     name: "Test User 1"                              # mandatory.
+        #     email: "test1@test.de"                           # mandatory.
+        #     groups: [ "admin", "user" ]                      # mandatory.
+        #     telegram_bot: {                                  # optional. used by openhab => reference to bot key in vault.yml
+        #         bot_testuser1                                  
+        #     },              
+        #     phone_device: {                                  # optional. used by device_ping role
+        #         ip: "{{server_subnet}}.69", 
+        #         timeout: 60 
+        #     },
+        #     vpn_gates: {                                     # optional. used by wireguard_mobile role
+        #         "phone": "{{vpn_mobile_subnet}}.11", 
+        #         "tablet": "{{vpn_mobile_subnet}}.12" 
+        #     },
+        #     media_dir: {                                     # optional. nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+        #         "test_media": "/"                              
+        #     }
+        # }        
     },
     
     "update_service_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
@@ -88,12 +88,11 @@ default_variables: {
     "vault_mailserver_port": {},                                  # "587" => smtp port from your email server
 
     "vault_userpasswords": {
-        #"example": {
-        #    testuser1: { 
-        #       samba_password: "<mysambapassword>",
-        #       web_password: "<mywebpassword>"
-        #    }
-        #}
+        # *** EXAMPLE ***
+        # testuser1: { 
+        #     samba_password: "<mysambapassword>",
+        #     web_password: "<mywebpassword>"
+        # }
     },
 
     # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
@@ -106,12 +105,12 @@ default_variables: {
     "vault_form_auth_passphrase": {},                             # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
 
     "vault_pihole_password": {                                    # used to login into pihole
-        condition: "pihole_ip"
+        condition: "{{pihole_ip is defined}}"
     },
 
     "vault_ftp_username": { "default": None },                    # "ftp" => used for e.g. camera image uploads ('None' means disabled) 
     "vault_ftp_password": {
-        condition: "vault_ftp_username"
+        condition: "{{vault_ftp_username is defined}}"
     },
 
     "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
@@ -148,22 +147,37 @@ default_variables: {
     "vault_openhab_mysql_password": {},
     
     
-    "librenms_devices": { "default": None },                        # used for librenms
-    # [
-    #  {
-    #    snmp_host: "192.168.7.100",
-    #    snmp_method: "v2c",
-    #    snmp_community_string: "public"
-    #  }
-    # ]
+    "network_devices": { "default": [] },                         # used for librenms and system_service (network monitoring)
+    # *** EXAMPLE ***
+    # {
+    #     host: { "default": None },                              # "{{server_subnet}}.100"
+    #     name: { "default": None },                              # "WLan AP Inhouse" => will be used in webui for openwrt devices
+    #     snmp_method: { "default": None },                       # "v2c"
+    #     snmp_community_string: { "default": None }              # "public"
+    #     is_openwrt: { "default": None }                         # True
+    # }
+    
+    "librenms_poller_interval": { "default": "5" },               # interval in minutes
+
     "vault_librenms_mysql_username": { "default": "librenms" },
     "vault_librenms_mysql_password": { 
-        condition: "librenms_devices"
+        condition: "{{librenms_devices | length > 0}}"
     },
 
     "vault_librenms_api_token": { 
-        condition: "librenms_devices"
+        condition: "{{librenms_devices | length > 0}}"
+    },
+
+    "vault_openwrt_api_username": { "default": "api" },
+    "vault_openwrt_api_password": { 
+        condition: "{{openwrt_devices | length > 0}}"
+    },
+    "vault_openwrt_root_password": { 
+        condition: "{{openwrt_devices | length > 0}}"
     },
 }
+
+librenms_devices: "{{network_devices | selectattr('snmp_method', 'defined') | list}}"
+openwrt_devices: "{{network_devices | selectattr('is_openwrt', 'defined') | list}}"
 
 

@@ -1,16 +1,15 @@
 import threading
 from datetime import datetime, timedelta
 import re
+import logging
 
 from smartserver.processlist import Processlist
 
 from server.watcher import watcher
 
 class ProcessWatcher(watcher.Watcher): 
-    def __init__(self, logger, operating_system ):
-        super().__init__(logger)
-      
-        self.logger = logger
+    def __init__(self, operating_system ):
+        super().__init__()
         
         self.reboot_required_services = []
         for string_pattern in operating_system.getRebootRequiredServices():
@@ -71,7 +70,7 @@ class ProcessWatcher(watcher.Watcher):
                 if ( datetime.now() - self.last_refresh ).total_seconds() > 900:
                     self._refresh()
                 else:
-                    #self.logger.info("clean outdated processlist")
+                    #logging.info("clean outdated processlist")
                     self._cleanup()
 
                 self.condition.wait(15)
@@ -90,7 +89,7 @@ class ProcessWatcher(watcher.Watcher):
             self._cleanup()
 
     def _refresh(self):
-        self.logger.info("Refresh outdated processlist & reboot state")
+        logging.info("Refresh outdated processlist & reboot state")
 
         is_reboot_needed_by_core_update = self.operating_system.getRebootState()
         if self.is_reboot_needed_by_core_update != is_reboot_needed_by_core_update:
@@ -99,7 +98,7 @@ class ProcessWatcher(watcher.Watcher):
 
         outdated_processes = Processlist.getOutdatedProcessIds()
         if outdated_processes.keys() != self.outdated_processes.keys():
-            self.logger.info("new outdated processe(s)")
+            logging.info("new outdated processe(s)")
             self.process(outdated_processes)
 
         self.last_refresh = datetime.now()
@@ -112,7 +111,7 @@ class ProcessWatcher(watcher.Watcher):
         outdated_processes = {k: v for k, v in self.outdated_processes.items() if k in processIds}
         
         if len(self.outdated_processes) != len(outdated_processes):
-            self.logger.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(outdated_processes) ))
+            logging.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(outdated_processes) ))
             self.process(outdated_processes)
 
           

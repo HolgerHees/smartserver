@@ -19,7 +19,6 @@
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service/outdated_roles" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
-  when: "update_service_system_check_enabled|bool"
 
 - name: synchronize service
   synchronize:
@@ -60,7 +59,6 @@
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"
   tags: ['apache_webui_page']
-  when: "update_service_system_check_enabled|bool"
 
 - name: copy webui config
   template:
@@ -70,7 +68,6 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   tags: ['apache_webui_page']
-  when: "update_service_software_check_enabled|bool"
 
 - name: register webui
   vars:

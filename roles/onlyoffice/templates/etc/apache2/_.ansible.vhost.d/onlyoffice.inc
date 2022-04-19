@@ -4,6 +4,9 @@ RequestHeader setifempty X-Forwarded-Proto https
 #X-Forwarded-For $proxy_add_x_forwarded_for;
 #ProxyAddHeaders Off
 
-ProxyPassMatch (.*)(\/websocket)$ "ws://onlyoffice/$1$2"
+RewriteCond %{HTTP:Connection} Upgrade [NC]
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteRule /(.*)(\/websocket)$ ws://onlyoffice/$1$2 [P,L]
+
 ProxyPass / "http://onlyoffice/"
 ProxyPassReverse / "http://onlyoffice/"

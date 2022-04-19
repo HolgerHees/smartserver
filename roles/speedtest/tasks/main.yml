@@ -1,0 +1,93 @@
+- name: set version
+  set_fact:
+    speedtest_version: '0.5.3'
+  tags: [ 'update_notifier_config' ]    
+
+- name: build docker image
+  vars:
+    name: "speedtest"
+    image_name: "custom_speedtest"
+    image_version: "v{{speedtest_version}}"
+    files:
+      - roles/speedtest/templates/container/Dockerfile
+      - roles/speedtest/templates/container/patches/ipInfo.js
+      - roles/speedtest/templates/container/patches/gzip.js
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: speedtest
+    image: "custom_speedtest:v{{speedtest_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: speedtest
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_speedtest_ip}}"
+    networks_cli_compatible: yes
+    exposed_ports:
+     - "8086"
+  notify: "restart speedtest"
+
+- name: add container name
+  vars:
+    host_name: "speedtest"
+    host_ip_address: "{{docker_speedtest_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** FINALIZE *****
+#- name: allow speedtest to connect ipinfo service
+#  vars:
+#    name: "postfix"
+#    rule: "outerface {{main_network_interface}} saddr {{docker_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443"
+#    is_docker: True
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
+
+- name: register webui
+  vars:
+    name: "speedtest"
+    js_file: "templates/webui/speedtest.js"
+    i18n_files: [ { language: "de", file: "templates/webui/speedtest.de.json" } ]
+    icons: [ 'templates/webui/icons/speedtest_logo.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "speedtest"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/speedtest.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/speedtest.conf"
+  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "speedtest"
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+- name: register update notifier
+  vars:
+    name: "speedtest"
+    type: "docker"
+    url: "https://github.com/e7d/speedtest/releases"
+    config: {
+      repository: "e7db/speedtest",
+      pattern: "^v([0-9\\.]+)$"
+    }
+  import_tasks: roles/update_service/tasks/add_software.yml
+
+- name: trigger speedtest handler
+  vars:
+    notify: "restart speedtest"
+    service: "speedtest.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

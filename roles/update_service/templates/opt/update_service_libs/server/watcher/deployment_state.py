@@ -4,10 +4,8 @@ from server.watcher import watcher
 
 
 class DeploymentStateWatcher(watcher.Watcher): 
-    def __init__(self, logger):
-        super().__init__(logger)
-        
-        self.logger = logger
+    def __init__(self):
+        super().__init__()
         
         self.state = {}
         self.last_modified = self.getStartupTimestamp()

@@ -10,6 +10,7 @@ import json
 import os
 import importlib
 from datetime import datetime
+import logging
 
 from config import config
 from server.cmd.builder import CmdBuilder
@@ -33,24 +34,22 @@ watched_data_files = [
 ]
 
 class Handler(Server):
-    def __init__(self,logger):
-        self.logger = logger
-        
-        super().__init__(self.logger, "update_service" )
+    def __init__(self):
+        super().__init__("update_service" )
            
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
         operating_system = plugin.OperatingSystem()
                 
-        self.process_watcher = ProcessWatcher(self.logger, operating_system)
-        self.system_update_watcher = SystemUpdateWatcher(self.logger,self.process_watcher, operating_system)
-        self.dependency_watcher = DependencyWatcher(self.logger, self.system_update_watcher)
-        self.deployment_state_watcher = DeploymentStateWatcher(self.logger)
-        self.deployment_tags_watcher = DeploymentTagsWatcher(self.logger)
-        self.software_versions_watcher = SoftwareVersionWatcher(self.logger)
+        self.process_watcher = ProcessWatcher(operating_system)
+        self.system_update_watcher = SystemUpdateWatcher(self.process_watcher, operating_system)
+        self.dependency_watcher = DependencyWatcher( self.system_update_watcher)
+        self.deployment_state_watcher = DeploymentStateWatcher()
+        self.deployment_tags_watcher = DeploymentTagsWatcher()
+        self.software_versions_watcher = SoftwareVersionWatcher()
 
-        self.cmd_builder = CmdBuilder(self.logger, self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
-        self.cmd_executer = CmdExecuter(self.logger, self)
-        self.cmd_workflow = CmdWorkflow(self.logger, self, self.cmd_executer, self.cmd_builder )
+        self.cmd_builder = CmdBuilder( self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
+        self.cmd_executer = CmdExecuter( self)
+        self.cmd_workflow = CmdWorkflow( self, self.cmd_executer, self.cmd_builder )
         
         self.service_base_path = os.path.dirname(__file__)
         self.service_need_restart = False
@@ -262,8 +261,8 @@ def killProcess():
     return handler.getState("update")
 
 if __name__ == '__main__':
-    app.logger.setLevel(logging.DEBUG)
-    handler = Handler(app.logger)
+    Server.initLogger(logging.INFO)
+    handler = Handler()
 
     def handleServer():
         WSGIRequestHandler.protocol_version = "HTTP/1.1"

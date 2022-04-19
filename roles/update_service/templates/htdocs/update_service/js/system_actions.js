@@ -33,22 +33,22 @@ mx.UpdateServiceActions = (function( ret ) {
                     var response = JSON.parse(this.response);
                     if( response["status"] == "0" )
                     {
-                        mx.UpdateServiceHelper.confirmSuccess();
+                        mx.Error.confirmSuccess();
 
                         mx.UNCore.handleDaemonState(response);
                     }
                     else
                     {
-                        mx.UpdateServiceHelper.handleServerError(response["message"]);
+                        mx.Error.handleServerError(response["message"]);
                     }
                 }
                 else if( this.status == 0 || this.status == 503 ) 
                 {
-                    mx.UpdateServiceHelper.handleServerNotAvailable();
+                    mx.Error.handleServerNotAvailable();
                 }
                 else
                 {
-                    mx.UpdateServiceHelper.handleRequestError(this.status, this.statusText, this.response);
+                    mx.Error.handleRequestError(this.status, this.statusText, this.response);
                 }
             }
         };

@@ -3,6 +3,7 @@ import glob
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
+import logging
 
 from smartserver.github import GitHub
 
@@ -17,9 +18,7 @@ repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 
 
 class JobWatcher(): 
-    def __init__(self, logger ):
-        self.logger = logger
-        
+    def __init__(self):
         self.terminated = False
         self.state = None
         self.initState()
@@ -46,7 +45,7 @@ class JobWatcher():
     def changedJobs(self, event):
         self.lock.acquire()
         try:
-            self.logger.info("Job changed")
+            logging.info("Job changed")
             self.last_seen_job_activity = datetime.now()
             self.initJobs()
         finally:
@@ -57,7 +56,7 @@ class JobWatcher():
     def changedState(self, event):
         self.lock.acquire()
         try:
-            self.logger.info("State changed")
+            logging.info("State changed")
             self.last_seen_job_activity = datetime.now()
             self.initState()
         finally:
@@ -110,7 +109,7 @@ class JobWatcher():
                 last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
                 job_is_running = self.isJobRunning()
                 if job_is_running and last_seen_job_activity_diff > 5:
-                    self.logger.error("Job crash detected. Marked as 'crashed' now and check log files.")
+                    logging.error("Job crash detected. Marked as 'crashed' now and check log files.")
                     self._cleanState(status)
                 else:
                     self._cleanJobs()
@@ -151,14 +150,14 @@ class JobWatcher():
                 if config.access_token != "" and self.state is not None:
                     # process git hashes
                     for git_hash in git_hashes: 
-                        self.logger.info("Clean states of git hash '{}'".format(git_hash))
+                        logging.info("Clean states of git hash '{}'".format(git_hash))
                         for deployment in git_hashes[git_hash]:
                             GitHub.setState(repository_owner,config.access_token,git_hash,"error", deployment,"Build crashed")
                             GitHub.cancelPendingStates(repository_owner, config.access_token, git_hash, "Build skipped")
 
                 # process logfiles
                 for name in invalid_jobs:
-                    self.logger.info("Clean file '{}'".format(name))
+                    logging.info("Clean file '{}'".format(name))
                     os.rename(name, name.replace("-running-","-crashed-"))
             finally:
                 self.lock.release()

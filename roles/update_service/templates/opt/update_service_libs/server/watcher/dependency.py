@@ -11,9 +11,7 @@ from server.watcher import watcher
 
 
 class DependencyWatcher(watcher.Watcher): 
-    def __init__(self, logger, system_update_watcher ):
-        self.logger = logger
-        
+    def __init__(self, system_update_watcher ):
         self.system_update_watcher = system_update_watcher
         
         self.outdated_roles = {}

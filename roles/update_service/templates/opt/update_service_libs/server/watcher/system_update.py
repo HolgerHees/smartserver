@@ -1,5 +1,6 @@
 import json 
 import hashlib
+import logging
 
 from datetime import datetime
 
@@ -11,10 +12,9 @@ from server.watcher import watcher
 
 
 class SystemUpdateWatcher(watcher.Watcher): 
-    def __init__(self, logger, process_watcher, operating_system ):
-        super().__init__(logger)
+    def __init__(self, process_watcher, operating_system ):
+        super().__init__()
       
-        self.logger = logger
         self.process_watcher = process_watcher
         self.reboot_required_packages = operating_system.getRebootRequiredPackages()
         
@@ -50,7 +50,7 @@ class SystemUpdateWatcher(watcher.Watcher):
                 
                 for update in self.states["system_updates"]:
                     if update["name"] not in new_updates and update["name"] in self.reboot_required_packages:
-                        self.logger.info("Found packages '{}' which is marked as 'requires reboot'".format(update["name"]))
+                        logging.info("Found packages '{}' which is marked as 'requires reboot'".format(update["name"]))
                         self.installed_reboot_required_packages[update["name"]] = True
             
             self.states = _states

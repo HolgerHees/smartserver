@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    fluentd_version: '1.14.5-debian-1.0'
+    fluentd_version: '1.14.6-debian-1.0'
     grafana_loki_version: '1.2.18'
   tags: [ 'update_notifier_config' ]    
   

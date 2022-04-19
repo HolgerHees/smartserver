@@ -1,0 +1,3 @@
+#!/bin/ash
+[ -f /etc/openwrt_release ] && source /etc/openwrt_release 
+echo ${DISTRIB_ID} ${DISTRIB_RELEASE} ${DISTRIB_REVISION}

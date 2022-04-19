@@ -1,0 +1,12 @@
+div.error {
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+  padding-top: 20px;
+} 
+
+div.error > div {
+  display: inline-block;
+  color: var(--color-red);
+}
