@@ -7,11 +7,12 @@
     mode: "{{item.mode}}"
   with_items:
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt" }
+    - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt/ap/" }
 
 - name: synchronize configs
   synchronize:
-    src: "templates/bundle/"
-    dest: "{{global_etc}}openwrt/bundle/default/"
+    src: "templates/config_ap/"
+    dest: "{{global_etc}}openwrt/ap/default/"
     archive: no
     checksum: yes
     group: yes
@@ -25,7 +26,7 @@
 - name: synchronize deployment script
   synchronize:
     src: "templates/deploy.sh"
-    dest: "{{global_etc}}openwrt/bundle/deploy.sh"
+    dest: "{{global_etc}}openwrt/ap/deploy.sh"
     archive: no
     checksum: yes
     group: yes
@@ -46,7 +47,7 @@
 - name: copy custom openwrt configs
   copy:
     src: "{{config_path}}vault/openwrt/{{item.1.host}}/"
-    dest: "{{global_etc}}openwrt/bundle/{{item.1.host}}/"
+    dest: "{{global_etc}}openwrt/ap/{{item.1.host}}/"
     owner: "root"
     group: "root"
     mode: "u=rwX,g=rX,o="
