@@ -19,6 +19,7 @@ start
 trap "stop" SIGTERM SIGINT
 
 # wait forever or until we get SIGTERM or SIGINT
-while :; do sleep 360 & wait; done
+#while :; do sleep 360 & wait; done
+while pidof python3 > /dev/null; do sleep 5; done
 
 exit 1
