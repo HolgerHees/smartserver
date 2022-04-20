@@ -187,6 +187,11 @@ class LibreNMS(_handler.Handler):
                 _mac = _connected_arp["mac_address"]
                 mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
                 
+                #gw_mac = self.cache.ip2mac(self.config.default_gateway_ip)
+                #if mac == gw_mac:
+                #    logging.info("SKIP")
+                #    continue
+                
                 device = self.cache.getDevice(mac, False)
                 if device is not None:
                     target_device = self.cache.getUnlockedDevice(target_mac)
