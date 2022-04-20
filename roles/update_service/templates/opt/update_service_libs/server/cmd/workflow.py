@@ -177,7 +177,7 @@ class CmdWorkflow:
         self.cmd_executer.finishRun(log_file_name,exit_code,start_time,cmd_block["cmd_type"],cmd_block["username"])
                       
         if exit_code == 0 and len(workflow) > 0:
-            self._runWorkflow( workflow, True )
+            self._runWorkflow( workflow )
         
     def _runWorkflow(self, workflow):   
         self.workflow_state = None
@@ -269,7 +269,7 @@ class CmdWorkflow:
     def runWorkflow(self, workflow, check_global_running ):
         is_running = self.cmd_executer.isRunning() if check_global_running else self.cmd_executer.isDaemonJobRunning()
         if not is_running:
-            thread = threading.Thread(target=self._runWorkflow, args=(workflow))
+            thread = threading.Thread(target=self._runWorkflow, args=(workflow,))
             thread.start()
             time.sleep(0.5)
             
