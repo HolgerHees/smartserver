@@ -12,36 +12,33 @@
     group: root
     mode: 0750
   with_items:
-    - "{{ global_lib }}grafana/"
-    - "{{ global_lib }}grafana/dashboards/"
     - "{{ global_lib }}grafana/plugins/"
     - "{{ global_etc }}grafana/"
-    - "{{ global_etc }}grafana/provisioning"
     - "{{ global_etc }}grafana/provisioning/dashboards/"
-    - "{{ global_etc }}grafana/provisioning/datasources/"
     - "{{ global_etc }}grafana/provisioning/notifiers/"
     - "{{ global_etc }}grafana/provisioning/plugins/"
 
-- name: synchronize shared grafana dashboards
-  synchronize:
-    src: "templates/dashboards/"
-    dest: "{{ global_lib }}grafana/dashboards/"
-    archive: no
-    checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown=root:root"
-      - "--chmod=D750,F640"
-  notify: "restart grafana"
+#- name: synchronize shared grafana dashboards
+#  synchronize:
+#    src: "templates/dashboards/"
+#    dest: "{{ global_lib }}grafana/dashboards/"
+#    archive: no
+#    checksum: yes
+#    group: yes
+#    owner: yes
+#    perms: yes
+#    recursive: yes
+#    rsync_opts:
+#      - "--chown=root:root"
+#      - "--chmod=D750,F640"
+#  notify: "restart grafana"
 
 - name: check individual grafana dashboards
   shell: "ls {{config_path}}roles/grafana/templates/dashboards/"
   register: dashboard_config_result
   changed_when: no
   failed_when: no
+  tags: ['grafana_config']
 
 - name: synchronize individual grafana dashboards
   synchronize:
@@ -58,6 +55,7 @@
       - "--chmod=D750,F640"
   when: "dashboard_config_result.rc == 0"
   notify: "restart grafana"
+  tags: ['grafana_config']
 
 - name: copy grafana provisioning
   template:
@@ -68,12 +66,12 @@
     mode: 0640
   notify: "restart grafana"
   with_items:
-    - "provisioning/datasources/opentsdb_influxdb.yaml"
-    - "provisioning/datasources/system_info_influxdb.yaml"
-    - "provisioning/datasources/openhab_influxdb.yaml"
-    - "provisioning/datasources/openhab_mysql.yaml"
-    - "provisioning/datasources/prometheus.yaml"
-    - "provisioning/datasources/loki.yaml"
+#    - "provisioning/datasources/opentsdb_influxdb.yaml"
+#    - "provisioning/datasources/system_info_influxdb.yaml"
+#    - "provisioning/datasources/openhab_influxdb.yaml"
+#    - "provisioning/datasources/openhab_mysql.yaml"
+#    - "provisioning/datasources/prometheus.yaml"
+#    - "provisioning/datasources/loki.yaml"
     - "provisioning/dashboards/provider.yaml"
     
 - name: install natel-discrete-panel archive

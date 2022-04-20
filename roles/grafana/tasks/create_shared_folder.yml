@@ -1,0 +1,14 @@
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{ global_lib }}grafana/"
+    - "{{ global_lib }}grafana/dashboards/"
+    - "{{ global_etc }}grafana/"
+    - "{{ global_etc }}grafana/provisioning"
+    - "{{ global_etc }}grafana/provisioning/datasources/"
+

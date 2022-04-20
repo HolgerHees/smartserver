@@ -35,10 +35,10 @@ class InfluxDBPublisher(_handler.Handler):
             try:
                 messurements = self._collectMessurements()
                 self._submitMessurements(messurements)
-                timeout = 5
+                timeout = 60
             except requests.exceptions.ConnectionError:
                 logging.warning("InfluxDB currently not available. Will 15 seconds")
-                timeout = 15
+                timeout = 60
                 
             with self.condition:
                 self.condition.wait(timeout)
@@ -69,6 +69,10 @@ class InfluxDBPublisher(_handler.Handler):
                 else:
                     messurement = "network_signal,ip={},band={} value=0".format(device.getIP(),band)
                 messurements.append(messurement)
+                
+            messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),stat.getInAvg()))
+            messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),stat.getOutAvg()))
+            messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),stat.getInAvg() + stat.getOutAvg()))
                 
         return messurements
 

@@ -176,6 +176,15 @@
   import_tasks: roles/influxdb/tasks/add_bucket.yml
   
 # ***** OTHER *****
+- name: register grafana configs
+  vars:
+    name: "netdata"
+    datasources: 
+      - "templates/grafana/datasources/opentsdb_influxdb.yaml"
+    dashboards:
+      - "templates/grafana/dashboards/Server Health.json"
+  import_tasks: roles/grafana/tasks/add_datasource.yml
+
 - name: register webui
   vars:
     name: "netdata"

@@ -62,7 +62,6 @@ class Device(Changeable):
         
         self.gids = []
         
-        self.ports = {}
         self.services = {}
         self.details = {}
 
@@ -207,9 +206,9 @@ class Device(Changeable):
             self._markAsChanged(key, "remove {}".format(key))
             del self.details[key]
             
-    def setPorts(self, ports):
-        self._markAsChanged("ports")
-        self.ports = ports
+    def setServices(self, services):
+        self._markAsChanged("services")
+        self.services = services
 
     def getSerializeable(self, devices ):
         
@@ -231,7 +230,6 @@ class Device(Changeable):
 
             "gids": self.gids,
 
-            "ports": self.ports,
             "services": self.services,
             "details": self.details
         }

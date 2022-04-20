@@ -471,6 +471,16 @@
   import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****
+- name: register grafana configs
+  vars:
+    name: "openhab"
+    datasources: 
+      - "templates/grafana/datasources/openhab_influxdb.yaml"
+      - "templates/grafana/datasources/openhab_mysql.yaml"
+    dashboards:
+      - "templates/grafana/dashboards/OpenHAB metrics.json"
+  import_tasks: roles/grafana/tasks/add_datasource.yml
+
 - name: register default webui
   vars:
     name: "openhab"

@@ -42,6 +42,9 @@ class Stat(Changeable):
             self._markAsChanged("in_bytes", "in bytes")
             self.in_bytes = bytes
 
+    def getInAvg(self):
+        return self.in_avg
+
     def setInAvg(self,bytes):
         if self.in_avg != bytes:
             self._markAsChanged("in_avg", "in avg")
@@ -54,6 +57,9 @@ class Stat(Changeable):
         if self.out_bytes != bytes:
             self._markAsChanged("out_bytes", "out bytes")
             self.out_bytes = bytes
+
+    def getOutAvg(self):
+        return self.in_avg
 
     def setOutAvg(self,bytes):
         if self.out_avg != bytes:

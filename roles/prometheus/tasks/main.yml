@@ -81,6 +81,13 @@
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
 
+- name: register grafana configs
+  vars:
+    name: "loki"
+    datasources: 
+      - "templates/grafana/datasources/prometheus.yaml"
+  import_tasks: roles/grafana/tasks/add_datasource.yml
+
 - name: register webui
   vars:
     name: "prometheus"

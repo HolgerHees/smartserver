@@ -76,6 +76,15 @@
   import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****
+- name: register grafana configs
+  vars:
+    name: "system_service"
+    datasources: 
+      - "templates/grafana/datasources/system_info_influxdb.yaml"
+    dashboards:
+      - "templates/grafana/dashboards/System Info.json"
+  import_tasks: roles/grafana/tasks/add_datasource.yml
+
 - name: synchronize webui
   synchronize:
     src: "templates/htdocs/system_service"
