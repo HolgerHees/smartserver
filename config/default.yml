@@ -157,7 +157,7 @@ default_variables: {
     #     is_openwrt: { "default": None }                         # True
     # }
     
-    "librenms_poller_interval": { "default": "5" },               # interval in minutes
+    "librenms_poller_interval": { "default": 5 },               # interval in minutes
 
     "vault_librenms_mysql_username": { "default": "librenms" },
     "vault_librenms_mysql_password": { 

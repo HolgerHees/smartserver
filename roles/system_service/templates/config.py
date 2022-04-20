@@ -8,12 +8,12 @@ service_ip = "127.0.0.1"
 service_port = "8507"
 
 librenms_token = "{% if librenms_devices|length > 0 %}{{vault_librenms_api_token if vault_librenms_api_token is defined else ''}}{% endif %}"
-librenms_rest = "http://librenms:8000/api/v0/";
-librenms_poller_interval = {{librenms_poller_interval * 60}}
+librenms_rest = "http://librenms:8000/api/v0/{% endif %}";
+librenms_poller_interval = {% if librenms_devices|length > 0 %}{{librenms_poller_interval * 60}}{% endif %}
 
-openwrt_username = "{{vault_openwrt_api_username | default('')}}"
-openwrt_password = "{{vault_openwrt_api_password | default('')}}"
-openwrt_devices = [ {% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %} ]
+openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_username | default('')}}{% endif %}"
+openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
+openwrt_devices = [{% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
 influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
