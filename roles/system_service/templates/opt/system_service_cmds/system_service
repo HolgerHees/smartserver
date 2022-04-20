@@ -39,7 +39,7 @@ class Handler(Server):
             self.dispatcher.register(OpenWRT(config, self.cache ))
         if config.librenms_token:
             self.dispatcher.register(LibreNMS(config, self.cache ))
-        #self.dispatcher.register(PortScanner(config, self.cache ))
+        self.dispatcher.register(PortScanner(config, self.cache ))
         #self.dispatcher.register(DefaultGateway(config, self.cache ))
         self.dispatcher.register(MQTTPublisher(config, self.cache ))
         self.dispatcher.register(InfluxDBPublisher(config, self.cache ))

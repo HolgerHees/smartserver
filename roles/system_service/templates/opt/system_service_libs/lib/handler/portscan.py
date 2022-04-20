@@ -7,13 +7,15 @@ import logging
 from smartserver import command
 
 from lib.handler import _handler
+from lib.dto.event import Event
 
 
 class PortScanner(_handler.Handler): 
-    def __init__(self, config ):
+    def __init__(self, config, cache ):
         super().__init__()
       
         self.config = config
+        self.cache = cache
         
         self.is_running = True
         self.last_refresh = 0
@@ -22,108 +24,102 @@ class PortScanner(_handler.Handler):
         self.waiting_queue = deque()
         self.running_queue = deque()
         
-        self.processed_ips = 0
-
-        self.port_map_lock = threading.Lock()
-        self.port_map = {}
-        self.port_last_check = {}
+        self.data_lock = threading.Lock()
+        self.monitored_devices = {}
         
         self.condition = threading.Condition()
         self.thread = threading.Thread(target=self.checkPortMap, args=())
         
     def start(self):
-        pass
-        #self.thread.start()
+        self.thread.start()
         
     def terminate(self):
         with self.condition:
             self.is_running = False
             self.condition.notifyAll()
 
-    def notify(self, changes):
-        if "ports" not in changes:
-            return
-        
-        now = datetime.now()
-        is_changed = False
-        with self.queue_lock:
-            known_ips = {};#FIXME self.arp_scanner.getKnownIps()
-            for ip in known_ips:
-                if ip not in self.port_map and ip not in self.waiting_queue and ip not in self.running_queue:
-                    logging.info("Add ip '{}'".format(ip))
-                    self.waiting_queue.append(ip)
-                    is_changed = True
-                #elif (now - self.port_last_check[ip]).total_seconds() > 60 * 60 * 24:
-                #    self.waiting_queue.append(ip)
-                
-            with self.port_map_lock:
-                for ip in list(self.port_map.keys()):
-                    
-                    if ip not in known_ips:
-                        logging.info("Clean ip '{}'".format(ip))
-                        del self.port_map[ip]
-                        del self.port_last_check[ip]
-              
-        if is_changed:
-            with self.condition:
-                self.condition.notifyAll()
-        
     def checkPortMap(self):
         while self.is_running:
-            with self.queue_lock:
+            with self.queue_lock:               
                 while self.is_running and len(self.waiting_queue) > 0 and len(self.running_queue) <= 5:
-                    ip = self.waiting_queue.popleft()
-                    self.running_queue.append(ip)
-                    self.processed_ips += 1
-                    t = threading.Thread(target = self._checkPorts, args = [ ip ] )
+                    device = self.waiting_queue.popleft()
+                    self.running_queue.append(device)
+                    t = threading.Thread(target = self._checkPorts, args = [ device ] )
                     t.start()
                     
-                #logging.info("waiting: {}, running: {}, processed: {}".format(len(self.waiting_queue), len(self.running_queue), self.processed_ips))
-                #logging.info(self.running_queue)
-                
-                if self.is_running and len(self.waiting_queue) == 0 and len(self.running_queue) == 0 and self.processed_ips > 0:
-                    self._getDispatcher().notify(["scanned_ports"])
+                now = datetime.now()
+                next_timeout = self.config.port_scan_interval
+                for mac in self.monitored_devices:
+                    device = self.cache.getUnlockedDevice(mac)
+                    if device.getIP() is None or device in self.waiting_queue or device in self.running_queue:
+                        continue
                     
-                with self.port_map_lock:
-                    now = datetime.now()
-                    for ip in self.port_last_check:
-                        if (now - self.port_last_check[ip]).total_seconds() > self.config.port_rescan_interval:
-                            self.running_queue.append(ip)
-                            self.processed_ips += 1
-                            t = threading.Thread(target = self._checkPorts, args = [ ip ] )
-                            t.start()
+                    if self.monitored_devices[mac] == None or (now - self.monitored_devices[mac]).total_seconds() > self.config.port_rescan_interval:
+                        self.waiting_queue.append(device)
+                        _timeout = self.config.port_rescan_interval
+                    elif self.monitored_devices[mac] != None:
+                        _timeout = (now - self.monitored_devices[mac]).total_seconds()
+                        
+                    if _timeout < next_timeout:
+                        next_timeout = _timeout
                     
             if self.is_running:
                 with self.condition:
-                    self.condition.wait(self.config.port_scan_interval)
+                    self.condition.wait(next_timeout)
             
-    def _checkPorts(self, ip):
-        logging.info("Start portscan for '{}'".format(ip))
+    def _checkPorts(self, device):
+        logging.info("Start portscan for {}".format(device))
         
-        result = command.exec(["/usr/bin/nmap", "-sS", ip])
+        result = command.exec(["/usr/bin/nmap", "-sS", device.getIP()])
         rows = result.stdout.decode().strip().split("\n")
 
-        ports = []
-
+        services = {}
         for row in rows:
             match = re.match("([0-9]*)/([a-z]*)\s*([a-z]*)\s*(.*)",row)
             if not match:
                 continue
         
-            ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
+            services[match[1]] = match[4]
+            #ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
                 
-        with self.port_map_lock:
-            self.port_last_check[ip] = datetime.now()
-            self.port_map[ip] = ports
-        
+        with self.data_lock:
+            self.monitored_devices[device.getMAC()] = datetime.now()
+
+            self.cache.lock()
+            events = []
+            device.setServices(services)
+            self.cache.confirmDevice( device, lambda event: events.append(event) )
+            self.cache.unlock()
+
+            if len(events) > 0:
+                self._getDispatcher().dispatch(self,events)
+
         with self.queue_lock:
-            self.running_queue.remove(ip)
+            self.running_queue.remove(device)
                 
         with self.condition:
             self.condition.notifyAll()
             
-    def processDevices(self, devices, groups):
-        for device in devices:
-            if device.getIp() in self.port_map:
-                 port = port_map[device.getIp()]
-                 device.appendService(port["port"], port["service"])
+    def getEventTypes(self):
+        return [ 
+            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_DELETE], "details": None },
+            { "types": [Event.TYPE_DEVICE], "actions": None, "details": ["ip"] } 
+        ]
+
+    def processEvents(self, events):
+        with self.data_lock:
+            for event in events:
+                mac = event.getObject().getMAC()
+                if event.getAction() == Event.ACTION_DELETE:
+                    logging.info("Remove device {}".format(event.getObject()))
+                    del self.monitored_devices[mac]
+                else:
+                    if mac not in self.monitored_devices:
+                        logging.info("Add device {}".format(event.getObject()))
+                    else:
+                        logging.info("Change device {}".format(event.getObject()))
+                        
+                    self.monitored_devices[mac] = None
+
+        with self.condition:
+            self.condition.notifyAll()

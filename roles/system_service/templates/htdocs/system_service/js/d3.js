@@ -214,9 +214,13 @@ mx.D3 = (function( ret )
                         }
                         if( device.info ) html += "<div><div>Info:</div><div>" + device.info + "</div></div>";
                         html += "<div><div>Type:</div><div>" + device.type + "</div></div>";
-                        if( device.connection && device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
+                    
+                        if( device.connection )
+                        {
+                            if( device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
                         
-                        if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
+                            if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
+                        }
                         
                         html += showRows(device.details,"Details","rows");
                         html += showRows(device.services,"Services","rows");

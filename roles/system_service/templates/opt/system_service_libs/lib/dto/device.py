@@ -207,6 +207,10 @@ class Device(Changeable):
             self._markAsChanged(key, "remove {}".format(key))
             del self.details[key]
             
+    def setPorts(self, ports):
+        self._markAsChanged("ports")
+        self.ports = ports
+
     def getSerializeable(self, devices ):
         
         #if not connection:

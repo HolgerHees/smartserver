@@ -13,7 +13,7 @@ librenms_poller_interval = {{librenms_poller_interval * 60}}
 
 openwrt_username = "{{vault_openwrt_api_username | default('')}}"
 openwrt_password = "{{vault_openwrt_api_password | default('')}}"
-openwrt_devices = [ "{{openwrt_devices | map(attribute='host') | list | join('","') }}" ]
+openwrt_devices = [ {% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %} ]
 
 influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"

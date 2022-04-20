@@ -54,8 +54,14 @@ class Dispatcher():
                         continue
                     if event_type["actions"] is not None and event.getAction() not in event_type["actions"]:
                         continue
-                    #if event_type["details"] is not None and event.getAction() not in event_type["details"]:
-                    #    continue
+                    if event_type["details"] is not None:
+                        found = False
+                        for detail in event_type["details"]:
+                            if event.hasDetail(detail):
+                                found = True
+                                break
+                        if not found:
+                            continue
                     _events.append(event)
                 
             if len(_events) > 0:
