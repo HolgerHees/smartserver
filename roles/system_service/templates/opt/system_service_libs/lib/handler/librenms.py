@@ -52,7 +52,8 @@ class LibreNMS(_handler.Handler):
             self.condition.notifyAll()
 
     def checkLibreNMS(self):
-        suspend_timeout = 0
+        was_suspended = False
+
         while self.is_running:
             now = datetime.now().timestamp()
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
@@ -61,26 +62,30 @@ class LibreNMS(_handler.Handler):
             
             timeout = 100000000
             
-            if suspend_timeout < now:
-                try:
-                    timeout = self._processLibreNMS(now, events, timeout)
-                except requests.exceptions.ConnectionError:
-                    logging.warning("LibreNMS currently not available. Will suspend for 5 minutes")
-                    suspend_timeout = now + self.config.remote_suspend_timeout
-                    if timeout > self.config.remote_suspend_timeout:
-                        timeout = self.config.remote_suspend_timeout
-                except Exception as e:
-                    logging.error("LibreNMS got unexpected exception. Will suspend for 15 minutes.")
-                    logging.error(traceback.format_exc())
-                    if timeout > self.config.remote_error_timeout:
-                        timeout = self.config.remote_error_timeout
-                        
-                if len(events) > 0:
-                    self._getDispatcher().dispatch(self,events)
+            try:
+                if was_suspended:
+                    logging.warning("Resume LibreNMS")
+                    was_suspended = False
+                
+                timeout = self._processLibreNMS(now, events, timeout)
+            except requests.exceptions.ConnectionError:
+                logging.warning("LibreNMS currently not available. Will suspend for 5 minutes")
+                if timeout > self.config.remote_suspend_timeout:
+                    timeout = self.config.remote_suspend_timeout
+                was_suspended = True
+            except Exception as e:
+                logging.error("LibreNMS got unexpected exception. Will suspend for 15 minutes.")
+                logging.error(traceback.format_exc())
+                if timeout > self.config.remote_error_timeout:
+                    timeout = self.config.remote_error_timeout
+                was_suspended = True
+                    
+            if len(events) > 0:
+                self._getDispatcher().dispatch(self,events)
 
-                if timeout > 0:
-                    with self.condition:
-                        self.condition.wait(timeout)
+            if timeout > 0:
+                with self.condition:
+                    self.condition.wait(timeout)
                     
     def _processLibreNMS(self, now, events, timeout):
         if now - self.last_check["device"] >= self.config.librenms_device_interval:
@@ -235,6 +240,10 @@ class LibreNMS(_handler.Handler):
         _active_devices = {}
         for _device in _devices:
             mac = self.cache.ip2mac(_device["hostname"])
+            if mac is None:
+                logging.info("Skip device {}. Not able to get mac address.".format(_device["hostname"]))
+                continue
+            
             device = {
                 "mac": mac,
                 "ip": _device["hostname"],

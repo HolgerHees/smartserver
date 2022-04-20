@@ -3,7 +3,6 @@ import subprocess
 
 from smartserver import command
 
-
 class Helper():       
     #def arp():
     #    result = command.exec(["/usr/bin/arp", "-n"])
@@ -54,6 +53,9 @@ class Helper():
                 match = re.search(r"{}.*?({}).*$".format(ip,"[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), row)
                 if match:
                     return match[1]
+                
+        Helper.ping(ip)
+        
         return None
 
     def nslookup(ip):

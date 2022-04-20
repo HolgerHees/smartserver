@@ -11,8 +11,8 @@ librenms_token = "{{vault_librenms_api_token if vault_librenms_api_token is defi
 librenms_rest = "http://librenms:8000/api/v0/";
 librenms_poller_interval = {{librenms_poller_interval * 60}}
 
-openwrt_username = "{{vault_openwrt_api_username}}"
-openwrt_password = "{{vault_openwrt_api_password}}"
+openwrt_username = "{{vault_openwrt_api_username | default('')}}"
+openwrt_password = "{{vault_openwrt_api_password | default('')}}"
 openwrt_devices = [ "{{openwrt_devices | map(attribute='host') | list | join('","') }}" ]
 
 influxdb_rest = "http://influxdb:8086"

@@ -18,6 +18,9 @@ from lib.dto.event import Event
 from lib.helper import Helper
 
 
+class DataException(Exception):
+    pass
+
 class OpenWRT(_handler.Handler): 
     def __init__(self, config, cache ):
         super().__init__()
@@ -57,6 +60,8 @@ class OpenWRT(_handler.Handler):
         
             self.client_wifi_connections[openwrt_ip] = {}
             self.wifi_networks[openwrt_ip] = {}
+            
+        was_suspended = False
                 
         while self.is_running:
             if self.delayed_wakeup_timer is not None:
@@ -74,17 +79,26 @@ class OpenWRT(_handler.Handler):
             
             for openwrt_ip in self.config.openwrt_devices:
                 try:
+                    if was_suspended:
+                        logging.warning("Resume OpenWRT '{}'.".format(openwrt_ip))
+                        was_suspended = False
+                        
                     timeout = self._processDevice(openwrt_ip, now, events, timeout)
+                except DataException:
+                    logging.warning("OpenWRT '{}' currently not resolvable. Will retry in 15 seconds.".format(openwrt_ip))
+                    timeout = 15
                 except requests.exceptions.ConnectionError:
                     logging.warning("OpenWRT '{}' currently not available. Will suspend for 5 minutes.".format(openwrt_ip))
                     self.sessions[openwrt_ip] = [ None, now + self.config.remote_suspend_timeout ]
                     if timeout > self.config.remote_suspend_timeout:
                         timeout = self.config.remote_suspend_timeout
+                    was_suspended = True
                 except Exception as e:
                     logging.error("OpenWRT '{}' got unexpected exception. Will suspend for 15 minutes.".format(openwrt_ip))
                     logging.error(traceback.format_exc())
                     if timeout > self.config.remote_error_timeout:
                         timeout = self.config.remote_error_timeout
+                    was_suspended = True
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -95,6 +109,8 @@ class OpenWRT(_handler.Handler):
                     
     def _processDevice(self, openwrt_ip, now, events, timeout ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip)
+        if openwrt_mac is None:
+            raise DataException()
 
         if openwrt_ip not in self.sessions or now >= self.sessions[openwrt_ip][1]:
             result = self._getSession( openwrt_ip, self.config.openwrt_username, self.config.openwrt_password )
