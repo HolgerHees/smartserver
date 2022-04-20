@@ -129,7 +129,8 @@
 - name: create systemd service
   vars:
     container_name: "system_service"
-    container_after: [ "mosquitto", "influxdb" ]
+    container_after: [ "network-online.target", "mosquitto", "influxdb" ]
+    container_wants: [ "network-online.target" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger device_ping handler
