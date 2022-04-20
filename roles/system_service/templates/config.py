@@ -1,4 +1,4 @@
-networks = ["192.168.0.0/24"]
+networks = ["{{intern_networks | join('","') }}"]
 main_interface = "{{main_network_interface}}"
 server_name = "{{server_name}}"
 server_domain = "{{server_domain}}"
@@ -10,7 +10,6 @@ service_port = "8507"
 librenms_token = "{% if librenms_devices|length > 0 %}{{vault_librenms_api_token if vault_librenms_api_token is defined else ''}}{% endif %}"
 librenms_rest = "{% if librenms_devices|length > 0 %}http://librenms:8000/api/v0/{% endif %}";
 librenms_poller_interval = {{librenms_poller_interval | int * 60}}
-
 
 openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_username | default('')}}{% endif %}"
 openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
