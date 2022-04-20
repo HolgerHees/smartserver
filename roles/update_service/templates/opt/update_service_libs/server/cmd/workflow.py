@@ -102,11 +102,8 @@ class CmdWorkflow:
         thread = threading.Thread(target=self._proceedWorkflow, args=(workflow, log_file_name, start_time_str ))
         thread.start()
         
-    def _checkRunning(self, check_global_running):
-        return self.cmd_executer.isRunning() if check_global_running else self.cmd_executer.isDaemonJobRunning()
-        
-    def _waitToProceed(self, lf, check_global_running, min_process_inactivity_time, max_startup_waiting_time ):
-        if not self._checkRunning(check_global_running):
+    def _waitToProceed(self, lf, min_process_inactivity_time, max_startup_waiting_time ):
+        if not self.cmd_executer.isExternalJobRunning():
             return True
         
         msg = "Waiting for {}s of inactivity to proceed".format(min_process_inactivity_time)
@@ -123,7 +120,7 @@ class CmdWorkflow:
             inactivity_time = now - last_seen_time
             waiting_time = round(now - waiting_start)
             
-            if self._checkRunning(check_global_running):
+            if self.cmd_executer.isExternalJobRunning():
                 external_cmd_type = self.cmd_executer.getExternalCmdType()
                 last_seen_time = now
                 last_cmd_type = external_cmd_type if external_cmd_type is not None else self.cmd_executer.getCurrentJobCmdType()
@@ -164,7 +161,7 @@ class CmdWorkflow:
             lf = LogFile(f)
 
             if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
-                can_proceed = self._waitToProceed(lf, True, MIN_PROCESS_INACTIVITY_TIME, MAX_STARTUP_WAITING_TIME)
+                can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MAX_STARTUP_WAITING_TIME)
             else:
                 can_proceed = True
                     
@@ -182,7 +179,7 @@ class CmdWorkflow:
         if exit_code == 0 and len(workflow) > 0:
             self._runWorkflow( workflow, True )
         
-    def _runWorkflow(self, workflow, check_global_running):   
+    def _runWorkflow(self, workflow):   
         self.workflow_state = None
 
         while len(workflow) > 0:
@@ -232,7 +229,7 @@ class CmdWorkflow:
             with open(job_log_file, 'w') as f:
                 lf = LogFile(f)
 
-                can_proceed = self._waitToProceed(lf, check_global_running, MIN_PROCESS_INACTIVITY_TIME, MAX_WORKFLOW_WAITING_TIME)
+                can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MAX_WORKFLOW_WAITING_TIME)
                 finish_run = False
                 if can_proceed:
                     if self.cmd_executer.lock(cmd_block["cmd_type"], job_log_name):
@@ -270,8 +267,9 @@ class CmdWorkflow:
                 break
 
     def runWorkflow(self, workflow, check_global_running ):
-        if not self._checkRunning(check_global_running):
-            thread = threading.Thread(target=self._runWorkflow, args=(workflow, check_global_running ))
+        is_running = self.cmd_executer.isRunning() if check_global_running else self.cmd_executer.isDaemonJobRunning()
+        if not is_running:
+            thread = threading.Thread(target=self._runWorkflow, args=(workflow))
             thread.start()
             time.sleep(0.5)
             

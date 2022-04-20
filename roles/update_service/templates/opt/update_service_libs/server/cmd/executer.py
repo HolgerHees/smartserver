@@ -122,6 +122,9 @@ class CmdExecuter(watcher.Watcher):
     def isDaemonJobRunning(self):
         return self.current_started != None
       
+    def isExternalJobRunning(self):
+        return self.getExternalCmdType() != None
+
     def isKilledJob(self):
         return self.killed_job
       
