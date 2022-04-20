@@ -7,7 +7,7 @@ server_ip = "{{server_ip}}"
 service_ip = "127.0.0.1"
 service_port = "8507"
 
-librenms_token = "{{vault_librenms_api_token if vault_librenms_api_token is defined else ''}}"
+librenms_token = "{% if librenms_devices|length > 0 %}{{vault_librenms_api_token if vault_librenms_api_token is defined else ''}}{% endif %}"
 librenms_rest = "http://librenms:8000/api/v0/";
 librenms_poller_interval = {{librenms_poller_interval * 60}}
 
