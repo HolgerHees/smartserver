@@ -177,7 +177,7 @@ default_variables: {
     },
 }
 
-librenms_devices: "{{network_devices | selectattr('snmp_method', 'defined') | list}}"
-openwrt_devices: "{{network_devices | selectattr('is_openwrt', 'defined') | list}}"
+librenms_devices: "{{network_devices | default([]) | selectattr('snmp_method', 'defined') | list}}"
+openwrt_devices: "{{network_devices | default([]) | selectattr('is_openwrt', 'defined') | list}}"
 
 
