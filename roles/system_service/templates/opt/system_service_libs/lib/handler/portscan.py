@@ -7,6 +7,7 @@ import logging
 from smartserver import command
 
 from lib.handler import _handler
+from lib.helper import Helper
 from lib.dto.event import Event
 
 
@@ -68,19 +69,7 @@ class PortScanner(_handler.Handler):
                     self.condition.wait(next_timeout)
             
     def _checkPorts(self, device):
-        logging.info("Start portscan for {}".format(device))
-        
-        result = command.exec(["/usr/bin/nmap", "-sS", device.getIP()])
-        rows = result.stdout.decode().strip().split("\n")
-
-        services = {}
-        for row in rows:
-            match = re.match("([0-9]*)/([a-z]*)\s*([a-z]*)\s*(.*)",row)
-            if not match:
-                continue
-        
-            services[match[1]] = match[4]
-            #ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
+        services = Helper.nmap(device.getIP())
                 
         with self.data_lock:
             self.monitored_devices[device.getMAC()] = datetime.now()

@@ -28,7 +28,21 @@ class Helper():
 
     def ping(ip):
         return subprocess.run(["/bin/ping", "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    
 
+    def nmap(ip):
+        result = command.exec(["/usr/bin/nmap", "-sS", ip])
+        rows = result.stdout.decode().strip().split("\n")
+        services = {}
+        for row in rows:
+            match = re.match("([0-9]*)/([a-z]*)\s*([a-z]*)\s*(.*)",row)
+            if not match:
+                continue
+        
+            services[match[1]] = match[4]
+            #ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
+        return services
+        
     def arpscan(interface, network ):
         result = command.exec(["/usr/local/bin/arp-scan", "--interface", interface, network])
         
@@ -67,5 +81,7 @@ class Helper():
                 if len(data) == 1:
                     continue
                 if data[1]:
+                    if data[1].endswith('.fritz.box'):
+                        data[1] = data[1][0:-10]
                     return data[1]
         return None
