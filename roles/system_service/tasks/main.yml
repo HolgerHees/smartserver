@@ -25,6 +25,7 @@
   with_items:
     - { "chmod": "D750,F640", "path": "system_service_libs/" }
     - { "chmod": "D750,F750", "path": "system_service_cmds/" }
+  notify: "restart system_service"
 
 - name: copy service config
   template:
@@ -33,6 +34,7 @@
     owner: root
     group: root
     mode: 0750
+  notify: "restart system_service"
 
 - name: build docker image
   vars:
@@ -62,6 +64,7 @@
     volumes:
       - '{{global_etc}}system_service/:/etc/system_service:ro,z'
       - '/opt/shared/python:/opt/shared/python:ro,z'
+  notify: "restart system_service"
 
 # ***** INFLUXDB DATABASE ****
 - name: create database
