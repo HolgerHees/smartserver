@@ -9,7 +9,8 @@ service_port = "8507"
 
 librenms_token = "{% if librenms_devices|length > 0 %}{{vault_librenms_api_token if vault_librenms_api_token is defined else ''}}{% endif %}"
 librenms_rest = "{% if librenms_devices|length > 0 %}http://librenms:8000/api/v0/{% endif %}";
-librenms_poller_interval = {% if librenms_devices|length > 0 %}{{librenms_poller_interval * 60}}{% endif %}
+librenms_poller_interval = {{librenms_poller_interval * 60}}
+
 
 openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_username | default('')}}{% endif %}"
 openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
