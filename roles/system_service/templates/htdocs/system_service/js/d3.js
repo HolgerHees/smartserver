@@ -130,8 +130,10 @@ mx.D3 = (function( ret )
         bodyHeight = bodyRect.height;
 
         // Compute the layout.
-        const dx = ( height / endCount ) - ( 2 * boxPadding ) ;
-        const dy = width / (root.height + 1);
+        let dx = ( height / endCount ) - ( 2 * boxPadding ) ;
+        if( dx > 30 ) dx = 30;
+        let dy = width / (root.height + 1);
+
         d3.tree().nodeSize([dx + 2, dy])(root);
         //d3.tree().size([300, 200])(root);
         
