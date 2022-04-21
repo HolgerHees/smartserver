@@ -15,15 +15,34 @@ from smartserver.filewatcher import FileWatcher
 class ShutdownException(Exception):
     pass
 
+class CustomFormatter(logging.Formatter):
+    def __init__(self, fmt_default, fmt_custom):
+        super().__init__()
+        self.fmt_default = fmt_default
+        self.fmt_custom = fmt_custom
+
+    def format(self, record):
+        if "_module" in record.__dict__:
+            formatter = logging.Formatter(self.fmt_custom)
+        else:
+            formatter = logging.Formatter(self.fmt_default)
+        return formatter.format(record)
+
 class Server():
     def initLogger(level):
+        is_daemon = not os.isatty(sys.stdin.fileno())
+
         #journal.JournalHandler(SYSLOG_IDENTIFIER="pulp-sync")
         handler = logging.StreamHandler(sys.stdout)
-        is_daemon = not os.isatty(sys.stdin.fileno())
+        handler.setFormatter(CustomFormatter(
+            "[%(levelname)s] - %(module)s:%(lineno)d - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s:%(lineno)d - %(message)s",
+            "[%(levelname)s] - _%(_module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - _%(_module)s - %(message)s"
+        ))
+        
         logging.basicConfig(
             handlers = [handler],
             level=level,
-            format= "[%(levelname)s] - %(module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s - %(message)s",
+            #format= CustomFormatter("[%(levelname)s] - %(module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s - %(message)s"),
             datefmt="%d.%m.%Y %H:%M:%S"
         )
 

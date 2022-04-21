@@ -17,6 +17,9 @@ from lib.dto.event import Event
 from lib.helper import Helper
 
 
+class DataException(Exception):
+    pass
+
 class LibreNMS(_handler.Handler): 
     def __init__(self, config, cache ):
         super().__init__()

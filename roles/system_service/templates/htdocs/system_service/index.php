@@ -218,6 +218,15 @@ svg g.nodes rect.traffic {
     fill: white;
 }
 
+svg g.nodes text.name,
+svg g.nodes text.details {
+    fill: #777;
+    font-weight: 300;
+}
+svg g.nodes text.details tspan.hs {
+    font-weight: 500;
+}
+
 svg g.nodes text.traffic.arrived {
     animation-name: traffic_arrived;
     animation-duration: 0.5s;

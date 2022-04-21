@@ -94,7 +94,7 @@
             "min",
             "max",
             "mean",
-            "last"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "right"
@@ -232,7 +232,7 @@
             "min",
             "max",
             "mean",
-            "last"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "right"
@@ -372,7 +372,7 @@
             "min",
             "max",
             "mean",
-            "last"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "right"
@@ -450,6 +450,6 @@
   "timezone": "",
   "title": "System Info",
   "uid": "system-info",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

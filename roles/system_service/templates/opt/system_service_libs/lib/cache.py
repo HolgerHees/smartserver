@@ -34,7 +34,7 @@ class Cache():
         [_, file ] = stack[1][1].rsplit("/", 1)
         
         #stack[1][3], 
-        logging.info("{}:{} => {}".format( file[:-3] , stack[1][2], msg ))
+        logging.info(msg, extra={"_module": "{}:{}".format( file[:-3] , stack[1][2] ) })
     
     def lock(self):
         self._lock.acquire()

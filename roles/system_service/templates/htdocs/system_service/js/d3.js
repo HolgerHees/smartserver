@@ -14,6 +14,10 @@ mx.D3 = (function( ret )
     
     let d3root = null;
     
+    let groups = null;
+    let devices = null;
+    let stats = null;
+    
     function initNode(device, stats, processedNodes)
     {
         processedNodes[device["mac"]] = true;
@@ -49,9 +53,18 @@ mx.D3 = (function( ret )
         }
     }
     
-    ret.drawCircles = function(devices, groups, stats, refresh_interval)
+    ret.drawCircles = function(_devices, _groups, _stats, refresh_interval)
     {
-        if( devices )
+        if( _groups )
+            groups = _groups;
+        
+        if( _devices )
+            devices = _devices;
+        
+        if( _stats )
+            stats = _stats;
+        
+        if( _devices )
         {
             let processedNodes = {};
             let rootNode = null;
@@ -99,9 +112,9 @@ mx.D3 = (function( ret )
             
             d3root = d3.hierarchy(rootNode);
 
-            initTree(d3root, endCount, groups);
+            initTree(d3root, endCount);
         }
-        else
+        else if( _stats )
         {            
             d3root.descendants().forEach(function(_data)
             {
@@ -109,7 +122,7 @@ mx.D3 = (function( ret )
                 if(mac in stats) _data["data"]["stat"] = stats[mac];
             });
 
-            redrawTraffic();
+            redrawState();
         }
     }
     
@@ -117,7 +130,7 @@ mx.D3 = (function( ret )
     {
     }
     
-    function initTree(root, endCount, groups)
+    function initTree(root, endCount)
     {
         bodyRect = document.body.getBoundingClientRect();
         bodyWidth = bodyRect.width;
@@ -317,6 +330,7 @@ mx.D3 = (function( ret )
         let font_size = boxHeight / 2.5
             
         node.append("text")
+            .classed("identifier", true)
             .attr("dy", font_size * 1.1)
             .attr("x", "5")
             .attr("font-size", font_size)
@@ -325,12 +339,24 @@ mx.D3 = (function( ret )
             .text(d => d.data["device"]["ip"] ? d.data["device"]["ip"] : d.data["device"]["mac"] ).each( wrap );
         
         node.append("text")
+            .classed("name", true)
             .attr("dy", font_size * 2 * 1.1)
             .attr("x", "5")
-            .attr("font-size", font_size)
+            .attr("font-size", font_size * 0.9)
         //      .attr("x", d => d.children ? -6 : 6)
         //      .attr("text-anchor", "start")
             .text(d => d.data["device"]["dns"] ? d.data["device"]["dns"] : d.data["device"]["type"] ).each( wrap );
+
+        let details_font_size = boxHeight / 4;
+        let details_text = node.append("text")
+            .classed("details", true)
+            //.text(d => getTrafficContent(d.data) )
+            //.attr("y", traffic_font_size)
+            //.attr("x", 0)
+            .attr("font-size", details_font_size);
+        details_text.append("tspan").classed("top", true);
+        details_text.append("tspan").classed("bottom", true);
+        details_text.each( setDetailsContent );
 
         let traffic_background = node.append("rect").classed("traffic", true);
 
@@ -361,13 +387,53 @@ mx.D3 = (function( ret )
         svg.attr("viewBox", [xMin - 10, yMin - 10, (xMax - xMin) + 20, (yMax - yMin) + 20])
     }
     
-    function redrawTraffic() {
+    function redrawState() {
+        node.selectAll("text.details").each( setDetailsContent );
+
         node.selectAll("text.traffic").each( setTrafficContent );
         node.selectAll("rect.traffic").each( setTrafficBackground );
 
         let online_circle = node.selectAll("circle");
         online_circle.attr("class", d => ( d.data.stat && d.data.stat.offline_since == null ? "online" : "offline" ) );
     };
+    
+    function setDetailsContent(d)
+    {
+        let text = d3.select(this);
+        let font_size = text.attr("font-size");
+
+        let top_span = text.select(".top");
+        let bottom_span = text.select(".bottom");
+        
+        top_span.text(d =>"");
+        bottom_span.classed("hs", false);
+        bottom_span.text(d =>"");
+
+        if( d.data.device.gids.length > 0 )
+        {
+            d.data.device.gids.forEach(function(gid){
+                let group = groups.filter(group => group["gid"] == gid );
+                if( group.length == 1 && group[0].type == "wifi"  )
+                {
+                    let stat = d.data.stat
+                    
+                    bottom_span.text(d => group[0].details.band + " • " + stat.details.signal + "db");
+                    if( group[0].details.band == "5g" )
+                        bottom_span.classed("hs", true);
+                    
+                    top_span.text(d => group[0].details.ssid);
+                    
+                    let textLength = top_span.node().getComputedTextLength() + 3;
+                    top_span.attr("x", boxWidth - textLength );
+                    top_span.attr("y", boxHeight - 3 - font_size );
+
+                    textLength = bottom_span.node().getComputedTextLength() + 3;
+                    bottom_span.attr("x", boxWidth - textLength );
+                    bottom_span.attr("y", boxHeight - 3 );
+                }
+            });
+        }        
+    }
     
     function setTrafficContent(d)
     {
