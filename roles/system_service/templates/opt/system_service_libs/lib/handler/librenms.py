@@ -68,6 +68,9 @@ class LibreNMS(_handler.Handler):
                     was_suspended = False
                 
                 timeout = self._processLibreNMS(now, events, timeout)
+            except DataException:
+                    logging.warning("Default gateway '{}' currently not resolvable. Will retry in 15 seconds.".format(self.config.default_gateway_ip))
+                    timeout = 15
             except requests.exceptions.ConnectionError:
                 logging.warning("LibreNMS currently not available. Will suspend for 5 minutes")
                 if timeout > self.config.remote_suspend_timeout:
@@ -88,6 +91,10 @@ class LibreNMS(_handler.Handler):
                     self.condition.wait(timeout)
                     
     def _processLibreNMS(self, now, events, timeout):
+        gateway_mac = self.cache.ip2mac(self.config.default_gateway_ip)
+        if gateway_mac is None:
+            raise DataException()
+        
         if now - self.last_check["device"] >= self.config.librenms_device_interval:
             [timeout, self.last_check["device"]] = self._processDevices(now, events, timeout, self.config.librenms_device_interval)
                                         
@@ -178,19 +185,19 @@ class LibreNMS(_handler.Handler):
             
             _active_connected_macs = []
             for _connected_arp in _connected_arps:
+                vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
                 device_id = _connected_arp["device_id"]
                 port_id = _connected_arp["port_id"]
                 target_mac = self.devices[device_id]["mac"]
                 target_interface = self.port_id_ifname_map[device_id][port_id]
-                vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
+                if target_interface == "lo":
+                    continue
                 
                 _mac = _connected_arp["mac_address"]
                 mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
                 
-                #gw_mac = self.cache.ip2mac(self.config.default_gateway_ip)
-                #if mac == gw_mac:
-                #    logging.info("SKIP")
-                #    continue
+                if mac == gateway_mac:
+                    continue
                 
                 device = self.cache.getDevice(mac, False)
                 if device is not None:

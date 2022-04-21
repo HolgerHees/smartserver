@@ -85,10 +85,10 @@ class OpenWRT(_handler.Handler):
                         
                     timeout = self._processDevice(openwrt_ip, now, events, timeout)
                 except DataException:
-                    logging.warning("OpenWRT '{}' currently not resolvable. Will retry in 15 seconds.".format(openwrt_ip))
+                    logging.warning("OpenWRT '{}' not resolvable. Will retry in 15 seconds.".format(openwrt_ip))
                     timeout = 15
                 except requests.exceptions.ConnectionError:
-                    logging.warning("OpenWRT '{}' currently not available. Will suspend for 5 minutes.".format(openwrt_ip))
+                    logging.warning("OpenWRT '{}' not available. Will suspend for 5 minutes.".format(openwrt_ip))
                     self.sessions[openwrt_ip] = [ None, now + self.config.remote_suspend_timeout ]
                     if timeout > self.config.remote_suspend_timeout:
                         timeout = self.config.remote_suspend_timeout
@@ -149,7 +149,7 @@ class OpenWRT(_handler.Handler):
             for [client_result,wlan_network] in client_results:
                 for mac in client_result["clients"]:
                     target_mac = openwrt_mac
-                    target_interface = wlan_network["ifname"]
+                    target_interface = wlan_network["ssid"]
                     vlan = wlan_network["vlan"]
                     gid = wlan_network["gid"]
                     
@@ -195,12 +195,13 @@ class OpenWRT(_handler.Handler):
                         
                     _active_client_macs.append(mac)
                     _active_client_wifi_connections.append(uid)
-                    self.client_wifi_connections[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, openwrt_mac, target_interface ]
+                    self.client_wifi_connections[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
                     
             for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.client_wifi_connections[openwrt_ip].values()):
                 if uid not in _active_client_wifi_connections:
                     device = self.cache.getDevice(mac)
-                    device.removeHopConnection(vlan, target_mac, target_interface)
+                    # connection should still exists, also when device becomes offline
+                    #device.removeHopConnection(vlan, target_mac, target_interface)
                     device.removeGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                     

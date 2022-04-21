@@ -162,6 +162,9 @@ body, svg {
 .tooltip span.text > div > div > div:first-child {
     font-weight: bold;
 }
+.tooltip div.rows {
+    padding: 0 !important;
+}
 
 @keyframes traffic_arrived {
   from {

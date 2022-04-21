@@ -12,10 +12,12 @@ from smartserver.server import Server
 
 from config import config
 from lib.handler.arpscan import ArpScanner
+
 from lib.handler.openwrt import OpenWRT
 from lib.handler.librenms import LibreNMS
 from lib.handler.portscan import PortScanner
-from lib.handler.default_gateway import DefaultGateway
+from lib.handler.gateway import Gateway
+
 from lib.handler.publish_mqtt import MQTTPublisher
 from lib.handler.publish_influxdb import InfluxDBPublisher
 
@@ -40,7 +42,7 @@ class Handler(Server):
         if config.librenms_token:
             self.dispatcher.register(LibreNMS(config, self.cache ))
         self.dispatcher.register(PortScanner(config, self.cache ))
-        #self.dispatcher.register(DefaultGateway(config, self.cache ))
+        self.dispatcher.register(Gateway(config, self.cache ))
         self.dispatcher.register(MQTTPublisher(config, self.cache ))
         self.dispatcher.register(InfluxDBPublisher(config, self.cache ))
         

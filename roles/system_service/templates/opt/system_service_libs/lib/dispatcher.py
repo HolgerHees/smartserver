@@ -114,7 +114,7 @@ class Dispatcher():
                 virtual_device.setVirtualConnection(virtual_connection)
                 
                 for device in connected_map[key]:
-                    virtual_connection = Connection(Connection.VIRTUAL, vlans[0], virtual_device.getMAC(), device.getMAC())
+                    virtual_connection = Connection(Connection.VIRTUAL, vlans[0], virtual_device.getMAC(), "hub")
                     for i in range(1,len(vlans)):
                         virtual_connection.addVLAN(vlans[i])
                     device.setVirtualConnection(virtual_connection)
@@ -161,13 +161,28 @@ class Dispatcher():
             interface = stat.getInterface()
             
             if interface:
+                # for interface based stats, we use the device pointing to this interface
                 source_devices = list(filter(lambda d: d.getConnection() and d.getConnection().getType() == Connection.ETHERNET and d.getConnection().getTargetMAC() == mac and d.getConnection().getTargetInterface() == interface, devices ))
             else:
                 source_devices = list(filter(lambda d: d.getMAC() == mac, devices ))
             
             if len(source_devices) > 0:
-                #print(source_devices[0].getMAC())
-                stats.append([stat.getSerializeable(source_devices[0].getMAC()), source_devices[0].getMAC(), stat.getInterface()])
+                source_device = source_devices[0]
+                source_mac = source_device.getMAC()
+                # for hub devices, we duplicate the port statistic
+                force_online = False
+                if source_device.getType() == "hub":
+                    all_children_online = True
+                    for _child_device in list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == source_mac, devices )):
+                        _child_stat = self.cache.getUnlockedStat(_child_device.getMAC())
+                        if not _child_stat.isOnline():
+                            all_children_online = False
+                        stats.append([stat.getSerializeable(_child_device.getMAC(), skip_traffic = True), _child_device.getMAC(), "hub"])
+                    if all_children_online:
+                        force_online = True
+                        
+                #print(source_mac)
+                stats.append([stat.getSerializeable(source_mac, force_online = force_online), source_mac, stat.getInterface()])
                 
         device_stats = []
         for device in devices:

@@ -1,3 +1,5 @@
+import logging
+
 from lib.dto._changeable import Changeable
 
 
@@ -22,6 +24,9 @@ class Connection():
 
     def addVLAN(self, vlan):
         self.vlans.append(vlan)
+
+    def setVLAN(self, vlan):
+        self.vlans = [ vlan ]
 
     def hasVLAN(self, vlan):
         return vlan in self.vlans
@@ -106,7 +111,11 @@ class Device(Changeable):
         self.dns
 
     def addHopConnection(self, type, vlan, target_mac, target_interface, target_device = None):
-        _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
+        if type == Connection.WIFI:
+            _connections = list(filter(lambda c: c.getType() == type, self.hop_connections ))
+        else:
+            _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
+
         if len(_connections) > 0:
             _connection = _connections[0]
             if _connection.getType() != type:
@@ -114,8 +123,11 @@ class Device(Changeable):
             
             if _connection.hasVLAN(vlan):
                 return
-
-            _connection.addVLAN(vlan)
+            
+            if type == Connection.WIFI:
+                _connection.setVLAN(vlan)
+            else:
+                _connection.addVLAN(vlan)
         else:
             if type == Connection.WIFI:
                 self.supports_wifi = True
@@ -178,6 +190,11 @@ class Device(Changeable):
             connection = _connection
             break
         
+        if connection is None:
+            logging.info(self)
+            for _connection in connections:
+                logging.info(_connection)
+                
         self.connection = connection
 
     def supportsWifi(self):

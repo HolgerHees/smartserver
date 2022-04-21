@@ -1,8 +1,5 @@
 mx.D3 = (function( ret ) 
 {
-    let width = 1000;//bodyRect.width;
-    let height = 1000;//bodyRect.height;
-    
     //let boxMargin = 3;
     let boxPadding = 3;
     let boxWidth = 150;
@@ -100,9 +97,6 @@ mx.D3 = (function( ret )
                 });
             }
             
-            const width = 400;
-            const height = 400;
-            
             d3root = d3.hierarchy(rootNode);
 
             initTree(d3root, endCount, groups);
@@ -128,6 +122,12 @@ mx.D3 = (function( ret )
         bodyRect = document.body.getBoundingClientRect();
         bodyWidth = bodyRect.width;
         bodyHeight = bodyRect.height;
+        
+        const width = 1000;//bodyWidth;
+        const height = 1000;//bodyWidth;
+        //scaleFactor = ( bodyWidth > bodyHeight ? bodyWidth : bodyHeight ) / 1000;
+        //const width = bodyWidth / scaleFactor;
+        //const height = bodyHeight / scaleFactor;
 
         // Compute the layout.
         let dx = ( height / endCount ) - ( 2 * boxPadding ) ;
@@ -151,10 +151,12 @@ mx.D3 = (function( ret )
             
         // Compute the default height.
         if (height === undefined) height = x1 - x0 + dx * 2;
-
+        
+        rootNodeGenerator(root, dx, dy);
+        
         const svg = d3.selectAll("#network")
             //.attr("viewBox", [-dy / 2 + ( dy / 3 ), x0 - dx, width, width])
-            .attr("viewBox", [0, 0, width, width])
+            .attr("viewBox", [0, 0, width, height])
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("font-family", "sans-serif");
@@ -217,13 +219,6 @@ mx.D3 = (function( ret )
                         if( device.info ) html += "<div><div>Info:</div><div>" + device.info + "</div></div>";
                         html += "<div><div>Type:</div><div>" + device.type + "</div></div>";
                     
-                        if( device.connection )
-                        {
-                            if( device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
-                        
-                            if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
-                        }
-                        
                         html += showRows(device.details,"Details","rows");
                         html += showRows(device.services,"Services","rows");
                         //html += showRows(device.ports,"Ports","rows");
@@ -232,6 +227,13 @@ mx.D3 = (function( ret )
                             let group = groups.filter(group => group["gid"] == gid );
                             html += showRows(group[0]["details"],group[0]["type"],"rows");
                         });
+                        
+                        if( device.connection )
+                        {
+                            if( device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
+                        
+                            if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
+                        }
                         
                         if( stat )
                         {
@@ -330,18 +332,21 @@ mx.D3 = (function( ret )
         //      .attr("text-anchor", "start")
             .text(d => d.data["device"]["dns"] ? d.data["device"]["dns"] : d.data["device"]["type"] ).each( wrap );
 
-        let traffic_background = node.append("rect")
-            .classed("traffic", true);
+        let traffic_background = node.append("rect").classed("traffic", true);
 
         let traffic_font_size = boxHeight / 4;
         let traffic_text = node.append("text")
             .classed("traffic", true)
-            .text(d => getTrafficContent(d.data) )
-            .attr("dy", traffic_font_size * 1.5)
-            .attr("font-size", traffic_font_size)
-            .each( setTrafficPosition );
-
-        node.selectAll("rect.traffic").each( setTrafficBackground );
+            //.text(d => getTrafficContent(d.data) )
+            //.attr("y", traffic_font_size)
+            //.attr("x", 0)
+            .attr("font-size", traffic_font_size);
+            
+            
+        traffic_text.append("tspan").classed("in", true);
+        traffic_text.append("tspan").classed("out", true);
+        traffic_text.each( setTrafficContent );
+        traffic_background.each( setTrafficBackground );
         
         let _svg = document.querySelector('svg');
         const { xMin, xMax, yMin, yMax } = [..._svg.children].reduce((acc, el) => {
@@ -357,53 +362,71 @@ mx.D3 = (function( ret )
     }
     
     function redrawTraffic() {
-        let traffic_text = node.selectAll("text.traffic");
-        traffic_text.text(function(d)
-        {
-            return getTrafficContent(d.data);
-        })
-        .each( setTrafficPosition );
-
+        node.selectAll("text.traffic").each( setTrafficContent );
         node.selectAll("rect.traffic").each( setTrafficBackground );
 
         let online_circle = node.selectAll("circle");
         online_circle.attr("class", d => ( d.data.stat && d.data.stat.offline_since == null ? "online" : "offline" ) );
     };
     
-    function getTrafficContent(data)
+    function setTrafficContent(d)
     {
-        if( !data["stat"] ) return "";
+        let text = d3.select(this);
         
-        let in_data = formatTraffic( data["stat"]["traffic"]["in_avg"]);
-        let out_data = formatTraffic( data["stat"]["traffic"]["out_avg"]);
+        let font_size = text.attr("font-size");
         
-        let in_out_data = [];
-        if( in_data != 0 ) in_out_data.push("⇩ " + in_data);
-        if( out_data != 0 ) in_out_data.push("⇧ " + out_data);
+        row = 0;
+        let box_height = 0;
+
+        let in_span = text.select(".in");
+        let in_data = formatTraffic( d.data["stat"]["traffic"]["in_avg"]);
+        let out_data = formatTraffic( d.data["stat"]["traffic"]["out_avg"]);
         
-        return in_out_data.length > 0 ? in_out_data.join(" • ") : "";
+        let offset = in_data != 0 && out_data != 0  ? font_size * 0.1 : font_size * 0.9;
+        
+        if( in_data != 0 ) 
+        {
+            row += 1;
+            in_span.text(d => "⇨ " + in_data );
+            let textLength = in_span.node().getComputedTextLength() + 3;
+            in_span.attr("x", textLength * -1);
+            in_span.attr("y", font_size * 1.5 * row + offset);
+            box_height = in_span.node().getBBox().height;
+        }
+        else
+        {
+            in_span.text(d => "");
+        }
+
+        let out_span = text.select(".out");
+        if( out_data != 0 )
+        {
+            row += 1;
+            out_span.text(d => "⇦ " + out_data );
+            let textLength = out_span.node().getComputedTextLength() + 3;
+            out_span.attr("x", textLength * -1);
+            out_span.attr("y", font_size * 1.5 * row + offset);
+            box_height = out_span.node().getBBox().height;
+        }
+        else
+        {
+            out_span.text(d => "");
+        }
     }
     
     function formatTraffic(traffic)
     {
-        if( traffic > 100000000 ) return Math.round( traffic / 1000000 ) + "MB/s";                  // >= 100MB
+        if( traffic > 100000000 ) return Math.round( traffic / 1000000 ).toFixed(1) + " MB/s";                  // >= 100MB
         
-        if( traffic > 1000000 ) return ( Math.round( ( traffic / 1000000 ) * 10 ) / 10 ) + "MB/s";  // >= 1MB
+        if( traffic > 1000000 ) return ( Math.round( ( traffic / 1000000 ) * 10 ) / 10 ).toFixed(1) + " MB/s";  // >= 1MB
 
-        if( traffic > 100000 ) return Math.round( traffic / 1000 ) + "KB/s";                        // >= 100KB
+        if( traffic > 100000 ) return Math.round( traffic / 1000 ).toFixed(1) + " KB/s";                        // >= 100KB
         
-        if( traffic > 1000 ) return ( Math.round( ( traffic / 1000 ) * 10 ) / 10 ) + "KB/s";        // >= 1KB
+        if( traffic > 1000 ) return ( Math.round( ( traffic / 1000 ) * 10 ) / 10 ).toFixed(1) + " KB/s";        // >= 1KB
         
-        if( traffic > 100 ) return ( Math.round(traffic / 100) / 10 ) + "KB/s";
+        if( traffic > 100 ) return ( Math.round(traffic / 100) / 10 ).toFixed(1) + " KB/s";
         
         return 0;
-    }
-
-    function setTrafficPosition(d)
-    {
-        let self = d3.select(this);
-        let textLength = self.node().getComputedTextLength() + 3;
-        self.attr("x", textLength * -1);
     }
 
     function setTrafficBackground(d)
@@ -416,17 +439,41 @@ mx.D3 = (function( ret )
         self.attr("width", rect.width + 1);
         self.attr("height", rect.height + 1);
     }
+    
+    function rootNodeGenerator(root, dx, dy)
+    {
+        if( root.children.length == 1 )
+        {
+            root.x = dx * 3;
+            root.y = dy;
+        }
+    }
 
     function linkGenerator(d) {
-        let path = d3.linkHorizontal()
-            .source(function (d) {
-                return [ d.source.y + boxWidth - 30, (d.source.x + d.source.height / 2) + boxHeight / 2 ];
-            })
-            .target(function (d) {
-                return [ d.target.y, (d.target.x + d.target.height / 2) + boxHeight / 2 ];
-            });
-                
-        return path(d);
+        if( d.source.parent == null && d.source.children.length == 1 )
+        {
+            let path = d3.linkHorizontal()
+                .source(function (d) {
+                    return [ d.source.y + (boxWidth / 2), (d.source.x + d.source.height / 2) + boxHeight / 2 ];
+                })
+                .target(function (d) {
+                    return [ d.target.y + (boxWidth / 2), (d.target.x + d.target.height / 2) + boxHeight / 2 ];
+                });
+                    
+            return path(d);
+        }
+        else
+        {
+            let path = d3.linkHorizontal()
+                .source(function (d) {
+                    return [ d.source.y + boxWidth - 30, (d.source.x + d.source.height / 2) + boxHeight / 2 ];
+                })
+                .target(function (d) {
+                    return [ d.target.y, (d.target.x + d.target.height / 2) + boxHeight / 2 ];
+                });
+                    
+            return path(d);
+        }
     }
         
     function positionTooltip(element)

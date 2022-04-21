@@ -1,5 +1,6 @@
 import re
 import subprocess
+import logging
 
 from smartserver import command
 
@@ -64,12 +65,9 @@ class Helper():
             rows = result.stdout.decode().strip().split("\n")
             for row in rows:
                 columns = row.split("\t")
-                match = re.search(r"{}.*?({}).*$".format(ip,"[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), row)
+                match = re.search(r"\({}\).*?({}).*$".format(ip,"[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), row)
                 if match:
                     return match[1]
-                
-        Helper.ping(ip)
-        
         return None
 
     def nslookup(ip):

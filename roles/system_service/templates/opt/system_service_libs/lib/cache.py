@@ -11,6 +11,9 @@ from lib.dto.event import Event
 from lib.helper import Helper
 
 
+class CacheDataException(Exception):
+    pass
+
 class Cache(): 
     def __init__(self, config):
         self.config = config
