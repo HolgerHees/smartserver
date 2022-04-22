@@ -1,0 +1,14 @@
+config rpcd
+        option socket /var/run/ubus/ubus.sock
+        option timeout 30
+
+config login
+        option username 'root'
+        option password '$p$root'
+        list read '*'
+        list write '*'
+
+config login
+        option username '{{vault_openwrt_api_username}}'
+        option password '{{vault_openwrt_api_password | password_hash('md5')}}'
+        list read api 

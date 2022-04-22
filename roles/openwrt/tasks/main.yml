@@ -9,20 +9,6 @@
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt" }
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt/ap/" }
 
-- name: synchronize configs
-  synchronize:
-    src: "templates/config_ap/"
-    dest: "{{global_etc}}openwrt/ap/default/"
-    archive: no
-    checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
-    recursive: yes
-    rsync_opts:
-      - "--chown=root:root"
-      - "--chmod=D750,F640"
-
 - name: synchronize deployment script
   synchronize:
     src: "templates/deploy.sh"
@@ -37,10 +23,56 @@
       - "--chown=root:root"
       - "--chmod=F750"
 
+- name: synchronize static configs
+  synchronize:
+    src: "templates/config_ap_static/"
+    dest: "{{global_etc}}openwrt/ap/default/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
+
+- name: check for dynamic configs
+  find:
+    paths: "roles/openwrt/templates/config_ap_dynamic/"
+    file_type: "file"
+    recurse: yes
+  delegate_to: 127.0.0.1
+  register: dynamic_shared_file_result
+  with_items: "{{openwrt_devices}}"
+  
+- name: prepare dynamic configs
+  set_fact: 
+    dynamic_shared_files: |
+      [
+        {% for file in dynamic_shared_file_result.results[0].files %}
+           '{{file.path}}',
+        {% endfor %}
+      ]
+#          {% for item in openwrt_devices %}
+#            '{{global_etc}}openwrt/ap/{{item.host}}/{{file.path[42:]}}'
+#          {% endfor %}
+
+- name: copy dynamic configs
+  template:
+    src: "{{item}}"
+    dest: "{{global_etc}}openwrt/ap/default/{{item[42:]}}"
+    owner: "root"
+    group: "root"
+    mode: "u=rwX,g=rX,o="
+  changed_when: no
+  with_items: "{{dynamic_shared_files}}"
+
 - name: check for custom openwrt configs
   find:
     paths: "{{config_path}}vault/openwrt/{{item.host}}"
     file_type: "any"
+  delegate_to: 127.0.0.1
   register: custom_config_directory
   with_items: "{{openwrt_devices}}"
 

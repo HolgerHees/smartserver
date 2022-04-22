@@ -14,6 +14,7 @@
 - name: check for vault keys
   find:
     paths: "{{config_path}}vault/wireguard_cloud"
+  delegate_to: 127.0.0.1
   register: key_directory
 
 - name: copy keys => is_production and key_directory exists
