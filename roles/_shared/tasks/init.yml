@@ -53,6 +53,22 @@
   include_vars: "config/pre_shared.yml"
   tags: always
 
+# set environment specific variables [pre]
+- name: set pre state vars
+  set_fact:
+    system_users: {}
+    system_groups: {}
+    is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
+    is_fedora: "{{ansible_distribution == 'Fedora'}}"
+    is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
+    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
+    is_production: "{{host_ip == production_ip}}"
+    default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
+#    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
+    main_network_interface: "{{main_device_result.stdout_lines[0]}}"
+    has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
+  tags: always
+
 # load initial environment variables
 - name: load default vars
   include_vars: "config/default.yml"
@@ -119,22 +135,6 @@
     that: "check_result.failed is not defined or not check_result.failed"
     msg: "Some variables are not defined. Please check the 'config/default.yml' file and add the missing variables to your configuration."
 
-# set environment specific variables [pre]
-- name: set pre state vars
-  set_fact:
-    system_users: {}
-    system_groups: {}
-    is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
-    is_fedora: "{{ansible_distribution == 'Fedora'}}"
-    is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
-    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
-    is_production: "{{host_ip == production_ip}}"
-    default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
-#    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
-    main_network_interface: "{{main_device_result.stdout_lines[0]}}"
-    has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
-  tags: always
-  
 # load shared variables
 - name: load shared vars
   include_vars: "config/post_shared.yml"

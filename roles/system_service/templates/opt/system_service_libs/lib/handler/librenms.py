@@ -94,10 +94,6 @@ class LibreNMS(_handler.Handler):
                     self.condition.wait(timeout)
                     
     def _processLibreNMS(self, now, events, timeout):
-        gateway_mac = self.cache.ip2mac(self.config.default_gateway_ip)
-        if gateway_mac is None:
-            raise DataException()
-        
         if now - self.last_check["device"] >= self.config.librenms_device_interval:
             [timeout, self.last_check["device"]] = self._processDevices(now, events, timeout, self.config.librenms_device_interval)
                                         
@@ -105,129 +101,142 @@ class LibreNMS(_handler.Handler):
             [timeout, self.last_check["vlan"]] = self._processVLANs(now, events, timeout, self.config.librenms_vlan_interval)
 
         if now - self.last_check["port"] >= self.config.librenms_port_interval:
-            self.last_check["port"] = now
-            if timeout > self.config.librenms_port_interval:
-                timeout = self.config.librenms_port_interval
-
-            _ports_json = self._get("ports?columns=device_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
-            _ports = json.loads(_ports_json)["ports"]
-
-            for _port in _ports:
-                if _port["device_id"] not in self.devices:
-                    [timeout, self.last_check["device"]] = self._processDevices(now, events, timeout, self.config.librenms_device_interval)
-                    for __port in _ports:
-                        if __port["device_id"] not in self.devices:
-                            raise Exception("Missing device {}".format(__port["device_id"]))
-                    break
-
-            self.cache.lock()
-
-            _active_ports_ids = []
-            for _port in _ports:
-                device_id = _port["device_id"]
-                mac = self.devices[device_id]["mac"]
-                port_ifname = _port["ifName"]
-                port_id = _port["ifIndex"]
-                
-                #device = self.cache.getDevice(mac)
-                #self.cache.confirmDevice( device, lambda event: events.append(event) )
-                
-                stat = self.cache.getStat(mac, port_ifname)
-                if port_id in self.device_ports_refreshed[device_id]:
-                    time_diff = (now - self.device_ports_refreshed[device_id][port_id])
-                    time_diff_slot = math.ceil(time_diff / self.config.librenms_poller_interval)
-                    time_diff = time_diff_slot * self.config.librenms_poller_interval
-                    
-                    in_diff = _port["ifInOctets"] - stat.getInBytes()
-                    if in_diff > 0 or time_diff > self.config.librenms_poller_interval * 2:
-                        stat.setInAvg(in_diff / time_diff)
-
-                    out_diff = _port["ifOutOctets"] - stat.getOutBytes()
-                    if out_diff > 0 or time_diff > self.config.librenms_poller_interval * 2:
-                        stat.setOutAvg(out_diff / time_diff)
-
-                stat.setInBytes(_port["ifInOctets"])
-                stat.setOutBytes(_port["ifOutOctets"])
-                stat.setInSpeed(_port["ifSpeed"])
-                stat.setOutSpeed(_port["ifSpeed"])
-                stat.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half")
-                self.cache.confirmStat( stat, lambda event: events.append(event) )
-                    
-                self.port_id_ifname_map[device_id][port_id] = port_ifname
-                
-                _active_ports_ids.append("{}-{}".format(device_id, port_id))
-                self.device_ports_refreshed[device_id][port_id] = now
-
-            for device_id in self.device_ports_refreshed:
-                for port_id in list(self.device_ports_refreshed[device_id].keys()):
-                    if "{}-{}".format(device_id, port_id) not in _active_ports_ids:
-                        self.cache.removeStat(self.devices[device_id]["mac"], self.port_id_ifname_map[device_id][port_id], lambda event: events.append(event))
-                        del self.device_ports_refreshed[device_id][port_id]
-                        del self.port_id_ifname_map[device_id][port_id]
-                        
-            self.cache.unlock()
-            
-        if now - self.last_check["fdb"] >= self.config.librenms_fdb_interval:
-            self.last_check["fdb"] = now
-            if timeout > self.config.librenms_fdb_interval:
-                timeout = self.config.librenms_fdb_interval
-                
-            _connected_arps_json = self._get("resources/fdb")
-            _connected_arps = json.loads(_connected_arps_json)["ports_fdb"]
-            
-            for _connected_arp in _connected_arps:
-                if _connected_arp["vlan_id"] not in self.vlan_id_map:
-                    [timeout, self.last_check["vlan"]] = self._processVLANs(now, events, timeout, self.config.librenms_vlan_interval)
-                    for __connected_arp in _connected_arps:
-                        if __connected_arp["vlan_id"] not in self.vlan_id_map:
-                            raise Exception("Missing vlan {}".format(__connected_arp["vlan_id"]))
-                    break
-
-
-            self.cache.lock()
-            
-            _active_connected_macs = []
-            for _connected_arp in _connected_arps:
-                vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
-                device_id = _connected_arp["device_id"]
-                port_id = _connected_arp["port_id"]
-                target_mac = self.devices[device_id]["mac"]
-                target_interface = self.port_id_ifname_map[device_id][port_id]
-                if target_interface == "lo":
-                    continue
-                
-                _mac = _connected_arp["mac_address"]
-                mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
-                
-                if mac == gateway_mac:
-                    continue
-                
-                device = self.cache.getDevice(mac, False)
-                if device is not None:
-                    target_device = self.cache.getUnlockedDevice(target_mac)
-                    if target_device is not None:
-                        device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
-                _active_connected_macs.append(mac)
-                self.connected_macs[device_id][mac] = {"vlan": vlan, "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface}
-
-            for device_id in self.connected_macs:
-                for mac in list(self.connected_macs[device_id].keys()):
-                    if mac not in _active_connected_macs:
-                        vlan = self.connected_macs[device_id][mac]["vlan"]
-                        target_mac = self.connected_macs[device_id][mac]["target_mac"]
-                        target_interface = self.connected_macs[device_id][mac]["target_interface"]
-                        
-                        device = self.cache.getDevice(mac, False)
-                        if device is not None:
-                            device.removeHopConnection(vlan, target_mac, target_interface)
-                            self.cache.confirmDevice( device, lambda event: events.append(event) )
-                    
-                        del self.connected_macs[device_id][mac]
-            
-            self.cache.unlock()
+            [timeout, self.last_check["port"]] = self._processPorts(now, events, timeout, self.config.librenms_port_interval)
+    
+        if now - self.last_check["fdb"] >= self.config.librenms_fdb_interval:               
+            [timeout, self.last_check["fdb"]] = self._processFDP(now, events, timeout, self.config.librenms_fdb_interval)
             
         return timeout
+
+    def _processPorts(self, now, events, global_timeout, call_timeout):    
+        _ports_json = self._get("ports?columns=device_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
+        _ports = json.loads(_ports_json)["ports"]
+
+        for _port in _ports:
+            if _port["device_id"] not in self.devices:
+                [timeout, self.last_check["device"]] = self._processDevices(now, events, timeout, self.config.librenms_device_interval)
+                for __port in _ports:
+                    if __port["device_id"] not in self.devices:
+                        raise Exception("Missing device {}".format(__port["device_id"]))
+                break
+
+        self.cache.lock()
+
+        _active_ports_ids = []
+        for _port in _ports:
+            device_id = _port["device_id"]
+            mac = self.devices[device_id]["mac"]
+            port_ifname = _port["ifName"]
+            port_id = _port["ifIndex"]
+            
+            #device = self.cache.getDevice(mac)
+            #self.cache.confirmDevice( device, lambda event: events.append(event) )
+            
+            stat = self.cache.getStat(mac, port_ifname)
+            if port_id in self.device_ports_refreshed[device_id]:
+                time_diff = (now - self.device_ports_refreshed[device_id][port_id])
+                time_diff_slot = math.ceil(time_diff / self.config.librenms_poller_interval)
+                time_diff = time_diff_slot * self.config.librenms_poller_interval
+                
+                in_diff = _port["ifInOctets"] - stat.getInBytes()
+                if in_diff > 0 or time_diff > self.config.librenms_poller_interval * 2:
+                    stat.setInAvg(in_diff / time_diff)
+
+                out_diff = _port["ifOutOctets"] - stat.getOutBytes()
+                if out_diff > 0 or time_diff > self.config.librenms_poller_interval * 2:
+                    stat.setOutAvg(out_diff / time_diff)
+
+            stat.setInBytes(_port["ifInOctets"])
+            stat.setOutBytes(_port["ifOutOctets"])
+            stat.setInSpeed(_port["ifSpeed"])
+            stat.setOutSpeed(_port["ifSpeed"])
+            stat.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half")
+            self.cache.confirmStat( stat, lambda event: events.append(event) )
+                
+            self.port_id_ifname_map[device_id][port_id] = port_ifname
+            
+            _active_ports_ids.append("{}-{}".format(device_id, port_id))
+            self.device_ports_refreshed[device_id][port_id] = now
+
+        for device_id in self.device_ports_refreshed:
+            for port_id in list(self.device_ports_refreshed[device_id].keys()):
+                if "{}-{}".format(device_id, port_id) not in _active_ports_ids:
+                    self.cache.removeStat(self.devices[device_id]["mac"], self.port_id_ifname_map[device_id][port_id], lambda event: events.append(event))
+                    del self.device_ports_refreshed[device_id][port_id]
+                    del self.port_id_ifname_map[device_id][port_id]
+                    
+        self.cache.unlock()
+            
+        if global_timeout > call_timeout:
+            global_timeout = call_timeout
+
+        return [global_timeout, now]
+    
+    def _processFDP(self, now, events, global_timeout, call_timeout):        
+        _connected_arps_json = self._get("resources/fdb")
+        _connected_arps = json.loads(_connected_arps_json)["ports_fdb"]
+        
+        for _connected_arp in _connected_arps:
+            if _connected_arp["vlan_id"] not in self.vlan_id_map:
+                [timeout, self.last_check["vlan"]] = self._processVLANs(now, events, timeout, self.config.librenms_vlan_interval)
+                for __connected_arp in _connected_arps:
+                    if __connected_arp["vlan_id"] not in self.vlan_id_map:
+                        raise Exception("Missing vlan {}".format(__connected_arp["vlan_id"]))
+                break
+
+
+        self.cache.lock()
+        
+        _active_connected_macs = []
+        for _connected_arp in _connected_arps:
+            vlan = self.vlan_id_map[_connected_arp["vlan_id"]]
+            device_id = _connected_arp["device_id"]
+            port_id = _connected_arp["port_id"]
+            target_mac = self.devices[device_id]["mac"]
+            target_interface = self.port_id_ifname_map[device_id][port_id]
+            if target_interface == "lo":
+                continue
+            
+            _mac = _connected_arp["mac_address"]
+            mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
+            
+            # swap direction for gateway devices
+            if self.cache.getGatewayMAC() == mac:
+                _mac = mac
+                mac = target_mac
+                target_mac = _mac
+                target_interface = "lan{}".format(vlan)
+            
+            device = self.cache.getDevice(mac, False)
+            if device is not None:
+                target_device = self.cache.getUnlockedDevice(target_mac)
+                if target_device is not None:
+                    device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
+                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                
+            _active_connected_macs.append(mac)
+            self.connected_macs[device_id][mac] = {"vlan": vlan, "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface}
+
+        for device_id in self.connected_macs:
+            for mac in list(self.connected_macs[device_id].keys()):
+                if mac not in _active_connected_macs:
+                    vlan = self.connected_macs[device_id][mac]["vlan"]
+                    target_mac = self.connected_macs[device_id][mac]["target_mac"]
+                    target_interface = self.connected_macs[device_id][mac]["target_interface"]
+                    
+                    device = self.cache.getDevice(mac, False)
+                    if device is not None:
+                        device.removeHopConnection(vlan, target_mac, target_interface)
+                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+                
+                    del self.connected_macs[device_id][mac]
+        
+        self.cache.unlock()
+            
+        if global_timeout > call_timeout:
+            global_timeout = call_timeout
+
+        return [global_timeout, now]
     
     def _processVLANs(self, now, events, global_timeout, call_timeout):
         _vlan_json = self._get("resources/vlans")

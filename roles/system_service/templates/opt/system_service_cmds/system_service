@@ -49,7 +49,8 @@ class Handler(Server):
         self.dispatcher.start()
         
     def terminate(self):
-        self.dispatcher.terminate()
+        if self.dispatcher:
+            self.dispatcher.terminate()
         super().terminate()
         
     def getState(self):

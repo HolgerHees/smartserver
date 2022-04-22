@@ -323,7 +323,6 @@ class ArpScanner(_handler.Handler):
         collected_arps = []
         for network in self.config.networks:
             arp_result = Helper.arpscan(self.config.main_interface, network)
-
             for arp_data in arp_result:
                 ip = arp_data["ip"]
                 mac = arp_data["mac"]

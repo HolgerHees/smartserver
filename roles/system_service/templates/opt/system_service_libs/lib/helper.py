@@ -59,7 +59,7 @@ class Helper():
             
         return arp_result
             
-    def ip2mac(ip):
+    def ip2mac(ip, interface):
         result = command.exec(["/sbin/arp", "-n"])
         if result.returncode == 0:
             rows = result.stdout.decode().strip().split("\n")
@@ -68,6 +68,19 @@ class Helper():
                 match = re.search(r"\({}\).*?({}).*$".format(ip,"[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), row)
                 if match:
                     return match[1]
+                
+        # fallback for devices from other networks
+        #result = command.exec(["/usr/local/bin/arp-scan", "--interface", interface, "{}/32".format(ip)])
+        #if result.returncode == 0:
+        #    rows = result.stdout.decode().strip().split("\n")
+        #    for row in rows:
+        #        columns = row.split("\t")
+                
+        #        if len(columns) != 3:
+        #            continue
+                
+        #        return columns[1]
+            
         return None
 
     def nslookup(ip):

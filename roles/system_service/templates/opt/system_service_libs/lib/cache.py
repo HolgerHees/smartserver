@@ -1,6 +1,7 @@
 import threading
 import inspect
 from datetime import datetime
+import time
 import logging
 
 from lib.dto._changeable import Changeable
@@ -26,7 +27,21 @@ class Cache():
 
         self.ip_mac_map = {}
         self.ip_dns_map = {}
+
+        self.gateway_mac = None
+
+        while True:
+            self.gateway_mac = self.ip2mac(self.config.default_gateway_ip)
+            if self.gateway_mac is not None:
+                break
+            logging.info("Waiting for gateway {}".format(self.config.default_gateway_ip))
+            time.sleep(1)
+            
+        logging.info("Gateway initialized")
         
+    def getGatewayMAC(self):
+        return self.gateway_mac
+
     #def getDevice(self, mac):
     #    return self.devices.get(mac, None)
     
@@ -165,7 +180,7 @@ class Cache():
     def ip2mac(self,ip):
         now = datetime.now()
         if ip not in self.ip_mac_map or (now - self.ip_mac_map[ip][1]).total_seconds() > self.config.cache_ip_mac_revalidation_interval:
-            mac = Helper.ip2mac(ip)
+            mac = Helper.ip2mac(ip, self.config.main_interface)
             if mac is None:
                 return None
             self.ip_mac_map[ip] = [mac, now]
