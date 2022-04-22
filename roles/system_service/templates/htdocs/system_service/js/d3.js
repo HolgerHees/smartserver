@@ -195,104 +195,12 @@ mx.D3 = (function( ret )
             .attr("transform", d => `translate(${d.y},${d.x})`)
             .attr("id", function(d) { return d.data.uid; })
             .on("mouseenter", function(e, d){ 
-                let device = d.data.device
-                if( device && device.type != "placeholder" )
-                {
-                        let stat = d.data.stat
-
-                        let html = "<div>";
-                        if( device.ip ) html += "<div><div>IP:</div><div>" + device.ip + "</div></div>";
-                        if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
-                        if( device.mac ) html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
-                        
-                        if( stat )
-                        {
-                            let dateTimeMsg = "";
-                            
-                            if( !stat["offline_since"] )
-                            {
-                                dateTimeMsg = "Online";
-                            }
-                            else
-                            {
-                                let lastSeenTimestamp = Date.parse(stat["offline_since"]);
-                                let lastSeenDatetime = new Date(lastSeenTimestamp)
-                                
-                                dateTimeMsg = lastSeenDatetime.toLocaleTimeString();
-                                if( ( ( new Date().getTime() - lastSeenTimestamp ) / 1000 ) > 60 * 60 * 12 )
-                                {
-                                    dateTimeMsg = lastSeenDatetime.toLocaleDateString() + " " + dateTimeMsg
-                                }
-                                
-                                dateTimeMsg = "Offline since " + dateTimeMsg;
-                            }
-                            
-                            html += "<div><div>Status:</div><div>" + dateTimeMsg + "</div></div>";
-                        }
-                        if( device.info ) html += "<div><div>Info:</div><div>" + device.info + "</div></div>";
-                        html += "<div><div>Type:</div><div>" + device.type + "</div></div>";
-                    
-                        html += showRows(device.details,"Details","rows");
-                        html += showRows(device.services,"Services","rows");
-                        //html += showRows(device.ports,"Ports","rows");
-                        
-                        device.gids.forEach(function(gid){
-                            let group = groups.filter(group => group["gid"] == gid );
-                            html += showRows(group[0]["details"],group[0]["type"],"rows");
-                        });
-                        
-                        if( device.connection )
-                        {
-                            if( device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
-                        
-                            if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
-                        }
-                        
-                        if( stat )
-                        {
-                            let inSpeed = stat["speed"]["in"];
-                            let outSpeed = stat["speed"]["out"];
-                            
-                            let duplex = "";
-                            if( "duplex" in stat["details"] )
-                            {
-                                duplex += " - " + ( stat["details"]["duplex"] == "full" ? "FullDuplex" : "HalfDuplex" );
-                            }
-                            
-                            html += "<div><div>Speed:</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex + "</div></div>";
-
-                            Object.entries(stat["details"]).forEach(function([key, value])
-                            {
-                                if( key == "duplex" ) return;
-                                
-                                if( key == "signal" ) value += " db";
-                                html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + value + "</div></div>";
-                            });
-                            //html += showRows(stat["traffic"],"Traffic","rows" );
-                        }
-
-                        html += "</div>"
-                        
-                        mx.Tooltip.setText(html);
-                }
-                else
-                {
-                    mx.Tooltip.hide();
-                }
-                
-                link
-                    .classed("online", false)
-                    .classed("offline", false)
-                    .filter(l => l.source.data === d.data || l.target.data === d.data)
-                    .classed("online", d.data.stat && d.data.stat.offline_since == null)
-                    .classed("offline", !d.data.stat || d.data.stat.offline_since != null);
+                e.stopPropagation();
+                showTooltip(d, link);
             })
             .on("mousemove", function(e, d){
-                let device = d.data.device
-                if( device && device.type != "placeholder" )
-                {
-                    positionTooltip(this);
-                }
+                e.stopPropagation();
+                positionTooltip(d, this);
             })
             .on("mouseleave", function(){
                 link
@@ -300,11 +208,15 @@ mx.D3 = (function( ret )
                     .classed("offline", false);
             })
             .on("click", function(e, d){
-                let device = d.data.device
-                if( device && device.type != "placeholder" )
+                e.stopPropagation();
+
+                if( mx.Core.isTouchDevice() )
                 {
-                    mx.Tooltip.toggle();
-                    e.stopPropagation();
+                    showTooltip(d, link);
+                }
+                else
+                {
+                    toogleTooltip(d);
                 }
             });
                 
@@ -383,7 +295,7 @@ mx.D3 = (function( ret )
             if (!acc.yMax || y + height > acc.yMax) acc.yMax = y + height;
             return acc;
         }, {});
-        console.log(xMin, yMin, xMax - xMin, yMax - yMin);
+        //console.log(xMin, yMin, xMax - xMin, yMax - yMin);
         svg.attr("viewBox", [xMin - 10, yMin - 10, (xMax - xMin) + 20, (yMax - yMin) + 20])
     }
     
@@ -541,37 +453,145 @@ mx.D3 = (function( ret )
             return path(d);
         }
     }
-        
-    function positionTooltip(element)
+    
+    function showTooltip(d,link)
     {
-        element = element.querySelector("rect.container");
-        
-        let nodeRect = element.getBoundingClientRect();
-        let tooltipRect = mx.Tooltip.getRootElementRect();
-
-        let arrowOffset = 0;
-        let arrowPosition = "right";
-        
-        let top = nodeRect.top;
-        if( top + tooltipRect.height > bodyHeight ) 
+        let device = d.data.device
+        if( device && device.type != "placeholder" )
         {
-            top = bodyHeight - tooltipRect.height - 6;
-            arrowOffset = tooltipRect.height - ( bodyHeight - ( nodeRect.top + nodeRect.height / 2 ) );
+                let stat = d.data.stat
+
+                let html = "<div>";
+                if( device.ip ) html += "<div><div>IP:</div><div>" + device.ip + "</div></div>";
+                if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
+                if( device.mac ) html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
+                
+                if( stat )
+                {
+                    let dateTimeMsg = "";
+                    
+                    if( !stat["offline_since"] )
+                    {
+                        dateTimeMsg = "Online";
+                    }
+                    else
+                    {
+                        let lastSeenTimestamp = Date.parse(stat["offline_since"]);
+                        let lastSeenDatetime = new Date(lastSeenTimestamp)
+                        
+                        dateTimeMsg = lastSeenDatetime.toLocaleTimeString();
+                        if( ( ( new Date().getTime() - lastSeenTimestamp ) / 1000 ) > 60 * 60 * 12 )
+                        {
+                            dateTimeMsg = lastSeenDatetime.toLocaleDateString() + " " + dateTimeMsg
+                        }
+                        
+                        dateTimeMsg = "Offline since " + dateTimeMsg;
+                    }
+                    
+                    html += "<div><div>Status:</div><div>" + dateTimeMsg + "</div></div>";
+                }
+                if( device.info ) html += "<div><div>Info:</div><div>" + device.info + "</div></div>";
+                html += "<div><div>Type:</div><div>" + device.type + "</div></div>";
+            
+                html += showRows(device.details,"Details","rows");
+                html += showRows(device.services,"Services","rows");
+                //html += showRows(device.ports,"Ports","rows");
+                
+                device.gids.forEach(function(gid){
+                    let group = groups.filter(group => group["gid"] == gid );
+                    html += showRows(group[0]["details"],group[0]["type"],"rows");
+                });
+                
+                if( device.connection )
+                {
+                    if( device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
+                
+                    if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
+                }
+                
+                if( stat )
+                {
+                    let inSpeed = stat["speed"]["in"];
+                    let outSpeed = stat["speed"]["out"];
+                    
+                    let duplex = "";
+                    if( "duplex" in stat["details"] )
+                    {
+                        duplex += " - " + ( stat["details"]["duplex"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                    }
+                    
+                    html += "<div><div>Speed:</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex + "</div></div>";
+
+                    Object.entries(stat["details"]).forEach(function([key, value])
+                    {
+                        if( key == "duplex" ) return;
+                        
+                        if( key == "signal" ) value += " db";
+                        html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + value + "</div></div>";
+                    });
+                    //html += showRows(stat["traffic"],"Traffic","rows" );
+                }
+
+                html += "</div>"
+                
+                mx.Tooltip.setText(html);
         }
         else
         {
-            arrowOffset = nodeRect.height / 2;
+            mx.Tooltip.hide();
         }
-
-        let left = nodeRect.left - tooltipRect.width - 6;
-        if( left < 0 )
+        
+        link
+            .classed("online", false)
+            .classed("offline", false)
+            .filter(l => l.source.data === d.data || l.target.data === d.data)
+            .classed("online", d.data.stat && d.data.stat.offline_since == null)
+            .classed("offline", !d.data.stat || d.data.stat.offline_since != null);
+    }
+        
+    function toogleTooltip(d)
+    {
+        let device = d.data.device
+        if( device && device.type != "placeholder" )
         {
-            left = nodeRect.left + nodeRect.width + 6;
-            arrowPosition = "left";
-        }
+            mx.Tooltip.toggle();
+       }
+    }
+    
+    function positionTooltip(d, element)
+    {
+        let device = d.data.device
+        if( device && device.type != "placeholder" )
+        {
+            element = element.querySelector("rect.container");
+            
+            let nodeRect = element.getBoundingClientRect();
+            let tooltipRect = mx.Tooltip.getRootElementRect();
 
-        mx.Tooltip.show(left, top, arrowOffset, arrowPosition );
-        window.setTimeout(function(){ mx.Tooltip.getRootElement().style.opacity="1"; },0);
+            let arrowOffset = 0;
+            let arrowPosition = "right";
+            
+            let top = nodeRect.top;
+            if( top + tooltipRect.height > bodyHeight ) 
+            {
+                top = bodyHeight - tooltipRect.height - 6;
+                arrowOffset = tooltipRect.height - ( bodyHeight - ( nodeRect.top + nodeRect.height / 2 ) );
+            }
+            else
+            {
+                arrowOffset = nodeRect.height / 2;
+            }
+
+            let left = nodeRect.left - tooltipRect.width - 6;
+            if( left < 0 )
+            {
+                left = nodeRect.left + nodeRect.width + 6;
+                arrowPosition = "left";
+            }
+
+            mx.Tooltip.show(left, top, arrowOffset, arrowPosition );
+            window.setTimeout(function(){ mx.Tooltip.getRootElement().style.opacity="1"; },0);
+        }
     }
     
     function wrap( d ) {
