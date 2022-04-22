@@ -33,10 +33,11 @@ class LibreNMS(_handler.Handler):
         
         self.devices = {}
         
-        self.device_ports_refreshed = {}
+        self.device_ports = {}
         self.vlan_id_map = {}
         self.port_id_ifname_map = {}
         self.connected_macs = {}
+        #self.swapped_directions = {}
 
         #self.port_id_name_map = {}
         #self.connected_arps = {}
@@ -114,7 +115,7 @@ class LibreNMS(_handler.Handler):
 
         for _port in _ports:
             if _port["device_id"] not in self.devices:
-                [timeout, self.last_check["device"]] = self._processDevices(now, events, timeout, self.config.librenms_device_interval)
+                [global_timeout, self.last_check["device"]] = self._processDevices(now, events, global_timeout, self.config.librenms_device_interval)
                 for __port in _ports:
                     if __port["device_id"] not in self.devices:
                         raise Exception("Missing device {}".format(__port["device_id"]))
@@ -129,12 +130,20 @@ class LibreNMS(_handler.Handler):
             port_ifname = _port["ifName"]
             port_id = _port["ifIndex"]
             
+            self.port_id_ifname_map[device_id][port_id] = port_ifname
+            
             #device = self.cache.getDevice(mac)
             #self.cache.confirmDevice( device, lambda event: events.append(event) )
             
+            #if port_ifname in self.swapped_directions:
+            #    assigned_devices = list(filter(lambda c: c["target_interface"] == port_ifname, self.connected_macs[device_id].values() ))
+            #    if len(assigned_devices) == 1:
+            #        mac = self.swapped_directions[port_ifname]
+            #        port_ifname = None
+            
             stat = self.cache.getStat(mac, port_ifname)
-            if port_id in self.device_ports_refreshed[device_id]:
-                time_diff = (now - self.device_ports_refreshed[device_id][port_id])
+            if port_id in self.device_ports[device_id]:
+                time_diff = (now - self.device_ports[device_id][port_id]["refreshed"])
                 time_diff_slot = math.ceil(time_diff / self.config.librenms_poller_interval)
                 time_diff = time_diff_slot * self.config.librenms_poller_interval
                 
@@ -153,16 +162,15 @@ class LibreNMS(_handler.Handler):
             stat.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half")
             self.cache.confirmStat( stat, lambda event: events.append(event) )
                 
-            self.port_id_ifname_map[device_id][port_id] = port_ifname
-            
             _active_ports_ids.append("{}-{}".format(device_id, port_id))
-            self.device_ports_refreshed[device_id][port_id] = now
+            self.device_ports[device_id][port_id] = { "refreshed": now, "mac": mac, "interface": port_ifname }
 
-        for device_id in self.device_ports_refreshed:
-            for port_id in list(self.device_ports_refreshed[device_id].keys()):
+        for device_id in self.device_ports:
+            for port_id in list(self.device_ports[device_id].keys()):
                 if "{}-{}".format(device_id, port_id) not in _active_ports_ids:
-                    self.cache.removeStat(self.devices[device_id]["mac"], self.port_id_ifname_map[device_id][port_id], lambda event: events.append(event))
-                    del self.device_ports_refreshed[device_id][port_id]
+                    _p = self.device_ports[device_id][port_id]
+                    self.cache.removeStat(_p["mac"], _p["interface"], lambda event: events.append(event))
+                    del self.device_ports[device_id][port_id]
                     del self.port_id_ifname_map[device_id][port_id]
                     
         self.cache.unlock()
@@ -202,10 +210,11 @@ class LibreNMS(_handler.Handler):
             
             # swap direction for gateway devices
             if self.cache.getGatewayMAC() == mac:
+                #self.swapped_directions[target_interface] = mac
                 _mac = mac
                 mac = target_mac
                 target_mac = _mac
-                target_interface = "lan{}".format(vlan)
+                #target_interface = "lan{}".format(vlan)
             
             device = self.cache.getDevice(mac, False)
             if device is not None:
@@ -281,8 +290,8 @@ class LibreNMS(_handler.Handler):
         self.cache.lock()
         
         for id in _active_devices:
-            if id not in self.device_ports_refreshed:
-                self.device_ports_refreshed[id] = {}
+            if id not in self.device_ports:
+                self.device_ports[id] = {}
                 
             if id not in self.port_id_ifname_map:
                 self.port_id_ifname_map[id] = {0: "lo"}
@@ -302,7 +311,7 @@ class LibreNMS(_handler.Handler):
         for id in list(self.devices.keys()):
             if id not in _active_devices:
                 del self.devices[id]
-                del self.device_ports_refreshed[id]
+                del self.device_ports[id]
                     
         self.cache.unlock()
             

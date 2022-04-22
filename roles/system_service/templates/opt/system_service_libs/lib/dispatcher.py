@@ -162,7 +162,8 @@ class Dispatcher():
             
             if interface:
                 # for interface based stats, we use the device pointing to this interface
-                source_devices = list(filter(lambda d: d.getConnection() and d.getConnection().getType() == Connection.ETHERNET and d.getConnection().getTargetMAC() == mac and d.getConnection().getTargetInterface() == interface, devices ))
+                source_devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == mac and d.getConnection().getTargetInterface() == interface, devices ))
+                #source_devices = list(filter(lambda d: d.getConnection() and d.getConnection().getType() == Connection.ETHERNET and d.getConnection().getTargetMAC() == mac and d.getConnection().getTargetInterface() == interface, devices ))
             else:
                 source_devices = list(filter(lambda d: d.getMAC() == mac, devices ))
             
