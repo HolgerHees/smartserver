@@ -1,8 +1,0 @@
-- name: restart device_ping
-  systemd:
-    name: device_ping
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart device_ping"

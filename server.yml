@@ -141,7 +141,6 @@
      
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
-    - { import_role: { name: device_ping }, tags: [ 'device_ping' ] }                            # ping mobile device service
 
     - { import_role: { name: rsync_backup }, tags: [ 'rsync_backup' ] }                          # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
 
