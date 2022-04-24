@@ -549,14 +549,17 @@ mx.D3 = (function( ret )
                     let inSpeed = stat["speed"]["in"];
                     let outSpeed = stat["speed"]["out"];
                     
-                    let duplex = "";
-                    if( "duplex" in stat["details"] )
+                    if( inSpeed != null )
                     {
-                        duplex += " - " + ( stat["details"]["duplex"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                        let duplex = "";
+                        if( "duplex" in stat["details"] )
+                        {
+                            duplex += " - " + ( stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                        }
+                        
+                        html += "<div><div>Speed:</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex + "</div></div>";
                     }
                     
-                    html += "<div><div>Speed:</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex + "</div></div>";
-
                     Object.entries(stat["details"]).forEach(function([key, value])
                     {
                         if( key == "duplex" ) return;
