@@ -11,12 +11,12 @@ class Stat(Changeable):
         self.mac = mac
         self.interface = interface
         
-        self.in_bytes = 0
-        self.in_avg = 0
-        self.out_bytes = 0
-        self.out_avg = 0
-        self.in_speed = 0
-        self.out_speed = 0
+        self.in_bytes = None
+        self.in_avg = None
+        self.out_bytes = None
+        self.out_avg = None
+        self.in_speed = None
+        self.out_speed = None
 
         self.offline_since = datetime.now() if interface is None else None
         

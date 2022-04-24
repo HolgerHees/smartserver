@@ -61,16 +61,18 @@ class InfluxDBPublisher(_handler.Handler):
                     if group is not None and group.getType() == Group.WIFI:
                         band = group.getDetail("band")
                 
-                signal = stat.getDetail("signal")
-                if signal is not None:
-                    messurement = "network_signal,ip={},band={} value={}".format(device.getIP(),band,signal)
+                if stat.getDetail("signal") is not None:
+                    messurement = "network_signal,ip={},band={} value={}".format(device.getIP(),band,stat.getDetail("signal"))
                 else:
                     messurement = "network_signal,ip={},band={} value=0".format(device.getIP(),band)
                 messurements.append(messurement)
                 
-            messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),stat.getInAvg()))
-            messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),stat.getOutAvg()))
-            messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),stat.getInAvg() + stat.getOutAvg()))
+            if stat.getInAvg() is not None or stat.getOutAvg() is not None:
+                if stat.getInAvg() is not None:
+                    messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),stat.getInAvg()))
+                if stat.getOutAvg() is not None:
+                    messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),stat.getOutAvg()))
+                messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),stat.getInAvg() + stat.getOutAvg()))
                 
         return messurements
 
