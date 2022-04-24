@@ -35,13 +35,11 @@ class InfluxDBPublisher(_handler.Handler):
             try:
                 messurements = self._collectMessurements()
                 self._submitMessurements(messurements)
-                timeout = 60
             except requests.exceptions.ConnectionError:
                 logging.warning("InfluxDB currently not available. Will 15 seconds")
-                timeout = 60
                 
             with self.condition:
-                self.condition.wait(timeout)
+                self.condition.wait(self.config.influxdb_publish_interval)
                 
     def _collectMessurements(self):
         messurements = []

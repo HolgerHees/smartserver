@@ -169,7 +169,7 @@ class Device(Changeable):
         self.connection = None
         
     def calculateConnectionPath(self, processed_devices):
-        logging.info("CALCULATE")
+        #logging.info("CALCULATE")
 
         if self.getMAC() in processed_devices:
             return
@@ -218,7 +218,7 @@ class Device(Changeable):
         return self.gids
 
     def setDetail(self, key, value, fmt):
-        if key not in self.details or self.details[key] != value:
+        if key not in self.details or self.details[key]["value"] != value:
             self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
             self.details[key] = { "value": value, "format": fmt }
 

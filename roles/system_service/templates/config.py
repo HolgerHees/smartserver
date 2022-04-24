@@ -16,8 +16,8 @@ openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_usern
 openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
 openwrt_devices = [{% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
-fritzbox_username = "{{vault_fritzbox_api_username}}"
-fritzbox_password = "{{vault_fritzbox_api_password}}"
+fritzbox_username = "{% if fritzbox_devices|length > 0 %}{{vault_fritzbox_api_username}}{% endif %}"
+fritzbox_password = "{% if fritzbox_devices|length > 0 %}{{vault_fritzbox_api_password}}{% endif %}"
 fritzbox_devices = [{% if fritzbox_devices|length > 0 %}"{{fritzbox_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
 influxdb_rest = "http://influxdb:8086"
@@ -47,7 +47,8 @@ librenms_port_interval = 60
 port_scan_interval = 300
 port_rescan_interval = 60*60*24
 
-publisher_republish_interval = 900
+influxdb_publish_interval = 60
+mqtt_republish_interval = 900
 
 user_devices = {
 {% for username in userdata %}

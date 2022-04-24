@@ -74,7 +74,7 @@ class MQTTPublisher(_handler.Handler):
     def _checkPublishedValues(self):
         while self.is_running:
             now = datetime.now()
-            timeout = self.config.publisher_republish_interval
+            timeout = self.config.mqtt_republish_interval
             
             for mac in list(self.published_values.keys()):
                 if self.cache.getUnlockedDevice(mac) is None:
@@ -85,11 +85,11 @@ class MQTTPublisher(_handler.Handler):
                     [last_publish, value] = self.published_values[mac][key]
                     
                     _diff = (now-last_publish).total_seconds()
-                    if _diff >= self.config.publisher_republish_interval:
+                    if _diff >= self.config.mqtt_republish_interval:
                         #logging.info("republish")
                         self._publishValue(mac, key, value)
                     else:
-                        _timeout = self.config.publisher_republish_interval - _diff
+                        _timeout = self.config.mqtt_republish_interval - _diff
                         if _timeout < timeout:
                             timeout = _timeout
 
@@ -122,18 +122,25 @@ class MQTTPublisher(_handler.Handler):
         if len(_details) == 0:
             return False
 
-        logging.info("PUBLISH {} of {}".format(_details, device))
-
+        _to_publish = {}
         for detail in _details:
             #if detail == "signal":
             #    self.mqtt_handler.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
             if detail == "online_state":
                 key = "network/{}/{}".format(device.getIP(),"online")
                 value = "ON" if stat.isOnline() else "OFF"
-                self._publishValue(mac, key, value)
+                _to_publish[detail] = [mac,key,value]
             elif detail in ["wan_type","wan_state"] and stat.getDetail(detail) is not None:
                 key = "network/{}/{}".format(device.getIP(),detail)
-                self._publishValue(mac, key, stat.getDetail(detail))
+                _to_publish[detail] = [mac,key,stat.getDetail(detail)]
+                
+        if len(_to_publish.values()) == 0:
+            return False
+
+        logging.info("PUBLISH {} of {}".format(_to_publish.keys(), device))
+
+        for [mac, key, value] in _to_publish.values():
+            self._publishValue(mac, key, value)
                 
         with self.condition:
             self.condition.notifyAll()
