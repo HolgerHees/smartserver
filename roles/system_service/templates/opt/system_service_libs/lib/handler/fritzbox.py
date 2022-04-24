@@ -98,28 +98,9 @@ class Fritzbox(_handler.Handler):
         self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
         
         stat = self.cache.getStat(fritzbox_mac)
-        #if fritzbox_mac in self.fritzbox_refreshed:
-        #    in_bytes = stat.getInBytes()
-        #    if in_bytes > 0:
-        #        time_diff = now - self.fritzbox_refreshed[fritzbox_mac]
-        #        byte_diff = wan_traffic_state_in["NewTotalBytesReceived"] - in_bytes
-        #        if byte_diff > 0:
-        #            stat.setInAvg(byte_diff / time_diff)
-                
-        #    outBytes = stat.getOutBytes()
-        #    if outBytes > 0:
-        #        time_diff = now - self.fritzbox_refreshed[fritzbox_mac]
-        #        byte_diff = wan_traffic_state_out["NewTotalBytesSent"] - outBytes
-        #        if byte_diff > 0:
-        #            stat.setOutAvg(byte_diff / time_diff)
-        #stat.setInBytes(wan_traffic_state_in["NewTotalBytesReceived"])
-        #stat.setOutBytes(wan_traffic_state_out["NewTotalBytesSent"])
         stat.setDetail("wan_type",link_state["NewWANAccessType"], "string")
         stat.setDetail("wan_state",link_state["NewPhysicalLinkStatus"], "string")
-        stat.setDetail("wan_speed", {"in": link_state["NewLayer1DownstreamMaxBitRate"] * 1000, "out": link_state["NewLayer1UpstreamMaxBitRate"] * 1000}, "speed")
-        self.cache.confirmStat( stat, lambda event: events.append(event) )
 
-        stat = self.cache.getStat(fritzbox_mac, "lan{}".format(self.config.default_vlan))
         if fritzbox_mac in self.fritzbox_refreshed:
             in_bytes = stat.getInBytes()
             if in_bytes > 0:
@@ -137,8 +118,8 @@ class Fritzbox(_handler.Handler):
        
         stat.setInBytes(traffic_state["received"])
         stat.setOutBytes(traffic_state["sent"])
-        #stat.setInSpeed(link_state["NewLayer1DownstreamMaxBitRate"] * 1000)
-        #stat.setOutSpeed(link_state["NewLayer1UpstreamMaxBitRate"] * 1000)
+        stat.setInSpeed(link_state["NewLayer1DownstreamMaxBitRate"] * 1000)
+        stat.setOutSpeed(link_state["NewLayer1UpstreamMaxBitRate"] * 1000)
         self.cache.confirmStat( stat, lambda event: events.append(event) )
                 
         self.cache.unlock()

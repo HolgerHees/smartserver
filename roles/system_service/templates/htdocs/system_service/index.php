@@ -59,7 +59,8 @@ mx.UNCore = (function( ret ) {
             
             state["changed_data"]["stats"].forEach(function(stat)
             {
-                _stats[stat["mac"]] = stat;
+                key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"]
+                _stats[key] = stat;
             });
             
             //console.log(_stats)

@@ -108,23 +108,30 @@ class Stat(Changeable):
             self._markAsChanged(key, "remove {}".format(key))
             del self.details[key]
         
-    def getSerializeable(self, mac, force_online = False, skip_traffic = False):
-        return {
-            "mac": mac,
-            "traffic": {
-                "in_total": self.in_bytes if not skip_traffic else 0,
-                "in_avg": self.in_avg if not skip_traffic else 0,
-                "out_total": self.out_bytes if not skip_traffic else 0,
-                "out_avg": self.out_avg if not skip_traffic else 0
-            },
-            "speed": {
-                "in": self.in_speed,
-                "out": self.out_speed
-            },
-            "offline_since": self.offline_since.astimezone().isoformat('T') if self.offline_since is not None and not force_online else None,
+    def getSerializeable(self):
+        _stat = {
+            "mac": self.mac,
+            "interface": self.interface,
+            "offline_since": self.offline_since.astimezone().isoformat('T') if self.offline_since is not None else None,
             "details": self.details
         }
+            
+        if self.in_speed is not None:
+            _stat["speed"] = {
+                "in": self.in_speed,
+                "out": self.out_speed
+            }
       
+        if self.in_bytes is not None:
+            _stat["traffic"] = {
+                "in_total": self.in_bytes,
+                "in_avg": self.in_avg,
+                "out_total": self.out_bytes,
+                "out_avg": self.out_avg
+            }
+            
+        return _stat
+            
     def toStr(self, related_device):
         return "{}{}".format(related_device,":{}".format(self.interface) if self.interface else "")
 

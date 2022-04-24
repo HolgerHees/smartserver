@@ -44,12 +44,19 @@ class InfluxDBPublisher(_handler.Handler):
     def _collectMessurements(self):
         messurements = []
         
+        devices = self.cache.getDevices()
+        
         for stat in list(self.cache.getStats()):
             if stat.getInterface() is not None:
-                continue
-            
-            mac = stat.getMAC()
-            device = self.cache.getUnlockedDevice(mac)
+                _devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == stat.getMAC() and d.getConnection().getTargetInterface() == stat.getInterface(), devices ))
+                if len(_devices) != 1:
+                    continue
+
+                device = _devices[0]
+            else:
+                mac = stat.getMAC()
+                device = self.cache.getUnlockedDevice(mac)
+
             if device.getIP() is None:
                 continue
             

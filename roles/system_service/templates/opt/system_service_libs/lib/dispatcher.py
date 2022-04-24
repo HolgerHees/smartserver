@@ -168,6 +168,11 @@ class Dispatcher():
         return self.last_device_refresh
 
     def getStats(self):
+        stats = []
+        for stat in self.cache.getStats():
+            stats.append(stat.getSerializeable())
+        return stats
+        
         devices = self.cache.getDevices() + self.virtual_devices
         
         stats = []

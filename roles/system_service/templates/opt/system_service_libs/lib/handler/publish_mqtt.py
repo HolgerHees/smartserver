@@ -173,7 +173,7 @@ class MQTTPublisher(_handler.Handler):
                         del self.skipped_macs[device.getMAC()]
             elif event.getType() == Event.TYPE_STAT:
                 stat = event.getObject()
-                if stat.getInterface() is not None:
+                if stat.getInterface() is not None and stat.getInterface() != "wan":
                     continue
 
                 device = self.cache.getUnlockedDevice(stat.getMAC())
