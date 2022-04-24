@@ -71,17 +71,19 @@ class Fritzbox(_handler.Handler):
         if fritzbox_mac is None:
             raise NetworkException()
         
-        #logging.info(self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetInfo"))
-
+        #https://github.com/blackw1ng/FritzBox-monitor/blob/master/checkfritz.py
+        
         link_state = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetCommonLinkProperties")
         #{'NewWANAccessType': 'Ethernet', 'NewLayer1UpstreamMaxBitRate': 1000000, 'NewLayer1DownstreamMaxBitRate': 1000000, 'NewPhysicalLinkStatus': 'Up'}
         #traffic_state = self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetStatistics")
         #{'NewBytesSent': 513185675, 'NewBytesReceived': 488698598, 'NewPacketsSent': 1990181, 'NewPacketsReceived': 4184644}
-        wan_traffic_state_out = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetTotalBytesSent")
+        #wan_traffic_state_out = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetTotalBytesSent")
         #{'NewTotalBytesSent': 322724083}
-        wan_traffic_state_in = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetTotalBytesReceived")
+        #wan_traffic_state_in = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetTotalBytesReceived")
         #{'NewTotalBytesReceived': 1141904910}
-        traffic_state = {'NewBytesSent': wan_traffic_state_out["NewTotalBytesSent"], 'NewBytesReceived': wan_traffic_state_in["NewTotalBytesReceived"]}
+        
+        _traffic_state = self.fc[fritzbox_ip].call_action("WANCommonIFC1", "GetAddonInfos")
+        traffic_state = {'sent': int(_traffic_state["NewX_AVM_DE_TotalBytesSent64"]), 'received': int(_traffic_state["NewX_AVM_DE_TotalBytesReceived64"])}
         
         #logging.info(self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetTotalBytesSent"))
         #logging.info(self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetTotalBytesReceived"))
@@ -122,19 +124,19 @@ class Fritzbox(_handler.Handler):
             in_bytes = stat.getInBytes()
             if in_bytes > 0:
                 time_diff = now - self.fritzbox_refreshed[fritzbox_mac]
-                byte_diff = traffic_state["NewBytesReceived"] - in_bytes
+                byte_diff = traffic_state["received"] - in_bytes
                 if byte_diff > 0:
                     stat.setInAvg(byte_diff / time_diff)
                 
             outBytes = stat.getOutBytes()
             if outBytes > 0:
                 time_diff = now - self.fritzbox_refreshed[fritzbox_mac]
-                byte_diff = traffic_state["NewBytesSent"] - outBytes
+                byte_diff = traffic_state["sent"] - outBytes
                 if byte_diff > 0:
                     stat.setOutAvg(byte_diff / time_diff)
        
-        stat.setInBytes(traffic_state["NewBytesReceived"])
-        stat.setOutBytes(traffic_state["NewBytesSent"])
+        stat.setInBytes(traffic_state["received"])
+        stat.setOutBytes(traffic_state["sent"])
         #stat.setInSpeed(link_state["NewLayer1DownstreamMaxBitRate"] * 1000)
         #stat.setOutSpeed(link_state["NewLayer1UpstreamMaxBitRate"] * 1000)
         self.cache.confirmStat( stat, lambda event: events.append(event) )
