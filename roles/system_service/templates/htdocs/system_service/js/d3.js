@@ -350,9 +350,6 @@ mx.D3 = (function( ret )
     
     function setTrafficContent(d)
     {
-        let traffic_stat = d.data.interface_stat && d.data.interface_stat.traffic ? d.data.interface_stat.traffic : ( d.data.device_stat && root != d ? d.data.device_stat.traffic : null );
-        if( !traffic_stat ) return;
-        
         let text = d3.select(this);
         let font_size = text.attr("font-size");
         
@@ -389,7 +386,10 @@ mx.D3 = (function( ret )
             
         if( position != "default" )
             text.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
-        
+
+        let traffic_stat = d.data.interface_stat && d.data.interface_stat.traffic ? d.data.interface_stat.traffic : ( d.data.device_stat && root != d ? d.data.device_stat.traffic : null );
+        if( !traffic_stat ) return;
+       
         let row = 0;
         
         let in_data = formatTraffic( traffic_stat["in_avg"]);
