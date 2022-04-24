@@ -172,12 +172,18 @@ default_variables: {
     "vault_openwrt_api_password": { 
         condition: "{{openwrt_devices | length > 0}}"
     },
-    "vault_openwrt_root_password": { 
-        condition: "{{openwrt_devices | length > 0}}"
+    #"vault_openwrt_root_password": { 
+    #    condition: "{{openwrt_devices | length > 0}}"
+    #},
+
+    "vault_fritzbox_api_username": { "default": "api" },
+    "vault_fritzbox_api_password": { 
+        condition: "{{fritzbox_devices | length > 0}}"
     },
 }
 
 librenms_devices: "{{network_devices | default([]) | selectattr('snmp_method', 'defined') | list}}"
-openwrt_devices: "{{network_devices | default([]) | selectattr('is_openwrt', 'defined') | list}}"
+openwrt_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','openwrt') | list}}"
+fritzbox_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','fritzbox') | list}}"
 
 

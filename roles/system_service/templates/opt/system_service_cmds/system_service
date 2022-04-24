@@ -15,6 +15,7 @@ from lib.handler.arpscan import ArpScanner
 
 from lib.handler.openwrt import OpenWRT
 from lib.handler.librenms import LibreNMS
+from lib.handler.fritzbox import Fritzbox
 from lib.handler.portscan import PortScanner
 from lib.handler.gateway import Gateway
 
@@ -39,6 +40,8 @@ class Handler(Server):
         self.dispatcher.register(ArpScanner(config, self.cache ))
         if len(config.openwrt_devices) > 0:
             self.dispatcher.register(OpenWRT(config, self.cache ))
+        if len(config.fritzbox_devices) > 0:
+            self.dispatcher.register(Fritzbox(config, self.cache ))
         if config.librenms_token:
             self.dispatcher.register(LibreNMS(config, self.cache ))
         self.dispatcher.register(PortScanner(config, self.cache ))
@@ -68,6 +71,7 @@ class Handler(Server):
             changed_data["groups"] = self.dispatcher.getGroups()
 
         if force or "last_data_modified[devices]" not in request.form or float(request.form["last_data_modified[devices]"]) < last_data_modified["devices"]:
+            changed_data["root"] = self.cache.getGatewayMAC()
             changed_data["devices"] = self.dispatcher.getDevices()
 
         if force or "last_data_modified[stats]" not in request.form or float(request.form["last_data_modified[stats]"]) < last_data_modified["stats"]:

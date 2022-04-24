@@ -18,7 +18,7 @@ class Stat(Changeable):
         self.in_speed = 0
         self.out_speed = 0
 
-        self.offline_since = datetime.now()
+        self.offline_since = datetime.now() if interface is None else None
         
         self.details = {}
         
@@ -93,13 +93,15 @@ class Stat(Changeable):
     def getLastSeen(self):
         return self.last_seen
 
-    def setDetail(self, key, value):
+    def setDetail(self, key, value, fmt):
         if key not in self.details or self.details[key] != value:
             self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
-            self.details[key] = value
+            self.details[key] = { "value": value, "format": fmt }
         
     def getDetail(self, key):
-        return self.details.get(key, None)
+        if key in self.details:
+            return self.details[key]["value"]
+        return None
 
     def removeDetail(self, key):
         if key in self.details:

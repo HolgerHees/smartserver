@@ -16,6 +16,10 @@ openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_usern
 openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
 openwrt_devices = [{% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
+fritzbox_username = "{{vault_fritzbox_api_username}}"
+fritzbox_password = "{{vault_fritzbox_api_password}}"
+fritzbox_devices = [{% if fritzbox_devices|length > 0 %}"{{fritzbox_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
+
 influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
 influxdb_token = "{{vault_influxdb_admin_token}}"

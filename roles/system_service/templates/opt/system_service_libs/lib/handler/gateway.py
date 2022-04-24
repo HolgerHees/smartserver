@@ -17,7 +17,7 @@ class Gateway(_handler.Handler):
         self.cache = cache
                 
     def getEventTypes(self):
-        return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE,Event.ACTION_MODIFY], "details": ["connection"] } ]
+        return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None } ]
 
     def processEvents(self, events):
         _events = []
@@ -28,12 +28,10 @@ class Gateway(_handler.Handler):
             gateway_mac = self.cache.getGatewayMAC()
             
             if gateway_mac != device.getMAC():
-                _connection = device.getConnection()
-                if _connection is not None:
-                    for vlan in _connection.getVLANs():
-                        event.getObject().addHopConnection(Connection.VIRTUAL, vlan, gateway_mac, "lan{}".format(vlan) );
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+                vlan = self.config.default_vlan
+                event.getObject().addHopConnection(Connection.ETHERNET, vlan, gateway_mac, "lan{}".format(vlan) );
+                self.cache.confirmDevice( device, lambda event: _events.append(event) )
         self.cache.unlock()
             
         if len(_events) > 0:
-            self.getDispatcher().notify(_events)
+            self._getDispatcher().dispatch(self, _events)

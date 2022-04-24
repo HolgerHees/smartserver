@@ -18,13 +18,15 @@ class Group(Changeable):
     def getType(self):
         return self.type
 
-    def setDetail(self, key, value):
+    def setDetail(self, key, value, fmt):
         if key not in self.details or self.details[key] != value:
             self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
-            self.details[key] = value
+            self.details[key] = { "value": value, "format": fmt }
         
     def getDetail(self, key):
-        return self.details.get(key, None)
+        if key in self.details:
+            return self.details[key]["value"]
+        return None
 
     def getSerializeable(self):
         return {

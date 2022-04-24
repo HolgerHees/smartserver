@@ -18,6 +18,8 @@ mx.D3 = (function( ret )
     let devices = null;
     let stats = null;
     
+    let root = null;
+    
     function initNode(device, stats, processedNodes)
     {
         processedNodes[device["mac"]] = true;
@@ -53,7 +55,7 @@ mx.D3 = (function( ret )
         }
     }
     
-    ret.drawCircles = function(_devices, _groups, _stats, refresh_interval)
+    ret.drawCircles = function(root_device_mac, _devices, _groups, _stats, refresh_interval)
     {
         if( _groups )
             groups = _groups;
@@ -85,29 +87,12 @@ mx.D3 = (function( ret )
 
             let endCount = devices.filter(data => data["connected_from"].length == 0 ).length;
             
-            let rootDevices = devices.filter(data => !data["connection"] || data["connection"]["target_mac"] == data["mac"] );
-            if( rootDevices.length == 1 )
+            let rootDevices = devices.filter(data => root_device_mac == data["mac"] );
+            rootNode = initNode(rootDevices[0], stats, processedNodes);
+        
+            if( rootNode["device"]["connected_from"].length > 0 )
             {
-                rootNode = initNode(rootDevices[0], stats, processedNodes);
-            
-                if( rootNode["device"]["connected_from"].length > 0 )
-                {
-                    initChildren(rootNode, devices, stats, processedNodes);
-                }
-            }
-            else
-            {
-                rootNode = {"uid": "dummy", "name": "root", "children": [], "device": {"is_online": false, "name": "0.0.0.0/24", "type": "placeholder" } }
-                rootDevices.forEach(function(rootDevice)
-                {
-                    let _rootNode = initNode(rootDevice, stats, processedNodes);
-                    rootNode["children"].push(_rootNode);
-
-                    if( _rootNode["device"]["connected_from"].length > 0 )
-                    {
-                        initChildren(_rootNode, devices, stats, processedNodes);
-                    }
-                });
+                initChildren(rootNode, devices, stats, processedNodes);
             }
             
             d3root = d3.hierarchy(rootNode);
@@ -130,8 +115,10 @@ mx.D3 = (function( ret )
     {
     }
     
-    function initTree(root, endCount)
+    function initTree(_root, endCount)
     {
+        root = _root;
+        
         bodyRect = document.body.getBoundingClientRect();
         bodyWidth = bodyRect.width;
         bodyHeight = bodyRect.height;
@@ -165,7 +152,11 @@ mx.D3 = (function( ret )
         // Compute the default height.
         if (height === undefined) height = x1 - x0 + dx * 2;
         
-        rootNodeGenerator(root, dx, dy);
+        if( root.children && root.children.length == 1 )
+        {
+            root.x = dx * 3;
+            root.y = dy;
+        }
         
         const svg = d3.selectAll("#network")
             //.attr("viewBox", [-dy / 2 + ( dy / 3 ), x0 - dx, width, width])
@@ -329,11 +320,11 @@ mx.D3 = (function( ret )
                 {
                     let stat = d.data.stat
                     
-                    bottom_span.text(d => group[0].details.band + " • " + stat.details.signal + "db");
-                    if( group[0].details.band == "5g" )
+                    bottom_span.text(d => group[0].details.band["value"] + " • " + stat.details.signal["value"] + "db");
+                    if( group[0].details.band["value"] == "5g" )
                         bottom_span.classed("hs", true);
                     
-                    top_span.text(d => group[0].details.ssid);
+                    top_span.text(d => group[0].details.ssid["value"]);
                     
                     let textLength = top_span.node().getComputedTextLength() + 3;
                     top_span.attr("x", boxWidth - textLength );
@@ -344,17 +335,42 @@ mx.D3 = (function( ret )
                     bottom_span.attr("y", boxHeight - 3 );
                 }
             });
-        }        
+        }  
+        else if(root == d && d.data.stat.details["wan_state"])
+        {
+            bottom_span.text(d => "WAN: " + d.data.stat.details["wan_state"]["value"]);
+            let textLength = bottom_span.node().getComputedTextLength() + 3;
+            bottom_span.attr("x", boxWidth - textLength );
+            bottom_span.attr("y", boxHeight - 3 );
+        }
     }
     
     function setTrafficContent(d)
     {
+        if( !d.data["stat"] )
+            return;
+        
+        let position = "default";
+        if( root.children && root.children.length == 1 )
+        {
+            if( root==d.parent )
+            {
+                position = "bottom";
+            }
+            else if( root==d )
+            {
+                position = "top";
+            }
+        }
+            
         let text = d3.select(this);
+        
+        if( position != "default" )
+            text.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
         
         let font_size = text.attr("font-size");
         
-        row = 0;
-        let box_height = 0;
+        let row = 0;
 
         let in_span = text.select(".in");
         let in_data = formatTraffic( d.data["stat"]["traffic"]["in_avg"]);
@@ -367,9 +383,23 @@ mx.D3 = (function( ret )
             row += 1;
             in_span.text(d => "⇨ " + in_data );
             let textLength = in_span.node().getComputedTextLength() + 3;
-            in_span.attr("x", textLength * -1);
-            in_span.attr("y", font_size * 1.5 * row + offset);
-            box_height = in_span.node().getBBox().height;
+            if( position != "default" )
+            {
+                in_span.attr("x", boxWidth / 2 - 2 - textLength );
+                if( position == "bottom" ) 
+                {
+                    in_span.attr("y", boxHeight + font_size * 1.5 );
+                }
+                else
+                {
+                    in_span.attr("y", font_size * -0.8 );
+                }
+            }
+            else
+            {
+                in_span.attr("x", textLength * -1);
+                in_span.attr("y", font_size * 1.5 * row + offset);
+            }
         }
         else
         {
@@ -382,9 +412,23 @@ mx.D3 = (function( ret )
             row += 1;
             out_span.text(d => "⇦ " + out_data );
             let textLength = out_span.node().getComputedTextLength() + 3;
-            out_span.attr("x", textLength * -1);
-            out_span.attr("y", font_size * 1.5 * row + offset);
-            box_height = out_span.node().getBBox().height;
+            if( position != "default" )
+            {
+                out_span.attr("x", boxWidth / 2 + 4 );
+                if( position == "bottom" ) 
+                {
+                    out_span.attr("y", boxHeight + font_size * 1.5);
+                }
+                else
+                {
+                    in_span.attr("y", font_size * -0.8 );
+                }
+            }
+            else
+            {
+                out_span.attr("x", textLength * -1);
+                out_span.attr("y", font_size * 1.5 * row + offset);
+            }
         }
         else
         {
@@ -418,17 +462,8 @@ mx.D3 = (function( ret )
         self.attr("height", rect.height + 1);
     }
     
-    function rootNodeGenerator(root, dx, dy)
-    {
-        if( root.children.length == 1 )
-        {
-            root.x = dx * 3;
-            root.y = dy;
-        }
-    }
-
     function linkGenerator(d) {
-        if( d.source.parent == null && d.source.children.length == 1 )
+        if( root == d.source && root.children.length == 1)
         {
             let path = d3.linkHorizontal()
                 .source(function (d) {
@@ -526,8 +561,18 @@ mx.D3 = (function( ret )
                     {
                         if( key == "duplex" ) return;
                         
-                        if( key == "signal" ) value += " db";
-                        html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + value + "</div></div>";
+                        let _value = value["value"];
+                        if( value["format"] == "speed" )
+                        {
+                            let inSpeed = _value["in"];
+                            let outSpeed = _value["out"];
+                            html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + "</div></div>";
+                        }
+                        else
+                        {
+                            if( value["format"] == "attenuation" ) _value += " db";
+                            html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + _value + "</div></div>";
+                        }
                     });
                     //html += showRows(stat["traffic"],"Traffic","rows" );
                 }
@@ -606,6 +651,8 @@ mx.D3 = (function( ret )
     }
         
     function capitalizeFirstLetter(string) {
+        string = string.replace("_", " ");
+        
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
     
@@ -628,8 +675,6 @@ mx.D3 = (function( ret )
                 key = capitalizeFirstLetter(key);
         }
         
-        key = key.replace("_", " ");
-        
         return [key, value]
     }
 
@@ -645,17 +690,9 @@ mx.D3 = (function( ret )
                 
                 if( value && typeof( value ) == "object" )
                 {
-                    Object.entries(value).forEach(function([key, value])
-                    {
-                        [key, value] = formatDetails(key, value)
-                        
-                        html += "<div><div>" + key + "</div><div>" + value + "</div></div>";
-                    });
+                    value = value["value"]
                 }
-                else
-                {
-                    html += "<div><div>" + key + "</div><div>" + value + "</div></div>";
-                }
+                html += "<div><div>" + key + "</div><div>" + value + "</div></div>";
             });
             html += "</div></div></div>";
         }

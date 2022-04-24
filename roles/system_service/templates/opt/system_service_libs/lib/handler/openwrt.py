@@ -179,10 +179,10 @@ class OpenWRT(_handler.Handler):
             network = _active_networks[gid]
 
             group = self.cache.getGroup(gid, Group.WIFI)
-            group.setDetail("ssid", network["ssid"])
-            group.setDetail("band", network["band"])
-            group.setDetail("channel", network["channel"])
-            group.setDetail("vlan", network["vlan"])
+            group.setDetail("ssid", network["ssid"], "string")
+            group.setDetail("band", network["band"], "string")
+            group.setDetail("channel", network["channel"], "string")
+            group.setDetail("vlan", network["vlan"], "string")
             self.cache.confirmGroup(group, lambda event: events.append(event))
                     
         for gid in list(self.wifi_networks[openwrt_ip].keys()):
@@ -258,7 +258,7 @@ class OpenWRT(_handler.Handler):
                 stat.setOutBytes(details["bytes"]["tx"])
                 stat.setInSpeed(details["rate"]["rx"] * 1000)
                 stat.setOutSpeed(details["rate"]["tx"] * 1000)
-                stat.setDetail("signal", details["signal"])
+                stat.setDetail("signal", details["signal"], "attenuation")
                 
                 self.cache.confirmStat( stat, lambda event: events.append(event) )
                     

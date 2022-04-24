@@ -134,7 +134,7 @@ class Device(Changeable):
                 
             self.hop_connections.append(Connection(type, vlan, target_mac, target_interface))
 
-        self._detectConnection()
+        #self.connection = None
 
         self._markAsChanged("connection", "add connection to {}:{}".format(target_device if target_device else target_mac,vlan))    
         
@@ -151,8 +151,8 @@ class Device(Changeable):
             if len(_connection.getVLANs()) == 0:
                 self.hop_connections.remove(_connection)
             
-            if _connection == self.connection:
-                self._detectConnection()
+            #if _connection == self.connection:
+            #    self.connection = None
 
             self._markAsChanged("connection", "remove connection from {}:{}".format(target_mac, vlan))            
             
@@ -164,38 +164,42 @@ class Device(Changeable):
         
     def getConnection(self):
         return self.virtual_connection if self.virtual_connection is not None else self.connection
-
-    def _detectConnection(self):
-        devices = self.cache.getDevices()
+   
+    def resetConnection(self):
+        self.connection = None
         
-        connections = self.getHopConnections();
-        
-        #print("-------------_" + self.ip)
-        related_macs = []
-        for _connection in connections:
-            related_devices = list(filter(lambda d: d.getMAC() == _connection.getTargetMAC(), devices ))
-            for related_device in related_devices:
-                for related_connection in related_device.getHopConnections():
-                    if related_connection.getTargetMAC() == related_device.getMAC():
-                        continue
-                    related_macs.append(related_connection.getTargetMAC())
-        #        print( " - " + _connection.getTargetMAC())
-        #print( related_macs )
+    def calculateConnectionPath(self, processed_devices):
+        logging.info("CALCULATE")
 
+        if self.getMAC() in processed_devices:
+            return
+        
+        processed_devices[self.getMAC()] = True
+        
         connection = None
-        for _connection in connections:
-            if _connection.getTargetMAC() in related_macs:
-                continue
-            
-            connection = _connection
-            break
-        
-        if connection is None:
-            logging.info(self)
-            for _connection in connections:
-                logging.info(_connection)
+        hop_count = 0
+        for _connection in self.getHopConnections():
+            _hop_count = self._getGWHopCount(_connection, 0, {}, processed_devices)
+            if _hop_count >= hop_count:
+                hop_count = _hop_count
+                connection = _connection
                 
         self.connection = connection
+
+    def _getGWHopCount(self, connection, count, processed_hops, processed_devices ):
+        if connection is None:
+            return count
+        
+        count += 1
+        
+        if connection.getTargetMAC() not in processed_hops and connection.getTargetMAC() != self.cache.getGatewayMAC():
+            processed_hops[connection.getTargetMAC()] = True
+            _device = self.cache.getUnlockedDevice(connection.getTargetMAC())
+            if _device.getConnection() is None:
+                _device.calculateConnectionPath(processed_devices)
+            count = self._getGWHopCount(_device.getConnection(), count, processed_hops, processed_devices)
+        
+        return count
 
     def supportsWifi(self):
         return self.supports_wifi
@@ -213,10 +217,15 @@ class Device(Changeable):
     def getGIDs(self):
         return self.gids
 
-    def setDetail(self, key, value):
+    def setDetail(self, key, value, fmt):
         if key not in self.details or self.details[key] != value:
             self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
-            self.details[key] = value
+            self.details[key] = { "value": value, "format": fmt }
+
+    #def getDetail(self, key):
+    #    if key in self.details:
+    #        return self.details[key][0]
+    #    return None
 
     def removeDetail(self, key):
         if key in self.details:

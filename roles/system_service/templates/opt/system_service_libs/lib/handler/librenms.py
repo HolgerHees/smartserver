@@ -37,12 +37,6 @@ class LibreNMS(_handler.Handler):
         self.vlan_id_map = {}
         self.port_id_ifname_map = {}
         self.connected_macs = {}
-        #self.swapped_directions = {}
-
-        #self.port_id_name_map = {}
-        #self.connected_arps = {}
-        #self.port_connection_stats = {}
-        #self.port_connection_stats_refresh = {}
         
         self.condition = threading.Condition()
         self.thread = threading.Thread(target=self.checkLibreNMS, args=())
@@ -159,7 +153,7 @@ class LibreNMS(_handler.Handler):
             stat.setOutBytes(_port["ifOutOctets"])
             stat.setInSpeed(_port["ifSpeed"])
             stat.setOutSpeed(_port["ifSpeed"])
-            stat.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half")
+            stat.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half", "string")
             self.cache.confirmStat( stat, lambda event: events.append(event) )
                 
             _active_ports_ids.append("{}-{}".format(device_id, port_id))
@@ -207,14 +201,6 @@ class LibreNMS(_handler.Handler):
             
             _mac = _connected_arp["mac_address"]
             mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
-            
-            # swap direction for gateway devices
-            if self.cache.getGatewayMAC() == mac:
-                #self.swapped_directions[target_interface] = mac
-                _mac = mac
-                mac = target_mac
-                target_mac = _mac
-                #target_interface = "lan{}".format(vlan)
             
             device = self.cache.getDevice(mac, False)
             if device is not None:
@@ -305,7 +291,7 @@ class LibreNMS(_handler.Handler):
             device = self.cache.getDevice(mac)
             device.setIP(_device["ip"])
             device.setType(_device["type"])
-            device.setDetail("hardware", _device["hardware"])
+            device.setDetail("hardware", _device["hardware"], "string")
             self.cache.confirmDevice( device, lambda event: events.append(event) )
                         
         for id in list(self.devices.keys()):
@@ -335,6 +321,8 @@ class LibreNMS(_handler.Handler):
         return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None } ]
 
     def processEvents(self, events):
+        _events = []
+        
         for event in events:
             if event.getAction() == Event.ACTION_CREATE:
                 mac =  event.getObject().getMAC()
@@ -349,7 +337,7 @@ class LibreNMS(_handler.Handler):
                             target_device = self.cache.getUnlockedDevice(_connection["target_mac"])
                             if target_device is not None:
                                 device.addHopConnection(Connection.ETHERNET, _connection["vlan"], _connection["target_mac"], _connection["target_interface"], target_device );
-                            self.cache.confirmDevice( device, lambda event: events.append(event) )
+                            self.cache.confirmDevice( device, lambda event: _events.append(event) )
                             
             #elif event.getAction() != Event.ACTION_MODIFY:
             #    with self.data_lock:
@@ -357,3 +345,6 @@ class LibreNMS(_handler.Handler):
             #        _connected_arps = list(filter(lambda a: a["source_mac"] == event.getIdentifier(), self.connected_arps.values() ))
             #        for _connected_arp in _connected_arps:
             #            self._fillConnection(_connected_arp, devices, True)
+
+        if len(_events) > 0:
+            self._getDispatcher().dispatch(self, _events)

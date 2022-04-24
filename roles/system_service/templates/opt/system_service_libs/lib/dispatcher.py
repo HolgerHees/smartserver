@@ -24,6 +24,8 @@ class Dispatcher():
         self.data_lock = threading.Lock()
         
     def register(self, handler):
+        handler.setDispatcher(self)
+
         self.registered_handler.append(handler)
         
         event_types = handler.getEventTypes()
@@ -31,8 +33,6 @@ class Dispatcher():
             return
         
         self.event_pipeline.append([event_types, handler])
-            
-        handler.setDispatcher(self)
         
     def start(self):
         for handler in self.registered_handler:
@@ -43,6 +43,22 @@ class Dispatcher():
             handler.terminate()
                
     def dispatch(self, source_handler, events):
+        # *** recalculate main connection ***
+        has_connections = False
+        for event in events:
+            if event.getType() == Event.TYPE_DEVICE and event.hasDetail("connection"):
+                has_connections = True
+                break
+        
+        if has_connections:
+            for device in self.cache.getDevices():   
+                device.resetConnection()
+                
+            processed_devices = {}    
+            for device in self.cache.getDevices():   
+                device.calculateConnectionPath(processed_devices)
+        # ***********************************
+        
         for [event_types, handler] in self.event_pipeline:
             if handler == source_handler:
                 continue
@@ -200,9 +216,12 @@ class Dispatcher():
                 _stats = list(filter(lambda s: s[1] == device.getMAC() and s[2] == device.getConnection().getTargetInterface() , stats ))
                 if len(_stats) > 0:
                     for key in _stats[0][0]:
-                        if key in device_stat and (key == "offline_since" or not _stats[0][0][key]):
-                            continue
-                        device_stat[key] = _stats[0][0][key]
+                        if key in ["traffic", "speed"] or key not in device_stat:
+                            device_stat[key] = _stats[0][0][key]
+                        elif key == "details":
+                            if key not in device_stat:
+                                device_stat[key] = {}
+                            device_stat[key] = device_stat[key] | _stats[0][0][key]
                         
             device_stats.append(device_stat)
                 

@@ -106,7 +106,7 @@ class MQTTPublisher(_handler.Handler):
 
         ip = device.getIP()
         if ip not in self.allowed_details:
-            self.allowed_details[ip] = [] #["signal"]
+            self.allowed_details[ip] = ["wan_type","wan_state"]
             if ip in self.config.user_devices:
                 self.allowed_details[ip].append("online_state")
         
@@ -131,6 +131,9 @@ class MQTTPublisher(_handler.Handler):
                 key = "network/{}/{}".format(device.getIP(),"online")
                 value = "ON" if stat.isOnline() else "OFF"
                 self._publishValue(mac, key, value)
+            elif detail in ["wan_type","wan_state"] and stat.getDetail(detail) is not None:
+                key = "network/{}/{}".format(device.getIP(),detail)
+                self._publishValue(mac, key, stat.getDetail(detail))
                 
         with self.condition:
             self.condition.notifyAll()
@@ -145,7 +148,10 @@ class MQTTPublisher(_handler.Handler):
         self.published_values[mac][key] = [datetime.now(), value]
     
     def getEventTypes(self):
-        return [ { "types": [Event.TYPE_DEVICE, Event.TYPE_STAT], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": None } ]
+        return [ 
+            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": None },
+            { "types": [Event.TYPE_STAT], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["online_state","wan_type","wan_state"] } 
+        ]
 
     def processEvents(self, events):
         for event in events:

@@ -20,6 +20,7 @@ mx.UNCore = (function( ret ) {
     var groups = [];    
     var devices = [];    
     var stats = {};    
+    var root_device_mac = null;
     
     function handleDaemonState(state)
     {
@@ -37,6 +38,7 @@ mx.UNCore = (function( ret ) {
         
         if( state["changed_data"].hasOwnProperty("devices") )
         {
+            root_device_mac = state["changed_data"]["root"];
             devices = state["changed_data"]["devices"];
             devices = devices.sort(function(a, b)
             {
@@ -67,7 +69,7 @@ mx.UNCore = (function( ret ) {
         
         if( groupsChanged || devicesChanged || statsChanged )
         {
-            mx.D3.drawCircles( groupsChanged || devicesChanged ? devices : null, groupsChanged || devicesChanged ? groups : null, stats, 15000);
+            mx.D3.drawCircles( root_device_mac, groupsChanged || devicesChanged ? devices : null, groupsChanged || devicesChanged ? groups : null, stats, 15000);
         }
 
         refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
