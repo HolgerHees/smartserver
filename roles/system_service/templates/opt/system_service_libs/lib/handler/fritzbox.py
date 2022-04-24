@@ -71,8 +71,8 @@ class Fritzbox(_handler.Handler):
         if fritzbox_mac is None:
             raise NetworkException()
         
-        logging.info(self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetInfo"))
-        
+        #logging.info(self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetInfo"))
+
         link_state = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetCommonLinkProperties")
         #{'NewWANAccessType': 'Ethernet', 'NewLayer1UpstreamMaxBitRate': 1000000, 'NewLayer1DownstreamMaxBitRate': 1000000, 'NewPhysicalLinkStatus': 'Up'}
         #traffic_state = self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetStatistics")
