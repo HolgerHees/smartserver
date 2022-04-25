@@ -13,7 +13,6 @@ from lib.handler import _handler
 from lib.dto._changeable import Changeable
 from lib.dto.device import Device, Connection
 from lib.dto.group import Group
-from lib.dto.stat import Stat
 from lib.dto.event import Event
 from lib.helper import Helper
 
@@ -182,7 +181,7 @@ class OpenWRT(_handler.Handler):
             group.setDetail("ssid", network["ssid"], "string")
             group.setDetail("band", network["band"], "string")
             group.setDetail("channel", network["channel"], "string")
-            group.setDetail("vlan", network["vlan"], "string")
+            #group.setDetail("vlan", network["vlan"], "string")
             self.cache.confirmGroup(group, lambda event: events.append(event))
                     
         for gid in list(self.wifi_networks[openwrt_ip].keys()):
@@ -216,20 +215,20 @@ class OpenWRT(_handler.Handler):
         _active_client_macs = []
         _active_client_wifi_connections = []
         for [client_result,wlan_network] in client_results:
+            #logging.info(client_result)
             for mac in client_result["clients"]:
+                if mac == self.cache.getGatewayMAC():
+                    continue
+            
                 target_mac = openwrt_mac
-                target_interface = wlan_network["ssid"]
+                target_interface = mac#wlan_network["ssid"]
                 vlan = wlan_network["vlan"]
                 gid = wlan_network["gid"]
                 
                 uid = "{}-{}".format(mac, gid)
 
-                # make sure that device exists
-                target_device = self.cache.getDevice(target_mac)
-                self.cache.confirmDevice( target_device, lambda event: events.append(event) )
-
                 device = self.cache.getDevice(mac)
-                device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface, target_device);
+                device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
                 device.addGID(gid)
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
 
@@ -237,7 +236,7 @@ class OpenWRT(_handler.Handler):
                 if not details["assoc"]: 
                     continue
                 
-                stat = self.cache.getStat(mac)
+                stat = self.cache.getConnectionStat(target_mac,target_interface)
                 if uid in self.client_wifi_connections[openwrt_ip]:
                     in_bytes = stat.getInBytes()
                     if in_bytes > 0:
@@ -275,16 +274,7 @@ class OpenWRT(_handler.Handler):
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
                 if mac not in _active_client_macs:
-                    stat = self.cache.getStat(mac)
-                    stat.setOnline(False)
-                    stat.setInAvg(0)
-                    stat.setOutAvg(0)
-                    stat.setInBytes(0)
-                    stat.setOutBytes(0)
-                    stat.setInSpeed(0)
-                    stat.setOutSpeed(0)
-                    stat.removeDetail("signal")
-                    self.cache.confirmStat( stat, lambda event: events.append(event) )
+                    stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
                 
                 del self.client_wifi_connections[openwrt_ip][uid]
                     

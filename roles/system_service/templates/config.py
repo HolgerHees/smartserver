@@ -39,6 +39,9 @@ arp_clean_device_timeout = 60 * 60 * 24 * 7
 openwrt_network_interval = 900
 openwrt_client_interval = 60
 
+fritzbox_network_interval = 900
+fritzbox_client_interval = 60
+
 librenms_device_interval = 900
 librenms_vlan_interval = 900
 librenms_fdb_interval = 300

@@ -12,13 +12,9 @@ from smartserver import command
 from lib.handler import _handler
 from lib.dto._changeable import Changeable
 from lib.dto.device import Device, Connection
-from lib.dto.stat import Stat
 from lib.dto.event import Event
 from lib.helper import Helper
 
-
-class DataException(Exception):
-    pass
 
 class LibreNMS(_handler.Handler): 
     def __init__(self, config, cache ):
@@ -66,9 +62,6 @@ class LibreNMS(_handler.Handler):
                     was_suspended = False
                 
                 timeout = self._processLibreNMS(now, events, timeout)
-            except DataException:
-                    logging.warning("Default gateway '{}' currently not resolvable. Will retry in 15 seconds.".format(self.config.default_gateway_ip))
-                    timeout = 15
             except requests.exceptions.ConnectionError:
                 logging.warning("LibreNMS currently not available. Will suspend for 5 minutes")
                 if timeout > self.config.remote_suspend_timeout:
@@ -135,7 +128,7 @@ class LibreNMS(_handler.Handler):
             #        mac = self.swapped_directions[port_ifname]
             #        port_ifname = None
             
-            stat = self.cache.getStat(mac, port_ifname)
+            stat = self.cache.getConnectionStat(mac, port_ifname)
             if port_id in self.device_ports[device_id]:
                 time_diff = (now - self.device_ports[device_id][port_id]["refreshed"])
                 time_diff_slot = math.ceil(time_diff / self.config.librenms_poller_interval)
@@ -163,7 +156,7 @@ class LibreNMS(_handler.Handler):
             for port_id in list(self.device_ports[device_id].keys()):
                 if "{}-{}".format(device_id, port_id) not in _active_ports_ids:
                     _p = self.device_ports[device_id][port_id]
-                    self.cache.removeStat(_p["mac"], _p["interface"], lambda event: events.append(event))
+                    self.cache.removeConnectionStat(_p["mac"], _p["interface"], lambda event: events.append(event))
                     del self.device_ports[device_id][port_id]
                     del self.port_id_ifname_map[device_id][port_id]
                     
@@ -202,11 +195,12 @@ class LibreNMS(_handler.Handler):
             _mac = _connected_arp["mac_address"]
             mac = ":".join([_mac[i:i+2] for i in range(0, len(_mac), 2)])
             
-            device = self.cache.getDevice(mac, False)
-            if device is not None:
-                target_device = self.cache.getUnlockedDevice(target_mac)
-                if target_device is not None:
-                    device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
+            if mac == self.cache.getGatewayMAC():
+                continue
+            
+            if self.cache.getUnlockedDevice(mac) is not None and self.cache.getUnlockedDevice(target_mac) is not None:
+                device = self.cache.getDevice(mac)
+                device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
             _active_connected_macs.append(mac)
@@ -219,10 +213,9 @@ class LibreNMS(_handler.Handler):
                     target_mac = self.connected_macs[device_id][mac]["target_mac"]
                     target_interface = self.connected_macs[device_id][mac]["target_interface"]
                     
-                    device = self.cache.getDevice(mac, False)
-                    if device is not None:
-                        device.removeHopConnection(vlan, target_mac, target_interface)
-                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    device = self.cache.getDevice(mac)
+                    device.removeHopConnection(vlan, target_mac, target_interface)
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
                     del self.connected_macs[device_id][mac]
         
@@ -328,15 +321,13 @@ class LibreNMS(_handler.Handler):
                 mac =  event.getObject().getMAC()
 
                 for device_macs in list(self.connected_macs.values()):
-                    for _connection in list(device_macs.values()):
-                        if _connection["source_mac"] != mac and _connection["target_mac"] != mac:
+                    for cm in list(device_macs.values()):
+                        if cm["source_mac"] != mac and cm["target_mac"] != mac:
                             continue
                             
-                        device = self.cache.getDevice(_connection["source_mac"], False)
-                        if device is not None:
-                            target_device = self.cache.getUnlockedDevice(_connection["target_mac"])
-                            if target_device is not None:
-                                device.addHopConnection(Connection.ETHERNET, _connection["vlan"], _connection["target_mac"], _connection["target_interface"], target_device );
+                        if self.cache.getUnlockedDevice(cm["source_mac"]) is not None and self.cache.getUnlockedDevice(cm["target_mac"]) is not None:    
+                            device = self.cache.getDevice(cm["source_mac"])
+                            device.addHopConnection(Connection.ETHERNET, cm["vlan"], cm["target_mac"], cm["target_interface"] );
                             self.cache.confirmDevice( device, lambda event: _events.append(event) )
                             
             #elif event.getAction() != Event.ACTION_MODIFY:

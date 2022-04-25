@@ -40,9 +40,6 @@ class Connection():
     def getTargetInterface(self):
         return self.target_interface
 
-    def toStr(self, related_device ):
-        return "{} => {}:{}".format(related_device,self.target_mac,self.target_interface)
-    
     def getSerializeable(self):
         return { "vlans": self.vlans, "type": self.type, "target_mac": self.target_mac, "target_interface": self.target_interface }
     
@@ -50,10 +47,8 @@ class Connection():
         return "{} => {}:{}".format(self.type,self.target_mac,self.target_interface)
     
 class Device(Changeable):
-    def __init__(self, mac, type, cache):
-        super().__init__()
-
-        self.cache = cache
+    def __init__(self, cache, mac, type):
+        super().__init__(cache)
 
         self.mac = mac
         self.type = type
@@ -68,7 +63,6 @@ class Device(Changeable):
         self.gids = []
         
         self.services = {}
-        self.details = {}
 
         # internal variables without change detection
         self.virtual_connection = None
@@ -110,7 +104,15 @@ class Device(Changeable):
     def getDNS(self):
         self.dns
 
-    def addHopConnection(self, type, vlan, target_mac, target_interface, target_device = None):
+    def addHopConnection(self, type, vlan, target_mac, target_interface):
+        if target_mac == self.cache.getGatewayMAC():
+            _connections = list(filter(lambda c: c.getTargetMAC() == target_mac, self.hop_connections ))
+            if len(_connections) > 0:
+                if _connections[0].getType() != Connection.ETHERNET:
+                    return
+                else:
+                    self.hop_connections.remove(_connections[0])
+        
         if type == Connection.WIFI:
             _connections = list(filter(lambda c: c.getType() == type, self.hop_connections ))
         else:
@@ -135,10 +137,9 @@ class Device(Changeable):
             self.hop_connections.append(Connection(type, vlan, target_mac, target_interface))
 
         #self.connection = None
-
+        
+        target_device = self.cache.getUnlockedDevice(target_mac)
         self._markAsChanged("connection", "add connection to {}:{}".format(target_device if target_device else target_mac,vlan))    
-        
-        
        
     def removeHopConnection(self, vlan, target_mac, target_interface):
         _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
@@ -154,7 +155,8 @@ class Device(Changeable):
             #if _connection == self.connection:
             #    self.connection = None
 
-            self._markAsChanged("connection", "remove connection from {}:{}".format(target_mac, vlan))            
+            target_device = self.cache.getUnlockedDevice(target_mac)
+            self._markAsChanged("connection", "remove connection from {}:{}".format(target_device if target_device else target_mac, vlan))            
             
     def getHopConnections(self):
         return list(self.hop_connections)
@@ -179,7 +181,8 @@ class Device(Changeable):
         connection = None
         hop_count = 0
         for _connection in self.getHopConnections():
-            _hop_count = self._getGWHopCount(_connection, 0, {}, processed_devices)
+            processed_hops = { self._getCache().getWanMAC(): True, self._getCache().getGatewayMAC(): True }
+            _hop_count = self._getGWHopCount(_connection, 0, processed_hops, processed_devices)
             if _hop_count >= hop_count:
                 hop_count = _hop_count
                 connection = _connection
@@ -192,12 +195,12 @@ class Device(Changeable):
         
         count += 1
         
-        if connection.getTargetMAC() not in processed_hops and connection.getTargetMAC() != self.cache.getGatewayMAC():
+        if connection.getTargetMAC() not in processed_hops:
             processed_hops[connection.getTargetMAC()] = True
-            _device = self.cache.getUnlockedDevice(connection.getTargetMAC())
-            if _device.getConnection() is None:
+            _device = self._getCache().getUnlockedDevice(connection.getTargetMAC())
+            if _device.connection is None:
                 _device.calculateConnectionPath(processed_devices)
-            count = self._getGWHopCount(_device.getConnection(), count, processed_hops, processed_devices)
+            count = self._getGWHopCount(_device.connection, count, processed_hops, processed_devices)
         
         return count
 
@@ -216,32 +219,12 @@ class Device(Changeable):
             
     def getGIDs(self):
         return self.gids
-
-    def setDetail(self, key, value, fmt):
-        if key not in self.details or self.details[key]["value"] != value:
-            self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
-            self.details[key] = { "value": value, "format": fmt }
-
-    #def getDetail(self, key):
-    #    if key in self.details:
-    #        return self.details[key][0]
-    #    return None
-
-    def removeDetail(self, key):
-        if key in self.details:
-            self._markAsChanged(key, "remove {}".format(key))
-            del self.details[key]
-            
+           
     def setServices(self, services):
         self._markAsChanged("services")
         self.services = services
 
     def getSerializeable(self, devices ):
-        
-        #if not connection:
-        #    print("NO CONNECTION")
-        #print( connection )
-
         connection = self.getConnection()
 
         return {
@@ -257,7 +240,7 @@ class Device(Changeable):
             "gids": self.gids,
 
             "services": self.services,
-            "details": self.details
+            "details": self._getDetails()
         }
     
     def __repr__(self):

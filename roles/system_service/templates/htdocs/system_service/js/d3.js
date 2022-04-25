@@ -85,7 +85,7 @@ mx.D3 = (function( ret )
 
             devices.forEach(function(device)
             {
-                if( !device["connection"] ) return;
+                if( !device["connection"] || !device_uid_map[device["connection"]["target_mac"]] ) return;
                 
                 device_uid_map[device["connection"]["target_mac"]]["connected_from"].push(device["mac"]);
             });
@@ -100,16 +100,28 @@ mx.D3 = (function( ret )
                 initChildren(rootNode, devices, stats, processedNodes);
             }
             
-            d3root = d3.hierarchy(rootNode);
+            root = d3.hierarchy(rootNode);
 
-            initTree(d3root, endCount);
+            initTree(endCount);
         }
         else if( _stats )
         {            
-            d3root.descendants().forEach(function(_data)
+            root.descendants().forEach(function(_data)
             {
                 let mac = _data["data"]["device"]["mac"];
-                if(mac in stats) _data["data"]["stat"] = stats[mac];
+                
+                if(mac in stats) 
+                {
+                    _data["data"]["device_stat"] = stats[mac];
+                }
+                if( _data["data"]["device"]["connection"] )
+                {
+                    key = _data["data"]["device"]["connection"]["target_mac"]+":"+_data["data"]["device"]["connection"]["target_interface"]
+                    if(key in stats)
+                    {
+                        _data["data"]["interface_stat"] = stats[key];
+                    }
+                }
             });
 
             redrawState();
@@ -120,10 +132,8 @@ mx.D3 = (function( ret )
     {
     }
     
-    function initTree(_root, endCount)
+    function initTree(endCount)
     {
-        root = _root;
-        
         bodyRect = document.body.getBoundingClientRect();
         bodyWidth = bodyRect.width;
         bodyHeight = bodyRect.height;
@@ -321,7 +331,7 @@ mx.D3 = (function( ret )
                 let group = groups.filter(group => group["gid"] == gid );
                 if( group.length == 1 && group[0].type == "wifi"  )
                 {
-                    let stat = d.data.device_stat
+                    let stat = d.data.interface_stat
                     
                     bottom_span.text(d => group[0].details.band["value"] + " • " + stat.details.signal["value"] + "db");
                     if( group[0].details.band["value"] == "5g" )
@@ -339,9 +349,9 @@ mx.D3 = (function( ret )
                 }
             });
         }  
-        else if(root == d && d.data.device_stat.details["wan_state"])
+        else if(root == d && d.data.interface_stat.details["wan_state"])
         {
-            bottom_span.text(d => "WAN: " + d.data.device_stat.details["wan_state"]["value"]);
+            bottom_span.text(d => "WAN: " + d.data.interface_stat.details["wan_state"]["value"]);
             let textLength = bottom_span.node().getComputedTextLength() + 3;
             bottom_span.attr("x", boxWidth - textLength );
             bottom_span.attr("y", boxHeight - 3 );
@@ -356,17 +366,17 @@ mx.D3 = (function( ret )
         let position = "default";
         if( root.children && root.children.length == 1 )
         {
-            if( root==d.parent )
+            if( root==d.parent || root==d )
             {
                 position = "bottom";
             }
-            else if( root==d )
+            /*else if(  )
             {
                 position = "top";
                 
-                if( d.data.device_stat.traffic )
+                if( d.data.interface_stat && d.data.interface_stat.traffic )
                 {
-                    let wan_in_data = formatTraffic( d.data.device_stat.traffic["in_avg"]);
+                    let wan_in_data = formatTraffic( d.data.interface_stat.traffic["in_avg"]);
                     let wan_in_span = text.select(".wan_in");
                     wan_in_span.text(d => wan_in_data == 0 ? "" : "⇨ " + wan_in_data );
                     
@@ -374,20 +384,20 @@ mx.D3 = (function( ret )
                     wan_in_span.attr("x", boxWidth / 2 - 2 - textLength );
                     wan_in_span.attr("y", boxHeight + font_size * 1.5 );
                     
-                    let wan_out_data = formatTraffic( d.data.device_stat.traffic["out_avg"]);
+                    let wan_out_data = formatTraffic( d.data.interface_stat.traffic["out_avg"]);
                     let wan_out_span = text.select(".wan_out");
                     wan_out_span.text(d => wan_out_data == 0 ? "" : "⇨ " + wan_out_data );
                     textLength = wan_out_span.node().getComputedTextLength() + 3;
                     wan_out_span.attr("x", boxWidth / 2 + 4 );
                     wan_out_span.attr("y", boxHeight + font_size * 1.5);
                 }
-            }
+            }*/
         }
             
         if( position != "default" )
             text.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
 
-        let traffic_stat = d.data.interface_stat && d.data.interface_stat.traffic ? d.data.interface_stat.traffic : ( d.data.device_stat && root != d ? d.data.device_stat.traffic : null );
+        let traffic_stat = d.data.interface_stat && d.data.interface_stat.traffic ? d.data.interface_stat.traffic : null;
         if( !traffic_stat ) return;
        
         let row = 0;
@@ -548,55 +558,63 @@ mx.D3 = (function( ret )
         html += showRows(device.services,"Services","rows");
         //html += showRows(device.ports,"Ports","rows");
         
+        connection_data = {}
         device.gids.forEach(function(gid){
             let group = groups.filter(group => group["gid"] == gid );
-            html += showRows(group[0]["details"],group[0]["type"],"rows");
+            if( group[0]["type"] == "wifi" )
+                connection_data = group[0]["details"]
+            else
+                html += showRows(group[0]["details"],group[0]["type"],"rows");
         });
         
         if( device.connection )
         {
-            if( device.connection["vlans"] ) html += "<div><div>VLAN:</div><div>" + device.connection["vlans"] + "</div></div>";
-        
-            if( device.connection["target_interface"] && device.connection["type"] != "wifi" ) html += "<div><div>Port:</div><div>" + device.connection["target_interface"] + "</div></div>";
-        }
-        
-        let connection_stat = d.data.interface_stat && d.data.interface_stat ? d.data.interface_stat : d.data.device_stat;
-        if( connection_stat && connection_stat["speed"])
-        {
-            let inSpeed = connection_stat["speed"]["in"];
-            let outSpeed = connection_stat["speed"]["out"];
+            if( device.connection["vlans"] )
+                connection_data["Vlan"] = "" + device.connection["vlans"];
+            if( device.connection["target_interface"] && device.connection["type"] != "wifi" )
+                connection_data["Port"] = device.connection["target_interface"];
             
-            if( inSpeed != null )
+            if( d.data.interface_stat )
             {
-                let duplex = "";
-                if( "duplex" in connection_stat["details"] )
+                if( d.data.interface_stat["speed"] )
                 {
-                    duplex += " - " + ( connection_stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                    let inSpeed = d.data.interface_stat["speed"]["in"];
+                    let outSpeed = d.data.interface_stat["speed"]["out"];
+                    
+                    if( inSpeed != null )
+                    {
+                        let duplex = "";
+                        if( "duplex" in d.data.interface_stat["details"] )
+                        {
+                            duplex += " - " + ( d.data.interface_stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                        }
+                        
+                        connection_data["Speed"] = formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex;
+                    }
                 }
-                
-                html += "<div><div>Speed:</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex + "</div></div>";
+
+                Object.entries(d.data.interface_stat["details"]).forEach(function([key, value])
+                {
+                    if( key == "duplex" )
+                        return;
+                        
+                    let _value = value["value"];
+                    if( value["format"] == "attenuation" ) 
+                        _value += " db";
+                    
+                    connection_data[key] = _value;
+                });
             }
         }
+        
+        html += showRows(connection_data,"Network","rows");
             
         if( d.data.device_stat )
         {
             Object.entries(d.data.device_stat["details"]).forEach(function([key, value])
             {
-                if( key == "duplex" ) return;
-                
                 let _value = value["value"];
-
-                if( value["format"] == "speed" )
-                {
-                    let inSpeed = _value["in"];
-                    let outSpeed = _value["out"];
-                    html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + "</div></div>";
-                }
-                else
-                {
-                    if( value["format"] == "attenuation" ) _value += " db";
-                    html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + _value + "</div></div>";
-                }
+                html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + _value + "</div></div>";
             });
         }
 
@@ -615,46 +633,40 @@ mx.D3 = (function( ret )
     function toogleTooltip(d)
     {
         let device = d.data.device
-        if( device && device.type != "placeholder" )
-        {
-            mx.Tooltip.toggle();
-       }
+        mx.Tooltip.toggle();
     }
     
     function positionTooltip(d, element)
     {
         let device = d.data.device
-        if( device && device.type != "placeholder" )
+        element = element.querySelector("rect.container");
+        
+        let nodeRect = element.getBoundingClientRect();
+        let tooltipRect = mx.Tooltip.getRootElementRect();
+
+        let arrowOffset = 0;
+        let arrowPosition = "right";
+        
+        let top = nodeRect.top;
+        if( top + tooltipRect.height > bodyHeight ) 
         {
-            element = element.querySelector("rect.container");
-            
-            let nodeRect = element.getBoundingClientRect();
-            let tooltipRect = mx.Tooltip.getRootElementRect();
-
-            let arrowOffset = 0;
-            let arrowPosition = "right";
-            
-            let top = nodeRect.top;
-            if( top + tooltipRect.height > bodyHeight ) 
-            {
-                top = bodyHeight - tooltipRect.height - 6;
-                arrowOffset = tooltipRect.height - ( bodyHeight - ( nodeRect.top + nodeRect.height / 2 ) );
-            }
-            else
-            {
-                arrowOffset = nodeRect.height / 2;
-            }
-
-            let left = nodeRect.left - tooltipRect.width - 6;
-            if( left < 0 )
-            {
-                left = nodeRect.left + nodeRect.width + 6;
-                arrowPosition = "left";
-            }
-
-            mx.Tooltip.show(left, top, arrowOffset, arrowPosition );
-            window.setTimeout(function(){ mx.Tooltip.getRootElement().style.opacity="1"; },0);
+            top = bodyHeight - tooltipRect.height - 6;
+            arrowOffset = tooltipRect.height - ( bodyHeight - ( nodeRect.top + nodeRect.height / 2 ) );
         }
+        else
+        {
+            arrowOffset = nodeRect.height / 2;
+        }
+
+        let left = nodeRect.left - tooltipRect.width - 6;
+        if( left < 0 )
+        {
+            left = nodeRect.left + nodeRect.width + 6;
+            arrowPosition = "left";
+        }
+
+        mx.Tooltip.show(left, top, arrowOffset, arrowPosition );
+        window.setTimeout(function(){ mx.Tooltip.getRootElement().style.opacity="1"; },0);
     }
     
     function wrap( d ) {

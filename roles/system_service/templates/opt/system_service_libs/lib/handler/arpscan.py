@@ -13,7 +13,7 @@ from lib.handler import _handler
 
 from lib.dto._changeable import Changeable
 from lib.dto.device import Device, Connection
-from lib.dto.stat import Stat
+from lib.dto.device_stat import DeviceStat
 from lib.dto.event import Event
 
 from lib.helper import Helper
@@ -113,7 +113,7 @@ class DeviceChecker(threading.Thread):
                     self.lastSeen = datetime.now()
                     if not self.stat.isOnline():
                         self.cache.lock()
-                        #stat = self.cache.getStat(mac)
+                        #stat = self.cache.getDeviceStat(mac)
                         self.stat.setOnline(True)
                         self.cache.confirmStat( self.stat, lambda event: events.append(event) )
                         self.cache.unlock()
@@ -124,7 +124,7 @@ class DeviceChecker(threading.Thread):
                     logging.info("Device {} is offline".format(ip_address))  
                     if self.stat.isOnline():
                         self.cache.lock()
-                        #stat = self.cache.getStat(mac)
+                        #stat = self.cache.getDeviceStat(mac)
                         self.stat.setOnline(False)
                         self.cache.confirmStat( self.stat, lambda event: events.append(event) )
                         self.cache.unlock()
@@ -306,9 +306,7 @@ class ArpScanner(_handler.Handler):
                 
             self._refreshDevice( server_mac, device, events)
 
-            for stat in list(self.cache.getStats()):
-                if stat.getInterface() is not None:
-                    continue
+            for stat in list(filter(lambda s: type(s) is DeviceStat, self.cache.getStats() )):
                 self._checkDevice(now, stat, events)
 
             self.cache.unlock()
@@ -337,7 +335,7 @@ class ArpScanner(_handler.Handler):
         self._getDispatcher().dispatch(self,events)
 
     def _refreshDevice(self, mac, device, events):
-        stat = self.cache.getStat(mac)
+        stat = self.cache.getDeviceStat(mac)
         stat.setOnline(True)
         self.cache.confirmStat( stat, lambda event: events.append(event) )
         
@@ -376,7 +374,7 @@ class ArpScanner(_handler.Handler):
             return
         
         if (now - stat.getLastSeen()).total_seconds() > self.config.arp_offline_device_timeout:
-            stat = self.cache.getStat(mac)
+            stat = self.cache.getDeviceStat(mac)
             stat.setOnline(False)
             self.cache.confirmStat( stat, lambda event: events.append(event) )
 

@@ -88,11 +88,11 @@ class Dispatcher():
         stats_changed = []
         for event in events:
             if event.getType() == Event.TYPE_GROUP:
-                groups_changed.append(event.getObject().getGID())
+                groups_changed.append(event.getObject())
             elif event.getType() == Event.TYPE_DEVICE:
-                devices_changed.append(event.getObject().getMAC())
+                devices_changed.append(event.getObject())
             elif event.getType() == Event.TYPE_STAT:
-                stats_changed.append(event.getObject().getID())
+                stats_changed.append(event.getObject())
                 
         if len(devices_changed) > 0:
             connected_map = {}
@@ -123,7 +123,7 @@ class Dispatcher():
                 #for device in connected_map[key]:
                 #    logging.info("  - {}".format(device.getMAC()))
                 
-                virtual_device = Device(key,"hub", self.cache)
+                virtual_device = Device(self.cache, key,"hub")
                 virtual_connection = Connection(Connection.ETHERNET, vlans[0], target_mac, target_interface)
                 for i in range(1,len(vlans)):
                     virtual_connection.addVLAN(vlans[i])
@@ -168,69 +168,10 @@ class Dispatcher():
         return self.last_device_refresh
 
     def getStats(self):
-        stats = []
+        _stats = []
         for stat in self.cache.getStats():
-            stats.append(stat.getSerializeable())
-        return stats
-        
-        devices = self.cache.getDevices() + self.virtual_devices
-        
-        stats = []
-        for stat in self.cache.getStats():
-            
-            mac = stat.getMAC()
-            interface = stat.getInterface()
-            
-            if interface:
-                # for interface based stats, we use the device pointing to this interface
-                source_devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == mac and d.getConnection().getTargetInterface() == interface, devices ))
-                #source_devices = list(filter(lambda d: d.getConnection() and d.getConnection().getType() == Connection.ETHERNET and d.getConnection().getTargetMAC() == mac and d.getConnection().getTargetInterface() == interface, devices ))
-            else:
-                source_devices = list(filter(lambda d: d.getMAC() == mac, devices ))
-            
-            if len(source_devices) > 0:
-                source_device = source_devices[0]
-                source_mac = source_device.getMAC()
-                # for hub devices, we duplicate the port statistic
-                force_online = False
-                if source_device.getType() == "hub":
-                    all_children_online = True
-                    for _child_device in list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == source_mac, devices )):
-                        _child_stat = self.cache.getUnlockedStat(_child_device.getMAC())
-                        if not _child_stat.isOnline():
-                            all_children_online = False
-                        stats.append([stat.getSerializeable(_child_device.getMAC(), skip_traffic = True), _child_device.getMAC(), "hub"])
-                    if all_children_online:
-                        force_online = True
-                        
-                #print(source_mac)
-                stats.append([stat.getSerializeable(source_mac, force_online = force_online), source_mac, stat.getInterface()])
-                
-        device_stats = []
-        for device in devices:
-            device_stat = {}
-
-            _stats = list(filter(lambda s: s[1] == device.getMAC() and s[2] is None , stats ))
-            if len(_stats) > 0:
-                for key in _stats[0][0]:
-                    if key in device_stats and not _stats[0][0][key]:
-                        continue
-                    device_stat[key] = _stats[0][0][key]
-                
-            if device.getConnection() is not None and device.getConnection().getTargetInterface() is not None:
-                _stats = list(filter(lambda s: s[1] == device.getMAC() and s[2] == device.getConnection().getTargetInterface() , stats ))
-                if len(_stats) > 0:
-                    for key in _stats[0][0]:
-                        if key in ["traffic", "speed"] or key not in device_stat:
-                            device_stat[key] = _stats[0][0][key]
-                        elif key == "details":
-                            if key not in device_stat:
-                                device_stat[key] = {}
-                            device_stat[key] = device_stat[key] | _stats[0][0][key]
-                        
-            device_stats.append(device_stat)
-                
-        return device_stats
+            _stats.append(stat.getSerializeable())
+        return _stats
 
     def getLastStatRefreshAsTimestamp(self):
         return self.last_stat_refresh

@@ -4,6 +4,7 @@ import requests
 
 from lib.handler import _handler
 from lib.dto.group import Group
+from lib.dto.connection_stat import ConnectionStat
 
 
 class InfluxDBHandler(): 
@@ -46,18 +47,10 @@ class InfluxDBPublisher(_handler.Handler):
         
         devices = self.cache.getDevices()
         
-        for stat in list(self.cache.getStats()):
-            if stat.getInterface() is not None:
-                _devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == stat.getMAC() and d.getConnection().getTargetInterface() == stat.getInterface(), devices ))
-                if len(_devices) != 1:
-                    continue
+        for stat in list(filter(lambda s: type(s) is ConnectionStat, self.cache.getStats() )):
+            device = stat.getUnlockedDevice()
 
-                device = _devices[0]
-            else:
-                mac = stat.getMAC()
-                device = self.cache.getUnlockedDevice(mac)
-
-            if device.getIP() is None:
+            if device is None or device.getIP() is None:
                 continue
             
             if device.supportsWifi():
@@ -87,6 +80,7 @@ class InfluxDBPublisher(_handler.Handler):
         if len(messurements) == 0:
             return
         
+        #logging.info(messurements)
         logging.info("Submit {} messurements".format(len(messurements)))
         
         #logging.info(messurements)

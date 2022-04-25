@@ -28,7 +28,7 @@ mx.UNCore = (function( ret ) {
         
         let groupsChanged = false;
         let devicesChanged = false;
-        let trafficChanged = false;
+        let statsChanged = false;
         
         if( state["changed_data"].hasOwnProperty("groups") )
         {
@@ -67,10 +67,10 @@ mx.UNCore = (function( ret ) {
             stats = _stats;
             statsChanged = true;
         }
-        
+            
         if( groupsChanged || devicesChanged || statsChanged )
         {
-            mx.D3.drawCircles( root_device_mac, groupsChanged || devicesChanged ? devices : null, groupsChanged || devicesChanged ? groups : null, stats, 15000);
+            mx.D3.drawCircles( root_device_mac, groupsChanged || devicesChanged ? devices : null, groupsChanged || devicesChanged ? groups : null, statsChanged || devicesChanged ? stats : null , 15000);
         }
 
         refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);

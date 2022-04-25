@@ -4,6 +4,7 @@ from datetime import datetime
 import logging
 
 from lib.handler import _handler
+from lib.dto.device_stat import DeviceStat
 from lib.dto.event import Event
 import paho.mqtt.client as mqtt
 
@@ -123,21 +124,24 @@ class MQTTPublisher(_handler.Handler):
             return False
 
         _to_publish = {}
-        for detail in _details:
-            #if detail == "signal":
-            #    self.mqtt_handler.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
-            if detail == "online_state":
-                key = "network/{}/{}".format(device.getIP(),"online")
-                value = "ON" if stat.isOnline() else "OFF"
-                _to_publish[detail] = [mac,key,value]
-            elif detail in ["wan_type","wan_state"] and stat.getDetail(detail) is not None:
-                key = "network/{}/{}".format(device.getIP(),detail)
-                _to_publish[detail] = [mac,key,stat.getDetail(detail)]
+        if type(stat) is DeviceStat:
+            for detail in _details:
+                if detail == "online_state":
+                    key = "network/{}/{}".format(device.getIP(),"online")
+                    value = "ON" if stat.isOnline() else "OFF"
+                    _to_publish[detail] = [mac,key,value]
+        else:
+            for detail in _details:
+                #if detail == "signal":
+                #    self.mqtt_handler.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
+                if detail in ["wan_type","wan_state"] and stat.getDetail(detail) is not None:
+                    key = "network/{}/{}".format(device.getIP(),detail)
+                    _to_publish[detail] = [mac,key,stat.getDetail(detail)]
                 
         if len(_to_publish.values()) == 0:
             return False
 
-        logging.info("PUBLISH {} of {}".format(_to_publish.keys(), device))
+        logging.info("PUBLISH {} of {}".format(list(_to_publish.keys()), device))
 
         for [mac, key, value] in _to_publish.values():
             self._publishValue(mac, key, value)
@@ -156,7 +160,7 @@ class MQTTPublisher(_handler.Handler):
     
     def getEventTypes(self):
         return [ 
-            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": None },
+            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["ip"] },
             { "types": [Event.TYPE_STAT], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["online_state","wan_type","wan_state"] } 
         ]
 
@@ -168,14 +172,27 @@ class MQTTPublisher(_handler.Handler):
             if event.getType() == Event.TYPE_DEVICE:
                 if event.getObject().getMAC() in self.skipped_macs:
                     device = event.getObject()
-                    stat = self.cache.getUnlockedStat(device.getMAC())
-                    if stat is not None and self._publishValues(device, stat):
+                    stats = []
+                    stat = self.cache.getUnlockedDeviceStat(device.getMAC())
+                    if stat is not None:
+                        stats.append(stat)
+                    if device.getConnection() is not None:
+                        stat = self.cache.getUnlockedConnectionStat(device.getConnection().getTargetMAC(), device.getConnection().getTargetInterface())
+                        if stat is not None:
+                            stats.append(stat)
+                        
+                    all_stats_published = True
+                    for stat in stats:
+                        if not self._publishValues(device, stat):
+                            all_stats_published = False
+                    if all_stats_published and device.getMAC() in self.skipped_macs:
                         del self.skipped_macs[device.getMAC()]
+
             elif event.getType() == Event.TYPE_STAT:
                 stat = event.getObject()
-                if stat.getInterface() is not None and stat.getInterface() != "wan":
+                device = stat.getUnlockedDevice()
+                    
+                if device is None:
                     continue
 
-                device = self.cache.getUnlockedDevice(stat.getMAC())
                 self._publishValues(device, stat, event.getDetails())               
-        return []
