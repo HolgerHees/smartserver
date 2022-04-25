@@ -41,7 +41,7 @@ class Fritzbox(_handler.Handler):
             self.fw[fritzbox_ip]["3"] = FritzWLAN(address=fritzbox_ip, service=3, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
         
         self.condition = threading.Condition()
-        self.thread = threading.Thread(target=self.checkFritzbox, args=())
+        self.thread = threading.Thread(target=self._checkFritzbox, args=())
         
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
@@ -53,15 +53,13 @@ class Fritzbox(_handler.Handler):
             self.is_running = False
             self.condition.notifyAll()
             
-    def checkFritzbox(self):
-        
+    def _checkFritzbox(self):
         for fritzbox_ip in self.config.fritzbox_devices:
             self.last_check[fritzbox_ip] = {"device": 0, "wifi_networks": 0, "wifi_clients": 0}
             self.wifi_networks[fritzbox_ip] = {}
             self.wifi_clients[fritzbox_ip] = {}
             
         while self.is_running:
-            
             events = []
 
             timeout = 60
@@ -102,68 +100,65 @@ class Fritzbox(_handler.Handler):
         
     def _fetchWifiClients(self, fritzbox_mac, fritzbox_ip, now, events, global_timeout, call_timeout ):
         client_results = {}
-        for i in range(1,4):
-            gid = "{}-{}".format(fritzbox_ip,i)
-            
-            if gid not in self.wifi_networks[fritzbox_ip]:
-                continue
-            
-            clients = self.fw[fritzbox_ip][str(i)].get_hosts_info()
+        for gid in self.wifi_networks[fritzbox_ip]:
+            index = self.wifi_networks[fritzbox_ip][gid]["index"]
+            clients = self.fw[fritzbox_ip][index].get_hosts_info()
             client_results[gid] = clients
             #{'service': 1, 'index': 0, 'status': True, 'mac': '3C:61:05:DC:EA:C9', 'ip': '192.168.179.120', 'signal': 29, 'speed': 43}
 
-        self.cache.lock()
+        if client_results or self.wifi_clients[fritzbox_ip]:
+            self.cache.lock()
 
-        _active_client_macs = []
-        _active_client_wifi_connections = []
-        for gid in client_results:
-            wlan_network = self.wifi_networks[fritzbox_ip][gid]
+            _active_client_macs = []
+            _active_client_wifi_connections = []
+            for gid in client_results:
+                wlan_network = self.wifi_networks[fritzbox_ip][gid]
 
-            for client in client_results[gid]:
-                mac = client["mac"].lower()
+                for client in client_results[gid]:
+                    mac = client["mac"].lower()
 
-                if mac == self.cache.getGatewayMAC():
-                    continue
+                    if mac == self.cache.getGatewayMAC():
+                        continue
 
-                target_mac = fritzbox_mac
-                target_interface = mac
-                vlan = self.config.default_vlan
+                    target_mac = fritzbox_mac
+                    target_interface = mac
+                    vlan = self.config.default_vlan
 
-                uid = "{}-{}".format(mac, gid)
+                    uid = "{}-{}".format(mac, gid)
 
-                device = self.cache.getDevice(mac)
-                device.setIP(client["ip"])
-                device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
-                device.addGID(gid)
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    device = self.cache.getDevice(mac)
+                    device.setIP(client["ip"])
+                    device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
+                    device.addGID(gid)
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
 
-                if not client["status"]: 
-                    continue
-                
-                stat = self.cache.getConnectionStat(target_mac,target_interface)
-                stat.setInSpeed(client["speed"] * 1000000)
-                stat.setOutSpeed(client["speed"] * 1000000)
-                stat.setDetail("signal", client["signal"], "attenuation")
-                self.cache.confirmStat( stat, lambda event: events.append(event) )
+                    if not client["status"]: 
+                        continue
                     
-                _active_client_macs.append(mac)
-                _active_client_wifi_connections.append(uid)
-                self.wifi_clients[fritzbox_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
+                    stat = self.cache.getConnectionStat(target_mac,target_interface)
+                    stat.setInSpeed(client["speed"] * 1000000)
+                    stat.setOutSpeed(client["speed"] * 1000000)
+                    stat.setDetail("signal", client["signal"], "attenuation")
+                    self.cache.confirmStat( stat, lambda event: events.append(event) )
+                        
+                    _active_client_macs.append(mac)
+                    _active_client_wifi_connections.append(uid)
+                    self.wifi_clients[fritzbox_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
 
-        for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_clients[fritzbox_ip].values()):
-            if uid not in _active_client_wifi_connections:
-                device = self.cache.getDevice(mac)
-                # connection should still exists, also when device becomes offline
-                #device.removeHopConnection(vlan, target_mac, target_interface)
-                device.removeGID(gid)
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
-                
-                if mac not in _active_client_macs:
-                    stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
-                
-                del self.wifi_clients[fritzbox_ip][uid]
+            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_clients[fritzbox_ip].values()):
+                if uid not in _active_client_wifi_connections:
+                    device = self.cache.getDevice(mac)
+                    # connection should still exists, also when device becomes offline
+                    #device.removeHopConnection(vlan, target_mac, target_interface)
+                    device.removeGID(gid)
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
-        self.cache.unlock()
+                    if mac not in _active_client_macs:
+                        stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
+                    
+                    del self.wifi_clients[fritzbox_ip][uid]
+                        
+            self.cache.unlock()
         
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -181,6 +176,7 @@ class Fritzbox(_handler.Handler):
             
             network = {
                 "gid": gid,
+                "index": str(i),
                 "ssid": wifi_info["NewSSID"],
                 "band": "5g" if i == 2 else "2g",
                 "channel": wifi_info["NewChannel"]
@@ -189,23 +185,24 @@ class Fritzbox(_handler.Handler):
             _active_networks[gid] = network
             self.wifi_networks[fritzbox_ip][gid] = network
             
-        self.cache.lock()
+        if _active_networks or self.wifi_networks[fritzbox_ip]:
+            self.cache.lock()
 
-        for gid in _active_networks:
-            network = _active_networks[gid]
+            for gid in _active_networks:
+                network = _active_networks[gid]
 
-            group = self.cache.getGroup(gid, Group.WIFI)
-            group.setDetail("ssid", network["ssid"], "string")
-            group.setDetail("band", network["band"], "string")
-            group.setDetail("channel", network["channel"], "string")
-            self.cache.confirmGroup(group, lambda event: events.append(event))
+                group = self.cache.getGroup(gid, Group.WIFI)
+                group.setDetail("ssid", network["ssid"], "string")
+                group.setDetail("band", network["band"], "string")
+                group.setDetail("channel", network["channel"], "string")
+                self.cache.confirmGroup(group, lambda event: events.append(event))
+                        
+            for gid in list(self.wifi_networks[fritzbox_ip].keys()):
+                if gid not in _active_networks:
+                    self.cache.removeGroup(gid, lambda event: events.append(event))
+                    del self.wifi_networks[fritzbox_ip][gid]
                     
-        for gid in list(self.wifi_networks[fritzbox_ip].keys()):
-            if gid not in _active_networks:
-                self.cache.removeGroup(gid, lambda event: events.append(event))
-                del self.wifi_networks[fritzbox_ip][gid]
-                
-        self.cache.unlock()
+            self.cache.unlock()
             
         if global_timeout > call_timeout:
             global_timeout = call_timeout

@@ -35,7 +35,7 @@ class OpenWRT(_handler.Handler):
         self.wifi_networks = {}
         
         self.condition = threading.Condition()
-        self.thread = threading.Thread(target=self.checkOpenWRT, args=())
+        self.thread = threading.Thread(target=self._checkOpenWRT, args=())
 
         self.delayed_wakeup_timer = None
 
@@ -49,8 +49,7 @@ class OpenWRT(_handler.Handler):
             self.is_running = False
             self.condition.notifyAll()
             
-    def checkOpenWRT(self):
-        
+    def _checkOpenWRT(self):
         for openwrt_ip in self.config.openwrt_devices:
             self.sessions[openwrt_ip] = [ None, datetime.now().timestamp()]
 
@@ -173,24 +172,25 @@ class OpenWRT(_handler.Handler):
                 
         #print(self.wifi_networks[openwrt_ip])
         
-        self.cache.lock()
+        if _active_networks or self.wifi_networks[openwrt_ip]:
+            self.cache.lock()
 
-        for gid in _active_networks:
-            network = _active_networks[gid]
+            for gid in _active_networks:
+                network = _active_networks[gid]
 
-            group = self.cache.getGroup(gid, Group.WIFI)
-            group.setDetail("ssid", network["ssid"], "string")
-            group.setDetail("band", network["band"], "string")
-            group.setDetail("channel", network["channel"], "string")
-            #group.setDetail("vlan", network["vlan"], "string")
-            self.cache.confirmGroup(group, lambda event: events.append(event))
+                group = self.cache.getGroup(gid, Group.WIFI)
+                group.setDetail("ssid", network["ssid"], "string")
+                group.setDetail("band", network["band"], "string")
+                group.setDetail("channel", network["channel"], "string")
+                #group.setDetail("vlan", network["vlan"], "string")
+                self.cache.confirmGroup(group, lambda event: events.append(event))
+                        
+            for gid in list(self.wifi_networks[openwrt_ip].keys()):
+                if gid not in _active_networks:
+                    self.cache.removeGroup(gid, lambda event: events.append(event))
+                    del self.wifi_networks[openwrt_ip][gid]
                     
-        for gid in list(self.wifi_networks[openwrt_ip].keys()):
-            if gid not in _active_networks:
-                self.cache.removeGroup(gid, lambda event: events.append(event))
-                del self.wifi_networks[openwrt_ip][gid]
-                
-        self.cache.unlock()
+            self.cache.unlock()
         
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -211,75 +211,76 @@ class OpenWRT(_handler.Handler):
                     raise e
             client_results.append([client_result,wlan_network])
                 
-        self.cache.lock()
+        if client_results or self.client_wifi_connections[openwrt_ip]:
+            self.cache.lock()
 
-        _active_client_macs = []
-        _active_client_wifi_connections = []
-        for [client_result,wlan_network] in client_results:
-            #logging.info(client_result)
-            for mac in client_result["clients"]:
-                if mac == self.cache.getGatewayMAC():
-                    continue
-            
-                target_mac = openwrt_mac
-                target_interface = mac#wlan_network["ssid"]
-                vlan = wlan_network["vlan"]
-                gid = wlan_network["gid"]
+            _active_client_macs = []
+            _active_client_wifi_connections = []
+            for [client_result,wlan_network] in client_results:
+                #logging.info(client_result)
+                for mac in client_result["clients"]:
+                    if mac == self.cache.getGatewayMAC():
+                        continue
                 
-                uid = "{}-{}".format(mac, gid)
+                    target_mac = openwrt_mac
+                    target_interface = mac#wlan_network["ssid"]
+                    vlan = wlan_network["vlan"]
+                    gid = wlan_network["gid"]
+                    
+                    uid = "{}-{}".format(mac, gid)
 
-                device = self.cache.getDevice(mac)
-                device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
-                device.addGID(gid)
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    device = self.cache.getDevice(mac)
+                    device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
+                    device.addGID(gid)
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
 
-                details = client_result["clients"][mac]
-                if not details["assoc"]: 
-                    continue
-                
-                stat = self.cache.getConnectionStat(target_mac,target_interface)
-                if uid in self.client_wifi_connections[openwrt_ip]:
-                    in_bytes = stat.getInBytes()
-                    if in_bytes > 0:
-                        time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
-                        byte_diff = details["bytes"]["rx"] - in_bytes
-                        if byte_diff > 0:
-                            stat.setInAvg(byte_diff / time_diff)
+                    details = client_result["clients"][mac]
+                    if not details["assoc"]: 
+                        continue
+                    
+                    stat = self.cache.getConnectionStat(target_mac,target_interface)
+                    if uid in self.client_wifi_connections[openwrt_ip]:
+                        in_bytes = stat.getInBytes()
+                        if in_bytes > 0:
+                            time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
+                            byte_diff = details["bytes"]["rx"] - in_bytes
+                            if byte_diff > 0:
+                                stat.setInAvg(byte_diff / time_diff)
+                            
+                        outBytes = stat.getOutBytes()
+                        if outBytes > 0:
+                            time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
+                            byte_diff = details["bytes"]["tx"] - outBytes
+                            if byte_diff > 0:
+                                stat.setOutAvg(byte_diff / time_diff)
+
+                    #stat.setOnline(True) # => will be set bei arpscan listener
+                    stat.setInBytes(details["bytes"]["rx"])
+                    stat.setOutBytes(details["bytes"]["tx"])
+                    stat.setInSpeed(details["rate"]["rx"] * 1000)
+                    stat.setOutSpeed(details["rate"]["tx"] * 1000)
+                    stat.setDetail("signal", details["signal"], "attenuation")
+                    
+                    self.cache.confirmStat( stat, lambda event: events.append(event) )
                         
-                    outBytes = stat.getOutBytes()
-                    if outBytes > 0:
-                        time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
-                        byte_diff = details["bytes"]["tx"] - outBytes
-                        if byte_diff > 0:
-                            stat.setOutAvg(byte_diff / time_diff)
-
-                #stat.setOnline(True) # => will be set bei arpscan listener
-                stat.setInBytes(details["bytes"]["rx"])
-                stat.setOutBytes(details["bytes"]["tx"])
-                stat.setInSpeed(details["rate"]["rx"] * 1000)
-                stat.setOutSpeed(details["rate"]["tx"] * 1000)
-                stat.setDetail("signal", details["signal"], "attenuation")
-                
-                self.cache.confirmStat( stat, lambda event: events.append(event) )
+                    _active_client_macs.append(mac)
+                    _active_client_wifi_connections.append(uid)
+                    self.client_wifi_connections[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
                     
-                _active_client_macs.append(mac)
-                _active_client_wifi_connections.append(uid)
-                self.client_wifi_connections[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
-                
-        for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.client_wifi_connections[openwrt_ip].values()):
-            if uid not in _active_client_wifi_connections:
-                device = self.cache.getDevice(mac)
-                # connection should still exists, also when device becomes offline
-                #device.removeHopConnection(vlan, target_mac, target_interface)
-                device.removeGID(gid)
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
-                
-                if mac not in _active_client_macs:
-                    stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
-                
-                del self.client_wifi_connections[openwrt_ip][uid]
+            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.client_wifi_connections[openwrt_ip].values()):
+                if uid not in _active_client_wifi_connections:
+                    device = self.cache.getDevice(mac)
+                    # connection should still exists, also when device becomes offline
+                    #device.removeHopConnection(vlan, target_mac, target_interface)
+                    device.removeGID(gid)
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
-        self.cache.unlock()
+                    if mac not in _active_client_macs:
+                        stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
+                    
+                    del self.client_wifi_connections[openwrt_ip][uid]
+                        
+            self.cache.unlock()
                     
         if global_timeout > call_timeout:
             global_timeout = call_timeout
