@@ -90,9 +90,10 @@ class OpenWRT(_handler.Handler):
                     else:
                         logging.error("OpenWRT '{}' got exception {} - '{}'. Will suspend for 15 minutes.".format(openwrt_ip, e.getCode(), e))
                         timeout = self.config.remote_error_timeout
-                except NetworkException:
-                    logging.warning("OpenWRT '{}' not resolvable. Will retry in 15 seconds.".format(openwrt_ip))
-                    timeout = 15
+                except NetworkException as e:
+                    logging.warning("{}. Will retry in 15 seconds.".format(e))
+                    if timeout > 15:
+                        timeout = 15
                 except requests.exceptions.ConnectionError:
                     logging.warning("OpenWRT '{}' not available. Will suspend for 5 minutes.".format(openwrt_ip))
                     self.sessions[openwrt_ip] = [ None, now + self.config.remote_suspend_timeout ]
@@ -116,7 +117,7 @@ class OpenWRT(_handler.Handler):
     def _processDevice(self, openwrt_ip, now, events, timeout ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip)
         if openwrt_mac is None:
-            raise NetworkException()
+            raise NetworkException("OpenWRT '{}' not resolvable".format(openwrt_ip))
 
         if now >= self.sessions[openwrt_ip][1]:
             result = self._getSession( openwrt_ip, self.config.openwrt_username, self.config.openwrt_password )

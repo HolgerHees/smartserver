@@ -62,6 +62,10 @@ class LibreNMS(_handler.Handler):
                     was_suspended = False
                 
                 timeout = self._processLibreNMS(now, events, timeout)
+            except NetworkException as e:
+                logging.warning("{}. Will retry in 15 seconds.".format(e))
+                if timeout > 15:
+                    timeout = 15
             except requests.exceptions.ConnectionError:
                 logging.warning("LibreNMS currently not available. Will suspend for 5 minutes")
                 if timeout > self.config.remote_suspend_timeout:
@@ -253,8 +257,11 @@ class LibreNMS(_handler.Handler):
         for _device in _devices:
             mac = self.cache.ip2mac(_device["hostname"])
             if mac is None:
-                logging.info("Skip device {}. Not able to get mac address.".format(_device["hostname"]))
-                continue
+                if device["id"] in self.devices:
+                    mac = self.devices[device["id"]]["mac"]
+                    logging.warning("Device {} currently not resolvable. User old mac address for now.".format(_device["hostname"]))
+                else:
+                    raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]))
             
             device = {
                 "mac": mac,
@@ -339,3 +346,6 @@ class LibreNMS(_handler.Handler):
 
         if len(_events) > 0:
             self._getDispatcher().dispatch(self, _events)
+
+class NetworkException(Exception):
+    pass

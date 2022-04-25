@@ -70,9 +70,10 @@ class Fritzbox(_handler.Handler):
             for fritzbox_ip in self.config.fritzbox_devices:
                 try:
                     timeout = self._processDevice(fritzbox_ip, now, events, timeout)
-                except NetworkException:
-                    logging.warning("Fritzbox '{}' currently not resolvable. Will retry in 15 seconds.".format(fritzbox_ip))
-                    timeout = 15
+                except NetworkException as e:
+                    logging.warning("{}. Will retry in 15 seconds.".format(e))
+                    if timeout > 15:
+                        timeout = 15
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -84,7 +85,7 @@ class Fritzbox(_handler.Handler):
     def _processDevice(self, fritzbox_ip, now, events, timeout):
         fritzbox_mac = self.cache.ip2mac(fritzbox_ip)
         if fritzbox_mac is None:
-            raise NetworkException()
+            raise NetworkException("Fritzbox '{}' currently not resolvable".format(fritzbox_ip))
         
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
 
