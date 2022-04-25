@@ -11,8 +11,8 @@
 - name: add devices
   shell: "docker exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.host}}\""
   register: device_register_result
-  changed_when: "device_register_result.rc != 2"
-  failed_when: "device_register_result.rc != 0 and device_register_result.rc != 2"
+  changed_when: "device_register_result.rc == 0"
+  failed_when: "device_register_result.rc != 0 and 'already exists' not in device_register_result.stdout"
   with_items: "{{librenms_devices}}"
   
 - name: set api token
