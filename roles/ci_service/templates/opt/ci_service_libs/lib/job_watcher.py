@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 import logging
+import requests
 
 from smartserver.github import GitHub
 
@@ -102,24 +103,29 @@ class JobWatcher():
         self._cleanJobs()
 
         while not self.terminated:
-            if self.job_activity_pid is None or not service.checkPid(self.job_activity_pid):
-                self.job_activity_pid = service.getPid()
-            
-            if self.job_activity_pid is None:
-                last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
-                job_is_running = self.isJobRunning()
-                if job_is_running and last_seen_job_activity_diff > 5:
-                    logging.error("Job crash detected. Marked as 'crashed' now and check log files.")
-                    self._cleanState(status)
+            try:
+                if self.job_activity_pid is None or not service.checkPid(self.job_activity_pid):
+                    self.job_activity_pid = service.getPid()
+                
+                if self.job_activity_pid is None:
+                    last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
+                    job_is_running = self.isJobRunning()
+                    if job_is_running and last_seen_job_activity_diff > 5:
+                        logging.error("Job crash detected. Marked as 'crashed' now and check log files.")
+                        self._cleanState(status)
+                    else:
+                        self._cleanJobs()
                 else:
+                    self.last_seen_job_activity = datetime.now()
+                    last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
                     self._cleanJobs()
-            else:
-                self.last_seen_job_activity = datetime.now()
-                last_seen_job_activity_diff = ( datetime.now() - self.last_seen_job_activity ).total_seconds()
-                self._cleanJobs()
+                timeout = 1 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600
+            except NetworkException as e:
+                self.logging.info("{}. Retry in 1 minute.".format(str(e)))
+                timeout = 60
             
             with self.condition:
-                self.condition.wait( 1 if ( len(self.running_jobs) > 0 or last_seen_job_activity_diff < 15 ) else 600 )
+                self.condition.wait(timeout)
                 
     def _cleanState(self, status):
         self.lock.acquire()
@@ -152,9 +158,13 @@ class JobWatcher():
                     for git_hash in git_hashes: 
                         logging.info("Clean states of git hash '{}'".format(git_hash))
                         for deployment in git_hashes[git_hash]:
-                            GitHub.setState(repository_owner,config.access_token,git_hash,"error", deployment,"Build crashed")
-                            GitHub.cancelPendingStates(repository_owner, config.access_token, git_hash, "Build skipped")
-
+                            try:
+                                GitHub.setState(repository_owner,config.access_token,git_hash,"error", deployment,"Build crashed")
+                                GitHub.cancelPendingStates(repository_owner, config.access_token, git_hash, "Build skipped")
+                            except requests.exceptions.ConnectionError as e:
+                                self.logger.info(str(e))
+                                raise NetworkException("Github network issues")
+                            
                 # process logfiles
                 for name in invalid_jobs:
                     logging.info("Clean file '{}'".format(name))
@@ -170,3 +180,6 @@ class JobWatcher():
                             
     def getLastRefreshAsTimestamp(self):
         return self.last_mtime
+
+class NetworkException(Exception):
+    pass
