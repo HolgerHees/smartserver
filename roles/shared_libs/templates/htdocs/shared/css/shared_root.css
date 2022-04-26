@@ -29,7 +29,10 @@
 
   --light-content-hover-bg: #f2f2f2;
   --dark-content-hover-bg: rgba(51,122,183,.20);
- 
+
+  --light-content-hightlight-bg: #e6eff6;
+  --dark-content-hightlight-bg: #243242;
+
   --light-tooltip-bg: white;
   --light-tooltip-shadow: #666;
   --dark-tooltip-bg: #202124;
@@ -58,6 +61,7 @@
   --menu-active-bg: var(--light-menu-active-bg);
   --content-text: var(--light-content-text);
   --content-hover-bg: var(--light-content-hover-bg);
+  --content-hightlight-bg: var(--light-content-hightlight-bg);
   --tooltip-bg: var(--light-tooltip-bg);
   --tooltip-shadow: var(--light-tooltip-shadow);
 
@@ -78,6 +82,7 @@
   --menu-active-bg: var(--dark-menu-active-bg);
   --content-text: var(--dark-content-text);
   --content-hover-bg: var(--dark-content-hover-bg);
+  --content-hightlight-bg: var(--dark-content-hightlight-bg);
   --tooltip-bg: var(--dark-tooltip-bg);
   --tooltip-shadow: var(--dark-tooltip-shadow);
 
