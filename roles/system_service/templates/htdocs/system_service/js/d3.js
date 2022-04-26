@@ -550,7 +550,7 @@ mx.D3 = (function( ret )
         let html = "<div>";
         if( device.ip ) 
         {
-            let has_traffic = d.data.interface_stat && d.data.interface_stat.traffic.in !== null;
+            let has_traffic = d.data.interface_stat && d.data.interface_stat.traffic.in_avg !== null;
             let has_wifi = device.connection["type"] == "wifi";
             
             html += "<div><div>IP:</div><div";
