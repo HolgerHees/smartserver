@@ -75,7 +75,9 @@ class Device(Changeable):
         return self.type
 
     def setType(self, type):
-        self.type = type
+        if self.type != type:
+            self._markAsChanged("type")
+            self.type = type
 
     def getIP(self):
         return self.ip

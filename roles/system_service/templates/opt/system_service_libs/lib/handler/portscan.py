@@ -74,8 +74,10 @@ class PortScanner(_handler.Handler):
         with self.data_lock:
             self.monitored_devices[device.getMAC()] = datetime.now()
 
-            self.cache.lock()
             events = []
+
+            self.cache.lock()
+            device.lock();
             device.setServices(services)
             self.cache.confirmDevice( device, lambda event: events.append(event) )
             self.cache.unlock()

@@ -76,8 +76,8 @@ class Changeable():
         self._last_lock_source = inspect.stack()[2]
 
     def unlock(self):
+        if not self._lock:
+            raise Exception("Not locked " + str(self) )
+        
         #print("unlock " + str(self))
         self._lock = False
-
-
-

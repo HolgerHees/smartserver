@@ -142,8 +142,9 @@ class LibreNMS(_handler.Handler):
                 
                 mac = _device["mac"]
                 device = self.cache.getDevice(mac)
+                if device.getType() == "device":
+                    device.setType(_device["type"])
                 device.setIP(_device["ip"])
-                device.setType(_device["type"])
                 device.setDetail("hardware", _device["hardware"], "string")
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                             

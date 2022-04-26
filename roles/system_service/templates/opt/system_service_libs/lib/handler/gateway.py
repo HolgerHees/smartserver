@@ -23,14 +23,16 @@ class Gateway(_handler.Handler):
         
         self.cache.lock()
         for event in events:
-            device = event.getObject()
             gateway_mac = self.cache.getGatewayMAC()
             vlan = self.config.default_vlan
 
+            device = event.getObject()
+            device.lock()
             if gateway_mac == device.getMAC():
-                event.getObject().addHopConnection(Connection.ETHERNET, vlan, self.cache.getWanMAC(), self.cache.getWanInterface() );
+                device.setType("network")
+                device.addHopConnection(Connection.ETHERNET, vlan, self.cache.getWanMAC(), self.cache.getWanInterface() )
             else:
-                event.getObject().addHopConnection(Connection.ETHERNET, vlan, gateway_mac, self.cache.getGatewayInterface(vlan) );
+                device.addHopConnection(Connection.ETHERNET, vlan, gateway_mac, self.cache.getGatewayInterface(vlan) )
             
             self.cache.confirmDevice( device, lambda event: _events.append(event) )
             
