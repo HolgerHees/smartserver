@@ -132,16 +132,14 @@ mx.D3 = (function( ret )
     {
     }
     
-    ret.openChart = function(ip, is_wifi)
+    ret.openChart = function(ip, has_traffic, has_wifi)
     {
         let height = ( bodyHeight * 0.8 ) / 2;
         let url_prefix = 'https://grafana.' + document.location.host;
         let url = url_prefix + '/d-solo/system-info/system-info';
-        let body = '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
-        if( is_wifi ) 
-        {
-            body += '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
-        }
+        let body = "";
+        if( has_traffic ) body += '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        if( has_wifi ) body += '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
         
         dialog = mx.Dialog.init({
             body: body,
@@ -552,10 +550,13 @@ mx.D3 = (function( ret )
         let html = "<div>";
         if( device.ip ) 
         {
+            let has_traffic = d.data.interface_stat && d.data.interface_stat.traffic.in !== null;
+            let has_wifi = device.connection["type"] == "wifi";
+            
             html += "<div><div>IP:</div><div";
-            if( d.data.interface_stat ) html += ' class="link" onclick="mx.D3.openChart(\'' + device.ip + '\', ' + ( device.connection["type"] == "wifi" ? 'true' : 'false' ) + ')"';
+            if( has_traffic || has_wifi ) html += ' class="link" onclick="mx.D3.openChart(\'' + device.ip + '\', ' + ( has_traffic ? 'true' : 'false' ) + ', ' + ( has_wifi ? 'true' : 'false' ) + ')"';
             html += ">" + device.ip;
-            if( d.data.interface_stat ) html += ' <span class="icon-chart-area"></span>';
+            if( has_traffic || has_wifi ) html += ' <span class="icon-chart-area"></span>';
             html += "</div></div>";
         }
         if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
