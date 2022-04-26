@@ -1,5 +1,6 @@
 mx.Page = (function( ret ) {
     let visualisationType = "phone";
+    let theme = null;
     
     function createRipple(event) {
         const button = event.currentTarget;
@@ -70,6 +71,11 @@ mx.Page = (function( ret ) {
         deviceListener(callback);
     }
     
+    ret.isDarkTheme = function()
+    {
+        return theme == "dark";
+    }
+    
     ret.handleRequestError = function(status,url,callback,timeout)
     {
         try 
@@ -94,7 +100,7 @@ mx.Page = (function( ret ) {
         body.classList.add("inline");
         if( spacer_cls ) body.classList.add(spacer_cls);
         
-        var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
+        theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
         if( theme ) document.body.classList.add(theme);
 
         initDeviceListener();

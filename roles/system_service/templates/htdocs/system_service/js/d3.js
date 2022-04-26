@@ -136,10 +136,10 @@ mx.D3 = (function( ret )
     {
         let height = ( bodyHeight * 0.8 ) / 2;
         let url_prefix = 'https://grafana.' + document.location.host;
-        let url = url_prefix + '/d-solo/system-info/system-info';
+        let url = url_prefix + '/d-solo/system-info/system-info?theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ) + '&var-host=' + ip + '&orgId=1';
         let body = "";
-        if( has_traffic ) body += '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
-        if( has_wifi ) body += '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        if( has_traffic ) body += '<iframe src="' + url + '&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        if( has_wifi ) body += '<iframe src="' + url + '&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
         
         dialog = mx.Dialog.init({
             body: body,
