@@ -1,5 +1,8 @@
 auth_enabled: false
 
+analytics:
+  reporting_enabled: false
+
 server:
   http_listen_port: 3100
 #  http_server_read_timeout: 60s # allow longer time span queries
