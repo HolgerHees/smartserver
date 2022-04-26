@@ -172,6 +172,15 @@ body, svg {
     width: 100px;
 }
 
+.tooltip span.text > div > div > div.link,
+.tooltip div.rows > div > div.link {
+    cursor: pointer;
+    color: var(--link-color);
+}
+.tooltip span.text > div > div > div.link:hover,
+.tooltip div.rows > div > div.link:hover {
+    text-decoration: underline;
+}
 .tooltip div.rows {
     padding: 0 !important;
 }

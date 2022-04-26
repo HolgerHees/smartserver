@@ -5,12 +5,13 @@ import sys
 import signal
 import traceback 
 import logging
+import threading
+
 
 from datetime import datetime, timezone
 
-sys.path.insert(0, "/opt/shared/python")
-
 from smartserver.filewatcher import FileWatcher
+
 
 class ShutdownException(Exception):
     pass
@@ -27,7 +28,7 @@ class CustomFormatter(logging.Formatter):
         else:
             formatter = logging.Formatter(self.fmt_default)
         return formatter.format(record)
-
+    
 class Server():
     def initLogger(level):
         is_daemon = not os.isatty(sys.stdin.fileno())
@@ -53,19 +54,11 @@ class Server():
             logging.info("Shutdown initiated")
             self.terminate()
             
-        def exceptionHandler(type, value, tb):
-            logger = logging.getLogger()
-            logger.error("Uncaught exception: {0}".format(str(value)))
-            for line in traceback.TracebackException(type, value, tb).format(chain=True):
-                rows = line.split("\n")
-                for row in rows:
-                    if row == "":
-                        continue
-                    logger.error(row)
-
         signal.signal(signal.SIGTERM, shutdown)
         signal.signal(signal.SIGINT, shutdown)
-        sys.excepthook = exceptionHandler
+        sys.excepthook = self._exceptionHandler
+
+        self._installThreadExcepthook()
 
         self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         try:
@@ -76,6 +69,32 @@ class Server():
             self._lock_socket.bind("\0{}".format(name))
         except socket.error:
             raise Exception("Service '{}' already running".format(name))
+
+    def _installThreadExcepthook(self):
+        _init = threading.Thread.__init__
+
+        def init(self, *args, **kwargs):
+            _init(self, *args, **kwargs)
+            _run = self.run
+
+            def run(*args, **kwargs):
+                try:
+                    _run(*args, **kwargs)
+                except:
+                    sys.excepthook(*sys.exc_info())
+            self.run = run
+
+        threading.Thread.__init__ = init
+
+    def _exceptionHandler(self, type, value, tb):
+        logger = logging.getLogger()
+        logger.error("Uncaught exception: {0}".format(str(value)))
+        for line in traceback.TracebackException(type, value, tb).format(chain=True):
+            rows = line.split("\n")
+            for row in rows:
+                if row == "":
+                    continue
+                logger.error(row)
 
     def start(self, callback):
         try:

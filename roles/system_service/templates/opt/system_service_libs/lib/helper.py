@@ -33,7 +33,7 @@ class Helper():
         return process.returncode == 0
 
     def nmap(ip):
-        result = command.exec(["/usr/bin/nmap", "-sS", ip])
+        result = command.exec(["/usr/bin/nmap", "-sS", "-PN", ip])
         if result.returncode == 0:
             rows = result.stdout.decode().strip().split("\n")
             services = {}

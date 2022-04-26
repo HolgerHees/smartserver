@@ -132,6 +132,33 @@ mx.D3 = (function( ret )
     {
     }
     
+    ret.openChart = function(ip, is_wifi)
+    {
+        let height = ( bodyHeight * 0.8 ) / 2;
+        
+        let body = '<iframe src="https://grafana.smartmarvin.de/d-solo/system-info/system-info?var-host=' + ip + '&orgId=1&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        if( is_wifi ) 
+        {
+            body += '<iframe src="https://grafana.smartmarvin.de/d-solo/system-info/system-info?var-host=' + ip + '&orgId=1&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        }
+        
+        dialog = mx.Dialog.init({
+            id: "chart",
+            title: mx.I18N.get("Chart"),
+            body: body,
+            buttons: [
+                { "text": mx.I18N.get("Close") },
+            ],
+            class: "confirmDialog",
+            destroy: true
+        });
+        dialog.open();
+        mx.Page.refreshUI(dialog.getRootElement());
+
+        //url = "https://grafana.smartmarvin.de/d/system-info/system-info?var-host=" + device.ip + "&orgId=1";
+        //url = "https://grafana.smartmarvin.de/d/system-info/system-info?var-host=" + device.ip + "&viewPanel=6&orgId=1";
+    }
+    
     function initTree(endCount)
     {
         bodyRect = document.body.getBoundingClientRect();
@@ -527,6 +554,17 @@ mx.D3 = (function( ret )
         if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
         if( device.mac ) html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
         
+        if( d.data.interface_stat && device.ip )
+        {
+            chart_name = "Traffic";
+            if( device.connection["type"] == "wifi" ) 
+            {
+                chart_name += " & Signal";
+            }
+            
+            html += '<div><div>Chart:</div><div class="link" onclick="mx.D3.openChart(\'' + device.ip + '\', ' + ( device.connection["type"] == "wifi" ? 'true' : 'false' ) + ')">' + chart_name +"</div></div>";
+        }
+        
         if( d.data.device_stat )
         {
             let dateTimeMsg = "";
@@ -555,7 +593,17 @@ mx.D3 = (function( ret )
         html += "<div><div>Type:</div><div>" + device.type + "</div></div>";
     
         html += showRows(device.details,"Details","rows");
-        html += showRows(device.services,"Services","rows");
+
+        services = {}
+        Object.entries(device.services).forEach(function([key, value])
+        {
+            if( value == "http" ) value = {"value": value, "link": "http://" + device.dns };
+            else if( value == "https" ) value = {"value": value, "link": "https://" + device.dns };
+            
+            services[key] = value;
+        });
+        
+        html += showRows(services,"Services","rows");
         //html += showRows(device.ports,"Ports","rows");
         
         connection_data = {}
@@ -585,7 +633,7 @@ mx.D3 = (function( ret )
                             duplex += " - " + ( d.data.interface_stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
                         }
                         
-                        connection_data["Speed"] = formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex;
+                        connection_data["Speed"] = { "value": formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex };
                     }
                 }
 
@@ -593,14 +641,10 @@ mx.D3 = (function( ret )
                 {
                     if( key == "duplex" )
                         return;
-                        
-                    let _value = value["value"];
-                    if( value["format"] == "attenuation" ) 
-                        _value += " db";
-                    
-                    if( key == "wan_type" ) wan_data["type"] = _value;
-                    else if( key == "wan_state" ) wan_data["state"] = _value;
-                    else connection_data[key] = _value;
+                                           
+                    if( key == "wan_type" ) wan_data["type"] = value;
+                    else if( key == "wan_state" ) wan_data["state"] = value;
+                    else connection_data[key] = value;
                 });
             }
 
@@ -741,18 +785,24 @@ mx.D3 = (function( ret )
             Object.entries(rows).forEach(function([key, value])
             {
                 [key, value] = formatDetails(key, value)
+
+                if( !(value && typeof( value ) == "object") ) value = {"value": value}
+
+                let _value = value["value"];
+                if( value["format"] == "attenuation" ) 
+                    _value += " db";
                 
-                if( value && typeof( value ) == "object" )
-                {
-                    value = value["value"]
-                }
-                html += "<div><div>" + key + "</div><div>" + value + "</div></div>";
+                html += "<div";
+                
+                if( value["link"] )
+                    html += " class=\"link\" onclick=\"window.open('" + value["link"] + "', '_blank')\"";
+                
+                html += "><div>" + key + "</div><div>" + _value + "</div></div>";
             });
             html += "</div></div></div>";
         }
         return html;
     }
-
 
     return ret;
 })( mx.D3 || {} );
