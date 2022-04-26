@@ -54,7 +54,7 @@
     image_version: "{{librenms_version}}"
     files:
       - roles/librenms/templates/container/Dockerfile
-      - roles/librenms/templates/container/patches/HttpAuthAuthorizer.php
+      - roles/librenms/templates/container/patches/AuthorizerBase.php
   import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: create docker network
