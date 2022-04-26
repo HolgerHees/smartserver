@@ -149,6 +149,12 @@
       "css": "help-circled",
       "code": 59410,
       "src": "fontawesome"
+    },
+    {
+      "uid": "7d1ca956f4181a023de4b9efbed92524",
+      "css": "chart-area",
+      "code": 61950,
+      "src": "fontawesome"
     }
   ]
 }

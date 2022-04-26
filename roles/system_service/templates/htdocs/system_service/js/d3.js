@@ -135,18 +135,18 @@ mx.D3 = (function( ret )
     ret.openChart = function(ip, is_wifi)
     {
         let height = ( bodyHeight * 0.8 ) / 2;
-        
-        let body = '<iframe src="https://grafana.smartmarvin.de/d-solo/system-info/system-info?var-host=' + ip + '&orgId=1&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        let url_prefix = 'https://grafana.' + document.location.host;
+        let url = url_prefix + '/d-solo/system-info/system-info';
+        let body = '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
         if( is_wifi ) 
         {
-            body += '<iframe src="https://grafana.smartmarvin.de/d-solo/system-info/system-info?var-host=' + ip + '&orgId=1&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
+            body += '<iframe src="' + url + '?var-host=' + ip + '&orgId=1&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
         }
         
         dialog = mx.Dialog.init({
-            id: "chart",
-            title: mx.I18N.get("Chart"),
             body: body,
             buttons: [
+                { "text": mx.I18N.get("Open Grafana"), "callback": function(){ window.open(url_prefix + '/d/system-info/system-info?orgId=1', '_blank'); }  },
                 { "text": mx.I18N.get("Close") },
             ],
             class: "confirmDialog",
@@ -550,20 +550,16 @@ mx.D3 = (function( ret )
     {
         let device = d.data.device
         let html = "<div>";
-        if( device.ip ) html += "<div><div>IP:</div><div>" + device.ip + "</div></div>";
-        if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
-        if( device.mac ) html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
-        
-        if( d.data.interface_stat && device.ip )
+        if( device.ip ) 
         {
-            chart_name = "Traffic";
-            if( device.connection["type"] == "wifi" ) 
-            {
-                chart_name += " & Signal";
-            }
-            
-            html += '<div><div>Chart:</div><div class="link" onclick="mx.D3.openChart(\'' + device.ip + '\', ' + ( device.connection["type"] == "wifi" ? 'true' : 'false' ) + ')">' + chart_name +"</div></div>";
+            html += "<div><div>IP:</div><div";
+            if( d.data.interface_stat ) html += ' class="link" onclick="mx.D3.openChart(\'' + device.ip + '\', ' + ( device.connection["type"] == "wifi" ? 'true' : 'false' ) + ')"';
+            html += ">" + device.ip;
+            if( d.data.interface_stat ) html += ' <span class="icon-chart-area"></span>';
+            html += "</div></div>";
         }
+        if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
+        html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
         
         if( d.data.device_stat )
         {

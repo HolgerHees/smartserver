@@ -1,6 +1,8 @@
 {
   "index": {
     "Network visualizer": "Netzwerk Visualisierung",
-    "Service is currently not available": "Service ist aktuell nicht verfügbar"
+    "Service is currently not available": "Service ist aktuell nicht verfügbar",
+    "Close": "Schliessen",
+    "Open Grafana": "Grafana öffnen"
   }
 }
