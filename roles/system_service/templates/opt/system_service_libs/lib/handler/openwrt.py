@@ -250,16 +250,16 @@ class OpenWRT(_handler.Handler):
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
                     if uid in self.client_wifi_connections[openwrt_ip]:
                         in_bytes = stat.getInBytes()
-                        if in_bytes > 0:
+                        if in_bytes is not None:
                             time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
                             byte_diff = details["bytes"]["rx"] - in_bytes
                             if byte_diff > 0:
                                 stat.setInAvg(byte_diff / time_diff)
                             
-                        outBytes = stat.getOutBytes()
-                        if outBytes > 0:
+                        out_bytes = stat.getOutBytes()
+                        if out_bytes is not None:
                             time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
-                            byte_diff = details["bytes"]["tx"] - outBytes
+                            byte_diff = details["bytes"]["tx"] - out_bytes
                             if byte_diff > 0:
                                 stat.setOutAvg(byte_diff / time_diff)
 
