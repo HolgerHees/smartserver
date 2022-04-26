@@ -217,6 +217,7 @@ svg g.nodes rect.container {
     fill: #fff;
 }
 
+svg g.nodes rect.container.hub,
 svg g.nodes rect.container.network {
     fill: #d2e2ef;
 }
