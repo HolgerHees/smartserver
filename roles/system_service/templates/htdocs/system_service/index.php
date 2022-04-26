@@ -147,6 +147,8 @@ body, svg {
 .tooltip {
     background: #fff;
     pointer-events: auto;
+    max-width: 400px;
+    white-space: normal;
 }
 .tooltip span.text > div,
 .tooltip div.rows > div {
@@ -165,6 +167,11 @@ body, svg {
 .tooltip span.text > div > div > div:first-child {
     font-weight: bold;
 }
+
+.tooltip div.rows > div > div > div:first-child {
+    width: 100px;
+}
+
 .tooltip div.rows {
     padding: 0 !important;
 }

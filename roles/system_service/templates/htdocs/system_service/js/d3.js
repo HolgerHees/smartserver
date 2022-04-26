@@ -559,20 +559,16 @@ mx.D3 = (function( ret )
         //html += showRows(device.ports,"Ports","rows");
         
         connection_data = {}
-        device.gids.forEach(function(gid){
-            let group = groups.filter(group => group["gid"] == gid );
-            if( group[0]["type"] == "wifi" )
-                connection_data = group[0]["details"]
-            else
-                html += showRows(group[0]["details"],group[0]["type"],"rows");
-        });
-        
+        wan_data = {}
+
         if( device.connection )
         {
             if( device.connection["vlans"] )
                 connection_data["Vlan"] = "" + device.connection["vlans"];
             if( device.connection["target_interface"] && device.connection["type"] != "wifi" )
                 connection_data["Port"] = device.connection["target_interface"];
+            else
+                connection_data["Port"] = "Wifi";
             
             if( d.data.interface_stat )
             {
@@ -602,13 +598,22 @@ mx.D3 = (function( ret )
                     if( value["format"] == "attenuation" ) 
                         _value += " db";
                     
-                    connection_data[key] = _value;
+                    if( key == "wan_type" ) wan_data["type"] = _value;
+                    else if( key == "wan_state" ) wan_data["state"] = _value;
+                    else connection_data[key] = _value;
                 });
             }
+
         }
         
         html += showRows(connection_data,"Network","rows");
-            
+        html += showRows(wan_data,"Wan","rows");
+
+        device.gids.forEach(function(gid){
+            let group = groups.filter(group => group["gid"] == gid );
+            html += showRows(group[0]["details"],group[0]["type"],"rows");
+        });
+
         if( d.data.device_stat )
         {
             Object.entries(d.data.device_stat["details"]).forEach(function([key, value])
