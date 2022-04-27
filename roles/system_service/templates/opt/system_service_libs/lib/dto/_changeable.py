@@ -17,6 +17,7 @@ class Changeable():
         self.cache = cache
         
         self._lock = False
+        self._lock_owner = None
         
     def setDetail(self, key, value, fmt):
         if key not in self.details or self.details[key]["value"] != value:
@@ -62,22 +63,37 @@ class Changeable():
         changed_details = list(set(changed_details))
         changed_details.sort()
         return [state, changed_raw, ", ".join(changed_details)]
+    
+    def _checkLock(self):
+        if not self._lock:
+            raise Exception("Not locked " + str(self) )
         
-    def lock(self):
+    def isLocked(self):
+        return self._lock is not None
+
+    def lock(self, owner):
         #print("lock " + str(self))
 
         if self._lock:
             #[_, file ] = self._last_lock_source[1].rsplit("/", 1)
             #last_log_source_msg = "{}.{}:{}".format( file[:-3] , self._last_lock_source[3], self._last_lock_source[2])
             #raise Exception("Still locked " + str(self) + " in " + last_log_source_msg )
-            raise Exception("Still locked " + str(self) )
+            raise Exception("{} still locked".format(str(self)) )
+        
+        if self._lock_owner is not None and self._lock_owner != owner:
+            raise Exception("Lock of {} owned by {}".format(str(self), str(self._lock_owner)) )
         
         self._lock = True
+        self._lock_owner = owner
         self._last_lock_source = inspect.stack()[2]
 
-    def unlock(self):
+    def unlock(self, owner):
         if not self._lock:
-            raise Exception("Not locked " + str(self) )
+            raise Exception("Unable to unlock " + str(self) )
         
+        if self._lock_owner != owner:
+            raise Exception("Lock of {} owned by {}".format(str(self), str(self._lock_owner)) )
+
         #print("unlock " + str(self))
         self._lock = False
+        self._lock_owner = None

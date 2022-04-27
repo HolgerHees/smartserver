@@ -1,6 +1,7 @@
 mx.Selectbutton = (function( ret ) {
     var _options = {
         values: {},
+        class: "",
         selectors: {
             button: null,
         }
@@ -35,13 +36,19 @@ mx.Selectbutton = (function( ret ) {
             
             options.elements.buttonSelectionLayer.style.width = buttonRect.width + "px";
             options.elements.buttonSelectionLayer.style.boxSizing = "border-box";
-            
-            buttonRect = options.elements.button.getBoundingClientRect();
-            selectionRect = options.elements.buttonSelectionLayer.getBoundingClientRect();
+
+            //selectionRect = options.elements.buttonSelectionLayer.getBoundingClientRect();
+            //buttonRect = options.elements.button.getBoundingClientRect();
+            //
             //console.log(buttonRect);
             //console.log(selectionRect);
         }
-
+        
+        if( selectionRect.bottom > window.innerHeight )
+        {
+            options.elements.buttonSelectionLayer.style.bottom = ( buttonRect.height + selectionRect.height - 8 ) + "px";
+        }
+        
         window.setTimeout(function(){ options.elements.buttonSelectionLayer.style.opacity = 1; }, 0);
 
         options.elements.buttonSelector.classList.add("open");
@@ -62,6 +69,19 @@ mx.Selectbutton = (function( ret ) {
 
         window.removeEventListener('click', options.onBlur);
     }
+    
+    function toggle(event, options)
+    {
+        if( options.elements.buttonSelectionLayer.style.display )
+        {
+            hide(event, options);
+        }
+        else
+        {   
+            if( options.elements.button.classList.contains("disabled") ) return;
+            show(event, options); 
+        }
+    }
    
     function createSelectbutton(options)
     {
@@ -69,6 +89,13 @@ mx.Selectbutton = (function( ret ) {
 
         options.elements.container = document.createElement("div");
         options.elements.container.classList.add("buttonSelection");
+        if( options["class"] ) 
+        {
+            let cls = Array.isArray(options["class"]) ? options["class"] : [options["class"]];
+            cls.forEach(function(value){
+                options.elements.container.classList.add(value);
+            });
+        }
         mx.Core.insertAfter(options.elements.container, options.elements.button );
         options.elements.container.appendChild(options.elements.button);
         
@@ -83,17 +110,7 @@ mx.Selectbutton = (function( ret ) {
         options.elements.buttonSelector = document.createElement("div");
         options.elements.buttonSelector.innerHTML = "<span class=\"icon-play\"></span>";
         options.elements.buttonSelector.classList.add("buttonSelectionSelector");
-        options.elements.buttonSelector.onclick = function(event){ 
-            if( options.elements.buttonSelectionLayer.style.display )
-            {
-                hide(event, options);
-            }
-            else
-            {   
-                if( options.elements.button.classList.contains("disabled") ) return;
-                show(event, options); 
-            }
-        };
+        options.elements.buttonSelector.onclick = function(event){ toggle(event, options); };
         options.elements.button.appendChild(options.elements.buttonSelector);
         
         options.elements.buttonSelectionLayer = document.createElement("div");
@@ -105,7 +122,7 @@ mx.Selectbutton = (function( ret ) {
             
             let element = document.createElement("div");
             element.innerHTML = value["text"];
-            element.onclick = function(event){ hide(event, options); value["onclick"].bind(options.elements.button)(); };
+            element.onclick = function(event){ hide(event, options); value["onclick"].bind(options.elements.button)(element); };
             options.elements.buttonSelectionLayer.appendChild(element);
         }
         
@@ -124,6 +141,14 @@ mx.Selectbutton = (function( ret ) {
         createSelectbutton(options);
         
         return {
+            toggle: function(event)
+            {
+                toggle(event, options);
+            },
+            setText: function(text)
+            {
+                options.elements.buttonText.innerHTML = text;
+            }
         };
     };
 

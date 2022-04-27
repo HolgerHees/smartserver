@@ -109,8 +109,9 @@ mx.Page = (function( ret ) {
         if( title ) document.title = title;
     };
     
-    ret.initMain = function(callback)
+    ret.initMain = function(callback, _theme)
     {
+        theme = _theme;
         initDeviceListener(callback);
     }
     

@@ -76,11 +76,11 @@ class PortScanner(_handler.Handler):
 
             events = []
 
-            self.cache.lock()
-            device.lock();
+            self.cache.lock(self)
+            device.lock(self)
             device.setServices(services)
             self.cache.confirmDevice( device, lambda event: events.append(event) )
-            self.cache.unlock()
+            self.cache.unlock(self)
 
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)

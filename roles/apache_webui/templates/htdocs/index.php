@@ -24,6 +24,8 @@ require "./shared/libs/ressources.php";
 
     <script>
         var demoMode = document.location.search.indexOf("demo=") !== -1;
+        
+        var pageTheme = null;
 
         var pageReady = false;
         
@@ -193,7 +195,7 @@ require "./shared/libs/ressources.php";
                 menuPanel.close();
             });
 
-            mx.Page.initMain(deviceChanged);
+            mx.Page.initMain(deviceChanged, pageTheme);
 
             pageReady = true;
         
@@ -232,13 +234,15 @@ require "./shared/libs/ressources.php";
             var darkMql = window.matchMedia( ( demoMode ? '' : '(prefers-color-scheme: dark) and ' ) + '(max-width: 600px)');
             if( darkMql.matches )
             {
+                pageTheme = "dark";
                 document.body.classList.add("dark");
             }
             else
             {
+                pageTheme = "light";
                 document.body.classList.remove("dark");
             }
-            document.cookie = "theme=" + ( darkMql.matches ? "dark" : "light" ) + "; expires=0; domain=" + document.location.hostname;
+            document.cookie = "theme=" + pageTheme + "; expires=0; domain=" + document.location.hostname;
         };
         
         return ret;

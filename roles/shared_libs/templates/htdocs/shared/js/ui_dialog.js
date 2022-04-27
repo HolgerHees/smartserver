@@ -39,7 +39,7 @@ mx.Dialog = (function( ret ) {
                     button.classList.add(value);
                 });
             }
-            button.onclick = function(){ if( cfg["callback"] ) cfg["callback"](); else hideDialog(options); };
+            button.onclick = function(event){ if( cfg["callback"] ) cfg["callback"](event); else hideDialog(options); };
             button.innerHTML = cfg["text"];
             options.elements.contentActions.appendChild(button);
         }

@@ -1,13 +1,10 @@
 mx.D3 = (function( ret ) 
 {
     //let boxMargin = 3;
-    let boxPadding = 3;
-    let boxWidth = 150;
-    let boxHeight = 0;
-
-    let bodyRect = {};
-    let bodyWidth = null;
-    let bodyHeight = null;
+    let box_padding = 3;
+    let box_width = 150;
+    let box_height = 0;
+    let font_size = 0;
 
     let link = null;
     let node = null;
@@ -134,52 +131,83 @@ mx.D3 = (function( ret )
     
     ret.openChart = function(ip, has_traffic, has_wifi)
     {
-        let height = ( bodyHeight * 0.8 ) / 2;
+        let timeranges = {
+            "now-3h": mx.I18N.get("Last 3 hours"),
+            "now-6h": mx.I18N.get("Last 6 hours"),
+            "now-12h": mx.I18N.get("Last 12 hours"),
+            "now-24h": mx.I18N.get("Last 24 hours"),
+            "now-2d": mx.I18N.get("Last 2 days"),
+            "now-7d": mx.I18N.get("Last 7 days")
+        };
+
+        let height = ( window.innerHeight * 0.8 ) / 2;
         let url_prefix = 'https://grafana.' + document.location.host;
         let url = url_prefix + '/d-solo/system-info/system-info?theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ) + '&var-host=' + ip + '&orgId=1';
         let body = "";
-        if( has_traffic ) body += '<iframe src="' + url + '&panelId=7" width="100%" height="' + height + '" frameborder="0"></iframe>';
-        if( has_wifi ) body += '<iframe src="' + url + '&panelId=4" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        if( has_traffic ) body += '<iframe src="' + url + '&panelId=7&from=now-6h&to=now" width="100%" height="' + height + '" frameborder="0"></iframe>';
+        if( has_wifi ) body += '<iframe src="' + url + '&panelId=4&from=now-6h&to=now" width="100%" height="' + height + '" frameborder="0"></iframe>';
+
+        let dialog = null;
+        let selectButton = null;
         
+        function changeTimerange(btn, timerange)
+        {
+            selectButton.setText(btn.innerHTML);
+            
+            let iframes = dialog.getRootElement().querySelectorAll("iframe");
+            iframes.forEach(function(iframe)
+            {
+                iframe.src = iframe.src.replace(/&from=[^&]+&/i,"&from=" + timerange + "&");
+            });
+        }
+       
         dialog = mx.Dialog.init({
             body: body,
             buttons: [
-                { "text": mx.I18N.get("Open Grafana"), "callback": function(){ window.open(url_prefix + '/d/system-info/system-info?orgId=1', '_blank'); }  },
+                { "text": timeranges["now-6h"], "class": "timeRange", "callback": function(event){ selectButton.toggle(event); } },
+                { "text": mx.I18N.get("Open Grafana"), "callback": function(){ window.open(url_prefix + '/d/system-info/system-info?orgId=1&theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ), '_blank'); }  },
                 { "text": mx.I18N.get("Close") },
             ],
             class: "confirmDialog",
             destroy: true
         });
+        
+        let values = []
+        Object.entries(timeranges).forEach(function([key,text])
+        {
+            values.push({ "text": text, "onclick": function(selection){ changeTimerange(selection, key); } });
+        })
+        
+        selectButton = mx.Selectbutton.init({
+            values: values,
+            class: "alignLeft",
+            elements: {
+                button: dialog.getRootElement().querySelector(".timeRange")
+            }
+        });
+
         dialog.open();
         mx.Page.refreshUI(dialog.getRootElement());
-
-        //url = "https://grafana.smartmarvin.de/d/system-info/system-info?var-host=" + device.ip + "&orgId=1";
-        //url = "https://grafana.smartmarvin.de/d/system-info/system-info?var-host=" + device.ip + "&viewPanel=6&orgId=1";
     }
     
     function initTree(endCount)
     {
-        bodyRect = document.body.getBoundingClientRect();
-        bodyWidth = bodyRect.width;
-        bodyHeight = bodyRect.height;
+        const width = 1000;
+        const height = 1000;
         
-        const width = 1000;//bodyWidth;
-        const height = 1000;//bodyWidth;
-        //scaleFactor = ( bodyWidth > bodyHeight ? bodyWidth : bodyHeight ) / 1000;
-        //const width = bodyWidth / scaleFactor;
-        //const height = bodyHeight / scaleFactor;
-
         // Compute the layout.
-        let dx = ( height / endCount ) - ( 2 * boxPadding ) ;
+        let dx = ( height / endCount ) - ( 2 * box_padding ) ;
         if( dx > 30 ) dx = 30;
         let dy = width / (root.height + 1);
 
         d3.tree().nodeSize([dx + 2, dy])(root);
         //d3.tree().size([300, 200])(root);
         
-        boxHeight = dx;
+        box_height = dx;
+        font_size = box_height / 2.5;
+        if( font_size > 8.6 ) font_size = 8.6;
         
-        //console.log(boxHeight);
+        //console.log(box_height);
 
         // Center the tree.
         let x0 = Infinity;
@@ -247,7 +275,7 @@ mx.D3 = (function( ret )
                 }
                 else
                 {
-                    toogleTooltip(d);
+                    toggleTooltip(d);
                 }
             });
                 
@@ -258,8 +286,8 @@ mx.D3 = (function( ret )
 
         node.append("rect")
             .attr("class", d => "container " + ( d.data["device"] ? d.data["device"]["type"] : "" ) )
-            .attr("width", boxWidth)
-            .attr("height", boxHeight);
+            .attr("width", box_width)
+            .attr("height", box_height);
 
         node.append("circle")
             .attr("class", d => ( isOnline(d) ? "online" : "offline" ) )
@@ -270,27 +298,26 @@ mx.D3 = (function( ret )
         //  if (title != null) node.append("title")
         //      .text(d => title(d.data, d));
 
-        let font_size = boxHeight / 2.5
-            
         node.append("text")
             .classed("identifier", true)
-            .attr("dy", font_size * 1.1)
-            .attr("x", "5")
+            .attr("dy", font_size * 1.2)
+            .attr("x", "2.5")
             .attr("font-size", font_size)
         //      .attr("x", d => d.children ? -6 : 6)
         //      .attr("text-anchor", d => d.children ? "end" : "start")
             .text(d => d.data["device"]["ip"] ? d.data["device"]["ip"] : d.data["device"]["mac"] ).each( wrap );
-        
+            
+        let details_font_size = box_height / 4;
+
         node.append("text")
             .classed("name", true)
-            .attr("dy", font_size * 2 * 1.1)
-            .attr("x", "5")
+            .attr("dy", font_size * 2.3 * 1.2)
+            .attr("x", "2.5")
             .attr("font-size", font_size * 0.9)
         //      .attr("x", d => d.children ? -6 : 6)
         //      .attr("text-anchor", "start")
             .text(d => d.data["device"]["dns"] ? d.data["device"]["dns"] : d.data["device"]["type"] ).each( wrap );
 
-        let details_font_size = boxHeight / 4;
         let details_text = node.append("text")
             .classed("details", true)
             .attr("font-size", details_font_size);
@@ -300,7 +327,7 @@ mx.D3 = (function( ret )
 
         let traffic_background = node.append("rect").classed("traffic", true);
 
-        let traffic_font_size = boxHeight / 4;
+        let traffic_font_size = box_height / 4;
         let traffic_text = node.append("text")
             .classed("traffic", true)
             .attr("font-size", traffic_font_size);
@@ -365,12 +392,12 @@ mx.D3 = (function( ret )
                     top_span.text(d => group[0].details.ssid["value"]);
                     
                     let textLength = top_span.node().getComputedTextLength() + 3;
-                    top_span.attr("x", boxWidth - textLength );
-                    top_span.attr("y", boxHeight - 3 - font_size );
+                    top_span.attr("x", box_width - textLength );
+                    top_span.attr("y", box_height - 3 - font_size );
 
                     textLength = bottom_span.node().getComputedTextLength() + 3;
-                    bottom_span.attr("x", boxWidth - textLength );
-                    bottom_span.attr("y", boxHeight - 3 );
+                    bottom_span.attr("x", box_width - textLength );
+                    bottom_span.attr("y", box_height - 3 );
                 }
             });
         }  
@@ -378,8 +405,8 @@ mx.D3 = (function( ret )
         {
             bottom_span.text(d => "WAN: " + d.data.interface_stat.details["wan_state"]["value"]);
             let textLength = bottom_span.node().getComputedTextLength() + 3;
-            bottom_span.attr("x", boxWidth - textLength );
-            bottom_span.attr("y", boxHeight - 3 );
+            bottom_span.attr("x", box_width - textLength );
+            bottom_span.attr("y", box_height - 3 );
         }
     }
     
@@ -406,15 +433,15 @@ mx.D3 = (function( ret )
                     wan_in_span.text(d => wan_in_data == 0 ? "" : "⇨ " + wan_in_data );
                     
                     let textLength = wan_in_span.node().getComputedTextLength() + 3;
-                    wan_in_span.attr("x", boxWidth / 2 - 2 - textLength );
-                    wan_in_span.attr("y", boxHeight + font_size * 1.5 );
+                    wan_in_span.attr("x", box_width / 2 - 2 - textLength );
+                    wan_in_span.attr("y", box_height + font_size * 1.5 );
                     
                     let wan_out_data = formatTraffic( d.data.interface_stat.traffic["out_avg"]);
                     let wan_out_span = text.select(".wan_out");
                     wan_out_span.text(d => wan_out_data == 0 ? "" : "⇨ " + wan_out_data );
                     textLength = wan_out_span.node().getComputedTextLength() + 3;
-                    wan_out_span.attr("x", boxWidth / 2 + 4 );
-                    wan_out_span.attr("y", boxHeight + font_size * 1.5);
+                    wan_out_span.attr("x", box_width / 2 + 4 );
+                    wan_out_span.attr("y", box_height + font_size * 1.5);
                 }
             }*/
         }
@@ -440,10 +467,10 @@ mx.D3 = (function( ret )
             let textLength = in_span.node().getComputedTextLength() + 3;
             if( position != "default" )
             {
-                in_span.attr("x", boxWidth / 2 - 2 - textLength );
+                in_span.attr("x", box_width / 2 - 2 - textLength );
                 if( position == "bottom" ) 
                 {
-                    in_span.attr("y", boxHeight + font_size * 1.5 );
+                    in_span.attr("y", box_height + font_size * 1.5 );
                 }
                 else
                 {
@@ -469,10 +496,10 @@ mx.D3 = (function( ret )
             let textLength = out_span.node().getComputedTextLength() + 3;
             if( position != "default" )
             {
-                out_span.attr("x", boxWidth / 2 + 4 );
+                out_span.attr("x", box_width / 2 + 4 );
                 if( position == "bottom" ) 
                 {
-                    out_span.attr("y", boxHeight + font_size * 1.5);
+                    out_span.attr("y", box_height + font_size * 1.5);
                 }
                 else
                 {
@@ -522,10 +549,10 @@ mx.D3 = (function( ret )
         {
             let path = d3.linkHorizontal()
                 .source(function (d) {
-                    return [ d.source.y + (boxWidth / 2), (d.source.x + d.source.height / 2) + boxHeight / 2 + boxHeight * 1.5 ];
+                    return [ d.source.y + (box_width / 2), (d.source.x + d.source.height / 2) + box_height / 2 + box_height * 1.5 ];
                 })
                 .target(function (d) {
-                    return [ d.target.y + (boxWidth / 2), (d.target.x + d.target.height / 2) + boxHeight / 2 ];
+                    return [ d.target.y + (box_width / 2), (d.target.x + d.target.height / 2) + box_height / 2 ];
                 });
                     
             return path(d);
@@ -534,10 +561,10 @@ mx.D3 = (function( ret )
         {
             let path = d3.linkHorizontal()
                 .source(function (d) {
-                    return [ d.source.y + boxWidth - 30, (d.source.x + d.source.height / 2) + boxHeight / 2 ];
+                    return [ d.source.y + box_width - 30, (d.source.x + d.source.height / 2) + box_height / 2 ];
                 })
                 .target(function (d) {
-                    return [ d.target.y, (d.target.x + d.target.height / 2) + boxHeight / 2 ];
+                    return [ d.target.y, (d.target.x + d.target.height / 2) + box_height / 2 ];
                 });
                     
             return path(d);
@@ -667,7 +694,30 @@ mx.D3 = (function( ret )
         html += "</div>"
         
         mx.Tooltip.setText(html);
+
+        // calculate font size
+        let container = document.body.querySelector("svg .nodes rect");
+        let box = container.getBoundingClientRect();
+        let real_font_size = box.height * font_size / box_height;
+        let real_max_width = box.width * 250 / box_width;
         
+        let tooltip = mx.Tooltip.getRootElement();
+        tooltip.style.fontSize = real_font_size + "px";
+        tooltip.style.maxWidth = real_max_width + "px";
+
+        // calculate column alignment
+        let columns = tooltip.querySelectorAll("div.rows > div > div > div:first-child");
+        let column_width = 0;
+        columns.forEach(function(column)
+        {
+            let length = column.getBoundingClientRect().width;
+            if( length > column_width ) column_width = length;
+        });
+        columns.forEach(function(column)
+        {
+            column.style.minWidth = column_width + "px";
+        });
+            
         link
             .classed("online", false)
             .classed("offline", false)
@@ -676,7 +726,7 @@ mx.D3 = (function( ret )
             .classed("offline", !isOnline(d));
     }
         
-    function toogleTooltip(d)
+    function toggleTooltip(d)
     {
         let device = d.data.device
         mx.Tooltip.toggle();
@@ -693,11 +743,13 @@ mx.D3 = (function( ret )
         let arrowOffset = 0;
         let arrowPosition = "right";
         
+        let body_height = window.innerHeight;
+        
         let top = nodeRect.top;
-        if( top + tooltipRect.height > bodyHeight ) 
+        if( top + tooltipRect.height > body_height ) 
         {
-            top = bodyHeight - tooltipRect.height - 6;
-            arrowOffset = tooltipRect.height - ( bodyHeight - ( nodeRect.top + nodeRect.height / 2 ) );
+            top = body_height - tooltipRect.height - 6;
+            arrowOffset = tooltipRect.height - ( body_height - ( nodeRect.top + nodeRect.height / 2 ) );
         }
         else
         {

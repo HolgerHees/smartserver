@@ -105,7 +105,7 @@ mx.Menu = (function( ret ) {
                                         getInfo: function(){ return entry['info']; },
                                         getNewWindow: function(){ return entry['newWindow']; },
                                         getIconUrl: function(){ return entry['iconUrl']; },
-                                        getUrl: function(){ return entry['url']; }
+                                        getUrl: function(){ return typeof entry['url'] === 'object' ? entry['url']['callback'](entry['url']['url']) : entry['url']; }
                                     }
                                 };
                             },
@@ -162,8 +162,10 @@ mx.Menu = (function( ret ) {
                         if( entry['title'] ) entry['title'] = processI18N(entry['title'],mainKey+'_'+subKey);
                         if( entry['info'] ) entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
 
-                        match = entry['url'].match(/(\/\/)([^\.]*)\.({host})/);
-                        if( match !== null ) entry['url'] = entry['url'].replace('//' + match[2] + "." + match[3], "//" + mx.Host.getAuthPrefix() + match[2] + "." + mx.Host.getDomain() );
+                        let reference = entry;
+                        if( typeof reference['url'] === "object" ) reference = reference['url'];
+                        match = reference['url'].match(/(\/\/)([^\.]*)\.({host})/);
+                        if( match !== null ) reference['url'] = reference['url'].replace('//' + match[2] + "." + match[3], "//" + mx.Host.getAuthPrefix() + match[2] + "." + mx.Host.getDomain() );
                     }
                     else
                     {

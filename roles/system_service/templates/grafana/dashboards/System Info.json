@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "iteration": 1650977324764,
+  "iteration": 1651069282163,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -315,7 +315,7 @@
             {
               "key": "band",
               "operator": "=",
-              "value": "2g"
+              "value": "5g"
             },
             {
               "condition": "AND",
@@ -326,7 +326,7 @@
           ]
         }
       ],
-      "title": "2G",
+      "title": "5G",
       "type": "timeseries"
     },
     {
@@ -820,6 +820,6 @@
   "timezone": "",
   "title": "System Info",
   "uid": "system-info",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }

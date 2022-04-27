@@ -1,5 +1,5 @@
 mx.Error = (function( ret ) {
-    let hasError = true;
+    let hasError = false;
     
     function hideError()
     {
@@ -13,7 +13,7 @@ mx.Error = (function( ret ) {
             if( element.nodeType == Node.TEXT_NODE ) continue;
             if( element.classList.contains("error") )
             {
-                element.style.display = "none";
+                element.style.display = "";
             }
             else
             {
@@ -38,7 +38,7 @@ mx.Error = (function( ret ) {
             if( element.nodeType == Node.TEXT_NODE ) continue;
             if( element.classList.contains("error") )
             {
-                element.style.display = "";
+                element.style.display = "block";
                 element.innerHTML = "<div>" + message + "</div>";
             }
             else if( element.style.display != "none" )
@@ -60,7 +60,7 @@ mx.Error = (function( ret ) {
         alert(mx.I18N.get("Service Error") + " '" + code + " " + text + "'" );
     }
     
-    ret.handleServerNotAvailable = function( message )
+    ret.handleError = function( message )
     {
         showError( message );
     }

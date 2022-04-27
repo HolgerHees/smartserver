@@ -20,6 +20,7 @@ class DeviceStat(Changeable):
         return self._getCache().getUnlockedDevice(self.mac)
     
     def setOnline(self,flag):
+        self._checkLock()
         if flag:
             self.last_seen = datetime.now()
             offline_since = None

@@ -51,12 +51,14 @@ class Dispatcher():
                 break
         
         if has_connections:
+            self.cache.lock(self)
             for device in self.cache.getDevices():   
                 device.resetConnection()
                 
             processed_devices = {}    
             for device in self.cache.getDevices():   
                 device.calculateConnectionPath(processed_devices)
+            self.cache.unlock(self)
         # ***********************************
         
         for [event_types, handler] in self.event_pipeline:

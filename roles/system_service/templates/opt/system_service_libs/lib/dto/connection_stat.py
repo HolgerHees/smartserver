@@ -32,6 +32,7 @@ class ConnectionStat(Changeable):
         return self.in_bytes
 
     def setInBytes(self,bytes):
+        self._checkLock()
         if self.in_bytes != bytes:
             self._markAsChanged("in_bytes", "in bytes")
             self.in_bytes = bytes
@@ -40,6 +41,7 @@ class ConnectionStat(Changeable):
         return self.in_avg
 
     def setInAvg(self,bytes):
+        self._checkLock()
         if self.in_avg != bytes:
             self._markAsChanged("in_avg", "in avg")
             self.in_avg = bytes
@@ -48,6 +50,7 @@ class ConnectionStat(Changeable):
         return self.out_bytes
 
     def setOutBytes(self,bytes):
+        self._checkLock()
         if self.out_bytes != bytes:
             self._markAsChanged("out_bytes", "out bytes")
             self.out_bytes = bytes
@@ -56,16 +59,19 @@ class ConnectionStat(Changeable):
         return self.in_avg
 
     def setOutAvg(self,bytes):
+        self._checkLock()
         if self.out_avg != bytes:
             self._markAsChanged("out_avg", "out avg")
             self.out_avg = bytes
 
     def setInSpeed(self,speed):
+        self._checkLock()
         if self.in_speed != speed:
             self._markAsChanged("in_speed", "in speed")
             self.in_speed = speed
 
     def setOutSpeed(self,speed):
+        self._checkLock()
         if self.out_speed != speed:
             self._markAsChanged("out_speed", "out speed")
             self.out_speed = speed

@@ -21,6 +21,7 @@ class Cache():
         self.config = config
         
         self._lock = threading.Lock()
+        self._lock_owner = None
         
         self.groups = {}
         self.devices = {}
@@ -61,11 +62,38 @@ class Cache():
         #stack[1][3], 
         logging.info(msg, extra={"_module": "{}:{}".format( file[:-3] , stack[1][2] ) })
     
-    def lock(self):
+    def lock(self, owner):
         self._lock.acquire()
+        self._lock_owner = owner
         
-    def unlock(self):
+    def unlock(self, owner):
         self._lock.release()
+        self._lock_owner = None
+        
+    def cleanLocks(self, owner, events):
+        if self._lock_owner != owner:
+            return
+        
+        for group in self.getGroups():
+            if not group.isLocked():
+                continue
+            self.confirmGroup(group, lambda event: events.append(event))
+        
+        for device in self.getDevices():
+            if not device.isLocked():
+                continue
+            self.confirmDevice(device, lambda event: events.append(event))
+
+        for stat in self.getStats():
+            if not stat.isLocked():
+                continue
+            self.confirmStat(stat, lambda event: events.append(event))
+
+        self.unlock(owner)
+    
+    def _checkLock(self):
+        if self._lock_owner is None:
+            raise Exception("Cache not locked")
         
     def getGroups(self):
         return list(self.groups.values())
@@ -74,16 +102,21 @@ class Cache():
         return self.groups.get(gid, None)
 
     def getGroup(self, gid, type):
+        self._checkLock()
+
         if gid not in self.groups:
             group = Group(self, gid, type)
             self.groups[gid] = group
         else:
             group = self.groups[gid]
-        group.lock()
+            
+        group.lock(self._lock_owner)
         return group
             
     def confirmGroup(self, group, event_callback ):
-        group.unlock()
+        self._checkLock()
+
+        group.unlock(self._lock_owner)
 
         [state, change_raw, change_details] = group.confirmModificationState()
         if state == Changeable.NEW:
@@ -98,6 +131,8 @@ class Cache():
         event_callback(Event(Event.TYPE_GROUP, event_action, group, change_raw))
         
     def removeGroup(self, gid, event_callback):
+        self._checkLock()
+
         if gid in self.groups:
             self._eventLog(inspect.stack(), "Remove group {}".format(self.groups[gid]) )
             event_callback(Event(Event.TYPE_GROUP, Event.ACTION_DELETE, self.groups[gid]))
@@ -110,16 +145,22 @@ class Cache():
         return self.devices.get(mac, None)
     
     def getDevice(self, mac):
+        self._checkLock()
+        
         if mac not in self.devices:
             device = Device(self, mac,"device")
             self.devices[mac] = device
         else:
             device = self.devices[mac]
-        device.lock()
+
+        device.lock(self._lock_owner)
+
         return device
             
     def confirmDevice(self, device, event_callback ):
-        device.unlock()
+        self._checkLock()
+
+        device.unlock(self._lock_owner)
 
         [state, change_raw, change_details] = device.confirmModificationState()
         if state == Changeable.NEW:
@@ -134,6 +175,8 @@ class Cache():
         event_callback(Event(Event.TYPE_DEVICE, event_action, device, change_raw ))
         
     def removeDevice(self, mac, event_callback):
+        self._checkLock()
+
         if mac in self.devices:
             self._eventLog(inspect.stack(), "Remove group {}".format(self.devices[mac]))
             event_callback(Event(Event.TYPE_DEVICE, Event.ACTION_DELETE, self.devices[mac] ))
@@ -153,17 +196,22 @@ class Cache():
         return self.getConnectionStat(mac, None)
     
     def getConnectionStat(self, mac, interface):
+        self._checkLock()
+
         id = "{}-{}".format(mac, interface)
         if id not in self.stats:
             stat = ConnectionStat(self, mac, interface) if interface is not None else DeviceStat(self, mac)
             self.stats[id] = stat
         else:
             stat = self.stats[id]
-        stat.lock()
+            
+        stat.lock(self._lock_owner)
         return stat
                        
     def confirmStat(self, stat, event_callback ):
-        stat.unlock()
+        self._checkLock()
+
+        stat.unlock(self._lock_owner)
 
         [state, change_raw, change_details] = stat.confirmModificationState()
         if state == Changeable.NEW:
@@ -178,9 +226,13 @@ class Cache():
         event_callback(Event(Event.TYPE_STAT, event_action, stat, change_raw))
 
     def removeDeviceStat(self, mac, event_callback):
+        self._checkLock()
+
         self.removeInterfaceStat(mac, None, event_callback)
         
     def removeConnectionStat(self, mac, interface, event_callback):
+        self._checkLock()
+
         id = "{}-{}".format(mac, interface)
         if id in self.stats:
             related = self.devices.get(mac, None)

@@ -174,7 +174,7 @@ class DeploymentUpdate:
             #print(last_deployment)
             #print(commit_lines)
             #print(committed_changes)
-
+            
             filtered_files = {}
             #lines = [ele.split("\t") for ele in uncommitted_changes]
             #lines = [ele.strip().split(" ",1) for ele in uncommitted_changes]
@@ -184,8 +184,8 @@ class DeploymentUpdate:
                 
                 line = line.strip()
                 flag = line[:1]
-                path = line[1:].strip()
-                
+                path = line[1:].strip().strip("\"")
+
                 if self.filterPath( flag, path, last_deployment.timestamp() ):
                     if path not in filtered_files or flag == "A":
                         filtered_files[path] = {"flag": flag, "path": path}

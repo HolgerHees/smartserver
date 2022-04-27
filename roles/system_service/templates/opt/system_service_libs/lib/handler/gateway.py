@@ -21,13 +21,13 @@ class Gateway(_handler.Handler):
     def processEvents(self, events):
         _events = []
         
-        self.cache.lock()
+        self.cache.lock(self)
         for event in events:
             gateway_mac = self.cache.getGatewayMAC()
             vlan = self.config.default_vlan
 
             device = event.getObject()
-            device.lock()
+            device.lock(self)
             if gateway_mac == device.getMAC():
                 device.setType("network")
                 device.addHopConnection(Connection.ETHERNET, vlan, self.cache.getWanMAC(), self.cache.getWanInterface() )
@@ -36,7 +36,7 @@ class Gateway(_handler.Handler):
             
             self.cache.confirmDevice( device, lambda event: _events.append(event) )
             
-        self.cache.unlock()
+        self.cache.unlock(self)
             
         if len(_events) > 0:
             self._getDispatcher().dispatch(self, _events)

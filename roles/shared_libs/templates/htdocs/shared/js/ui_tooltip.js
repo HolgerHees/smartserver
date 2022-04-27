@@ -50,7 +50,8 @@ mx.Tooltip = (function( ret ) {
     {
         if( tooltip == null ) create();
         
-        tooltip.style.cssText = "left: " + tooltipLeft + "px; top: " + tooltipTop + "px;";
+        tooltip.style.left = tooltipLeft + "px";
+        tooltip.style.top = tooltipTop + "px";
         
         if( !arrowPosition ) arrowPosition = "bottom";
         

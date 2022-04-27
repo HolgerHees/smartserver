@@ -196,10 +196,13 @@ div.form.table > div.row:first-child > div.sort {
 .dialogLayer .box .actions {
     display: flex;
     align-items: center;
-    justify-content: right;
+    justify-content: flex-end;
 }
 .dialogLayer .box .actions .form.button {
     margin-left: 5px;
+}
+.dialogLayer .box .actions .alignLeft {
+    margin-right:auto;
 }
 
 /* AUTOCOMPLETE & SELECTIONBUTTON */
@@ -399,3 +402,19 @@ div.buttonSelection > div.buttonSelectionLayer > div:hover {
 .tooltip.active {
   visibility: visible;
 }  
+
+/* ERROR & INFO */
+div.error {
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+  padding-top: 20px;
+  display: none;
+} 
+
+div.error > div {
+  display: inline-block;
+  color: var(--color-red);
+}
+

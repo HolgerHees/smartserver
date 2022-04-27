@@ -44,7 +44,7 @@ mx.UpdateServiceActions = (function( ret ) {
                 }
                 else if( this.status == 0 || this.status == 503 ) 
                 {
-                    mx.Error.handleServerNotAvailable( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
+                    mx.Error.handleError( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
                 }
                 else
                 {

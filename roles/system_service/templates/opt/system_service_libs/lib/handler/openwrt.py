@@ -90,16 +90,13 @@ class OpenWRT(_handler.Handler):
                         logging.error("OpenWRT '{}' got exception {} - '{}'. Will suspend for 15 minutes.".format(openwrt_ip, e.getCode(), e))
                         timeout = self.config.remote_error_timeout
                 except NetworkException as e:
-                    logging.warning("{}. Will retry in 15 seconds.".format(e))
-                    if timeout > 15:
-                        timeout = 15
-                except requests.exceptions.ConnectionError:
-                    logging.warning("OpenWRT '{}' not available. Will suspend for 5 minutes.".format(openwrt_ip))
-                    self.sessions[openwrt_ip] = [ None, now + self.config.remote_suspend_timeout ]
-                    if timeout > self.config.remote_suspend_timeout:
-                        timeout = self.config.remote_suspend_timeout
+                    logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
+                    if timeout > e.getTimeout():
+                        timeout = e.getTimeout()
                     was_suspended = True
                 except Exception as e:
+                    self.cache.cleanLocks(self, events)
+
                     logging.error("OpenWRT '{}' got unexpected exception. Will suspend for 15 minutes.".format(openwrt_ip))
                     logging.error(traceback.format_exc())
                     if timeout > self.config.remote_error_timeout:
@@ -116,7 +113,7 @@ class OpenWRT(_handler.Handler):
     def _processDevice(self, openwrt_ip, now, events, timeout ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip)
         if openwrt_mac is None:
-            raise NetworkException("OpenWRT '{}' not resolvable".format(openwrt_ip))
+            raise NetworkException("OpenWRT '{}' not resolvable".format(openwrt_ip), 15)
 
         if now >= self.sessions[openwrt_ip][1]:
             result = self._getSession( openwrt_ip, self.config.openwrt_username, self.config.openwrt_password )
@@ -173,7 +170,7 @@ class OpenWRT(_handler.Handler):
         #print(self.wifi_networks[openwrt_ip])
         
         if _active_networks or self.wifi_networks[openwrt_ip]:
-            self.cache.lock()
+            self.cache.lock(self)
 
             for gid in _active_networks:
                 network = _active_networks[gid]
@@ -190,16 +187,16 @@ class OpenWRT(_handler.Handler):
                     self.cache.removeGroup(gid, lambda event: events.append(event))
                     del self.wifi_networks[openwrt_ip][gid]
                     
-            self.cache.unlock()
+            self.cache.unlock(self)
         
         # set device type
         _device = self.cache.getUnlockedDevice(openwrt_mac)
         if _device is not None and _device.getType() != "network":
-            self.cache.lock()
+            self.cache.lock(self)
             device = self.cache.getDevice(openwrt_mac)
             device.setType("network")
             self.cache.confirmDevice( device, lambda event: events.append(event) )
-            self.cache.unlock()
+            self.cache.unlock(self)
 
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -221,7 +218,7 @@ class OpenWRT(_handler.Handler):
             client_results.append([client_result,wlan_network])
                 
         if client_results or self.client_wifi_connections[openwrt_ip]:
-            self.cache.lock()
+            self.cache.lock(self)
 
             _active_client_macs = []
             _active_client_wifi_connections = []
@@ -289,7 +286,7 @@ class OpenWRT(_handler.Handler):
                     
                     del self.client_wifi_connections[openwrt_ip][uid]
                         
-            self.cache.unlock()
+            self.cache.unlock(self)
                     
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -298,9 +295,7 @@ class OpenWRT(_handler.Handler):
 
     def _parseResult(self, ip, r, type):
         if r.status_code != 200:
-            msg = "Wrong status code: {}".format(r.status_code)
-            logging.error(msg)
-            raise requests.exceptions.ConnectionError(msg)
+            raise NetworkException("OpenWRT {} returns wrong status code: {}".format(openwrt_ip, r.status_code), self.config.remote_suspend_timeout)
 
         _json = r.text
         result = json.loads(_json)
@@ -313,30 +308,37 @@ class OpenWRT(_handler.Handler):
         return result["result"][1]
         #logging.warning("OpenWRT {} - {} - got unexpected device result '{}'".format(ip, type, _json))
         #return None
+    
+    def _post(self, ip, json):
+        try:
+            return requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
+        except requests.exceptions.ConnectionError as e:
+            logging.error(str(e))
+            raise NetworkException("OpenWRT {} currently not available".format(ip), self.config.remote_suspend_timeout)
         
     def _getSession(self, ip, username, password ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ "00000000000000000000000000000000", "session", "login", { "username": username, "password": password } ] }
-        r = requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
+        r = self._post(ip, json)
         return self._parseResult(ip, r, "session")
     
     def _getDevices(self, ip, session ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "network.device", "status", {} ] }
-        r = requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
+        r = self._post(ip, json)
         return self._parseResult(ip, r, "device_list")
 
     def _getWifiNetworks(self, ip, session ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "network.wireless", "status", {} ] }
-        r = requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
+        r = self._post(ip, json)
         return self._parseResult(ip, r, "device_list")
 
     def _getWifiInterfaceDetails(self, ip, session, interface ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "hostapd.{}".format(interface), "get_status", {} ] }
-        r = requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
+        r = self._post(ip, json)
         return self._parseResult(ip, r, "device_details")
 
     def _getWifiClients(self, ip, session, interface ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "hostapd.{}".format(interface), "get_clients", {} ] }
-        r = requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
+        r = self._post(ip, json)
         return self._parseResult(ip, r, "client_list")
         
     def _delayedWakeup(self, triggered_at):
@@ -365,7 +367,13 @@ class OpenWRT(_handler.Handler):
                 self.delayed_wakeup_timer.start()
 
 class NetworkException(Exception):
-    pass
+    def __init__(self, msg, timeout):
+        super().__init__(msg)
+        
+        self.timeout = timeout
+        
+    def getTimeout(self):
+        return self.timeout
 
 class UbusCallException(Exception):
     def __init__(self, ip, type, code, message):

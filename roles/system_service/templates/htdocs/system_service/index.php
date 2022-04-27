@@ -67,8 +67,12 @@ mx.UNCore = (function( ret ) {
             stats = _stats;
             statsChanged = true;
         }
-            
-        if( groupsChanged || devicesChanged || statsChanged )
+        
+        if( devices.length == 0 )
+        {
+            mx.Error.handleError( mx.I18N.get("Network analysis is in progress")  );
+        }
+        else if( groupsChanged || devicesChanged || statsChanged )
         {
             mx.D3.drawCircles( root_device_mac, groupsChanged || devicesChanged ? devices : null, groupsChanged || devicesChanged ? groups : null, statsChanged || devicesChanged ? stats : null , 15000);
         }
@@ -109,7 +113,7 @@ mx.UNCore = (function( ret ) {
                 let timeout = 15000;
                 if( this.status == 0 || this.status == 503 ) 
                 {
-                    mx.Error.handleServerNotAvailable( mx.I18N.get( "Service is currently not available") );
+                    mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
                 }
                 else
                 {
@@ -139,128 +143,7 @@ mx.OnDocReady.push( mx.UNCore.init );
 </head>
 <body class="inline">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Network visualizer")); } );</script>
-<style>
-body, svg {
-    width: 100%;
-    height: 100%;
-}
-.tooltip {
-    background: var(--bg);
-    pointer-events: auto;
-    max-width: 200px;
-    max-width: 400px;
-    white-space: normal;
-}
-.tooltip span.text > div,
-.tooltip div.rows > div {
-    display: table;
-}
-.tooltip span.text > div > div,
-.tooltip div.rows > div > div {
-    display: table-row;
-}
-.tooltip span.text > div > div > div,
-.tooltip div.rows > div > div > div {
-    display: table-cell;
-    padding: 3px;
-    text-align: left;
-}
-.tooltip span.text > div > div > div:first-child {
-    font-weight: bold;
-}
-
-.tooltip div.rows > div > div > div:first-child {
-    width: 100px;
-}
-
-.tooltip span.text > div > div > div.link,
-.tooltip div.rows > div > div.link {
-    cursor: pointer;
-    color: var(--link-color);
-}
-.tooltip span.text > div > div > div.link:hover,
-.tooltip div.rows > div > div.link:hover {
-    text-decoration: underline;
-}
-.tooltip div.rows {
-    padding: 0 !important;
-}
-
-svg g.links {
-    fill: none;
-    stroke-width: 1;
-    stroke: var(--content-text);
-}
-svg g.links path.online,
-svg g.links path.offline {
-    stroke-width: 2;
-}
-
-svg g.links path.online {
-    stroke: var(--color-green);
-}
-svg g.links path.offline {
-    stroke: var(--color-red);
-}
-
-svg g.nodes rect.container {
-    stroke-width: 0.5;
-    stroke: var(--content-text);
-    fill: var(--bg);
-}
-
-svg g.nodes rect.container.hub,
-svg g.nodes rect.container.network {
-    fill: var(--content-hightlight-bg);
-}
-
-svg g.nodes circle.online,
-svg g.nodes circle.offline {
-    stroke-width: 0.5;
-    stroke: var(--content-text);
-}
-svg g.nodes circle.online {
-    fill: var(--color-green);
-}
-svg g.nodes circle.offline {
-    fill: var(--color-red);
-}
-
-svg g.nodes rect.traffic {
-    fill: var(--bg);
-}
-
-svg g.nodes text.traffic tspan,
-svg g.nodes text.identifier {
-    fill: var(--content-text);
-}
-
-svg g.nodes text.name,
-svg g.nodes text.details {
-    fill: #777;
-    font-weight: 300;
-}
-svg g.nodes text.details tspan.hs {
-    font-weight: 500;
-}
-
-svg g.nodes text.traffic.arrived {
-    animation-name: traffic_arrived;
-    animation-duration: 0.5s;
-    animation-direction: alternate;
-    animation-iteration-count: 5;
-}
-
-body.dark svg g.nodes text.name,
-body.dark svg g.nodes text.details {
-    fill: #ccc;
-}
-/*.tooltip div.services > div > div > div:first-child {
-    text-align: right;
-}*/
-</style>
 <div class="error"></div>
-<div id="tooltip"></div>
 <svg id="network"></svg>
 </body>
 </html>

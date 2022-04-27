@@ -310,7 +310,7 @@ require "config.php";
                     let timeout = 15000;
                     if( this.status == 0 || this.status == 503 ) 
                     {
-                        mx.Error.handleServerNotAvailable( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
+                        mx.Error.handleError( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
                         timeout = mx.UpdateServiceHelper.isRestarting() ? 1000 : 15000;
                     }
                     else

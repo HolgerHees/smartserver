@@ -109,25 +109,26 @@ class DeviceChecker(threading.Thread):
                     is_success = Helper.ping(ip_address)
                     
                 if is_success:
-                    logging.info("Device {} is online - check time {} sec".format(ip_address,round((datetime.now() - startTime).total_seconds(),2)))  
+                    duration = round((datetime.now() - startTime).total_seconds(),2)
+                    logging.info("Device {} is online - check time {} sec".format(ip_address,duration))  
                     self.lastSeen = datetime.now()
                     if not self.stat.isOnline():
-                        self.cache.lock()
-                        #stat = self.cache.getDeviceStat(mac)
+                        self.cache.lock(self)
+                        self.stat.lock(self)
                         self.stat.setOnline(True)
                         self.cache.confirmStat( self.stat, lambda event: events.append(event) )
-                        self.cache.unlock()
+                        self.cache.unlock(self)
                     break
                     
                 loopIndex += 1
                 if loopIndex == arpRetries:
                     logging.info("Device {} is offline".format(ip_address))  
                     if self.stat.isOnline():
-                        self.cache.lock()
-                        #stat = self.cache.getDeviceStat(mac)
+                        self.cache.lock(self)
+                        self.stat.lock(self)
                         self.stat.setOnline(False)
                         self.cache.confirmStat( self.stat, lambda event: events.append(event) )
-                        self.cache.unlock()
+                        self.cache.unlock(self)
                     break
                 
             if len(events) > 0:
@@ -196,7 +197,7 @@ class DHCPListener(threading.Thread):
                             
                         client_dns = self.cache.nslookup(client_ip)
                         
-                        self.cache.lock()
+                        self.cache.lock(self)
 
                         events = []
                         device = self.cache.getDevice(client_mac)
@@ -205,9 +206,9 @@ class DHCPListener(threading.Thread):
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                         logging.info("New dhcp request for {}".format(device))
                         
-                        self.arpscanner._refreshDevice( client_mac, device, events )
+                        self.arpscanner._refreshDevice( device, events )
                         
-                        self.cache.unlock()
+                        self.cache.unlock(self)
                         
                         if len(events) > 0:
                             self.arpscanner._dispatch(events)
@@ -286,7 +287,7 @@ class ArpScanner(_handler.Handler):
                         processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}
                         processed_ips[ip] = mac
             
-            self.cache.lock()
+            self.cache.lock(self)
             
             for entry in processed_macs.values():
                 mac = entry["mac"]
@@ -296,7 +297,7 @@ class ArpScanner(_handler.Handler):
                 device.setDNS(entry["dns"])
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                                       
-                self._refreshDevice( mac, device, events)
+                self._refreshDevice( device, events)
                               
             device = self.cache.getDevice(server_mac)
             device.setIP(self.config.server_ip)
@@ -304,12 +305,12 @@ class ArpScanner(_handler.Handler):
             device.setDNS(self.config.server_domain)
             self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
-            self._refreshDevice( server_mac, device, events)
+            self._refreshDevice( device, events)
 
             for stat in list(filter(lambda s: type(s) is DeviceStat, self.cache.getStats() )):
                 self._checkDevice(now, stat, events)
 
-            self.cache.unlock()
+            self.cache.unlock(self)
 
             if len(events) > 0:
                 self._dispatch(events)
@@ -334,7 +335,9 @@ class ArpScanner(_handler.Handler):
     def _dispatch(self, events):
         self._getDispatcher().dispatch(self,events)
 
-    def _refreshDevice(self, mac, device, events):
+    def _refreshDevice(self, device, events):
+        mac = device.getMAC()
+        
         stat = self.cache.getDeviceStat(mac)
         stat.setOnline(True)
         self.cache.confirmStat( stat, lambda event: events.append(event) )
@@ -350,7 +353,9 @@ class ArpScanner(_handler.Handler):
             self.registered_devices[mac] = DeviceChecker(self, self.cache, device, stat, self.config.main_interface, user_config["type"], user_config["timeout"])
             self.registered_devices[mac].start()
     
-    def _validateDevice(self,mac, device):
+    def _validateDevice(self,device):
+        mac = device.getMAC()
+        
         if self.registered_devices[mac] is None:
             return
         
@@ -374,6 +379,22 @@ class ArpScanner(_handler.Handler):
             return
         
         if (now - stat.getLastSeen()).total_seconds() > self.config.arp_offline_device_timeout:
+            # last check, if the device is really offline
+            device = self.cache.getUnlockedDevice(mac)
+            if device is not None and device.getIP() is not None:
+                startTime = datetime.now()
+                methods = ["arping"]
+                is_success = Helper.arpping(self.config.main_interface,device.getIP(),2)
+                if not is_success:
+                    methods.append("ping")
+                    is_success = Helper.ping(device.getIP())
+                
+                duration = round((datetime.now() - startTime).total_seconds(),2)
+                logging.info("Device {} checked with {} in {} seconds".format(device," & ".join(methods),duration))
+                if is_success:
+                    self._refreshDevice(device, events)
+                    return
+            
             stat = self.cache.getDeviceStat(mac)
             stat.setOnline(False)
             self.cache.confirmStat( stat, lambda event: events.append(event) )
@@ -384,22 +405,32 @@ class ArpScanner(_handler.Handler):
     def processEvents(self, events):
         new_events = []
         
+        unregistered_devices = []
+        unvalidated_devices = []
         for event in events:
             device = event.getObject()
-            mac = device.getMAC()
 
             if event.getAction() == Event.ACTION_CREATE:
-                if mac in self.registered_devices:
+                if device.getMAC() in self.registered_devices:
                     continue
 
-                self._refreshDevice(mac, device, new_events)
-                logging.info("Register lazy device {}".format(device))
+                unregistered_devices.append(device)
 
             elif event.getAction() == Event.ACTION_MODIFY:
-                if mac not in self.registered_devices:
+                if device.getMAC() not in self.registered_devices:
                     continue
                 
-                self._validateDevice(mac,device)
+                unvalidated_devices.append(device)
+                
+        if len(unregistered_devices) > 0:
+            self.cache.lock(self)
+            for device in unregistered_devices:
+                self._refreshDevice(device, new_events)
+                logging.info("Register lazy device {}".format(device))
+            self.cache.unlock(self)
+            
+        for device in unvalidated_devices:
+            self._validateDevice(device)
                 
         if len(new_events) > 0:
             self._getDispatcher().dispatch(self, new_events)

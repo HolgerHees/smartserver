@@ -75,6 +75,7 @@ class Device(Changeable):
         return self.type
 
     def setType(self, type):
+        self._checkLock()
         if self.type != type:
             self._markAsChanged("type")
             self.type = type
@@ -83,7 +84,12 @@ class Device(Changeable):
         return self.ip
         
     def setIP(self, ip):
+        self._checkLock()
         if self.ip != ip:
+            if self.ip is not None:
+                # should trigger a alert message (influxdb and mqtt data will not match anymore)
+                # TODO - exclude guest network
+                logging.error("IP changed from {} to {}".format(self.ip,ip))
             self._markAsChanged("ip")
             self.ip = ip
 
@@ -91,6 +97,7 @@ class Device(Changeable):
         return self.info
 
     def setInfo(self, info):
+        self._checkLock()
         if self.info != info:
             self._markAsChanged("info")
             self.info = info
@@ -99,6 +106,7 @@ class Device(Changeable):
         return self.dns
 
     def setDNS(self, dns):
+        self._checkLock()
         if self.dns != dns:
             self._markAsChanged("dns")
             self.dns = dns
@@ -107,6 +115,7 @@ class Device(Changeable):
         self.dns
 
     def addHopConnection(self, type, vlan, target_mac, target_interface):
+        self._checkLock()
         if target_mac == self.cache.getGatewayMAC():
             _connections = list(filter(lambda c: c.getTargetMAC() == target_mac, self.hop_connections ))
             if len(_connections) > 0:
@@ -144,6 +153,7 @@ class Device(Changeable):
         self._markAsChanged("connection", "add connection to {}:{}".format(target_device if target_device else target_mac,vlan))    
        
     def removeHopConnection(self, vlan, target_mac, target_interface):
+        self._checkLock()
         _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
         if len(_connections) > 0:
             _connection = _connections[0]
@@ -210,11 +220,13 @@ class Device(Changeable):
         return self.supports_wifi
 
     def addGID(self, gid):
+        self._checkLock()
         if gid not in self.gids:
             self._markAsChanged("gid", "add gid")
             self.gids.append(gid)
 
     def removeGID(self, gid):
+        self._checkLock()
         if gid in self.gids:
             self._markAsChanged("gid", "remove gid")
             self.gids.remove(gid)
@@ -223,6 +235,7 @@ class Device(Changeable):
         return self.gids
            
     def setServices(self, services):
+        self._checkLock()
         self._markAsChanged("services")
         self.services = services
 

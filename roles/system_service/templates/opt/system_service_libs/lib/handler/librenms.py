@@ -63,15 +63,13 @@ class LibreNMS(_handler.Handler):
                 
                 timeout = self._processLibreNMS(now, events, timeout)
             except NetworkException as e:
-                logging.warning("{}. Will retry in 15 seconds.".format(e))
-                if timeout > 15:
-                    timeout = 15
-            except requests.exceptions.ConnectionError:
-                logging.warning("LibreNMS currently not available. Will suspend for 5 minutes")
-                if timeout > self.config.remote_suspend_timeout:
-                    timeout = self.config.remote_suspend_timeout
+                logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
+                if timeout > e.getTimeout():
+                    timeout = e.getTimeout()
                 was_suspended = True
             except Exception as e:
+                self.cache.cleanLocks(self, events)
+
                 logging.error("LibreNMS got unexpected exception. Will suspend for 15 minutes.")
                 logging.error(traceback.format_exc())
                 if timeout > self.config.remote_error_timeout:
@@ -113,7 +111,7 @@ class LibreNMS(_handler.Handler):
                     mac = self.devices[device["id"]]["mac"]
                     logging.warning("Device {} currently not resolvable. User old mac address for now.".format(_device["hostname"]))
                 else:
-                    raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]))
+                    raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]), 15)
             
             device = {
                 "mac": mac,
@@ -126,7 +124,7 @@ class LibreNMS(_handler.Handler):
             self.devices[device["id"]] = device
 
         if _active_devices or self.devices:
-            self.cache.lock()
+            self.cache.lock(self)
             
             for id in _active_devices:
                 if id not in self.device_ports:
@@ -153,7 +151,7 @@ class LibreNMS(_handler.Handler):
                     del self.devices[id]
                     del self.device_ports[id]
                         
-            self.cache.unlock()
+            self.cache.unlock(self)
             
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -191,7 +189,7 @@ class LibreNMS(_handler.Handler):
                 break
             
         if _ports or self.device_ports:
-            self.cache.lock()
+            self.cache.lock(self)
 
             _active_ports_ids = []
             for _port in _ports:
@@ -201,15 +199,6 @@ class LibreNMS(_handler.Handler):
                 port_id = _port["ifIndex"]
                 
                 self.port_id_ifname_map[device_id][port_id] = port_ifname
-                
-                #device = self.cache.getDevice(mac)
-                #self.cache.confirmDevice( device, lambda event: events.append(event) )
-                
-                #if port_ifname in self.swapped_directions:
-                #    assigned_devices = list(filter(lambda c: c["target_interface"] == port_ifname, self.connected_macs[device_id].values() ))
-                #    if len(assigned_devices) == 1:
-                #        mac = self.swapped_directions[port_ifname]
-                #        port_ifname = None
                 
                 stat = self.cache.getConnectionStat(mac, port_ifname)
                 if port_id in self.device_ports[device_id]:
@@ -247,7 +236,7 @@ class LibreNMS(_handler.Handler):
                         del self.device_ports[device_id][port_id]
                         del self.port_id_ifname_map[device_id][port_id]
                         
-            self.cache.unlock()
+            self.cache.unlock(self)
             
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -267,7 +256,7 @@ class LibreNMS(_handler.Handler):
                 break
 
         if _connected_arps or self.connected_macs:
-            self.cache.lock()
+            self.cache.lock(self)
             
             _active_connected_macs = []
             for _connected_arp in _connected_arps:
@@ -285,7 +274,7 @@ class LibreNMS(_handler.Handler):
                 if mac == self.cache.getGatewayMAC():
                     continue
                 
-                if self.cache.getUnlockedDevice(mac) is not None and self.cache.getUnlockedDevice(target_mac) is not None:
+                if self.cache.getUnlockedDevice(mac) is not None:
                     device = self.cache.getDevice(mac)
                     device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -306,7 +295,7 @@ class LibreNMS(_handler.Handler):
                     
                         del self.connected_macs[device_id][mac]
             
-            self.cache.unlock()
+            self.cache.unlock(self)
             
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -316,13 +305,15 @@ class LibreNMS(_handler.Handler):
     def _get(self,call):
         headers = {'X-Auth-Token': self.config.librenms_token}
         
-        #print("{}{}".format(self.config.librenms_rest,call))
-        r = requests.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
-        if r.status_code != 200:
-            msg = "Wrong status code: {}".format(r.status_code)
-            logging.error(msg)
-            raise requests.exceptions.ConnectionError(msg)
-        return r.text
+        try:
+            #print("{}{}".format(self.config.librenms_rest,call))
+            r = requests.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
+            if r.status_code != 200:
+                raise NetworkException("Got wrong status code: {}".format(r.status_code), self.config.remote_suspend_timeout)
+            return r.text
+        except requests.exceptions.ConnectionError as e:
+            logging.error(str(e))
+            raise NetworkException("LibreNMS currently not available", self.config.remote_suspend_timeout)
     
     def getEventTypes(self):
         return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None } ]
@@ -330,29 +321,33 @@ class LibreNMS(_handler.Handler):
     def processEvents(self, events):
         _events = []
         
+        unprocessed_connections = []
         for event in events:
             if event.getAction() == Event.ACTION_CREATE:
                 mac =  event.getObject().getMAC()
 
                 for device_macs in list(self.connected_macs.values()):
-                    for cm in list(device_macs.values()):
-                        if cm["source_mac"] != mac and cm["target_mac"] != mac:
-                            continue
-                            
-                        if self.cache.getUnlockedDevice(cm["source_mac"]) is not None and self.cache.getUnlockedDevice(cm["target_mac"]) is not None:    
-                            device = self.cache.getDevice(cm["source_mac"])
-                            device.addHopConnection(Connection.ETHERNET, cm["vlan"], cm["target_mac"], cm["target_interface"] );
-                            self.cache.confirmDevice( device, lambda event: _events.append(event) )
-                            
-            #elif event.getAction() != Event.ACTION_MODIFY:
-            #    with self.data_lock:
-            #        # fill fallback connections
-            #        _connected_arps = list(filter(lambda a: a["source_mac"] == event.getIdentifier(), self.connected_arps.values() ))
-            #        for _connected_arp in _connected_arps:
-            #            self._fillConnection(_connected_arp, devices, True)
+                    if mac not in list(device_macs.keys()):
+                        continue
+                    
+                    unprocessed_connections.append(device_macs[mac])
 
+        if len(unprocessed_connections) > 0:
+            self.cache.lock(self)
+            for connection_data in unprocessed_connections:
+                device = self.cache.getDevice(connection_data["source_mac"])
+                device.addHopConnection(Connection.ETHERNET, connection_data["vlan"], connection_data["target_mac"], connection_data["target_interface"] );
+                self.cache.confirmDevice( device, lambda event: _events.append(event) )
+            self.cache.unlock(self)
+            
         if len(_events) > 0:
             self._getDispatcher().dispatch(self, _events)
 
 class NetworkException(Exception):
-    pass
+    def __init__(self, msg, timeout):
+        super().__init__(msg)
+        
+        self.timeout = timeout
+        
+    def getTimeout(self):
+        return self.timeout

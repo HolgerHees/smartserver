@@ -11,6 +11,7 @@ from fritzconnection.lib.fritzwlan import FritzWLAN
 from lib.handler import _handler
 from lib.dto.device import Connection
 from lib.dto.group import Group
+from lib.dto.event import Event
 
 
 class Fritzbox(_handler.Handler): 
@@ -28,6 +29,8 @@ class Fritzbox(_handler.Handler):
         
         self.wifi_networks = {}
         self.wifi_clients = {}
+        
+        self.dhcp_clients = {}
 
         self.fc = {}
         self.fh = {}
@@ -55,9 +58,10 @@ class Fritzbox(_handler.Handler):
             
     def _checkFritzbox(self):
         for fritzbox_ip in self.config.fritzbox_devices:
-            self.last_check[fritzbox_ip] = {"device": 0, "wifi_networks": 0, "wifi_clients": 0}
+            self.last_check[fritzbox_ip] = {"device": 0, "wifi_networks": 0, "wifi_clients": 0, "dhcp_clients": 0}
             self.wifi_networks[fritzbox_ip] = {}
             self.wifi_clients[fritzbox_ip] = {}
+            self.dhcp_clients[fritzbox_ip] = {}
             
         while self.is_running:
             events = []
@@ -95,7 +99,11 @@ class Fritzbox(_handler.Handler):
         
         if now - self.last_check[fritzbox_ip]["wifi_clients"] >= self.config.fritzbox_client_interval:
             [timeout, self.last_check[fritzbox_ip]["wifi_clients"]] = self._fetchWifiClients(fritzbox_mac, fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
-        
+            
+        #hosts = self.fh[fritzbox_ip].get_active_hosts()
+        #for host in hosts:
+        #    logging.info(host)
+            
         return timeout
         
     def _fetchWifiClients(self, fritzbox_mac, fritzbox_ip, now, events, global_timeout, call_timeout ):
@@ -107,7 +115,7 @@ class Fritzbox(_handler.Handler):
             #{'service': 1, 'index': 0, 'status': True, 'mac': '3C:61:05:DC:EA:C9', 'ip': '192.168.179.120', 'signal': 29, 'speed': 43}
 
         if client_results or self.wifi_clients[fritzbox_ip]:
-            self.cache.lock()
+            self.cache.lock(self)
 
             _active_client_macs = []
             _active_client_wifi_connections = []
@@ -158,7 +166,7 @@ class Fritzbox(_handler.Handler):
                     
                     del self.wifi_clients[fritzbox_ip][uid]
                         
-            self.cache.unlock()
+            self.cache.unlock(self)
         
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -186,7 +194,7 @@ class Fritzbox(_handler.Handler):
             self.wifi_networks[fritzbox_ip][gid] = network
             
         if _active_networks or self.wifi_networks[fritzbox_ip]:
-            self.cache.lock()
+            self.cache.lock(self)
 
             for gid in _active_networks:
                 network = _active_networks[gid]
@@ -202,7 +210,7 @@ class Fritzbox(_handler.Handler):
                     self.cache.removeGroup(gid, lambda event: events.append(event))
                     del self.wifi_networks[fritzbox_ip][gid]
                     
-            self.cache.unlock()
+            self.cache.unlock(self)
             
         if global_timeout > call_timeout:
             global_timeout = call_timeout
@@ -229,7 +237,7 @@ class Fritzbox(_handler.Handler):
             lan_traffic_received += wan_traffic_state["received"]
             lan_traffic_sent += wan_traffic_state["sent"]
 
-        self.cache.lock()
+        self.cache.lock(self)
 
         fritzbox_device = self.cache.getDevice(fritzbox_mac)
         fritzbox_device.setIP(fritzbox_ip)
@@ -289,7 +297,7 @@ class Fritzbox(_handler.Handler):
             stat.setOutSpeed(wan_link_state["up"] * 1000)
             self.cache.confirmStat( stat, lambda event: events.append(event) )
                 
-        self.cache.unlock()
+        self.cache.unlock(self)
 
         if global_timeout > call_timeout:
             global_timeout = call_timeout

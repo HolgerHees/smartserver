@@ -3,6 +3,13 @@
     "Network visualizer": "Netzwerk Visualisierung",
     "Service is currently not available": "Service ist aktuell nicht verfügbar",
     "Close": "Schliessen",
-    "Open Grafana": "Grafana öffnen"
+    "Open Grafana": "Grafana öffnen",
+    "Network analysis is in progress": "Netzwerkanalyse läuft gerade",
+    "Last 3 hours": "Letzten 3 Stunden",
+    "Last 6 hours": "Letzten 6 Stunden",
+    "Last 12 hours": "Letzten 12 Stunden",
+    "Last 24 hours": "Letzten 24 Stunden",
+    "Last 2 days": "Letzten 2 Tage",
+    "Last 7 days": "Letzten 7 Tage"
   }
 }

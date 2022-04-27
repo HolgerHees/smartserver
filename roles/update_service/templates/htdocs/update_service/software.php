@@ -71,7 +71,7 @@ mx.SNCore = (function( ret ) {
                 let timeout = 15000;
                 if( this.status == 0 || this.status == 503 ) 
                 {
-                    mx.Error.handleServerNotAvailable( mx.I18N.get( "Service is currently not available") );
+                    mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
                 }
                 else
                 {
@@ -108,10 +108,6 @@ mx.SNCore = (function( ret ) {
                 {
                     mx.Error.handleServerError(response["message"]);
                 }
-            }
-            else if( this.status == 503 ) 
-            {
-                mx.Error.handleServerNotAvailable();
             }
             else
             {
