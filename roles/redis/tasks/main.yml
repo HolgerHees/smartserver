@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    redis_version: '6.2.6'
+    redis_version: '7.0.0'
   tags: [ 'update_notifier_config' ]
   
 - name: check started docker
@@ -43,7 +43,7 @@
   vars:
     name: "redis"
     type: "docker"
-    url: "https://raw.githubusercontent.com/antirez/redis/6.0/00-RELEASENOTES"
+    url: "https://raw.githubusercontent.com/antirez/redis/7.0/00-RELEASENOTES"
     config: {
       repository: "redis",
       pattern: "^([0-9\\.]+)-alpine$"
