@@ -26,6 +26,7 @@ from lib.handler.publish_influxdb import InfluxDBPublisher
 from lib.dispatcher import Dispatcher
 from lib.cache import Cache
 
+websocket_ns = "//" + config.server_domain + "/system_service/api/"
 
 app = Flask(__name__ )
 app.logger = logging.getLogger()
@@ -62,10 +63,13 @@ class Handler(Server):
             self.dispatcher.terminate()
         super().terminate()
         
-    def notify(self):
-        logging.info("has changes")
-        #with socketio.test_request_context('/'):
-        #    emit('message', {'changed': 'true'})
+    def notify(self, changed_data):           
+        with app.app_context():
+            socketio.emit('message', changed_data, namespace=websocket_ns)
+        #socketio.sleep(5)
+        
+    def emitData(self):
+        emit('message', self.dispatcher.getData(), namespace=websocket_ns)
         
     def getState(self):
 
@@ -102,21 +106,22 @@ class Handler(Server):
 def state():
     return handler.getState()
 
-@socketio.on('connect', namespace="//" + config.server_domain + "/system_service/api/")
+@socketio.on('connect', namespace=websocket_ns)
 def on_connect():
     logging.info("on_connect {}".format(request.sid))
     
-@socketio.on('disconnect', namespace="//" + config.server_domain + "//system_service/api/")
+@socketio.on('disconnect', namespace=websocket_ns)
 def on_disconnect():
     logging.info("on_disconnect {}".format(request.sid))
     
-@socketio.on('message', namespace="//" + config.server_domain + "/system_service/api/")
+@socketio.on('message', namespace=websocket_ns)
 def on_message(message):
     logging.info(message)
-    emit('message', {'data': 'ok'})
+    handler.emitData()
     
 if __name__ == '__main__':
     Server.initLogger(logging.INFO)
+
     handler = Handler()
 
     def handleServer():
@@ -124,3 +129,4 @@ if __name__ == '__main__':
         socketio.run(app=app, use_reloader=False, host=config.service_ip, port=config.service_port)
         
     handler.start(handleServer)
+

@@ -209,7 +209,7 @@ class Fritzbox(_handler.Handler):
                         #logging.info(host)
                         device.setIP("fritzbox", 100, host["NewIPAddress"])
                         device.setDNS("fritzbox", 100, host["NewHostName"])
-                    self.cache.confirmStat( device, lambda event: events.append(event) )
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
                         
                     self.dhcp_clients[fritzbox_ip][mac] = now
                 self.cache.unlock(self)

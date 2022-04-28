@@ -97,7 +97,7 @@ class Dispatcher():
             elif event.getType() == Event.TYPE_STAT:
                 stats_changed.append(event.getObject())
                 
-        if len(devices_changed) > 0:
+        if has_connections:
             connected_map = {}
             for device in self.cache.getDevices():               
                 device.setVirtualConnection(None)
@@ -151,7 +151,39 @@ class Dispatcher():
         if len(stats_changed) > 0:
             self.last_stat_refresh = round(datetime.now().timestamp(),3)
             
-        self.handler.notify()
+        all_devices = devices = self.cache.getDevices() + self.virtual_devices
+        changed_data = self._prepareChanges(groups_changed, all_devices if has_connections else devices_changed, all_devices, stats_changed)
+
+        self.handler.notify(changed_data)
+        
+    def _prepareChanges(self, groups, devices, all_devices, stats):
+        logging.info("changed groups: {}, devices: {}, stats: {}".format(len(groups),len(devices),len(stats)))
+
+        changed_data = {}
+        
+        if len(groups)>0:
+            _groups = []
+            for group in groups:
+                _groups.append(group.getSerializeable())
+            changed_data["groups"] = _groups
+            
+        if len(devices)>0:
+            _devices = []
+            for device in devices:
+                _devices.append(device.getSerializeable(all_devices))
+            changed_data["devices"] = _devices
+
+        if len(stats)>0:
+            _stats = []
+            for stat in stats:
+                _stats.append(stat.getSerializeable())
+            changed_data["stats"] = _stats
+
+        return changed_data
+    
+    def getData(self):
+        devices = self.cache.getDevices() + self.virtual_devices
+        return self._prepareChanges(self.cache.getGroups(), devices, devices, self.cache.getStats())
             
     def getGroups(self):
         _groups = []

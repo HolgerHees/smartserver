@@ -134,12 +134,10 @@ mx.UNCore = (function( ret ) {
         
         refreshDaemonState(null, function(state){});
         
-        let last_data_modified = {}
-        
         const socket = io("wss://" + daemonApiUrl, {path: '/system_service/api/socket.io' });
         socket.on('connect', function() {
             console.log("connected");
-            socket.emit('message', { "last_data_modified": last_data_modified });
+            socket.emit('message', { "connected": true });
         });
         socket.on('message', function(message) {
             console.log(message);
