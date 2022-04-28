@@ -11,7 +11,6 @@ require "../shared/libs/ressources.php";
 <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
 <script src="<?php echo Ressources::getJSPath('/system_service/'); ?>"></script>
 <script src="<?php echo Ressources::getComponentPath('/system_service/'); ?>"></script>
-<script src="https://d3js.org/d3.v7.js"></script>
 <script>
 mx.UNCore = (function( ret ) {
     var daemonApiUrl = mx.Host.getBase() + 'api/'; 
@@ -134,6 +133,17 @@ mx.UNCore = (function( ret ) {
         mx.I18N.process(document);
         
         refreshDaemonState(null, function(state){});
+        
+        let last_data_modified = {}
+        
+        const socket = io("wss://" + daemonApiUrl, {path: '/system_service/api/socket.io' });
+        socket.on('connect', function() {
+            console.log("connected");
+            socket.emit('message', { "last_data_modified": last_data_modified });
+        });
+        socket.on('message', function(message) {
+            console.log(message);
+        });
     }
     return ret;
 })( mx.UNCore || {} );

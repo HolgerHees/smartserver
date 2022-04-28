@@ -201,8 +201,8 @@ class DHCPListener(threading.Thread):
 
                         events = []
                         device = self.cache.getDevice(client_mac)
-                        device.setIP(client_ip)
-                        device.setDNS(client_dns)
+                        device.setIP("dhcp_listener", 75, client_ip)
+                        device.setDNS("nslookup", 1, client_dns)
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                         logging.info("New dhcp request for {}".format(device))
                         
@@ -292,17 +292,19 @@ class ArpScanner(_handler.Handler):
             for entry in processed_macs.values():
                 mac = entry["mac"]
                 device = self.cache.getDevice(mac)
-                device.setIP(entry["ip"])
+                device.setIP("arpscan", 1, entry["ip"])
+                device.setDNS("nslookup", 1, entry["dns"])
+                
                 device.setInfo(entry["info"])
-                device.setDNS(entry["dns"])
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                                       
                 self._refreshDevice( device, events)
                               
             device = self.cache.getDevice(server_mac)
-            device.setIP(self.config.server_ip)
+            device.setIP("arpscan", 1, self.config.server_ip)
+            device.setDNS("nslookup", 1, self.config.server_domain)
+
             device.setInfo(self.config.server_name)
-            device.setDNS(self.config.server_domain)
             self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
             self._refreshDevice( device, events)

@@ -3,10 +3,12 @@ import requests
 from urllib3.exceptions import InsecureRequestWarning
 import logging
 from datetime import datetime
+import traceback
 
 from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzwlan import FritzWLAN
+from fritzconnection.core.exceptions import FritzLookUpError
 
 from lib.handler import _handler
 from lib.dto.device import Connection
@@ -25,12 +27,20 @@ class Fritzbox(_handler.Handler):
         
         self.sessions = {}
         
-        self.last_check = {}
+        self.next_run = {}
         
+        self.has_wifi_networks = False
         self.wifi_networks = {}
+
+        self.wifi_associations = {}
         self.wifi_clients = {}
         
         self.dhcp_clients = {}
+        
+        self.known_clients = {}
+        self.fritzbox_macs = {}
+
+        self.devices = {}
 
         self.fc = {}
         self.fh = {}
@@ -46,6 +56,10 @@ class Fritzbox(_handler.Handler):
         self.condition = threading.Condition()
         self.thread = threading.Thread(target=self._checkFritzbox, args=())
         
+        self.delayed_lock = threading.Lock()
+        self.delayed_devices = {}
+        self.delayed_wakeup_timer = None
+        
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
     def start(self):
@@ -57,25 +71,47 @@ class Fritzbox(_handler.Handler):
             self.condition.notifyAll()
             
     def _checkFritzbox(self):
+        was_suspended = {}
+        
+        now = datetime.now().timestamp()
+        
         for fritzbox_ip in self.config.fritzbox_devices:
-            self.last_check[fritzbox_ip] = {"device": 0, "wifi_networks": 0, "wifi_clients": 0, "dhcp_clients": 0}
+            self.next_run[fritzbox_ip] = {"device": now, "wifi_networks": now, "wifi_clients": now, "dhcp_clients": now}
+            
             self.wifi_networks[fritzbox_ip] = {}
+            
+            self.wifi_associations[fritzbox_ip] = {}
             self.wifi_clients[fritzbox_ip] = {}
+            
             self.dhcp_clients[fritzbox_ip] = {}
             
+            self.known_clients[fritzbox_ip] = {}
+            self.fritzbox_macs[fritzbox_ip] = None
+            
+            was_suspended[fritzbox_ip] = False
+        
         while self.is_running:
+            now = datetime.now().timestamp()
+            
             events = []
 
             timeout = 60
             
-            now = datetime.now().timestamp()
             for fritzbox_ip in self.config.fritzbox_devices:
                 try:
+                    if was_suspended[fritzbox_ip]:
+                        logging.warning("Resume Fritzbox '{}'.".format(fritzbox_ip))
+                        was_suspended[fritzbox_ip] = False
+                        
                     timeout = self._processDevice(fritzbox_ip, now, events, timeout)
-                except NetworkException as e:
-                    logging.warning("{}. Will retry in 15 seconds.".format(e))
-                    if timeout > 15:
-                        timeout = 15
+                except Exception as e:
+                    self.cache.cleanLocks(self, events)
+
+                    logging.error("Fritzbox '{}' got unexpected exception. Will suspend for 15 minutes.".format(fritzbox_ip))
+                    logging.error(traceback.format_exc())
+                    if timeout > self.config.remote_error_timeout:
+                        timeout = self.config.remote_error_timeout
+                    was_suspended[fritzbox_ip] = True
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -85,28 +121,107 @@ class Fritzbox(_handler.Handler):
                     self.condition.wait(timeout)
                     
     def _processDevice(self, fritzbox_ip, now, events, timeout):
-        fritzbox_mac = self.cache.ip2mac(fritzbox_ip)
-        if fritzbox_mac is None:
-            raise NetworkException("Fritzbox '{}' currently not resolvable".format(fritzbox_ip))
-        
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
 
-        if now - self.last_check[fritzbox_ip]["device"] >= self.config.fritzbox_client_interval:
-            [timeout, self.last_check[fritzbox_ip]["device"]] = self._fetchDeviceInfo(fritzbox_mac, fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
-                
-        if now - self.last_check[fritzbox_ip]["wifi_networks"] >= self.config.fritzbox_network_interval:
-            [timeout, self.last_check[fritzbox_ip]["wifi_networks"]] = self._fetchWifiNetworks(fritzbox_ip, now, events, timeout, self.config.fritzbox_network_interval)
+        # needs to run first to find fritzbox mac on startup
+        if self.next_run[fritzbox_ip]["dhcp_clients"] <= now:
+            [timeout, self.next_run[fritzbox_ip]["dhcp_clients"]] = self._fetchDHCPClients(fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
+
+        # needs to run before _fetchWifiClients, because of created groups which are used later
+        if self.next_run[fritzbox_ip]["wifi_networks"] <= now:
+            [timeout, self.next_run[fritzbox_ip]["wifi_networks"]] = self._fetchWifiNetworks(fritzbox_ip, now, events, timeout, self.config.fritzbox_network_interval)
         
-        if now - self.last_check[fritzbox_ip]["wifi_clients"] >= self.config.fritzbox_client_interval:
-            [timeout, self.last_check[fritzbox_ip]["wifi_clients"]] = self._fetchWifiClients(fritzbox_mac, fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
+        if self.next_run[fritzbox_ip]["wifi_clients"] <= now:
+            [timeout, self.next_run[fritzbox_ip]["wifi_clients"]] = self._fetchWifiClients(fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
             
-        #hosts = self.fh[fritzbox_ip].get_active_hosts()
-        #for host in hosts:
-        #    logging.info(host)
-            
+        if self.next_run[fritzbox_ip]["device"] <= now:
+            [timeout, self.next_run[fritzbox_ip]["device"]] = self._fetchDeviceInfo(fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
+                
         return timeout
         
-    def _fetchWifiClients(self, fritzbox_mac, fritzbox_ip, now, events, global_timeout, call_timeout ):
+    def _fetchDHCPClients(self, fritzbox_ip, now, events, global_timeout, call_timeout ):
+        first_run = not self.known_clients[fritzbox_ip]
+
+        # collect devices which are not processed or which are outdated
+        devices = self.cache.getDevices()
+        new_clients = {}
+        outdated_clients = {}
+        for device in devices:
+            mac = device.getMAC()
+            if mac not in self.dhcp_clients[fritzbox_ip]:
+                new_clients[mac] = device
+            elif now - self.dhcp_clients[fritzbox_ip][mac] >= self.config.fritzbox_network_interval:
+                outdated_clients[mac] = device
+            else:
+                continue
+
+        if first_run or new_clients or outdated_clients:
+            # check mac is not in known_clients or if known_clients is outdated
+            reload_clients = outdated_clients.copy()
+            for mac in new_clients:
+                if mac not in self.known_clients[fritzbox_ip]:
+                    reload_clients[mac] = new_clients[mac]
+            
+            if first_run or reload_clients:
+                # fetch full list
+                if first_run or len(reload_clients.keys()) > 5:
+                    start = datetime.now().timestamp()
+                    _hosts = {}
+                    for _host in self.fh[fritzbox_ip].get_generic_host_entries():
+                        mac = _host["NewMACAddress"].lower()
+                        _hosts[mac] = _host
+                        if self.fritzbox_macs[fritzbox_ip] is None and _host["NewIPAddress"] == fritzbox_ip:
+                            logging.info("Found {} for fritzbox {}".format(mac, fritzbox_ip))
+                            self.fritzbox_macs[fritzbox_ip] = mac
+                    self.known_clients[fritzbox_ip] = _hosts
+                    logging.info("Full refresh in {} seconds".format(datetime.now().timestamp() - start))
+                # for small amount of hosts, fetch individual data
+                else:
+                    start = datetime.now().timestamp()
+                    for mac in reload_clients:
+                        try:
+                            self.known_clients[fritzbox_ip][mac] = self.fh[fritzbox_ip].get_specific_host_entry(mac.upper())
+                        except FritzLookUpError:
+                            pass
+                    logging.info("Partial refresh in {} seconds {}".format(datetime.now().timestamp() - start,list(reload_clients.values())))
+    
+            hosts = self.known_clients[fritzbox_ip]
+    
+            # clean unknown hosts
+            for mac in list(new_clients.keys()):
+                if mac not in hosts:
+                    self.dhcp_clients[fritzbox_ip][mac] = now
+                else:
+                    outdated_clients[mac] = new_clients[mac]
+                    
+            # update known host devices
+            if outdated_clients:
+                self.cache.lock(self)
+                for device in outdated_clients.values():
+                    mac = device.getMAC()
+                    device.lock(self)
+                    if mac not in hosts and mac not in self.wifi_clients[fritzbox_ip]:
+                        logging.info("Removed details from {}".format(device))
+                        device.removeIP("fritzbox")
+                        device.removeDNS("fritzbox")
+                    else:
+                        host = hosts[mac]
+                        #logging.info(host)
+                        device.setIP("fritzbox", 100, host["NewIPAddress"])
+                        device.setDNS("fritzbox", 100, host["NewHostName"])
+                    self.cache.confirmStat( device, lambda event: events.append(event) )
+                        
+                    self.dhcp_clients[fritzbox_ip][mac] = now
+                self.cache.unlock(self)
+        
+        if global_timeout > call_timeout:
+            global_timeout = call_timeout
+
+        return [global_timeout, now + call_timeout]
+        
+    def _fetchWifiClients(self, fritzbox_ip, now, events, global_timeout, call_timeout ):
+        fritzbox_mac = self.fritzbox_macs[fritzbox_ip]
+        
         client_results = {}
         for gid in self.wifi_networks[fritzbox_ip]:
             index = self.wifi_networks[fritzbox_ip][gid]["index"]
@@ -114,7 +229,7 @@ class Fritzbox(_handler.Handler):
             client_results[gid] = clients
             #{'service': 1, 'index': 0, 'status': True, 'mac': '3C:61:05:DC:EA:C9', 'ip': '192.168.179.120', 'signal': 29, 'speed': 43}
 
-        if client_results or self.wifi_clients[fritzbox_ip]:
+        if client_results or self.wifi_associations[fritzbox_ip]:
             self.cache.lock(self)
 
             _active_client_macs = []
@@ -135,7 +250,7 @@ class Fritzbox(_handler.Handler):
                     uid = "{}-{}".format(mac, gid)
 
                     device = self.cache.getDevice(mac)
-                    device.setIP(client["ip"])
+                    device.setIP("fritzbox", 100, client["ip"])
                     device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -151,27 +266,32 @@ class Fritzbox(_handler.Handler):
                         
                     _active_client_macs.append(mac)
                     _active_client_wifi_connections.append(uid)
-                    self.wifi_clients[fritzbox_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
+                    self.wifi_associations[fritzbox_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
 
-            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_clients[fritzbox_ip].values()):
+            wifi_clients = {}
+            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[fritzbox_ip].values()):
                 if uid not in _active_client_wifi_connections:
                     device = self.cache.getDevice(mac)
                     # connection should still exists, also when device becomes offline
                     #device.removeHopConnection(vlan, target_mac, target_interface)
+                    device.removeIP("fritzbox")
                     device.removeGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                     if mac not in _active_client_macs:
                         stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
                     
-                    del self.wifi_clients[fritzbox_ip][uid]
+                    del self.wifi_associations[fritzbox_ip][uid]
+                else:
+                    wifi_clients[mac] = now
+            self.wifi_clients[fritzbox_ip] = wifi_clients
                         
             self.cache.unlock(self)
         
         if global_timeout > call_timeout:
             global_timeout = call_timeout
 
-        return [global_timeout, now]
+        return [global_timeout, now + call_timeout]
     
     def _fetchWifiNetworks(self, fritzbox_ip, now, events, global_timeout, call_timeout ):
         _active_networks = {}
@@ -212,12 +332,21 @@ class Fritzbox(_handler.Handler):
                     
             self.cache.unlock(self)
             
+        has_wifi_networks = False
+        for _fritzbox_ip in self.config.fritzbox_devices:
+            if self.wifi_networks[_fritzbox_ip]:
+                has_wifi_networks = True
+                break
+        self.has_wifi_networks = has_wifi_networks
+            
         if global_timeout > call_timeout:
             global_timeout = call_timeout
 
-        return [global_timeout, now]
+        return [global_timeout, now + call_timeout]
             
-    def _fetchDeviceInfo(self, fritzbox_mac, fritzbox_ip, now, events, global_timeout, call_timeout ):
+    def _fetchDeviceInfo(self, fritzbox_ip, now, events, global_timeout, call_timeout ):
+        fritzbox_mac = self.fritzbox_macs[fritzbox_ip]
+        
         #https://github.com/blackw1ng/FritzBox-monitor/blob/master/checkfritz.py
         
         #_lan_link_state = self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetInfo")
@@ -239,25 +368,27 @@ class Fritzbox(_handler.Handler):
 
         self.cache.lock(self)
 
-        fritzbox_device = self.cache.getDevice(fritzbox_mac)
-        fritzbox_device.setIP(fritzbox_ip)
-        if fritzbox_mac == self.cache.getGatewayMAC():
-            fritzbox_device.addHopConnection(Connection.ETHERNET, self.config.default_vlan, self.cache.getWanMAC(), self.cache.getWanInterface() );
-        self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
+        fritzbox_device = self.cache.getUnlockedDevice(fritzbox_mac)
+        if fritzbox_device is None or not fritzbox_device.hasIP("fritzbox"):
+            fritzbox_device = self.cache.getDevice(fritzbox_mac)
+            fritzbox_device.setIP("fritzbox", 100, fritzbox_ip)
+            if fritzbox_mac == self.cache.getGatewayMAC():
+                fritzbox_device.addHopConnection(Connection.ETHERNET, self.config.default_vlan, self.cache.getWanMAC(), self.cache.getWanInterface() );
+            self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
         
         stat = self.cache.getConnectionStat(fritzbox_mac, self.cache.getGatewayInterface(self.config.default_vlan))
-        if self.last_check[fritzbox_ip]["device"] != 0:
+        if fritzbox_ip in self.devices:
             in_bytes = stat.getInBytes()
-            if in_bytes > 0:
-                time_diff = now - self.last_check[fritzbox_ip]["device"]
+            if in_bytes is not None:
+                time_diff = now - self.devices[fritzbox_ip]
                 byte_diff = lan_traffic_received - in_bytes
                 if byte_diff > 0:
                     stat.setInAvg(byte_diff / time_diff)
                 
-            outBytes = stat.getOutBytes()
-            if outBytes > 0:
-                time_diff = now - self.last_check[fritzbox_ip]["device"]
-                byte_diff = lan_traffic_sent - outBytes
+            out_bytes = stat.getOutBytes()
+            if out_bytes is not None:
+                time_diff = now - self.devices[fritzbox_ip]
+                byte_diff = lan_traffic_sent - out_bytes
                 if byte_diff > 0:
                     stat.setOutAvg(byte_diff / time_diff)
        
@@ -276,18 +407,18 @@ class Fritzbox(_handler.Handler):
             stat.setDetail("wan_type",wan_link_state["type"], "string")
             stat.setDetail("wan_state",wan_link_state["state"], "string")
 
-            if self.last_check[fritzbox_ip]["device"] != 0:
+            if fritzbox_ip in self.devices:
                 in_bytes = stat.getInBytes()
-                if in_bytes > 0:
-                    time_diff = now - self.last_check[fritzbox_ip]["device"]
+                if in_bytes is not None:
+                    time_diff = now - self.devices[fritzbox_ip]
                     byte_diff = wan_traffic_state["received"] - in_bytes
                     if byte_diff > 0:
                         stat.setInAvg(byte_diff / time_diff)
                     
-                outBytes = stat.getOutBytes()
-                if outBytes > 0:
-                    time_diff = now - self.last_check[fritzbox_ip]["device"]
-                    byte_diff = wan_traffic_state["sent"] - outBytes
+                out_bytes = stat.getOutBytes()
+                if out_bytes is not None:
+                    time_diff = now - self.devices[fritzbox_ip]
+                    byte_diff = wan_traffic_state["sent"] - out_bytes
                     if byte_diff > 0:
                         stat.setOutAvg(byte_diff / time_diff)
         
@@ -298,11 +429,69 @@ class Fritzbox(_handler.Handler):
             self.cache.confirmStat( stat, lambda event: events.append(event) )
                 
         self.cache.unlock(self)
+        
+        self.devices[fritzbox_ip] = now
 
         if global_timeout > call_timeout:
             global_timeout = call_timeout
 
-        return [global_timeout, now]
+        return [global_timeout, now + call_timeout]
 
-class NetworkException(Exception):
-    pass
+    def _delayedWakeup(self):
+        with self.delayed_lock:
+            self.delayed_wakeup_timer = None
+            
+            missing_dhcp_macs = []
+            missing_wifi_macs = []
+            for mac in list(self.delayed_devices.keys()):
+                for fritzbox_ip in self.config.fritzbox_devices:
+                    if mac not in self.dhcp_clients[fritzbox_ip]:
+                        missing_dhcp_macs.append(mac)
+                    if self.has_wifi_networks and mac not in self.wifi_clients[fritzbox_ip] and self.delayed_devices[mac].supportsWifi():
+                        missing_wifi_macs.append(mac)
+                del self.delayed_devices[mac]
+            
+            triggered_types = {}
+            for fritzbox_ip in self.next_run:
+                if len(missing_dhcp_macs) > 0:
+                    self.next_run[fritzbox_ip]["dhcp_clients"] = datetime.now().timestamp()
+                    triggered_types["dhcp"] = True
+                if len(missing_wifi_macs) > 0:
+                    self.next_run[fritzbox_ip]["wifi_clients"] = datetime.now().timestamp()
+                    triggered_types["wifi"] = True
+                    
+            if triggered_types:
+                logging.info("Delayed trigger runs for {}".format(" & ".join(triggered_types)))
+
+                with self.condition:
+                    self.condition.notifyAll()
+            else:
+                logging.info("Delayed trigger not needed anymore")
+
+    def getEventTypes(self):
+        return [ 
+            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None },
+            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_MODIFY], "details": ["online"] }
+        ]
+
+    def processEvents(self, events):
+        with self.delayed_lock:
+            has_new_devices = False
+            for event in events:
+                device = event.getObject()
+
+                if event.getAction() == Event.ACTION_MODIFY and not self.has_wifi_networks or not device.supportsWifi():
+                    continue
+                
+                logging.info("Delayed trigger started for {}".format(device))
+
+                self.delayed_devices[device.getMAC()] = device
+                has_new_devices = True
+
+            if has_new_devices:
+                if self.delayed_wakeup_timer is not None:
+                    self.delayed_wakeup_timer.cancel()
+
+                # delayed triggers try to group several event bulks into one
+                self.delayed_wakeup_timer = threading.Timer(5,self._delayedWakeup)
+                self.delayed_wakeup_timer.start()

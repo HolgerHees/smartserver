@@ -29,7 +29,7 @@ class Gateway(_handler.Handler):
             device = event.getObject()
             device.lock(self)
             if gateway_mac == device.getMAC():
-                device.setType("network")
+                device.setType("gateway", 100, "network")
                 device.addHopConnection(Connection.ETHERNET, vlan, self.cache.getWanMAC(), self.cache.getWanInterface() )
             else:
                 device.addHopConnection(Connection.ETHERNET, vlan, gateway_mac, self.cache.getGatewayInterface(vlan) )

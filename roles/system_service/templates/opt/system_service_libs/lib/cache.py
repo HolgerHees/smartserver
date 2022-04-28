@@ -60,7 +60,7 @@ class Cache():
         [_, file ] = stack[1][1].rsplit("/", 1)
         
         #stack[1][3], 
-        logging.info(msg, extra={"_module": "{}:{}".format( file[:-3] , stack[1][2] ) })
+        logging.info(msg, extra={"custom_module": "{}:{}".format( file[:-3] , stack[1][2] ) })
     
     def lock(self, owner):
         self._lock.acquire()

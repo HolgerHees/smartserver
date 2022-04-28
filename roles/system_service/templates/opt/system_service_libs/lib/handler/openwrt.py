@@ -28,15 +28,20 @@ class OpenWRT(_handler.Handler):
         
         self.sessions = {}
         
-        self.last_check = {}
+        self.next_run = {}
         self.last_run = 0
         
-        self.client_wifi_connections = {}
+        self.has_wifi_networks = False
         self.wifi_networks = {}
+        
+        self.wifi_associations = {}
+        self.wifi_clients = {}
         
         self.condition = threading.Condition()
         self.thread = threading.Thread(target=self._checkOpenWRT, args=())
 
+        self.delayed_lock = threading.Lock()
+        self.delayed_devices = {}
         self.delayed_wakeup_timer = None
 
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -50,16 +55,22 @@ class OpenWRT(_handler.Handler):
             self.condition.notifyAll()
             
     def _checkOpenWRT(self):
+        was_suspended = {}
+                
+        now = datetime.now().timestamp()
+
         for openwrt_ip in self.config.openwrt_devices:
             self.sessions[openwrt_ip] = [ None, datetime.now().timestamp()]
 
-            self.last_check[openwrt_ip] = {"network": 0, "client": 0}
+            self.next_run[openwrt_ip] = {"wifi_networks": now, "wifi_clients": now}
         
-            self.client_wifi_connections[openwrt_ip] = {}
             self.wifi_networks[openwrt_ip] = {}
+
+            self.wifi_associations[openwrt_ip] = {}
+            self.wifi_clients[openwrt_ip] = {}
             
-        was_suspended = False
-                
+            was_suspended[openwrt_ip] = False
+            
         while self.is_running:
             if self.delayed_wakeup_timer is not None:
                 self.delayed_wakeup_timer.cancel()
@@ -76,9 +87,9 @@ class OpenWRT(_handler.Handler):
             
             for openwrt_ip in self.config.openwrt_devices:
                 try:
-                    if was_suspended:
+                    if was_suspended[openwrt_ip]:
                         logging.warning("Resume OpenWRT '{}'.".format(openwrt_ip))
-                        was_suspended = False
+                        was_suspended[openwrt_ip] = False
                         
                     timeout = self._processDevice(openwrt_ip, now, events, timeout)
                 except UbusCallException as e:
@@ -93,7 +104,7 @@ class OpenWRT(_handler.Handler):
                     logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
                     if timeout > e.getTimeout():
                         timeout = e.getTimeout()
-                    was_suspended = True
+                    was_suspended[openwrt_ip] = True
                 except Exception as e:
                     self.cache.cleanLocks(self, events)
 
@@ -101,7 +112,7 @@ class OpenWRT(_handler.Handler):
                     logging.error(traceback.format_exc())
                     if timeout > self.config.remote_error_timeout:
                         timeout = self.config.remote_error_timeout
-                    was_suspended = True
+                    was_suspended[openwrt_ip] = True
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -124,11 +135,11 @@ class OpenWRT(_handler.Handler):
         
         ubus_session_id = self.sessions[openwrt_ip][0]
                             
-        if now - self.last_check[openwrt_ip]["network"] >= self.config.openwrt_network_interval:
-            [timeout, self.last_check[openwrt_ip]["network"] ] = self._processWifiNetworks(openwrt_ip, ubus_session_id, now, events, timeout, self.config.openwrt_network_interval, openwrt_mac)
+        if self.next_run[openwrt_ip]["wifi_networks"] <= now:
+            [timeout, self.next_run[openwrt_ip]["wifi_networks"] ] = self._processWifiNetworks(openwrt_ip, ubus_session_id, now, events, timeout, self.config.openwrt_network_interval, openwrt_mac)
                             
-        if now - self.last_check[openwrt_ip]["client"] >= self.config.openwrt_client_interval:  
-            [timeout, self.last_check[openwrt_ip]["client"] ] = self._processWifiClients(openwrt_ip, ubus_session_id, now, events, timeout, self.config.openwrt_client_interval, openwrt_mac)
+        if self.next_run[openwrt_ip]["wifi_clients"] <= now:  
+            [timeout, self.next_run[openwrt_ip]["wifi_clients"] ] = self._processWifiClients(openwrt_ip, ubus_session_id, now, events, timeout, self.config.openwrt_client_interval, openwrt_mac)
             
         return timeout
                 
@@ -190,18 +201,25 @@ class OpenWRT(_handler.Handler):
             self.cache.unlock(self)
         
         # set device type
-        _device = self.cache.getUnlockedDevice(openwrt_mac)
-        if _device is not None and _device.getType() != "network":
+        device = self.cache.getUnlockedDevice(openwrt_mac)
+        if device is not None and not device.hasType("openwrt"):
             self.cache.lock(self)
-            device = self.cache.getDevice(openwrt_mac)
-            device.setType("network")
+            device.lock(self)
+            device.setType("openwrt", 100, "network")
             self.cache.confirmDevice( device, lambda event: events.append(event) )
             self.cache.unlock(self)
+            
+        has_wifi_networks = False
+        for _openwrt_ip in self.config.openwrt_devices:
+            if self.wifi_networks[_openwrt_ip]:
+                has_wifi_networks = True
+                break
+        self.has_wifi_networks = has_wifi_networks
 
         if global_timeout > call_timeout:
             global_timeout = call_timeout
 
-        return [global_timeout, now]
+        return [global_timeout, now + call_timeout]
         
     def _processWifiClients(self, openwrt_ip, ubus_session_id, now, events, global_timeout, call_timeout, openwrt_mac):
         client_results = []
@@ -211,17 +229,17 @@ class OpenWRT(_handler.Handler):
             except UbusCallException as e:
                 if e.getCode() == -32000:
                     logging.warning("OpenWRT '{}' interface '{}' has gone".format(openwrt_ip, wlan_network["ifname"]))
-                    self.last_check[openwrt_ip]["network"] = 0 # => force refresh next time
+                    self.next_run[openwrt_ip]["wifi_networks"] = now # => force refresh next time
                     continue
                 else:
                     raise e
             client_results.append([client_result,wlan_network])
                 
-        if client_results or self.client_wifi_connections[openwrt_ip]:
+        if client_results or self.wifi_associations[openwrt_ip]:
             self.cache.lock(self)
 
             _active_client_macs = []
-            _active_client_wifi_connections = []
+            _active_client_wifi_associations = []
             for [client_result,wlan_network] in client_results:
                 #logging.info(client_result)
                 for mac in client_result["clients"]:
@@ -245,17 +263,17 @@ class OpenWRT(_handler.Handler):
                         continue
                     
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
-                    if uid in self.client_wifi_connections[openwrt_ip]:
+                    if uid in self.wifi_associations[openwrt_ip]:
                         in_bytes = stat.getInBytes()
                         if in_bytes is not None:
-                            time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
+                            time_diff = now - self.wifi_associations[openwrt_ip][uid][0]
                             byte_diff = details["bytes"]["rx"] - in_bytes
                             if byte_diff > 0:
                                 stat.setInAvg(byte_diff / time_diff)
                             
                         out_bytes = stat.getOutBytes()
                         if out_bytes is not None:
-                            time_diff = now - self.client_wifi_connections[openwrt_ip][uid][0]
+                            time_diff = now - self.wifi_associations[openwrt_ip][uid][0]
                             byte_diff = details["bytes"]["tx"] - out_bytes
                             if byte_diff > 0:
                                 stat.setOutAvg(byte_diff / time_diff)
@@ -270,11 +288,12 @@ class OpenWRT(_handler.Handler):
                     self.cache.confirmStat( stat, lambda event: events.append(event) )
                         
                     _active_client_macs.append(mac)
-                    _active_client_wifi_connections.append(uid)
-                    self.client_wifi_connections[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
+                    _active_client_wifi_associations.append(uid)
+                    self.wifi_associations[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
                     
-            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.client_wifi_connections[openwrt_ip].values()):
-                if uid not in _active_client_wifi_connections:
+            wifi_clients = {}
+            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[openwrt_ip].values()):
+                if uid not in _active_client_wifi_associations:
                     device = self.cache.getDevice(mac)
                     # connection should still exists, also when device becomes offline
                     #device.removeHopConnection(vlan, target_mac, target_interface)
@@ -284,14 +303,17 @@ class OpenWRT(_handler.Handler):
                     if mac not in _active_client_macs:
                         stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
                     
-                    del self.client_wifi_connections[openwrt_ip][uid]
-                        
+                    del self.wifi_associations[openwrt_ip][uid]
+                else:
+                    wifi_clients[mac] = now
+            self.wifi_clients[openwrt_ip] = wifi_clients
+                    
             self.cache.unlock(self)
                     
         if global_timeout > call_timeout:
             global_timeout = call_timeout
 
-        return [global_timeout, now]
+        return [global_timeout, now + call_timeout]
 
     def _parseResult(self, ip, r, type):
         if r.status_code != 200:
@@ -342,28 +364,53 @@ class OpenWRT(_handler.Handler):
         return self._parseResult(ip, r, "client_list")
         
     def _delayedWakeup(self, triggered_at):
-        self.delayed_wakeup_timer = None
-        
-        if self.last_run > triggered_at:
-            logging.info("Delayed trigger not needed anymore")
-            return
-        
-        for openwrt_ip in self.last_check:
-            self.last_check[openwrt_ip]["client"] = datetime.now().timestamp() - self.config.openwrt_client_interval
-        with self.condition:
-            self.condition.notifyAll()
+        with self.delayed_lock:
+            self.delayed_wakeup_timer = None
+            
+            missing_wifi_macs = []
+            for mac in list(self.delayed_devices.keys()):
+                for openwrt_ip in self.config.openwrt_devices:
+                    if mac not in self.wifi_clients[openwrt_ip]:
+                        missing_wifi_macs.append(mac)
+                del self.delayed_devices[mac]
+            
+            triggered_types = {}
+            for openwrt_ip in self.next_run:
+                if len(missing_wifi_macs) > 0:
+                    self.next_run[openwrt_ip]["wifi_clients"] = datetime.now().timestamp()
+                    triggered_types["wifi"] = True
+                    
+            if triggered_types:
+                logging.info("Delayed trigger runs for {}".format(" & ".join(triggered_types)))
 
+                with self.condition:
+                    self.condition.notifyAll()
+            else:
+                logging.info("Delayed trigger not needed anymore")
+                
     def getEventTypes(self):
-        return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None } ]
+        return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_MODIFY], "details": ["online"] } ]
 
     def processEvents(self, events):
-        for event in events:
-            device = event.getObject()
-            if device.supportsWifi():
+        with self.delayed_lock:
+            has_new_devices = False
+            for event in events:
+                device = event.getObject()
+
+                if not self.has_wifi_networks or not device.supportsWifi():
+                    continue
+                    
+                logging.info("Delayed trigger started for {}".format(device))
+
+                self.delayed_devices[device.getMAC()] = device
+                has_new_devices = True
+                    
+            if has_new_devices:
                 if self.delayed_wakeup_timer is not None:
                     self.delayed_wakeup_timer.cancel()
-                logging.info("Delayed trigger started for {}".format(device))
-                self.delayed_wakeup_timer = threading.Timer(5,self._delayedWakeup,[datetime.now().timestamp()])
+
+                # delayed triggers try to group several event bulks into one
+                self.delayed_wakeup_timer = threading.Timer(5,self._delayedWakeup)
                 self.delayed_wakeup_timer.start()
 
 class NetworkException(Exception):

@@ -51,9 +51,7 @@ class Device(Changeable):
         super().__init__(cache)
 
         self.mac = mac
-        self.type = type
         
-        self.ip = None
         self.dns = None
         self.info = None
         
@@ -67,31 +65,61 @@ class Device(Changeable):
         # internal variables without change detection
         self.virtual_connection = None
         self.supports_wifi = False
+        
+        self._initPriorizedData(["type", "ip", "dns"])
 
+        self._setPriorizedData("type", "default", 0, type)
+        
     def getMAC(self):
         return self.mac
 
     def getType(self):
-        return self.type
+        return self._getPriorizedValue("type")
 
-    def setType(self, type):
+    def setType(self, source, priority, type):
         self._checkLock()
-        if self.type != type:
+        if self._setPriorizedData("type", source, priority, type):
             self._markAsChanged("type")
-            self.type = type
+            
+    def removeType(self, source):
+        self._checkLock()
+        if self._removePriorizedData("type", source):
+            self._markAsChanged("type")
+            
+    def hasType(self,source):
+        return self._hasPriorizedData("type", source)
 
     def getIP(self):
-        return self.ip
+        return self._getPriorizedValue("ip")
         
-    def setIP(self, ip):
+    def setIP(self, source, priority, ip):
         self._checkLock()
-        if self.ip != ip:
-            if self.ip is not None:
-                # should trigger a alert message (influxdb and mqtt data will not match anymore)
-                # TODO - exclude guest network
-                logging.error("IP changed from {} to {}".format(self.ip,ip))
+        if self._setPriorizedData("ip", source, priority, ip):
             self._markAsChanged("ip")
-            self.ip = ip
+                
+    def removeIP(self, source):
+        self._checkLock()
+        if self._removePriorizedData("ip", source):
+            self._markAsChanged("ip")
+
+    def hasIP(self,source):
+        return self._hasPriorizedData("ip", source)
+
+    def getDNS(self):
+        return self._getPriorizedValue("dns")
+        
+    def setDNS(self, source, priority, dns):
+        self._checkLock()
+        if self._setPriorizedData("dns", source, priority, dns):
+            self._markAsChanged("dns")
+                
+    def removeDNS(self, source):
+        self._checkLock()
+        if self._removePriorizedData("dns", source):
+            self._markAsChanged("dns")
+
+    def hasDNS(self,source):
+        return self._hasPriorizedData("dns", source)
 
     def getInfo(self):
         return self.info
@@ -101,18 +129,6 @@ class Device(Changeable):
         if self.info != info:
             self._markAsChanged("info")
             self.info = info
-
-    def getDNS(self):
-        return self.dns
-
-    def setDNS(self, dns):
-        self._checkLock()
-        if self.dns != dns:
-            self._markAsChanged("dns")
-            self.dns = dns
-
-    def getDNS(self):
-        self.dns
 
     def addHopConnection(self, type, vlan, target_mac, target_interface):
         self._checkLock()
@@ -244,10 +260,11 @@ class Device(Changeable):
 
         return {
             "mac": self.mac,
-            "type": self.type,
 
-            "ip": self.ip,
-            "dns": self.dns,
+            "type": self.getType(),
+            "ip": self.getIP(),
+            "dns": self.getDNS(),
+            
             "info": self.info,
             
             "connection": connection.getSerializeable() if connection else None,
@@ -259,8 +276,9 @@ class Device(Changeable):
         }
     
     def __repr__(self):
-        if self.ip:
-            return self.ip
+        ip = self.getIP()
+        if ip:
+            return ip
         else:
             return self.mac
       

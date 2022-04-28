@@ -19,6 +19,48 @@ class Changeable():
         self._lock = False
         self._lock_owner = None
         
+        self.priorized_data = {}
+        self.priorized_value = {}
+        
+    def _initPriorizedData(self, keys):
+        for key in keys:
+            self.priorized_data[key] = {}
+            self.priorized_value[key] = None
+            
+    def _getPriorizedValue(self, key):
+        return self.priorized_value[key]
+    
+    def _hasPriorizedData(self, key, source):
+        return source in self.priorized_data[key]
+        
+    def _setPriorizedData(self, key, source, priority, value):
+        if source not in self.priorized_data[key] or self.priorized_data[key][source]["priority"] != priority or self.priorized_data[key][source]["value"] != value:
+            self.priorized_data[key][source] = {"value": value, "priority": priority}
+            _priority = priority
+            _value = value
+            for data in self.priorized_data[key].values():
+                if data["priority"] > _priority:
+                    _priority = data["priority"]
+                    _value = data["value"]
+            if self.priorized_value[key] != _value:
+                self.priorized_value[key] = _value
+                return True
+        return False
+    
+    def _removePriorizedData(self, key, source):
+        if source in self.priorized_data[key]:
+            del self.priorized_data[key][source]
+            _priority = 0
+            _value = None
+            for data in self.priorized_data[key].values():
+                if data["priority"] > _priority:
+                    _priority = data["priority"]
+                    _value = data["value"]
+            if self.priorized_value[key] != _value:
+                self.priorized_value[key] = _value
+                return True
+        return False
+
     def setDetail(self, key, value, fmt):
         if key not in self.details or self.details[key]["value"] != value:
             self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
@@ -69,7 +111,7 @@ class Changeable():
             raise Exception("Not locked " + str(self) )
         
     def isLocked(self):
-        return self._lock is not None
+        return self._lock
 
     def lock(self, owner):
         #print("lock " + str(self))

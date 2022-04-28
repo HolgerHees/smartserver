@@ -23,7 +23,7 @@ class CustomFormatter(logging.Formatter):
         self.fmt_custom = fmt_custom
 
     def format(self, record):
-        if "_module" in record.__dict__:
+        if "custom_module" in record.__dict__:
             formatter = logging.Formatter(self.fmt_custom)
         else:
             formatter = logging.Formatter(self.fmt_default)
@@ -37,7 +37,7 @@ class Server():
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(CustomFormatter(
             "[%(levelname)s] - %(module)s:%(lineno)d - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s:%(lineno)d - %(message)s",
-            "[%(levelname)s] - _%(_module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - _%(_module)s - %(message)s"
+            "[%(levelname)s] - %(custom_module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(custom_module)s - %(message)s"
         ))
         
         logging.basicConfig(

@@ -52,7 +52,7 @@ class PortScanner(_handler.Handler):
                 next_timeout = self.config.port_scan_interval
                 for mac in self.monitored_devices:
                     device = self.cache.getUnlockedDevice(mac)
-                    if device.getIP() is None or device in self.waiting_queue or device in self.running_queue:
+                    if device is None or device.getIP() is None or device in self.waiting_queue or device in self.running_queue:
                         continue
                     
                     if self.monitored_devices[mac] == None or (now - self.monitored_devices[mac]).total_seconds() > self.config.port_rescan_interval:
@@ -99,6 +99,7 @@ class PortScanner(_handler.Handler):
 
     def processEvents(self, events):
         with self.data_lock:
+            has_changed_devices = False
             for event in events:
                 mac = event.getObject().getMAC()
                 if event.getAction() == Event.ACTION_DELETE:
@@ -111,6 +112,8 @@ class PortScanner(_handler.Handler):
                         logging.info("Change device {}".format(event.getObject()))
                         
                     self.monitored_devices[mac] = None
+                    has_changed_devices = True
 
-        with self.condition:
-            self.condition.notifyAll()
+            if has_changed_devices:
+                with self.condition:
+                    self.condition.notifyAll()

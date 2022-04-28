@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from flask import Flask, request, make_response
+from flask_socketio import SocketIO, emit
 from werkzeug.serving import WSGIRequestHandler
 
 import logging
@@ -26,6 +27,11 @@ from lib.dispatcher import Dispatcher
 from lib.cache import Cache
 
 
+app = Flask(__name__ )
+app.logger = logging.getLogger()
+#app.config['SECRET_KEY'] = 'test!'
+socketio = SocketIO(app, async_mode="threading", logger=logging.getLogger(), cors_allowed_origins="*")
+
 class Handler(Server):
     def __init__(self):
         super().__init__("system_service")
@@ -35,7 +41,7 @@ class Handler(Server):
         self.pipeline = []
         self.cache = Cache(config)
 
-        self.dispatcher = Dispatcher(config, self.cache )
+        self.dispatcher = Dispatcher(config, self.cache, self )
         
         self.dispatcher.register(ArpScanner(config, self.cache ))
         if len(config.openwrt_devices) > 0:
@@ -55,6 +61,11 @@ class Handler(Server):
         if self.dispatcher:
             self.dispatcher.terminate()
         super().terminate()
+        
+    def notify(self):
+        logging.info("has changes")
+        #with socketio.test_request_context('/'):
+        #    emit('message', {'changed': 'true'})
         
     def getState(self):
 
@@ -85,18 +96,31 @@ class Handler(Server):
 
         return json.dumps(result)
           
-app = Flask(__name__)
+#https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
 
 @app.route('/state/', methods = ['POST'])
 def state():
     return handler.getState()
 
+@socketio.on('connect', namespace="//" + config.server_domain + "/system_service/api/")
+def on_connect():
+    logging.info("on_connect {}".format(request.sid))
+    
+@socketio.on('disconnect', namespace="//" + config.server_domain + "//system_service/api/")
+def on_disconnect():
+    logging.info("on_disconnect {}".format(request.sid))
+    
+@socketio.on('message', namespace="//" + config.server_domain + "/system_service/api/")
+def on_message(message):
+    logging.info(message)
+    emit('message', {'data': 'ok'})
+    
 if __name__ == '__main__':
     Server.initLogger(logging.INFO)
     handler = Handler()
 
     def handleServer():
         WSGIRequestHandler.protocol_version = "HTTP/1.1"
-        app.run(debug=False, use_reloader=False, threaded=True, host=config.service_ip, port=config.service_port)
+        socketio.run(app=app, use_reloader=False, host=config.service_ip, port=config.service_port)
         
     handler.start(handleServer)

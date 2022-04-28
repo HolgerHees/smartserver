@@ -8,9 +8,10 @@ from lib.dto.event import Event
 
 
 class Dispatcher(): 
-    def __init__(self, config, cache ):
+    def __init__(self, config, cache, handler ):
         self.config = config
         self.cache = cache
+        self.handler = handler
         
         self.event_pipeline = []
         self.registered_handler = []
@@ -149,6 +150,8 @@ class Dispatcher():
         
         if len(stats_changed) > 0:
             self.last_stat_refresh = round(datetime.now().timestamp(),3)
+            
+        self.handler.notify()
             
     def getGroups(self):
         _groups = []
