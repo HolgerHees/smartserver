@@ -401,7 +401,7 @@ mx.D3 = (function( ret )
                 }
             });
         }  
-        else if(root == d && d.data.interface_stat.details["wan_state"])
+        else if(root == d && d.data.interface_stat && d.data.interface_stat.details["wan_state"])
         {
             bottom_span.text(d => "WAN: " + d.data.interface_stat.details["wan_state"]["value"]);
             let textLength = bottom_span.node().getComputedTextLength() + 3;
