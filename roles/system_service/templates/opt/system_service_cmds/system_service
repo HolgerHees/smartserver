@@ -5,7 +5,7 @@ from flask_socketio import SocketIO, emit
 from werkzeug.serving import WSGIRequestHandler
 
 import logging
-import json
+import sys
 
 from datetime import datetime
 
@@ -26,12 +26,11 @@ from lib.handler.publish_influxdb import InfluxDBPublisher
 from lib.dispatcher import Dispatcher
 from lib.cache import Cache
 
-websocket_ns = "//" + config.server_domain + "/system_service/api/"
-
 app = Flask(__name__ )
 app.logger = logging.getLogger()
 #app.config['SECRET_KEY'] = 'test!'
-socketio = SocketIO(app, async_mode="threading", logger=logging.getLogger(), cors_allowed_origins="*")
+#socketio = SocketIO(app, async_mode="threading", logger=logging.getLogger(), cors_allowed_origins="*")
+socketio = SocketIO(app, async_mode="threading", cors_allowed_origins="*")
 
 class Handler(Server):
     def __init__(self):
@@ -63,61 +62,45 @@ class Handler(Server):
             self.dispatcher.terminate()
         super().terminate()
         
-    def notify(self, changed_data):           
+    def notifyNetworkData(self, changed_data, msg):
+        logging.info("Emit changed {}".format(msg))
+
         with app.app_context():
-            socketio.emit('message', changed_data, namespace=websocket_ns)
+            socketio.emit('network_data', changed_data)
         #socketio.sleep(5)
         
-    def emitData(self):
-        emit('message', self.dispatcher.getData(), namespace=websocket_ns)
-        
-    def getState(self):
+    def emitNetworkData(self):
+        [ data, msg ] = self.dispatcher.getData();
 
-        last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp
-        last_data_modified["groups"] = self.dispatcher.getLastGroupRefreshAsTimestamp()
-        last_data_modified["devices"] = self.dispatcher.getLastDeviceRefreshAsTimestamp()
-        last_data_modified["stats"] = self.dispatcher.getLastStatRefreshAsTimestamp()
-        changed_data = {}
-        
-        force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
-                
-        if force or "last_data_modified[groups]" not in request.form or float(request.form["last_data_modified[groups]"]) < last_data_modified["groups"]:
-            changed_data["groups"] = self.dispatcher.getGroups()
+        logging.info("Emit initial {}".format(msg))
 
-        if force or "last_data_modified[devices]" not in request.form or float(request.form["last_data_modified[devices]"]) < last_data_modified["devices"]:
-            changed_data["root"] = self.cache.getGatewayMAC()
-            changed_data["devices"] = self.dispatcher.getDevices()
-
-        if force or "last_data_modified[stats]" not in request.form or float(request.form["last_data_modified[stats]"]) < last_data_modified["stats"]:
-            changed_data["stats"] = self.dispatcher.getStats()
-
-        result = { 
-            "status": 0, 
-            "last_data_modified": last_data_modified,
-            "changed_data": changed_data
-        }
-
-        return json.dumps(result)
+        data["root"] = self.cache.getGatewayMAC()
+        emit('network_data', data)
           
+#@app.route('/state/', methods = ['POST'])
+#def state():
+#    pass
+
 #https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
 
-@app.route('/state/', methods = ['POST'])
-def state():
-    return handler.getState()
+@socketio.on_error_default
+def on_error(e):
+    logging.error(e)
+    sys.excepthook(*sys.exc_info())
 
-@socketio.on('connect', namespace=websocket_ns)
+@socketio.on('connect')
 def on_connect():
     logging.info("on_connect {}".format(request.sid))
     
-@socketio.on('disconnect', namespace=websocket_ns)
+@socketio.on('disconnect')
 def on_disconnect():
     logging.info("on_disconnect {}".format(request.sid))
     
-@socketio.on('message', namespace=websocket_ns)
-def on_message(message):
-    logging.info(message)
-    handler.emitData()
+@socketio.on('call')
+def on_call(type):
+    logging.info("on_call {}".format(type))
+    if type == "network_data":
+        handler.emitNetworkData()
     
 if __name__ == '__main__':
     Server.initLogger(logging.INFO)

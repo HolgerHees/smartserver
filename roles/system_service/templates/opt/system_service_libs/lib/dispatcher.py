@@ -17,12 +17,6 @@ class Dispatcher():
         self.registered_handler = []
 
         self.virtual_devices = []
-
-        self.last_group_refresh = 0
-        self.last_device_refresh = 0
-        self.last_stat_refresh = 0
-
-        self.data_lock = threading.Lock()
         
     def register(self, handler):
         handler.setDispatcher(self)
@@ -45,13 +39,13 @@ class Dispatcher():
                
     def dispatch(self, source_handler, events):
         # *** recalculate main connection ***
-        has_connections = False
+        has_connection_changes = False
         for event in events:
             if event.getType() == Event.TYPE_DEVICE and event.hasDetail("connection"):
-                has_connections = True
+                has_connection_changes = True
                 break
         
-        if has_connections:
+        if has_connection_changes:
             self.cache.lock(self)
             for device in self.cache.getDevices():   
                 device.resetConnection()
@@ -85,19 +79,8 @@ class Dispatcher():
                 
             if len(_events) > 0:
                 handler.processEvents(_events)
-                
-        groups_changed = []
-        devices_changed = []
-        stats_changed = []
-        for event in events:
-            if event.getType() == Event.TYPE_GROUP:
-                groups_changed.append(event.getObject())
-            elif event.getType() == Event.TYPE_DEVICE:
-                devices_changed.append(event.getObject())
-            elif event.getType() == Event.TYPE_STAT:
-                stats_changed.append(event.getObject())
-                
-        if has_connections:
+                               
+        if has_connection_changes:
             connected_map = {}
             for device in self.cache.getDevices():               
                 device.setVirtualConnection(None)
@@ -142,73 +125,89 @@ class Dispatcher():
                 
             self.virtual_devices = virtual_devices
             
-        if len(groups_changed) > 0:
-            self.last_group_refresh = round(datetime.now().timestamp(),3)
+        [ changed_data, msg ] = self._convertEvents(events, has_connection_changes)
 
-        if len(devices_changed) > 0:
-            self.last_device_refresh = round(datetime.now().timestamp(),3)
-        
-        if len(stats_changed) > 0:
-            self.last_stat_refresh = round(datetime.now().timestamp(),3)
+        self.handler.notifyNetworkData(changed_data, msg)
+
+    def _convertEvents(self, events, has_connection_changes):
+        full_device_update_needed = has_connection_changes
+        devices_added = []
+        devices_modified = []
+        devices_deleted = []
+
+        groups_added = []
+        groups_modified = []
+        groups_deleted = []
+
+        stats_added = []
+        stats_modified = []
+        stats_deleted = []
+
+        for event in events:
+            if event.getType() == Event.TYPE_DEVICE:
+                if event.getAction() == Event.ACTION_CREATE:
+                    devices_added.append(event.getObject())
+                elif event.getAction() == Event.ACTION_DELETE:
+                    devices_deleted.append(event.getObject())
+                else:
+                    devices_modified.append(event.getObject())
+            elif event.getType() == Event.TYPE_GROUP:
+                if event.getAction() == Event.ACTION_CREATE:
+                    groups_added.append(event.getObject())
+                elif event.getAction() == Event.ACTION_DELETE:
+                    groups_deleted.append(event.getObject())
+                else:
+                    groups_modified.append(event.getObject())
+            elif event.getType() == Event.TYPE_STAT:
+                if event.getAction() == Event.ACTION_CREATE:
+                    stats_added.append(event.getObject())
+                elif event.getAction() == Event.ACTION_DELETE:
+                    stats_deleted.append(event.getObject())
+                else:
+                    stats_modified.append(event.getObject())
+                    
+        all_devices = self.cache.getDevices() + self.virtual_devices
+        #if full_device_update_needed:
+        #    devices_modified = all_devices
             
-        all_devices = devices = self.cache.getDevices() + self.virtual_devices
-        changed_data = self._prepareChanges(groups_changed, all_devices if has_connections else devices_changed, all_devices, stats_changed)
+        return self._prepareChanges( devices_added, devices_modified, devices_deleted, has_connection_changes, all_devices, groups_added, groups_modified, groups_deleted, stats_added, stats_modified, stats_deleted )
 
-        self.handler.notify(changed_data)
-        
-    def _prepareChanges(self, groups, devices, all_devices, stats):
-        logging.info("changed groups: {}, devices: {}, stats: {}".format(len(groups),len(devices),len(stats)))
+    def _prepareChanges(self, devices_added, devices_modified, devices_deleted, has_connection_changes, all_devices, groups_added, groups_modified, groups_deleted, stats_added, stats_modified, stats_deleted ):
+        msg = "devices: [{},{},{}] - groups: [{},{},{}] - stats: [{},{},{}] ".format(len(devices_added), len(devices_modified), len(devices_deleted), len(groups_added), len(groups_modified), len(groups_deleted), len(stats_added), len(stats_modified), len(stats_deleted))
 
         changed_data = {}
         
-        if len(groups)>0:
-            _groups = []
-            for group in groups:
-                _groups.append(group.getSerializeable())
-            changed_data["groups"] = _groups
+        changed_data["devices"] = { "values": [], "replace": False }
+        if has_connection_changes or devices_added or devices_deleted:
+            changed_data["devices"]["replace"] = True
+            for device in all_devices:
+                changed_data["devices"]["values"].append(device.getSerializeable(all_devices))
+        else:
+            #for device in devices_added:
+            #    changed_data["devices"]["added"].append(device.getSerializeable(all_devices))
+            for device in devices_modified:
+                changed_data["devices"]["values"].append(device.getSerializeable(all_devices))
+            #for device in devices_deleted:
+            #    changed_data["devices"]["deleted"].append(device.getSerializeable(all_devices))
+
+        changed_data["groups"] = { "added": [], "modified": [], "deleted": [] }
+        for group in groups_added:
+            changed_data["groups"]["added"].append(group.getSerializeable())
+        for group in groups_modified:
+            changed_data["groups"]["modified"].append(group.getSerializeable())
+        for group in groups_deleted:
+            changed_data["groups"]["deleted"].append(group.getSerializeable())
             
-        if len(devices)>0:
-            _devices = []
-            for device in devices:
-                _devices.append(device.getSerializeable(all_devices))
-            changed_data["devices"] = _devices
+        changed_data["stats"] = { "added": [], "modified": [], "deleted": [] }
+        for stat in stats_added:
+            changed_data["stats"]["added"].append(stat.getSerializeable())
+        for stat in stats_modified:
+            changed_data["stats"]["modified"].append(stat.getSerializeable())
+        for stat in stats_deleted:
+            changed_data["stats"]["deleted"].append(stat.getSerializeable())
 
-        if len(stats)>0:
-            _stats = []
-            for stat in stats:
-                _stats.append(stat.getSerializeable())
-            changed_data["stats"] = _stats
-
-        return changed_data
+        return [ changed_data, msg ]
     
     def getData(self):
         devices = self.cache.getDevices() + self.virtual_devices
-        return self._prepareChanges(self.cache.getGroups(), devices, devices, self.cache.getStats())
-            
-    def getGroups(self):
-        _groups = []
-        for group in self.cache.getGroups():
-            _groups.append(group.getSerializeable())
-        return _groups
-
-    def getLastGroupRefreshAsTimestamp(self):
-        return self.last_group_refresh
-
-    def getDevices(self):
-        devices = self.cache.getDevices() + self.virtual_devices
-        _devices = []
-        for device in devices:
-            _devices.append(device.getSerializeable(devices))
-        return _devices
-
-    def getLastDeviceRefreshAsTimestamp(self):
-        return self.last_device_refresh
-
-    def getStats(self):
-        _stats = []
-        for stat in self.cache.getStats():
-            _stats.append(stat.getSerializeable())
-        return _stats
-
-    def getLastStatRefreshAsTimestamp(self):
-        return self.last_stat_refresh
+        return self._prepareChanges(devices, [], [], False, devices, self.cache.getGroups(), [], [], self.cache.getStats(), [], [])

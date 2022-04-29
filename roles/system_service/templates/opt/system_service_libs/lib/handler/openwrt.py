@@ -245,7 +245,7 @@ class OpenWRT(_handler.Handler):
                 for mac in client_result["clients"]:
                     if mac == self.cache.getGatewayMAC():
                         continue
-                
+                                   
                     target_mac = openwrt_mac
                     target_interface = mac#wlan_network["ssid"]
                     vlan = wlan_network["vlan"]

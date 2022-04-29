@@ -13,33 +13,101 @@ require "../shared/libs/ressources.php";
 <script src="<?php echo Ressources::getComponentPath('/system_service/'); ?>"></script>
 <script>
 mx.UNCore = (function( ret ) {
-    var daemonApiUrl = mx.Host.getBase() + 'api/'; 
-    
-    var refreshDaemonStateTimer = 0;
-    var groups = [];    
-    var devices = [];    
+    var groups = {};    
+    var devices = {};    
     var stats = {};    
     var root_device_mac = null;
     
-    function handleDaemonState(state)
+    var nodes = {};
+    
+    var rootNode = null;
+
+    function initNode(device)
     {
-        window.clearTimeout(refreshDaemonStateTimer);
+        let node = {};
+        node["name"] = device["mac"];
+        node["device"] = device;
+        node["children"] = [];
+
+        nodes[device["mac"]] = node;
+
+        return node;
+    }
+    
+    function initChildren(parentNode, devices, stats)
+    {
+        let connectedDevices = Object.values(devices).filter(data => data["connection"] && parentNode["device"]["mac"] == data["connection"]["target_mac"]);
         
-        let groupsChanged = false;
-        let devicesChanged = false;
-        let statsChanged = false;
-        
-        if( state["changed_data"].hasOwnProperty("groups") )
+        for( i in connectedDevices)
         {
-            groups = state["changed_data"]["groups"];
-            groupsChanged = true;
+            if( connectedDevices[i]["mac"] in nodes )
+            {
+                continue;
+            }
+          
+            childNode = initNode(connectedDevices[i], stats);
+            parentNode["children"].push(childNode);
+
+            if( childNode["device"]["connected_from"].length > 0 )
+            {
+                initChildren(childNode, devices, stats);
+            }
         }
-        
-        if( state["changed_data"].hasOwnProperty("devices") )
+    }
+    
+    function buildStructure()
+    {
+        nodes = {};
+
+        Object.values(devices).forEach(function(device)
         {
-            root_device_mac = state["changed_data"]["root"];
-            devices = state["changed_data"]["devices"];
-            devices = devices.sort(function(a, b)
+            device["connected_from"] = [];
+        });
+
+        Object.values(devices).forEach(function(device)
+        {
+            if( !device["connection"] || !devices[device["connection"]["target_mac"]] ) return;
+            
+            devices[device["connection"]["target_mac"]]["connected_from"].push(device);
+        });
+
+        let rootDevices = Object.values(devices).filter(data => root_device_mac == data["mac"] );
+        if( rootDevices.length > 0 )
+        {
+            rootNode = initNode(rootDevices[0], stats);
+        
+            if( rootNode["device"]["connected_from"].length > 0 )
+            {
+                initChildren(rootNode, devices, stats);
+            }
+        }
+        else
+        {
+            rootNode = null;
+        }
+    }
+
+    function processData(data)
+    {
+        //console.log(data);
+        
+        if( data.hasOwnProperty("root") ) root_device_mac = data["root"];
+        
+        // **** PROCESS DEVICES ****
+        let replacesNodes = data["devices"]["replace"];
+        
+        let _devices = {}
+        if( replacesNodes ) devices = {}
+        data["devices"]["values"].forEach(function(device)
+        {
+            devices[device["mac"]] = device;
+            _devices[device["mac"]] = device;
+        });
+        
+        // **** SORT DEVICES ****
+        if( data["devices"]["values"].length > 0 )
+        {
+            _devices = Object.values(devices).sort(function(a, b)
             {
                 if( a.ip == null ) return -1;
                 if( b.ip == null ) return 1;
@@ -49,98 +117,90 @@ mx.UNCore = (function( ret ) {
                 
                 return a.ip > b.ip;
             });
-            devicesChanged = true;
-        }
-        
-        if( state["changed_data"].hasOwnProperty("stats") )
-        {
-            let _stats = {}
             
-            state["changed_data"]["stats"].forEach(function(stat)
+            devices = {}
+            _devices.forEach(function(device)
             {
-                key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"]
-                _stats[key] = stat;
+                devices[device["mac"]] = device;
             });
-            
-            //console.log(_stats)
-            stats = _stats;
-            statsChanged = true;
         }
         
-        if( devices.length == 0 )
+        // **** BUILD REPLACED STRUCTURE ****
+        if( replacesNodes || rootNode == null ) 
+        {
+            if( rootNode == null ) mx.Error.confirmSuccess();
+            
+            buildStructure();
+            
+            _devices = devices;
+            replacesNodes = true;
+        }
+        // **** UPDATE STRUCTURE ****
+        else
+        {
+            Object.values(nodes).forEach(function(node)
+            {
+                node["device"] = devices[node["device"]["mac"]];
+            });
+        }
+        
+        // **** PROCESS GROUPS ****
+        data["groups"]["added"].forEach(function(group)
+        {
+            groups[group["gid"]] = group;
+        });
+        data["groups"]["modified"].forEach(function(group)
+        {
+            groups[group["gid"]] = group;
+        });
+        data["groups"]["deleted"].forEach(function(group)
+        {
+            delete groups[group["gid"]];
+        });
+
+        // **** PROCESS STATS ****
+        data["stats"]["added"].forEach(function(stat)
+        {
+            key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"];
+            stats[key] = stat;
+        });
+        data["stats"]["modified"].forEach(function(stat)
+        {
+            key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"];
+            stats[key] = stat;
+        });
+        data["stats"]["deleted"].forEach(function(stat)
+        {
+            key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"];
+            delete stats[key];
+        });
+        
+        if( rootNode == null )
         {
             mx.Error.handleError( mx.I18N.get("Network analysis is in progress")  );
         }
-        else if( groupsChanged || devicesChanged || statsChanged )
+        else
         {
-            mx.D3.drawCircles( root_device_mac, groupsChanged || devicesChanged ? devices : null, groupsChanged || devicesChanged ? groups : null, statsChanged || devicesChanged ? stats : null , 15000);
+            mx.D3.drawStructure( replacesNodes ? rootNode : null, groups, stats);
         }
-
-        refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
-             
-        mx.Page.refreshUI();
-    }
-    
-    function refreshDaemonState(last_data_modified,callback)
-    {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl + "state/" );
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-            
-            if( this.status == 200 ) 
-            {
-                var response = JSON.parse(this.response);
-                if( response["status"] == "0" )
-                {
-                    mx.Error.confirmSuccess();
-                    
-                    handleDaemonState(response);
-                    
-                    if( callback ) callback();
-                }
-                else
-                {
-                    mx.Error.handleServerError(response["message"]);
-                }
-            }
-            else
-            {
-                let timeout = 15000;
-                if( this.status == 0 || this.status == 503 ) 
-                {
-                    mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-                }
-                else
-                {
-                    if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
-                }
-                
-                refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, 15000);
-            }
-        };
-        
-        xhr.send(mx.Core.encodeDict( { "last_data_modified": last_data_modified } ));
     }
         
     ret.init = function()
     { 
-        mx.D3.init();
-        
         mx.I18N.process(document);
         
-        refreshDaemonState(null, function(state){});
+        //refreshDaemonState(null, function(state){});
         
-        const socket = io("wss://" + daemonApiUrl, {path: '/system_service/api/socket.io' });
+        const socket = io("/", {path: '/system_service/api/socket.io' });
         socket.on('connect', function() {
-            console.log("connected");
-            socket.emit('message', { "connected": true });
+            mx.Error.confirmSuccess();
+            socket.emit('call', "network_data");
         });
-        socket.on('message', function(message) {
-            console.log(message);
+        socket.on('disconnect', function() {
+            mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
+        });
+        socket.on('network_data', function(data) {
+            processData(data);
         });
     }
     return ret;

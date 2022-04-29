@@ -6,127 +6,85 @@ mx.D3 = (function( ret )
     let box_height = 0;
     let font_size = 0;
 
-    let link = null;
-    let node = null;
-    
-    let d3root = null;
-    
     let groups = null;
-    let devices = null;
     let stats = null;
     
     let root = null;
     
-    function initNode(device, stats, processedNodes)
+    let link = null;
+    let node = null;
+    
+    let active_tooltip_d = null;
+    
+    function getGroup(gid)
     {
-        processedNodes[device["mac"]] = true;
+        return groups[gid];
+    }
+    
+    function getDeviceStat(device)
+    {
+        return stats.hasOwnProperty(device["mac"]) ? stats[device["mac"]] : null;
+    }
 
-        let node = {};
-        node["name"] = device["mac"];
-        node["device"] = device;
-        node["children"] = [];
-
-        node["device_stat"] = stats[device["mac"]] ? stats[device["mac"]] : null;
+    function getInterfaceStat(device)
+    {
         if( device["connection"] )
         {
-            key = device["connection"]["target_mac"]+":"+device["connection"]["target_interface"]
-            node["interface_stat"] = stats[key] ? stats[key] : null;
+            key = device["connection"]["target_mac"] + ":" + device["connection"]["target_interface"];
+            if( stats.hasOwnProperty(key) ) return stats[key];
+        }
+        return null;
+    }
+
+    function isOnline(device)
+    {
+        if( device.type == 'hub' )
+        {
+            let all_children_online = true;
+            for(let child_device of device.connected_from) 
+            {
+                let child_device_stat = getDeviceStat(child_device);
+                if( !child_device_stat || child_device_stat.offline_since != null )
+                {
+                    all_children_online = false;
+                    break;
+                }
+            }
+            return all_children_online;
         }
 
-        return node;
+        let device_stat = getDeviceStat(device);
+        return device_stat && device_stat.offline_since == null;
     }
-    
-    function initChildren(rootNode, devices, stats, processedNodes)
-    {
-        let connectedDevices = devices.filter(data => data["connection"] && rootNode["device"]["mac"] == data["connection"]["target_mac"]);
+
+    ret.drawStructure = function( rootNode, _groups, _stats) {
+        groups = _groups;
+        stats = _stats;
         
-        for( i in connectedDevices)
+        if( rootNode )
         {
-            if( connectedDevices[i]["mac"] in processedNodes )
-            {
-                continue;
-            }
-          
-            childNode = initNode(connectedDevices[i], stats, processedNodes);
-            rootNode["children"].push(childNode);
-
-            if( childNode["device"]["connected_from"].length > 0 )
-            {
-                initChildren(childNode, devices, stats, processedNodes);
-            }
-        }
-    }
-    
-    ret.drawCircles = function(root_device_mac, _devices, _groups, _stats, refresh_interval)
-    {
-        if( _groups )
-            groups = _groups;
-        
-        if( _devices )
-            devices = _devices;
-        
-        if( _stats )
-            stats = _stats;
-        
-        if( _devices )
-        {
-            let processedNodes = {};
-            let rootNode = null;
-            
-            device_uid_map = {}
-            devices.forEach(function(device)
-            {
-                device["connected_from"] = [];
-                device_uid_map[device["mac"]] = device;
-            });
-
-            devices.forEach(function(device)
-            {
-                if( !device["connection"] || !device_uid_map[device["connection"]["target_mac"]] ) return;
-                
-                device_uid_map[device["connection"]["target_mac"]]["connected_from"].push(device["mac"]);
-            });
-
-            let endCount = devices.filter(data => data["connected_from"].length == 0 ).length;
-            
-            let rootDevices = devices.filter(data => root_device_mac == data["mac"] );
-            rootNode = initNode(rootDevices[0], stats, processedNodes);
-        
-            if( rootNode["device"]["connected_from"].length > 0 )
-            {
-                initChildren(rootNode, devices, stats, processedNodes);
-            }
-            
             root = d3.hierarchy(rootNode);
 
-            initTree(endCount);
-        }
-        else if( _stats )
-        {            
-            root.descendants().forEach(function(_data)
-            {
-                let mac = _data["data"]["device"]["mac"];
-                
-                if(mac in stats) 
-                {
-                    _data["data"]["device_stat"] = stats[mac];
-                }
-                if( _data["data"]["device"]["connection"] )
-                {
-                    key = _data["data"]["device"]["connection"]["target_mac"]+":"+_data["data"]["device"]["connection"]["target_interface"]
-                    if(key in stats)
-                    {
-                        _data["data"]["interface_stat"] = stats[key];
-                    }
-                }
+            depthCount = {}
+            root.descendants().forEach(function(data){
+                if( !depthCount.hasOwnProperty(data["depth"]) ) depthCount[data["depth"]] = 0;
+                depthCount[data["depth"]] += 1;
             });
 
-            redrawState();
+            let endCount = 0;
+            Object.values(depthCount).forEach(function(value)
+            {
+                if( value > endCount ) endCount = value;
+            });
+
+            initTree(endCount);
+            refreshTooltip();
         }
-    }
-    
-    ret.init = function(devices, groups, traffic)
-    {
+        else if( node )
+        {
+            redrawState();
+            refreshTooltip();
+        }
     }
     
     ret.openChart = function(ip, has_traffic, has_wifi)
@@ -204,9 +162,9 @@ mx.D3 = (function( ret )
         //d3.tree().size([300, 200])(root);
         
         box_height = dx;
-        font_size = box_height / 2.5;
-        if( font_size > 8.6 ) font_size = 8.6;
-        
+        font_size = box_height / 3;
+        //if( font_size > 10 ) font_size = 10;
+        //console.log(font_size);
         //console.log(box_height);
 
         // Center the tree.
@@ -255,7 +213,7 @@ mx.D3 = (function( ret )
             .attr("id", function(d) { return d.data.uid; })
             .on("mouseenter", function(e, d){ 
                 e.stopPropagation();
-                showTooltip(d, link);
+                showTooltip(d);
             })
             .on("mousemove", function(e, d){
                 e.stopPropagation();
@@ -271,7 +229,7 @@ mx.D3 = (function( ret )
 
                 if( mx.Core.isTouchDevice() )
                 {
-                    showTooltip(d, link);
+                    showTooltip(d);
                 }
                 else
                 {
@@ -281,16 +239,16 @@ mx.D3 = (function( ret )
                 
                 
             svg.on("click", function(e, d){
-                mx.Tooltip.hide();
+                hideTooltip();
             });
 
         node.append("rect")
-            .attr("class", d => "container " + ( d.data["device"] ? d.data["device"]["type"] : "" ) )
+            .attr("class", d => "container " + d.data.device.type )
             .attr("width", box_width)
             .attr("height", box_height);
 
         node.append("circle")
-            .attr("class", d => ( isOnline(d) ? "online" : "offline" ) )
+            .attr("class", d => ( isOnline(d.data.device) ? "online" : "offline" ) )
             .attr("cx", 143)
             .attr("cy", 7)
             .attr("r", 3);
@@ -311,7 +269,7 @@ mx.D3 = (function( ret )
 
         node.append("text")
             .classed("name", true)
-            .attr("dy", font_size * 2.3 * 1.2)
+            .attr("dy", font_size * 2.2 * 1.2)
             .attr("x", "2.5")
             .attr("font-size", font_size * 0.9)
         //      .attr("x", d => d.children ? -6 : 6)
@@ -362,7 +320,7 @@ mx.D3 = (function( ret )
         node.selectAll("rect.traffic").each( setTrafficBackground );
 
         let online_circle = node.selectAll("circle");
-        online_circle.attr("class", d => ( isOnline(d) ? "online" : "offline" ) );
+        online_circle.attr("class", d => ( isOnline(d.data.device) ? "online" : "offline" ) );
     };
     
     function setDetailsContent(d)
@@ -380,16 +338,16 @@ mx.D3 = (function( ret )
         if( d.data.device.gids.length > 0 )
         {
             d.data.device.gids.forEach(function(gid){
-                let group = groups.filter(group => group["gid"] == gid );
-                if( group.length == 1 && group[0].type == "wifi"  )
+                let group = getGroup(gid);
+                if( group && group.type == "wifi"  )
                 {
-                    let stat = d.data.interface_stat
+                    let interface_stat = getInterfaceStat(d.data.device);
                     
-                    bottom_span.text(d => group[0].details.band["value"] + " • " + stat.details.signal["value"] + "db");
-                    if( group[0].details.band["value"] == "5g" )
+                    bottom_span.text(d => group.details.band["value"] + " • " + interface_stat.details.signal["value"] + "db");
+                    if( group.details.band["value"] == "5g" )
                         bottom_span.classed("hs", true);
                     
-                    top_span.text(d => group[0].details.ssid["value"]);
+                    top_span.text(d => group.details.ssid["value"]);
                     
                     let textLength = top_span.node().getComputedTextLength() + 3;
                     top_span.attr("x", box_width - textLength );
@@ -401,12 +359,16 @@ mx.D3 = (function( ret )
                 }
             });
         }  
-        else if(root == d && d.data.interface_stat && d.data.interface_stat.details["wan_state"])
+        else if(root == d )
         {
-            bottom_span.text(d => "WAN: " + d.data.interface_stat.details["wan_state"]["value"]);
-            let textLength = bottom_span.node().getComputedTextLength() + 3;
-            bottom_span.attr("x", box_width - textLength );
-            bottom_span.attr("y", box_height - 3 );
+            let interface_stat = getInterfaceStat(d.data.device);
+            if( interface_stat && interface_stat.details["wan_state"])
+            {
+                bottom_span.text(d => "WAN: " + interface_stat.details["wan_state"]["value"]);
+                let textLength = bottom_span.node().getComputedTextLength() + 3;
+                bottom_span.attr("x", box_width - textLength );
+                bottom_span.attr("y", box_height - 3 );
+            }
         }
     }
     
@@ -449,18 +411,18 @@ mx.D3 = (function( ret )
         if( position != "default" )
             text.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
 
-        let traffic_stat = d.data.interface_stat && d.data.interface_stat.traffic ? d.data.interface_stat.traffic : null;
-        if( !traffic_stat ) return;
+        let interface_stat = getInterfaceStat(d.data.device);
+        if( !interface_stat || !interface_stat.traffic) return;
        
         let row = 0;
         
-        let in_data = formatTraffic( traffic_stat["in_avg"]);
-        let out_data = formatTraffic( traffic_stat["out_avg"]);
+        let in_data = formatTraffic( interface_stat.traffic["in_avg"], false);
+        let out_data = formatTraffic( interface_stat.traffic["out_avg"], false);
         
-        let offset = in_data != 0 && out_data != 0  ? font_size * 0.1 : font_size * 0.9;
+        let offset = in_data && out_data  ? font_size * 0.1 : font_size * 0.9;
         
         let in_span = text.select(".in");
-        if( in_data != 0 ) 
+        if( in_data ) 
         {
             row += 1;
             in_span.text(d => "⇨ " + in_data );
@@ -489,7 +451,7 @@ mx.D3 = (function( ret )
         }
 
         let out_span = text.select(".out");
-        if( out_data != 0 )
+        if( out_data )
         {
             row += 1;
             out_span.text(d => "⇦ " + out_data );
@@ -518,21 +480,6 @@ mx.D3 = (function( ret )
         }
     }
     
-    function formatTraffic(traffic)
-    {
-        if( traffic > 100000000 ) return Math.round( traffic / 1000000 ).toFixed(1) + " MB/s";                  // >= 100MB
-        
-        if( traffic > 1000000 ) return ( Math.round( ( traffic / 1000000 ) * 10 ) / 10 ).toFixed(1) + " MB/s";  // >= 1MB
-
-        if( traffic > 100000 ) return Math.round( traffic / 1000 ).toFixed(1) + " KB/s";                        // >= 100KB
-        
-        if( traffic > 1000 ) return ( Math.round( ( traffic / 1000 ) * 10 ) / 10 ).toFixed(1) + " KB/s";        // >= 1KB
-        
-        if( traffic > 100 ) return ( Math.round(traffic / 100) / 10 ).toFixed(1) + " KB/s";
-        
-        return 0;
-    }
-
     function setTrafficBackground(d)
     {
         let self = d3.select(this);
@@ -571,13 +518,41 @@ mx.D3 = (function( ret )
         }
     }
     
-    function showTooltip(d,link)
+    function hideTooltip()
+    {
+        mx.Tooltip.hide();  
+        active_tooltip_d = null;
+    }
+    
+    function showTooltip(d)
+    {
+        active_tooltip_d = d;
+        _buildTooltip(active_tooltip_d);
+    }
+    
+    function refreshTooltip()
+    {
+        if( !active_tooltip_d ) return;
+        
+        active_device = root.descendants().filter(n => active_tooltip_d.data.device["mac"] == n.data.device["mac"] );
+        if( active_device.length > 0 )
+        {
+            _buildTooltip(active_tooltip_d);
+        }
+        else
+        {
+            hideTooltip();
+        }
+    }
+    
+    function _buildTooltip(d)
     {
         let device = d.data.device
         let html = "<div>";
         if( device.ip ) 
         {
-            let has_traffic = d.data.interface_stat && d.data.interface_stat.traffic.in_avg !== null;
+            let interface_stat = getInterfaceStat(device);
+            let has_traffic = interface_stat && interface_stat.traffic.in_avg !== null;
             let has_wifi = device.connection["type"] == "wifi";
             
             html += "<div><div>IP:</div><div";
@@ -589,17 +564,18 @@ mx.D3 = (function( ret )
         if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
         html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
         
-        if( d.data.device_stat )
+        let device_stat = getDeviceStat(device);
+        if( device_stat )
         {
             let dateTimeMsg = "";
             
-            if( isOnline(d) )
+            if( isOnline(device) )
             {
                 dateTimeMsg = "Online";
             }
             else
             {
-                let lastSeenTimestamp = Date.parse(d.data.device_stat["offline_since"]);
+                let lastSeenTimestamp = Date.parse(device_stat["offline_since"]);
                 let lastSeenDatetime = new Date(lastSeenTimestamp)
                 
                 dateTimeMsg = lastSeenDatetime.toLocaleTimeString();
@@ -642,26 +618,27 @@ mx.D3 = (function( ret )
             else
                 connection_data["Port"] = "Wifi";
             
-            if( d.data.interface_stat )
+            let interface_stat = getInterfaceStat(device);
+            if( interface_stat )
             {
-                if( d.data.interface_stat["speed"] )
+                if( interface_stat["speed"] )
                 {
-                    let inSpeed = d.data.interface_stat["speed"]["in"];
-                    let outSpeed = d.data.interface_stat["speed"]["out"];
+                    let inSpeed = interface_stat["speed"]["in"];
+                    let outSpeed = interface_stat["speed"]["out"];
                     
                     if( inSpeed != null )
                     {
                         let duplex = "";
-                        if( "duplex" in d.data.interface_stat["details"] )
+                        if( "duplex" in interface_stat["details"] )
                         {
-                            duplex += " - " + ( d.data.interface_stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                            duplex += " - " + ( interface_stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
                         }
                         
                         connection_data["Speed"] = { "value": formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex };
                     }
                 }
 
-                Object.entries(d.data.interface_stat["details"]).forEach(function([key, value])
+                Object.entries(interface_stat["details"]).forEach(function([key, value])
                 {
                     if( key == "duplex" )
                         return;
@@ -670,21 +647,29 @@ mx.D3 = (function( ret )
                     else if( key == "wan_state" ) wan_data["state"] = value;
                     else connection_data[key] = value;
                 });
-            }
 
+                if( interface_stat.traffic )
+                {
+                    let in_data = formatTraffic( interface_stat.traffic["in_avg"], true);
+                    let out_data = formatTraffic( interface_stat.traffic["out_avg"], true);
+                    connection_data["Traffic"] = { "value": "⇨ " + in_data + ", ⇦ " + out_data };
+                }
+            }
         }
+        
+
         
         html += showRows(connection_data,"Network","rows");
         html += showRows(wan_data,"Wan","rows");
 
         device.gids.forEach(function(gid){
-            let group = groups.filter(group => group["gid"] == gid );
-            html += showRows(group[0]["details"],group[0]["type"],"rows");
+            let group = getGroup(gid);
+            html += showRows(group["details"],group["type"],"rows");
         });
 
-        if( d.data.device_stat )
+        if( device_stat )
         {
-            Object.entries(d.data.device_stat["details"]).forEach(function([key, value])
+            Object.entries(device_stat["details"]).forEach(function([key, value])
             {
                 let _value = value["value"];
                 html += "<div><div>" + capitalizeFirstLetter(key) + ":</div><div>" + _value + "</div></div>";
@@ -700,6 +685,8 @@ mx.D3 = (function( ret )
         let box = container.getBoundingClientRect();
         let real_font_size = box.height * font_size / box_height;
         let real_max_width = box.width * 250 / box_width;
+        
+        if( real_font_size > 16 ) real_font_size = 16;
         
         let tooltip = mx.Tooltip.getRootElement();
         tooltip.style.fontSize = real_font_size + "px";
@@ -722,8 +709,8 @@ mx.D3 = (function( ret )
             .classed("online", false)
             .classed("offline", false)
             .filter(l => l.source.data === d.data || l.target.data === d.data)
-            .classed("online", isOnline(d))
-            .classed("offline", !isOnline(d));
+            .classed("online", isOnline(d.data.device))
+            .classed("offline", !isOnline(d.data.device));
     }
         
     function toggleTooltip(d)
@@ -792,6 +779,21 @@ mx.D3 = (function( ret )
             else return speed + " Bit";
     }
     
+    function formatTraffic(traffic, format_zero)
+    {
+        if( traffic > 100000000 ) return Math.round( traffic / 1000000 ).toFixed(1) + " MB/s";                  // >= 100MB
+        
+        if( traffic > 1000000 ) return ( Math.round( ( traffic / 1000000 ) * 10 ) / 10 ).toFixed(1) + " MB/s";  // >= 1MB
+
+        if( traffic > 100000 ) return Math.round( traffic / 1000 ).toFixed(1) + " KB/s";                        // >= 100KB
+        
+        if( traffic > 1000 ) return ( Math.round( ( traffic / 1000 ) * 10 ) / 10 ).toFixed(1) + " KB/s";        // >= 1KB
+        
+        if( traffic > 100 ) return ( Math.round(traffic / 100) / 10 ).toFixed(1) + " KB/s";
+        
+        return format_zero ? "0 KB/s" : null;
+    }
+
     function formatDetails(key, value)
     {
         if( ["ssid"].indexOf(key) != -1 )
@@ -806,25 +808,6 @@ mx.D3 = (function( ret )
         return [key, value]
     }
     
-    function isOnline(d)
-    {
-        if( d.data.device.type == 'hub' )
-        {
-            let all_children_online = true;
-            for(let child of d.data.children) 
-            {
-                if( !child.device_stat || child.device_stat.offline_since != null )
-                {
-                    all_children_online = false;
-                    break;
-                }
-            }
-            return all_children_online;
-        }
-
-        return d.data.device_stat && d.data.device_stat.offline_since == null;
-    }
-
     function showRows(rows, name, cls)
     {
         let html = '';
