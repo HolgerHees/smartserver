@@ -36,6 +36,9 @@ class LibreNMS(_handler.Handler):
         
         self.condition = threading.Condition()
         self.thread = threading.Thread(target=self._checkLibreNMS, args=())
+        
+        # use request session for keepalive support of librenms
+        self.request_session = requests.Session()
 
     def start(self):
         self.thread.start()
@@ -315,7 +318,7 @@ class LibreNMS(_handler.Handler):
         
         try:
             #print("{}{}".format(self.config.librenms_rest,call))
-            r = requests.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
+            r = self.request_session.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
             if r.status_code != 200:
                 raise NetworkException("Got wrong status code: {}".format(r.status_code), self.config.remote_suspend_timeout)
             return r.text
