@@ -380,7 +380,7 @@ class ArpScanner(_handler.Handler):
         if self.registered_devices[mac] is not None:
             return
         
-        if (now - stat.getLastSeen()).total_seconds() > self.config.arp_offline_device_timeout:
+        if stat.isOnline() and (now - stat.getLastSeen()).total_seconds() > self.config.arp_offline_device_timeout:
             # last check, if the device is really offline
             device = self.cache.getUnlockedDevice(mac)
             if device is not None and device.getIP() is not None:
