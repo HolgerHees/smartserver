@@ -140,10 +140,7 @@ class Device(Changeable):
                 else:
                     self.hop_connections.remove(_connections[0])
         
-        if type == Connection.WIFI:
-            _connections = list(filter(lambda c: c.getType() == type, self.hop_connections ))
-        else:
-            _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
+        _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
 
         if len(_connections) > 0:
             _connection = _connections[0]
@@ -186,6 +183,20 @@ class Device(Changeable):
             target_device = self.cache.getUnlockedDevice(target_mac)
             self._markAsChanged("connection", "remove connection from {}:{}".format(target_device if target_device else target_mac, vlan))            
             
+    def prepareWifiConnection(self, target_mac, events):
+        _connections = list(filter(lambda c: c.getType() == Connection.WIFI and c.getTargetMAC() != target_mac, self.hop_connections ))
+        if len(_connections) > 0:
+            _connection = _connections[0]
+            
+            # another wifi connection is always removed
+            self.hop_connections.remove(_connections[0])
+            
+            # same happens for stats
+            self.cache.removeConnectionStat(_connection.getTargetMAC(), _connection.getTargetInterface(), lambda event: events.append(event))
+            
+            target_device = self.cache.getUnlockedDevice(target_mac)
+            self._markAsChanged("connection", "remove connection from {}:{}".format(target_device if target_device else target_mac, vlan))
+
     def getHopConnections(self):
         return list(self.hop_connections)
 

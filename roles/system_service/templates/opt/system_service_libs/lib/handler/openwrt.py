@@ -254,37 +254,44 @@ class OpenWRT(_handler.Handler):
                     uid = "{}-{}".format(mac, gid)
 
                     device = self.cache.getDevice(mac)
+                    device.prepareWifiConnection(target_mac, events)
                     device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
 
                     details = client_result["clients"][mac]
-                    if not details["assoc"]: 
-                        continue
-                    
+                   
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
-                    if uid in self.wifi_associations[openwrt_ip]:
-                        in_bytes = stat.getInBytes()
-                        if in_bytes is not None:
-                            time_diff = now - self.wifi_associations[openwrt_ip][uid][0]
-                            byte_diff = details["bytes"]["rx"] - in_bytes
-                            if byte_diff > 0:
-                                stat.setInAvg(byte_diff / time_diff)
-                            
-                        out_bytes = stat.getOutBytes()
-                        if out_bytes is not None:
-                            time_diff = now - self.wifi_associations[openwrt_ip][uid][0]
-                            byte_diff = details["bytes"]["tx"] - out_bytes
-                            if byte_diff > 0:
-                                stat.setOutAvg(byte_diff / time_diff)
+                    if not details["assoc"]: 
+                        stat.setInAvg(0)
+                        stat.setOutAvg(0)
+                        stat.setInBytes(0)
+                        stat.setOutBytes(0)
+                        stat.setInSpeed(0)
+                        stat.setOutSpeed(0)
+                        stat.removeDetail("signal")
+                    else:
+                        if uid in self.wifi_associations[openwrt_ip]:
+                            in_bytes = stat.getInBytes()
+                            if in_bytes is not None:
+                                time_diff = now - self.wifi_associations[openwrt_ip][uid][0]
+                                byte_diff = details["bytes"]["rx"] - in_bytes
+                                if byte_diff > 0:
+                                    stat.setInAvg(byte_diff / time_diff)
+                                
+                            out_bytes = stat.getOutBytes()
+                            if out_bytes is not None:
+                                time_diff = now - self.wifi_associations[openwrt_ip][uid][0]
+                                byte_diff = details["bytes"]["tx"] - out_bytes
+                                if byte_diff > 0:
+                                    stat.setOutAvg(byte_diff / time_diff)
 
-                    #stat.setOnline(True) # => will be set bei arpscan listener
-                    stat.setInBytes(details["bytes"]["rx"])
-                    stat.setOutBytes(details["bytes"]["tx"])
-                    stat.setInSpeed(details["rate"]["rx"] * 1000)
-                    stat.setOutSpeed(details["rate"]["tx"] * 1000)
-                    stat.setDetail("signal", details["signal"], "attenuation")
-                    
+                        #stat.setOnline(True) # => will be set bei arpscan listener
+                        stat.setInBytes(details["bytes"]["rx"])
+                        stat.setOutBytes(details["bytes"]["tx"])
+                        stat.setInSpeed(details["rate"]["rx"] * 1000)
+                        stat.setOutSpeed(details["rate"]["tx"] * 1000)
+                        stat.setDetail("signal", details["signal"], "attenuation")
                     self.cache.confirmStat( stat, lambda event: events.append(event) )
                         
                     _active_client_macs.append(mac)
@@ -295,13 +302,9 @@ class OpenWRT(_handler.Handler):
             for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[openwrt_ip].values()):
                 if uid not in _active_client_wifi_associations:
                     device = self.cache.getDevice(mac)
-                    # connection should still exists, also when device becomes offline
-                    #device.removeHopConnection(vlan, target_mac, target_interface)
+                    # **** connection cleanup and stats cleanup happens in prepareWifiConnection ****
                     device.removeGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
-                    
-                    if mac not in _active_client_macs:
-                        stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
                     
                     del self.wifi_associations[openwrt_ip][uid]
                 else:

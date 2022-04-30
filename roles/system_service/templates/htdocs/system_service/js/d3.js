@@ -276,12 +276,14 @@ mx.D3 = (function( ret )
         //      .attr("text-anchor", "start")
             .text(d => d.data["device"]["dns"] ? d.data["device"]["dns"] : d.data["device"]["type"] ).each( wrap );
 
-        let details_text = node.append("text")
+        let details_info = node.append("foreignObject")
             .classed("details", true)
-            .attr("font-size", details_font_size);
-        details_text.append("tspan").classed("top", true);
-        details_text.append("tspan").classed("bottom", true);
-        details_text.each( setDetailsContent );
+            .attr("font-size", details_font_size)
+            .attr("height", box_height - 10 )
+            .attr("width", box_width / 2 - 3)
+            .attr("y", 10 )
+            .attr("x", box_width / 2);
+        details_info.each( setDetailsContent );
 
         let traffic_background = node.append("rect").classed("traffic", true);
 
@@ -314,7 +316,7 @@ mx.D3 = (function( ret )
     }
     
     function redrawState() {
-        node.selectAll("text.details").each( setDetailsContent );
+        node.selectAll("foreignObject.details").each( setDetailsContent );
 
         node.selectAll("text.traffic").each( setTrafficContent );
         node.selectAll("rect.traffic").each( setTrafficBackground );
@@ -325,16 +327,10 @@ mx.D3 = (function( ret )
     
     function setDetailsContent(d)
     {
-        let text = d3.select(this);
-        let font_size = text.attr("font-size");
-
-        let top_span = text.select(".top");
-        let bottom_span = text.select(".bottom");
+        let foreignobject = d3.select(this);
         
-        top_span.text(d =>"");
-        bottom_span.classed("hs", false);
-        bottom_span.text(d =>"");
-
+        foreignobject.html(d => "" );
+        
         if( d.data.device.gids.length > 0 )
         {
             d.data.device.gids.forEach(function(gid){
@@ -343,19 +339,32 @@ mx.D3 = (function( ret )
                 {
                     let interface_stat = getInterfaceStat(d.data.device);
                     
-                    bottom_span.text(d => group.details.band["value"] + " • " + interface_stat.details.signal["value"] + "db");
-                    if( group.details.band["value"] == "5g" )
-                        bottom_span.classed("hs", true);
-                    
-                    top_span.text(d => group.details.ssid["value"]);
-                    
-                    let textLength = top_span.node().getComputedTextLength() + 3;
-                    top_span.attr("x", box_width - textLength );
-                    top_span.attr("y", box_height - 3 - font_size );
+                    // *** Should never happen. Otherwise it is a bug in system_service
+                    /*if( interface_stat == null )
+                    {
+                        console.log(d.data.device)
+                        console.log(stats)
+                        return;
+                    }*/
 
-                    textLength = bottom_span.node().getComputedTextLength() + 3;
-                    bottom_span.attr("x", box_width - textLength );
-                    bottom_span.attr("y", box_height - 3 );
+                    let signal_value = interface_stat.details.signal["value"];
+                    let band_value = group.details.band["value"];
+                    
+                    let offset = 0;//band_value == "2g" ? 0 : 10;
+                    
+                    if( signal_value > -50 - offset ) signal_class = "highest";
+                    else if( signal_value > -67 - offset ) signal_class = "high";
+                    else if( signal_value > -75 - offset ) signal_class = "medium";
+                    else if( signal_value > -85 - offset ) signal_class = "low";
+                    else signal_class = "lowest";
+                    
+                    let html = "<div class='top'>" + group.details.ssid["value"] + "</div>";
+                    html += "<div class='bottom'><span class='band c" + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
+                    foreignobject.html(d => html );
+                    
+                    //textLength = bottom_span.node().getComputedTextLength() + 3;
+                    //bottom_span.attr("x", box_width - textLength );
+                    //bottom_span.attr("y", box_height - 3 );
                 }
             });
         }  
@@ -364,13 +373,87 @@ mx.D3 = (function( ret )
             let interface_stat = getInterfaceStat(d.data.device);
             if( interface_stat && interface_stat.details["wan_state"])
             {
-                bottom_span.text(d => "WAN: " + interface_stat.details["wan_state"]["value"]);
-                let textLength = bottom_span.node().getComputedTextLength() + 3;
-                bottom_span.attr("x", box_width - textLength );
-                bottom_span.attr("y", box_height - 3 );
+                foreignobject.html(d => "<div class='top'>&nbsp;</div><div class='bottom'>WAN: " + interface_stat.details["wan_state"]["value"] + "</div>");
             }
         }
     }
+    
+    /*function setTrafficContentNeu(d)
+    {
+        let foreignobject = d3.select(this);
+        let font_size = foreignobject.attr("font-size");
+        
+        let position = "default";
+        if( root.children && root.children.length == 1 )
+        {
+            if( root==d.parent || root==d )
+            {
+                position = "bottom";
+            }
+        }
+            
+        if( position != "default" )
+            foreignobject.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
+
+        let interface_stat = getInterfaceStat(d.data.device);
+        if( !interface_stat || !interface_stat.traffic) return;
+       
+        let row = 0;
+        
+        let in_data = formatTraffic( interface_stat.traffic["in_avg"], false);
+        let out_data = formatTraffic( interface_stat.traffic["out_avg"], false);
+        
+        let offset = in_data && out_data  ? font_size * 0.1 : font_size * 0.9;
+        
+        let html = '';
+        if( in_data ) 
+        {
+            html += "<div class='in'>⇨ " + in_data + "</div>";
+        }
+
+        if( out_data )
+        {
+            html += "<div class='out'>⇦ " + out_data + "</div>";
+        }
+        
+        foreignobject.html(d => "<div>" + html + "</div>" );
+        
+        let height = 0;
+        let width = 0;
+        
+        //foreignobject.attr("height", 300).attr("width", 300);
+        
+        let childNodes = foreignobject.node().childNodes[0].childNodes;
+        if( position == "bottom" )
+        {
+            childNodes.forEach(function(node)
+            {
+                let box = node.getBoundingClientRect();
+                if( box.height > height ) height = box.height;
+                width += box.width;
+                
+                console.log(box.width);
+            });
+            console.log(width);
+            console.log("----");
+
+            foreignobject.attr("x", box_width / 2 - width / 2).attr("y", box_height );
+        }
+        else
+        {
+            childNodes.forEach(function(node)
+            {
+                let box = node.getBoundingClientRect();
+                height += box.height;
+                if( box.width > width ) width = box.width;
+            });
+            foreignobject.attr("x", width * -1 - 5).attr("y", 0);
+        }
+        
+        //foreignobject.attr("height", height).attr("width", width);
+
+        //console.log(foreignobject.node().firstChild.getBoundingClientRect());
+    }*/
     
     function setTrafficContent(d)
     {
@@ -384,28 +467,6 @@ mx.D3 = (function( ret )
             {
                 position = "bottom";
             }
-            /*else if(  )
-            {
-                position = "top";
-                
-                if( d.data.interface_stat && d.data.interface_stat.traffic )
-                {
-                    let wan_in_data = formatTraffic( d.data.interface_stat.traffic["in_avg"]);
-                    let wan_in_span = text.select(".wan_in");
-                    wan_in_span.text(d => wan_in_data == 0 ? "" : "⇨ " + wan_in_data );
-                    
-                    let textLength = wan_in_span.node().getComputedTextLength() + 3;
-                    wan_in_span.attr("x", box_width / 2 - 2 - textLength );
-                    wan_in_span.attr("y", box_height + font_size * 1.5 );
-                    
-                    let wan_out_data = formatTraffic( d.data.interface_stat.traffic["out_avg"]);
-                    let wan_out_span = text.select(".wan_out");
-                    wan_out_span.text(d => wan_out_data == 0 ? "" : "⇨ " + wan_out_data );
-                    textLength = wan_out_span.node().getComputedTextLength() + 3;
-                    wan_out_span.attr("x", box_width / 2 + 4 );
-                    wan_out_span.attr("y", box_height + font_size * 1.5);
-                }
-            }*/
         }
             
         if( position != "default" )

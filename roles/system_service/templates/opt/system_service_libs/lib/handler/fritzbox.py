@@ -251,6 +251,7 @@ class Fritzbox(_handler.Handler):
 
                     device = self.cache.getDevice(mac)
                     device.setIP("fritzbox", 100, client["ip"])
+                    device.prepareWifiConnection(target_mac, events)
                     device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -272,8 +273,7 @@ class Fritzbox(_handler.Handler):
             for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[fritzbox_ip].values()):
                 if uid not in _active_client_wifi_connections:
                     device = self.cache.getDevice(mac)
-                    # connection should still exists, also when device becomes offline
-                    #device.removeHopConnection(vlan, target_mac, target_interface)
+                    # **** connection cleanup and stats cleanup happens in prepareWifiConnection ****
                     device.removeIP("fritzbox")
                     device.removeGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )

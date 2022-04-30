@@ -87,13 +87,44 @@ svg g.nodes text.identifier {
     fill: var(--content-text);
 }
 
+svg g.nodes foreignObject.traffic > div {
+    background: var(--bg);
+    text-align: end;
+}
+
+svg g.nodes foreignObject.traffic > div > div {
+    display: inline-block;
+}
+
 svg g.nodes text.name,
-svg g.nodes text.details {
+svg g.nodes foreignObject.details {
     fill: #777;
     font-weight: 300;
 }
-svg g.nodes text.details tspan.hs {
+svg g.nodes foreignObject.details div {
+    text-align: end;
+    padding-right: 1px;
+}
+
+svg g.nodes foreignObject.details span.band.c2g {
+}
+svg g.nodes foreignObject.details span.band.c5g {
     font-weight: 500;
+}
+svg g.nodes foreignObject.details span.signal.lowest {
+    color: red;
+}
+svg g.nodes foreignObject.details span.signal.low {
+    color: #ff8800;
+}
+svg g.nodes foreignObject.details span.signal.medium {
+    color: #bfa900;
+}
+svg g.nodes foreignObject.details span.signal.high {
+    color: #7cbf00;
+}
+svg g.nodes foreignObject.details span.signal.highest {
+    color: #00ff00;
 }
 
 svg g.nodes text.traffic.arrived {
