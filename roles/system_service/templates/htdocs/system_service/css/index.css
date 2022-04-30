@@ -129,7 +129,7 @@ svg g.nodes foreignObject.details span.band.c5g {
     font-weight: 500;
 }
 svg g.nodes foreignObject.details span.signal.lowest {
-    color: red;
+    color: #e80000;
 }
 svg g.nodes foreignObject.details span.signal.low {
     color: #ff8800;
@@ -141,7 +141,7 @@ svg g.nodes foreignObject.details span.signal.high {
     color: #7cbf00;
 }
 svg g.nodes foreignObject.details span.signal.highest {
-    color: #00ff00;
+    color: #04bf0a;
 }
 
 svg g.nodes text.traffic.arrived {
