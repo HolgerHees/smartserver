@@ -78,22 +78,39 @@ svg g.nodes circle.offline {
     fill: var(--color-red);
 }
 
-svg g.nodes rect.traffic {
-    fill: var(--bg);
-}
-
-svg g.nodes text.traffic tspan,
 svg g.nodes text.identifier {
     fill: var(--content-text);
 }
 
-svg g.nodes foreignObject.traffic > div {
-    background: var(--bg);
+svg g.nodes foreignObject.traffic:not(.bottom) > div {
     text-align: end;
+    height: 100%;
+    position: relative;
 }
 
-svg g.nodes foreignObject.traffic > div > div {
+svg g.nodes foreignObject.traffic:not(.bottom) > div > div {
+    background: var(--bg);
+    text-align: end;
     display: inline-block;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(0, -50%);
+}
+svg g.nodes foreignObject.traffic.bottom > div {
+}
+svg g.nodes foreignObject.traffic.bottom > div > div {
+    position: relative;
+}
+svg g.nodes foreignObject.traffic.bottom > div > div > div:first-child {
+    position: absolute;
+    left: 50%;
+    transform: translate(-110%);
+}
+svg g.nodes foreignObject.traffic.bottom > div > div > div:last-child {
+    position: absolute;
+    right: 50%;
+    transform: translate(110%);
 }
 
 svg g.nodes text.name,

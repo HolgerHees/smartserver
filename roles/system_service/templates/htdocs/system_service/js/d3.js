@@ -285,22 +285,11 @@ mx.D3 = (function( ret )
             .attr("x", box_width / 2);
         details_info.each( setDetailsContent );
 
-        let traffic_background = node.append("rect").classed("traffic", true);
-
         let traffic_font_size = box_height / 4;
-        let traffic_text = node.append("text")
+        let traffic_info = node.append("foreignObject")
             .classed("traffic", true)
             .attr("font-size", traffic_font_size);
-        traffic_text.append("tspan").classed("in", true);
-        traffic_text.append("tspan").classed("out", true);
-
-        let root_traffic_text = node.selectAll("text.traffic").filter(d => d == root );
-        root_traffic_text.append("tspan").classed("wan_in", true)
-        root_traffic_text.append("tspan").classed("wan_out", true);
-
-        traffic_text.each( setTrafficContent );
-
-        traffic_background.each( setTrafficBackground );
+        traffic_info.each( setTrafficContent );
         
         let _svg = document.querySelector('svg');
         const { xMin, xMax, yMin, yMax } = [..._svg.children].reduce((acc, el) => {
@@ -317,9 +306,7 @@ mx.D3 = (function( ret )
     
     function redrawState() {
         node.selectAll("foreignObject.details").each( setDetailsContent );
-
-        node.selectAll("text.traffic").each( setTrafficContent );
-        node.selectAll("rect.traffic").each( setTrafficBackground );
+        node.selectAll("foreignObject.traffic").each( setTrafficContent );
 
         let online_circle = node.selectAll("circle");
         online_circle.attr("class", d => ( isOnline(d.data.device) ? "online" : "offline" ) );
@@ -361,10 +348,6 @@ mx.D3 = (function( ret )
                     let html = "<div class='top'>" + group.details.ssid["value"] + "</div>";
                     html += "<div class='bottom'><span class='band c" + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
                     foreignobject.html(d => html );
-                    
-                    //textLength = bottom_span.node().getComputedTextLength() + 3;
-                    //bottom_span.attr("x", box_width - textLength );
-                    //bottom_span.attr("y", box_height - 3 );
                 }
             });
         }  
@@ -378,7 +361,7 @@ mx.D3 = (function( ret )
         }
     }
     
-    /*function setTrafficContentNeu(d)
+    function setTrafficContent(d)
     {
         let foreignobject = d3.select(this);
         let font_size = foreignobject.attr("font-size");
@@ -392,9 +375,6 @@ mx.D3 = (function( ret )
             }
         }
             
-        if( position != "default" )
-            foreignobject.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
-
         let interface_stat = getInterfaceStat(d.data.device);
         if( !interface_stat || !interface_stat.traffic) return;
        
@@ -416,140 +396,24 @@ mx.D3 = (function( ret )
             html += "<div class='out'>⇦ " + out_data + "</div>";
         }
         
-        foreignobject.html(d => "<div>" + html + "</div>" );
+        foreignobject.html(d => "<div><div>" + html + "</div></div>" );
         
-        let height = 0;
-        let width = 0;
-        
-        //foreignobject.attr("height", 300).attr("width", 300);
-        
-        let childNodes = foreignobject.node().childNodes[0].childNodes;
         if( position == "bottom" )
         {
-            childNodes.forEach(function(node)
-            {
-                let box = node.getBoundingClientRect();
-                if( box.height > height ) height = box.height;
-                width += box.width;
-                
-                console.log(box.width);
-            });
-            console.log(width);
-            console.log("----");
-
-            foreignobject.attr("x", box_width / 2 - width / 2).attr("y", box_height );
+            foreignobject.classed("bottom",true)
+                        .attr("height", 20 )
+                        .attr("width", box_width)
+                        .attr("y", box_height )
+                        .attr("x", 0);
         }
         else
         {
-            childNodes.forEach(function(node)
-            {
-                let box = node.getBoundingClientRect();
-                height += box.height;
-                if( box.width > width ) width = box.width;
-            });
-            foreignobject.attr("x", width * -1 - 5).attr("y", 0);
+            foreignobject.classed("bottom",false)
+                        .attr("height", box_height )
+                        .attr("width", box_width)
+                        .attr("y", 0 )
+                        .attr("x", box_width * -1 - 6);
         }
-        
-        //foreignobject.attr("height", height).attr("width", width);
-
-        //console.log(foreignobject.node().firstChild.getBoundingClientRect());
-    }*/
-    
-    function setTrafficContent(d)
-    {
-        let text = d3.select(this);
-        let font_size = text.attr("font-size");
-        
-        let position = "default";
-        if( root.children && root.children.length == 1 )
-        {
-            if( root==d.parent || root==d )
-            {
-                position = "bottom";
-            }
-        }
-            
-        if( position != "default" )
-            text.node().parentNode.querySelector("rect.traffic").style.setProperty("fill", "transparent");
-
-        let interface_stat = getInterfaceStat(d.data.device);
-        if( !interface_stat || !interface_stat.traffic) return;
-       
-        let row = 0;
-        
-        let in_data = formatTraffic( interface_stat.traffic["in_avg"], false);
-        let out_data = formatTraffic( interface_stat.traffic["out_avg"], false);
-        
-        let offset = in_data && out_data  ? font_size * 0.1 : font_size * 0.9;
-        
-        let in_span = text.select(".in");
-        if( in_data ) 
-        {
-            row += 1;
-            in_span.text(d => "⇨ " + in_data );
-            let textLength = in_span.node().getComputedTextLength() + 3;
-            if( position != "default" )
-            {
-                in_span.attr("x", box_width / 2 - 2 - textLength );
-                if( position == "bottom" ) 
-                {
-                    in_span.attr("y", box_height + font_size * 1.5 );
-                }
-                else
-                {
-                    in_span.attr("y", font_size * -0.8 );
-                }
-            }
-            else
-            {
-                in_span.attr("x", textLength * -1);
-                in_span.attr("y", font_size * 1.5 * row + offset);
-            }
-        }
-        else
-        {
-            in_span.text(d => "");
-        }
-
-        let out_span = text.select(".out");
-        if( out_data )
-        {
-            row += 1;
-            out_span.text(d => "⇦ " + out_data );
-            let textLength = out_span.node().getComputedTextLength() + 3;
-            if( position != "default" )
-            {
-                out_span.attr("x", box_width / 2 + 4 );
-                if( position == "bottom" ) 
-                {
-                    out_span.attr("y", box_height + font_size * 1.5);
-                }
-                else
-                {
-                    in_span.attr("y", font_size * -0.8 );
-                }
-            }
-            else
-            {
-                out_span.attr("x", textLength * -1);
-                out_span.attr("y", font_size * 1.5 * row + offset);
-            }
-        }
-        else
-        {
-            out_span.text(d => "");
-        }
-    }
-    
-    function setTrafficBackground(d)
-    {
-        let self = d3.select(this);
-        
-        let rect = self.node().parentNode.querySelector("text.traffic").getBBox();
-        self.attr("x", rect.x - 1);
-        self.attr("y", rect.y - 1);
-        self.attr("width", rect.width + 1);
-        self.attr("height", rect.height + 1);
     }
     
     function linkGenerator(d) {
