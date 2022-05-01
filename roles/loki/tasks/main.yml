@@ -80,6 +80,15 @@
     host_ip_address: "{{docker_loki_ip}}"
   import_tasks: roles/network/tasks/add_to_hosts.yml
 
+# ***** FINALIZE *****
+- name: register webui
+  vars:
+    name: "loki"
+    js_file: "templates/webui/loki.js"
+    i18n_files: [ { language: "de", file: "templates/webui/loki.de.json" } ]
+    icons: [ 'templates/webui/icons/loki_logs.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/loki.conf"

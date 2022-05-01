@@ -1,0 +1,1 @@
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('grafana_logs', { "url": '//grafana.{host}/d/logs/logs?autofitpanels', "callback": mx.Grafana.applyTheme },'admin', 100, '{i18n_Server Logs}', '{i18n_Grafana}', false, 'grafana_logs.svg');
