@@ -16,6 +16,11 @@ mx.D3 = (function( ret )
     
     let active_tooltip_d = null;
     
+    function isSpecialRootLayout()
+    {
+        return root.children && root.children.length == 1;
+    }
+    
     ret.drawStructure = function( rootNode, _groups, _stats) {
         groups = _groups;
         stats = _stats;
@@ -24,10 +29,13 @@ mx.D3 = (function( ret )
         {
             root = d3.hierarchy(rootNode);
 
-            depthCount = {}
+            depthCount = {};
+            maxDepth = 0;
             root.descendants().forEach(function(data){
                 if( !depthCount.hasOwnProperty(data["depth"]) ) depthCount[data["depth"]] = 0;
                 depthCount[data["depth"]] += 1;
+                
+                if( data["depth"] > maxDepth ) maxDepth = data["depth"];
             });
 
             let endCount = 0;
@@ -36,7 +44,7 @@ mx.D3 = (function( ret )
                 if( value > endCount ) endCount = value;
             });
 
-            initTree(endCount);
+            initTree(endCount, maxDepth);
             refreshTooltip();
         }
         else if( node )
@@ -107,7 +115,7 @@ mx.D3 = (function( ret )
         mx.Page.refreshUI(dialog.getRootElement());
     }
     
-    function initTree(endCount)
+    function initTree(endCount, maxDepth)
     {
         const width = 1000;
         const height = 1000;
@@ -115,8 +123,9 @@ mx.D3 = (function( ret )
         // Compute the layout.
         let dx = ( height / endCount ) - ( 2 * box_padding ) ;
         if( dx > 30 ) dx = 30;
-        let dy = width / (root.height + 1);
-
+        //let dy = width / (root.height + 1);
+        let dy = width / ( maxDepth + ( isSpecialRootLayout() ? 1 : 2 ) );
+        
         d3.tree().nodeSize([dx + 2, dy])(root);
         //d3.tree().size([300, 200])(root);
         
@@ -137,7 +146,7 @@ mx.D3 = (function( ret )
         // Compute the default height.
         if (height === undefined) height = x1 - x0 + dx * 2;
         
-        if( root.children && root.children.length == 1 )
+        if( isSpecialRootLayout() )
         {
             root.x = dx * 3;
             root.y = dy;
@@ -336,7 +345,7 @@ mx.D3 = (function( ret )
         let font_size = foreignobject.attr("font-size");
         
         let position = "default";
-        if( root.children && root.children.length == 1 )
+        if( isSpecialRootLayout() )
         {
             if( root==d.parent || root==d )
             {
@@ -386,7 +395,7 @@ mx.D3 = (function( ret )
     }
     
     function linkGenerator(d) {
-        if( root == d.source && root.children.length == 1)
+        if( isSpecialRootLayout() && root == d.source )
         {
             let path = d3.linkHorizontal()
                 .source(function (d) {
