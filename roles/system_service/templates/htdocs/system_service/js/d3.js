@@ -379,9 +379,9 @@ mx.D3 = (function( ret )
         {
             foreignobject.classed("bottom",false)
                         .attr("height", box_height )
-                        .attr("width", box_width)
+                        .attr("width", box_width / 2)
                         .attr("y", 0 )
-                        .attr("x", box_width * -1 - 6);
+                        .attr("x", ( box_width / 2 ) * -1 - 6);
         }
     }
     
