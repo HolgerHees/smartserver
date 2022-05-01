@@ -146,6 +146,8 @@ class OpenWRT(_handler.Handler):
     def _processWifiNetworks(self, openwrt_ip, ubus_session_id, now, events, global_timeout, call_timeout, openwrt_mac):
         wifi_network_result = self._getWifiNetworks(openwrt_ip, ubus_session_id)
         
+        wifi_network_changed = False
+        
         _active_vlans = {}
         device_result = self._getDevices(openwrt_ip, ubus_session_id)
         for device_name in device_result:
@@ -160,20 +162,26 @@ class OpenWRT(_handler.Handler):
         for wifi_network_name in wifi_network_result:
             _wifi_network = wifi_network_result[wifi_network_name]
             for _interface in _wifi_network["interfaces"]:
-                gid = "{}-{}".format(openwrt_ip,_interface["ifname"])
+                ifname = _interface["ifname"];
+                ssid = _interface["config"]["ssid"];
+                band = _wifi_network["config"]["band"];
+                gid = "{}-{}-{}".format(openwrt_ip,ssid,band)
                 
-                wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, _interface["ifname"])
+                wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, ifname)
                 channel = wifi_interface_details_result["channel"]
 
                 network = { 
                     "gid": gid,
-                    "ifname": _interface["ifname"],
-                    "ssid": _interface["config"]["ssid"],
-                    "band": _wifi_network["config"]["band"],
+                    "ifname": ifname,
+                    "ssid": ssid,
+                    "band": band,
                     "channel": channel,
-                    "vlan": _active_vlans[_interface["ifname"]] if _interface["ifname"] in _active_vlans else self.config.default_vlan,
+                    "vlan": _active_vlans[ifname] if ifname in _active_vlans else self.config.default_vlan,
                     "device": wifi_network_name
                 }
+                
+                if gid not in self.wifi_networks[openwrt_ip]:
+                    wifi_network_changed = True
                 
                 _active_networks[gid] = network
                 self.wifi_networks[openwrt_ip][gid] = network
@@ -195,11 +203,17 @@ class OpenWRT(_handler.Handler):
                         
             for gid in list(self.wifi_networks[openwrt_ip].keys()):
                 if gid not in _active_networks:
+                    wifi_network_changed = True
+                    
                     self.cache.removeGroup(gid, lambda event: events.append(event))
                     del self.wifi_networks[openwrt_ip][gid]
                     
             self.cache.unlock(self)
-        
+            
+        if wifi_network_changed:
+            # force a client refresh
+            self.next_run[openwrt_ip]["wifi_clients"] = now
+            
         # set device type
         device = self.cache.getUnlockedDevice(openwrt_mac)
         if device is not None and not device.hasType("openwrt"):
@@ -229,8 +243,10 @@ class OpenWRT(_handler.Handler):
             except UbusCallException as e:
                 if e.getCode() == -32000:
                     logging.warning("OpenWRT '{}' interface '{}' has gone".format(openwrt_ip, wlan_network["ifname"]))
-                    self.next_run[openwrt_ip]["wifi_networks"] = now # => force refresh next time
-                    continue
+                    
+                    # force refresh for wifi networks & clients
+                    self.next_run[openwrt_ip]["wifi_networks"] = now
+                    return [global_timeout, now]
                 else:
                     raise e
             client_results.append([client_result,wlan_network])
@@ -303,7 +319,7 @@ class OpenWRT(_handler.Handler):
                 if uid not in _active_client_wifi_associations:
                     device = self.cache.getDevice(mac)
                     # **** connection cleanup and stats cleanup happens in prepareWifiConnection ****
-                    device.removeGID(gid)
+                    device.removeGID(gid);
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                     del self.wifi_associations[openwrt_ip][uid]
@@ -366,7 +382,7 @@ class OpenWRT(_handler.Handler):
         r = self._post(ip, json)
         return self._parseResult(ip, r, "client_list")
         
-    def _delayedWakeup(self, triggered_at):
+    def _delayedWakeup(self):
         with self.delayed_lock:
             self.delayed_wakeup_timer = None
             
@@ -392,14 +408,17 @@ class OpenWRT(_handler.Handler):
                 logging.info("Delayed trigger not needed anymore")
                 
     def getEventTypes(self):
-        return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_MODIFY], "details": ["online"] } ]
+        return [ { "types": [Event.TYPE_STAT], "actions": [Event.ACTION_MODIFY], "details": ["online_state"] } ]
 
     def processEvents(self, events):
         with self.delayed_lock:
             has_new_devices = False
             for event in events:
-                device = event.getObject()
-
+                stat = event.getObject()
+                device = self.cache.getUnlockedDevice(stat.getMAC())
+                if device is None:
+                    logging.error("Unknown device for stat {}".format(stat))
+                
                 if not self.has_wifi_networks or not device.supportsWifi():
                     continue
                     

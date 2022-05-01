@@ -55,33 +55,6 @@ svg g.links path.offline {
     stroke: var(--color-red);
 }
 
-svg g.nodes rect.container {
-    stroke-width: 0.5;
-    stroke: var(--content-text);
-    fill: var(--bg);
-}
-
-svg g.nodes rect.container.hub,
-svg g.nodes rect.container.network {
-    fill: var(--content-hightlight-bg);
-}
-
-svg g.nodes circle.online,
-svg g.nodes circle.offline {
-    stroke-width: 0.5;
-    stroke: var(--content-text);
-}
-svg g.nodes circle.online {
-    fill: var(--color-green);
-}
-svg g.nodes circle.offline {
-    fill: var(--color-red);
-}
-
-svg g.nodes text.identifier {
-    fill: var(--content-text);
-}
-
 svg g.nodes foreignObject.traffic:not(.bottom) > div {
     text-align: end;
     height: 100%;
@@ -113,49 +86,90 @@ svg g.nodes foreignObject.traffic.bottom > div > div > div:last-child {
     transform: translate(110%);
 }
 
-svg g.nodes text.name,
-svg g.nodes foreignObject.details {
-    fill: #777;
-    font-weight: 300;
-}
-svg g.nodes foreignObject.details div {
-    text-align: end;
-    padding-right: 1px;
+svg g.nodes rect.container {
+    stroke-width: 0.5;
+    stroke: var(--content-text);
+    fill: var(--bg);
 }
 
-svg g.nodes foreignObject.details span.band.c2g {
+svg g.nodes rect.container.hub,
+svg g.nodes rect.container.network {
+    fill: var(--content-hightlight-bg);
 }
-svg g.nodes foreignObject.details span.band.c5g {
+
+svg g.nodes circle.online,
+svg g.nodes circle.offline {
+    stroke-width: 0.5;
+    stroke: var(--content-text);
+}
+svg g.nodes circle.online {
+    fill: var(--color-green);
+}
+svg g.nodes circle.offline {
+    fill: var(--color-red);
+}
+
+svg g.nodes foreignObject.traffic,
+svg g.nodes foreignObject.details {
+    color: var(--content-text);
+}
+
+svg g.nodes foreignObject.details > div {
+    height: 100%;
+    position: relative;
+}
+
+svg g.nodes foreignObject.details > div > div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+    padding: 1px 2px;
+}
+
+svg g.nodes foreignObject.details > div > div.name {
+    left: 0;
+    top: 0;
+    right: 10px;
+}
+
+svg g.nodes foreignObject.details > div > div.info {
+    left: 0;
+    bottom: 0;
+    opacity: 0.7;
+    font-weight: 300;
+    right: 35px;
+}
+
+svg g.nodes foreignObject.details > div > div.details {
+    right: 0;
+    bottom: 0;
+    text-align: end;
+}
+
+svg g.nodes foreignObject.details > div > div.details div.top {
+    opacity: 0.7;
+    font-weight: 300;
+    margin-bottom: -2px;
+}
+
+svg g.nodes foreignObject.details > div > div.details span.band.c2g {
+}
+svg g.nodes foreignObject.details > div > div.details span.band.c5g {
     font-weight: 500;
 }
-svg g.nodes foreignObject.details span.signal.lowest {
+svg g.nodes foreignObject.details > div > div.details span.signal.lowest {
     color: #e80000;
 }
-svg g.nodes foreignObject.details span.signal.low {
+svg g.nodes foreignObject.details > div > div.details span.signal.low {
     color: #ff8800;
 }
-svg g.nodes foreignObject.details span.signal.medium {
+svg g.nodes foreignObject.details > div > div.details span.signal.medium {
     color: #bfa900;
 }
-svg g.nodes foreignObject.details span.signal.high {
+svg g.nodes foreignObject.details > div > div.details span.signal.high {
     color: #7cbf00;
 }
-svg g.nodes foreignObject.details span.signal.highest {
+svg g.nodes foreignObject.details > div > div.details span.signal.highest {
     color: #04bf0a;
 }
-
-svg g.nodes text.traffic.arrived {
-    animation-name: traffic_arrived;
-    animation-duration: 0.5s;
-    animation-direction: alternate;
-    animation-iteration-count: 5;
-}
-
-body.dark svg g.nodes text.name,
-body.dark svg g.nodes text.details {
-    fill: #ccc;
-}
-/*.tooltip div.services > div > div > div:first-child {
-    text-align: right;
-}*/
- 

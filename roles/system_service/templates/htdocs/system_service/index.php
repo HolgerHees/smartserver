@@ -22,6 +22,47 @@ mx.UNCore = (function( ret ) {
     
     var rootNode = null;
 
+    function getGroup(gid)
+    {
+        return groups[gid];
+    }
+    
+    function getDeviceStat(device)
+    {
+        return stats.hasOwnProperty(device["mac"]) ? stats[device["mac"]] : null;
+    }
+
+    function getInterfaceStat(device)
+    {
+        if( device["connection"] )
+        {
+            key = device["connection"]["target_mac"] + ":" + device["connection"]["target_interface"];
+            if( stats.hasOwnProperty(key) ) return stats[key];
+        }
+        return null;
+    }
+
+    function isOnline(device)
+    {
+        if( device.type == 'hub' )
+        {
+            let all_children_online = true;
+            for(let child_device of device.connected_from) 
+            {
+                let child_device_stat = getDeviceStat(child_device);
+                if( !child_device_stat || child_device_stat.offline_since != null )
+                {
+                    all_children_online = false;
+                    break;
+                }
+            }
+            return all_children_online;
+        }
+
+        let device_stat = getDeviceStat(device);
+        return device_stat && device_stat.offline_since == null;
+    }
+
     function initNode(device)
     {
         let node = {};
@@ -96,10 +137,12 @@ mx.UNCore = (function( ret ) {
         // **** PROCESS DEVICES ****
         let replacesNodes = data["devices"]["replace"];
         
+        let now = new Date().getTime();
         let _devices = {}
         if( replacesNodes ) devices = {}
         data["devices"]["values"].forEach(function(device)
         {
+            device["update"] = now;
             devices[device["mac"]] = device;
             _devices[device["mac"]] = device;
         });
@@ -147,10 +190,12 @@ mx.UNCore = (function( ret ) {
         // **** PROCESS GROUPS ****
         data["groups"]["added"].forEach(function(group)
         {
+            group["update"] = now;
             groups[group["gid"]] = group;
         });
         data["groups"]["modified"].forEach(function(group)
         {
+            group["update"] = now;
             groups[group["gid"]] = group;
         });
         data["groups"]["deleted"].forEach(function(group)
@@ -161,11 +206,13 @@ mx.UNCore = (function( ret ) {
         // **** PROCESS STATS ****
         data["stats"]["added"].forEach(function(stat)
         {
+            stat["update"] = now;
             key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"];
             stats[key] = stat;
         });
         data["stats"]["modified"].forEach(function(stat)
         {
+            stat["update"] = now;
             key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"];
             stats[key] = stat;
         });
@@ -173,6 +220,23 @@ mx.UNCore = (function( ret ) {
         {
             key = stat["interface"] ? stat["mac"]+":"+stat["interface"] : stat["mac"];
             delete stats[key];
+        });
+        
+        Object.values(devices).forEach(function(device)
+        {
+            device["isOnline"] = isOnline(device);
+            device["deviceStat"] = getDeviceStat(device);
+            device["interfaceStat"] = getInterfaceStat(device);
+            
+            if( device["deviceStat"] && device["deviceStat"]["update"] > device["update"] ) device["update"] = device["deviceStat"]["update"];
+            if( device["interfaceStat"] && device["interfaceStat"]["update"] > device["update"] ) device["update"] = device["interfaceStat"]["update"];
+            
+            _groups = [];
+            device["gids"].forEach(function(gid)
+            {
+                _groups.push(getGroup(gid));
+            });
+            device["groups"] = _groups;
         });
         
         if( rootNode == null )
