@@ -262,7 +262,7 @@ class Fritzbox(_handler.Handler):
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
                     stat.setInSpeed(client["speed"] * 1000000)
                     stat.setOutSpeed(client["speed"] * 1000000)
-                    stat.setDetail("signal", client["signal"], "attenuation")
+                    stat.setDetail("signal", client["signal"] * -1, "attenuation")
                     self.cache.confirmStat( stat, lambda event: events.append(event) )
                         
                     _active_client_macs.append(mac)
