@@ -199,7 +199,7 @@ class Device(Changeable):
             connection.setEnabled(False)
             
             target_device = self.cache.getUnlockedDevice(target_mac)
-            self._markAsChanged("connection", "disable connection to {}:{}".format(target_device if target_device else target_mac,",".join(connection.getVLANs())))    
+            self._markAsChanged("connection", "disable connection to {}:{}".format(target_device if target_device else target_mac,",".join(str(v) for v in connection.getVLANs())))    
 
     def cleanDisabledHobConnections(self, type, event_callback):
         _connections = list(filter(lambda c: c.getType() == type and not c.isEnabled(), self.hop_connections ))
@@ -210,7 +210,7 @@ class Device(Changeable):
             
             target_mac = _connection.getTargetMAC()
             target_device = self.cache.getUnlockedDevice(target_mac)
-            self._markAsChanged("connection", "remove disabled connection from {}:{}".format(target_device if target_device else target_mac, ",".join(connection.getVLANs())))
+            self._markAsChanged("connection", "remove disabled connection from {}:{}".format(target_device if target_device else target_mac, ",".join(str(v) for v in connection.getVLANs())))
 
     def getHopConnections(self):
         return list(self.hop_connections)
