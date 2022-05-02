@@ -270,7 +270,7 @@ class OpenWRT(_handler.Handler):
                     uid = "{}-{}".format(mac, gid)
 
                     device = self.cache.getDevice(mac)
-                    device.prepareWifiConnection(target_mac, events)
+                    device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
                     device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -318,8 +318,9 @@ class OpenWRT(_handler.Handler):
             for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[openwrt_ip].values()):
                 if uid not in _active_client_wifi_associations:
                     device = self.cache.getDevice(mac)
-                    # **** connection cleanup and stats cleanup happens in prepareWifiConnection ****
                     device.removeGID(gid);
+                    # **** connection cleanup and stats cleanup happens in cleanDisabledHobConnection ****
+                    device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                     del self.wifi_associations[openwrt_ip][uid]

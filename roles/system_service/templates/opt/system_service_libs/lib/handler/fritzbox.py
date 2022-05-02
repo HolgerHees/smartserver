@@ -39,6 +39,10 @@ class Fritzbox(_handler.Handler):
         
         self.known_clients = {}
         self.fritzbox_macs = {}
+        
+        #self.uid_macs_map = {}
+        #self.uid_child_mac_map = {}
+        #self.child_mac_parent_mac_map = {}
 
         self.devices = {}
 
@@ -76,7 +80,7 @@ class Fritzbox(_handler.Handler):
         now = datetime.now().timestamp()
         
         for fritzbox_ip in self.config.fritzbox_devices:
-            self.next_run[fritzbox_ip] = {"device": now, "wifi_networks": now, "wifi_clients": now, "dhcp_clients": now}
+            self.next_run[fritzbox_ip] = {"device": now, "mesh_topologie": now, "wifi_networks": now, "wifi_clients": now, "dhcp_clients": now}
             
             self.wifi_networks[fritzbox_ip] = {}
             
@@ -123,6 +127,9 @@ class Fritzbox(_handler.Handler):
     def _processDevice(self, fritzbox_ip, now, events, timeout):
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
 
+        #if self.next_run[fritzbox_ip]["mesh_topologie"] <= now:
+        #    [timeout, self.next_run[fritzbox_ip]["mesh_topologie"]] = self._fetchMesh(fritzbox_ip, now, timeout, self.config.fritzbox_network_interval)
+       
         # needs to run first to find fritzbox mac on startup
         if self.next_run[fritzbox_ip]["dhcp_clients"] <= now:
             [timeout, self.next_run[fritzbox_ip]["dhcp_clients"]] = self._fetchDHCPClients(fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
@@ -130,15 +137,69 @@ class Fritzbox(_handler.Handler):
         # needs to run before _fetchWifiClients, because of created groups which are used later
         if self.next_run[fritzbox_ip]["wifi_networks"] <= now:
             [timeout, self.next_run[fritzbox_ip]["wifi_networks"]] = self._fetchWifiNetworks(fritzbox_ip, now, events, timeout, self.config.fritzbox_network_interval)
-        
+
         if self.next_run[fritzbox_ip]["wifi_clients"] <= now:
             [timeout, self.next_run[fritzbox_ip]["wifi_clients"]] = self._fetchWifiClients(fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
-            
+
         if self.next_run[fritzbox_ip]["device"] <= now:
             [timeout, self.next_run[fritzbox_ip]["device"]] = self._fetchDeviceInfo(fritzbox_ip, now, events, timeout, self.config.fritzbox_client_interval)
                 
         return timeout
+    
+    #def _fetchMesh(self, fritzbox_ip, now, global_timeout, call_timeout):
+    #    logging.info("FETCH TOPOLOGIE {}".format(fritzbox_ip))
+            
+    #    _mesh_links = {}
+    #    _mesh_devices = {}
+    #    uid_macs_map = {}
+    #    topologie = self.fh[fritzbox_ip].get_mesh_topology()
+    #    for node in topologie["nodes"]:
+    #        logging.info(node)
+    #        #mac = node["device_mac_address"].lower()
+    #        wifi_links = []
+    #        node_macs = [node["device_mac_address"].lower()]
+    #        for node_interface in node["node_interfaces"]:
+    #            node_macs.append(node_interface["mac_address"].lower())
+    #            if len(node_interface["node_links"]) == 0:
+    #                continue
+    #            #logging.info("    INTERFACE: {}-{}-{}".format(node_interface["name"], node_interface["type"], node_interface["mac_address"]))
+    #            for node_link in node_interface["node_links"]:
+    #                if node_link["uid"] not in _mesh_links:
+    #                    _mesh_links[node_link["uid"]] = []
+    #                _mesh_links[node_link["uid"]].append(node["uid"])
+                    
+    #                if node_interface["type"] == "WLAN":
+    #                    wifi_links.append(node_link["uid"])
+    #                    #logging.info("        LINK: {}".format(node_link["uid"]))
+    #        _mesh_devices[node["uid"]] = [node,wifi_links]
+
+    #        if node["is_meshed"]:
+    #            uid_macs_map[node["uid"]] = list(set(node_macs))
+    #        #mesh_macs[node["device_mac_address"].lower()] = node["uid"]
         
+    #    uid_child_mac_map = {}
+    #    for [node,wifi_links] in _mesh_devices.values():
+    #        logging.info("DEVICE: {}-{}-{} (MESHED: {}-{})".format(node["uid"],node["device_name"],wifi_links,node["is_meshed"],node["mesh_role"]))
+    #        for _link_uid in wifi_links:
+    #            #logging.info("DEVICE: {}-{}-{} (MESHED: {}-{})".format(node["uid"],node["device_name"],node_macs,node["is_meshed"],node["mesh_role"]))
+    #            linked_node_uids = list(filter(lambda uid: uid != node["uid"],_mesh_links[_link_uid]))
+    #            if len(linked_node_uids) != 1:
+    #                logging.error("Unexpected uid count")
+    #                continue
+    #            [linked_node,_] = _mesh_devices[linked_node_uids[0]]
+    #            if linked_node["is_meshed"] and node["mesh_role"] != "master":
+    #                if linked_node_uids[0] not in uid_child_mac_map:
+    #                    uid_child_mac_map[linked_node_uids[0]] = []
+    #                uid_child_mac_map[linked_node_uids[0]].append(node["device_mac_address"].lower())
+                    
+    #    self.uid_child_mac_map = uid_child_mac_map
+    #    self.uid_macs_map = uid_macs_map
+            
+    #    if global_timeout > call_timeout:
+    #        global_timeout = call_timeout
+
+    #    return [global_timeout, now + call_timeout]
+                
     def _fetchDHCPClients(self, fritzbox_ip, now, events, global_timeout, call_timeout ):
         first_run = not self.known_clients[fritzbox_ip]
 
@@ -200,20 +261,40 @@ class Fritzbox(_handler.Handler):
                 for device in outdated_clients.values():
                     mac = device.getMAC()
                     device.lock(self)
-                    if mac not in hosts and mac not in self.wifi_clients[fritzbox_ip]:
+                    if mac not in hosts:
                         logging.info("Removed details from {}".format(device))
-                        device.removeIP("fritzbox")
-                        device.removeDNS("fritzbox")
+                        device.removeIP("fritzbox-dhcp")
+                        device.removeDNS("fritzbox-dhcp")
                     else:
                         host = hosts[mac]
                         #logging.info(host)
-                        device.setIP("fritzbox", 100, host["NewIPAddress"])
-                        device.setDNS("fritzbox", 100, host["NewHostName"])
+                        device.setIP("fritzbox-dhcp", 100, host["NewIPAddress"])
+                        device.setDNS("fritzbox-dhcp", 100, host["NewHostName"])
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                         
                     self.dhcp_clients[fritzbox_ip][mac] = now
                 self.cache.unlock(self)
+                
+        #self.uid_macs_map = {}
+        #self.child_mac_parent_uid_map = {}
+        #self.child_mac_parent_mac_map = {}
         
+        #child_mac_parent_mac_map = {}
+        #for uid in self.uid_macs_map:
+        #    macs = self.uid_macs_map[uid]
+        #    for mac in self.dhcp_clients[fritzbox_ip]:
+        #        if mac in macs:
+        #            logging.info("MAP {} => {}".format(uid,mac))
+        #            child_macs = self.uid_child_mac_map[uid]
+        #            for child_mac in child_macs:
+        #                child_mac_parent_mac_map[child_mac] = mac
+        #            break
+                
+        #for mac in child_mac_parent_mac_map.keys():
+        #    logging.info("{} => {}".format(mac, child_mac_parent_mac_map[mac]))
+            
+        #self.child_mac_parent_mac_map = child_mac_parent_mac_map
+            
         if global_timeout > call_timeout:
             global_timeout = call_timeout
 
@@ -239,6 +320,8 @@ class Fritzbox(_handler.Handler):
 
                 for client in client_results[gid]:
                     mac = client["mac"].lower()
+                    
+                    logging.info(client)
 
                     if mac == self.cache.getGatewayMAC():
                         continue
@@ -250,8 +333,13 @@ class Fritzbox(_handler.Handler):
                     uid = "{}-{}".format(mac, gid)
 
                     device = self.cache.getDevice(mac)
-                    device.setIP("fritzbox", 100, client["ip"])
-                    device.prepareWifiConnection(target_mac, events)
+                    device.setIP("fritzbox-wifi", 99, client["ip"])
+                    
+                    #if mac in self.child_mac_parent_mac_map:
+                    #    logging.info("REAL MAP {} => {}".format(mac,self.child_mac_parent_mac_map[mac]))
+                    #    target_mac = self.child_mac_parent_mac_map[mac]
+
+                    device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
                     device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -273,13 +361,11 @@ class Fritzbox(_handler.Handler):
             for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[fritzbox_ip].values()):
                 if uid not in _active_client_wifi_connections:
                     device = self.cache.getDevice(mac)
-                    # **** connection cleanup and stats cleanup happens in prepareWifiConnection ****
-                    device.removeIP("fritzbox")
+                    device.removeIP("fritzbox-wifi")
                     device.removeGID(gid)
+                    # **** connection cleanup and stats cleanup happens in cleanDisabledHobConnection ****
+                    device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
-                    
-                    if mac not in _active_client_macs:
-                        stat = self.cache.removeConnectionStat(target_mac, target_interface, lambda event: events.append(event))
                     
                     del self.wifi_associations[fritzbox_ip][uid]
                 else:

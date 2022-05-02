@@ -78,24 +78,30 @@ class MQTTPublisher(_handler.Handler):
             timeout = self.config.mqtt_republish_interval
             
             for mac in list(self.published_values.keys()):
-                if self.cache.getUnlockedDevice(mac) is None:
+                _device = self.cache.getUnlockedDevice(mac)
+                if _device is None:
+                    logging.info("CLEAN values of {}".format(mac))
                     del self.published_values[mac]
                     continue
                 
-                for key in self.published_values[mac]:
-                    [last_publish, value] = self.published_values[mac][key]
+                _to_publish = {}
+                for [detail, topic, value, last_publish] in self.published_values[mac].values():
                     
                     _diff = (now-last_publish).total_seconds()
                     if _diff >= self.config.mqtt_republish_interval:
-                        #logging.info("republish")
-                        self._publishValue(mac, key, value)
+                        _to_publish[detail] = [detail, topic, value]
                     else:
                         _timeout = self.config.mqtt_republish_interval - _diff
                         if _timeout < timeout:
                             timeout = _timeout
+                            
+                if len(_to_publish) > 0:
+                    logging.info("REPUBLISH {} of {}".format(list(_to_publish.keys()), _device))
+                    for [detail, topic, value] in _to_publish.values():
+                        self._publishValue(mac, detail, topic, value, now)
 
             with self.condition:
-                #logging.info("sleep {}".format(timeout))
+                logging.info("Sleep {}".format(timeout))
                 self.condition.wait(timeout)
     
     def _publishValues(self, device, stat, changed_details = None):
@@ -127,36 +133,37 @@ class MQTTPublisher(_handler.Handler):
         if type(stat) is DeviceStat:
             for detail in _details:
                 if detail == "online_state":
-                    key = "network/{}/{}".format(device.getIP(),"online")
+                    topic = "network/{}/{}".format(device.getIP(),"online")
                     value = "ON" if stat.isOnline() else "OFF"
-                    _to_publish[detail] = [mac,key,value]
+                    _to_publish[detail] = [detail,topic,value]
         else:
             for detail in _details:
                 #if detail == "signal":
                 #    self.mqtt_handler.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
                 if detail in ["wan_type","wan_state"] and stat.getDetail(detail) is not None:
-                    key = "network/{}/{}".format(device.getIP(),detail)
-                    _to_publish[detail] = [mac,key,stat.getDetail(detail)]
+                    topic = "network/{}/{}".format(device.getIP(),detail)
+                    _to_publish[detail] = [detail,topic,stat.getDetail(detail)]
                 
         if len(_to_publish.values()) == 0:
             return False
 
         logging.info("PUBLISH {} of {}".format(list(_to_publish.keys()), device))
 
-        for [mac, key, value] in _to_publish.values():
-            self._publishValue(mac, key, value)
+        now = datetime.now()
+        for [detail, topic, value] in _to_publish.values():
+            self._publishValue(mac, detail, topic, value, now)
                 
         with self.condition:
             self.condition.notifyAll()
 
         return True
     
-    def _publishValue(self, mac, key, value):
+    def _publishValue(self, mac, detail, topic, value, now):
         if mac not in self.published_values:
             self.published_values[mac] = {}
             
-        self.mqtt_handler.publish(key, value )
-        self.published_values[mac][key] = [datetime.now(), value]
+        self.mqtt_handler.publish(topic, value )
+        self.published_values[mac][topic] = [detail, topic, value, now]
     
     def getEventTypes(self):
         return [ 

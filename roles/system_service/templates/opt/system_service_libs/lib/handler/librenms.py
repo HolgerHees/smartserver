@@ -301,7 +301,7 @@ class LibreNMS(_handler.Handler):
                         target_interface = self.connected_macs[device_id][mac]["target_interface"]
                         
                         device = self.cache.getDevice(mac)
-                        device.removeHopConnection(vlan, target_mac, target_interface)
+                        device.removeHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface)
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                         del self.connected_macs[device_id][mac]
