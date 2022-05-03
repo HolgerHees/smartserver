@@ -37,7 +37,7 @@ class InfluxDBPublisher(_handler.Handler):
                 messurements = self._collectMessurements()
                 self._submitMessurements(messurements)
             except requests.exceptions.ConnectionError:
-                logging.warning("InfluxDB currently not available. Will 15 seconds")
+                logging.warning("InfluxDB currently not available. Will 15 retry in seconds")
                 
             with self.condition:
                 self.condition.wait(self.config.influxdb_publish_interval)

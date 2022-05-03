@@ -391,7 +391,7 @@ class ArpScanner(_handler.Handler):
                 logging.info("Device {} checked with {} in {} seconds".format(device," & ".join(methods),duration))
                 if is_success:
                     # confirm that the right MAC address was answering
-                    if Helper.checkMAC(device.getMAC()):
+                    if Helper.checkMAC(device.getMAC(), self.config.main_interface):
                         self._refreshDevice(device, events)
                         return
                     else:
@@ -401,7 +401,7 @@ class ArpScanner(_handler.Handler):
                             self._removeDevice(mac, events)
                             return
             
-            stat.lock()
+            stat.lock(self)
             stat.setOnline(False)
             self.cache.confirmStat( stat, lambda event: events.append(event) )
 

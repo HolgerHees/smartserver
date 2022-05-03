@@ -9,6 +9,8 @@ from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzwlan import FritzWLAN
 from fritzconnection.core.exceptions import FritzLookUpError
+from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.core.exceptions import FritzServiceError
 
 from lib.handler import _handler
 from lib.dto.device import Connection
@@ -43,7 +45,7 @@ class Fritzbox(_handler.Handler):
         #self.uid_macs_map = {}
         #self.uid_child_mac_map = {}
         #self.child_mac_parent_mac_map = {}
-
+        
         self.devices = {}
 
         self.fc = {}
@@ -108,6 +110,12 @@ class Fritzbox(_handler.Handler):
                         was_suspended[fritzbox_ip] = False
                         
                     timeout = self._processDevice(fritzbox_ip, now, events, timeout)
+                except FritzConnectionException as e:
+                    logging.error("Fritzbox '{}' not accessible. Will suspend for 1 minutes.".format(fritzbox_ip))
+                    logging.error(traceback.format_exc())
+                    if timeout > 60:
+                        timeout = 60
+                    was_suspended[fritzbox_ip] = True
                 except Exception as e:
                     self.cache.cleanLocks(self, events)
 
@@ -438,85 +446,89 @@ class Fritzbox(_handler.Handler):
         #_lan_link_state = self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetInfo")
         #lan_link_state = {'up': _lan_link_state["NewMaxBitRate"], 'down': _lan_link_state["NewMaxBitRate"], 'duplex': _lan_link_state["NewDuplexMode"]}
 
-        _lan_traffic_state = self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetStatistics")
-        lan_traffic_received = _lan_traffic_state["NewBytesReceived"]
-        lan_traffic_sent = _lan_traffic_state["NewBytesSent"]
-        
-        if fritzbox_mac == self.cache.getGatewayMAC():
-            _wan_link_state = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetCommonLinkProperties")
-            wan_link_state = {'type': _wan_link_state["NewWANAccessType"], 'state': _wan_link_state["NewPhysicalLinkStatus"], 'up': _wan_link_state["NewLayer1UpstreamMaxBitRate"], 'down': _wan_link_state["NewLayer1DownstreamMaxBitRate"]}
-
-            _wan_traffic_state = self.fc[fritzbox_ip].call_action("WANCommonIFC1", "GetAddonInfos")
-            wan_traffic_state = {'sent': int(_wan_traffic_state["NewX_AVM_DE_TotalBytesSent64"]), 'received': int(_wan_traffic_state["NewX_AVM_DE_TotalBytesReceived64"])}
-        
-            lan_traffic_received += wan_traffic_state["received"]
-            lan_traffic_sent += wan_traffic_state["sent"]
-
-        self.cache.lock(self)
-
-        fritzbox_device = self.cache.getUnlockedDevice(fritzbox_mac)
-        if fritzbox_device is None or not fritzbox_device.hasIP("fritzbox"):
-            fritzbox_device = self.cache.getDevice(fritzbox_mac)
-            fritzbox_device.setIP("fritzbox", 100, fritzbox_ip)
+        try:
+            _lan_traffic_state = self.fc[fritzbox_ip].call_action("LANEthernetInterfaceConfig1", "GetStatistics")
+            lan_traffic_received = _lan_traffic_state["NewBytesReceived"]
+            lan_traffic_sent = _lan_traffic_state["NewBytesSent"]
+            
             if fritzbox_mac == self.cache.getGatewayMAC():
-                fritzbox_device.addHopConnection(Connection.ETHERNET, self.config.default_vlan, self.cache.getWanMAC(), self.cache.getWanInterface() );
-            self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
-        
-        stat = self.cache.getConnectionStat(fritzbox_mac, self.cache.getGatewayInterface(self.config.default_vlan))
-        if fritzbox_ip in self.devices:
-            in_bytes = stat.getInBytes()
-            if in_bytes is not None:
-                time_diff = now - self.devices[fritzbox_ip]
-                byte_diff = lan_traffic_received - in_bytes
-                if byte_diff > 0:
-                    stat.setInAvg(byte_diff / time_diff)
-                
-            out_bytes = stat.getOutBytes()
-            if out_bytes is not None:
-                time_diff = now - self.devices[fritzbox_ip]
-                byte_diff = lan_traffic_sent - out_bytes
-                if byte_diff > 0:
-                    stat.setOutAvg(byte_diff / time_diff)
-       
-        stat.setInBytes(lan_traffic_received)
-        stat.setOutBytes(lan_traffic_sent)
-        #stat.setInSpeed(lan_link_state['down'] * 1000)
-        stat.setInSpeed(1000000000)
-        #stat.setOutSpeed(lan_link_state['up'] * 1000)
-        stat.setOutSpeed(1000000000)
-        #stat.setDetail("duplex", "full" if _port["duplex"] == "fullDuplex" else "half", "string")
-        #stat.setDetail("duplex", lan_link_state["duplex"], "string")
-        self.cache.confirmStat( stat, lambda event: events.append(event) )
+                _wan_link_state = self.fc[fritzbox_ip].call_action("WANCommonInterfaceConfig1", "GetCommonLinkProperties")
+                wan_link_state = {'type': _wan_link_state["NewWANAccessType"], 'state': _wan_link_state["NewPhysicalLinkStatus"], 'up': _wan_link_state["NewLayer1UpstreamMaxBitRate"], 'down': _wan_link_state["NewLayer1DownstreamMaxBitRate"]}
 
-        if fritzbox_mac == self.cache.getGatewayMAC():
-            stat = self.cache.getConnectionStat(self.cache.getWanMAC(),"wan")
-            stat.setDetail("wan_type",wan_link_state["type"], "string")
-            stat.setDetail("wan_state",wan_link_state["state"], "string")
+                _wan_traffic_state = self.fc[fritzbox_ip].call_action("WANCommonIFC1", "GetAddonInfos")
+                wan_traffic_state = {'sent': int(_wan_traffic_state["NewX_AVM_DE_TotalBytesSent64"]), 'received': int(_wan_traffic_state["NewX_AVM_DE_TotalBytesReceived64"])}
+            
+                lan_traffic_received += wan_traffic_state["received"]
+                lan_traffic_sent += wan_traffic_state["sent"]
 
+            self.cache.lock(self)
+
+            fritzbox_device = self.cache.getUnlockedDevice(fritzbox_mac)
+            if fritzbox_device is None or not fritzbox_device.hasIP("fritzbox"):
+                fritzbox_device = self.cache.getDevice(fritzbox_mac)
+                fritzbox_device.setIP("fritzbox", 100, fritzbox_ip)
+                if fritzbox_mac == self.cache.getGatewayMAC():
+                    fritzbox_device.addHopConnection(Connection.ETHERNET, self.config.default_vlan, self.cache.getWanMAC(), self.cache.getWanInterface() );
+                self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
+            
+            stat = self.cache.getConnectionStat(fritzbox_mac, self.cache.getGatewayInterface(self.config.default_vlan))
             if fritzbox_ip in self.devices:
                 in_bytes = stat.getInBytes()
                 if in_bytes is not None:
                     time_diff = now - self.devices[fritzbox_ip]
-                    byte_diff = wan_traffic_state["received"] - in_bytes
+                    byte_diff = lan_traffic_received - in_bytes
                     if byte_diff > 0:
                         stat.setInAvg(byte_diff / time_diff)
                     
                 out_bytes = stat.getOutBytes()
                 if out_bytes is not None:
                     time_diff = now - self.devices[fritzbox_ip]
-                    byte_diff = wan_traffic_state["sent"] - out_bytes
+                    byte_diff = lan_traffic_sent - out_bytes
                     if byte_diff > 0:
                         stat.setOutAvg(byte_diff / time_diff)
         
-            stat.setInBytes(wan_traffic_state["received"])
-            stat.setOutBytes(wan_traffic_state["sent"])
-            stat.setInSpeed(wan_link_state["down"] * 1000)
-            stat.setOutSpeed(wan_link_state["up"] * 1000)
+            stat.setInBytes(lan_traffic_received)
+            stat.setOutBytes(lan_traffic_sent)
+            #stat.setInSpeed(lan_link_state['down'] * 1000)
+            stat.setInSpeed(1000000000)
+            #stat.setOutSpeed(lan_link_state['up'] * 1000)
+            stat.setOutSpeed(1000000000)
+            #stat.setDetail("duplex", "full" if _port["duplex"] == "fullDuplex" else "half", "string")
+            #stat.setDetail("duplex", lan_link_state["duplex"], "string")
             self.cache.confirmStat( stat, lambda event: events.append(event) )
-                
-        self.cache.unlock(self)
-        
-        self.devices[fritzbox_ip] = now
+
+            if fritzbox_mac == self.cache.getGatewayMAC():
+                stat = self.cache.getConnectionStat(self.cache.getWanMAC(),"wan")
+                stat.setDetail("wan_type",wan_link_state["type"], "string")
+                stat.setDetail("wan_state",wan_link_state["state"], "string")
+
+                if fritzbox_ip in self.devices:
+                    in_bytes = stat.getInBytes()
+                    if in_bytes is not None:
+                        time_diff = now - self.devices[fritzbox_ip]
+                        byte_diff = wan_traffic_state["received"] - in_bytes
+                        if byte_diff > 0:
+                            stat.setInAvg(byte_diff / time_diff)
+                        
+                    out_bytes = stat.getOutBytes()
+                    if out_bytes is not None:
+                        time_diff = now - self.devices[fritzbox_ip]
+                        byte_diff = wan_traffic_state["sent"] - out_bytes
+                        if byte_diff > 0:
+                            stat.setOutAvg(byte_diff / time_diff)
+            
+                stat.setInBytes(wan_traffic_state["received"])
+                stat.setOutBytes(wan_traffic_state["sent"])
+                stat.setInSpeed(wan_link_state["down"] * 1000)
+                stat.setOutSpeed(wan_link_state["up"] * 1000)
+                self.cache.confirmStat( stat, lambda event: events.append(event) )
+                    
+            self.cache.unlock(self)
+            
+            self.devices[fritzbox_ip] = now
+        except FritzServiceError:
+            logging.info("No LAN Device statistic available on '{}'. Check diabled.".format(fritzbox_ip))
+            call_timeout = 99999999999999
 
         if global_timeout > call_timeout:
             global_timeout = call_timeout
