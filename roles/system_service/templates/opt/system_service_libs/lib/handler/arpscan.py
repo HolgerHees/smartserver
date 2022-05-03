@@ -369,11 +369,7 @@ class ArpScanner(_handler.Handler):
         mac = stat.getMAC()
  
         if (now - stat.getLastSeen()).total_seconds() > self.config.arp_clean_device_timeout:
-            self.cache.removeDevice(mac, lambda event: events.append(event))
-            self.cache.removeStat(mac, None, lambda event: events.append(event))
-            if self.registered_devices[mac] is not None:
-                self.registered_devices[mac].terminate()
-                del self.registered_devices[mac]
+            self._removeDevice(mac, events)
             return
 
         # State checke only for devices without DeviceChecker
@@ -394,12 +390,27 @@ class ArpScanner(_handler.Handler):
                 duration = round((datetime.now() - startTime).total_seconds(),2)
                 logging.info("Device {} checked with {} in {} seconds".format(device," & ".join(methods),duration))
                 if is_success:
-                    self._refreshDevice(device, events)
-                    return
+                    # confirm that the right MAC address was answering
+                    if Helper.checkMAC(device.getMAC()):
+                        self._refreshDevice(device, events)
+                        return
+                    else:
+                        # check if there is another device with the same IP
+                        similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
+                        if len(similarDevices) > 0:
+                            self._removeDevice(mac, events)
+                            return
             
-            stat = self.cache.getDeviceStat(mac)
+            stat.lock()
             stat.setOnline(False)
             self.cache.confirmStat( stat, lambda event: events.append(event) )
+
+    def _removeDevice(self,mac, events):
+        self.cache.removeDevice(mac, lambda event: events.append(event))
+        self.cache.removeStat(mac, None, lambda event: events.append(event))
+        if self.registered_devices[mac] is not None:
+            self.registered_devices[mac].terminate()
+            del self.registered_devices[mac]
 
     def getEventTypes(self):
         return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE,Event.ACTION_MODIFY], "details": None } ]

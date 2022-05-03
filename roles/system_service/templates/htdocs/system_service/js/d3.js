@@ -37,6 +37,7 @@ mx.D3 = (function( ret )
                 
                 if( data["depth"] > maxDepth ) maxDepth = data["depth"];
             });
+            maxDepth += 1;
 
             let endCount = 0;
             Object.values(depthCount).forEach(function(value)
@@ -124,8 +125,16 @@ mx.D3 = (function( ret )
         let dx = ( height / endCount ) - ( 2 * box_padding ) ;
         if( dx > 30 ) dx = 30;
         //let dy = width / (root.height + 1);
-        let dy = width / ( maxDepth + ( isSpecialRootLayout() ? 1 : 2 ) );
         
+        if( isSpecialRootLayout() ) maxDepth -= 1;
+        
+        let offset = Math.round(endCount / 20);
+        //console.log(width);
+        //console.log(maxDepth);
+        //console.log(offset);
+        let dy = ( width / maxDepth ) + offset;
+        if( dy > 250 ) dy = 250;
+
         d3.tree().nodeSize([dx + 2, dy])(root);
         //d3.tree().size([300, 200])(root);
         

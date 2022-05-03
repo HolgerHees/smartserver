@@ -65,6 +65,13 @@ class Helper():
 
         raise Exception("Cmd 'arp-scan' was not successful")
             
+    def checkMAC(mac, interface):
+        result = command.exec(["/sbin/arp", "-n"])
+        if result.returncode == 0:
+            rows = result.stdout.decode().strip()
+            return mac in rows
+        raise Exception("Cmd 'arp' was not successful")
+        
     def ip2mac(ip, interface):
         result = command.exec(["/sbin/arp", "-n"])
         if result.returncode == 0:
