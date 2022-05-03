@@ -3,6 +3,7 @@
     git_clone_name: "toolbox"
     git_clone_path: "{{projects_path}}toolbox"
     git_clone_url: "https://github.com/HolgerHees/toolbox.git"
+    git_sudo_user: "{{system_users['www'].name}}"
   import_tasks: roles/_shared/tasks/git_clone.yml
 
 - name: copy system config

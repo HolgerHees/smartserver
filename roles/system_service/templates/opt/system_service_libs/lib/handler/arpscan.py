@@ -92,6 +92,7 @@ class DeviceChecker(threading.Thread):
             startTime = datetime.now()
             
             ip_address = self.device.getIP()
+            mac_address = self.device.getMAC()
             address_family = AddressHelper.getAddressFamily(ip_address)
             
             events = []
@@ -102,11 +103,11 @@ class DeviceChecker(threading.Thread):
                     AddressHelper.knock(self.address_family,ip_address)
                     time.sleep(0.05)
           
-                is_success = Helper.arpping(self.interface,ip_address,arpTime)
+                is_success = Helper.arpping(ip_address, mac_address, self.interface, arpTime)
 
                 if not is_success and self.stat.isOnline():
                     logging.info("Arping for {} was unsuccessful. Fallback to normal ping".format(ip_address))
-                    is_success = Helper.ping(ip_address)
+                    is_success = Helper.ping(ip_address, mac_address, self.interface)
                     
                 if is_success:
                     duration = round((datetime.now() - startTime).total_seconds(),2)
@@ -382,24 +383,22 @@ class ArpScanner(_handler.Handler):
             if device is not None and device.getIP() is not None:
                 startTime = datetime.now()
                 methods = ["arping"]
-                is_success = Helper.arpping(self.config.main_interface,device.getIP(),2)
+                is_success = Helper.arpping(device.getIP(), device.getMAC(), self.config.main_interface, 2)
                 if not is_success:
                     methods.append("ping")
-                    is_success = Helper.ping(device.getIP())
-                
+                    is_success = Helper.ping(device.getIP(), device.getMAC(), self.config.main_interface)
+
                 duration = round((datetime.now() - startTime).total_seconds(),2)
                 logging.info("Device {} checked with {} in {} seconds".format(device," & ".join(methods),duration))
                 if is_success:
-                    # confirm that the right MAC address was answering
-                    if Helper.checkMAC(device.getMAC(), self.config.main_interface):
-                        self._refreshDevice(device, events)
+                    self._refreshDevice(device, events)
+                    return
+                else:
+                    # check if there is another device with the same IP
+                    similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
+                    if len(similarDevices) > 0:
+                        self._removeDevice(mac, events)
                         return
-                    else:
-                        # check if there is another device with the same IP
-                        similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
-                        if len(similarDevices) > 0:
-                            self._removeDevice(mac, events)
-                            return
             
             stat.lock(self)
             stat.setOnline(False)
@@ -407,7 +406,7 @@ class ArpScanner(_handler.Handler):
 
     def _removeDevice(self,mac, events):
         self.cache.removeDevice(mac, lambda event: events.append(event))
-        self.cache.removeStat(mac, None, lambda event: events.append(event))
+        self.cache.removeDeviceStat(mac, None, lambda event: events.append(event))
         if self.registered_devices[mac] is not None:
             self.registered_devices[mac].terminate()
             del self.registered_devices[mac]

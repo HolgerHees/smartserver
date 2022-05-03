@@ -24,16 +24,30 @@ class Helper():
                                 bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                 universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
-    def arpping(interface, ip, timeout):
-        process = subprocess.run(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        return process.returncode == 0
+    def arpping(ip, mac, interface, timeout):
+        result = command.exec(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], exitstatus_check = False)
+        is_success = result.returncode == 0
+        if is_success:
+            found = False
+            rows = result.stdout.decode().strip().split("\n")
+            for row in rows:
+                # 0c:c4:13:18:ad:83 (192.168.0.69)
+                if re.search(r"{} \({}\)".format(mac,ip), row):
+                    found = True
+            if not found:
+                is_success = False
+        return is_success
 
-    def ping(ip):
+    def ping(ip, mac = None, interface = None):
         process = subprocess.run(["/bin/ping", "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        return process.returncode == 0
+        is_success = process.returncode == 0
+        if is_success and mac is not None and interface is not None:
+            if mac != Helper.ip2mac(ip, interface):
+                is_success = False
+        return is_success
 
     def nmap(ip):
-        result = command.exec(["/usr/bin/nmap", "-sS", "-PN", ip])
+        result = command.exec(["/usr/bin/nmap", "-sS", "-PN", ip], exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode().strip().split("\n")
             services = {}
@@ -49,7 +63,7 @@ class Helper():
             raise Exception("Cmd 'nmap' was not successful")
         
     def arpscan(interface, network ):
-        result = command.exec(["/usr/local/bin/arp-scan", "--interface", interface, network])
+        result = command.exec(["/usr/local/bin/arp-scan", "--interface", interface, network], exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode().strip().split("\n")
             
@@ -65,15 +79,15 @@ class Helper():
 
         raise Exception("Cmd 'arp-scan' was not successful")
             
-    def checkMAC(mac, interface):
-        result = command.exec(["/sbin/arp", "-n"])
-        if result.returncode == 0:
-            rows = result.stdout.decode().strip()
-            return mac in rows
-        raise Exception("Cmd 'arp' was not successful")
+    #def _checkMAC(mac, interface):
+    #    result = command.exec(["/sbin/arp", "-n"])
+    #    if result.returncode == 0:
+    #        rows = result.stdout.decode().strip()
+    #        return mac in rows
+    #    raise Exception("Cmd 'arp' was not successful")
         
     def ip2mac(ip, interface):
-        result = command.exec(["/sbin/arp", "-n"])
+        result = command.exec(["/sbin/arp", "-n"], exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode().strip().split("\n")
             for row in rows:
