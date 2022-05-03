@@ -115,7 +115,7 @@ Vagrant.configure(2) do |config|
     
     setup.vm.network "private_network", ip: $env_ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
-    setup.vm.synced_folder ".", "/vagrant"
+    setup.vm.synced_folder ".", "/vagrant", owner: "root", group: "root"
     #, automount: true
 
     setup.vm.provider :virtualbox do |vb|
