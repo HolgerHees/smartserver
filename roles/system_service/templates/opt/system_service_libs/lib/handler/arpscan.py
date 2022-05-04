@@ -103,15 +103,16 @@ class DeviceChecker(threading.Thread):
                     AddressHelper.knock(self.address_family,ip_address)
                     time.sleep(0.05)
           
+                methods = ["arping"]
                 is_success = Helper.arpping(ip_address, mac_address, self.interface, arpTime)
 
                 if not is_success and self.stat.isOnline():
-                    logging.info("Arping for {} was unsuccessful. Fallback to normal ping".format(ip_address))
+                    methods.append("ping")
                     is_success = Helper.ping(ip_address, mac_address, self.interface)
                     
                 if is_success:
                     duration = round((datetime.now() - startTime).total_seconds(),2)
-                    logging.info("Device {} is online - check time {} sec".format(ip_address,duration))  
+                    logging.info("Device {} is online. Checked with {} in {} seconds".format(ip_address," & ".join(methods),duration))
                     self.lastSeen = datetime.now()
                     if not self.stat.isOnline():
                         self.cache.lock(self)
