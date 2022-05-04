@@ -1,5 +1,5 @@
 - name: "fetch last git pull date"
-  shell: "git rev-parse HEAD"
+  shell: "OWNER=`stat -c '%U' .` && sudo -u $OWNER git rev-parse HEAD"
   changed_when: no
   register: git_fetch_result
 
