@@ -389,7 +389,7 @@ mx.Actions = (function( ret ) {
     ret.openMenu = function(subGroup,event)
     {       
         let entries = subGroup.getEntries();
-        if( entries.length == 1 && entries[0].getContentType() == "url" )
+        if( subGroup.isSingleEntryGroup() && entries.length > 0 && entries[0].getContentType() == "url" )
         {
             mx.Actions.openEntryById(event,subGroup.getEntries()[0].getUId())
             

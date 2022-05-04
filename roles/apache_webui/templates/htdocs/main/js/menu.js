@@ -39,8 +39,7 @@ mx.Menu = (function( ret ) {
     
     function filterMenuEntries(subGroup)
     {
-        let entries = subGroup.getEntries();
-        return entries.length == 1 ? [] : entries.filter(entry => entry.getContentType() == 'url' && entry.getTitle() );
+        return subGroup.isSingleEntryGroup() ? [] : subGroup.getEntries().filter(entry => entry.getContentType() == 'url' && entry.getTitle() );
     }
 
     ret.getMainGroup = function(mainGroupId)
@@ -87,6 +86,7 @@ mx.Menu = (function( ret ) {
                             getMainGroup: function(){ return mainGroup['_']; },
                             getEntry: function(entryId){ return subGroup['menuEntries'].hasOwnProperty(entryId) ? subGroup['menuEntries'][entryId]['_'] : null; },
                             getEntries: function(){ return filterAllowedEntries(Object.values(subGroup['menuEntries']).map( entry => entry['_'] )); },
+                            isSingleEntryGroup: function(){ return Object.values(subGroup['menuEntries']).length == 1; },
                             getMenuEntries: function(){ return filterMenuEntries(subGroup['_']) },
                             addUrl: function(entryId,url,usergroups,order,title,info,newWindow,iconUrl){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
