@@ -167,12 +167,14 @@ class Fritzbox(_handler.Handler):
                     ssid = node_interface["ssid"]
                     channel = node_interface["current_channel"]
                     band = "5g" if channel > 13 else "2g"
+                    priority = 1 if channel > 13 else 0
                     
                     gid = "{}-{}-{}".format(fritzbox_ip,band,ssid)
                     network = {
                         "gid": gid,
                         "ssid": ssid,
                         "band": band,
+                        "priority": priority,
                         "vlan": self.config.default_vlan,
                         "channel": channel
                     }
@@ -245,10 +247,11 @@ class Fritzbox(_handler.Handler):
                         wifi_network = node_link_wifi_map[node_link["uid"]]
                         vlan = wifi_network["vlan"]
                         gid = wifi_network["gid"]
+                        priority = wifi_network["priority"]
                         
                         device = self.cache.getDevice(source_mac)
                         device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
-                        device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
+                        device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface, priority);
                         device.addGID(gid)
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                         

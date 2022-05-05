@@ -172,12 +172,14 @@ class OpenWRT(_handler.Handler):
                 
                 wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, ifname)
                 channel = wifi_interface_details_result["channel"]
-
+                priority = 1 if channel > 13 else 0
+                
                 network = { 
                     "gid": gid,
                     "ifname": ifname,
                     "ssid": ssid,
                     "band": band,
+                    "priority": priority,
                     "channel": channel,
                     "vlan": _active_vlans[ifname] if ifname in _active_vlans else self.config.default_vlan,
                     "device": wifi_network_name
@@ -267,12 +269,13 @@ class OpenWRT(_handler.Handler):
                     target_interface = mac#wlan_network["ssid"]
                     vlan = wlan_network["vlan"]
                     gid = wlan_network["gid"]
+                    priority = wlan_network["priority"]
                     
                     uid = "{}-{}".format(mac, gid)
 
                     device = self.cache.getDevice(mac)
                     device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
-                    device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface);
+                    device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface, priority);
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
 

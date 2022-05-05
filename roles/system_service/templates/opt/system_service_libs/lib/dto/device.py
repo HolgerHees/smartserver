@@ -10,11 +10,12 @@ class Connection():
     
     INTERFACE_DEFAULT = "default"
     
-    def __init__(self, type, vlan, target_mac, target_interface ):
+    def __init__(self, type, vlan, target_mac, target_interface, priority = 0 ):
         self.type = type
         self.vlans = [ vlan ]
         self.target_mac = target_mac
         self.target_interface = target_interface
+        self.priority = priority
         self.enabled = True
             
     def getType(self):
@@ -41,6 +42,9 @@ class Connection():
     def getTargetInterface(self):
         return self.target_interface
     
+    def getPriority(self):
+        return self.priority
+
     def setEnabled(self, enabled):
         self.enabled = enabled
 
@@ -137,7 +141,7 @@ class Device(Changeable):
             self._markAsChanged("info")
             self.info = info
 
-    def addHopConnection(self, type, vlan, target_mac, target_interface):
+    def addHopConnection(self, type, vlan, target_mac, target_interface, priority = 0):
         self._checkLock()
         if target_mac == self.cache.getGatewayMAC():
             _connections = list(filter(lambda c: c.getTargetMAC() == target_mac, self.hop_connections ))
@@ -168,7 +172,7 @@ class Device(Changeable):
             if type == Connection.WIFI:
                 self.supports_wifi = True
                 
-            self.hop_connections.append(Connection(type, vlan, target_mac, target_interface))
+            self.hop_connections.append(Connection(type, vlan, target_mac, target_interface, priority))
 
         #self.connection = None
         
@@ -237,7 +241,7 @@ class Device(Changeable):
         for _connection in self.getHopConnections():
             processed_hops = { self._getCache().getWanMAC(): True, self._getCache().getGatewayMAC(): True }
             _hop_count = self._getGWHopCount(_connection, 0, processed_hops, processed_devices)
-            if _hop_count >= hop_count:
+            if _hop_count > hop_count or ( _hop_count >= hop_count and _connection.getPriority() > connection.getPriority() ):
                 hop_count = _hop_count
                 connection = _connection
                 

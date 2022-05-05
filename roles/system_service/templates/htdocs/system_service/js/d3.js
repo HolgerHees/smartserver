@@ -295,38 +295,47 @@ mx.D3 = (function( ret )
 
         if( d.data.device.gids.length > 0 )
         {
-            d.data.device.groups.forEach(function(group){
-                if( group && group.type == "wifi"  )
+            let group = null
+            d.data.device.groups.forEach(function(_group){
+                if( _group && _group.type == "wifi"  )
                 {
-                    let interface_stat = d.data.device.interfaceStat;
-                    
-                    // *** Should never happen. Otherwise it is a bug in system_service
-                    /*if( interface_stat == null )
+                    if( group == null || _group.details.band["value"].substring(0,1) > group.details.band["value"].substring(0,1) )
                     {
-                        console.log(d.data.device)
-                        console.log(stats)
-                        return;
-                    }*/
-                    if( interface_stat.details["signal"] )
-                    {
-                        let signal_value = interface_stat.details.signal["value"];
-                        let band_value = group.details.band["value"];
-                        
-                        let offset = 0;//band_value == "2g" ? 0 : 10;
-                        
-                        if( signal_value > -50 - offset ) signal_class = "highest";
-                        else if( signal_value > -67 - offset ) signal_class = "high";
-                        else if( signal_value > -75 - offset ) signal_class = "medium";
-                        else if( signal_value > -85 - offset ) signal_class = "low";
-                        else signal_class = "lowest";
-                        
-                        html += "<div class='details' style='font-size:" + detailsFontSize + "'>";
-                        html += "<div class='top'>" + group.details.ssid["value"] + "</div>";
-                        html += "<div class='bottom'><span class='band c" + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
-                        html += "</div>";
+                        group = _group
                     }
                 }
             });
+            
+            if( group != null )
+            {
+                let interface_stat = d.data.device.interfaceStat;
+                
+                // *** Should never happen. Otherwise it is a bug in system_service
+                /*if( interface_stat == null )
+                {
+                    console.log(d.data.device)
+                    console.log(stats)
+                    return;
+                }*/
+                if( interface_stat.details["signal"] )
+                {
+                    let signal_value = interface_stat.details.signal["value"];
+                    let band_value = group.details.band["value"];
+                    
+                    let offset = 0;//band_value == "2g" ? 0 : 10;
+                    
+                    if( signal_value > -50 - offset ) signal_class = "highest";
+                    else if( signal_value > -67 - offset ) signal_class = "high";
+                    else if( signal_value > -75 - offset ) signal_class = "medium";
+                    else if( signal_value > -85 - offset ) signal_class = "low";
+                    else signal_class = "lowest";
+                    
+                    html += "<div class='details' style='font-size:" + detailsFontSize + "'>";
+                    html += "<div class='top'>" + group.details.ssid["value"] + "</div>";
+                    html += "<div class='bottom'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
+                    html += "</div>";
+                }
+            };
         }  
         else if(root == d )
         {
