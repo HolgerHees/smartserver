@@ -132,8 +132,9 @@ mx.D3 = (function( ret )
         //console.log(width);
         //console.log(maxDepth);
         //console.log(offset);
-        let dy = ( width / maxDepth ) + offset;
-        if( dy > 250 ) dy = 250;
+        //let dy = ( width / maxDepth ) + offset;
+        //if( dy > 250 ) dy = 250;
+        let dy = 250;
 
         d3.tree().nodeSize([dx + 2, dy])(root);
         //d3.tree().size([300, 200])(root);
