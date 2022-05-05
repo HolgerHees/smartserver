@@ -29,7 +29,7 @@ class PortScanner(_handler.Handler):
         self.monitored_devices = {}
         
         self.condition = threading.Condition()
-        self.thread = threading.Thread(target=self.checkPortMap, args=())
+        self.thread = threading.Thread(target=self._checkPortMap, args=())
         
     def start(self):
         self.thread.start()
@@ -39,7 +39,7 @@ class PortScanner(_handler.Handler):
             self.is_running = False
             self.condition.notifyAll()
 
-    def checkPortMap(self):
+    def _checkPortMap(self):
         while self.is_running:
             with self.queue_lock:               
                 while self.is_running and len(self.waiting_queue) > 0 and len(self.running_queue) <= 5:

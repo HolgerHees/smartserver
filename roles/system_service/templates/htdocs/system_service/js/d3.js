@@ -570,7 +570,7 @@ mx.D3 = (function( ret )
                     else connection_data[key] = value;
                 });
 
-                if( interface_stat.traffic )
+                if( interface_stat.traffic["in_avg"] != null || interface_stat.traffic["out_avg"] != null )
                 {
                     let in_data = formatTraffic( interface_stat.traffic["in_avg"], true);
                     let out_data = formatTraffic( interface_stat.traffic["out_avg"], true);

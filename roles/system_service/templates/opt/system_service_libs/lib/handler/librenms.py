@@ -25,7 +25,7 @@ class LibreNMS(_handler.Handler):
         
         self.is_running = True
         
-        self.next_run = {"device": 0, "vlan": 0, "port": 0, "fdb": 0}
+        self.next_run = {}
         
         self.devices = {}
         
@@ -51,20 +51,22 @@ class LibreNMS(_handler.Handler):
     def _checkLibreNMS(self):
         was_suspended = False
 
+        now = datetime.now()
+        self.next_run = {"device": now, "vlan": now, "port": now, "fdb": now}
+        
         while self.is_running:
-            now = datetime.now().timestamp()
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
             events = []
             
-            timeout = 100000000
+            timeout = 9999999999
             
             try:
                 if was_suspended:
                     logging.warning("Resume LibreNMS")
                     was_suspended = False
                 
-                timeout = self._processLibreNMS(now, events, timeout)
+                self._processLibreNMS(events)
             except NetworkException as e:
                 logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
                 if timeout > e.getTimeout():
@@ -81,27 +83,32 @@ class LibreNMS(_handler.Handler):
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
+                
+            now = datetime.now()
+            for next_run in self.next_run.values():
+                diff = (next_run - now).total_seconds()
+                if diff < timeout:
+                    timeout = diff
 
             if timeout > 0:
                 with self.condition:
                     self.condition.wait(timeout)
                     
-    def _processLibreNMS(self, now, events, timeout):
-        if self.next_run["device"] <= now:
-            [timeout, self.next_run["device"]] = self._processDevices(now, events, timeout, self.config.librenms_device_interval)
+    def _processLibreNMS(self, events):
+        if self.next_run["device"] <= datetime.now():
+            self._processDevices(events)
                                         
-        if self.next_run["vlan"] <= now:
-            [timeout, self.next_run["vlan"]] = self._processVLANs(now, events, timeout, self.config.librenms_vlan_interval)
+        if self.next_run["vlan"] <= datetime.now():
+            self._processVLANs(events)
 
-        if self.next_run["port"] <= now:
-            [timeout, self.next_run["port"]] = self._processPorts(now, events, timeout, self.config.librenms_port_interval)
+        if self.next_run["port"] <= datetime.now():
+            self._processPorts(events)
     
-        if self.next_run["fdb"] <= now:               
-            [timeout, self.next_run["fdb"]] = self._processFDP(now, events, timeout, self.config.librenms_fdb_interval)
-            
-        return timeout
+        if self.next_run["fdb"] <= datetime.now():               
+            self._processFDP(events)
 
-    def _processDevices(self, now, events, global_timeout, call_timeout):
+    def _processDevices(self, events):
+        self.next_run["device"] = datetime.now() + timedelta(seconds=self.config.librenms_device_interval)
         
         _device_json = self._get("devices")
         _devices = json.loads(_device_json)["devices"]
@@ -162,13 +169,10 @@ class LibreNMS(_handler.Handler):
                     del self.device_ports[id]
                         
             self.cache.unlock(self)
-            
-        if global_timeout > call_timeout:
-            global_timeout = call_timeout
-
-        return [global_timeout, now]
                 
-    def _processVLANs(self, now, events, global_timeout, call_timeout):
+    def _processVLANs(self, events):
+        self.next_run["vlan"] = datetime.now() + timedelta(seconds=self.config.librenms_vlan_interval)
+
         _vlan_json = self._get("resources/vlans")
         _vlans = json.loads(_vlan_json)["vlans"]
         
@@ -180,19 +184,16 @@ class LibreNMS(_handler.Handler):
         for vlan_id in list(self.vlan_id_map.keys()):
             if vlan_id not in _active_vlan_ids:
                 del self.vlan_id_map[vlan_id]
-
-        if global_timeout > call_timeout:
-            global_timeout = call_timeout
-
-        return [global_timeout, now]
     
-    def _processPorts(self, now, events, global_timeout, call_timeout):    
+    def _processPorts(self, events):    
+        self.next_run["port"] = datetime.now() + timedelta(seconds=self.config.librenms_port_interval)
+
         _ports_json = self._get("ports?columns=device_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
         _ports = json.loads(_ports_json)["ports"]
 
         for _port in _ports:
             if _port["device_id"] not in self.devices:
-                [global_timeout, self.next_run["device"]] = self._processDevices(now, events, global_timeout, self.config.librenms_device_interval)
+                self._processDevices(events)
                 for __port in _ports:
                     if __port["device_id"] not in self.devices:
                         raise Exception("Missing device {}".format(__port["device_id"]))
@@ -200,6 +201,8 @@ class LibreNMS(_handler.Handler):
             
         if _ports or self.device_ports:
             self.cache.lock(self)
+
+            now = datetime.now()
 
             _active_ports_ids = []
             for _port in _ports:
@@ -212,7 +215,7 @@ class LibreNMS(_handler.Handler):
                 
                 stat = self.cache.getConnectionStat(mac, port_ifname)
                 if port_id in self.device_ports[device_id]:
-                    time_diff = (now - self.device_ports[device_id][port_id]["refreshed"])
+                    time_diff = (now - self.device_ports[device_id][port_id]["refreshed"]).total_seconds()
                     time_diff_slot = math.ceil(time_diff / self.config.librenms_poller_interval)
                     time_diff = time_diff_slot * self.config.librenms_poller_interval
                     
@@ -247,19 +250,16 @@ class LibreNMS(_handler.Handler):
                         del self.port_id_ifname_map[device_id][port_id]
                         
             self.cache.unlock(self)
-            
-        if global_timeout > call_timeout:
-            global_timeout = call_timeout
-
-        return [global_timeout, now + call_timeout]
     
-    def _processFDP(self, now, events, global_timeout, call_timeout):        
+    def _processFDP(self, events):        
+        self.next_run["fdb"] = datetime.now() + timedelta(seconds=self.config.librenms_fdb_interval)
+
         _connected_arps_json = self._get("resources/fdb")
         _connected_arps = json.loads(_connected_arps_json)["ports_fdb"]
         
         for _connected_arp in _connected_arps:
             if _connected_arp["vlan_id"] not in self.vlan_id_map:
-                [timeout, self.next_run["vlan"]] = self._processVLANs(now, events, timeout, self.config.librenms_vlan_interval)
+                self._processVLANs(events)
                 for __connected_arp in _connected_arps:
                     if __connected_arp["vlan_id"] not in self.vlan_id_map:
                         raise Exception("Missing vlan {}".format(__connected_arp["vlan_id"]))
@@ -285,11 +285,13 @@ class LibreNMS(_handler.Handler):
                     continue
                 
                 device = self.cache.getUnlockedDevice(mac)
-                if device is not None:
-                    device.lock(self)
-                    device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
-                    
+                if device is None:
+                    continue
+                
+                device.lock(self)
+                device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
+                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                
                 _active_connected_macs.append(mac)
                 self.connected_macs[device_id][mac] = {"vlan": vlan, "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface}
 
@@ -307,11 +309,6 @@ class LibreNMS(_handler.Handler):
                         del self.connected_macs[device_id][mac]
             
             self.cache.unlock(self)
-            
-        if global_timeout > call_timeout:
-            global_timeout = call_timeout
-
-        return [global_timeout, now + call_timeout]
     
     def _get(self,call):
         headers = {'X-Auth-Token': self.config.librenms_token}

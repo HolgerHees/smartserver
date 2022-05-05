@@ -240,7 +240,7 @@ class ArpScanner(_handler.Handler):
         self.registered_devices = {}
 
         self.condition = threading.Condition()
-        self.thread = threading.Thread(target=self.checkArpTable, args=())
+        self.thread = threading.Thread(target=self._checkArpTable, args=())
         
     def start(self):
         self.thread.start()
@@ -259,7 +259,7 @@ class ArpScanner(_handler.Handler):
             self.is_running = False
             self.condition.notifyAll()
             
-    def checkArpTable(self):
+    def _checkArpTable(self):
         server_mac = "00:00:00:00:00:00"
         try:
             with open("/sys/class/net/{}/address".format(self.config.main_interface), 'r') as f:
