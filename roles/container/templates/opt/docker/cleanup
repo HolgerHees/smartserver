@@ -65,11 +65,11 @@ for line in lines[0:-1]:
     obj = json.loads(line[1:-1])
     
     created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
-    image = Image(obj["ID"],obj["Repository"],obj["Tag"],created)
+    image = Image(obj["ID"],obj["Repository"] if obj["Repository"] else obj["ID"],obj["Tag"],created)
     if image.name not in images:
         images[image.name] = []
     images[image.name].append(image)
-    
+
 cleaned = False
 
 for name in sorted(images):
