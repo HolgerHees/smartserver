@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 
-import subprocess
 import json
 import sys
 from datetime import datetime
 
 from config import config
+
+from smartserver import command
+
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %Z'
 
@@ -37,7 +39,7 @@ if len(sys.argv) >= 2:
 
 # Collect Images used in Dockerfiles
 build_images = {}
-result = execCommand("grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD))
+result = command.exec(["grep -RPo \"^FROM [^ ]*\" {}*/Dockerfile".format(config.GLOBAL_BUILD) ] , shell=True)
 lines = result.stdout.decode("utf-8").split("\n")
 for line in lines[0:-1]:
     columns = line.split()
@@ -45,10 +47,10 @@ for line in lines[0:-1]:
 
 # Collect Images used in Containers
 containers = {}
-result = execCommand("docker ps -a --format '{{json .}}'")
+result = command.exec(["docker", "ps", "-a", "--format", "'{{json .}}'"])
 lines = result.stdout.decode("utf-8").split("\n")
 for line in lines[0:-1]:
-    obj = json.loads(line)
+    obj = json.loads(line[1:-1])
     
     container = Container(obj["ID"],obj["Names"],obj["Image"])
     if container.image not in containers:
@@ -57,11 +59,10 @@ for line in lines[0:-1]:
 
 # Collect all Images
 images = {}
-result = execCommand("docker image list --format '{{json .}}'")
+result = command.exec(["docker", "image", "list", "--format", "'{{json .}}'"])
 lines = result.stdout.decode("utf-8").split("\n")
 for line in lines[0:-1]:
-    #print(line)
-    obj = json.loads(line)
+    obj = json.loads(line[1:-1])
     
     created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
     image = Image(obj["ID"],obj["Repository"],obj["Tag"],created)
@@ -90,7 +91,7 @@ for name in sorted(images):
         
         cleaned = True
 
-        execCommand("docker image rm {}".format(image_version.id))
+        command.exec(["docker", "image", "rm", "{}".format(image_version.id)])
       
 if is_quite and not cleaned:
     print(u"No images deleted")
