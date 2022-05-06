@@ -31,7 +31,7 @@ class ConnectionStatDetails(Changeable):
             self.setInSpeed(0)
         if self.out_speed is not None:
             self.setOutSpeed(0)
-        for key in self._getDetails():
+        for key in list(self._getDetails()):
             self.removeDetail(key)
 
     def getInBytes(self):
