@@ -34,6 +34,7 @@ cache_ip_mac_revalidation_interval = 900
 
 arp_scan_interval = 60
 arp_offline_device_timeout = 60
+arp_offline_device_check_timeout = 900
 arp_clean_device_timeout = 60 * 60 * 24 * 7
 
 openwrt_network_interval = 900

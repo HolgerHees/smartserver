@@ -378,28 +378,30 @@ class ArpScanner(_handler.Handler):
         if self.registered_devices[mac] is not None:
             return
         
-        if stat.isOnline() and (now - stat.getLastSeen()).total_seconds() > self.config.arp_offline_device_timeout:
-            # last check, if the device is really offline
-            device = self.cache.getUnlockedDevice(mac)
-            if device is not None and device.getIP() is not None:
-                startTime = datetime.now()
-                methods = ["arping"]
-                is_success = Helper.arpping(device.getIP(), device.getMAC(), self.config.main_interface, 2)
-                if not is_success:
-                    methods.append("ping")
-                    is_success = Helper.ping(device.getIP(), device.getMAC(), self.config.main_interface)
+        last_seen_diff = (now - stat.getLastSeen()).total_seconds()
+        if last_seen_diff > self.config.arp_offline_device_timeout:
+            if last_seen_diff < self.config.arp_offline_device_check_timeout:
+                # last check, if the device is really offline
+                device = self.cache.getUnlockedDevice(mac)
+                if device is not None and device.getIP() is not None:
+                    startTime = datetime.now()
+                    methods = ["arping"]
+                    is_success = Helper.arpping(device.getIP(), device.getMAC(), self.config.main_interface, 2)
+                    if not is_success:
+                        methods.append("ping")
+                        is_success = Helper.ping(device.getIP(), device.getMAC(), self.config.main_interface)
 
-                duration = round((datetime.now() - startTime).total_seconds(),2)
-                logging.info("Device {} checked with {} in {} seconds".format(device," & ".join(methods),duration))
-                if is_success:
-                    self._refreshDevice(device, events)
-                    return
-                else:
-                    # check if there is another device with the same IP
-                    similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
-                    if len(similarDevices) > 0:
-                        self._removeDevice(mac, events)
+                    duration = round((datetime.now() - startTime).total_seconds(),2)
+                    logging.info("Device {} checked with {} in {} seconds".format(device," & ".join(methods),duration))
+                    if is_success:
+                        self._refreshDevice(device, events)
                         return
+                    else:
+                        # check if there is another device with the same IP
+                        similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
+                        if len(similarDevices) > 0:
+                            self._removeDevice(mac, events)
+                            return
             
             stat.lock(self)
             stat.setOnline(False)
