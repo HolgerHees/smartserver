@@ -140,9 +140,10 @@ class MQTTPublisher(_handler.Handler):
             for detail in _details:
                 #if detail == "signal":
                 #    self.mqtt_handler.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
-                if detail in ["wan_type","wan_state"] and stat.getDetail(detail) is not None:
-                    topic = "network/{}/{}".format(device.getIP(),detail)
-                    _to_publish[detail] = [detail,topic,stat.getDetail(detail)]
+                for data in stat.getDataList():
+                    if detail in ["wan_type","wan_state"] and data.getDetail(detail) is not None:
+                        topic = "network/{}/{}".format(device.getIP(),detail)
+                        _to_publish[detail] = [detail,topic,data.getDetail(detail)]
                 
         if len(_to_publish.values()) == 0:
             return False

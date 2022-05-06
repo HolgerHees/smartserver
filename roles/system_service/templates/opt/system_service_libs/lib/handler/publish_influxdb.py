@@ -53,26 +53,26 @@ class InfluxDBPublisher(_handler.Handler):
             if device is None or device.getIP() is None:
                 continue
             
-            if device.supportsWifi():
+            inAvg = None
+            outAvg = None
+            for data in stat.getDataList():
+                if device.supportsWifi() and data.getDetail("signal") is not None:
+                    messurements.append("network_signal,ip={},band={} value={}".format(device.getIP(),data.getConnectionDetail("band"), data.getDetail("signal")))
+                if data.getInAvg() is not None:
+                    if inAvg is None:
+                        inAvg = 0
+                    inAvg += data.getInAvg()
+                if data.getOutAvg() is not None:
+                    if outAvg is None:
+                        outAvg = 0
+                    outAvg += data.getOutAvg()
                 
-                band = "none"
-                for gid in device.getGIDs():
-                    group = self.cache.getUnlockedGroup(gid)
-                    if group is not None and group.getType() == Group.WIFI:
-                        band = group.getDetail("band")
-                
-                if stat.getDetail("signal") is not None:
-                    messurement = "network_signal,ip={},band={} value={}".format(device.getIP(),band,stat.getDetail("signal"))
-                else:
-                    messurement = "network_signal,ip={},band={} value=0".format(device.getIP(),band)
-                messurements.append(messurement)
-                
-            if stat.getInAvg() is not None or stat.getOutAvg() is not None:
-                if stat.getInAvg() is not None:
-                    messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),stat.getInAvg()))
-                if stat.getOutAvg() is not None:
-                    messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),stat.getOutAvg()))
-                messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),stat.getInAvg() + stat.getOutAvg()))
+            if inAvg is not None or outAvg is not None:
+                if inAvg is not None:
+                    messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),inAvg))
+                if outAvg is not None:
+                    messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),outAvg))
+                messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),inAvg + outAvg))
                 
         return messurements
 

@@ -294,59 +294,56 @@ mx.D3 = (function( ret )
 
         html += "<div class='state " + ( d.data.device.isOnline ? "online" : "offline" ) + "'></div>";
 
-        if( d.data.device.gids.length > 0 )
+        if( d.data.device.groups.length > 0 && d.data.device.interfaceStat )
         {
-            let group = null
-            d.data.device.groups.forEach(function(_group){
-                if( _group && _group.type == "wifi"  )
+            let group = null;
+            let stat = null;
+            
+            d.data.device.groups.forEach(function(_group)
+            {
+                if( group == null || group.details.priority["value"] < _group.details.priority["value"] )
                 {
-                    if( group == null || _group.details.band["value"].substring(0,1) > group.details.band["value"].substring(0,1) )
-                    {
-                        group = _group
-                    }
+                    group = _group;
                 }
             });
-            
+
             if( group != null )
             {
-                let interface_stat = d.data.device.interfaceStat;
-                
-                // *** Should never happen. Otherwise it is a bug in system_service
-                /*if( interface_stat == null )
-                {
-                    console.log(d.data.device)
-                    console.log(stats)
-                    return;
-                }*/
-                if( interface_stat.details["signal"] )
-                {
-                    let signal_value = interface_stat.details.signal["value"];
-                    let band_value = group.details.band["value"];
-                    
-                    let offset = 0;//band_value == "2g" ? 0 : 10;
-                    
-                    if( signal_value > -50 - offset ) signal_class = "highest";
-                    else if( signal_value > -67 - offset ) signal_class = "high";
-                    else if( signal_value > -75 - offset ) signal_class = "medium";
-                    else if( signal_value > -85 - offset ) signal_class = "low";
-                    else signal_class = "lowest";
-                    
-                    html += "<div class='details' style='font-size:" + detailsFontSize + "'>";
-                    html += "<div class='top'>" + group.details.ssid["value"] + "</div>";
-                    html += "<div class='bottom'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
-                    html += "</div>";
-                }
-            };
-        }  
-        else if(root == d )
-        {
-            let interface_stat = d.data.device.interfaceStat;
-            if( interface_stat && interface_stat.details["wan_state"])
+                let _stat = d.data.device.interfaceStat.data.filter(data => data["connection_details"]["band"] == group.details.band["value"]);
+                if( _stat.length > 0)
+                    stat = _stat[0];
+            }
+            
+            if( group && stat && stat.details["signal"] )
             {
+                let signal_value = stat.details.signal["value"];
+                let band_value = group.details.band["value"];
+                
+                let offset = 0;//band_value == "2g" ? 0 : 10;
+                
+                if( signal_value > -50 - offset ) signal_class = "highest";
+                else if( signal_value > -67 - offset ) signal_class = "high";
+                else if( signal_value > -75 - offset ) signal_class = "medium";
+                else if( signal_value > -85 - offset ) signal_class = "low";
+                else signal_class = "lowest";
+                
                 html += "<div class='details' style='font-size:" + detailsFontSize + "'>";
-                html += "<div class='top'>&nbsp;</div><div class='bottom'>WAN: " + interface_stat.details["wan_state"]["value"] + "</div>";
+                html += "<div class='top'>" + group.details.ssid["value"] + "</div>";
+                html += "<div class='bottom'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
                 html += "</div>";
             }
+        }  
+        else if(root == d  && d.data.device.interfaceStat)
+        {
+            d.data.device.interfaceStat.data.forEach(function(data)
+            {
+                if( data.details["wan_state"])
+                {
+                    html += "<div class='details' style='font-size:" + detailsFontSize + "'>";
+                    html += "<div class='top'>&nbsp;</div><div class='bottom'>WAN: " + data.details["wan_state"]["value"] + "</div>";
+                    html += "</div>";
+                }
+            });
         }
         
         html += "</div>";
@@ -372,13 +369,20 @@ mx.D3 = (function( ret )
             }
         }
             
-        let interface_stat = d.data.device.interfaceStat;
-        if( !interface_stat || !interface_stat.traffic) return;
-       
-        let row = 0;
+        if( !d.data.device.interfaceStat ) return;
         
-        let in_data = formatTraffic( interface_stat.traffic["in_avg"], false);
-        let out_data = formatTraffic( interface_stat.traffic["out_avg"], false);
+        let in_data = 0;
+        let out_data = 0;
+        d.data.device.interfaceStat.data.forEach(function(data)
+        {
+            if( data.traffic )
+            {
+                in_data += data.traffic["in_avg"];
+                out_data += data.traffic["out_avg"];
+            }
+        });
+        in_data = formatTraffic( in_data, false);
+        out_data = formatTraffic( out_data, false);
         
         let offset = in_data && out_data  ? font_size * 0.1 : font_size * 0.9;
         
@@ -483,8 +487,7 @@ mx.D3 = (function( ret )
         let html = "<div>";
         if( device.ip ) 
         {
-            let interface_stat = device.interfaceStat;
-            let has_traffic = interface_stat && interface_stat.traffic.in_avg !== null;
+            let has_traffic = device.interfaceStat && device.interfaceStat.data.filter(d => d.traffic && d.traffic.in_avg !== null).length > 0;
             let has_wifi = device.connection["type"] == "wifi";
             
             html += "<div><div>IP:</div><div";
@@ -526,77 +529,101 @@ mx.D3 = (function( ret )
     
         html += showRows(device.details,"Details","rows");
 
-        services = {}
+        services = [];
         Object.entries(device.services).forEach(function([key, value])
         {
-            if( value == "http" ) value = {"value": value, "link": "http://" + device.dns };
-            else if( value == "https" ) value = {"value": value, "link": "https://" + device.dns };
-            
-            services[key] = value;
+            row = { "name": key, "value": value };
+            if( value == "http" ) row["link"] = "http://" + device.dns;
+            else if( value == "https" ) row["link"] = "https://" + device.dns;
+            services.push( row );
         });
         
         html += showRows(services,"Services","rows");
         //html += showRows(device.ports,"Ports","rows");
         
-        connection_data = {}
-        wan_data = {}
-
         if( device.connection )
         {
-            if( device.connection["vlans"] )
-                connection_data["Vlan"] = "" + device.connection["vlans"];
+            connection_data = []
+
             if( device.connection["target_interface"] && device.connection["type"] != "wifi" )
-                connection_data["Port"] = device.connection["target_interface"];
+                connection_data.push( { "name": "Port", "value": device.connection["target_interface"] } );
             else
-                connection_data["Port"] = "Wifi";
+                connection_data.push( { "name": "Port", "value": "Wifi" } );
             
+            let vlans = [];
+            device.connection["details"].forEach(function(details)
+            {   
+                if( details == null )
+                    console.log(device);
+                
+                if( details["vlan"] )
+                    vlans.push(details["vlan"]);
+            });
+            
+            if( vlans.length > 0 )
+                connection_data.push( { "name": "Vlan", "value": vlans.join(",") } );
+            
+            html += showRows(connection_data,"Network","rows");
+
+            wan_data = []
+
             let interface_stat = device.interfaceStat;
             if( interface_stat )
             {
-                if( interface_stat["speed"] )
+                interface_stat.data.forEach(function(data, i)
                 {
-                    let inSpeed = interface_stat["speed"]["in"];
-                    let outSpeed = interface_stat["speed"]["out"];
+                    connection_data = []
                     
-                    if( inSpeed != null )
+                    if( data.traffic["in_avg"] != null || data.traffic["out_avg"] != null )
                     {
-                        let duplex = "";
-                        if( "duplex" in interface_stat["details"] )
-                        {
-                            duplex += " - " + ( interface_stat["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
-                        }
-                        
-                        connection_data["Speed"] = { "value": formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex };
+                        let in_data = formatTraffic( data.traffic["in_avg"], true);
+                        let out_data = formatTraffic( data.traffic["out_avg"], true);
+                        connection_data.push( { "name": "Traffic", "value": "⇨ " + in_data + ", ⇦ " + out_data } );
                     }
-                }
 
-                Object.entries(interface_stat["details"]).forEach(function([key, value])
-                {
-                    if( key == "duplex" )
-                        return;
-                                           
-                    if( key == "wan_type" ) wan_data["type"] = value;
-                    else if( key == "wan_state" ) wan_data["state"] = value;
-                    else connection_data[key] = value;
+                    if( data["speed"] )
+                    {
+                        let inSpeed = data["speed"]["in"];
+                        let outSpeed = data["speed"]["out"];
+                        
+                        if( inSpeed != null )
+                        {
+                            let duplex = "";
+                            if( "duplex" in data["details"] )
+                            {
+                                duplex += " - " + ( data["details"]["duplex"]["value"] == "full" ? "FullDuplex" : "HalfDuplex" );
+                            }
+                            
+                            connection_data.push( { "name": "Speed", "value": formatSpeed(inSpeed) + (inSpeed == outSpeed ? '' : ' RX / ' + formatSpeed(outSpeed) + " TX" ) + duplex } );
+                        }
+                    }
+
+                    Object.entries(data["details"]).forEach(function([key, value])
+                    {
+                        if( key == "duplex" )
+                            return;
+                                            
+                        if( key == "wan_type" ) wan_data.push( { "name": "type", "value": value["value"], "format": value["format"] } );
+                        else if( key == "wan_state" ) wan_data.push( { "name": "state", "value": value["value"], "format": value["format"] } );
+                        else connection_data.push( { "name": key, "value": value["value"], "format": value["format"] } );
+                    });
+
+                    if( data["connection_details"] && data["connection_details"]["band"] )
+                    {
+                        let group = device.groups.filter(group => group.details.band["value"] == data["connection_details"]["band"] );
+                        Object.entries(group[0]["details"]).forEach(function([key,value])
+                        {
+                            connection_data.push( { "name": key, "value": value["value"], "format": value["format"] });
+                        });
+                    }
+                    
+                    connection_data.unshift("<div class='connector'></div>");
+                    html += showRows(connection_data,null,"rows socket");
                 });
-
-                if( interface_stat.traffic["in_avg"] != null || interface_stat.traffic["out_avg"] != null )
-                {
-                    let in_data = formatTraffic( interface_stat.traffic["in_avg"], true);
-                    let out_data = formatTraffic( interface_stat.traffic["out_avg"], true);
-                    connection_data["Traffic"] = { "value": "⇨ " + in_data + ", ⇦ " + out_data };
-                }
             }
         }
         
-
-        
-        html += showRows(connection_data,"Network","rows");
         html += showRows(wan_data,"Wan","rows");
-
-        device.groups.forEach(function(group){
-            html += showRows(group["details"],group["type"],"rows");
-        });
 
         if( device_stat )
         {
@@ -721,42 +748,55 @@ mx.D3 = (function( ret )
         return format_zero ? "0 KB/s" : null;
     }
 
-    function formatDetails(key, value)
+    function formatName(name)
     {
-        if( ["ssid"].indexOf(key) != -1 )
+        if( name == "ssid" )
         {
-                key = key.toUpperCase()
+            name = name.toUpperCase()
         }
         else
         {
-                key = capitalizeFirstLetter(key);
+            name = capitalizeFirstLetter(name);
         }
         
-        return [key, value]
+        return name;
     }
     
     function showRows(rows, name, cls)
     {
-        let html = '';
-        if( Object.entries(rows).length > 0)
+        if( !Array.isArray(rows) )
         {
-            html += "<div><div>" + capitalizeFirstLetter(name) + ":</div><div class='" + cls + "'><div>";
+            let _rows = [];
             Object.entries(rows).forEach(function([key, value])
             {
-                [key, value] = formatDetails(key, value)
-
-                if( !(value && typeof( value ) == "object") ) value = {"value": value}
-
-                let _value = value["value"];
-                if( value["format"] == "attenuation" ) 
-                    _value += " db";
-                
-                html += "<div";
-                
-                if( value["link"] )
-                    html += " class=\"link\" onclick=\"window.open('" + value["link"] + "', '_blank')\"";
-                
-                html += "><div>" + key + "</div><div>" + _value + "</div></div>";
+                _rows.push({"name": key, "value": value});
+            });
+            rows = _rows;
+        }
+        
+        let html = '';
+        if( rows.length > 0)
+        {
+            html += "<div><div>" + ( name ? capitalizeFirstLetter(name) + ":" : "" ) + "</div><div class='" + cls + "'><div>";
+            rows.forEach(function(row)
+            {
+                if( typeof(row) == "string" )
+                {
+                    html += row;
+                }
+                else if( row["format"] != "hidden" )
+                {
+                    name = formatName(row["name"]);
+                    value = row["value"];
+                    if( row["format"] == "attenuation" ) 
+                        value += " db";
+                    html += "<div";
+                    
+                    if( row["link"] )
+                        html += " class=\"link\" onclick=\"window.open('" + row["link"] + "', '_blank')\"";
+                    
+                    html += "><div>" + name + "</div><div>" + value + "</div></div>";
+                }
             });
             html += "</div></div></div>";
         }

@@ -15,6 +15,19 @@ body, svg {
 .tooltip div.rows > div > div {
     display: table-row;
 }
+.tooltip div.rows.socket {
+    position: relative;
+}
+.tooltip div.rows.socket .connector {
+    position: absolute;
+    left: -5px;
+    top: 2px;
+    bottom: 2px;
+    width: 10px;
+    border-left: 1px solid var(--content-text);
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
 .tooltip span.text > div > div > div,
 .tooltip div.rows > div > div > div {
     display: table-cell;

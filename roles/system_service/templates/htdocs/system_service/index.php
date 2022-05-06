@@ -130,8 +130,8 @@ mx.UNCore = (function( ret ) {
 
     function processData(data)
     {
-        //console.log(data);
-        
+        //console.log(rootNode);
+
         if( data.hasOwnProperty("root") ) root_device_mac = data["root"];
         
         // **** PROCESS DEVICES ****
@@ -238,6 +238,8 @@ mx.UNCore = (function( ret ) {
             });
             device["groups"] = _groups;
         });
+        
+        //console.log(stats);
         
         if( rootNode == null )
         {

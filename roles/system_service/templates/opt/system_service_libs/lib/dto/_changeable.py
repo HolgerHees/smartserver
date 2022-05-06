@@ -7,7 +7,7 @@ class Changeable():
     NEW = 3
     DELETED = 4
     
-    def __init__(self, cache):
+    def __init__(self, cache, locked = False):
         self.is_created = True
         self.is_changed_raw = []
         self.is_changed_details = []
@@ -16,7 +16,7 @@ class Changeable():
         
         self.cache = cache
         
-        self._lock = False
+        self._lock = locked
         self._lock_owner = None
         
         self.priorized_data = {}
@@ -61,17 +61,19 @@ class Changeable():
                 return True
         return False
 
-    def setDetail(self, key, value, fmt):
-        if key not in self.details or self.details[key]["value"] != value:
-            self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
-            self.details[key] = { "value": value, "format": fmt }
-        
     def getDetail(self, key):
         if key in self.details:
             return self.details[key]["value"]
         return None
 
+    def setDetail(self, key, value, fmt):
+        self._checkLock()
+        if key not in self.details or self.details[key]["value"] != value:
+            self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
+            self.details[key] = { "value": value, "format": fmt }
+        
     def removeDetail(self, key):
+        self._checkLock()
         if key in self.details:
             self._markAsChanged(key, "remove {}".format(key))
             del self.details[key]

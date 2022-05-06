@@ -214,28 +214,29 @@ class LibreNMS(_handler.Handler):
                 self.port_id_ifname_map[device_id][port_id] = port_ifname
                 
                 stat = self.cache.getConnectionStat(mac, port_ifname)
+                stat_data = stat.getData()
                 if port_id in self.device_ports[device_id]:
                     time_diff = (now - self.device_ports[device_id][port_id]["refreshed"]).total_seconds()
                     time_diff_slot = math.ceil(time_diff / self.config.librenms_poller_interval)
                     time_diff = time_diff_slot * self.config.librenms_poller_interval
                     
-                    in_bytes = stat.getInBytes()
+                    in_bytes = stat_data.getInBytes()
                     if in_bytes is not None:
                         in_diff = _port["ifInOctets"] - in_bytes
                         if in_diff > 0 or time_diff > self.config.librenms_poller_interval * 2:
-                            stat.setInAvg(in_diff / time_diff)
+                            stat_data.setInAvg(in_diff / time_diff)
 
-                    out_bytes = stat.getOutBytes()
+                    out_bytes = stat_data.getOutBytes()
                     if out_bytes is not None:
                         out_diff = _port["ifOutOctets"] - out_bytes
                         if out_diff > 0 or time_diff > self.config.librenms_poller_interval * 2:
-                            stat.setOutAvg(out_diff / time_diff)
+                            stat_data.setOutAvg(out_diff / time_diff)
 
-                stat.setInBytes(_port["ifInOctets"])
-                stat.setOutBytes(_port["ifOutOctets"])
-                stat.setInSpeed(_port["ifSpeed"])
-                stat.setOutSpeed(_port["ifSpeed"])
-                stat.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half", "string")
+                stat_data.setInBytes(_port["ifInOctets"])
+                stat_data.setOutBytes(_port["ifOutOctets"])
+                stat_data.setInSpeed(_port["ifSpeed"])
+                stat_data.setOutSpeed(_port["ifSpeed"])
+                stat_data.setDetail("duplex", "full" if _port["ifDuplex"] == "fullDuplex" else "half", "string")
                 self.cache.confirmStat( stat, lambda event: events.append(event) )
                     
                 _active_ports_ids.append("{}-{}".format(device_id, port_id))
@@ -285,25 +286,23 @@ class LibreNMS(_handler.Handler):
                     continue
                 
                 device = self.cache.getUnlockedDevice(mac)
-                if device is None:
-                    continue
-                
-                device.lock(self)
-                device.addHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface );
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                if device is not None:
+                    device.lock(self)
+                    device.addHopConnection(Connection.ETHERNET, target_mac, target_interface, { "vlan": vlan } );
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
                 _active_connected_macs.append(mac)
-                self.connected_macs[device_id][mac] = {"vlan": vlan, "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface}
+                self.connected_macs[device_id][mac] = { "source_mac": mac, "target_mac": target_mac, "target_interface": target_interface, "details": { "vlan": vlan } }
 
             for device_id in self.connected_macs:
                 for mac in list(self.connected_macs[device_id].keys()):
                     if mac not in _active_connected_macs:
-                        vlan = self.connected_macs[device_id][mac]["vlan"]
+                        details = self.connected_macs[device_id][mac]["details"]
                         target_mac = self.connected_macs[device_id][mac]["target_mac"]
                         target_interface = self.connected_macs[device_id][mac]["target_interface"]
                         
                         device = self.cache.getDevice(mac)
-                        device.removeHopConnection(Connection.ETHERNET, vlan, target_mac, target_interface)
+                        device.removeHopConnection(Connection.ETHERNET, target_mac, target_interface, details)
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                         del self.connected_macs[device_id][mac]
@@ -344,7 +343,7 @@ class LibreNMS(_handler.Handler):
             self.cache.lock(self)
             for connection_data in unprocessed_connections:
                 device = self.cache.getDevice(connection_data["source_mac"])
-                device.addHopConnection(Connection.ETHERNET, connection_data["vlan"], connection_data["target_mac"], connection_data["target_interface"] );
+                device.addHopConnection(Connection.ETHERNET, connection_data["target_mac"], connection_data["target_interface"], connection_data["details"] );
                 self.cache.confirmDevice( device, lambda event: _events.append(event) )
             self.cache.unlock(self)
             

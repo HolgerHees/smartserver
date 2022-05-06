@@ -192,6 +192,7 @@ class Fritzbox(_handler.Handler):
                 group.setDetail("ssid", network["ssid"], "string")
                 group.setDetail("band", network["band"], "string")
                 group.setDetail("channel", network["channel"], "string")
+                group.setDetail("priority", network["priority"], "hidden")
                 self.cache.confirmGroup(group, lambda event: events.append(event))
                         
             for gid in list(self.wifi_networks[fritzbox_ip].keys()):
@@ -228,7 +229,7 @@ class Fritzbox(_handler.Handler):
                     logging.warning(self.dhcp_clients[fritzbox_ip].keys())
                     logging.warning("No mac found for {} - {}".format(node_uid,node_macs))
                 else:
-                    mesh_hops[node_uid] = main_node_mac
+                    mesh_hops[node_uid] = [main_node_mac,mesh_type]
                     
         _active_associations = []
         for node in topologie["nodes"]:
@@ -238,46 +239,56 @@ class Fritzbox(_handler.Handler):
                 if node_interface["type"] != "WLAN":
                     continue
 
+                if node_uid in mesh_hops and node_interface["opmode"] != "REPEATER":
+                    continue
+
                 for node_link in node_interface["node_links"]:
-                    if node_link["node_2_uid"] == node_uid and node_link["node_1_uid"] in mesh_hops:
-                        
-                        source_mac = mesh_hops[node_link["node_2_uid"]] if node_link["node_2_uid"] in mesh_hops else node_interface["mac_address"].lower()
-                        target_mac = mesh_hops[node_link["node_1_uid"]]
+                    
+                    flip = node_link["node_1_uid"] == node_uid
+                    source_key = "node_1_uid" if flip else "node_2_uid"
+                    target_key = "node_2_uid" if flip else "node_1_uid"
+
+                    if node_link[target_key] in mesh_hops:
+                        source_mac = mesh_hops[node_link[source_key]][0] if node_link[source_key] in mesh_hops else node_interface["mac_address"].lower()
+                        target_mac = mesh_hops[node_link[target_key]][0]
                         target_interface = source_mac
                         wifi_network = node_link_wifi_map[node_link["uid"]]
                         vlan = wifi_network["vlan"]
+                        band = wifi_network["band"]
                         gid = wifi_network["gid"]
-                        priority = wifi_network["priority"]
                         
-                        device = self.cache.getDevice(source_mac)
-                        device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
-                        device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface, priority);
-                        device.addGID(gid)
-                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+                        device = self.cache.getUnlockedDevice(source_mac)
+                        if device is not None:
+                            connection_details = { "vlan": vlan, "band": band }
+                            
+                            device.lock(self)
+                            device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
+                            device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
+                            device.addGID(gid)
+                            self.cache.confirmDevice( device, lambda event: events.append(event) )
+                            self.wifi_clients[fritzbox_ip][source_mac] = True
                         
-                        stat = self.cache.getConnectionStat(target_mac,target_interface)
-                        stat.setInSpeed(node_link["cur_data_rate_rx"] * 1000)
-                        stat.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
-                        stat.setDetail("signal", node_link["rx_rcpi"], "attenuation")
-                        self.cache.confirmStat( stat, lambda event: events.append(event) )
+                            stat = self.cache.getConnectionStat(target_mac,target_interface)
+                            stat_data = stat.getData(connection_details)
+                            stat_data.setInSpeed(node_link["cur_data_rate_rx"] * 1000)
+                            stat_data.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
+                            stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
+                            self.cache.confirmStat( stat, lambda event: events.append(event) )
 
                         self.wifi_associations[fritzbox_ip][source_mac] = [ source_mac, gid, vlan, target_mac, target_interface ]
                         _active_associations.append(source_mac)
               
-        now = datetime.now().timestamp()
-        wifi_clients = {}
         for [ source_mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[fritzbox_ip].values()):
             if source_mac not in _active_associations:
-                device = self.cache.getDevice(mac)
+                device = self.cache.getDevice(source_mac)
                 device.removeGID(gid);
                 # **** connection cleanup and stats cleanup happens in cleanDisabledHobConnection ****
                 device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
                 del self.wifi_associations[fritzbox_ip][source_mac]
-            else:
-                wifi_clients[source_mac] = now
-        self.wifi_clients[fritzbox_ip] = wifi_clients
+                if source_mac in self.wifi_clients[fritzbox_ip]:
+                    del self.wifi_clients[fritzbox_ip][source_mac]
             
         self.cache.unlock(self)
                 
@@ -402,59 +413,61 @@ class Fritzbox(_handler.Handler):
             fritzbox_device = self.cache.getDevice(fritzbox_mac)
             fritzbox_device.setIP("fritzbox", 100, fritzbox_ip)
             if fritzbox_mac == self.cache.getGatewayMAC():
-                fritzbox_device.addHopConnection(Connection.ETHERNET, self.config.default_vlan, self.cache.getWanMAC(), self.cache.getWanInterface() );
+                fritzbox_device.addHopConnection(Connection.ETHERNET, self.cache.getWanMAC(), self.cache.getWanInterface() );
             self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
         
-        stat = self.cache.getConnectionStat(fritzbox_mac, self.cache.getGatewayInterface(self.config.default_vlan))
+        stat = self.cache.getConnectionStat(fritzbox_mac, self.cache.getGatewayInterface(self.config.default_vlan) )
+        stat_data = stat.getData() 
         if fritzbox_ip in self.devices:
             time_diff = (now - self.devices[fritzbox_ip]).total_seconds()
 
-            in_bytes = stat.getInBytes()
+            in_bytes = stat_data.getInBytes()
             if in_bytes is not None:
                 byte_diff = lan_traffic_received - in_bytes
                 if byte_diff > 0:
-                    stat.setInAvg(byte_diff / time_diff)
+                    stat_data.setInAvg(byte_diff / time_diff)
                 
-            out_bytes = stat.getOutBytes()
+            out_bytes = stat_data.getOutBytes()
             if out_bytes is not None:
                 byte_diff = lan_traffic_sent - out_bytes
                 if byte_diff > 0:
-                    stat.setOutAvg(byte_diff / time_diff)
+                    stat_data.setOutAvg(byte_diff / time_diff)
     
-        stat.setInBytes(lan_traffic_received)
-        stat.setOutBytes(lan_traffic_sent)
-        #stat.setInSpeed(lan_link_state['down'] * 1000)
-        stat.setInSpeed(1000000000)
-        #stat.setOutSpeed(lan_link_state['up'] * 1000)
-        stat.setOutSpeed(1000000000)
-        #stat.setDetail("duplex", "full" if _port["duplex"] == "fullDuplex" else "half", "string")
-        #stat.setDetail("duplex", lan_link_state["duplex"], "string")
+        stat_data.setInBytes(lan_traffic_received)
+        stat_data.setOutBytes(lan_traffic_sent)
+        #stat_data.setInSpeed(lan_link_state['down'] * 1000)
+        stat_data.setInSpeed(1000000000)
+        #stat_data.setOutSpeed(lan_link_state['up'] * 1000)
+        stat_data.setOutSpeed(1000000000)
+        #stat_data.setDetail("duplex", "full" if _port["duplex"] == "fullDuplex" else "half", "string")
+        #stat_data.setDetail("duplex", lan_link_state["duplex"], "string")
         self.cache.confirmStat( stat, lambda event: events.append(event) )
 
         if fritzbox_mac == self.cache.getGatewayMAC():
-            stat = self.cache.getConnectionStat(self.cache.getWanMAC(),"wan")
-            stat.setDetail("wan_type",wan_link_state["type"], "string")
-            stat.setDetail("wan_state",wan_link_state["state"], "string")
+            stat = self.cache.getConnectionStat(self.cache.getWanMAC(), self.cache.getWanInterface() )
+            stat_data = stat.getData()
+            stat_data.setDetail("wan_type",wan_link_state["type"], "string")
+            stat_data.setDetail("wan_state",wan_link_state["state"], "string")
 
             if fritzbox_ip in self.devices:
                 time_diff = (now - self.devices[fritzbox_ip]).total_seconds()
 
-                in_bytes = stat.getInBytes()
+                in_bytes = stat_data.getInBytes()
                 if in_bytes is not None:
                     byte_diff = wan_traffic_state["received"] - in_bytes
                     if byte_diff > 0:
-                        stat.setInAvg(byte_diff / time_diff)
+                        stat_data.setInAvg(byte_diff / time_diff)
                     
-                out_bytes = stat.getOutBytes()
+                out_bytes = stat_data.getOutBytes()
                 if out_bytes is not None:
                     byte_diff = wan_traffic_state["sent"] - out_bytes
                     if byte_diff > 0:
-                        stat.setOutAvg(byte_diff / time_diff)
+                        stat_data.setOutAvg(byte_diff / time_diff)
         
-            stat.setInBytes(wan_traffic_state["received"])
-            stat.setOutBytes(wan_traffic_state["sent"])
-            stat.setInSpeed(wan_link_state["down"] * 1000)
-            stat.setOutSpeed(wan_link_state["up"] * 1000)
+            stat_data.setInBytes(wan_traffic_state["received"])
+            stat_data.setOutBytes(wan_traffic_state["sent"])
+            stat_data.setInSpeed(wan_link_state["down"] * 1000)
+            stat_data.setOutSpeed(wan_link_state["up"] * 1000)
             self.cache.confirmStat( stat, lambda event: events.append(event) )
                 
         self.cache.unlock(self)
@@ -504,7 +517,7 @@ class Fritzbox(_handler.Handler):
             for event in events:
                 device = event.getObject()
 
-                if event.getAction() == Event.ACTION_MODIFY and not self.has_wifi_networks or not device.supportsWifi():
+                if event.getAction() == Event.ACTION_MODIFY and (not self.has_wifi_networks or not device.supportsWifi()):
                     continue
                 
                 logging.info("Delayed trigger started for {}".format(device))

@@ -179,8 +179,8 @@ class OpenWRT(_handler.Handler):
                     "ifname": ifname,
                     "ssid": ssid,
                     "band": band,
-                    "priority": priority,
                     "channel": channel,
+                    "priority": priority,
                     "vlan": _active_vlans[ifname] if ifname in _active_vlans else self.config.default_vlan,
                     "device": wifi_network_name
                 }
@@ -203,6 +203,7 @@ class OpenWRT(_handler.Handler):
                 group.setDetail("ssid", network["ssid"], "string")
                 group.setDetail("band", network["band"], "string")
                 group.setDetail("channel", network["channel"], "string")
+                group.setDetail("priority", network["priority"], "hidden")
                 #group.setDetail("vlan", network["vlan"], "string")
                 self.cache.confirmGroup(group, lambda event: events.append(event))
                         
@@ -269,56 +270,59 @@ class OpenWRT(_handler.Handler):
                     target_interface = mac#wlan_network["ssid"]
                     vlan = wlan_network["vlan"]
                     gid = wlan_network["gid"]
-                    priority = wlan_network["priority"]
+                    band = wlan_network["band"]
                     
                     uid = "{}-{}".format(mac, gid)
+                    
+                    connection_details = { "vlan": vlan, "band": band }
 
                     device = self.cache.getDevice(mac)
                     device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
-                    device.addHopConnection(Connection.WIFI, vlan, target_mac, target_interface, priority);
+                    device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
 
                     details = client_result["clients"][mac]
                    
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
+                    stat_data = stat.getData(connection_details)
                     if not details["assoc"]: 
-                        stat.setInAvg(0)
-                        stat.setOutAvg(0)
-                        stat.setInBytes(0)
-                        stat.setOutBytes(0)
-                        stat.setInSpeed(0)
-                        stat.setOutSpeed(0)
-                        stat.removeDetail("signal")
+                        stat_data.setInAvg(0)
+                        stat_data.setOutAvg(0)
+                        stat_data.setInBytes(0)
+                        stat_data.setOutBytes(0)
+                        stat_data.setInSpeed(0)
+                        stat_data.setOutSpeed(0)
+                        stat_data.removeDetail("signal")
                     else:
                         if uid in self.wifi_associations[openwrt_ip]:
                             time_diff = (now - self.wifi_associations[openwrt_ip][uid][0]).total_seconds()
 
-                            in_bytes = stat.getInBytes()
+                            in_bytes = stat_data.getInBytes()
                             if in_bytes is not None:
                                 byte_diff = details["bytes"]["rx"] - in_bytes
                                 if byte_diff > 0:
-                                    stat.setInAvg(byte_diff / time_diff)
+                                    stat_data.setInAvg(byte_diff / time_diff)
                                 
-                            out_bytes = stat.getOutBytes()
+                            out_bytes = stat_data.getOutBytes()
                             if out_bytes is not None:
                                 byte_diff = details["bytes"]["tx"] - out_bytes
                                 if byte_diff > 0:
-                                    stat.setOutAvg(byte_diff / time_diff)
+                                    stat_data.setOutAvg(byte_diff / time_diff)
 
-                        #stat.setOnline(True) # => will be set bei arpscan listener
-                        stat.setInBytes(details["bytes"]["rx"])
-                        stat.setOutBytes(details["bytes"]["tx"])
-                        stat.setInSpeed(details["rate"]["rx"] * 1000)
-                        stat.setOutSpeed(details["rate"]["tx"] * 1000)
-                        stat.setDetail("signal", details["signal"], "attenuation")
+                        #stat_data.setOnline(True) # => will be set bei arpscan listener
+                        stat_data.setInBytes(details["bytes"]["rx"])
+                        stat_data.setOutBytes(details["bytes"]["tx"])
+                        stat_data.setInSpeed(details["rate"]["rx"] * 1000)
+                        stat_data.setOutSpeed(details["rate"]["tx"] * 1000)
+                        stat_data.setDetail("signal", details["signal"], "attenuation")
                     self.cache.confirmStat( stat, lambda event: events.append(event) )
                         
                     _active_client_macs.append(mac)
                     _active_client_wifi_associations.append(uid)
                     self.wifi_associations[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
+                    self.wifi_clients[openwrt_ip][mac] = True
                     
-            wifi_clients = {}
             for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[openwrt_ip].values()):
                 if uid not in _active_client_wifi_associations:
                     device = self.cache.getDevice(mac)
@@ -328,9 +332,7 @@ class OpenWRT(_handler.Handler):
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                     del self.wifi_associations[openwrt_ip][uid]
-                else:
-                    wifi_clients[mac] = now
-            self.wifi_clients[openwrt_ip] = wifi_clients
+                    del self.wifi_clients[openwrt_ip][mac]
                     
             self.cache.unlock(self)
 
@@ -396,7 +398,7 @@ class OpenWRT(_handler.Handler):
             triggered_types = {}
             for openwrt_ip in self.next_run:
                 if len(missing_wifi_macs) > 0:
-                    self.next_run[openwrt_ip]["wifi_clients"] = datetime.now().timestamp()
+                    self.next_run[openwrt_ip]["wifi_clients"] = datetime.now()
                     triggered_types["wifi"] = True
                     
             if triggered_types:
