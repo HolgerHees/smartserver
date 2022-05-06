@@ -17,6 +17,22 @@ class ConnectionStatDetails(Changeable):
         self.out_speed = None
 
         self.details = {}
+        
+    def reset(self):
+        if self.in_avg is not None:
+            self.setInAvg(0)
+        if self.out_avg is not None:
+            self.setOutAvg(0)
+        if self.in_bytes is not None:
+            self.setInBytes(0)
+        if self.out_bytes is not None:
+            self.setOutBytes(0)
+        if self.in_speed is not None:
+            self.setInSpeed(0)
+        if self.out_speed is not None:
+            self.setOutSpeed(0)
+        for key in self._getDetails():
+            self.removeDetail(key)
 
     def getInBytes(self):
         return self.in_bytes

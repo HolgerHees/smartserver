@@ -257,10 +257,10 @@ class Fritzbox(_handler.Handler):
                         band = wifi_network["band"]
                         gid = wifi_network["gid"]
                         
+                        connection_details = { "vlan": vlan, "band": band }
+
                         device = self.cache.getUnlockedDevice(source_mac)
                         if device is not None:
-                            connection_details = { "vlan": vlan, "band": band }
-                            
                             device.lock(self)
                             device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
                             device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
@@ -275,10 +275,10 @@ class Fritzbox(_handler.Handler):
                             stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
                             self.cache.confirmStat( stat, lambda event: events.append(event) )
 
-                        self.wifi_associations[fritzbox_ip][source_mac] = [ source_mac, gid, vlan, target_mac, target_interface ]
+                        self.wifi_associations[fritzbox_ip][source_mac] = [ source_mac, gid, vlan, target_mac, target_interface, connection_details ]
                         _active_associations.append(source_mac)
               
-        for [ source_mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[fritzbox_ip].values()):
+        for [ source_mac, gid, vlan, target_mac, target_interface, connection_details ] in list(self.wifi_associations[fritzbox_ip].values()):
             if source_mac not in _active_associations:
                 device = self.cache.getDevice(source_mac)
                 device.removeGID(gid);
@@ -286,6 +286,11 @@ class Fritzbox(_handler.Handler):
                 device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
+                stat = self.cache.getConnectionStat(target_mac,target_interface)
+                stat_data = stat.getData(connection_details)
+                stat_data.reset()
+                self.cache.confirmStat( stat, lambda event: events.append(event) )
+
                 del self.wifi_associations[fritzbox_ip][source_mac]
                 if source_mac in self.wifi_clients[fritzbox_ip]:
                     del self.wifi_clients[fritzbox_ip][source_mac]

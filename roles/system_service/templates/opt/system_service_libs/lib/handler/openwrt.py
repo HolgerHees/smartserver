@@ -287,13 +287,7 @@ class OpenWRT(_handler.Handler):
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
                     stat_data = stat.getData(connection_details)
                     if not details["assoc"]: 
-                        stat_data.setInAvg(0)
-                        stat_data.setOutAvg(0)
-                        stat_data.setInBytes(0)
-                        stat_data.setOutBytes(0)
-                        stat_data.setInSpeed(0)
-                        stat_data.setOutSpeed(0)
-                        stat_data.removeDetail("signal")
+                        stat_data.reset()
                     else:
                         if uid in self.wifi_associations[openwrt_ip]:
                             time_diff = (now - self.wifi_associations[openwrt_ip][uid][0]).total_seconds()
@@ -320,16 +314,21 @@ class OpenWRT(_handler.Handler):
                         
                     _active_client_macs.append(mac)
                     _active_client_wifi_associations.append(uid)
-                    self.wifi_associations[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface ]
+                    self.wifi_associations[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface, connection_details ]
                     self.wifi_clients[openwrt_ip][mac] = True
                     
-            for [ _, uid, mac, gid, vlan, target_mac, target_interface ] in list(self.wifi_associations[openwrt_ip].values()):
+            for [ _, uid, mac, gid, vlan, target_mac, target_interface, connection_details ] in list(self.wifi_associations[openwrt_ip].values()):
                 if uid not in _active_client_wifi_associations:
                     device = self.cache.getDevice(mac)
                     device.removeGID(gid);
                     # **** connection cleanup and stats cleanup happens in cleanDisabledHobConnection ****
                     device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
+
+                    stat = self.cache.getConnectionStat(target_mac,target_interface)
+                    stat_data = stat.getData(connection_details)
+                    stat_data.reset()
+                    self.cache.confirmStat( stat, lambda event: events.append(event) )
                     
                     del self.wifi_associations[openwrt_ip][uid]
                     del self.wifi_clients[openwrt_ip][mac]

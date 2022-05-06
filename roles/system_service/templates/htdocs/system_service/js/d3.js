@@ -611,10 +611,13 @@ mx.D3 = (function( ret )
                     if( data["connection_details"] && data["connection_details"]["band"] )
                     {
                         let group = device.groups.filter(group => group.details.band["value"] == data["connection_details"]["band"] );
-                        Object.entries(group[0]["details"]).forEach(function([key,value])
+                        if( group.length > 0 )
                         {
-                            connection_data.push( { "name": key, "value": value["value"], "format": value["format"] });
-                        });
+                            Object.entries(group[0]["details"]).forEach(function([key,value])
+                            {
+                                connection_data.push( { "name": key, "value": value["value"], "format": value["format"] });
+                            });
+                        }
                     }
                     
                     connection_data.unshift("<div class='connector'></div>");
