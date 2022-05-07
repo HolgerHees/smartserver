@@ -24,17 +24,20 @@ class Helper():
                                 bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                 universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
-    def ping(ip):
+    def ping(ip, interface):
         result = command.exec(["/bin/ping", "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, exitstatus_check = False)
-        return result.returncode == 0
-
-    def arpping(ip, mac, interface, timeout):
+        if result.returncode == 0:
+            return Helper.ip2mac(ip, interface)
+        return None
+    
+    def arpping(ip, interface, timeout):
         result = command.exec(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], exitstatus_check = False)
-        is_success = result.returncode == 0
-        if is_success:
+        if result.returncode == 0:
             rows = result.stdout.decode()
-            is_success = re.search(r"{} \({}\)".format(mac,ip), rows)
-        return is_success
+            match = re.search(r"({}) \({}\)".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}",ip), rows)
+            if match:
+                return match[1]
+        return None
 
     def arpscan(interface, network ):
         result = command.exec(["/usr/local/bin/arp-scan", "--interface", interface, network], exitstatus_check = False)

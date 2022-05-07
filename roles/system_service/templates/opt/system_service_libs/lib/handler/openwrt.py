@@ -304,7 +304,6 @@ class OpenWRT(_handler.Handler):
                                 if byte_diff > 0:
                                     stat_data.setOutAvg(byte_diff / time_diff)
 
-                        #stat_data.setOnline(True) # => will be set bei arpscan listener
                         stat_data.setInBytes(details["bytes"]["rx"])
                         stat_data.setOutBytes(details["bytes"]["tx"])
                         stat_data.setInSpeed(details["rate"]["rx"] * 1000)

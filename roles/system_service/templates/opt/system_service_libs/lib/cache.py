@@ -246,11 +246,10 @@ class Cache():
             mac = Helper.ip2mac(ip, self.config.main_interface)
             if mac is None:
                 logging.info("Not able to resolve ip2mac. Fallback to ping")
-                # try to force an arp table update
-                if Helper.ping(ip):
-                    mac = Helper.ip2mac(ip, self.config.main_interface)
-                    if mac is None:
-                        return None
+                # try a ping to force an arp table update
+                mac = Helper.ping(ip, self.config.main_interface)
+                if mac is None:
+                    return None
             self.ip_mac_map[ip] = [mac, now]
 
         return self.ip_mac_map[ip][0]
