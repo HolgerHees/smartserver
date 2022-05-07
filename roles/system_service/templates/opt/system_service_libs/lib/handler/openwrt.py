@@ -6,6 +6,8 @@ from urllib3.exceptions import InsecureRequestWarning
 import json
 import traceback
 import logging
+#import cProfile, pstats
+#from pstats import SortKey
 
 from smartserver import command
 
@@ -256,6 +258,7 @@ class OpenWRT(_handler.Handler):
         if client_results or self.wifi_associations[openwrt_ip]:
             self.cache.lock(self)
 
+            #with cProfile.Profile() as pr:
             now = datetime.now()
 
             _active_client_macs = []
@@ -265,7 +268,7 @@ class OpenWRT(_handler.Handler):
                 for mac in client_result["clients"]:
                     if mac == self.cache.getGatewayMAC():
                         continue
-                                   
+                                
                     target_mac = openwrt_mac
                     target_interface = mac#wlan_network["ssid"]
                     vlan = wlan_network["vlan"]
@@ -283,7 +286,7 @@ class OpenWRT(_handler.Handler):
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
 
                     details = client_result["clients"][mac]
-                   
+                
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
                     stat_data = stat.getData(connection_details)
                     if not details["assoc"]: 
@@ -331,6 +334,10 @@ class OpenWRT(_handler.Handler):
                     
                     del self.wifi_associations[openwrt_ip][uid]
                     del self.wifi_clients[openwrt_ip][mac]
+
+            #sortby = SortKey.CUMULATIVE
+            #ps = pstats.Stats(pr).sort_stats(sortby)
+            #ps.print_stats()
                     
             self.cache.unlock(self)
 

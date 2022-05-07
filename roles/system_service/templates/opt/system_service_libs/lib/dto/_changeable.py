@@ -129,7 +129,7 @@ class Changeable():
         
         self._lock = True
         self._lock_owner = owner
-        self._last_lock_source = inspect.stack()[2]
+        #self._last_lock_source = inspect.stack()[2]
 
     def unlock(self, owner):
         if not self._lock:

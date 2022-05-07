@@ -2,6 +2,7 @@ import re
 import subprocess
 import logging
 from datetime import datetime
+import sys
 
 from smartserver import command
 
@@ -20,11 +21,17 @@ class Helper():
             
     #    return arp_result
     
-    def logEvent(stack, msg):
-        [_, file ] = stack[1][1].rsplit("/", 1)
+    #def logEvent(stack, msg):
+    #    logging.info(sys._getframe(1).f_code.co_filename)
+    #    logging.info(sys._getframe(1).f_lineno)
         
+    #    [_, file ] = stack[1][1].rsplit("/", 1)
+        
+    def logEvent(frame, msg):
+        [_, file ] = frame.f_code.co_filename.rsplit("/", 1)
+
         #stack[1][3], 
-        logging.info(msg, extra={"custom_module": "{}:{}".format( file[:-3] , stack[1][2] ) })
+        logging.info(msg, extra={"custom_module": "{}:{}".format( file[:-3] , frame.f_lineno ) })
     
     def logProfiler(cls, start, msg):
         pass
