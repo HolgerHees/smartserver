@@ -359,27 +359,37 @@ class OpenWRT(_handler.Handler):
         
     def _getSession(self, ip, username, password ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ "00000000000000000000000000000000", "session", "login", { "username": username, "password": password } ] }
+        start = datetime.now()
         r = self._post(ip, json)
+        Helper.logProfiler(self, start, "Session of '{}' refreshed".format(ip))
         return self._parseResult(ip, r, "session")
     
     def _getDevices(self, ip, session ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "network.device", "status", {} ] }
+        start = datetime.now()
         r = self._post(ip, json)
+        Helper.logProfiler(self, start, "Devices of '{}' fetched".format(ip))
         return self._parseResult(ip, r, "device_list")
 
     def _getWifiNetworks(self, ip, session ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "network.wireless", "status", {} ] }
+        start = datetime.now()
         r = self._post(ip, json)
+        Helper.logProfiler(self, start, "Networks of '{}' fetched".format(ip))
         return self._parseResult(ip, r, "device_list")
 
     def _getWifiInterfaceDetails(self, ip, session, interface ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "hostapd.{}".format(interface), "get_status", {} ] }
+        start = datetime.now()
         r = self._post(ip, json)
+        Helper.logProfiler(self, start, "Network details of '{}' fetched".format(ip))
         return self._parseResult(ip, r, "device_details")
 
     def _getWifiClients(self, ip, session, interface ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "hostapd.{}".format(interface), "get_clients", {} ] }
+        start = datetime.now()
         r = self._post(ip, json)
+        Helper.logProfiler(self, start, "Clients of '{}' fetched".format(ip))
         return self._parseResult(ip, r, "client_list")
         
     def _delayedWakeup(self):

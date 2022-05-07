@@ -110,7 +110,10 @@ class LibreNMS(_handler.Handler):
     def _processDevices(self, events):
         self.next_run["device"] = datetime.now() + timedelta(seconds=self.config.librenms_device_interval)
         
+        start = datetime.now()
         _device_json = self._get("devices")
+        Helper.logProfiler(self, start, "Devices fetched")
+        
         _devices = json.loads(_device_json)["devices"]
         
         _active_devices = {}
@@ -173,7 +176,10 @@ class LibreNMS(_handler.Handler):
     def _processVLANs(self, events):
         self.next_run["vlan"] = datetime.now() + timedelta(seconds=self.config.librenms_vlan_interval)
 
+        start = datetime.now()
         _vlan_json = self._get("resources/vlans")
+        Helper.logProfiler(self, start, "VLANs fetched")
+
         _vlans = json.loads(_vlan_json)["vlans"]
         
         _active_vlan_ids = []
@@ -188,7 +194,10 @@ class LibreNMS(_handler.Handler):
     def _processPorts(self, events):    
         self.next_run["port"] = datetime.now() + timedelta(seconds=self.config.librenms_port_interval)
 
+        start = datetime.now()
         _ports_json = self._get("ports?columns=device_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
+        Helper.logProfiler(self, start, "Ports fetched")
+
         _ports = json.loads(_ports_json)["ports"]
 
         for _port in _ports:
@@ -255,7 +264,10 @@ class LibreNMS(_handler.Handler):
     def _processFDP(self, events):        
         self.next_run["fdb"] = datetime.now() + timedelta(seconds=self.config.librenms_fdb_interval)
 
+        start = datetime.now()
         _connected_arps_json = self._get("resources/fdb")
+        Helper.logProfiler(self, start, "Clients fetched")
+
         _connected_arps = json.loads(_connected_arps_json)["ports_fdb"]
         
         for _connected_arp in _connected_arps:

@@ -1,6 +1,7 @@
 import re
 import subprocess
 import logging
+from datetime import datetime
 
 from smartserver import command
 
@@ -18,6 +19,16 @@ class Helper():
     #        arp_result.append({"ip": columns[0], "mac": columns[1], "info": columns[2] })
             
     #    return arp_result
+    
+    def logEvent(stack, msg):
+        [_, file ] = stack[1][1].rsplit("/", 1)
+        
+        #stack[1][3], 
+        logging.info(msg, extra={"custom_module": "{}:{}".format( file[:-3] , stack[1][2] ) })
+    
+    def logProfiler(cls, start, msg):
+        pass
+        #logging.info("*** PROFILER *** {} - {} in {} seconds".format(cls.__class__.__name__, msg, round( (datetime.now() - start).total_seconds(), 3 ) ) )
     
     def dhcplisten(interface):
         return subprocess.Popen( ["/usr/bin/stdbuf", "-oL", "/usr/bin/tcpdump", "-i", interface, "-pvn", "port", "67", "or", "port", "68"],

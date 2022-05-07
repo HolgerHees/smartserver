@@ -15,6 +15,7 @@ from lib.handler import _handler
 from lib.dto.device import Connection
 from lib.dto.group import Group
 from lib.dto.event import Event
+from lib.helper import Helper
 
 
 class Fritzbox(_handler.Handler): 
@@ -149,9 +150,9 @@ class Fritzbox(_handler.Handler):
         mesh_hops = {}
         #mesh_nodes = {}
         
-        #start = datetime.now().timestamp()
+        start = datetime.now().timestamp()
         topologie = self.fh[fritzbox_ip].get_mesh_topology()
-        #logging.info("Mesh data of '{}' fetched in {} seconds".format(fritzbox_ip, datetime.now().timestamp() - start))
+        Helper.logProfiler(self, start, "Mesh data of '{}' fetched".format(fritzbox_ip))
         
         self.cache.lock(self)
         
@@ -308,12 +309,12 @@ class Fritzbox(_handler.Handler):
         reload_clients = {}
         if not first_run:
             devices = self.cache.getDevices()
-            now = datetime.now().timestamp()
+            now = datetime.now()
             for device in devices:
                 mac = device.getMAC()
                 if mac not in self.dhcp_clients[fritzbox_ip]:
                     new_clients[mac] = device
-                elif now - self.dhcp_clients[fritzbox_ip][mac] >= self.config.fritzbox_network_interval:
+                elif (now - self.dhcp_clients[fritzbox_ip][mac]).total_seconds() >= self.config.fritzbox_network_interval:
                     outdated_clients[mac] = device
                 else:
                     continue
@@ -326,7 +327,7 @@ class Fritzbox(_handler.Handler):
         if first_run or reload_clients:
             # check mac is not in known_clients or if known_clients is outdated
             
-            #start = datetime.now().timestamp()
+            start = datetime.now()
 
             # fetch full list
             if first_run or len(reload_clients.keys()) > 5:
@@ -335,7 +336,7 @@ class Fritzbox(_handler.Handler):
                     mac = _host["NewMACAddress"].lower()
                     _hosts[mac] = _host
                 self.known_clients[fritzbox_ip] = _hosts
-                #logging.info("Full refresh in {} seconds".format(datetime.now().timestamp() - start))
+                Helper.logProfiler(self, start, "Full refresh of '{}'".format(fritzbox_ip))
             # for small amount of hosts, fetch individual data
             else:
                 for mac in reload_clients:
@@ -343,7 +344,7 @@ class Fritzbox(_handler.Handler):
                         self.known_clients[fritzbox_ip][mac] = self.fh[fritzbox_ip].get_specific_host_entry(mac.upper())
                     except FritzLookUpError:
                         pass
-                #logging.info("Partial refresh in {} seconds {}".format(datetime.now().timestamp() - start,list(reload_clients.values())))
+                Helper.logProfiler(self, start, "Partial refresh of '{}'".format(fritzbox_ip))
                 
             hosts = self.known_clients[fritzbox_ip]
 
@@ -364,8 +365,9 @@ class Fritzbox(_handler.Handler):
                     obsolete_clients.append(device)
 
             if new_clients or outdated_clients or obsolete_clients:
+                now = datetime.now()
+                
                 self.cache.lock(self)
-                now = datetime.now().timestamp()
                 for device in (new_clients | outdated_clients).values():
                     mac = device.getMAC()
                     if mac in hosts:
