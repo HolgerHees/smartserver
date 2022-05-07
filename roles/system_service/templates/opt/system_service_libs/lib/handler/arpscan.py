@@ -387,11 +387,12 @@ class ArpScanner(_handler.Handler):
         # maybe offline if unvalidated check (arpping or ping) was older then "arp_unvalidated_offline_device_timeout"
         if validated_last_seen_diff > self.config.arp_validated_offline_device_timeout or unvalidated_last_seen_diff > self.config.arp_unvalidated_offline_device_timeout:
 
-            # unvalidated check only allowed if validated check (arp-scan) is not older then "arp_validated_offline_device_timeout"
-            if validated_last_seen_diff < self.config.arp_validated_offline_device_timeout:
-                # last check, if the device is really offline
-                device = self.cache.getUnlockedDevice(mac)
-                if device is not None and device.getIP() is not None:
+            # last check, if the device is really offline
+            device = self.cache.getUnlockedDevice(mac)
+            if device is not None and device.getIP() is not None:
+
+                # unvalidated check only allowed if validated check (arp-scan) is not older then "arp_validated_offline_device_timeout"
+                if validated_last_seen_diff < self.config.arp_validated_offline_device_timeout:
                     startTime = datetime.now()
                     
                     methods = ["arping"]
@@ -409,11 +410,11 @@ class ArpScanner(_handler.Handler):
 
                     logging.info("Device {} is offline. Checked with {} in {} seconds".format(device," & ".join(methods),duration))
 
-            # check if there is another device with the same IP
-            similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
-            if len(similarDevices) > 0:
-                self._removeDevice(mac, events)
-                return
+                # check if there is another device with the same IP
+                similarDevices = list(filter(lambda d: d.getMAC() != mac and d.getIP() == device.getIP(), self.cache.getDevices() ))
+                if len(similarDevices) > 0:
+                    self._removeDevice(mac, events)
+                    return
             
             stat.lock(self)
             stat.setOnline(False)
