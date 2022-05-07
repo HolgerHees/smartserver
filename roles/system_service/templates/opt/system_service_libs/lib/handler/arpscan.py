@@ -409,7 +409,7 @@ class ArpScanner(_handler.Handler):
 
     def _removeDevice(self,mac, events):
         self.cache.removeDevice(mac, lambda event: events.append(event))
-        self.cache.removeDeviceStat(mac, None, lambda event: events.append(event))
+        self.cache.removeDeviceStat(mac, lambda event: events.append(event))
         if self.registered_devices[mac] is not None:
             self.registered_devices[mac].terminate()
             del self.registered_devices[mac]
