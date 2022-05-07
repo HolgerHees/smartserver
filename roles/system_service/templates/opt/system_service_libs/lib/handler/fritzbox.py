@@ -149,9 +149,9 @@ class Fritzbox(_handler.Handler):
         mesh_hops = {}
         #mesh_nodes = {}
         
-        start = datetime.now().timestamp()
+        #start = datetime.now().timestamp()
         topologie = self.fh[fritzbox_ip].get_mesh_topology()
-        logging.info("Mesh data of '{}' fetched in {} seconds".format(fritzbox_ip, datetime.now().timestamp() - start))
+        #logging.info("Mesh data of '{}' fetched in {} seconds".format(fritzbox_ip, datetime.now().timestamp() - start))
         
         self.cache.lock(self)
         
@@ -326,7 +326,7 @@ class Fritzbox(_handler.Handler):
         if first_run or reload_clients:
             # check mac is not in known_clients or if known_clients is outdated
             
-            start = datetime.now().timestamp()
+            #start = datetime.now().timestamp()
 
             # fetch full list
             if first_run or len(reload_clients.keys()) > 5:
@@ -335,7 +335,7 @@ class Fritzbox(_handler.Handler):
                     mac = _host["NewMACAddress"].lower()
                     _hosts[mac] = _host
                 self.known_clients[fritzbox_ip] = _hosts
-                logging.info("Full refresh in {} seconds".format(datetime.now().timestamp() - start))
+                #logging.info("Full refresh in {} seconds".format(datetime.now().timestamp() - start))
             # for small amount of hosts, fetch individual data
             else:
                 for mac in reload_clients:
@@ -343,7 +343,7 @@ class Fritzbox(_handler.Handler):
                         self.known_clients[fritzbox_ip][mac] = self.fh[fritzbox_ip].get_specific_host_entry(mac.upper())
                     except FritzLookUpError:
                         pass
-                logging.info("Partial refresh in {} seconds {}".format(datetime.now().timestamp() - start,list(reload_clients.values())))
+                #logging.info("Partial refresh in {} seconds {}".format(datetime.now().timestamp() - start,list(reload_clients.values())))
                 
             hosts = self.known_clients[fritzbox_ip]
 
