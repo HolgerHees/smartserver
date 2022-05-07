@@ -11,7 +11,8 @@ class DeviceStat(Changeable):
         self.offline_since = datetime.now()
         
         # internal variables without change detection
-        self.last_seen = datetime.now()
+        self.last_validated_seen = datetime.now()
+        self.last_unvalidated_seen = datetime.now()
 
     def getMAC(self):
         return self.mac
@@ -19,13 +20,15 @@ class DeviceStat(Changeable):
     def getUnlockedDevice(self):
         return self._getCache().getUnlockedDevice(self.mac)
     
-    def setOnline(self,flag):
+    def setOnline(self,flag, validated):
         self._checkLock()
         if flag:
-            self.last_seen = datetime.now()
+            if validated:
+                self.last_validated_seen = datetime.now()
+            self.last_unvalidated_seen = datetime.now()
             offline_since = None
         else:
-            offline_since = self.last_seen
+            offline_since = self.last_validated_seen
         
         if self.offline_since != offline_since:
             self._markAsChanged( "online_state", "offline" if offline_since else "online")
@@ -34,8 +37,8 @@ class DeviceStat(Changeable):
     def isOnline(self):
         return self.offline_since is None
 
-    def getLastSeen(self):
-        return self.last_seen
+    def getLastSeen(self, validated):
+        return self.last_validated_seen if validated else self.last_unvalidated_seen
 
     def getSerializeable(self):
         _stat = {
