@@ -18,6 +18,12 @@ class ConnectionStatDetails(Changeable):
 
         self.details = {}
         
+    def _checkLock(self):
+        self.connection_stat._checkLock()
+        
+    def _markAsChanged(self, type, details = None):
+        self.connection_stat._markAsChanged(type,details)
+        
     def reset(self):
         if self.in_avg is not None:
             self.setInAvg(0)
@@ -38,48 +44,48 @@ class ConnectionStatDetails(Changeable):
         return self.in_bytes
 
     def setInBytes(self,bytes):
-        self.connection_stat._checkLock()
+        self._checkLock()
         if self.in_bytes != bytes:
-            self.connection_stat._markAsChanged("in_bytes", "in bytes")
+            self._markAsChanged("in_bytes", "in bytes")
             self.in_bytes = bytes
 
     def getInAvg(self):
         return self.in_avg
 
     def setInAvg(self,bytes):
-        self.connection_stat._checkLock()
+        self._checkLock()
         if self.in_avg != bytes:
-            self.connection_stat._markAsChanged("in_avg", "in avg")
+            self._markAsChanged("in_avg", "in avg")
             self.in_avg = bytes
    
     def getOutBytes(self):
         return self.out_bytes
 
     def setOutBytes(self,bytes):
-        self.connection_stat._checkLock()
+        self._checkLock()
         if self.out_bytes != bytes:
-            self.connection_stat._markAsChanged("out_bytes", "out bytes")
+            self._markAsChanged("out_bytes", "out bytes")
             self.out_bytes = bytes
 
     def getOutAvg(self):
         return self.in_avg
 
     def setOutAvg(self,bytes):
-        self.connection_stat._checkLock()
+        self._checkLock()
         if self.out_avg != bytes:
-            self.connection_stat._markAsChanged("out_avg", "out avg")
+            self._markAsChanged("out_avg", "out avg")
             self.out_avg = bytes
 
     def setInSpeed(self,speed):
-        self.connection_stat._checkLock()
+        self._checkLock()
         if self.in_speed != speed:
-            self.connection_stat._markAsChanged("in_speed", "in speed")
+            self._markAsChanged("in_speed", "in speed")
             self.in_speed = speed
 
     def setOutSpeed(self,speed):
-        self.connection_stat._checkLock()
+        self._checkLock()
         if self.out_speed != speed:
-            self.connection_stat._markAsChanged("out_speed", "out speed")
+            self._markAsChanged("out_speed", "out speed")
             self.out_speed = speed
             
     def getConnectionDetail(self, key):
