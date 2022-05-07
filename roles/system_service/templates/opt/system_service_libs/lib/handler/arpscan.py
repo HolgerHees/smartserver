@@ -206,7 +206,7 @@ class DHCPListener(threading.Thread):
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                         logging.info("New dhcp request for {}".format(device))
                         
-                        self.arpscanner._refreshDevice( device, events )
+                        self.arpscanner._refreshDevice( device, True, events )
                         
                         self.cache.unlock(self)
                         
