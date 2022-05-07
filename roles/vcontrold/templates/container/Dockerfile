@@ -1,6 +1,6 @@
 FROM alpine:{{alpine_version}}
 
-RUN apk --no-cache add cmake eudev-dev libusb-compat-dev libxml2-dev linux-headers git make gcc musl-dev shadow python3 py3-paho-mqtt
+RUN apk --no-cache add cmake eudev-dev libusb-compat-dev libxml2-dev linux-headers git make gcc musl-dev shadow python3 py3-paho-mqtt tzdata
 
 #https://medium.com/@gdiener/how-to-build-a-smaller-docker-image-76779e18d48a
 

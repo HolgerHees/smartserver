@@ -2,7 +2,7 @@ FROM alpine:{{image_version}}
 
 COPY entrypoint.sh /usr/sbin/
 
-RUN apk update && apk upgrade &&  apk --update --no-cache add procps vsftpd \
+RUN apk update && apk upgrade &&  apk --update --no-cache add procps vsftpd tzdata \
     && chmod +x /usr/sbin/entrypoint.sh
 
 RUN echo "local_enable=YES" >> /etc/vsftpd/vsftpd.conf \

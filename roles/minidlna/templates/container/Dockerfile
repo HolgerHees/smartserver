@@ -1,7 +1,7 @@
 FROM alpine:{{alpine_version}}
 
 # Install
-RUN apk --no-cache add bash curl minidlna tini shadow su-exec
+RUN apk --no-cache add bash curl minidlna tini shadow su-exec tzdata
 
 # Entrypoint
 COPY entrypoint.sh /
