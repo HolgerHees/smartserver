@@ -21,12 +21,6 @@ class Helper():
             
     #    return arp_result
     
-    #def logEvent(stack, msg):
-    #    logging.info(sys._getframe(1).f_code.co_filename)
-    #    logging.info(sys._getframe(1).f_lineno)
-        
-    #    [_, file ] = stack[1][1].rsplit("/", 1)
-        
     def logEvent(frame, msg):
         [_, file ] = frame.f_code.co_filename.rsplit("/", 1)
 
