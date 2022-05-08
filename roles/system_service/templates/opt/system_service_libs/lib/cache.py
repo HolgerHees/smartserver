@@ -235,9 +235,9 @@ class Cache():
             del self.stats[id]
 
     def removeConnectionStatDetails(self, mac, interface, connection_details, event_callback):
-        stat = self.getUnlockedConnectionStat(target_mac,target_interface)
+        stat = self.getUnlockedConnectionStat(mac,interface)
         if len(stat.getDataList()) == 1:
-            self.removeConnectionStat(target_mac,target_interface, event_callback)
+            self.removeConnectionStat(mac,interface, event_callback)
         else:
             stat.lock(self)
             stat.removeData(connection_details)
