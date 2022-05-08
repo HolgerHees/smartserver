@@ -4,6 +4,7 @@ from urllib3.exceptions import InsecureRequestWarning
 import logging
 from datetime import datetime, timedelta
 import traceback
+import time
 
 from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -54,7 +55,7 @@ class Fritzbox(_handler.Handler):
             self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
             self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
         
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._checkFritzbox, args=())
         
         self.delayed_lock = threading.Lock()
@@ -67,12 +68,11 @@ class Fritzbox(_handler.Handler):
         self.thread.start()
         
     def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
             
     def _checkFritzbox(self):
-        was_suspended = {}
+        is_supended = {}
         
         now = datetime.now()
         for fritzbox_ip in self.config.fritzbox_devices:
@@ -88,7 +88,7 @@ class Fritzbox(_handler.Handler):
             
             self.fritzbox_macs[fritzbox_ip] = None
             
-            was_suspended[fritzbox_ip] = False
+            is_supended[fritzbox_ip] = False
         
         while self.is_running:
             events = []
@@ -97,25 +97,22 @@ class Fritzbox(_handler.Handler):
             
             for fritzbox_ip in self.config.fritzbox_devices:
                 try:
-                    if was_suspended[fritzbox_ip]:
+                    if is_supended[fritzbox_ip]:
                         logging.warning("Resume Fritzbox '{}'.".format(fritzbox_ip))
-                        was_suspended[fritzbox_ip] = False
+                        is_supended[fritzbox_ip] = False
                         
                     self._processDevice(fritzbox_ip, events)
                 except FritzConnectionException as e:
                     logging.error("Fritzbox '{}' not accessible. Will suspend for 1 minutes.".format(fritzbox_ip))
                     logging.error(traceback.format_exc())
-                    if timeout > 60:
-                        timeout = 60
-                    was_suspended[fritzbox_ip] = True
+                    timeout = 60
+                    is_supended[fritzbox_ip] = True
                 except Exception as e:
                     self.cache.cleanLocks(self, events)
-
                     logging.error("Fritzbox '{}' got unexpected exception. Will suspend for 15 minutes.".format(fritzbox_ip))
                     logging.error(traceback.format_exc())
-                    if timeout > self.config.remote_error_timeout:
-                        timeout = self.config.remote_error_timeout
-                    was_suspended[fritzbox_ip] = True
+                    timeout = self.config.remote_error_timeout
+                    is_supended[fritzbox_ip] = True
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -128,8 +125,11 @@ class Fritzbox(_handler.Handler):
                         timeout = diff
 
             if timeout > 0:
-                with self.condition:
-                    self.condition.wait(timeout)
+                if is_supended[fritzbox_ip]:
+                    time.sleep(timeout)
+                else:
+                    self.event.wait(timeout)
+                    self.event.clear()
                     
     def _processDevice(self, fritzbox_ip, events):
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
@@ -287,12 +287,10 @@ class Fritzbox(_handler.Handler):
                 device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
-                stat = self.cache.getConnectionStat(target_mac,target_interface)
-                stat_data = stat.getData(connection_details)
-                stat_data.reset()
-                self.cache.confirmStat( stat, lambda event: events.append(event) )
+                self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
 
                 del self.wifi_associations[fritzbox_ip][source_mac]
+                
                 if source_mac in self.wifi_clients[fritzbox_ip]:
                     del self.wifi_clients[fritzbox_ip][source_mac]
             
@@ -507,8 +505,7 @@ class Fritzbox(_handler.Handler):
             if triggered_types:
                 logging.info("Delayed trigger runs for {}".format(" & ".join(triggered_types)))
 
-                with self.condition:
-                    self.condition.notifyAll()
+                self.event.set()
             else:
                 logging.info("Delayed trigger not needed anymore")
 

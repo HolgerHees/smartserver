@@ -65,7 +65,7 @@ class DeviceChecker(threading.Thread):
                 
         self.process = None
         
-        self.condition = threading.Condition()
+        self.event = threading.Event()
 
         #self.lastSeen = datetime(1, 1, 1, 0, 0)
         #self.lastPublished = datetime(1, 1, 1, 0, 0)
@@ -74,75 +74,89 @@ class DeviceChecker(threading.Thread):
       
     def run(self):
         logging.info("Device checker for {} started".format(self.device))
+        is_supended = False
         
         while self.is_running:
-            sleepTime = self.onlineSleepTime if self.stat.isOnline() else self.offlineSleepTime
-            
-            with self.condition:
-                self.condition.wait(sleepTime)
-                
-            if not self.is_running:
-                break
-            
-            arpTime = self.onlineArpCheckTime if self.stat.isOnline() else self.offlineArpCheckTime
-            arpRetries = self.onlineArpRetries if self.stat.isOnline() else self.offlineArpRetries
-                
-            startTime = datetime.now()
-            
-            ip_address = self.device.getIP()
-            mac_address = self.device.getMAC()
-            address_family = AddressHelper.getAddressFamily(ip_address)
-            
             events = []
 
-            loopIndex = 0
-            while self.is_running:
-                if self.type != "android":
-                    AddressHelper.knock(self.address_family,ip_address)
-                    time.sleep(0.05)
-          
-                methods = ["arping"]
-                answering_mac = Helper.arpping(ip_address, self.interface, arpTime)
-                if answering_mac is None and self.stat.isOnline():
-                    methods.append("ping")
-                    answering_mac = Helper.ping(ip_address, self.interface)
+            try:
+                if is_supended:
+                    logging.warning("Resume DeviceChecker")
+                    is_supended = False
+                
+                sleepTime = self.onlineSleepTime if self.stat.isOnline() else self.offlineSleepTime
+                
+                self.event.wait(sleepTime)
+                self.event.clear()
                     
-                duration = round((datetime.now() - startTime).total_seconds(),2)
-
-                if answering_mac is not None:
-                    validated = answering_mac == mac_address
-                    logging.info("Device {} is {} online. Checked with {} in {} seconds".format(ip_address, "validated" if validated else "unvalidated"," & ".join(methods),duration))
-                    self.lastSeen = datetime.now()
-                    self.stat.setLastSeen(validated) # no lock needed
-                    if not self.stat.isOnline():
-                        self.cache.lock(self)
-                        self.stat.lock(self)
-                        self.stat.setOnline(True)
-                        self.cache.confirmStat( self.stat, lambda event: events.append(event) )
-                        self.cache.unlock(self)
-                    break
-                    
-                loopIndex += 1
-                if loopIndex == arpRetries:
-                    logging.info("Device {} is offline. Checked with {} in {} seconds".format(ip_address," & ".join(methods),duration))
-                    if self.stat.isOnline():
-                        self.cache.lock(self)
-                        self.stat.lock(self)
-                        self.stat.setOnline(False)
-                        self.cache.confirmStat( self.stat, lambda event: events.append(event) )
-                        self.cache.unlock(self)
+                if not self.is_running:
                     break
                 
+                arpTime = self.onlineArpCheckTime if self.stat.isOnline() else self.offlineArpCheckTime
+                arpRetries = self.onlineArpRetries if self.stat.isOnline() else self.offlineArpRetries
+                    
+                startTime = datetime.now()
+                
+                ip_address = self.device.getIP()
+                mac_address = self.device.getMAC()
+                address_family = AddressHelper.getAddressFamily(ip_address)
+                
+                loopIndex = 0
+                while self.is_running:
+                    if self.type != "android":
+                        AddressHelper.knock(self.address_family,ip_address)
+                        time.sleep(0.05)
+            
+                    methods = ["arping"]
+                    answering_mac = Helper.arpping(ip_address, self.interface, arpTime)
+                    if answering_mac is None and self.stat.isOnline():
+                        methods.append("ping")
+                        answering_mac = Helper.ping(ip_address, self.interface)
+                        
+                    duration = round((datetime.now() - startTime).total_seconds(),2)
+
+                    if answering_mac is not None:
+                        validated = answering_mac == mac_address
+                        logging.info("Device {} is {} online. Checked with {} in {} seconds".format(ip_address, "validated" if validated else "unvalidated"," & ".join(methods),duration))
+                        self.lastSeen = datetime.now()
+                        self.stat.setLastSeen(validated) # no lock needed
+                        if not self.stat.isOnline():
+                            self.cache.lock(self)
+                            self.stat.lock(self)
+                            self.stat.setOnline(True)
+                            self.cache.confirmStat( self.stat, lambda event: events.append(event) )
+                            self.cache.unlock(self)
+                        break
+                        
+                    loopIndex += 1
+                    if loopIndex == arpRetries:
+                        logging.info("Device {} is offline. Checked with {} in {} seconds".format(ip_address," & ".join(methods),duration))
+                        if self.stat.isOnline():
+                            self.cache.lock(self)
+                            self.stat.lock(self)
+                            self.stat.setOnline(False)
+                            self.cache.confirmStat( self.stat, lambda event: events.append(event) )
+                            self.cache.unlock(self)
+                        break
+                    
+            except Exception as e:
+                self.cache.cleanLocks(self, events)
+                logging.error("DeviceChecker got unexpected exception. Will suspend for 15 minutes.")
+                logging.error(traceback.format_exc())
+                is_supended = True
+                    
             if len(events) > 0:
                 self.arpscanner._dispatch(events)
+                
+            if is_supended:
+                time.sleep(900)
         
     def terminate(self):
         if self.process != None:
             self.process.terminate()
 
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
 
         logging.info("Terminate device checker for {}".format(self.device))
         
@@ -165,6 +179,7 @@ class DHCPListener(threading.Thread):
             
         client_mac = None
         client_ip = None
+        is_supended = False
         
         while self.is_running:
             output = self.dhcpListenerProcess.stdout.readline()
@@ -173,6 +188,10 @@ class DHCPListener(threading.Thread):
                 if not self.is_running:
                     break
                 raise Exception("DHCP Listener stoppen")
+            
+            if is_supended:
+                logging.warning("Resume DHCPListener")
+                is_supended = False
                 
             if output:
                 line = output.strip()
@@ -197,23 +216,34 @@ class DHCPListener(threading.Thread):
                             client_ip = None
                             continue
                             
-                        client_dns = self.cache.nslookup(client_ip)
-                        
-                        self.cache.lock(self)
-
                         events = []
-                        device = self.cache.getDevice(client_mac)
-                        device.setIP("dhcp_listener", 75, client_ip)
-                        device.setDNS("nslookup", 1, client_dns)
-                        self.cache.confirmDevice( device, lambda event: events.append(event) )
-                        logging.info("New dhcp request for {}".format(device))
                         
-                        self.arpscanner._refreshDevice( device, True, events )
-                        
-                        self.cache.unlock(self)
+                        try:
+                            client_dns = self.cache.nslookup(client_ip)
+                            
+                            self.cache.lock(self)
+                            
+                            device = self.cache.getDevice(client_mac)
+                            device.setIP("dhcp_listener", 75, client_ip)
+                            device.setDNS("nslookup", 1, client_dns)
+                            self.cache.confirmDevice( device, lambda event: events.append(event) )
+                            logging.info("New dhcp request for {}".format(device))
+                            
+                            self.arpscanner._refreshDevice( device, True, events )
+                            
+                            self.cache.unlock(self)
+                            
+                        except Exception as e:
+                            self.cache.cleanLocks(self, events)
+                            logging.error("DHCPListener checker got unexpected exception. Will suspend for 15 minutes.")
+                            logging.error(traceback.format_exc())
+                            is_supended = True
                         
                         if len(events) > 0:
                             self.arpscanner._dispatch(events)
+                            
+                        if is_supended:
+                            time.sleep(900)
                         
                         client_mac = None
                         client_ip = None
@@ -239,7 +269,7 @@ class ArpScanner(_handler.Handler):
         
         self.registered_devices = {}
 
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._checkArpTable, args=())
         
     def start(self):
@@ -255,9 +285,8 @@ class ArpScanner(_handler.Handler):
             if self.registered_devices[mac] is not None:
                 self.registered_devices[mac].terminate()
                 
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
             
     def _checkArpTable(self):
         server_mac = "00:00:00:00:00:00"
@@ -266,6 +295,8 @@ class ArpScanner(_handler.Handler):
                 server_mac = f.read().strip()
         except (IOError, OSError) as e:
             pass
+        
+        is_supended = False
 
         while self.is_running:
             try:
@@ -277,49 +308,63 @@ class ArpScanner(_handler.Handler):
 
             events = []
 
-            processed_ips = {}
-            processed_macs = {}
-            for [ip, mac, dns, info] in collected_arps:
-                if mac not in processed_macs:
-                    if ip not in processed_ips:
-                        info = re.sub("\s\\(DUP: [0-9]+\\)", "", info) # eleminate dublicate marker
-                        if info == "(Unknown)":
-                            info = None
-                        processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}
-                        processed_ips[ip] = mac
-            
-            self.cache.lock(self)
-            
-            for entry in processed_macs.values():
-                mac = entry["mac"]
-                device = self.cache.getDevice(mac)
-                device.setIP("arpscan", 1, entry["ip"])
-                device.setDNS("nslookup", 1, entry["dns"])
+            try:
+                if is_supended:
+                    logging.warning("Resume ArpScanner")
+                    is_supended = False
                 
-                device.setInfo(entry["info"])
+                processed_ips = {}
+                processed_macs = {}
+                for [ip, mac, dns, info] in collected_arps:
+                    if mac not in processed_macs:
+                        if ip not in processed_ips:
+                            info = re.sub("\s\\(DUP: [0-9]+\\)", "", info) # eleminate dublicate marker
+                            if info == "(Unknown)":
+                                info = None
+                            processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}
+                            processed_ips[ip] = mac
+                
+                self.cache.lock(self)
+                
+                for entry in processed_macs.values():
+                    mac = entry["mac"]
+                    device = self.cache.getDevice(mac)
+                    device.setIP("arpscan", 1, entry["ip"])
+                    device.setDNS("nslookup", 1, entry["dns"])
+                    
+                    device.setInfo(entry["info"])
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+                                        
+                    self._refreshDevice( device, True, events)
+                                
+                device = self.cache.getDevice(server_mac)
+                device.setIP("arpscan", 1, self.config.server_ip)
+                device.setDNS("nslookup", 1, self.config.server_domain)
+
+                device.setInfo(self.config.server_name)
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
-                                      
+                    
                 self._refreshDevice( device, True, events)
-                              
-            device = self.cache.getDevice(server_mac)
-            device.setIP("arpscan", 1, self.config.server_ip)
-            device.setDNS("nslookup", 1, self.config.server_domain)
 
-            device.setInfo(self.config.server_name)
-            self.cache.confirmDevice( device, lambda event: events.append(event) )
-                
-            self._refreshDevice( device, True, events)
+                for stat in list(filter(lambda s: type(s) is DeviceStat, self.cache.getStats() )):
+                    self._checkDevice(stat, events)
 
-            for stat in list(filter(lambda s: type(s) is DeviceStat, self.cache.getStats() )):
-                self._checkDevice(stat, events)
-
-            self.cache.unlock(self)
+                self.cache.unlock(self)
+            
+            except Exception as e:
+                self.cache.cleanLocks(self, events)
+                logging.error("DHCPListener checker got unexpected exception. Will suspend for 15 minutes.")
+                logging.error(traceback.format_exc())
+                is_supended = True
 
             if len(events) > 0:
                 self._dispatch(events)
 
-            with self.condition:
-                self.condition.wait(self.config.arp_scan_interval)
+            if is_supended:
+                time.sleep(900)
+            else:
+                self.event.wait(self.config.arp_scan_interval)
+                self.event.clear()
                 
     def _fetchArpResult(self):
         collected_arps = []

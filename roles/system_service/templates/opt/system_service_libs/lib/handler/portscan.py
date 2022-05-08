@@ -28,16 +28,15 @@ class PortScanner(_handler.Handler):
         self.data_lock = threading.Lock()
         self.monitored_devices = {}
         
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._checkPortMap, args=())
         
     def start(self):
         self.thread.start()
         
     def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
 
     def _checkPortMap(self):
         while self.is_running:
@@ -65,8 +64,8 @@ class PortScanner(_handler.Handler):
                         next_timeout = _timeout
                     
             if self.is_running:
-                with self.condition:
-                    self.condition.wait(next_timeout)
+                self.event.wait(next_timeout)
+                self.event.clear()
             
     def _checkPorts(self, device):
         services = Helper.nmap(device.getIP())
@@ -88,8 +87,7 @@ class PortScanner(_handler.Handler):
         with self.queue_lock:
             self.running_queue.remove(device)
                 
-        with self.condition:
-            self.condition.notifyAll()
+        self.event.set()
             
     def getEventTypes(self):
         return [ 
@@ -115,5 +113,4 @@ class PortScanner(_handler.Handler):
                     has_changed_devices = True
 
             if has_changed_devices:
-                with self.condition:
-                    self.condition.notifyAll()
+                self.event.set()

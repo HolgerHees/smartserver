@@ -58,7 +58,7 @@ class MQTTPublisher(_handler.Handler):
         
         self.published_values = {}
         
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._checkPublishedValues, args=())
 
     def start(self):
@@ -66,9 +66,8 @@ class MQTTPublisher(_handler.Handler):
         self.thread.start()
         
     def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
 
         self.mqtt_handler.terminate() 
         
@@ -100,9 +99,9 @@ class MQTTPublisher(_handler.Handler):
                     for [detail, topic, value] in _to_publish.values():
                         self._publishValue(mac, detail, topic, value, now)
 
-            with self.condition:
-                logging.info("Sleep {}".format(timeout))
-                self.condition.wait(timeout)
+            logging.info("Sleep {}".format(timeout))
+            self.event.wait(timeout)
+            self.event.clear()
     
     def _publishValues(self, device, stat, changed_details = None):
         mac = device.getMAC()
@@ -154,8 +153,7 @@ class MQTTPublisher(_handler.Handler):
         for [detail, topic, value] in _to_publish.values():
             self._publishValue(mac, detail, topic, value, now)
                 
-        with self.condition:
-            self.condition.notifyAll()
+        self.event.set()
 
         return True
     

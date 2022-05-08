@@ -110,7 +110,7 @@ class ConnectionStat(Changeable):
         devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == self.mac and d.getConnection().getTargetInterface() == self.interface, (self._getCache().getDevices()) ))
         return devices[0] if len(devices) == 1 else None
     
-    def getData(self, connection_details = None):
+    def _buildKey(self, connection_details = None):
         if connection_details is not None:
             _parts = []
             for key in sorted(connection_details.keys()):
@@ -118,10 +118,19 @@ class ConnectionStat(Changeable):
             key = "-".join(_parts)
         else:
             key = "default"
+            
+        return key
     
+    def getData(self, connection_details = None):
+        key = self._buildKey(connection_details)
         if key not in self.data:
             self.data[key] = ConnectionStatDetails(self, connection_details)
         return self.data[key]
+
+    def removeData(self, connection_details = None):
+        key = self._buildKey(connection_details)
+        if key in self.data:
+            del self.data[key]
 
     def getDataList(self):
         return self.data.values()

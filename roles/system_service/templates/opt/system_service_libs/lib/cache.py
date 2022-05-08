@@ -234,6 +234,15 @@ class Cache():
             event_callback(Event(Event.TYPE_STAT, Event.ACTION_DELETE, self.stats[id]))
             del self.stats[id]
 
+    def removeConnectionStatDetails(self, mac, interface, connection_details, event_callback):
+        stat = self.getUnlockedConnectionStat(target_mac,target_interface)
+        if len(stat.getDataList()) == 1:
+            self.removeConnectionStat(target_mac,target_interface, event_callback)
+        else:
+            stat.lock(self)
+            stat.removeData(connection_details)
+            self.confirmStat( stat, event_callback )
+
     def ip2mac(self,ip):
         now = datetime.now()
         if ip not in self.ip_mac_map or (now - self.ip_mac_map[ip][1]).total_seconds() > self.config.cache_ip_mac_revalidation_interval:

@@ -20,16 +20,15 @@ class InfluxDBPublisher(_handler.Handler):
         self.config = config
         self.cache = cache
         
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._processStats, args=())
 
     def start(self):
         self.thread.start()
         
     def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
         
     def _processStats(self):
         while self.is_running:
@@ -39,8 +38,8 @@ class InfluxDBPublisher(_handler.Handler):
             except requests.exceptions.ConnectionError:
                 logging.warning("InfluxDB currently not available. Will 15 retry in seconds")
                 
-            with self.condition:
-                self.condition.wait(self.config.influxdb_publish_interval)
+            self.event.wait(self.config.influxdb_publish_interval)
+            self.event.clear()
                 
     def _collectMessurements(self):
         messurements = []

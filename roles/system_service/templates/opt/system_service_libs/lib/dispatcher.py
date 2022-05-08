@@ -22,7 +22,7 @@ class Dispatcher():
         
         self.event_queue = deque()
         
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._worker, args=())
         
     def register(self, handler):
@@ -43,25 +43,23 @@ class Dispatcher():
             handler.start()
             
     def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
         
         for handler in self.registered_handler:
             handler.terminate()
                
     def dispatch(self, source_handler, events):
         self.event_queue.append([source_handler,events])
-        with self.condition:
-            self.condition.notifyAll()
+        self.event.set()
             
     def _worker(self):
         while self.is_running:
             while len(self.event_queue) > 0:
                 [source_handler,events] = self.event_queue.popleft()
                 self._dispatch(source_handler, events)
-            with self.condition:
-                self.condition.wait(60)
+            self.event.wait()
+            self.event.clear()
 
     #def dispatch(self, source_handler, events):
     def _dispatch(self, source_handler, events):
