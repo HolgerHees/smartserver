@@ -490,17 +490,23 @@ class Fritzbox(_handler.Handler):
     def getEventTypes(self):
         return [ 
             { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None },
-            { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_MODIFY], "details": ["online"] }
+            { "types": [Event.TYPE_STAT], "actions": [Event.ACTION_MODIFY], "details": ["online_state"] }
         ]
 
     def processEvents(self, events):
         with self.delayed_lock:
             has_new_devices = False
             for event in events:
-                device = event.getObject()
-
-                if event.getAction() == Event.ACTION_MODIFY and (not self.has_wifi_networks or not device.supportsWifi()):
-                    continue
+                if event.getAction() == Event.ACTION_MODIFY:
+                    stat = event.getObject()
+                    device = self.cache.getUnlockedDevice(stat.getMAC())
+                    if device is None:
+                        logging.error("Unknown device for stat {}".format(stat))
+                    
+                    if not self.has_wifi_networks or not device.supportsWifi() or not stat.isOnline():
+                        continue
+                else:
+                    device = event.getObject()
                 
                 logging.info("Delayed trigger started for {}".format(device))
 

@@ -374,15 +374,20 @@ class OpenWRT(_handler.Handler):
         Helper.logProfiler(self, start, "Clients of '{}' fetched".format(ip))
         return self._parseResult(ip, r, "client_list")
     
+    def _isKnownClient(self, mac):
+        for openwrt_ip in self.config.openwrt_devices:
+            if mac not in self.wifi_clients[openwrt_ip]:
+                return True
+        return False
+    
     def _delayedWakeup(self):
         with self.delayed_lock:
             self.delayed_wakeup_timer = None
             
             missing_wifi_macs = []
             for mac in list(self.delayed_devices.keys()):
-                for openwrt_ip in self.config.openwrt_devices:
-                    if mac not in self.wifi_clients[openwrt_ip]:
-                        missing_wifi_macs.append(mac)
+                if not self._isKnownClient(mac):
+                    missing_wifi_macs.append(mac)
                 del self.delayed_devices[mac]
             
             triggered_types = {}
@@ -410,7 +415,7 @@ class OpenWRT(_handler.Handler):
                 if device is None:
                     logging.error("Unknown device for stat {}".format(stat))
                 
-                if not self.has_wifi_networks or not device.supportsWifi():
+                if not self.has_wifi_networks or not device.supportsWifi() or not stat.isOnline():
                     continue
                     
                 logging.info("Delayed trigger started for {}".format(device))
