@@ -1,4 +1,3 @@
-import threading
 from datetime import datetime, timedelta
 import re
 import requests
@@ -6,7 +5,6 @@ import json
 import traceback
 import math
 import logging
-import time
 
 from smartserver import command
 
@@ -24,8 +22,6 @@ class LibreNMS(_handler.Handler):
         self.config = config
         self.cache = cache
         
-        self.is_running = True
-        
         self.next_run = {}
         
         self.devices = {}
@@ -35,26 +31,14 @@ class LibreNMS(_handler.Handler):
         self.port_id_ifname_map = {}
         self.connected_macs = {}
         
-        self.event = threading.Event()
-        self.thread = threading.Thread(target=self._checkLibreNMS, args=())
-        
         # use request session for keepalive support of librenms
         self.request_session = requests.Session()
 
-    def start(self):
-        self.thread.start()
-        
-    def terminate(self):
-        self.is_running = False
-        self.event.set()
-
-    def _checkLibreNMS(self):
-        is_supended = False
-
+    def _run(self):
         now = datetime.now()
         self.next_run = {"device": now, "vlan": now, "port": now, "fdb": now}
         
-        while self.is_running:
+        while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
             events = []
@@ -62,21 +46,17 @@ class LibreNMS(_handler.Handler):
             timeout = 9999999999
             
             try:
-                if is_supended:
-                    logging.warning("Resume LibreNMS")
-                    is_supended = False
+                if self._isSuspended():
+                    self._confirmSuspended()
                 
                 self._processLibreNMS(events)
             except NetworkException as e:
                 logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
                 timeout = e.getTimeout()
-                is_supended = True
+                self._suspend()
             except Exception as e:
                 self.cache.cleanLocks(self, events)
-                logging.error("LibreNMS got unexpected exception. Will suspend for 15 minutes.")
-                logging.error(traceback.format_exc())
-                timeout = self.config.remote_error_timeout
-                is_supended = True
+                timeout = self._handleUnexpectedException(e)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -88,11 +68,10 @@ class LibreNMS(_handler.Handler):
                     timeout = diff
 
             if timeout > 0:
-                if is_supended:
-                    time.sleep(timeout)
+                if self._isSuspended():
+                    self._sleep(timeout)
                 else:
-                    self.event.wait(timeout)
-                    self.event.clear()
+                    self._wait(timeout)
                     
     def _processLibreNMS(self, events):
         if self.next_run["device"] <= datetime.now():

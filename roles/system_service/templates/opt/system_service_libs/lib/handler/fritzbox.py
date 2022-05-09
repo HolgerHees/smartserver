@@ -4,7 +4,6 @@ from urllib3.exceptions import InsecureRequestWarning
 import logging
 from datetime import datetime, timedelta
 import traceback
-import time
 
 from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -25,8 +24,6 @@ class Fritzbox(_handler.Handler):
       
         self.config = config
         self.cache = cache
-        
-        self.is_running = True
         
         self.sessions = {}
         
@@ -55,25 +52,13 @@ class Fritzbox(_handler.Handler):
             self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
             self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
         
-        self.event = threading.Event()
-        self.thread = threading.Thread(target=self._checkFritzbox, args=())
-        
         self.delayed_lock = threading.Lock()
         self.delayed_devices = {}
         self.delayed_wakeup_timer = None
         
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-    def start(self):
-        self.thread.start()
-        
-    def terminate(self):
-        self.is_running = False
-        self.event.set()
-            
-    def _checkFritzbox(self):
-        is_supended = {}
-        
+    def _run(self):
         now = datetime.now()
         for fritzbox_ip in self.config.fritzbox_devices:
             self.next_run[fritzbox_ip] = {"device": now, "dhcp_clients": now, "mesh_clients": now}
@@ -87,32 +72,26 @@ class Fritzbox(_handler.Handler):
             self.dhcp_clients[fritzbox_ip] = {}
             
             self.fritzbox_macs[fritzbox_ip] = None
-            
-            is_supended[fritzbox_ip] = False
         
-        while self.is_running:
+        while self._isRunning():
             events = []
 
             timeout = 9999999999
             
             for fritzbox_ip in self.config.fritzbox_devices:
                 try:
-                    if is_supended[fritzbox_ip]:
-                        logging.warning("Resume Fritzbox '{}'.".format(fritzbox_ip))
-                        is_supended[fritzbox_ip] = False
+                    if self._isSuspended():
+                        self._confirmSuspended()
                         
                     self._processDevice(fritzbox_ip, events)
                 except FritzConnectionException as e:
                     logging.error("Fritzbox '{}' not accessible. Will suspend for 1 minutes.".format(fritzbox_ip))
                     logging.error(traceback.format_exc())
                     timeout = 60
-                    is_supended[fritzbox_ip] = True
+                    self._suspend(fritzbox_ip)
                 except Exception as e:
                     self.cache.cleanLocks(self, events)
-                    logging.error("Fritzbox '{}' got unexpected exception. Will suspend for 15 minutes.".format(fritzbox_ip))
-                    logging.error(traceback.format_exc())
-                    timeout = self.config.remote_error_timeout
-                    is_supended[fritzbox_ip] = True
+                    timeout = self._handleUnexpectedException(e, fritzbox_ip)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -125,11 +104,10 @@ class Fritzbox(_handler.Handler):
                         timeout = diff
 
             if timeout > 0:
-                if is_supended[fritzbox_ip]:
-                    time.sleep(timeout)
+                if self._isSuspended(fritzbox_ip):
+                    self._sleep(timeout)
                 else:
-                    self.event.wait(timeout)
-                    self.event.clear()
+                    self._wait(timeout)
                     
     def _processDevice(self, fritzbox_ip, events):
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
@@ -505,7 +483,7 @@ class Fritzbox(_handler.Handler):
             if triggered_types:
                 logging.info("Delayed trigger runs for {}".format(" & ".join(triggered_types)))
 
-                self.event.set()
+                self._wakeup()
             else:
                 logging.info("Delayed trigger not needed anymore")
 

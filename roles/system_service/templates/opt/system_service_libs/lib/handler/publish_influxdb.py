@@ -1,6 +1,6 @@
-import threading
 import logging
 import requests
+import time
 
 from lib.handler import _handler
 from lib.dto.group import Group
@@ -15,31 +15,26 @@ class InfluxDBPublisher(_handler.Handler):
     def __init__(self, config, cache ):
         super().__init__()
       
-        self.is_running = True
-      
         self.config = config
         self.cache = cache
-        
-        self.event = threading.Event()
-        self.thread = threading.Thread(target=self._processStats, args=())
 
-    def start(self):
-        self.thread.start()
-        
-    def terminate(self):
-        self.is_running = False
-        self.event.set()
-        
-    def _processStats(self):
-        while self.is_running:
+    def _run(self):
+        while self._isRunning():
             try:
-                messurements = self._collectMessurements()
-                self._submitMessurements(messurements)
-            except requests.exceptions.ConnectionError:
-                logging.warning("InfluxDB currently not available. Will 15 retry in seconds")
+                if self._isSuspended():
+                    self._confirmSuspended()
+                    
+                try:
+                    messurements = self._collectMessurements()
+                    self._submitMessurements(messurements)
+                except requests.exceptions.ConnectionError:
+                    logging.warning("InfluxDB currently not available. Will 15 retry in seconds")
                 
-            self.event.wait(self.config.influxdb_publish_interval)
-            self.event.clear()
+                self._wait(self.config.influxdb_publish_interval)
+
+            except Exception as e:
+                timeout = self._handleUnexpectedException(e)
+                self._sleep(timeout)
                 
     def _collectMessurements(self):
         messurements = []

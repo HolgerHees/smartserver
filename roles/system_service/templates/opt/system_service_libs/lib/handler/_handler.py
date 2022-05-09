@@ -1,5 +1,7 @@
-import time
 from datetime import datetime
+import logging
+import threading
+import time
 
 import json
 
@@ -7,9 +9,60 @@ from lib.dto.event import Event
 
 
 class Handler:
-    def __init__(self):
+    def __init__(self, with_worker = True):
         self.dispatcher = None
+        
+        self.is_suspended = {}
+
+        self.is_running = with_worker
+
+        if with_worker:
+            self.event = threading.Event()
+            self.thread = threading.Thread(target=self._run, args=())
+        else:
+            self.event = None
+            self.thread = None
+        
+    def start(self):
+        if self.thread is not None:
+            self.thread.start()
+
+    def terminate(self):
+        if self.event is not None:
+            self.is_running = False
+            self.event.set()
+        
+    def _wait(self, timeout):
+        if self.event is not None:
+            self.event.wait(timeout)
+            self.event.clear()
+        
+    def _sleep(self, timeout):
+        time.sleep(timeout)
+        
+    def _wakeup(self):
+        if self.event is not None:
+            self.event.set()
+        
+    def _isRunning(self):
+        return self.is_running
     
+    def _suspend(self, key = None):
+        self.is_suspended[key] = True
+        
+    def _isSuspended(self, key = None):
+        return self.is_suspended.get(key, False)
+    
+    def _confirmSuspended(self, key = None):
+        logging.warning("Resume {}".format(self.__class__.__name__))
+        self.is_suspended[key] = False
+    
+    def _handleUnexpectedException(self, e, key = None):
+        logging.error("{} got unexpected exception. Will suspend for 15 minutes.".format(self.__class__.__name__))
+        logging.error(traceback.format_exc())
+        self.is_suspended[key] = True
+        return 900
+        
     def setDispatcher(self, dispatcher):
         self.dispatcher = dispatcher
         
@@ -60,12 +113,6 @@ class Handler:
             return False
             
         return True
-    
-    def start(self):
-        pass
-
-    def terminate(self):
-        pass
     
     def getEventTypes(self):
         return []

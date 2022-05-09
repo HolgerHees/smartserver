@@ -6,7 +6,6 @@ from urllib3.exceptions import InsecureRequestWarning
 import json
 import traceback
 import logging
-import time
 #import cProfile, pstats
 #from pstats import SortKey
 
@@ -27,8 +26,6 @@ class OpenWRT(_handler.Handler):
         self.config = config
         self.cache = cache
         
-        self.is_running = True
-        
         self.sessions = {}
         
         self.next_run = {}
@@ -39,25 +36,13 @@ class OpenWRT(_handler.Handler):
         self.wifi_associations = {}
         self.wifi_clients = {}
         
-        self.event = threading.Event()
-        self.thread = threading.Thread(target=self._checkOpenWRT, args=())
-
         self.delayed_lock = threading.Lock()
         self.delayed_devices = {}
         self.delayed_wakeup_timer = None
 
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-    def start(self):
-        self.thread.start()
-        
-    def terminate(self):
-        self.is_running = False
-        self.event.set()
-            
-    def _checkOpenWRT(self):
-        is_supended = {}
-                
+    def _run(self):
         now = datetime.now()
 
         for openwrt_ip in self.config.openwrt_devices:
@@ -70,13 +55,7 @@ class OpenWRT(_handler.Handler):
             self.wifi_associations[openwrt_ip] = {}
             self.wifi_clients[openwrt_ip] = {}
             
-            is_supended[openwrt_ip] = False
-            
-        while self.is_running:
-            if self.delayed_wakeup_timer is not None:
-                self.delayed_wakeup_timer.cancel()
-                self.delayed_wakeup_timer = None
-                    
+        while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
             events = []
@@ -85,9 +64,8 @@ class OpenWRT(_handler.Handler):
             
             for openwrt_ip in self.config.openwrt_devices:
                 try:
-                    if is_supended[openwrt_ip]:
-                        logging.warning("Resume OpenWRT '{}'.".format(openwrt_ip))
-                        is_supended[openwrt_ip] = False
+                    if self._isSuspended(openwrt_ip):
+                        self._confirmSuspended(openwrt_ip)
                         
                     self._processDevice(openwrt_ip, events)
                 except UbusCallException as e:
@@ -98,17 +76,14 @@ class OpenWRT(_handler.Handler):
                     else:
                         logging.error("OpenWRT '{}' got exception {} - '{}'. Will suspend for 15 minutes.".format(openwrt_ip, e.getCode(), e))
                         timeout = self.config.remote_error_timeout
-                        is_supended[openwrt_ip] = True
+                        self._suspend(openwrt_ip)
                 except NetworkException as e:
                     logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
                     timeout = e.getTimeout()
-                    is_supended[openwrt_ip] = True
+                    self._suspend(openwrt_ip)
                 except Exception as e:
                     self.cache.cleanLocks(self, events)
-                    logging.error("OpenWRT '{}' got unexpected exception. Will suspend for 15 minutes.".format(openwrt_ip))
-                    logging.error(traceback.format_exc())
-                    timeout = 900
-                    is_supended[openwrt_ip] = True
+                    timeout = self._handleUnexpectedException(e, openwrt_ip)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
@@ -121,11 +96,10 @@ class OpenWRT(_handler.Handler):
                         timeout = diff
 
             if timeout > 0:
-                if is_supended[openwrt_ip]:
-                    time.sleep(timeout)
+                if self._isSuspended(openwrt_ip):
+                    self._sleep(timeout)
                 else:
-                    self.event.wait(timeout)
-                    self.event.clear()
+                    self._wait(timeout)
                     
     def _processDevice(self, openwrt_ip, events ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip)
@@ -399,7 +373,7 @@ class OpenWRT(_handler.Handler):
         r = self._post(ip, json)
         Helper.logProfiler(self, start, "Clients of '{}' fetched".format(ip))
         return self._parseResult(ip, r, "client_list")
-        
+    
     def _delayedWakeup(self):
         with self.delayed_lock:
             self.delayed_wakeup_timer = None
@@ -420,7 +394,7 @@ class OpenWRT(_handler.Handler):
             if triggered_types:
                 logging.info("Delayed trigger runs for {}".format(" & ".join(triggered_types)))
 
-                self.event.set()
+                self._wakeup()
             else:
                 logging.info("Delayed trigger not needed anymore")
                 

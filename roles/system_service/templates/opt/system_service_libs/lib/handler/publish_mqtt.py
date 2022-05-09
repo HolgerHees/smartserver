@@ -1,4 +1,3 @@
-import threading
 from datetime import datetime
 
 import logging
@@ -46,8 +45,6 @@ class MQTTPublisher(_handler.Handler):
     def __init__(self, config, cache ):
         super().__init__()
       
-        self.is_running = True
-      
         self.config = config
         self.cache = cache
         
@@ -58,51 +55,55 @@ class MQTTPublisher(_handler.Handler):
         
         self.published_values = {}
         
-        self.event = threading.Event()
-        self.thread = threading.Thread(target=self._checkPublishedValues, args=())
-
     def start(self):
         self.mqtt_handler.start() 
-        self.thread.start()
+
+        super().start()
         
     def terminate(self):
-        self.is_running = False
-        self.event.set()
+        super().terminate()
 
         self.mqtt_handler.terminate() 
         
-    def _checkPublishedValues(self):
-        while self.is_running:
-            now = datetime.now()
-            timeout = self.config.mqtt_republish_interval
-            
-            for mac in list(self.published_values.keys()):
-                _device = self.cache.getUnlockedDevice(mac)
-                if _device is None:
-                    logging.info("CLEAN values of {}".format(mac))
-                    del self.published_values[mac]
-                    continue
-                
-                _to_publish = {}
-                for [detail, topic, value, last_publish] in self.published_values[mac].values():
+    def _run(self):
+        while self._isRunning():
+            try:
+                if self._isSuspended():
+                    self._confirmSuspended()
                     
-                    _diff = (now-last_publish).total_seconds()
-                    if _diff >= self.config.mqtt_republish_interval:
-                        _to_publish[detail] = [detail, topic, value]
-                    else:
-                        _timeout = self.config.mqtt_republish_interval - _diff
-                        if _timeout < timeout:
-                            timeout = _timeout
-                            
-                if len(_to_publish) > 0:
-                    logging.info("REPUBLISH {} of {}".format(list(_to_publish.keys()), _device))
-                    for [detail, topic, value] in _to_publish.values():
-                        self._publishValue(mac, detail, topic, value, now)
+                now = datetime.now()
+                timeout = self.config.mqtt_republish_interval
+                
+                for mac in list(self.published_values.keys()):
+                    _device = self.cache.getUnlockedDevice(mac)
+                    if _device is None:
+                        logging.info("CLEAN values of {}".format(mac))
+                        del self.published_values[mac]
+                        continue
+                    
+                    _to_publish = {}
+                    for [detail, topic, value, last_publish] in self.published_values[mac].values():
+                        
+                        _diff = (now-last_publish).total_seconds()
+                        if _diff >= self.config.mqtt_republish_interval:
+                            _to_publish[detail] = [detail, topic, value]
+                        else:
+                            _timeout = self.config.mqtt_republish_interval - _diff
+                            if _timeout < timeout:
+                                timeout = _timeout
+                                
+                    if len(_to_publish) > 0:
+                        logging.info("REPUBLISH {} of {}".format(list(_to_publish.keys()), _device))
+                        for [detail, topic, value] in _to_publish.values():
+                            self._publishValue(mac, detail, topic, value, now)
 
-            logging.info("Sleep {}".format(timeout))
-            self.event.wait(timeout)
-            self.event.clear()
-    
+                logging.info("Sleep {}".format(timeout))
+                self._wait(timeout)
+
+            except Exception as e:
+                timeout = self._handleUnexpectedException(e)
+                self._sleep(timeout)
+                
     def _publishValues(self, device, stat, changed_details = None):
         mac = device.getMAC()
         
@@ -153,7 +154,7 @@ class MQTTPublisher(_handler.Handler):
         for [detail, topic, value] in _to_publish.values():
             self._publishValue(mac, detail, topic, value, now)
                 
-        self.event.set()
+        self._wakeup()
 
         return True
     

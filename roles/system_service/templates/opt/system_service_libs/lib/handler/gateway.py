@@ -10,7 +10,7 @@ from lib.helper import Helper
 
 class Gateway(_handler.Handler): 
     def __init__(self, config, cache ):
-        super().__init__()
+        super().__init__(False)
       
         self.config = config
         self.cache = cache

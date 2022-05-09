@@ -265,19 +265,14 @@ class ArpScanner(_handler.Handler):
         self.config = config
         self.cache = cache
         
-        self.is_running = True
-        
         self.registered_devices = {}
-
-        self.event = threading.Event()
-        self.thread = threading.Thread(target=self._checkArpTable, args=())
         
     def start(self):
-        self.thread.start()
-        
         self.dhcp_listener = DHCPListener(self, self.cache, self.config.main_interface)
         self.dhcp_listener.start()
         
+        super().start()
+
     def terminate(self):
         self.dhcp_listener.terminate()
 
@@ -285,10 +280,9 @@ class ArpScanner(_handler.Handler):
             if self.registered_devices[mac] is not None:
                 self.registered_devices[mac].terminate()
                 
-        self.is_running = False
-        self.event.set()
+        super().terminate()
             
-    def _checkArpTable(self):
+    def _run(self):
         server_mac = "00:00:00:00:00:00"
         try:
             with open("/sys/class/net/{}/address".format(self.config.main_interface), 'r') as f:
@@ -296,9 +290,7 @@ class ArpScanner(_handler.Handler):
         except (IOError, OSError) as e:
             pass
         
-        is_supended = False
-
-        while self.is_running:
+        while self._isRunning():
             try:
                 collected_arps = self._fetchArpResult()
             except Exception as e:
@@ -307,11 +299,12 @@ class ArpScanner(_handler.Handler):
                 raise e
 
             events = []
+            
+            timeout = self.config.arp_scan_interval
 
             try:
-                if is_supended:
-                    logging.warning("Resume ArpScanner")
-                    is_supended = False
+                if self._isSuspended():
+                    self._confirmSuspended()
                 
                 processed_ips = {}
                 processed_macs = {}
@@ -353,18 +346,15 @@ class ArpScanner(_handler.Handler):
             
             except Exception as e:
                 self.cache.cleanLocks(self, events)
-                logging.error("DHCPListener checker got unexpected exception. Will suspend for 15 minutes.")
-                logging.error(traceback.format_exc())
-                is_supended = True
+                timeout = self._handleUnexpectedException(e)
 
             if len(events) > 0:
                 self._dispatch(events)
 
-            if is_supended:
-                time.sleep(900)
+            if self._isSuspended():
+                self._sleep(timeout)
             else:
-                self.event.wait(self.config.arp_scan_interval)
-                self.event.clear()
+                self._wait(timeout)
                 
     def _fetchArpResult(self):
         collected_arps = []
