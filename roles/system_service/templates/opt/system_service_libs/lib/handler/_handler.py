@@ -33,6 +33,7 @@ class Handler:
             self.event.set()
         
     def _wait(self, timeout):
+        #logging.info("wait {}".format(self.__class__.__name__))
         if self.event is not None:
             self.event.wait(timeout)
             self.event.clear()

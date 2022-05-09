@@ -477,7 +477,7 @@ class Fritzbox(_handler.Handler):
                     self.next_run[fritzbox_ip]["dhcp_clients"] = datetime.now()
                     triggered_types["dhcp"] = True
                 if len(missing_wifi_macs) > 0:
-                    self.next_run[fritzbox_ip]["wifi_clients"] = datetime.now()
+                    self.next_run[fritzbox_ip]["mesh_clients"] = datetime.now()
                     triggered_types["wifi"] = True
                     
             if triggered_types:
