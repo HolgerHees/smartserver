@@ -3,7 +3,6 @@ import requests
 from urllib3.exceptions import InsecureRequestWarning
 import logging
 from datetime import datetime, timedelta
-import traceback
 
 from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -20,10 +19,7 @@ from lib.helper import Helper
 
 class Fritzbox(_handler.Handler): 
     def __init__(self, config, cache ):
-        super().__init__()
-      
-        self.config = config
-        self.cache = cache
+        super().__init__(config,cache)
         
         self.sessions = {}
         
@@ -53,7 +49,8 @@ class Fritzbox(_handler.Handler):
             self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
         
         self.delayed_lock = threading.Lock()
-        self.delayed_devices = {}
+        self.delayed_dhcp_devices = {}
+        self.delayed_wifi_devices = {}
         self.delayed_wakeup_timer = None
         
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -85,10 +82,8 @@ class Fritzbox(_handler.Handler):
                         
                     self._processDevice(fritzbox_ip, events)
                 except FritzConnectionException as e:
-                    logging.error("Fritzbox '{}' not accessible. Will suspend for 1 minutes.".format(fritzbox_ip))
-                    logging.error(traceback.format_exc())
-                    timeout = 60
-                    self._suspend(fritzbox_ip)
+                    self.cache.cleanLocks(self, events)
+                    timeout = self._handleExpectedException(e, "Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
                 except Exception as e:
                     self.cache.cleanLocks(self, events)
                     timeout = self._handleUnexpectedException(e, fritzbox_ip)
@@ -457,19 +452,33 @@ class Fritzbox(_handler.Handler):
         
         self.devices[fritzbox_ip] = now
 
+    def _isKnownDHCPClient(self, mac):
+        for fritzbox_ip in self.config.fritzbox_devices:
+            if mac in self.dhcp_clients[fritzbox_ip]:
+                return True
+        return False
+
+    def _isKnownWifiClient(self, mac):
+        for fritzbox_ip in self.config.fritzbox_devices:
+            if mac in self.wifi_clients[fritzbox_ip]:
+                return True
+        return False
+    
     def _delayedWakeup(self):
         with self.delayed_lock:
             self.delayed_wakeup_timer = None
             
             missing_dhcp_macs = []
+            for mac in list(self.delayed_dhcp_devices.keys()):
+                if not self._isKnownDHCPClient(mac):
+                    missing_dhcp_macs.append(mac)
+                del self.delayed_dhcp_devices[mac]
+
             missing_wifi_macs = []
-            for mac in list(self.delayed_devices.keys()):
-                for fritzbox_ip in self.config.fritzbox_devices:
-                    if mac not in self.dhcp_clients[fritzbox_ip]:
-                        missing_dhcp_macs.append(mac)
-                    if self.has_wifi_networks and mac not in self.wifi_clients[fritzbox_ip] and self.delayed_devices[mac].supportsWifi():
-                        missing_wifi_macs.append(mac)
-                del self.delayed_devices[mac]
+            for mac in list(self.delayed_wifi_devices.keys()):
+                if not self._isKnownWifiClient(mac):
+                    missing_wifi_macs.append(mac)
+                del self.delayed_wifi_devices[mac]
             
             triggered_types = {}
             for fritzbox_ip in self.next_run:
@@ -490,14 +499,14 @@ class Fritzbox(_handler.Handler):
     def getEventTypes(self):
         return [ 
             { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None },
-            { "types": [Event.TYPE_STAT], "actions": [Event.ACTION_MODIFY], "details": ["online_state"] }
+            { "types": [Event.TYPE_DEVICE_STAT], "actions": [Event.ACTION_MODIFY], "details": ["online_state"] }
         ]
 
     def processEvents(self, events):
         with self.delayed_lock:
             has_new_devices = False
             for event in events:
-                if event.getAction() == Event.ACTION_MODIFY:
+                if event.getType() == Event.TYPE_DEVICE_STAT:
                     stat = event.getObject()
                     device = self.cache.getUnlockedDevice(stat.getMAC())
                     if device is None:
@@ -505,13 +514,15 @@ class Fritzbox(_handler.Handler):
                     
                     if not self.has_wifi_networks or not device.supportsWifi() or not stat.isOnline():
                         continue
+
+                    self.delayed_wifi_devices[device.getMAC()] = device
                 else:
                     device = event.getObject()
+                    self.delayed_dhcp_devices[device.getMAC()] = device
+
+                has_new_devices = True
                 
                 logging.info("Delayed trigger started for {}".format(device))
-
-                self.delayed_devices[device.getMAC()] = device
-                has_new_devices = True
 
             if has_new_devices:
                 if self.delayed_wakeup_timer is not None:

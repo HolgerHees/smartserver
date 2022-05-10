@@ -1,7 +1,8 @@
 class Event():   
     TYPE_GROUP = "group"
     TYPE_DEVICE = "device"
-    TYPE_STAT = "stat"
+    TYPE_DEVICE_STAT = "device_stat"
+    TYPE_CONNECTION_STAT = "connection_stat"
 
     ACTION_CREATE = "create"
     ACTION_MODIFY = "modify"

@@ -1,4 +1,5 @@
 from lib.dto._changeable import Changeable
+from lib.dto.event import Event
 
 
 class Group(Changeable):
@@ -11,6 +12,9 @@ class Group(Changeable):
         self.type = type
         
         self.details = {}
+
+    def getEventType(self):
+        return Event.TYPE_GROUP
 
     def getGID(self):
         return self.gid

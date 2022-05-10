@@ -36,8 +36,8 @@ class Helper():
                                 bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                 universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
-    def ping(ip, interface):
-        result = command.exec(["/bin/ping", "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, exitstatus_check = False)
+    def ping(ip, interface, timeout):
+        result = command.exec(["/bin/ping", "-W", str(timeout), "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, exitstatus_check = False)
         if result.returncode == 0:
             return Helper.ip2mac(ip, interface)
         return None

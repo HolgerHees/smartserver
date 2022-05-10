@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import threading
 import time
+import traceback
 
 import json
 
@@ -9,7 +10,10 @@ from lib.dto.event import Event
 
 
 class Handler:
-    def __init__(self, with_worker = True):
+    def __init__(self, config, cache, with_worker = True):
+        self.config = config
+        self.cache = cache
+
         self.dispatcher = None
         
         self.is_suspended = {}
@@ -48,21 +52,25 @@ class Handler:
     def _isRunning(self):
         return self.is_running
     
-    def _suspend(self, key = None):
-        self.is_suspended[key] = True
-        
     def _isSuspended(self, key = None):
         return self.is_suspended.get(key, False)
     
     def _confirmSuspended(self, key = None):
         logging.warning("Resume {}".format(self.__class__.__name__))
         self.is_suspended[key] = False
-    
-    def _handleUnexpectedException(self, e, key = None):
-        logging.error("{} got unexpected exception. Will suspend for 15 minutes.".format(self.__class__.__name__))
+        
+    def _handleExpectedException(self, msg, key, timeout = 60):
+        logging.error("{}.{}".format(msg, " Will suspend for {} minute(s).".format(timeout / 60) if timeout >= 0 else ""))
         logging.error(traceback.format_exc())
         self.is_suspended[key] = True
-        return 900
+        return timeout
+    
+    def _handleUnexpectedException(self, e, key = None, timeout = 900):
+        logging.error("{} got unexpected exception.{}".format(self.__class__.__name__, " Will suspend for {} minute(s).".format(timeout / 60) if timeout >= 0 else ""))
+        logging.error(traceback.format_exc())
+        if timeout >= 0:
+            self.is_suspended[key] = True
+        return timeout
         
     def setDispatcher(self, dispatcher):
         self.dispatcher = dispatcher

@@ -14,10 +14,7 @@ from lib.dto.event import Event
 
 class PortScanner(_handler.Handler): 
     def __init__(self, config, cache ):
-        super().__init__()
-      
-        self.config = config
-        self.cache = cache
+        super().__init__(config,cache)
         
         self.last_refresh = 0
         

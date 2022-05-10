@@ -1,6 +1,7 @@
 import logging
 
 from lib.dto._changeable import Changeable
+from lib.dto.event import Event
 
 
 class Connection():
@@ -80,6 +81,9 @@ class Device(Changeable):
 
         self._setPriorizedData("type", "default", 0, type)
         
+    def getEventType(self):
+        return Event.TYPE_DEVICE
+
     def getMAC(self):
         return self.mac
 

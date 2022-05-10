@@ -180,7 +180,7 @@ class Dispatcher():
                     groups_deleted.append(event.getObject())
                 else:
                     groups_modified.append(event.getObject())
-            elif event.getType() == Event.TYPE_STAT:
+            elif event.getType() == Event.TYPE_DEVICE_STAT or event.getType() == Event.TYPE_CONNECTION_STAT:
                 if event.getAction() == Event.ACTION_CREATE:
                     stats_added.append(event.getObject())
                 elif event.getAction() == Event.ACTION_DELETE:

@@ -1,5 +1,6 @@
 from lib.dto._changeable import Changeable
 from datetime import datetime
+from lib.dto.event import Event
 
 
 class DeviceStat(Changeable):
@@ -13,6 +14,9 @@ class DeviceStat(Changeable):
         # internal variables without change detection
         self.last_validated_seen = datetime.now()
         self.last_unvalidated_seen = datetime.now()
+        
+    def getEventType(self):
+        return Event.TYPE_DEVICE_STAT
 
     def getMAC(self):
         return self.mac

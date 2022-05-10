@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import re
 import requests
 import json
-import traceback
 import math
 import logging
 
@@ -17,10 +16,7 @@ from lib.helper import Helper
 
 class LibreNMS(_handler.Handler): 
     def __init__(self, config, cache ):
-        super().__init__()
-      
-        self.config = config
-        self.cache = cache
+        super().__init__(config,cache)
         
         self.next_run = {}
         
@@ -51,9 +47,8 @@ class LibreNMS(_handler.Handler):
                 
                 self._processLibreNMS(events)
             except NetworkException as e:
-                logging.warning("{}. Will retry in {} seconds.".format(str(e), e.getTimeout()))
-                timeout = e.getTimeout()
-                self._suspend()
+                self.cache.cleanLocks(self, events)
+                timeout = self._handleExpectedException(e, str(e), None, e.getTimeout())
             except Exception as e:
                 self.cache.cleanLocks(self, events)
                 timeout = self._handleUnexpectedException(e)

@@ -1,5 +1,7 @@
 from lib.dto._changeable import Changeable
 from datetime import datetime
+from lib.dto.event import Event
+
 
 class ConnectionStatDetails(Changeable):
     def __init__(self, connection_stat, connection_details):
@@ -99,6 +101,9 @@ class ConnectionStat(Changeable):
         self.interface = interface
 
         self.data = {}
+
+    def getEventType(self):
+        return Event.TYPE_CONNECTION_STAT
 
     def getMAC(self):
         return self.mac

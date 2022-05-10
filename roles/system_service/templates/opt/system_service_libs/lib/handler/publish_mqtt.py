@@ -43,10 +43,7 @@ class MQTTHandler():
 
 class MQTTPublisher(_handler.Handler): 
     def __init__(self, config, cache ):
-        super().__init__()
-      
-        self.config = config
-        self.cache = cache
+        super().__init__(config,cache)
         
         self.skipped_macs = {}
         self.allowed_details = {}
@@ -168,7 +165,7 @@ class MQTTPublisher(_handler.Handler):
     def getEventTypes(self):
         return [ 
             { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["ip"] },
-            { "types": [Event.TYPE_STAT], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["online_state","wan_type","wan_state"] } 
+            { "types": [Event.TYPE_DEVICE_STAT, Event.TYPE_CONNECTION_STAT], "actions": [Event.ACTION_CREATE, Event.ACTION_MODIFY], "details": ["online_state","wan_type","wan_state"] } 
         ]
 
     def processEvents(self, events):
@@ -195,7 +192,7 @@ class MQTTPublisher(_handler.Handler):
                     if all_stats_published and device.getMAC() in self.skipped_macs:
                         del self.skipped_macs[device.getMAC()]
 
-            elif event.getType() == Event.TYPE_STAT:
+            else:
                 stat = event.getObject()
                 device = stat.getUnlockedDevice()
                     
