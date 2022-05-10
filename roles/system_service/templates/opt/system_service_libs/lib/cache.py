@@ -189,7 +189,7 @@ class Cache():
     def getConnectionStat(self, mac, interface):
         self._checkLock()
 
-        id = "{}-{}".format(mac, interface)
+        stat = id = "{}-{}".format(mac, interface)
         if id not in self.stats:
             stat = ConnectionStat(self, mac, interface) if interface is not None else DeviceStat(self, mac)
             self.stats[id] = stat
@@ -234,12 +234,13 @@ class Cache():
         self._checkLock()
 
         stat = self.getUnlockedConnectionStat(mac,interface)
-        if len(stat.getDataList()) == 1:
-            self.removeConnectionStat(mac,interface, event_callback, caller_frame + 1)
-        else:
-            stat.lock(self._lock_owner)
-            stat.removeData(connection_details)
-            self.confirmStat( stat, event_callback, caller_frame + 1 )
+        if stat is not None:
+            if len(stat.getDataList()) == 1:
+                self.removeConnectionStat(mac,interface, event_callback, caller_frame + 1)
+            else:
+                stat.lock(self._lock_owner)
+                stat.removeData(connection_details)
+                self.confirmStat( stat, event_callback, caller_frame + 1 )
 
     def ip2mac(self,ip):
         now = datetime.now()

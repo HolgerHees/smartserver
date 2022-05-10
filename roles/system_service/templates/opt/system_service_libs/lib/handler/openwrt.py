@@ -238,12 +238,13 @@ class OpenWRT(_handler.Handler):
                     if mac == self.cache.getGatewayMAC():
                         continue
                                 
-                    target_mac = openwrt_mac
-                    target_interface = mac
                     vlan = wlan_network["vlan"]
                     gid = wlan_network["gid"]
                     band = wlan_network["band"]
                     
+                    target_mac = openwrt_mac
+                    target_interface = mac
+
                     uid = "{}-{}".format(mac, gid)
                     
                     connection_details = { "vlan": vlan, "band": band }
