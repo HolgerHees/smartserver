@@ -127,6 +127,8 @@ class Fritzbox(_handler.Handler):
         topologie = self.fh[fritzbox_ip].get_mesh_topology()
         Helper.logProfiler(self, start, "Mesh data of '{}' fetched".format(fritzbox_ip))
         
+        #logging.info(topologie)
+        
         self.cache.lock(self)
         
         # ************ Prepare wifi networks ****************
@@ -218,6 +220,8 @@ class Fritzbox(_handler.Handler):
                     continue
 
                 for node_link in node_interface["node_links"]:
+                    if node_link["state"] != "CONNECTED":
+                        continue
                     
                     flip = node_link["node_1_uid"] == node_uid
                     source_key = "node_1_uid" if flip else "node_2_uid"
@@ -252,6 +256,7 @@ class Fritzbox(_handler.Handler):
                             stat_data.setInSpeed(node_link["cur_data_rate_rx"] * 1000)
                             stat_data.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
                             stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
+                            #stat_data.setDetail("signal", node_link["rx_rcpi"] if node_link["rx_rcpi"] != "255" else node_link["tx_rcpi"], "attenuation")
                             self.cache.confirmStat( stat, lambda event: events.append(event) )
 
                         _active_associations.append(uid)
