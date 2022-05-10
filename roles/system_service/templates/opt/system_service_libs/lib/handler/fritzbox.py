@@ -237,7 +237,7 @@ class Fritzbox(_handler.Handler):
                         target_mac = mesh_hops[node_link[target_key]][0]
                         target_interface = mac
                         
-                        uid = "{}-{}".format(mac, gid)
+                        uid = "{}-{}-{}".format(mac, target_mac, gid)
 
                         connection_details = { "vlan": vlan, "band": band }
 

@@ -245,7 +245,7 @@ class OpenWRT(_handler.Handler):
                     target_mac = openwrt_mac
                     target_interface = mac
 
-                    uid = "{}-{}".format(mac, gid)
+                    uid = "{}-{}-{}".format(mac, target_mac, gid)
                     
                     connection_details = { "vlan": vlan, "band": band }
 
