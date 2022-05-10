@@ -187,7 +187,7 @@ class Device(Changeable):
                 self.hop_connections.remove(_connection)
                 target_mac = _connection.getTargetMAC()
                 target_device = self.cache.getUnlockedDevice(target_mac)
-                self._markAsChanged("connection", "remove disabled connection to {}:{}".format(target_device if target_device else target_mac, connection.getDetailsList() ))
+                self._markAsChanged("connection", "remove disabled connection to {}:{}".format(target_device if target_device else target_mac, _connection.getDetailsList() ))
 
     def removeHopConnection(self, type, target_mac, target_interface, details, disable_last_of_type = False):
         self._checkLock()
