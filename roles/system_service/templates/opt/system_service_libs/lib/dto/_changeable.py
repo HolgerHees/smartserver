@@ -106,7 +106,7 @@ class Changeable():
         
         changed_details = list(set(changed_details))
         changed_details.sort()
-        return [state, changed_raw, ", ".join(changed_details)]
+        return [state, list(set(changed_raw)), ", ".join(changed_details)]
     
     def _checkLock(self):
         if not self._lock:

@@ -236,7 +236,6 @@ class Fritzbox(_handler.Handler):
                         device = self.cache.getUnlockedDevice(source_mac)
                         if device is not None:
                             device.lock(self)
-                            device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
                             device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
                             device.addGID(gid)
                             self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -256,8 +255,7 @@ class Fritzbox(_handler.Handler):
             if source_mac not in _active_associations:
                 device = self.cache.getDevice(source_mac)
                 device.removeGID(gid);
-                # **** connection cleanup and stats cleanup happens in cleanDisabledHobConnection ****
-                device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
+                device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
                 
                 self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))

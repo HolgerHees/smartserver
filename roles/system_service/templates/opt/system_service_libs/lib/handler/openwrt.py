@@ -249,7 +249,6 @@ class OpenWRT(_handler.Handler):
                     connection_details = { "vlan": vlan, "band": band }
 
                     device = self.cache.getDevice(mac)
-                    device.cleanDisabledHobConnections(target_mac, lambda event: events.append(event))
                     device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
                     device.addGID(gid)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
@@ -293,8 +292,7 @@ class OpenWRT(_handler.Handler):
                 if uid not in _active_associations:
                     device = self.cache.getDevice(mac)
                     device.removeGID(gid);
-                    # **** connection cleanup and stats cleanup happens in cleanDisabledHobConnection ****
-                    device.disableHopConnection(Connection.WIFI, target_mac, target_interface)
+                    device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
 
                     self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
