@@ -260,21 +260,6 @@ class Device(Changeable):
     def supportsWifi(self):
         return self.supports_wifi
 
-    def addGID(self, gid):
-        self._checkLock()
-        if gid not in self.gids:
-            self._markAsChanged("gid", "add gid")
-            self.gids.append(gid)
-
-    def removeGID(self, gid):
-        self._checkLock()
-        if gid in self.gids:
-            self._markAsChanged("gid", "remove gid")
-            self.gids.remove(gid)
-            
-    def getGIDs(self):
-        return self.gids
-           
     def setServices(self, services):
         self._checkLock()
         self._markAsChanged("services")
@@ -293,8 +278,6 @@ class Device(Changeable):
             "info": self.info,
             
             "connection": connection.getSerializeable() if connection else None,
-
-            "gids": self.gids,
 
             "services": self.services,
             "details": self._getDetails()

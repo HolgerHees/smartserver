@@ -232,10 +232,13 @@ mx.UNCore = (function( ret ) {
             if( device["interfaceStat"] && device["interfaceStat"]["update"] > device["update"] ) device["update"] = device["interfaceStat"]["update"];
             
             _groups = [];
-            device["gids"].forEach(function(gid)
+            if( device["connection"] )
             {
-                _groups.push(getGroup(gid));
-            });
+                device["connection"]["details"].forEach(function(details)
+                {
+                    if( details["gid"] ) _groups.push(getGroup(details["gid"]));
+                });
+            }
             device["groups"] = _groups;
         });
         

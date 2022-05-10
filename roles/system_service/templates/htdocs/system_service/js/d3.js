@@ -309,7 +309,7 @@ mx.D3 = (function( ret )
 
             if( group != null )
             {
-                let _stat = d.data.device.interfaceStat.data.filter(data => data["connection_details"]["band"] == group.details.band["value"]);
+                let _stat = d.data.device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
                 if( _stat.length > 0)
                     stat = _stat[0];
             }
@@ -608,9 +608,9 @@ mx.D3 = (function( ret )
                         else connection_data.push( { "name": key, "value": value["value"], "format": value["format"] } );
                     });
 
-                    if( data["connection_details"] && data["connection_details"]["band"] )
+                    if( data["connection_details"] && data["connection_details"]["gid"] )
                     {
-                        let group = device.groups.filter(group => group.details.band["value"] == data["connection_details"]["band"] );
+                        let group = device.groups.filter(group => group.gid == data["connection_details"]["gid"] );
                         if( group.length > 0 )
                         {
                             Object.entries(group[0]["details"]).forEach(function([key,value])

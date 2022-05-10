@@ -239,13 +239,12 @@ class Fritzbox(_handler.Handler):
                         
                         uid = "{}-{}-{}".format(mac, target_mac, gid)
 
-                        connection_details = { "vlan": vlan, "band": band }
+                        connection_details = { "vlan": vlan, "gid": gid }
 
                         device = self.cache.getUnlockedDevice(mac)
                         if device is not None:
                             device.lock(self)
                             device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
-                            device.addGID(gid)
                             self.cache.confirmDevice( device, lambda event: events.append(event) )
 
                             _active_client_macs.append(mac)
@@ -267,7 +266,6 @@ class Fritzbox(_handler.Handler):
                 device = self.cache.getUnlockedDevice(mac)
                 if device is not None:
                     device.lock(self)
-                    device.removeGID(gid);
                     device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
