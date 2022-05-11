@@ -18,11 +18,13 @@ class Container:
         self.image = image
 
 class Image:
-    def __init__(self,id,name,tag,created):
+    def __init__(self,id,repository,tag,created):
         self.id = id
-        self.name = name
+        self.repository = repository
         self.tag = tag
         self.created = created
+        
+        self.name = u"{}:{}".format(self.repository,self.tag) if self.repository is not None and self.tag is not None else self.id
         
     def __eq__(self, other):
         return self.id == other.id
@@ -65,7 +67,7 @@ for line in lines[0:-1]:
     obj = json.loads(line[1:-1])
     
     created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
-    image = Image(obj["ID"],obj["Repository"] if obj["Repository"] else obj["ID"],obj["Tag"],created)
+    image = Image(obj["ID"],obj["Repository"] if obj["Repository"] != "<none>" else None,obj["Tag"] if obj["Tag"] != "<none>" else None,created)
     if image.name not in images:
         images[image.name] = []
     images[image.name].append(image)
@@ -76,7 +78,8 @@ for name in sorted(images):
     image_versions = sorted(images[name], reverse=True)
     
     for image_version in image_versions:
-        container_image = u"{}:{}".format(image_version.name,image_version.tag)
+        container_image = image_version.name
+        
         if container_image in containers:
             if not is_quite:
                 print(u"\033[0;32mUSED\033[0m      : '{}', '{}'".format(image_version.id,container_image))
