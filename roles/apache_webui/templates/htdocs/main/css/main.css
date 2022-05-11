@@ -465,13 +465,11 @@ body.phone #menu .header {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center bottom;
-    opacity: 1;
-    top: -5px;
-    left: -5px;
-    bottom: -5px;
-    right: -5px;
-    margin: -5px;
-    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
     z-index: -1;   
     opacity: 0;
     transition: opacity 200ms ease-out; 
@@ -479,11 +477,36 @@ body.phone #menu .header {
 body.dark #background {
     filter: brightness(70%);
 }
-#inline.content #background {
-    filter: blur(5px);
+@supports (backdrop-filter: none) {
+    #background::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        backdrop-filter: blur(5px) opacity(0);
+        transition: backdrop-filter 200ms ease-out;
+    }
+    #inline.content #background::after {
+        backdrop-filter: blur(5px) opacity(1);
+    }
 }
-body.dark #inline.content #background {
-    filter: brightness(70%) blur(5px);
+@supports not (backdrop-filter: none) { /* Firefox */
+    #background {
+        top: -5px;
+        left: -5px;
+        bottom: -5px;
+        right: -5px;
+        margin: -5px;
+        position: fixed;
+        transition: all 200ms ease-out; 
+    }
+    #inline.content #background {
+        filter: blur(5px);
+    }
+    body.dark #inline.content #background {
+        filter: brightness(70%) blur(5px);
+    }
 }
 #submenu .service.home {
     height: 100%;
