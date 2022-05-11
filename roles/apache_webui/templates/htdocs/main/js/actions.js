@@ -377,6 +377,8 @@ mx.Actions = (function( ret ) {
         setIFrameUrl(new_url, entry.getTitle());
 
         if( visualisationType != "desktop" ) menuPanel.close();
+
+        inlineElement.classList.add("content");
     };
 
     ret.openMenuById = function(event,subGroupUId)
@@ -410,12 +412,15 @@ mx.Actions = (function( ret ) {
             mx.Menu.activateMenu(subGroup);
             
             if( visualisationType != "desktop" && subGroup.getMenuEntries().length == 0 ) menuPanel.close();
+            
+            inlineElement.classList.add("content");
         }
-
     };
 
     ret.openHome = function(event)
     {
+        inlineElement.classList.remove("content");
+
         var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
         
         var isActive = ( mx.History.getActiveNavigation() === subGroup );

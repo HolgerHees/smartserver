@@ -466,20 +466,24 @@ body.phone #menu .header {
     background-size: cover;
     background-position: center bottom;
     opacity: 1;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    position: absolute;
+    top: -5px;
+    left: -5px;
+    bottom: -5px;
+    right: -5px;
+    margin: -5px;
+    position: fixed;
     z-index: -1;   
     opacity: 0;
     transition: opacity 200ms ease-out; 
-    -webkit-transition: opacity 200ms ease-out; 
-    -moz-transition: opacity 200ms ease-out;
-    -o-transition: opacity 200ms ease-out;
 }
 body.dark #background {
     filter: brightness(70%);
+}
+#inline.content #background {
+    filter: blur(5px);
+}
+body.dark #inline.content #background {
+    filter: brightness(70%) blur(5px);
 }
 #submenu .service.home {
     height: 100%;
