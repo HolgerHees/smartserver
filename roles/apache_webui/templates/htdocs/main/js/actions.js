@@ -323,7 +323,7 @@ mx.Actions = (function( ret ) {
                     
                 },"setSubMenu1");
                 submenu.style.opacity = "0";
-            }, 100);
+            }, 0);
         }
     }
     
