@@ -12,10 +12,11 @@ from smartserver import command
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %z %Z'
 
 class Container:
-    def __init__(self,id,name,image):
+    def __init__(self,id,name,image,is_stopped_since):
         self.id = id
         self.name = name
         self.image = image
+        self.is_stopped_since = is_stopped_since
 
 class Image:
     def __init__(self,id,repository,tag,created):
@@ -24,8 +25,14 @@ class Image:
         self.tag = tag
         self.created = created
         
-        self.name = u"{}:{}".format(self.repository,self.tag) if self.repository is not None and self.tag is not None else self.id
-        
+        if self.repository is not None and self.tag is not None:
+            if self.tag == "latest":
+                self.name = self.repository
+            else:
+                self.name = u"{}:{}".format(self.repository,self.tag)
+        else:
+            self.name = self.id
+            
     def __eq__(self, other):
         return self.id == other.id
 
@@ -54,7 +61,21 @@ lines = result.stdout.decode("utf-8").split("\n")
 for line in lines[0:-1]:
     obj = json.loads(line[1:-1])
     
-    container = Container(obj["ID"],obj["Names"],obj["Image"])
+    is_stopped_since = None
+    if obj["State"] == "exited":
+        result = command.exec(["docker", "inspect", obj["ID"]])
+        _obj = json.loads(result.stdout.decode("utf-8"))
+        state = _obj[0]["State"]
+        finished_at = state["FinishedAt"].split('.')[0]
+        finished_at = datetime.strptime("{}Z".format(finished_at), '%Y-%m-%dT%H:%M:%SZ')
+        is_stopped_since = (datetime.utcnow() - finished_at)
+    #else:
+    #    started_at = obj["CreatedAt"]
+    #    started_at = datetime.strptime(started_at, '%Y-%m-%d %H:%M:%S %z %Z')
+    #    time_diff = (datetime.now().astimezone() - started_at).total_seconds()
+
+    container = Container(obj["ID"],obj["Names"],obj["Image"],is_stopped_since)  
+    
     if container.image not in containers:
         containers[container.image] = []
     containers[container.image].append(container)
@@ -81,16 +102,33 @@ for name in sorted(images):
         container_image = image_version.name
         
         if container_image in containers:
-            if not is_quite:
-                print(u"\033[0;32mUSED\033[0m      : '{}', '{}'".format(image_version.id,container_image))
-            continue
+            container_used = False
+            for container in containers[container_image]:
+                if container.is_stopped_since is not None:
+                    # remove containers, stopped more then 1 week ago
+                    if container.is_stopped_since.total_seconds() < 60 * 60 * 24 * 7:
+                        if not is_quite:
+                            stopped_since = str(container.is_stopped_since).split(".")[0]
+                            print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}' stopped since {}".format(container.id,container.name, image_version.id, container_image, stopped_since))
+                        container_used = True
+                    else:
+                        print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}'".format(container.id, container.name, image_version.id, container_image))
+                        command.exec(["docker", "rm", "{}".format(container.id)])
+                        
+                else:
+                    container_used = True
+               
+            if container_used:
+                if not is_quite:
+                    print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image_version.id,container_image))
+                continue
 
         if container_image in build_images:
             if not is_quite:
-                print(u"\033[0;33mREFERENCED\033[0m: '{}', '{}'".format(image_version.id,container_image))
+                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image_version.id,container_image))
             continue
 
-        print(u"\033[0;91mDELETED\033[0m   : '{}', '{}'".format(image_version.id,container_image))
+        print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image_version.id,container_image))
         
         cleaned = True
 
