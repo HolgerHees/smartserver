@@ -48,7 +48,7 @@ class LibreNMS(_handler.Handler):
                 self._processLibreNMS(events)
             except NetworkException as e:
                 self.cache.cleanLocks(self, events)
-                timeout = self._handleExpectedException(e, str(e), None, e.getTimeout())
+                timeout = self._handleExpectedException(str(e), None, e.getTimeout())
             except Exception as e:
                 self.cache.cleanLocks(self, events)
                 timeout = self._handleUnexpectedException(e)

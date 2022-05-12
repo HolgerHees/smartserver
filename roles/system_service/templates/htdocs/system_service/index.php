@@ -260,17 +260,21 @@ mx.UNCore = (function( ret ) {
         
         //refreshDaemonState(null, function(state){});
         
+        function handleErrors()
+        {
+            mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
+        }
         const socket = io("/", {path: '/system_service/api/socket.io' });
         socket.on('connect', function() {
             mx.Error.confirmSuccess();
             socket.emit('call', "network_data");
         });
-        socket.on('disconnect', function() {
-            mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-        });
         socket.on('network_data', function(data) {
             processData(data);
         });
+        socket.on('connect_error', err => handleErrors(err))
+        socket.on('connect_failed', err => handleErrors(err))
+        socket.on('disconnect', err => handleErrors(err))
     }
     return ret;
 })( mx.UNCore || {} );
