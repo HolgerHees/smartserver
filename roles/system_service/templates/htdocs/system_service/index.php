@@ -284,7 +284,7 @@ mx.OnDocReady.push( mx.UNCore.init );
 </head>
 <body class="inline">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Network visualizer")); } );</script>
-<div class="error"></div>
+<div class="contentLayer error"></div>
 <svg id="network"></svg>
 </body>
 </html>

@@ -142,6 +142,6 @@ mx.OnDocReady.push( mx.SNCore.init );
 <body class="software">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("spacer-800", mx.I18N.get("Software")); } );</script>
 <div class="list"></div>
-<div class="error"></div>
+<div class="contentLayer error"></div>
 </body>
 </html>

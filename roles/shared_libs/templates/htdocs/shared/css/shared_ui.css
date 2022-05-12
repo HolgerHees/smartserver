@@ -404,7 +404,7 @@ div.buttonSelection > div.buttonSelectionLayer > div:hover {
 }  
 
 /* ERROR & INFO */
-div.error {
+div.contentLayer.error {
   width: 100%;
   max-width: 800px;
   margin: auto;
@@ -413,7 +413,7 @@ div.error {
   display: none;
 } 
 
-div.error > div {
+div.contentLayer.error > div {
   display: inline-block;
   color: var(--color-red);
 }

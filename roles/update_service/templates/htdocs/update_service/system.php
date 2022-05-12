@@ -410,6 +410,6 @@ require "config.php";
     <div id="smartserverChangeDetails"></div>
     <div class="action" id="smartserverChangeState"></div>
 </div>
-<div class="error"></div>
+<div class="contentLayer error"></div>
 </body>
 </html>
