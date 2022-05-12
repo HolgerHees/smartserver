@@ -1,6 +1,7 @@
 [Unit]
 Description={{container_name}}
-Requires=docker.service
+Requires=docker.service{% if container_requires is defined %}{% for dependency_name in container_requires %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif %}
+
 After=docker.service{% if container_after is defined %}{% for dependency_name in container_after %} {{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %}{% endfor %}{% endif %}
 
 {% if container_wants is defined %}Wants={% for dependency_name in container_wants %}{{dependency_name}}{% if '.' not in dependency_name %}.service{% endif %} {% endfor %}{% endif %}
