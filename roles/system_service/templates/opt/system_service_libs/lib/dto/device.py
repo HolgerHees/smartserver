@@ -63,13 +63,10 @@ class Device(Changeable):
 
         self.mac = mac
         
-        self.dns = None
         self.info = None
         
         self.hop_connections = []
         self.connection = None
-        
-        self.gids = []
         
         self.services = {}
 
@@ -77,9 +74,11 @@ class Device(Changeable):
         self.virtual_connection = None
         self.supports_wifi = False
         
-        self._initPriorizedData(["type", "ip", "dns"])
-
-        self._setPriorizedData("type", "default", 0, type)
+        self._initPriorizedData([ 
+            {"key": "type", "source": "default", "priority": 0, "value": type},
+            {"key": "ip"},
+            {"key": "dns"}
+        ])
         
     def getEventType(self):
         return Event.TYPE_DEVICE
@@ -92,13 +91,11 @@ class Device(Changeable):
 
     def setType(self, source, priority, type):
         self._checkLock()
-        if self._setPriorizedData("type", source, priority, type):
-            self._markAsChanged("type")
+        self._setPriorizedData("type", source, priority, type)
             
     def removeType(self, source):
         self._checkLock()
-        if self._removePriorizedData("type", source):
-            self._markAsChanged("type")
+        self._removePriorizedData("type", source)
             
     def hasType(self,source):
         return self._hasPriorizedData("type", source)
@@ -108,13 +105,11 @@ class Device(Changeable):
         
     def setIP(self, source, priority, ip):
         self._checkLock()
-        if self._setPriorizedData("ip", source, priority, ip):
-            self._markAsChanged("ip")
+        self._setPriorizedData("ip", source, priority, ip)
                 
     def removeIP(self, source):
         self._checkLock()
-        if self._removePriorizedData("ip", source):
-            self._markAsChanged("ip")
+        self._removePriorizedData("ip", source)
 
     def hasIP(self,source):
         return self._hasPriorizedData("ip", source)
@@ -124,13 +119,11 @@ class Device(Changeable):
         
     def setDNS(self, source, priority, dns):
         self._checkLock()
-        if self._setPriorizedData("dns", source, priority, dns):
-            self._markAsChanged("dns")
+        self._setPriorizedData("dns", source, priority, dns)
                 
     def removeDNS(self, source):
         self._checkLock()
-        if self._removePriorizedData("dns", source):
-            self._markAsChanged("dns")
+        self._removePriorizedData("dns", source)
 
     def hasDNS(self,source):
         return self._hasPriorizedData("dns", source)

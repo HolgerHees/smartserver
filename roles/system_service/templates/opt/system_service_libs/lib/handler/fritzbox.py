@@ -357,11 +357,11 @@ class Fritzbox(_handler.Handler):
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
 
             for device in obsolete_clients:
-                logging.info("Removed details from {}".format(device))
+                mac = device.getMAC()
                 device.lock(self)
                 device.removeIP("fritzbox-dhcp")
                 device.removeDNS("fritzbox-dhcp")
-                del self.dhcp_clients[fritzbox_ip][mac]
+                del self.dhcp_clients[fritzbox_ip][device.getMAC()]
                 self.cache.confirmDevice( device, lambda event: events.append(event) )
             self.cache.unlock(self)
                            

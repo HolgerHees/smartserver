@@ -22,10 +22,14 @@ class Changeable():
         self.priorized_data = {}
         self.priorized_value = {}
         
-    def _initPriorizedData(self, keys):
-        for key in keys:
+    def _initPriorizedData(self, data):
+        for _data in data:
+            key = _data["key"]
             self.priorized_data[key] = {}
             self.priorized_value[key] = None
+            if "source" in _data:
+                self.priorized_data[key][_data["source"]] = {"value": _data["value"], "priority": _data["priority"]}
+                self.priorized_value[key] = _data["value"]
             
     def _getPriorizedValue(self, key):
         return self.priorized_value[key]
@@ -44,8 +48,9 @@ class Changeable():
                     _value = data["value"]
             if self.priorized_value[key] != _value:
                 self.priorized_value[key] = _value
-                return True
-        return False
+                self._markAsChanged("{}".format(key), "{}{}".format("change " if len(self.priorized_data[key].values()) > 1 else "set ", key))
+            else:
+                self._markAsChanged("_{}".format(key), "add {}".format(key))
     
     def _removePriorizedData(self, key, source):
         if source in self.priorized_data[key]:
@@ -58,8 +63,9 @@ class Changeable():
                     _value = data["value"]
             if self.priorized_value[key] != _value:
                 self.priorized_value[key] = _value
-                return True
-        return False
+                self._markAsChanged("{}".format(key), "{}{}".format("remove " if len(self.priorized_data[key].values()) > 0 else "clear ", key))
+            else:
+                self._markAsChanged("_{}".format(key), "remove {}".format(key))
 
     def getDetail(self, key):
         if key in self.details:
