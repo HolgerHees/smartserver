@@ -38,14 +38,16 @@ class OpenWRT(_handler.Handler):
 
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-    def _run(self):
+    def _initNextRuns(self):
         now = datetime.now()
-
         for openwrt_ip in self.config.openwrt_devices:
             self.sessions[openwrt_ip] = [ None, datetime.now()]
-
             self.next_run[openwrt_ip] = {"wifi_networks": now, "wifi_clients": now}
-        
+
+    def _run(self):
+        self._initNextRuns()
+
+        for openwrt_ip in self.config.openwrt_devices:
             self.wifi_networks[openwrt_ip] = {}
 
             self.wifi_associations[openwrt_ip] = {}
@@ -73,28 +75,31 @@ class OpenWRT(_handler.Handler):
                         self.cache.cleanLocks(self, events)
                         timeout = self._handleExpectedException(e, "OpenWRT '{}' got exception {} - '{}'".format(openwrt_ip, e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
                 except NetworkException as e:
+                    self._initNextRuns()
                     self.cache.cleanLocks(self, events)
                     timeout = self._handleExpectedException(e, str(e), openwrt_ip, e.getTimeout())
                 except Exception as e:
+                    self._initNextRuns()
                     self.cache.cleanLocks(self, events)
                     timeout = self._handleUnexpectedException(e, openwrt_ip)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
                 
-            now = datetime.now()
-            for openwrt_ip in self.config.openwrt_devices:
-                for next_run in self.next_run[openwrt_ip].values():
-                    diff = (next_run - now).total_seconds()
-                    if diff < timeout:
-                        timeout = diff
+            if not self._isSuspended():
+                now = datetime.now()
+                for openwrt_ip in self.config.openwrt_devices:
+                    for next_run in self.next_run[openwrt_ip].values():
+                        diff = (next_run - now).total_seconds()
+                        if diff < timeout:
+                            timeout = diff
 
             if timeout > 0:
                 if self._isSuspended(openwrt_ip):
                     self._sleep(timeout)
                 else:
                     self._wait(timeout)
-                    
+                                        
     def _processDevice(self, openwrt_ip, events ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip)
         if openwrt_mac is None:

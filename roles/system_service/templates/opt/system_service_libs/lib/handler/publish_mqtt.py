@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 
 import logging
 
@@ -9,18 +10,25 @@ import paho.mqtt.client as mqtt
 
 
 class MQTTHandler(): 
-    def __init__(self):
+    def __init__(self, config):
         self.mqtt_client = None
+        self.config = config
               
     def start(self):
-        logging.info("Connection to mqtt ...")
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
-        self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
-        self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
-        self.mqtt_client.connect("mosquitto", 1883, 60)
-        
-        self.mqtt_client.loop_start()
+        while True:
+            try:
+                logging.info("Connection to mqtt ...")
+                self.mqtt_client = mqtt.Client()
+                self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
+                self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
+                self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
+                self.mqtt_client.connect("mosquitto", 1883, 60)
+                
+                self.mqtt_client.loop_start()
+                break
+            except Exception as e:
+                logging.warning("MQTT {}. Retry in 5 seconds".format(str(e)))
+                time.sleep(self.config.startup_error_timeout)
 
     def on_connect(self,client,userdata,flags,rc):
         logging.info("Connected to mqtt with result code:"+str(rc))
@@ -48,7 +56,7 @@ class MQTTPublisher(_handler.Handler):
         self.skipped_macs = {}
         self.allowed_details = {}
         
-        self.mqtt_handler = MQTTHandler()
+        self.mqtt_handler = MQTTHandler(config)
         
         self.published_values = {}
         

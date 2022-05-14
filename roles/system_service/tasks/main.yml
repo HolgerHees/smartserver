@@ -130,7 +130,7 @@
   vars:
     container_name: "system_service"
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
-    container_requires: [ "network-online.target" ]
+    container_wants: [ "network-online.target" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger device_ping handler

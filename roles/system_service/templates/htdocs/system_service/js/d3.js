@@ -485,7 +485,7 @@ mx.D3 = (function( ret )
     {
         let device = d.data.device
         let html = "<div>";
-        if( device.ip ) 
+        if( device.ip && device.connection ) 
         {
             let has_traffic = device.interfaceStat && device.interfaceStat.data.filter(d => d.traffic && d.traffic.in_avg !== null).length > 0;
             let has_wifi = device.connection["type"] == "wifi";
@@ -541,6 +541,8 @@ mx.D3 = (function( ret )
         html += showRows(services,"Services","rows");
         //html += showRows(device.ports,"Ports","rows");
         
+        wan_data = []
+
         if( device.connection )
         {
             connection_data = []
@@ -564,8 +566,6 @@ mx.D3 = (function( ret )
                 connection_data.push( { "name": "Vlan", "value": vlans.join(",") } );
             
             html += showRows(connection_data,"Network","rows");
-
-            wan_data = []
 
             let interface_stat = device.interfaceStat;
             if( interface_stat )

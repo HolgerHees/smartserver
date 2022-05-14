@@ -30,9 +30,12 @@ class LibreNMS(_handler.Handler):
         # use request session for keepalive support of librenms
         self.request_session = requests.Session()
 
-    def _run(self):
+    def _initNextRuns(self):
         now = datetime.now()
         self.next_run = {"device": now, "vlan": now, "port": now, "fdb": now}
+                    
+    def _run(self):
+        self._initNextRuns()
         
         while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
@@ -47,21 +50,23 @@ class LibreNMS(_handler.Handler):
                 
                 self._processLibreNMS(events)
             except NetworkException as e:
+                self._initNextRuns()
                 self.cache.cleanLocks(self, events)
                 timeout = self._handleExpectedException(str(e), None, e.getTimeout())
             except Exception as e:
+                self._initNextRuns()
                 self.cache.cleanLocks(self, events)
                 timeout = self._handleUnexpectedException(e)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
                 
-            now = datetime.now()
-            for next_run in self.next_run.values():
-                diff = (next_run - now).total_seconds()
-                if diff < timeout:
-                    timeout = diff
-
+            if not self._isSuspended():
+                now = datetime.now()
+                for next_run in self.next_run.values():
+                    diff = (next_run - now).total_seconds()
+                    if diff < timeout:
+                        timeout = diff
             if timeout > 0:
                 if self._isSuspended():
                     self._sleep(timeout)
@@ -98,7 +103,7 @@ class LibreNMS(_handler.Handler):
                     mac = self.devices[device["id"]]["mac"]
                     logging.warning("Device {} currently not resolvable. User old mac address for now.".format(_device["hostname"]))
                 else:
-                    raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]), 15)
+                    raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]), self.config.startup_error_timeout)
             
             device = {
                 "mac": mac,
@@ -294,6 +299,9 @@ class LibreNMS(_handler.Handler):
                         del self.connected_macs[device_id][mac]
             
             self.cache.unlock(self)
+            
+    def _isInitialized(self):
+        return len(self.devices.values()) > 0
     
     def _get(self,call):
         headers = {'X-Auth-Token': self.config.librenms_token}
@@ -302,11 +310,11 @@ class LibreNMS(_handler.Handler):
             #print("{}{}".format(self.config.librenms_rest,call))
             r = self.request_session.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
             if r.status_code != 200:
-                raise NetworkException("Got wrong status code: {}".format(r.status_code), self.config.remote_suspend_timeout)
+                raise NetworkException("Got wrong status code: {}".format(r.status_code), self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout)
             return r.text
         except requests.exceptions.ConnectionError as e:
-            logging.error(str(e))
-            raise NetworkException("LibreNMS currently not available", self.config.remote_suspend_timeout)
+            #logging.error(str(e))
+            raise NetworkException("LibreNMS currently not available", self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout )
     
     def getEventTypes(self):
         return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None } ]

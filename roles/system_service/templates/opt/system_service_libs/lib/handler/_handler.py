@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import threading
 import time
@@ -60,8 +60,8 @@ class Handler:
         self.is_suspended[key] = False
         
     def _handleExpectedException(self, msg, key, timeout = 60):
-        logging.error("{}.{}".format(msg, " Will suspend for {} minute(s).".format(timeout / 60) if timeout >= 0 else ""))
-        logging.error(traceback.format_exc())
+        logging.error("{}.{}".format(msg, " Will suspend for {}.".format(timedelta(seconds=timeout) if timeout >= 0 else "")))
+        #logging.error(traceback.format_exc())
         self.is_suspended[key] = True
         return timeout
     

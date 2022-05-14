@@ -26,6 +26,8 @@ influxdb_token = "{{vault_influxdb_admin_token}}"
 
 default_vlan = 1
 
+startup_error_timeout = 5
+
 remote_suspend_timeout = 300
 remote_error_timeout = 900
 
