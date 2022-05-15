@@ -257,6 +257,13 @@ class OpenWRT(_handler.Handler):
                     device = self.cache.getDevice(mac)
                     device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
                     self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    
+                    # user device online states are check in arpscan
+                    if device.getIP() is not None and device.getIP() not in self.config.user_devices:
+                        stat = self.cache.getDeviceStat(mac)
+                        stat.setLastSeen(True)
+                        stat.setOnline(True)
+                        self.cache.confirmStat( stat, lambda event: events.append(event) )
 
                     details = client_result["clients"][mac]
                 
