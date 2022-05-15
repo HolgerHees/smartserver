@@ -506,7 +506,7 @@ class ArpScanner(_handler.Handler):
                 unregistered_devices.append(device)
                 
         if len(disabled_devices) > 0:
-            for device in devices:
+            for device in disabled_devices:
                 logging.info("Recheck device {}".format(device))
                 self._checkDevice(device, events, True)
         
