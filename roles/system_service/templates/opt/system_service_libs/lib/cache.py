@@ -219,7 +219,7 @@ class Cache():
     def removeDeviceStat(self, mac, event_callback, caller_frame = 1):
         self._checkLock()
 
-        self.removeConnectionStat(mac, None, event_callback, caller_frame)
+        self.removeConnectionStat(mac, None, event_callback, caller_frame + 1)
         
     def removeConnectionStat(self, mac, interface, event_callback, caller_frame = 1):
         self._checkLock()

@@ -449,7 +449,7 @@ class ArpScanner(_handler.Handler):
             self._dispatch(events)
         
     def _markDeviceAsOffline(self, device, stat, events):
-        if device is not None and device.getIP() is not None:
+        if device.getIP() is not None:
             # check if there is another device with the same IP
             similarDevices = list(filter(lambda d: d.getMAC() != device.getMAC() and d.getIP() == device.getIP(), self.cache.getDevices() ))
             if len(similarDevices) > 0:
