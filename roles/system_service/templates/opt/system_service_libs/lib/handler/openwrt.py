@@ -73,11 +73,11 @@ class OpenWRT(_handler.Handler):
                         timeout = 0
                     else:
                         self.cache.cleanLocks(self, events)
-                        timeout = self._handleExpectedException(e, "OpenWRT '{}' got exception {} - '{}'".format(openwrt_ip, e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
+                        timeout = self._handleExpectedException("OpenWRT '{}' got exception {} - '{}'".format(openwrt_ip, e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
                 except NetworkException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
-                    timeout = self._handleExpectedException(e, str(e), openwrt_ip, e.getTimeout())
+                    timeout = self._handleExpectedException(str(e), openwrt_ip, e.getTimeout())
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
