@@ -86,7 +86,7 @@ class OpenWRT(_handler.Handler):
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
                 
-            if not self._isSuspended():
+            if not self._isSuspended(openwrt_ip):
                 now = datetime.now()
                 for openwrt_ip in self.config.openwrt_devices:
                     for next_run in self.next_run[openwrt_ip].values():
