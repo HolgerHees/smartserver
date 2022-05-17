@@ -17,18 +17,21 @@ class ShutdownException(Exception):
     pass
 
 class CustomFormatter(logging.Formatter):
-    def __init__(self, fmt_default, fmt_custom):
+    def __init__(self, fmt):
         super().__init__()
-        self.fmt_default = fmt_default
-        self.fmt_custom = fmt_custom
+        self.fmt = fmt
 
     def format(self, record):
-        if "custom_module" in record.__dict__:
-            formatter = logging.Formatter(self.fmt_custom)
-        else:
-            formatter = logging.Formatter(self.fmt_default)
+        if "custom_module" not in record.__dict__:
+            module = record.pathname.replace("/",".")[:-3] + ":" + str(record.lineno)
+            module = module.ljust(25)
+            module = module[-25:]
+            
+            record.__dict__["custom_module"] = module
+            
+        formatter = logging.Formatter(self.fmt)
         return formatter.format(record)
-    
+            
 class Server():
     def initLogger(level):
         is_daemon = not os.isatty(sys.stdin.fileno())
@@ -36,8 +39,8 @@ class Server():
         #journal.JournalHandler(SYSLOG_IDENTIFIER="pulp-sync")
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(CustomFormatter(
-            "[%(levelname)s] - %(module)s:%(lineno)d - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s:%(lineno)d - %(message)s",
-            "[%(levelname)s] - %(custom_module)s - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(custom_module)s - %(message)s"
+            "[%(levelname)s] - [%(custom_module)s] - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - [%(custom_module)s] - %(message)s"
+            #"[%(levelname)s] - %(module).12s:%(lineno)d - %(message)s" if is_daemon else "%(asctime)s - [%(levelname)s] - %(module)s:%(lineno)d - %(message)s",
         ))
         
         logging.basicConfig(

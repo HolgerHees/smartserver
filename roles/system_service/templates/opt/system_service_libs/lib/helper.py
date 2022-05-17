@@ -32,8 +32,12 @@ class Helper():
 
     def _log(log, msg, caller_frame):
         frame = sys._getframe(caller_frame + 1)
-        [_, file ] = frame.f_code.co_filename.rsplit("/", 1)
-        log(msg, extra={"custom_module": "{}:{}".format( file[:-3] , frame.f_lineno ) })
+        
+        module = "{}:{}".format( frame.f_code.co_filename.replace("/",".")[:-3] , frame.f_lineno )
+        module = module.ljust(25)
+        module = module[-25:]
+        
+        log(msg, extra={"custom_module": module })
 
     def logProfiler(cls, start, msg):
         pass
