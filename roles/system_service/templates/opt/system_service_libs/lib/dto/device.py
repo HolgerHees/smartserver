@@ -55,7 +55,7 @@ class Connection():
         return { "type": self.type, "target_mac": self.target_mac, "target_interface": self.target_interface, "details": self.details_list }
     
     def __repr__(self):
-        return "{} => {}:{}".format(self.type,self.target_mac,self.target_interface)
+        return "type: {}, mac: {}, interface: {}".format(self.type,self.target_mac,self.target_interface)
     
 class Device(Changeable):
     def __init__(self, cache, mac, type):
@@ -147,8 +147,8 @@ class Device(Changeable):
         #        else:
         #            self.hop_connections.remove(_connections[0])
         
-        action = "add"
-
+        action = None
+        
         _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
         if len(_connections) > 0:
             _connection = _connections[0]
@@ -156,19 +156,22 @@ class Device(Changeable):
             if _connection.getType() != type:
                 raise Exception("Wrong connection type")
             
+            if details is not None and not _connection.hasDetails(details):
+                _connection.addDetails(details)
+                action = "add"
+
             if not _connection.isEnabled():
                 _connection.setEnabled(True)
                 action = "enable"
-            else:
-                if _connection.hasDetails(details) or details is None:
-                    return
-                
-                _connection.addDetails(details)
         else:
             if type == Connection.WIFI:
                 self.supports_wifi = True
                 
             self.hop_connections.append(Connection(type, target_mac, target_interface, [ details ] if details is not None else [] ))
+            action = "add"
+            
+        if action is None:
+            return
 
         target_device = self.cache.getUnlockedDevice(target_mac)
         self._markAsChanged("connection", "{} connection to {}:{}".format(action, target_device if target_device else target_mac, details))    
@@ -184,14 +187,16 @@ class Device(Changeable):
 
     def removeHopConnection(self, type, target_mac, target_interface, details, disable_last_of_type = False):
         self._checkLock()
+
         _connections = list(filter(lambda c: c.getType() == type and c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
         if len(_connections) > 0:
             _connection = _connections[0]
 
+            action = "remove"
+
             if _connection.hasDetails(details):
                 _connection.removeDetails(details)
 
-            action = "remove"
             if len(_connection.getDetailsList()) == 0:
                 if disable_last_of_type and len(list(filter(lambda c: c.getType() == type, self.hop_connections ))) == 1:
                     _connection.setEnabled(False)
