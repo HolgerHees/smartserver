@@ -67,11 +67,10 @@ class LibreNMS(_handler.Handler):
                     diff = (next_run - now).total_seconds()
                     if diff < timeout:
                         timeout = diff
-            if timeout > 0:
-                if self._isSuspended():
-                    self._sleep(timeout)
-                else:
+                if timeout > 0:
                     self._wait(timeout)
+            else:
+                self._sleep(timeout)
                     
     def _processLibreNMS(self, events):
         if self.next_run["device"] <= datetime.now():

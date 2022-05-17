@@ -112,10 +112,10 @@ class Cache():
         [state, change_raw, change_details] = group.confirmModificationState()
         if state == Changeable.NEW:
             event_action = Event.ACTION_CREATE
-            Helper.logEvent(sys._getframe(caller_frame), "Add group {} - [{}]".format(group, change_details) )
+            Helper.logInfo("Add group {} - [{}]".format(group, change_details), caller_frame )
         elif state == Changeable.CHANGED:
             event_action = Event.ACTION_MODIFY
-            Helper.logEvent(sys._getframe(caller_frame), "Update group {} - [{}]".format(group, change_details) )
+            Helper.logInfo("Update group {} - [{}]".format(group, change_details), caller_frame )
         else:
             return
         
@@ -125,7 +125,7 @@ class Cache():
         self._checkLock()
 
         if gid in self.groups:
-            Helper.logEvent(sys._getframe(caller_frame), "Remove group {}".format(self.groups[gid]) )
+            Helper.logInfo("Remove group {}".format(self.groups[gid]), caller_frame )
             event_callback(Event(self.groups[gid].getEventType(), Event.ACTION_DELETE, self.groups[gid]))
             del self.groups[gid]
 
@@ -156,10 +156,10 @@ class Cache():
         [state, change_raw, change_details] = device.confirmModificationState()
         if state == Changeable.NEW:
             event_action = Event.ACTION_CREATE
-            Helper.logEvent(sys._getframe(caller_frame), "Add device {} - [{}]".format(device, change_details))
+            Helper.logInfo("Add device {} - [{}]".format(device, change_details), caller_frame)
         elif state == Changeable.CHANGED:
             event_action = Event.ACTION_MODIFY
-            Helper.logEvent(sys._getframe(caller_frame), "Update device {} - [{}]".format(device, change_details))
+            Helper.logInfo("Update device {} - [{}]".format(device, change_details), caller_frame)
         else:
             return
         
@@ -169,7 +169,7 @@ class Cache():
         self._checkLock()
 
         if mac in self.devices:
-            Helper.logEvent(sys._getframe(caller_frame), "Remove device {}".format(self.devices[mac]))
+            Helper.logInfo("Remove device {}".format(self.devices[mac]), caller_frame)
             event_callback(Event(self.devices[mac].getEventType(), Event.ACTION_DELETE, self.devices[mac] ))
             del self.devices[mac]
             
@@ -207,10 +207,10 @@ class Cache():
         [state, change_raw, change_details] = stat.confirmModificationState()
         if state == Changeable.NEW:
             event_action = Event.ACTION_CREATE
-            Helper.logEvent(sys._getframe(1), "Add stat {} - [{}]".format(stat, change_details))
+            Helper.logInfo("Add stat {} - [{}]".format(stat, change_details), caller_frame)
         elif state == Changeable.CHANGED:
             event_action = Event.ACTION_MODIFY
-            Helper.logEvent(sys._getframe(1), "Update stat {} - [{}]".format(stat, change_details))
+            Helper.logInfo("Update stat {} - [{}]".format(stat, change_details), caller_frame)
         else:
             return
 
@@ -226,7 +226,7 @@ class Cache():
 
         id = "{}-{}".format(mac, interface)
         if id in self.stats:
-            Helper.logEvent(sys._getframe(caller_frame), "Remove {} stat {}".format( "device" if interface is None else "connection", self.stats[id] ) )
+            Helper.logInfo("Remove {} stat {}".format( "device" if interface is None else "connection", self.stats[id] ), caller_frame )
             event_callback(Event(self.stats[id].getEventType(), Event.ACTION_DELETE, self.stats[id]))
             del self.stats[id]
 

@@ -7,6 +7,7 @@ import traceback
 import json
 
 from lib.dto.event import Event
+from lib.helper import Helper
 
 
 class Handler:
@@ -56,18 +57,17 @@ class Handler:
         return self.is_suspended.get(key, False)
     
     def _confirmSuspended(self, key = None):
-        logging.warning("Resume {}".format(self.__class__.__name__))
+        Helper.logWarning("Resume {}".format(self.__class__.__name__), 2)
         self.is_suspended[key] = False
         
     def _handleExpectedException(self, msg, key, timeout = 60):
-        logging.error("{}.{}".format(msg, " Will suspend for {}.".format(timedelta(seconds=timeout) if timeout >= 0 else "")))
-        #logging.error(traceback.format_exc())
+        Helper.logError("{}.{}".format(msg, " Will suspend for {}.".format(timedelta(seconds=timeout) if timeout >= 0 else "")), 2)
         self.is_suspended[key] = True
         return timeout
     
     def _handleUnexpectedException(self, e, key = None, timeout = 900):
-        logging.error("{} got unexpected exception.{}".format(self.__class__.__name__, " Will suspend for {} minute(s).".format(timeout / 60) if timeout >= 0 else ""))
-        logging.error(traceback.format_exc())
+        Helper.logError("{} got unexpected exception.{}".format(self.__class__.__name__, " Will suspend for {} minute(s).".format(timeout / 60) if timeout >= 0 else ""), 2)
+        Helper.logError(traceback.format_exc(), 2)
         if timeout >= 0:
             self.is_suspended[key] = True
         return timeout

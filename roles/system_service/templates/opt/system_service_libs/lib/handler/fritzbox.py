@@ -104,12 +104,10 @@ class Fritzbox(_handler.Handler):
                         diff = (next_run - now).total_seconds()
                         if diff < timeout:
                             timeout = diff
-
-            if timeout > 0:
-                if self._isSuspended(fritzbox_ip):
-                    self._sleep(timeout)
-                else:
+                if timeout > 0:
                     self._wait(timeout)
+            else:
+                self._sleep(timeout)
          
     def _processDevice(self, fritzbox_ip, events):
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
