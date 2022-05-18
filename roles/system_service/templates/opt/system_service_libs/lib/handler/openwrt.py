@@ -139,6 +139,10 @@ class OpenWRT(_handler.Handler):
         for wifi_network_name in wifi_network_result:
             _wifi_network = wifi_network_result[wifi_network_name]
             for _interface in _wifi_network["interfaces"]:
+                # skip non configured interfaces
+                if "ifname" not in _interface:
+                    continue
+                
                 ifname = _interface["ifname"];
                 ssid = _interface["config"]["ssid"];
                 band = _wifi_network["config"]["band"];

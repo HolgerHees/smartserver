@@ -12,7 +12,15 @@ authenticate() {
     
     echo -n "Check password ... "
     sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP /bin/true
-    if [ $? -eq 0 ]
+    
+    EXIT_CODE=`echo $?`
+    
+    if [ "$EXIT_CODE" -eq 6 ]
+    then
+      echo "unknown key fingerprint."
+      echo "Login manually first"
+      exit
+    elif [ "$EXIT_CODE" -eq 0 ]
     then
       echo "ok"
       break
