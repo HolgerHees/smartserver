@@ -250,10 +250,10 @@ class Fritzbox(_handler.Handler):
                         device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
                         self.cache.confirmDevice( device, lambda event: events.append(event) )
                         
-                        # user device online states are check in arpscan
-                        if device.getIP() is not None and device.getIP() not in self.config.user_devices:
+                        # mark as online for new clients or if it is not a user device (is checked in arpscan)
+                        if mac not in self.wifi_clients[fritzbox_ip] or device.getIP() is None or device.getIP() not in self.config.user_devices:
                             stat = self.cache.getDeviceStat(mac)
-                            stat.setLastSeen(True)
+                            stat.setLastSeen(False) # because no IP validation
                             stat.setOnline(True)
                             self.cache.confirmStat( stat, lambda event: events.append(event) )
 

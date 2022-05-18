@@ -131,13 +131,15 @@ class DeviceChecker(threading.Thread):
                         
                     loopIndex += 1
                     if loopIndex == arpRetries:
-                        logging.info("Device {} is offline. Checked with {} in {} seconds".format(ip_address," & ".join(methods),duration))
-                        if self.stat.isOnline():
-                            self.cache.lock(self)
-                            self.stat.lock(self)
-                            self.stat.setOnline(False)
-                            self.cache.confirmStat( self.stat, lambda event: events.append(event) )
-                            self.cache.unlock(self)
+                        [_, maybe_offline, _] = self.arpscanner._possibleOfflineStates(self.stat)
+                        if maybe_offline:
+                            logging.info("Device {} is offline. Checked with {} in {} seconds".format(ip_address," & ".join(methods),duration))
+                            if self.stat.isOnline():
+                                self.cache.lock(self)
+                                self.stat.lock(self)
+                                self.stat.setOnline(False)
+                                self.cache.confirmStat( self.stat, lambda event: events.append(event) )
+                                self.cache.unlock(self)
                         break
                     
             except Exception as e:
@@ -374,6 +376,25 @@ class ArpScanner(_handler.Handler):
                 
     def _dispatch(self, events):
         self._getDispatcher().dispatch(self,events)
+        
+    def _possibleOfflineStates(self, stat):
+        now = datetime.now()
+ 
+        validated_last_seen_diff = (now - stat.getValidatedLastSeen()).total_seconds()
+        unvalidated_last_seen_diff = (now - stat.getUnvalidatedLastSeen()).total_seconds()
+        
+        # maybe offline if unvalidated check (arpping or ping) was older then "arp_soft_offline_device_timeout"
+        # => validated means, the answer was from the expected ip and mac
+        # => unvalidated means, the answer was from the excpected ip but different mac
+        maybe_offline = unvalidated_last_seen_diff > self.config.arp_soft_offline_device_timeout or validated_last_seen_diff > self.config.arp_hard_offline_device_timeout
+
+        # last check, if the device is really offline AND unvalidated check only allowed if validated check (arp-scan) is not older then "arp_hard_offline_device_timeout"
+        # ping could be unvalidated, means it is only valid until "arp_hard_offline_device_timeout"
+        ping_check = validated_last_seen_diff < self.config.arp_hard_offline_device_timeout
+        
+        outdated = validated_last_seen_diff > self.config.arp_clean_device_timeout
+        
+        return [outdated, maybe_offline, ping_check]
 
     def _checkDevice(self, device, events, force = False):
         mac = device.getMAC()
@@ -383,32 +404,19 @@ class ArpScanner(_handler.Handler):
             logging.info("Can't check device {}. Stat is missing.".format(device))
             return
  
-        now = datetime.now()
- 
         if force:
             maybe_offline = True
             ping_check = True
         else:
-            validated_last_seen_diff = (now - stat.getValidatedLastSeen()).total_seconds()
-
-            if validated_last_seen_diff > self.config.arp_clean_device_timeout:
+            [outdated, maybe_offline, ping_check] = self._possibleOfflineStates(stat)
+            
+            if outdated:
                 self._removeDevice(mac, events)
                 return
 
             # State checke only for devices without DeviceChecker
             if self.registered_devices[mac] is not None:
                 return
-
-            unvalidated_last_seen_diff = (now - stat.getUnvalidatedLastSeen()).total_seconds()
-            
-            # maybe offline if unvalidated check (arpping or ping) was older then "arp_soft_offline_device_timeout"
-            # => validated means, the answer was from the expected ip and mac
-            # => unvalidated means, the answer was from the excpected ip but different mac
-            maybe_offline = unvalidated_last_seen_diff > self.config.arp_soft_offline_device_timeout or validated_last_seen_diff > self.config.arp_hard_offline_device_timeout
-
-            # last check, if the device is really offline AND unvalidated check only allowed if validated check (arp-scan) is not older then "arp_hard_offline_device_timeout"
-            # ping could be unvalidated, means it is only valid until "arp_hard_offline_device_timeout"
-            ping_check = validated_last_seen_diff < self.config.arp_hard_offline_device_timeout
 
         if maybe_offline:
             if device.getIP() is not None and ping_check:
@@ -437,10 +445,13 @@ class ArpScanner(_handler.Handler):
                 self._refreshDevice(device, validated, events)
                 self.cache.unlock(self)
                 return
-
-            logging.info("Device {} is offline. Checked with {} in {} seconds".format(device," & ".join(methods),duration))
             
-            self._markDeviceAsOffline(device, stat, events)
+            [_, maybe_offline, ping_check] = self._possibleOfflineStates(stat)
+            
+            if maybe_offline or not ping_check:
+                logging.info("Device {} is offline. Checked with {} in {} seconds".format(device," & ".join(methods),duration))
+                self._markDeviceAsOffline(device, stat, events)
+
         except Exception as e:
             self.cache.cleanLocks(self, events)
             self._handleUnexpectedException(e, None, -1)
