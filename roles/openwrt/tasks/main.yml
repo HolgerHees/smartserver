@@ -26,7 +26,7 @@
 - name: synchronize static configs
   synchronize:
     src: "templates/config_ap_static/"
-    dest: "{{global_etc}}openwrt/ap/default/"
+    dest: "{{global_etc}}openwrt/ap/{{item.host}}/"
     archive: no
     checksum: yes
     group: yes
@@ -36,7 +36,8 @@
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"
-
+  with_items: "{{openwrt_devices}}"
+      
 - name: check for dynamic configs
   find:
     paths: "roles/openwrt/templates/config_ap_dynamic/"
@@ -44,31 +45,51 @@
     recurse: yes
   delegate_to: 127.0.0.1
   register: dynamic_shared_file_result
-  with_items: "{{openwrt_devices}}"
   
 - name: prepare dynamic configs
   set_fact: 
     dynamic_shared_files: |
       [
-        {% for file in dynamic_shared_file_result.results[0].files %}
-           '{{file.path}}',
+        {% for device in openwrt_devices %}
+          {% for file in dynamic_shared_file_result.files %}
+            { 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path[42:]}}' },
+          {% endfor %}
         {% endfor %}
       ]
-#          {% for item in openwrt_devices %}
-#            '{{global_etc}}openwrt/ap/{{item.host}}/{{file.path[42:]}}'
-#          {% endfor %}
-
+      
 - name: copy dynamic configs
   template:
-    src: "{{item}}"
-    dest: "{{global_etc}}openwrt/ap/default/{{item[42:]}}"
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
     owner: "root"
     group: "root"
     mode: "u=rwX,g=rX,o="
   changed_when: no
   with_items: "{{dynamic_shared_files}}"
 
-- name: check for custom openwrt configs
+- name: check for custom shared openwrt configs
+  stat:
+    path: "{{config_path}}vault/openwrt/shared/"
+  register: custom_shared_config_directory
+  delegate_to: 127.0.0.1
+
+- name: synchronize custom shared static configs
+  synchronize:
+    src: "{{config_path}}vault/openwrt/shared/"
+    dest: "{{global_etc}}openwrt/ap/{{item.host}}/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
+  with_items: "{{openwrt_devices}}"
+  when: "custom_shared_config_directory.stat.exists"
+
+- name: check for custom host openwrt configs
   find:
     paths: "{{config_path}}vault/openwrt/{{item.host}}"
     file_type: "any"
@@ -76,13 +97,19 @@
   register: custom_config_directory
   with_items: "{{openwrt_devices}}"
 
-- name: copy custom openwrt configs
-  copy:
+- name: copy custom host openwrt configs
+  synchronize:
     src: "{{config_path}}vault/openwrt/{{item.1.host}}/"
     dest: "{{global_etc}}openwrt/ap/{{item.1.host}}/"
-    owner: "root"
-    group: "root"
-    mode: "u=rwX,g=rX,o="
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D750,F640"
   loop_control:
     index_var: index
   when: "custom_config_directory.results[index].matched > 0"

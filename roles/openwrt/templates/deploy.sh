@@ -75,11 +75,7 @@ sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update"
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl"
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc wpad-wolfssl hostapd-utils snmpd"
 
-echo "Copy default configs ..."
-sshpass -f <(printf '%s\n' $PASSWORD) scp -r $SOURCE/default/* root@$IP:/
-
-# must be last because of changed shadow
-echo "Copy custom configs ..."
+echo "Copy configs ..."
 sshpass -f <(printf '%s\n' $PASSWORD) scp -r $SOURCE/$IP/* root@$IP:/
 
 authenticate
