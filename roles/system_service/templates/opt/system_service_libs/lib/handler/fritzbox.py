@@ -280,7 +280,7 @@ class Fritzbox(_handler.Handler):
                         
                         del self.wifi_associations[fritzbox_ip][uid]
                         
-                        if mac not in _active_client_macs:
+                        if mac not in _active_client_macs and mac in self.wifi_clients[fritzbox_ip]:
                             del self.wifi_clients[fritzbox_ip][mac]
 
 #                        device = self.cache.getUnlockedDevice(mac)

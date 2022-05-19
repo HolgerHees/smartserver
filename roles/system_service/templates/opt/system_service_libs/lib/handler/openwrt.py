@@ -312,7 +312,7 @@ class OpenWRT(_handler.Handler):
                     
                     del self.wifi_associations[openwrt_ip][uid]
                     
-                    if mac not in _active_client_macs:
+                    if mac not in _active_client_macs and mac in self.wifi_clients[openwrt_ip]:
                         del self.wifi_clients[openwrt_ip][mac]
 
             #sortby = SortKey.CUMULATIVE
