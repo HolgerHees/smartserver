@@ -38,9 +38,11 @@ class OpenWRT(_handler.Handler):
 
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-    def _initNextRuns(self):
+    def _initNextRuns(self, limit_openwrt_ip = None):
         now = datetime.now()
         for openwrt_ip in self.config.openwrt_devices:
+            if limit_openwrt_ip is not None and limit_openwrt_ip != openwrt_ip:
+                continue
             self.sessions[openwrt_ip] = [ None, datetime.now()]
             self.next_run[openwrt_ip] = {"wifi_networks": now, "wifi_clients": now}
 
@@ -58,45 +60,46 @@ class OpenWRT(_handler.Handler):
             
             events = []
 
-            timeout = 9999999999
-            
             for openwrt_ip in self.config.openwrt_devices:
                 try:
                     if self._isSuspended(openwrt_ip):
-                        self._confirmSuspended(openwrt_ip)
-                        
+                        continue
+                    
                     self._processDevice(openwrt_ip, events)
                 except UbusCallException as e:
                     if self.sessions[openwrt_ip][0] is not None and e.getCode() == -32002:
                         logging.info("OpenWRT '{}' has invalid session. Will refresh.".format(openwrt_ip))
-                        self.sessions[openwrt_ip] = [ None, datetime.now() ]
-                        timeout = 0
+                        self._initNextRuns(openwrt_ip)
                     else:
                         self.cache.cleanLocks(self, events)
-                        timeout = self._handleExpectedException("OpenWRT '{}' got exception {} - '{}'".format(openwrt_ip, e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
+                        self._handleExpectedException("OpenWRT '{}' got exception {} - '{}'".format(openwrt_ip, e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
                 except NetworkException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
-                    timeout = self._handleExpectedException(str(e), openwrt_ip, e.getTimeout())
+                    self._handleExpectedException(str(e), openwrt_ip, e.getTimeout())
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
-                    timeout = self._handleUnexpectedException(e, openwrt_ip)
+                    self._handleUnexpectedException(e, openwrt_ip)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
                 
-            if not self._isSuspended(openwrt_ip):
-                now = datetime.now()
-                for openwrt_ip in self.config.openwrt_devices:
+            timeout = 9999999999
+            now = datetime.now()
+            for openwrt_ip in self.config.openwrt_devices:
+                suspend_timeout = self._getSuspendTimeout(openwrt_ip)
+                if suspend_timeout > 0:
+                    if suspend_timeout < timeout:
+                        timeout = suspend_timeout
+                else:
                     for next_run in self.next_run[openwrt_ip].values():
                         diff = (next_run - now).total_seconds()
                         if diff < timeout:
                             timeout = diff
-                if timeout > 0:
-                    self._wait(timeout)
-            else:
-                self._sleep(timeout)
+                        
+            if timeout > 0:
+                self._wait(timeout)
                                         
     def _processDevice(self, openwrt_ip, events ):
         openwrt_mac = self.cache.ip2mac(openwrt_ip)
@@ -221,6 +224,7 @@ class OpenWRT(_handler.Handler):
         for wlan_network in list(self.wifi_networks[openwrt_ip].values()):
             try:
                 client_result = self._getWifiClients(openwrt_ip, ubus_session_id, wlan_network["ifname"])
+                client_results.append([client_result,wlan_network])
             except UbusCallException as e:
                 if e.getCode() == -32000:
                     logging.warning("OpenWRT '{}' interface '{}' has gone".format(openwrt_ip, wlan_network["ifname"]))
@@ -229,7 +233,6 @@ class OpenWRT(_handler.Handler):
                     self.next_run[openwrt_ip]["wifi_networks"] = datetime.now()
                 else:
                     raise e
-            client_results.append([client_result,wlan_network])
                 
         if client_results or self.wifi_associations[openwrt_ip]:
             self.cache.lock(self)
@@ -294,8 +297,10 @@ class OpenWRT(_handler.Handler):
                         stat_data.setInSpeed(details["rate"]["rx"] * 1000)
                         stat_data.setOutSpeed(details["rate"]["tx"] * 1000)
                         stat_data.setDetail("signal", details["signal"], "attenuation")
-                    self.cache.confirmStat( stat, lambda event: events.append(event) )
-                        
+                    if self.cache.confirmStat( stat, lambda event: events.append(event) ):
+                        if device.hasMultiConnections():
+                            device.generateMultiConnectionEvents(events[-1],events)
+                    
                     _active_associations.append(uid)
                     self.wifi_associations[openwrt_ip][uid] = [ now, uid, mac, gid, vlan, target_mac, target_interface, connection_details ]
 

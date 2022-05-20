@@ -39,6 +39,8 @@ class DeviceStat(Changeable):
         if self.offline_since != offline_since:
             self._markAsChanged( "online_state", "offline" if offline_since else "online")
             self.offline_since = offline_since
+            return True
+        return False
             
     def isOnline(self):
         return self.offline_since is None

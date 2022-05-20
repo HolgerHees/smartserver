@@ -50,6 +50,8 @@ class ConnectionStatDetails(Changeable):
         if self.in_bytes != bytes:
             self._markAsChanged("in_bytes", "in bytes")
             self.in_bytes = bytes
+            return True
+        return False
 
     def getInAvg(self):
         return self.in_avg
@@ -59,6 +61,8 @@ class ConnectionStatDetails(Changeable):
         if self.in_avg != bytes:
             self._markAsChanged("in_avg", "in avg")
             self.in_avg = bytes
+            return True
+        return False
    
     def getOutBytes(self):
         return self.out_bytes
@@ -68,6 +72,8 @@ class ConnectionStatDetails(Changeable):
         if self.out_bytes != bytes:
             self._markAsChanged("out_bytes", "out bytes")
             self.out_bytes = bytes
+            return True
+        return False
 
     def getOutAvg(self):
         return self.in_avg
@@ -77,42 +83,48 @@ class ConnectionStatDetails(Changeable):
         if self.out_avg != bytes:
             self._markAsChanged("out_avg", "out avg")
             self.out_avg = bytes
+            return True
+        return False
 
     def setInSpeed(self,speed):
         self._checkLock()
         if self.in_speed != speed:
             self._markAsChanged("in_speed", "in speed")
             self.in_speed = speed
+            return True
+        return False
 
     def setOutSpeed(self,speed):
         self._checkLock()
         if self.out_speed != speed:
             self._markAsChanged("out_speed", "out speed")
             self.out_speed = speed
+            return True
+        return False
             
-    def getConnectionDetail(self, key):
-        return self.connection_details[key] if key in self.connection_details else None
+    def getConnectionDetail(self, key, fallback = None):
+        return self.connection_details[key] if key in self.connection_details else fallback
 
 class ConnectionStat(Changeable):
-    def __init__(self, cache, mac, interface):
+    def __init__(self, cache, target_mac, target_interface):
         super().__init__(cache)
         
-        self.mac = mac
-        self.interface = interface
+        self.target_mac = target_mac
+        self.target_interface = target_interface
 
         self.data = {}
 
     def getEventType(self):
         return Event.TYPE_CONNECTION_STAT
 
-    def getMAC(self):
-        return self.mac
+    def getTargetMAC(self):
+        return self.target_mac
 
-    def getInterface(self):
-        return self.interface
+    def getTargetInterface(self):
+        return self.target_interface
     
     def getUnlockedDevice(self):
-        devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == self.mac and d.getConnection().getTargetInterface() == self.interface, (self._getCache().getDevices()) ))
+        devices = list(filter(lambda d: d.getConnection() and d.getConnection().getTargetMAC() == self.target_mac and d.getConnection().getTargetInterface() == self.target_interface, (self._getCache().getDevices()) ))
         return devices[0] if len(devices) == 1 else None
     
     def _buildKey(self, connection_details = None):
@@ -142,8 +154,8 @@ class ConnectionStat(Changeable):
 
     def getSerializeable(self):
         _stat = {
-            "mac": self.mac,
-            "interface": self.interface,
+            "mac": self.target_mac,
+            "interface": self.target_interface,
             "data": []
         }
         
@@ -165,5 +177,5 @@ class ConnectionStat(Changeable):
         return _stat
             
     def __repr__(self):
-        device = self._getCache().getUnlockedDevice(self.mac)
-        return "{}:{}".format(device if device is not None else self.mac,self.interface)
+        device = self._getCache().getUnlockedDevice(self.target_mac)
+        return "{}:{}".format(device if device is not None else self.target_mac,self.target_interface)

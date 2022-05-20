@@ -67,16 +67,16 @@ class Changeable():
             else:
                 self._markAsChanged("_{}".format(key), "remove {}".format(key))
 
-    def getDetail(self, key):
-        if key in self.details:
-            return self.details[key]["value"]
-        return None
+    def getDetail(self, key, fallback = None):
+        return self.details[key]["value"] if key in self.details else fallback
 
     def setDetail(self, key, value, fmt):
         self._checkLock()
         if key not in self.details or self.details[key]["value"] != value:
             self._markAsChanged(key, "{}{}".format( "add " if key not in self.details else "", key))
             self.details[key] = { "value": value, "format": fmt }
+            return True
+        return False
         
     def removeDetail(self, key):
         self._checkLock()

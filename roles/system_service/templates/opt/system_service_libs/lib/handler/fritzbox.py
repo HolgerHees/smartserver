@@ -77,37 +77,39 @@ class Fritzbox(_handler.Handler):
         while self._isRunning():
             events = []
 
-            timeout = 9999999999
-            
             for fritzbox_ip in self.config.fritzbox_devices:
                 try:
-                    if self._isSuspended():
-                        self._confirmSuspended()
+                    if self._isSuspended(fritzbox_ip):
+                        continue
                         
                     self._processDevice(fritzbox_ip, events)
                 except FritzConnectionException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
-                    timeout = self._handleExpectedException(e, "Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
+                    self._handleExpectedException(e, "Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
-                    timeout = self._handleUnexpectedException(e, fritzbox_ip)
+                    self._handleUnexpectedException(e, fritzbox_ip)
                     
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
 
-            if not self._isSuspended():
-                now = datetime.now()
-                for fritzbox_ip in self.config.fritzbox_devices:
+            timeout = 9999999999
+            now = datetime.now()
+            for fritzbox_ip in self.config.fritzbox_devices:
+                suspend_timeout = self._getSuspendTimeout(fritzbox_ip)
+                if suspend_timeout > 0:
+                    if suspend_timeout < timeout:
+                        timeout = suspend_timeout
+                else:
                     for next_run in self.next_run[fritzbox_ip].values():
                         diff = (next_run - now).total_seconds()
                         if diff < timeout:
                             timeout = diff
-                if timeout > 0:
-                    self._wait(timeout)
-            else:
-                self._sleep(timeout)
+                            
+            if timeout > 0:
+                self._wait(timeout)
          
     def _processDevice(self, fritzbox_ip, events):
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
@@ -262,8 +264,10 @@ class Fritzbox(_handler.Handler):
                         stat_data.setInSpeed(node_link["cur_data_rate_rx"] * 1000)
                         stat_data.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
                         stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
-                        self.cache.confirmStat( stat, lambda event: events.append(event) )
-
+                        if self.cache.confirmStat( stat, lambda event: events.append(event) ):
+                            if device.hasMultiConnections():
+                                device.generateMultiConnectionEvents(events[-1],events)
+                        
                         _active_associations.append(uid)
                         self.wifi_associations[fritzbox_ip][uid] = [ uid, mac, gid, vlan, target_mac, target_interface, connection_details ]
 

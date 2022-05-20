@@ -65,8 +65,9 @@ class Device(Changeable):
         
         self.info = None
         
-        self.hop_connections = []
+        self.hop_connection_map = {}
         self.connection = None
+        self.multi_connections = False
         
         self.services = {}
 
@@ -136,6 +137,8 @@ class Device(Changeable):
         if self.info != info:
             self._markAsChanged("info")
             self.info = info
+            return True
+        return False
 
     def addHopConnection(self, type, target_mac, target_interface, details = None ):
         self._checkLock()
@@ -149,9 +152,10 @@ class Device(Changeable):
         
         action = None
         
-        _connections = list(filter(lambda c: c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
-        if len(_connections) > 0:
-            _connection = _connections[0]
+        key = "{}:{}".format(target_mac,target_interface)
+        
+        if key in self.hop_connection_map:
+            _connection = self.hop_connection_map[key]
 
             if _connection.getType() != type:
                 raise Exception("Wrong connection type")
@@ -167,7 +171,7 @@ class Device(Changeable):
             if type == Connection.WIFI:
                 self.supports_wifi = True
                 
-            self.hop_connections.append(Connection(type, target_mac, target_interface, [ details ] if details is not None else [] ))
+            self.hop_connection_map[key] = Connection(type, target_mac, target_interface, [ details ] if details is not None else [] )
             action = "add"
             
         if action is None:
@@ -178,19 +182,21 @@ class Device(Changeable):
 
         # *** CLEANUP only needed for added connections and NOT for enabled or unchanged ones ***
         if action == "add":
-            _connections = list(filter(lambda c: c.getType() == type and not c.isEnabled(), self.hop_connections ))
+            _connections = list(filter(lambda c: c.getType() == type and not c.isEnabled(), self.hop_connection_map.values() ))
             for _connection in _connections:
-                self.hop_connections.remove(_connection)
                 target_mac = _connection.getTargetMAC()
                 target_device = self.cache.getUnlockedDevice(target_mac)
+                key = "{}:{}".format(target_mac,_connection.getTargetInterface())
+                del self.hop_connection_map[key]
                 self._markAsChanged("connection", "remove disabled connection to {}:{}".format(target_device if target_device else target_mac, _connection.getDetailsList() ))
 
     def removeHopConnection(self, type, target_mac, target_interface, details, disable_last_of_type = False):
         self._checkLock()
 
-        _connections = list(filter(lambda c: c.getType() == type and c.getTargetMAC() == target_mac and c.getTargetInterface() == target_interface, self.hop_connections ))
-        if len(_connections) > 0:
-            _connection = _connections[0]
+        key = "{}:{}".format(target_mac,target_interface)
+
+        if key in self.hop_connection_map:
+            _connection = self.hop_connection_map[key]
 
             action = "remove"
 
@@ -198,17 +204,17 @@ class Device(Changeable):
                 _connection.removeDetails(details)
 
             if len(_connection.getDetailsList()) == 0:
-                if disable_last_of_type and len(list(filter(lambda c: c.getType() == type, self.hop_connections ))) == 1:
+                if disable_last_of_type and len(list(filter(lambda c: c.getType() == type, self.hop_connection_map.values() ))) == 1:
                     _connection.setEnabled(False)
                     action = "disable"
                 else:
-                    self.hop_connections.remove(_connection)
+                    del self.hop_connection_map[key]
 
             target_device = self.cache.getUnlockedDevice(target_mac)
             self._markAsChanged("connection", "{} connection from {}:{}".format(action, target_device if target_device else target_mac, details))            
 
     def getHopConnections(self):
-        return list(self.hop_connections)
+        return list(self.hop_connection_map.values())
 
     def setVirtualConnection(self, connection):
         self.virtual_connection = connection
@@ -216,8 +222,23 @@ class Device(Changeable):
     def getConnection(self):
         return self.virtual_connection if self.virtual_connection is not None else self.connection
    
-    def resetConnection(self):
-        self.connection = None
+    #def resetConnection(self):
+    #    self.connection = None
+        
+    def hasMultiConnections(self):
+        return self.multi_connections
+        
+    def generateMultiConnectionEvents(self, event, events):
+        if not event.hasDetail("signal"):
+            return
+        
+        found = False
+        for event in events:
+            if event.getType() == self.getEventType() and event.getObject() == self and event.hasDetail("connection"):
+                found = True
+        
+        if not found:
+            events.append(Event(self.getEventType(), Event.ACTION_MODIFY, self, ["connection", "connection_helper"]))
         
     def calculateConnectionPath(self, processed_devices):
         #logging.info("CALCULATE")
@@ -227,16 +248,51 @@ class Device(Changeable):
         
         processed_devices[self.getMAC()] = True
         
+        multi_connections = False
         connection = None
         hop_count = 0
         for _connection in self.getHopConnections():
             processed_hops = { self._getCache().getWanMAC(): True, self._getCache().getGatewayMAC(): True }
-            _hop_count = 9999 if _connection.getType() == Connection.WIFI else self._getGWHopCount(_connection, 0, processed_hops, processed_devices)
-            if _hop_count >= hop_count:
-                hop_count = _hop_count
-                connection = _connection
+            if _connection.getType() == Connection.WIFI:
+                hop_count = 9999
+                if connection is None or connection.getType() != Connection.WIFI:
+                    connection = _connection
+                else:
+                    max_signal = -256
+                    stat = self.cache.getUnlockedConnectionStat(connection.getTargetMAC(),connection.getTargetInterface())
+                    for stat_data in stat.getDataList():
+                        signal = int(stat_data.getDetail("signal","-256"))
+                        if signal > max_signal:
+                            max_signal = signal
+                            
+                    _max_signal = -256
+                    _stat = self.cache.getUnlockedConnectionStat(_connection.getTargetMAC(),_connection.getTargetInterface())
+                    for _stat_data in _stat.getDataList():
+                        _signal = int(_stat_data.getDetail("signal","-256"))
+                        if _signal > _max_signal:
+                            _max_signal = _signal
+                            
+                    #logging.info("SIGNAL {} {}".format(_max_signal,max_signal))
 
-        self.connection = connection
+                    if _max_signal > max_signal:
+                        #logging.info("OLD {}".format(connection))
+                        #logging.info("NEW {}".format(_connection))
+                        connection = _connection
+                        
+                    multi_connections = True
+            else:
+                _hop_count = self._getGWHopCount(_connection, 0, processed_hops, processed_devices)
+                if _hop_count >= hop_count:
+                    hop_count = _hop_count
+                    connection = _connection
+
+        self.multi_connections = multi_connections
+        
+        if self.connection != connection:
+            self.connection = connection
+            return True
+        
+        return False
         
         #logging.info("{} {}".format(self,len(self.getHopConnections())))
 

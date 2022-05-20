@@ -292,73 +292,72 @@ class ArpScanner(_handler.Handler):
             pass
         
         while self._isRunning():
-            try:
-                collected_arps = self._fetchArpResult()
-            except Exception as e:
-                if not self.is_running:
-                    break
-                raise e
+            if not self._isSuspended():
+                try:
+                    collected_arps = self._fetchArpResult()
+                except Exception as e:
+                    if not self.is_running:
+                        break
+                    raise e
 
-            events = []
+                events = []
             
-            timeout = self.config.arp_scan_interval
-
-            try:
-                if self._isSuspended():
-                    self._confirmSuspended()
-                
-                processed_ips = {}
-                processed_macs = {}
-                for [ip, mac, dns, info] in collected_arps:
-                    if mac not in processed_macs:
-                        if ip not in processed_ips:
-                            info = re.sub("\s\\(DUP: [0-9]+\\)", "", info) # eleminate dublicate marker
-                            if info == "(Unknown)":
-                                info = None
-                            processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}
-                            processed_ips[ip] = mac
-                
-                self.cache.lock(self)
-                
-                refreshed_macs = []
-                for entry in processed_macs.values():
-                    mac = entry["mac"]
-                    device = self.cache.getDevice(mac)
-                    device.setIP("arpscan", 1, entry["ip"])
-                    device.setDNS("nslookup", 1, entry["dns"])
-                    device.setInfo(entry["info"])
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
-                                        
-                    self._refreshDevice( device, True, events)
-                    refreshed_macs.append(mac)
-                                
-                device = self.cache.getDevice(server_mac)
-                device.setIP("arpscan", 1, self.config.server_ip)
-                device.setDNS("nslookup", 1, self.config.server_domain)
-                device.setInfo(self.config.server_name)
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                try:
+                    processed_ips = {}
+                    processed_macs = {}
+                    for [ip, mac, dns, info] in collected_arps:
+                        if mac not in processed_macs:
+                            if ip not in processed_ips:
+                                info = re.sub("\s\\(DUP: [0-9]+\\)", "", info) # eleminate dublicate marker
+                                if info == "(Unknown)":
+                                    info = None
+                                processed_macs[mac] = {"mac": mac, "ip": ip, "dns": dns, "info": info}
+                                processed_ips[ip] = mac
                     
-                self._refreshDevice( device, True, events)
-                refreshed_macs.append(server_mac)
+                    self.cache.lock(self)
+                    
+                    refreshed_macs = []
+                    for entry in processed_macs.values():
+                        mac = entry["mac"]
+                        device = self.cache.getDevice(mac)
+                        device.setIP("arpscan", 1, entry["ip"])
+                        device.setDNS("nslookup", 1, entry["dns"])
+                        device.setInfo(entry["info"])
+                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+                                            
+                        self._refreshDevice( device, True, events)
+                        refreshed_macs.append(mac)
+                                    
+                    device = self.cache.getDevice(server_mac)
+                    device.setIP("arpscan", 1, self.config.server_ip)
+                    device.setDNS("nslookup", 1, self.config.server_domain)
+                    device.setInfo(self.config.server_name)
+                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+                        
+                    self._refreshDevice( device, True, events)
+                    refreshed_macs.append(server_mac)
 
-                self.cache.unlock(self)
+                    self.cache.unlock(self)
 
-                for device in self.cache.getDevices():
-                    if device.getMAC() in refreshed_macs:
-                        continue
-                    self._checkDevice(device, events)
-            
-            except Exception as e:
-                self.cache.cleanLocks(self, events)
-                timeout = self._handleUnexpectedException(e)
+                    for device in self.cache.getDevices():
+                        if device.getMAC() in refreshed_macs:
+                            continue
+                        self._checkDevice(device, events)
+                
+                except Exception as e:
+                    self.cache.cleanLocks(self, events)
+                    self._handleUnexpectedException(e)
 
-            if len(events) > 0:
-                self._dispatch(events)
+                if len(events) > 0:
+                    self._dispatch(events)
 
-            if self._isSuspended():
-                self._sleep(timeout)
+            suspend_timeout = self._getSuspendTimeout()
+            if suspend_timeout > 0:
+                timeout = suspend_timeout
             else:
-                self._wait(timeout)
+                timeout = self.config.arp_scan_interval
+                        
+            self._wait(timeout)
                 
     def _fetchArpResult(self):
         collected_arps = []
@@ -415,7 +414,7 @@ class ArpScanner(_handler.Handler):
                 return
 
             # State checke only for devices without DeviceChecker
-            if self.registered_devices[mac] is not None:
+            if mac in self.registered_devices and self.registered_devices[mac] is not None:
                 return
 
         if maybe_offline:

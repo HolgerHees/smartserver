@@ -40,37 +40,35 @@ class LibreNMS(_handler.Handler):
         while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
-            events = []
-            
-            timeout = 9999999999
-            
-            try:
-                if self._isSuspended():
-                    self._confirmSuspended()
-                
-                self._processLibreNMS(events)
-            except NetworkException as e:
-                self._initNextRuns()
-                self.cache.cleanLocks(self, events)
-                timeout = self._handleExpectedException(str(e), None, e.getTimeout())
-            except Exception as e:
-                self._initNextRuns()
-                self.cache.cleanLocks(self, events)
-                timeout = self._handleUnexpectedException(e)
-                    
-            if len(events) > 0:
-                self._getDispatcher().dispatch(self,events)
-                
             if not self._isSuspended():
+                events = []
+                try:
+                    self._processLibreNMS(events)
+                except NetworkException as e:
+                    self._initNextRuns()
+                    self.cache.cleanLocks(self, events)
+                    self._handleExpectedException(str(e), None, e.getTimeout())
+                except Exception as e:
+                    self._initNextRuns()
+                    self.cache.cleanLocks(self, events)
+                    self._handleUnexpectedException(e)
+                        
+                if len(events) > 0:
+                    self._getDispatcher().dispatch(self,events)
+                
+            suspend_timeout = self._getSuspendTimeout()
+            if suspend_timeout > 0:
+                timeout = suspend_timeout
+            else:
+                timeout = 9999999999
                 now = datetime.now()
                 for next_run in self.next_run.values():
                     diff = (next_run - now).total_seconds()
                     if diff < timeout:
                         timeout = diff
-                if timeout > 0:
-                    self._wait(timeout)
-            else:
-                self._sleep(timeout)
+                    
+            if timeout > 0:
+                self._wait(timeout)
                     
     def _processLibreNMS(self, events):
         if self.next_run["device"] <= datetime.now():

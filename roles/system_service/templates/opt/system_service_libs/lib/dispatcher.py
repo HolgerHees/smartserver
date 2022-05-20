@@ -73,14 +73,30 @@ class Dispatcher():
                 break
         
         if has_connection_changes:
+            has_connection_changes = False
             self.cache.lock(self)
-            for device in self.cache.getDevices():   
-                device.resetConnection()
-                
+            #for device in self.cache.getDevices():   
+            #    device.resetConnection()
             processed_devices = {}    
+            unprocessed_devices = []
             for device in self.cache.getDevices():   
-                device.calculateConnectionPath(processed_devices)
+                if device.calculateConnectionPath(processed_devices):
+                    has_connection_changes = True
+                else:
+                    unprocessed_devices.append(device)
+
+            # cleanup
+            for event in list(events):
+                if event.getObject() in unprocessed_devices:
+                    if event.hasDetail("connection_helper"):
+                        #logging.info(">>>>>>>>>>>>>> CLEAN")
+                        events.remove(event)
+                    
             self.cache.unlock(self)
+            
+            if len(events) == 0:
+                #logging.info(">>>>>>>>>>>>>> SKIP")
+                return
         # ***********************************
         
         for [event_types, handler] in self.event_pipeline:

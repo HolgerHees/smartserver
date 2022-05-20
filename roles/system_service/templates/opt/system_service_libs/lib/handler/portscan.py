@@ -27,40 +27,42 @@ class PortScanner(_handler.Handler):
         
     def _run(self):
         while self._isRunning():
-            try:
-                if self._isSuspended():
-                    self._confirmSuspended()
+            if not self._isSuspended():
+                try:
 
-                timeout = self.config.port_scan_interval
+                    timeout = self.config.port_scan_interval
 
-                with self.queue_lock:               
-                    while self.is_running and len(self.waiting_queue) > 0 and len(self.running_queue) <= 5:
-                        device = self.waiting_queue.popleft()
-                        self.running_queue.append(device)
-                        t = threading.Thread(target = self._checkPorts, args = [ device ] )
-                        t.start()
-                        
-                    now = datetime.now()
-                    for mac in self.monitored_devices:
-                        device = self.cache.getUnlockedDevice(mac)
-                        if device is None or device.getIP() is None or device in self.waiting_queue or device in self.running_queue:
-                            continue
-                        
-                        if self.monitored_devices[mac] == None or (now - self.monitored_devices[mac]).total_seconds() > self.config.port_rescan_interval:
-                            self.waiting_queue.append(device)
-                            _timeout = self.config.port_rescan_interval
-                        elif self.monitored_devices[mac] != None:
-                            _timeout = (now - self.monitored_devices[mac]).total_seconds()
+                    with self.queue_lock:               
+                        while self.is_running and len(self.waiting_queue) > 0 and len(self.running_queue) <= 5:
+                            device = self.waiting_queue.popleft()
+                            self.running_queue.append(device)
+                            t = threading.Thread(target = self._checkPorts, args = [ device ] )
+                            t.start()
                             
-                        if _timeout < timeout:
-                            timeout = _timeout
-                        
-                self._wait(timeout)
+                        now = datetime.now()
+                        for mac in self.monitored_devices:
+                            device = self.cache.getUnlockedDevice(mac)
+                            if device is None or device.getIP() is None or device in self.waiting_queue or device in self.running_queue:
+                                continue
+                            
+                            if self.monitored_devices[mac] == None or (now - self.monitored_devices[mac]).total_seconds() > self.config.port_rescan_interval:
+                                self.waiting_queue.append(device)
+                                _timeout = self.config.port_rescan_interval
+                            elif self.monitored_devices[mac] != None:
+                                _timeout = (now - self.monitored_devices[mac]).total_seconds()
+                                
+                            if _timeout < timeout:
+                                timeout = _timeout
+
+                except Exception as e:
+                    self._handleUnexpectedException(e)
             
-            except Exception as e:
-                timeout = self._handleUnexpectedException(e)
-                self._sleep(timeout)
-            
+            suspend_timeout = self._getSuspendTimeout()
+            if suspend_timeout > 0:
+                timeout = suspend_timeout
+                    
+            self._wait(timeout)
+
     def _checkPorts(self, device):
         services = Helper.nmap(device.getIP())
                 

@@ -117,10 +117,11 @@ class Cache():
             event_action = Event.ACTION_MODIFY
             Helper.logInfo("Update group {} - [{}]".format(group, change_details), caller_frame + 1 )
         else:
-            return
+            return False
         
         event_callback(Event(group.getEventType(), event_action, group, change_raw))
-        
+        return True
+    
     def removeGroup(self, gid, event_callback, caller_frame = 1):
         self._checkLock()
 
@@ -161,10 +162,11 @@ class Cache():
             event_action = Event.ACTION_MODIFY
             Helper.logInfo("Update device {} - [{}]".format(device, change_details), caller_frame + 1)
         else:
-            return
+            return False
         
         event_callback(Event(device.getEventType(), event_action, device, change_raw ))
-        
+        return True
+    
     def removeDevice(self, mac, event_callback, caller_frame = 1):
         self._checkLock()
 
@@ -212,9 +214,10 @@ class Cache():
             event_action = Event.ACTION_MODIFY
             Helper.logInfo("Update stat {} - [{}]".format(stat, change_details), caller_frame + 1)
         else:
-            return
+            return False
 
         event_callback(Event(stat.getEventType(), event_action, stat, change_raw))
+        return True
 
     def removeDeviceStat(self, mac, event_callback, caller_frame = 1):
         self._checkLock()
