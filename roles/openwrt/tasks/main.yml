@@ -23,6 +23,15 @@
       - "--chown=root:root"
       - "--chmod=F750"
 
+- name: copy deployment config
+  template:
+    src: "templates/deploy.env"
+    dest: "{{global_etc}}openwrt/ap/{{item.host}}.env"
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o="
+  with_items: "{{openwrt_devices}}"
+
 - name: synchronize static configs
   synchronize:
     src: "templates/config_ap_static/"

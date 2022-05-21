@@ -70,15 +70,33 @@ connectivity
 
 authenticate
 
+source "$IP.env"
+
 echo "Installing software ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update"
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl"
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc wpad-wolfssl hostapd-utils snmpd"
+
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc wpad-wolfssl hostapd-utils"
+
+if [ -f "$SOURCE/$IP/etc/config/snmp" ]; then
+  echo "Install snmpd packages ..."
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install snmpd"
+fi
+
+grep "ieee80211r '1'" "$SOURCE/$IP/etc/config/wireless" > /dev/null
+if [ $? -eq 0 ]
+then
+  echo "Install roaming packages ..."
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install umdns dawn luci-app-dawn"
+fi
 
 echo "Copy configs ..."
 sshpass -f <(printf '%s\n' $PASSWORD) scp -r $SOURCE/$IP/* root@$IP:/
 
-authenticate
+#authenticate
+
+echo "Apply hostname and timezone ..."
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.hostname='$HOSTNAME' & uci set system.cfg01e48a.zonename='$TIMEZONE' & uci commit;"
 
 #/etc/init.d/rpcd restart
 #/etc/init.d/snmpd restart
