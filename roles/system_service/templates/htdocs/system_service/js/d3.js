@@ -311,7 +311,17 @@ mx.D3 = (function( ret )
             {
                 let _stat = d.data.device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
                 if( _stat.length > 0)
+                {
                     stat = _stat[0];
+                }
+                else
+                {
+                    console.log("----");
+                    console.log(d.data.device.groups);
+                    console.log(d.data.device.interfaceStat);
+                    console.log(group);
+                    console.log(stats);
+                }
             }
             
             if( group && stat && stat.details["signal"] )
@@ -319,12 +329,11 @@ mx.D3 = (function( ret )
                 let signal_value = stat.details.signal["value"];
                 let band_value = group.details.band["value"];
                 
-                let offset = 0;//band_value == "2g" ? 0 : 10;
-                
-                if( signal_value > -50 - offset ) signal_class = "highest";
-                else if( signal_value > -67 - offset ) signal_class = "high";
-                else if( signal_value > -75 - offset ) signal_class = "medium";
-                else if( signal_value > -85 - offset ) signal_class = "low";
+                //if( signal_value >= -40 - offset ) signal_class = "highest";
+                if( signal_value >= -50 ) signal_class = "highest";
+                else if( signal_value >= -60 ) signal_class = "high";
+                else if( signal_value >= -70 ) signal_class = "medium";
+                else if( signal_value >= -80 ) signal_class = "low";
                 else signal_class = "lowest";
                 
                 html += "<div class='details' style='font-size:" + detailsFontSize + "'>";

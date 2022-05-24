@@ -49,7 +49,9 @@ class InfluxDBPublisher(_handler.Handler):
             outAvg = None
             for data in stat.getDataList():
                 if device.supportsWifi() and data.getDetail("signal") is not None:
-                    messurements.append("network_signal,ip={},band={} value={}".format(device.getIP(),data.getConnectionDetail("band"), data.getDetail("signal")))
+                    gid = data.getConnectionDetail("gid")
+                    band = self.cache.getUnlockedGroup(gid).getDetail("band")
+                    messurements.append("network_signal,ip={},band={} value={}".format(device.getIP(),band, data.getDetail("signal")))
                 if data.getInAvg() is not None:
                     if inAvg is None:
                         inAvg = 0
