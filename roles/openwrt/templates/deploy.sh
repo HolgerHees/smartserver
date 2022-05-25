@@ -88,6 +88,7 @@ if [ $? -eq 0 ]
 then
   echo "Install roaming packages ..."
   sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install umdns dawn luci-app-dawn"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "[ -f /etc/seccomp/umdns.json ] && mv /etc/seccomp/umdns.json /etc/seccomp/umdns.json.disabled"
 fi
 
 echo "Copy configs ..."
