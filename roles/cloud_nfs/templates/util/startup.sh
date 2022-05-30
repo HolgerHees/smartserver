@@ -77,11 +77,11 @@ exportLocalShares()
         #/usr/sbin/rpc.gssd -v
         
         echo "starting nfs"
-        /usr/sbin/rpc.nfsd --debug --no-nfs-version 2 --no-nfs-version 3
+        /usr/sbin/rpc.nfsd --debug --no-nfs-version 3
         #sleep 1
         #/usr/sbin/rpc.nfsd 0
         #sleep 1
-        #/usr/sbin/rpc.nfsd --debug --no-nfs-version 2
+        #/usr/sbin/rpc.nfsd --debug --no-nfs-version 3
         
         echo "starting exportfs"
         FS_RESULT=$(/usr/sbin/exportfs -arv)
