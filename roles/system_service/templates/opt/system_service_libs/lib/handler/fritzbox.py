@@ -274,18 +274,18 @@ class Fritzbox(_handler.Handler):
                         _active_client_macs.append(mac)
                         self.wifi_clients[fritzbox_ip][mac] = True
                         
-                for [ uid, mac, gid, vlan, target_mac, target_interface, connection_details ] in list(self.wifi_associations[fritzbox_ip].values()):
-                    if uid not in _active_associations:
-                        device = self.cache.getDevice(mac)
-                        device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
-                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+        for [ uid, mac, gid, vlan, target_mac, target_interface, connection_details ] in list(self.wifi_associations[fritzbox_ip].values()):
+            if uid not in _active_associations:
+                device = self.cache.getDevice(mac)
+                device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
+                self.cache.confirmDevice( device, lambda event: events.append(event) )
 
-                        self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
-                        
-                        del self.wifi_associations[fritzbox_ip][uid]
-                        
-                        if mac not in _active_client_macs and mac in self.wifi_clients[fritzbox_ip]:
-                            del self.wifi_clients[fritzbox_ip][mac]
+                self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
+                
+                del self.wifi_associations[fritzbox_ip][uid]
+                
+                if mac not in _active_client_macs and mac in self.wifi_clients[fritzbox_ip]:
+                    del self.wifi_clients[fritzbox_ip][mac]
 
 #                        device = self.cache.getUnlockedDevice(mac)
 #                        if device is not None:
