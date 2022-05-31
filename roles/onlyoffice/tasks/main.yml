@@ -51,18 +51,12 @@
       USE_UNAUTHORIZED_STORAGE: "true"
       REDIS_SERVER_HOST: "redis"
       REDIS_SERVER_PORT: "6379"
-#      DB_TYPE: "mariadb" => gives
-#         Aborted connection 16707 to db: 'unconnected' user: 'unauthenticated' host: '172.21.0.4' (This connection closed normally without authentication)
-
-#      DB_TYPE: "mysql" => gives every hour
-#         Aborted connection 15784 to db: 'onlyoffice' user: 'onlyoffice' host: '172.21.0.4' (Got timeout reading communication packets)
-
-#      DB_TYPE: "mysql"
-#      DB_HOST: "mysql"
-#      DB_PORT: "3306"
-#      DB_NAME: "onlyoffice"
-#      DB_USER: "{{vault_onlyoffice_mysql_username}}"
-#      DB_PWD: "{{vault_onlyoffice_mysql_password}}"
+      DB_TYPE: "mariadb"
+      DB_HOST: "mysql"
+      DB_PORT: "3306"
+      DB_NAME: "onlyoffice"
+      DB_USER: "{{vault_onlyoffice_mysql_username}}"
+      DB_PWD: "{{vault_onlyoffice_mysql_password}}"
     log_driver: journald
     log_options:
       tag: onlyoffice
