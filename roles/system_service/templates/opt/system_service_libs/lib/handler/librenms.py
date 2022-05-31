@@ -96,9 +96,9 @@ class LibreNMS(_handler.Handler):
         for _device in _devices:
             mac = self.cache.ip2mac(_device["hostname"])
             if mac is None:
-                if device["id"] in self.devices:
-                    mac = self.devices[device["id"]]["mac"]
-                    logging.warning("Device {} currently not resolvable. User old mac address for now.".format(_device["hostname"]))
+                if _device["device_id"] in self.devices:
+                    mac = self.devices[_device["device_id"]]["mac"]
+                    logging.warning("Device {} currently not resolvable. Use old mac address for now.".format(_device["hostname"]))
                 else:
                     raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]), self.config.startup_error_timeout)
             

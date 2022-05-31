@@ -36,7 +36,7 @@ vault_librenms_mysql_password: "default123"
 vault_librenms_api_token: "lasd6213k1jsl12nd098sdk2j3"
 
 vault_openwrt_api_password: "äaslfdk324kj2l4"
-vault_openwrt_root_password: "laksd8213jhasd"
+vault_fritzbox_api_password: "default123"
 
 # ****** OPTIONAL VARIABLES ******
 # variables are optional and only necessary if they are referenced in one of the optional roles or configurations
@@ -51,10 +51,6 @@ vault_cloud_vpn_keys: {
 vault_cloudsync_password: "default123"
 
 # used in custom external openhab config repository
-vault_fritzbox_username: "openhab"
-vault_fritzbox_password: "default123"
-vault_fritzbox_wan_uuid: "12345"
-vault_fritzbox_lan_uuid: "12345"
 vault_telegram_bots: {
     bot_testuser1: { # for user1
         chat_id: "<chat_id>",
