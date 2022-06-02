@@ -436,7 +436,7 @@ mx.Actions = (function( ret ) {
 
         var prefix = '';
         if(h >= 18) prefix = mx.I18N.get('Good Evening');
-        else if(h >  12) prefix = mx.I18N.get('Good Afternoon');
+        else if(h >=  11) prefix = mx.I18N.get('Good Afternoon');
         else prefix = mx.I18N.get('Good Morning');
 
         content = '<div class="service home">';
