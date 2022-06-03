@@ -1,5 +1,5 @@
 - name: check if {{git_clone_name}} git is updateable => ! (directory exists, is not empty and contains not commited or not pushed changes)
-  shell: "[ -d '{{git_clone_path}}' ] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ! sudo -u {{ git_sudo_user | default(ansible_user) }} git diff-index --quiet origin/master"
+  shell: "[ -d '{{git_clone_path}}' ] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ! sudo -u {{ git_owner | default(ansible_user) }} git diff-index --quiet origin/master"
   register: "_git_clone_result"
   changed_when: "_git_clone_result.rc == 0"
   failed_when: "_git_clone_result.rc > 1"
@@ -20,10 +20,20 @@
     version: 'master'
   vars:
     ansible_remote_tmp: "/tmp"
-  become_user: "{{ git_sudo_user | default(ansible_user)}}"
+  become_user: "{{ git_owner | default(ansible_user)}}"
   register: "git_clone_result"
   when: "_git_clone_result.rc == 1"
  
+- name: ensure that right owner is assigned => git_clone_result changed
+  file:
+    path: "{{projects_path}}openhab_shared"
+    owner: "{{git_owner | default(ansible_user)}}"
+    group: "{{git_group | default('root')}}"
+    mode: "{{git_mode | default('u=rwX,g=rwX,o=')}}"
+    recurse: yes
+  when: "git_clone_result.changed and (git_owner is defined or git_group is defined or git_mode is defined)"
+#  when: "(git_owner is defined or git_group is defined or git_mode is defined)"
+
 - name: register result state
   set_fact:
     git_clone_changed: "{{ git_clone_result.changed }}"

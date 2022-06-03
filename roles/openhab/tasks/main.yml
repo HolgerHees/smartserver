@@ -43,15 +43,10 @@
     git_clone_name: "shared"
     git_clone_path: "{{projects_path}}openhab_shared"
     git_clone_url: "https://github.com/HolgerHees/openhab_shared.git"
+    git_owner:  "{{openhab_user}}"
+    git_group:  "{{openhab_group}}"
+    git_mode:  "u=rwX,g=rX,o="
   import_tasks: roles/_shared/tasks/git_clone.yml
-
-- name: ensure that right owner is assigned => git_clone_result changed
-  file:
-    path: "{{projects_path}}openhab_shared"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    recurse: yes
-  when: "git_clone_changed"
 
 - name: set symbolic link to shared python scripts
   file:
@@ -72,16 +67,11 @@
     git_clone_name: "config"
     git_clone_path: "{{projects_path}}openhab_config"
     git_clone_url: "{{vault_openhab_config_git}}"
+    git_owner:  "{{openhab_user}}"
+    git_group:  "{{openhab_group}}"
+    git_mode:  "u=rwX,g=rX,o="
   import_tasks: roles/_shared/tasks/git_clone.yml
 
-- name: ensure that right owner is assigned => git_clone_result changed
-  file:
-    path: "{{projects_path}}openhab_config"
-    owner: "{{openhab_user}}"
-    group: "{{openhab_group}}"
-    recurse: yes
-  when: "git_clone_changed"
-  
 # => custom python
 - name: link custom python
   file:
