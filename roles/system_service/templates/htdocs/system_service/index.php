@@ -21,6 +21,8 @@ mx.UNCore = (function( ret ) {
     var nodes = {};
     
     var rootNode = null;
+    
+    var isTable = false;
 
     function getGroup(gid)
     {
@@ -250,7 +252,14 @@ mx.UNCore = (function( ret ) {
         }
         else
         {
-            mx.D3.drawStructure( replacesNodes ? rootNode : null, groups, stats);
+            if( isTable)
+            {
+                mx.NetworkTable.draw( replacesNodes ? rootNode : null, groups, stats);
+            }
+            else
+            {
+                mx.NetworkStructure.draw( replacesNodes ? rootNode : null, groups, stats);
+            }
         }
     }
         
@@ -275,6 +284,38 @@ mx.UNCore = (function( ret ) {
         socket.on('connect_error', err => handleErrors(err))
         socket.on('connect_failed', err => handleErrors(err))
         socket.on('disconnect', err => handleErrors(err))
+        
+        mx.$("#networkToolbar .networkDisplay.button").addEventListener("click",function()
+        {
+            isTable = !isTable;
+
+            if( isTable )
+            {
+                mx.$("#networkToolbar .networkDisplay.button span").className = "icon-flow-tree";
+                mx.NetworkTable.draw( rootNode, groups, stats);
+            }
+            else
+            {
+                mx.$("#networkToolbar .networkDisplay.button span").className = "icon-table";
+                mx.NetworkStructure.draw( rootNode, groups, stats);
+            }
+        });
+        
+        mx.$("#networkToolbar .networkSearch.button").addEventListener("click",function()
+        {
+            let element = mx.$("#networkToolbar .networkSearchInput");
+            element.classList.toggle("active");
+            
+            /*dialog = mx.Dialog.init({
+                title: "Not implement",
+                body: "Needs still time to implement",
+                buttons: [
+                    { "text": "OK" },
+                ],
+                destroy: true
+            });
+            dialog.open();*/
+        });
     }
     return ret;
 })( mx.UNCore || {} );
@@ -285,6 +326,8 @@ mx.OnDocReady.push( mx.UNCore.init );
 <body class="inline">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Network visualizer")); } );</script>
 <div class="contentLayer error"></div>
-<svg id="network"></svg>
+<svg id="networkStructure"></svg>
+<div id="networkList"></div>
+<div id="networkToolbar"><div class="networkSearchInput"><input></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkDisplay form button"><span class="icon-table"></span></div></div>
 </body>
 </html>

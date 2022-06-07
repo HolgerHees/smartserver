@@ -64,7 +64,7 @@ class Helper():
         return None
 
     def arpscan(interface, network ):
-        result = command.exec(["/usr/local/bin/arp-scan", "-N", "-x", "--retry=1", "--interface", interface, network], exitstatus_check = False)
+        result = command.exec(["/usr/local/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode().strip().split("\n")
             

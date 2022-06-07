@@ -1,4 +1,32 @@
-mx.D3 = (function( ret ) 
+mx.NetworkHelper = (function( ret ) 
+{
+    ret.prepareElements = function(activeElementId, inactiveElementId)
+    {
+        let activeElement = mx.$(activeElementId);
+        activeElement.innerHTML = "";
+        activeElement.style.display = "";
+        let inactiveElement = mx.$(inactiveElementId);
+        inactiveElement.innerHTML = "";
+        inactiveElement.style.display = "none";        
+        
+        mx.Tooltip.hide();
+    }
+    return ret;
+})( mx.NetworkHelper || {} );
+
+mx.NetworkTable = (function( ret ) 
+{
+    ret.draw = function( rootNode, _groups, _stats) {
+        if( rootNode )
+        {
+            mx.NetworkHelper.prepareElements("#networkList","#networkStructure");
+        }
+    }
+    
+    return ret;
+})( mx.NetworkTable || {} );
+
+mx.NetworkStructure = (function( ret ) 
 {
     //let boxMargin = 3;
     let box_padding = 3;
@@ -21,7 +49,7 @@ mx.D3 = (function( ret )
         return root.children && root.children.length == 1;
     }
     
-    ret.drawStructure = function( rootNode, _groups, _stats) {
+    ret.draw = function( rootNode, _groups, _stats) {
         groups = _groups;
         stats = _stats;
         
@@ -45,6 +73,7 @@ mx.D3 = (function( ret )
                 if( value > endCount ) endCount = value;
             });
 
+            mx.NetworkHelper.prepareElements("#networkStructure", "#networkList");
             initTree(endCount, maxDepth);
             refreshTooltip();
         }
@@ -162,14 +191,14 @@ mx.D3 = (function( ret )
             root.y = dy;
         }
         
-        const svg = d3.selectAll("#network")
+        const svg = d3.selectAll("#networkStructure")
             //.attr("viewBox", [-dy / 2 + ( dy / 3 ), x0 - dx, width, width])
             .attr("viewBox", [0, 0, width, height])
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("font-family", "sans-serif");
         
-        svg.selectAll("g").remove()
+        //svg.selectAll("g").remove()
         
         link = svg.append("g")
                 .classed("links", true)
@@ -816,4 +845,4 @@ mx.D3 = (function( ret )
     }
 
     return ret;
-})( mx.D3 || {} );
+})( mx.NetworkStructure || {} );
