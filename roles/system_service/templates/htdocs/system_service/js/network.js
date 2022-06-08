@@ -11,16 +11,183 @@ mx.NetworkHelper = (function( ret )
         
         mx.Tooltip.hide();
     }
+    
+    ret.getDeviceSignal = function(device)
+    {
+        let group = null;
+        let stat = null;
+        
+        device.groups.forEach(function(_group)
+        {
+            if( group == null || group.details.priority["value"] < _group.details.priority["value"] )
+            {
+                group = _group;
+            }
+        });
+
+        if( group != null )
+        {
+            let _stat = device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
+            if( _stat.length > 0)
+            {
+                stat = _stat[0];
+            }
+            else
+            {
+                console.log("----");
+                console.log(device.groups);
+                console.log(device.interfaceStat);
+                console.log(group);
+                console.log(stats);
+            }
+        }
+        
+        if( group && stat && stat.details["signal"] )
+        {    
+            return { "group": group, "stat": stat }
+        }
+        
+        return null;
+    }
+    
+    ret.getSignalClass = function(signal_value)
+    {
+        //if( signal_value >= -40 - offset ) signal_class = "highest";
+        if( signal_value >= -50 ) return "highest";
+        else if( signal_value >= -60 ) return "high";
+        else if( signal_value >= -70 ) return "medium";
+        else if( signal_value >= -80 ) return "low";
+        
+        return "lowest";
+    }
+    
+    ret.isSearchMatch = function(searchTerm, device)
+    {
+        if( device["ip"] && device["ip"].includes(searchTerm) )
+            return true;
+            
+        if( device["mac"] && device["mac"].includes(searchTerm) )
+            return true;
+        
+        if( device["dns"] && device["dns"].includes(searchTerm) )
+            return true;
+
+        let signal = mx.NetworkHelper.getDeviceSignal(device);
+        if( signal )
+        {
+            return signal["group"].details.ssid["value"].includes(searchTerm) || signal["group"].details.band["value"].includes(searchTerm);
+        }
+
+        return false;
+    }
+    
     return ret;
 })( mx.NetworkHelper || {} );
 
 mx.NetworkTable = (function( ret ) 
 {
-    ret.draw = function( rootNode, _groups, _stats) {
-        if( rootNode )
+    let type = null
+    let reverse = null;
+    let data = null;
+    
+    function convertIP(ip)
+    {
+        return ip.split('.')
+            .map(p => parseInt(p))
+            .reverse()
+            .reduce((acc,val,i) => acc+(val*(256**i)),0)        
+    }
+    
+    function compareIP(reverse, ip1,ip2)
+    {
+        if( ip1 == null ) ip1 = "0";
+        if( ip2 == null ) ip2 = "0";
+        
+        return reverse ? convertIP(ip1) < convertIP(ip2) : convertIP(ip1) > convertIP(ip2);
+    }
+    
+    function buildTable(searchTerm, _type, _reverse, _data)
+    {
+        type = _type;
+        reverse = _reverse;
+        data = _data;
+        
+        data.sort(function(first, second) {
+            if( type == "ip" )
+                return compareIP(reverse, first[type], second[type]);
+            else
+                return reverse ? first[type] < second[type] : first[type] > second[type];
+        });
+        
+        let rows = [];
+        data.forEach(function(device)
         {
-            mx.NetworkHelper.prepareElements("#networkList","#networkStructure");
-        }
+            if( searchTerm && !mx.NetworkHelper.isSearchMatch(searchTerm, device) )
+                return;
+            
+            rows.push({
+                "columns": [
+                    { "value": device["ip"] },
+                    { "value": device["mac"] },
+                    { "value": device["dns"] },
+                    { "value": device["ssid"] },
+                    { "value": device["band"], "class": "band c" + device["band"] },
+                    { "value": device["signal"], "class": "signal " + mx.NetworkHelper.getSignalClass(device["signal"]) },
+                    { "value": "<span></span>", "class": device["isOnline"] ? "online" : "offline" }
+                ]
+            });
+        });
+
+        let table = mx.Table.init( {
+            "class": "list",
+            "sort": { "value": type, "reverse": reverse, "callback": function(_type,_reverse){ buildTable(searchTerm, _type, type != _type ? reverse : _reverse, data) } },
+            "header": [
+                { "value": "IP", "sort": { "value": "ip", "reverse": true } },
+                { "value": "MAC", "sort": { "value": "mac", "reverse": true } },
+                { "value": "DNS", "sort": { "value": "dns", "reverse": true }, "grow": true },
+                { "value": "SSID", "sort": { "value": "ssid", "reverse": true } },
+                { "value": "Band", "sort": { "value": "band", "reverse": true } },
+                { "value": "Signal", "sort": { "value": "signal", "reverse": true } },
+                { "value": "" }
+            ],
+            "rows": rows
+        });
+        
+        table.build(mx.$("#networkList"));
+    }
+    
+    ret.search = function(searchTerm) {
+        buildTable(searchTerm, type, reverse, data);            
+    }
+    
+    ret.draw = function( searchTerm, nodes, _groups, _stats) {
+        mx.NetworkHelper.prepareElements("#networkList","#networkStructure");
+        
+        let data = [];
+        Object.values(nodes).forEach(function(node)
+        {
+            if( node.device.type == "hub" )
+                return;
+            
+            let device = Object.assign({}, node.device);
+            let signal = mx.NetworkHelper.getDeviceSignal(device);
+            if( signal )
+            {
+                device["signal"] = signal["stat"].details.signal["value"];
+                device["band"] = signal["group"].details.band["value"];
+                device["ssid"] = signal["group"].details.ssid["value"];
+            }
+            else
+            {
+                device["signal"] = "";
+                device["band"] = "";
+                device["ssid"] = "";
+            }
+            
+            data.push(device);
+        });
+        
+        buildTable(searchTerm, 'ip', false, data);            
     }
     
     return ret;
@@ -36,6 +203,7 @@ mx.NetworkStructure = (function( ret )
 
     let groups = null;
     let stats = null;
+    let searchTerm = null;
     
     let root = null;
     
@@ -49,9 +217,16 @@ mx.NetworkStructure = (function( ret )
         return root.children && root.children.length == 1;
     }
     
-    ret.draw = function( rootNode, _groups, _stats) {
+    ret.search = function(_searchTerm) {
+        searchTerm = _searchTerm;
+        
+        redrawMatch();
+    }
+    
+    ret.draw = function(_searchTerm, rootNode, _groups, _stats) {
         groups = _groups;
         stats = _stats;
+        searchTerm = _searchTerm;
         
         if( rootNode )
         {
@@ -296,6 +471,17 @@ mx.NetworkStructure = (function( ret )
         online_circle.attr("class", d => ( d.data.device.isOnline ? "online" : "offline" ) );
     };
     
+    function redrawMatch(){
+        node.selectAll("rect").each( setSearchState );
+    }
+    
+    function setSearchState(d)
+    {
+        let rect = d3.select(this);
+        
+        rect.node().setAttribute("class", "container " + d.data.device.type + ( searchTerm && mx.NetworkHelper.isSearchMatch(searchTerm, d.data.device) ? " match" : "" ) );
+    }
+    
     function setDetailsContent(d)
     {
         let foreignobject = d3.select(this);
@@ -305,7 +491,7 @@ mx.NetworkStructure = (function( ret )
         foreignobject.node().setAttribute("data-update", d.data.device.update);
 
         let rect = foreignobject.node().parentNode.querySelector("rect");
-        rect.setAttribute("class", "container " + d.data.device.type);
+        rect.setAttribute("class", "container " + d.data.device.type + ( searchTerm && mx.NetworkHelper.isSearchMatch(searchTerm, d.data.device) ? " match" : "" ) );
         let circle = foreignobject.node().parentNode.querySelector("circle");
         circle.setAttribute("class", d.data.device.isOnline ? "online" : "offline");
 
@@ -325,48 +511,21 @@ mx.NetworkStructure = (function( ret )
 
         if( d.data.device.groups.length > 0 && d.data.device.interfaceStat )
         {
-            let group = null;
-            let stat = null;
+            let signal = mx.NetworkHelper.getDeviceSignal(d.data.device);
             
-            d.data.device.groups.forEach(function(_group)
+            if( signal )
             {
-                if( group == null || group.details.priority["value"] < _group.details.priority["value"] )
-                {
-                    group = _group;
-                }
-            });
+                let group = signal["group"];
+                let stat = signal["stat"];
 
-            if( group != null )
-            {
-                let _stat = d.data.device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
-                if( _stat.length > 0)
-                {
-                    stat = _stat[0];
-                }
-                else
-                {
-                    console.log("----");
-                    console.log(d.data.device.groups);
-                    console.log(d.data.device.interfaceStat);
-                    console.log(group);
-                    console.log(stats);
-                }
-            }
-            
-            if( group && stat && stat.details["signal"] )
-            {
                 let signal_value = stat.details.signal["value"];
                 let band_value = group.details.band["value"];
+                let ssid_value = group.details.ssid["value"];
                 
-                //if( signal_value >= -40 - offset ) signal_class = "highest";
-                if( signal_value >= -50 ) signal_class = "highest";
-                else if( signal_value >= -60 ) signal_class = "high";
-                else if( signal_value >= -70 ) signal_class = "medium";
-                else if( signal_value >= -80 ) signal_class = "low";
-                else signal_class = "lowest";
+                let signal_class = mx.NetworkHelper.getSignalClass(signal_value);
                 
                 html += "<div class='details' style='font-size:" + detailsFontSize + "'>";
-                html += "<div class='top'>" + group.details.ssid["value"] + "</div>";
+                html += "<div class='top'>" + ssid_value + "</div>";
                 html += "<div class='bottom'><span class='band " + band_value + "'>" + band_value + "</span> • <span class='signal " + signal_class + "'>" + signal_value + "db</span></div>";
                 html += "</div>";
             }

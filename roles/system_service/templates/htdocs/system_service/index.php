@@ -23,6 +23,7 @@ mx.UNCore = (function( ret ) {
     var rootNode = null;
     
     var isTable = false;
+    var activeTerm = "";
 
     function getGroup(gid)
     {
@@ -254,11 +255,11 @@ mx.UNCore = (function( ret ) {
         {
             if( isTable)
             {
-                mx.NetworkTable.draw( replacesNodes ? rootNode : null, groups, stats);
+                //mx.NetworkTable.draw( nodes, groups, stats);
             }
             else
             {
-                mx.NetworkStructure.draw( replacesNodes ? rootNode : null, groups, stats);
+                mx.NetworkStructure.draw( activeTerm, replacesNodes ? rootNode : null, groups, stats);
             }
         }
     }
@@ -292,12 +293,12 @@ mx.UNCore = (function( ret ) {
             if( isTable )
             {
                 mx.$("#networkToolbar .networkDisplay.button span").className = "icon-flow-tree";
-                mx.NetworkTable.draw( rootNode, groups, stats);
+                mx.NetworkTable.draw( activeTerm, nodes, groups, stats);
             }
             else
             {
                 mx.$("#networkToolbar .networkDisplay.button span").className = "icon-table";
-                mx.NetworkStructure.draw( rootNode, groups, stats);
+                mx.NetworkStructure.draw( activeTerm, rootNode, groups, stats);
             }
         });
         
@@ -305,6 +306,8 @@ mx.UNCore = (function( ret ) {
         {
             let element = mx.$("#networkToolbar .networkSearchInput");
             element.classList.toggle("active");
+            
+            if( element.classList.contains("active") ) mx.$("#networkToolbar .networkSearchInput input").focus();
             
             /*dialog = mx.Dialog.init({
                 title: "Not implement",
@@ -315,6 +318,24 @@ mx.UNCore = (function( ret ) {
                 destroy: true
             });
             dialog.open();*/
+        });
+        
+        mx.$("#networkToolbar .networkSearchInput input").addEventListener("keyup",function()
+        {
+            var _term = mx.$("#networkToolbar .networkSearchInput input").value.toLowerCase();
+            if( _term == activeTerm )
+                return;
+
+            activeTerm = _term;
+            
+            if( isTable)
+            {
+                mx.NetworkTable.search(activeTerm);
+            }
+            else
+            {
+                mx.NetworkStructure.search(activeTerm);
+            }
         });
     }
     return ret;

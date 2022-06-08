@@ -30,6 +30,10 @@ body, svg {
     width: 400px;
     margin-left: 5px;
 }
+#networkList {
+    max-width: 900px;
+    margin: auto;
+}
 .tooltip {
     background: var(--bg);
     pointer-events: auto;
@@ -133,6 +137,10 @@ svg g.nodes rect.container {
     fill: var(--bg);
 }
 
+svg g.nodes rect.container.match {
+    stroke: red;
+}
+
 svg g.nodes rect.container.hub,
 svg g.nodes rect.container.network {
     fill: var(--content-hightlight-bg);
@@ -143,8 +151,25 @@ svg g.nodes circle.offline {
     stroke-width: 0.5;
     stroke: var(--content-text);
 }
+#networkList .row .online,
+#networkList .row .offline {
+    text-align: center;
+}
+#networkList .row .online span,
+#networkList .row .offline span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+}
+#networkList .row .online span {
+    background: var(--color-green);
+}
 svg g.nodes circle.online {
     fill: var(--color-green);
+}
+#networkList .row .offline span {
+    background: var(--color-red);
 }
 svg g.nodes circle.offline {
     fill: var(--color-red);
@@ -194,23 +219,30 @@ svg g.nodes foreignObject.details > div > div.details div.top {
     margin-bottom: -2px;
 }
 
+#networkList .row .band.c2g,
 svg g.nodes foreignObject.details > div > div.details span.band.c2g {
 }
+#networkList .row .band.c5g,
 svg g.nodes foreignObject.details > div > div.details span.band.c5g {
     font-weight: 500;
 }
+#networkList .row .signal.lowest,
 svg g.nodes foreignObject.details > div > div.details span.signal.lowest {
     color: #e80000;
 }
+#networkList .row .signal.low,
 svg g.nodes foreignObject.details > div > div.details span.signal.low {
     color: #ff8800;
 }
+#networkList .row .signal.medium,
 svg g.nodes foreignObject.details > div > div.details span.signal.medium {
     color: #bfa900;
 }
+#networkList .row .signal.high,
 svg g.nodes foreignObject.details > div > div.details span.signal.high {
     color: #7cbf00;
 }
+#networkList .row .signal.highest,
 svg g.nodes foreignObject.details > div > div.details span.signal.highest {
     color: #027a04;
 }
