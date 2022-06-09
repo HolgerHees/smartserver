@@ -38,7 +38,7 @@ body, svg {
     max-width: 600px;
     margin: auto;
 }
-#networkList .row.body {
+#networkList .row:not(:first-child) {
     cursor: pointer;
 }
 .tooltip {

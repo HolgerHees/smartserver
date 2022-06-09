@@ -11,7 +11,7 @@ mx.Table = (function( ret ) {
     {
         tableElement.className = "form table" + ( options["class"] ? " " + options["class"] : "" );
         
-        let content = "<div class=\"row header";
+        let content = "<div class=\"row";
         content += "\">";
         options["header"].forEach(function(column)
         {
@@ -34,7 +34,7 @@ mx.Table = (function( ret ) {
 
         options["rows"].forEach(function(row)
         {
-            content += "<div class=\"row body";
+            content += "<div class=\"row";
             let cls = [];
             if( row["class"] ) cls.push(row["class"]);
             if( cls.length ) content += " " + cls.join(" ");
