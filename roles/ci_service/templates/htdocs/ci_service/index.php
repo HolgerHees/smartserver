@@ -31,7 +31,7 @@ function initPage()
                 let date = new Date(job["timestamp"] * 1000);
                 
                 rows.push({
-                    "onclick": function(){ mx.CICore.openDetails(event,job['date'],job['config'],job['deployment'],job['branch'],job['git_hash']); },
+                    "events": { "click": function(){ mx.CICore.openDetails(event,job['date'],job['config'],job['deployment'],job['branch'],job['git_hash']); } },
                     "data": { "timestamp": job["timestamp"] },
                     "columns": [
                         { "class": "state " + job['state'] },

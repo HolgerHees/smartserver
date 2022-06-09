@@ -60,9 +60,11 @@ mx.Tooltip = (function( ret ) {
         if( arrowPosition == "top" || arrowPosition == "bottom" )
         {
             tooltipArrow.style.left = arrowOffset;
+            tooltipArrow.style.top = "";
         }
         else
         {
+            tooltipArrow.style.left = "";
             tooltipArrow.style.top = arrowOffset;
         }
         tooltip.classList.add("active");

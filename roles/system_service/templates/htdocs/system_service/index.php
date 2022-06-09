@@ -25,6 +25,44 @@ mx.UNCore = (function( ret ) {
     var isTable = false;
     var activeTerm = "";
 
+    function getDeviceSignal(device)
+    {
+        let group = null;
+        let stat = null;
+        
+        device.groups.forEach(function(_group)
+        {
+            if( group == null || group.details.priority["value"] < _group.details.priority["value"] )
+            {
+                group = _group;
+            }
+        });
+
+        if( group != null )
+        {
+            let _stat = device.interfaceStat.data.filter(data => data["connection_details"]["gid"] == group.gid);
+            if( _stat.length > 0)
+            {
+                stat = _stat[0];
+            }
+            else
+            {
+                console.log("----");
+                console.log(device.groups);
+                console.log(device.interfaceStat);
+                console.log(group);
+                console.log(stats);
+            }
+        }
+        
+        if( group && stat && stat.details["signal"] )
+        {    
+            return { "group": group, "stat": stat }
+        }
+        
+        return null;
+    }
+
     function getGroup(gid)
     {
         return groups[gid];
@@ -243,6 +281,20 @@ mx.UNCore = (function( ret ) {
                 });
             }
             device["groups"] = _groups;
+            
+            device["wifi_signal"] = "";
+            device["wifi_band"] = "";
+            device["wifi_ssid"] = "";
+            if( _groups.length > 0 && device["interfaceStat"] )
+            {
+                let signal = getDeviceSignal(device);
+                if( signal )
+                {
+                    device["wifi_signal"] = signal["stat"].details.signal["value"];
+                    device["wifi_band"] = signal["group"].details.band["value"];
+                    device["wifi_ssid"] = signal["group"].details.ssid["value"];
+                }
+            }
         });
         
         //console.log(stats);
@@ -302,39 +354,60 @@ mx.UNCore = (function( ret ) {
             }
         });
         
+        let searchInputBox = mx.$("#networkToolbar .networkSearchInput");
+        let searchInputField = mx.$("#networkToolbar .networkSearchInput input");
+        let lastBlur = 0;
+        
         mx.$("#networkToolbar .networkSearch.button").addEventListener("click",function()
         {
-            let element = mx.$("#networkToolbar .networkSearchInput");
-            element.classList.toggle("active");
+            if( window.performance.now() - lastBlur  < 500 )
+                return;
             
-            if( element.classList.contains("active") ) mx.$("#networkToolbar .networkSearchInput input").focus();
+            searchInputBox.classList.toggle("active");
             
-            /*dialog = mx.Dialog.init({
-                title: "Not implement",
-                body: "Needs still time to implement",
-                buttons: [
-                    { "text": "OK" },
-                ],
-                destroy: true
-            });
-            dialog.open();*/
+            if( searchInputBox.classList.contains("active") ) 
+            {
+                searchInputField.focus();
+            }
         });
         
-        mx.$("#networkToolbar .networkSearchInput input").addEventListener("keyup",function()
+        searchInputField.addEventListener("keyup",function(event)
         {
-            var _term = mx.$("#networkToolbar .networkSearchInput input").value.toLowerCase();
-            if( _term == activeTerm )
-                return;
-
-            activeTerm = _term;
-            
-            if( isTable)
+            if(event.keyCode == 27 ) // esc
             {
-                mx.NetworkTable.search(activeTerm);
+                searchInputBox.classList.toggle("active");
+                searchInputField.blur();
             }
             else
             {
-                mx.NetworkStructure.search(activeTerm);
+                var _term = searchInputField.value.toLowerCase();
+                if( _term == activeTerm )
+                    return;
+
+                activeTerm = _term;
+                
+                if( isTable)
+                {
+                    mx.NetworkTable.search(activeTerm);
+                }
+                else
+                {
+                    mx.NetworkStructure.search(activeTerm);
+                }
+            }
+        });
+        
+        searchInputField.addEventListener("focus",function(event)
+        {
+            searchInputField.select();
+        });
+
+        searchInputField.addEventListener("blur",function(event)
+        {   
+            if( searchInputField.value == "" )
+            {
+                searchInputBox.classList.remove("active");
+                lastBlur = window.performance.now();
             }
         });
     }
@@ -347,8 +420,10 @@ mx.OnDocReady.push( mx.UNCore.init );
 <body class="inline">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Network visualizer")); } );</script>
 <div class="contentLayer error"></div>
-<svg id="networkStructure"></svg>
+<div id="networkDataPages">
+<div id="networkStructure"></div>
 <div id="networkList"></div>
+</div>
 <div id="networkToolbar"><div class="networkSearchInput"><input></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkDisplay form button"><span class="icon-table"></span></div></div>
 </body>
 </html>

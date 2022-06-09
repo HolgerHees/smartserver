@@ -24,15 +24,21 @@ body, svg {
     transition: max-width 0.3s;
 }
 #networkToolbar .networkSearchInput.active {
-    max-width: 405px;
+    max-width: 205px;
 }
 #networkToolbar .networkSearchInput input {
-    width: 400px;
+    width: 200px;
     margin-left: 5px;
 }
+#networkDataPages > div {
+    display: none;
+}
 #networkList {
-    max-width: 900px;
+    max-width: 600px;
     margin: auto;
+}
+#networkList .row.body {
+    cursor: pointer;
 }
 .tooltip {
     background: var(--bg);

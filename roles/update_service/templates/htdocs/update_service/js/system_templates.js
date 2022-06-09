@@ -536,7 +536,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             {
                 let date = new Date(job["timestamp"] * 1000);
                 rows.push({
-                    "onclick": function(event){ mx.UpdateServiceActions.openDetails(event,job["start"],job["type"],job["user"]); },
+                    "events": { "click": function(event){ mx.UpdateServiceActions.openDetails(event,job["start"],job["type"],job["user"]); } },
                     "columns": [
                         { "class": "state " + job["state"] },
                         { "value": mx.I18N.get(cmd_type_map[job["type"]]) },

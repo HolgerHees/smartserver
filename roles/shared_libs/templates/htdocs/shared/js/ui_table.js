@@ -11,7 +11,7 @@ mx.Table = (function( ret ) {
     {
         tableElement.className = "form table" + ( options["class"] ? " " + options["class"] : "" );
         
-        let content = "<div class=\"row";
+        let content = "<div class=\"row header";
         content += "\">";
         options["header"].forEach(function(column)
         {
@@ -34,7 +34,7 @@ mx.Table = (function( ret ) {
 
         options["rows"].forEach(function(row)
         {
-            content += "<div class=\"row";
+            content += "<div class=\"row body";
             let cls = [];
             if( row["class"] ) cls.push(row["class"]);
             if( cls.length ) content += " " + cls.join(" ");
@@ -77,13 +77,29 @@ mx.Table = (function( ret ) {
         {
             let rowElement = tableElement.childNodes[i+1];
             
-            if( row["onclick"] ) rowElement.addEventListener("click",row["onclick"]);
+            if( row["events"] )
+            {
+                Object.keys(row["events"]).forEach(function(event)
+                {
+                    rowElement.addEventListener(event,row["events"][event]);
+                });
+            }
+            
+            //if( row["onclick"] ) rowElement.addEventListener("click",row["onclick"]);
             
             row["columns"].forEach(function(column,j)
             {
-                if( !column["onclick"] ) return;
+                if( column["events"] )
+                {
+                    Object.keys(column["events"]).forEach(function(event)
+                    {
+                        rowElement.childNodes[j].addEventListener(event,column["events"][event]);
+                    });
+                }
+                
+                //if( !column["onclick"] ) return;
 
-                rowElement.childNodes[j].addEventListener("click",column["onclick"]);
+                //rowElement.childNodes[j].addEventListener("click",column["onclick"]);
             });
         });
         
