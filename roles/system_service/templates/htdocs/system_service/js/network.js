@@ -449,7 +449,7 @@ mx.NetworkHelper = (function( ret )
     {
         if( activeElementId != newElementId )
         {
-            if( activeElementId )
+            /*if( activeElementId )
             {
                 mx.$("body").style.overflowX = "hidden";
                 
@@ -513,8 +513,17 @@ mx.NetworkHelper = (function( ret )
             {
                 newElement = mx.$(newElementId);
                 newElement.style.display = "block";
-            }
+            }*/
 
+            if( activeElementId )
+            {
+                activeElement = mx.$(activeElementId);
+                activeElement.innerHTML = "";
+                activeElement.style.display = "";
+            }
+            
+            newElement = mx.$(newElementId);
+            newElement.style.display = "block";
             activeElementId = newElementId;
         }
     }
