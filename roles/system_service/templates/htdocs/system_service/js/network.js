@@ -449,14 +449,70 @@ mx.NetworkHelper = (function( ret )
     {
         if( activeElementId != newElementId )
         {
-            newElement = mx.$(newElementId);
-            newElement.style.display = "block";
-
             if( activeElementId )
             {
+                mx.$("body").style.overflowX = "hidden";
+                
                 activeElement = mx.$(activeElementId);
-                activeElement.innerHTML = "";
-                activeElement.style.display = "";
+                let activeRect = activeElement.getBoundingClientRect();
+                
+                activeElement.style.position = "absolute";
+                activeElement.style.top = "0";
+                activeElement.style.left = activeRect.left + "px";
+                activeElement.style.width = activeRect.width + "px";
+                activeElement.style.height = activeRect.height + "px";
+                activeElement.style.transform = "translate(-" + window.innerWidth + "px,0)";
+
+                newElement = mx.$(newElementId);
+                newElement.style.display = "block";
+
+                window.setTimeout(function()
+                {
+                    let newRect = newElement.getBoundingClientRect();
+                    newElement.style.position = "absolute";
+                    newElement.style.top = "0";
+                    newElement.style.left = ( newRect.left - window.innerWidth ) + "px";
+                    newElement.style.width = newRect.width + "px";
+                    newElement.style.height = newRect.height + "px";
+                    newElement.style.transform = "translate(" + window.innerWidth + "px,0)";
+
+                    window.setTimeout(function()
+                    {                       
+                        activeElement.style.transition = "unset";
+                        newElement.style.transition = "unset";
+                        
+                        window.setTimeout(function()
+                        {
+                            activeElement.innerHTML = "";
+                            activeElement.style.display = "";
+                            activeElement.style.position = "";
+                            activeElement.style.top = "";
+                            activeElement.style.left = "";
+                            activeElement.style.width = "";
+                            activeElement.style.height = "";
+                            activeElement.style.transform = "";
+
+                            newElement.style.position = "";
+                            newElement.style.top = "";
+                            newElement.style.left = "";
+                            newElement.style.width = "";
+                            newElement.style.height = "";
+                            newElement.style.transform = "";
+                        
+                            window.setTimeout(function(){
+                                activeElement.style.transition = "";
+                                newElement.style.transition = "";
+                                
+                                mx.$("body").style.overflowX = "";
+                            },100);
+                        },0);
+                    },300);
+                },0);
+            }
+            else
+            {
+                newElement = mx.$(newElementId);
+                newElement.style.display = "block";
             }
 
             activeElementId = newElementId;
@@ -482,10 +538,10 @@ mx.NetworkHelper = (function( ret )
         if( device["mac"] && device["mac"].includes(searchTerm) )
             return true;
         
-        if( device["dns"] && device["dns"].toLowerCase().includes(searchTerm) )
+        if( device["dns"] && device["dns"].includes(searchTerm) )
             return true;
 
-        if( device["wifi_ssid"] && device["wifi_ssid"].toLowerCase().includes(searchTerm) )
+        if( device["wifi_ssid"] && device["wifi_ssid"].includes(searchTerm) )
             return true;
 
         if( device["wifi_band"] && device["wifi_band"].includes(searchTerm) )
