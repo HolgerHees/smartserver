@@ -26,6 +26,7 @@ class CmdExecuter(watcher.Watcher):
     START_TIME_STR_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
     env_path = "/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
+    home_path = "/root"
 
     process_mapping = {
         "software_update_check": "software_check",
@@ -220,6 +221,7 @@ class CmdExecuter(watcher.Watcher):
         if env is None:
             env = {}
         env["PATH"] = CmdExecuter.env_path
+        env["HOME"] = CmdExecuter.home_path
 
         self.current_child = pexpect.spawn(cmd, timeout=3600, cwd=cwd, env=env)
         self.current_child.logfile_read = lf
