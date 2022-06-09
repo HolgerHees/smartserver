@@ -144,7 +144,8 @@ svg g.nodes rect.container {
 }
 
 svg g.nodes rect.container.match {
-    stroke: red;
+    fill: var(--color-red) !important;
+    filter: brightness(2.0);
 }
 
 svg g.nodes rect.container.hub,

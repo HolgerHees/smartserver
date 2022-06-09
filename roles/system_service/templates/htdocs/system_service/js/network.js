@@ -623,7 +623,7 @@ mx.NetworkStructure = (function( ret )
     let boxPadding = 100 * scale;
         
     //let boxMargin = 3;
-    let box_padding = 3;
+    let box_padding = 3 * scale;
     
     // ** RUNTIME VALUES **
     let box_width = 0;
@@ -721,7 +721,7 @@ mx.NetworkStructure = (function( ret )
         //if( dy > 250 ) dy = 250;
         let dy = box_width + boxPadding;
 
-        d3.tree().nodeSize([box_height + 2, dy])(root);
+        d3.tree().nodeSize([box_height + (2 * scale), dy])(root);
         //d3.tree().size([300, 200])(root);
         
         font_size = box_height / 3;
