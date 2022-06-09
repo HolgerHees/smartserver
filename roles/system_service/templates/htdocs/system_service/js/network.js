@@ -504,9 +504,9 @@ mx.NetworkHelper = (function( ret )
                                 newElement.style.transition = "";
                                 
                                 mx.$("body").style.overflowX = "";
-                            },100);
+                            },200);
                         },0);
-                    },300);
+                    },200);
                 },0);
             }
             else
