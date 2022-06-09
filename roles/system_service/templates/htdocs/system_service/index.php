@@ -384,7 +384,7 @@ mx.UNCore = (function( ret ) {
                 if( _term == activeTerm )
                     return;
 
-                activeTerm = _term;
+                activeTerm = _term.toLowerCase();
                 
                 if( isTable)
                 {

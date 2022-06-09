@@ -482,10 +482,10 @@ mx.NetworkHelper = (function( ret )
         if( device["mac"] && device["mac"].includes(searchTerm) )
             return true;
         
-        if( device["dns"] && device["dns"].includes(searchTerm) )
+        if( device["dns"] && device["dns"].toLowerCase().includes(searchTerm) )
             return true;
 
-        if( device["wifi_ssid"] && device["wifi_ssid"].includes(searchTerm) )
+        if( device["wifi_ssid"] && device["wifi_ssid"].toLowerCase().includes(searchTerm) )
             return true;
 
         if( device["wifi_band"] && device["wifi_band"].includes(searchTerm) )
@@ -531,8 +531,6 @@ mx.NetworkTable = (function( ret )
             else
                 return ( reverse ? first[type] < second[type] : first[type] > second[type] ) ? 1 : -1;
         });
-        
-        console.log(data);
         
         let rows = [];
         data.forEach(function(device)
