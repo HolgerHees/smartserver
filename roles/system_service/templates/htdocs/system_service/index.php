@@ -424,6 +424,6 @@ mx.OnDocReady.push( mx.UNCore.init );
 <div id="networkStructure"></div>
 <div id="networkList"></div>
 </div>
-<div id="networkToolbar"><div class="networkSearchInput"><input></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkDisplay form button"><span class="icon-table"></span></div></div>
+<div id="networkToolbar"><div class="networkDisplay form button"><span class="icon-table"></span></div><div class="networkSearch form button"><span class="icon-search-1"></span></div><div class="networkSearchInput"><input></div></div>
 </body>
 </html>

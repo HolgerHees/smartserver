@@ -5,8 +5,9 @@ body, svg {
 #networkToolbar {
     position: fixed;
     top: 0px;
-    right: 0px;
-    margin: 5px;
+    left: 0px;
+    height: 56px;
+    padding-left: 5px;
     display: flex;
     align-items: center;
     background: var(--bg);
@@ -14,7 +15,7 @@ body, svg {
 #networkToolbar .button {
     padding-left: 5px;
     padding-right: 5px;
-    margin-left: 5px;
+    margin-right: 5px;
 }
 #networkToolbar .networkSearchInput {
     display: inline-block;
@@ -28,7 +29,10 @@ body, svg {
 }
 #networkToolbar .networkSearchInput input {
     width: 200px;
-    margin-left: 5px;
+    margin-right: 5px;
+}
+#networkToolbar .networkSearchInput input:focus {
+    outline: 0;
 }
 #networkDataPages > div {
     display: none;
