@@ -530,13 +530,12 @@ mx.NetworkHelper = (function( ret )
        
     ret.getSignalClass = function(signal_value)
     {
-        //if( signal_value >= -40 - offset ) signal_class = "highest";
-        if( signal_value >= -50 ) return "highest";
-        else if( signal_value >= -60 ) return "high";
-        else if( signal_value >= -70 ) return "medium";
-        else if( signal_value >= -80 ) return "low";
-        
-        return "lowest";
+        if( signal_value >= -50 ) return "signal1";
+        else if( signal_value >= -60 ) return "signal2";
+        else if( signal_value >= -67 ) return "signal3";
+        else if( signal_value >= -72 ) return "signal4";
+        else if( signal_value >= -80 ) return "signal5";
+        return "signal6";
     }
     
     ret.isSearchMatch = function(searchTerm, device)

@@ -238,23 +238,27 @@ svg g.nodes foreignObject.details > div > div.details span.band.c2g {
 svg g.nodes foreignObject.details > div > div.details span.band.c5g {
     font-weight: 500;
 }
-#networkList .row .signal.lowest,
-svg g.nodes foreignObject.details > div > div.details span.signal.lowest {
+#networkList .row .signal.signal6,
+svg g.nodes foreignObject.details > div > div.details span.signal.signal6 {
     color: #e80000;
 }
-#networkList .row .signal.low,
-svg g.nodes foreignObject.details > div > div.details span.signal.low {
+#networkList .row .signal.signal5,
+svg g.nodes foreignObject.details > div > div.details span.signal.signal5 {
     color: #ff8800;
 }
-#networkList .row .signal.medium,
-svg g.nodes foreignObject.details > div > div.details span.signal.medium {
+#networkList .row .signal.signal4,
+svg g.nodes foreignObject.details > div > div.details span.signal.signal4 {
     color: #bfa900;
 }
-#networkList .row .signal.high,
-svg g.nodes foreignObject.details > div > div.details span.signal.high {
+#networkList .row .signal.signal3,
+svg g.nodes foreignObject.details > div > div.details span.signal.signal3 {
     color: #7cbf00;
 }
-#networkList .row .signal.highest,
-svg g.nodes foreignObject.details > div > div.details span.signal.highest {
+#networkList .row .signal.signal2,
+svg g.nodes foreignObject.details > div > div.details span.signal.signal2 {
+    color: #499800;
+}
+#networkList .row .signal.signal1,
+svg g.nodes foreignObject.details > div > div.details span.signal.signal1 {
     color: #027a04;
 }
