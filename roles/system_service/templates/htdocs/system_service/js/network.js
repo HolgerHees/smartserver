@@ -636,7 +636,7 @@ mx.NetworkTable = (function( ret )
             "header": [
                 { "value": "IP", "sort": { "value": "ip", "reverse": true } },
                 //{ "value": "MAC", "sort": { "value": "mac", "reverse": true } },
-                { "value": "DNS", "sort": { "value": "dns", "reverse": true }, "grow": true },
+                { "value": "DNS", "sort": { "value": "dns", "reverse": true } },
                 { "value": "Ports", "grow": true },
                 { "value": "SSID", "sort": { "value": "wifi_ssid", "reverse": true } },
                 { "value": "Band", "sort": { "value": "wifi_band", "reverse": true } },

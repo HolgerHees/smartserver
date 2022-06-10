@@ -45,9 +45,6 @@ body, svg {
 #networkList .row:not(:first-child) {
     cursor: pointer;
 }
-#networkList .row div.network_dns {
-    white-space: nowrap;
-}
 #networkList .row div.network_ports {
     white-space: normal;
 }
