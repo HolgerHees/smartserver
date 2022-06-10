@@ -620,7 +620,8 @@ mx.NetworkTable = (function( ret )
                 "columns": [
                     { "value": device["ip"] },
                     //{ "value": device["mac"] },
-                    { "value": device["dns"] },
+                    { "value": device["dns"], "class": "network_dns" },
+                    { "value": Object.keys(device.services).join(", "), "class": "network_ports" },
                     { "value": device["wifi_ssid"] },
                     { "value": device["wifi_band"], "class": "band c" + device["wifi_band"] },
                     { "value": device["wifi_signal"], "class": "signal " + mx.NetworkHelper.getSignalClass(device["wifi_signal"]) },
@@ -636,6 +637,7 @@ mx.NetworkTable = (function( ret )
                 { "value": "IP", "sort": { "value": "ip", "reverse": true } },
                 //{ "value": "MAC", "sort": { "value": "mac", "reverse": true } },
                 { "value": "DNS", "sort": { "value": "dns", "reverse": true }, "grow": true },
+                { "value": "Ports", "grow": true },
                 { "value": "SSID", "sort": { "value": "wifi_ssid", "reverse": true } },
                 { "value": "Band", "sort": { "value": "wifi_band", "reverse": true } },
                 { "value": "Signal", "sort": { "value": "wifi_signal", "reverse": true } },

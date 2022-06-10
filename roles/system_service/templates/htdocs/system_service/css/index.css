@@ -39,11 +39,17 @@ body, svg {
     /*transition: transform 0.15s;*/
 }
 #networkList {
-    max-width: 600px;
+    max-width: 900px;
     margin: auto;
 }
 #networkList .row:not(:first-child) {
     cursor: pointer;
+}
+#networkList .row div.network_dns {
+    white-space: nowrap;
+}
+#networkList .row div.network_ports {
+    white-space: normal;
 }
 .tooltip {
     background: var(--bg);
