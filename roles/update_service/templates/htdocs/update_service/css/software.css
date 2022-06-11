@@ -34,7 +34,6 @@ body.software div.form.table > div.row.green > div:first-child  {
     background-color: var(--color-green);
 }
 body.software div.form.table > div.row > div:nth-child(2) {
-    width: 100%;
     white-space: normal; 
 }
 body.software div.versionLink, div.typeLink {

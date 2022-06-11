@@ -169,7 +169,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 let table = mx.Table.init( {
                     "header": [
                         { "value": states.length },
-                        { "value": "Name" },
+                        { "value": "Name", "grow": true },
                         { "value": "Version" },
                         { "value": "Updates" },
                         { "value": lastUpdateDateFormatted }
