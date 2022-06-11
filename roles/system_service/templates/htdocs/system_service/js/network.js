@@ -672,6 +672,8 @@ mx.NetworkTable = (function( ret )
         buildTable(searchTerm, 'ip', false, data);            
 
         mx.NetworkHelper.showPage("#networkList");
+        
+        mx.NetworkTooltip.initSize(16, 400);
     }
 
     return ret;
@@ -923,16 +925,30 @@ mx.NetworkStructure = (function( ret )
         }, {});
         //console.log(xMin, yMin, xMax - xMin, yMax - yMin);
         svg.attr("viewBox", [xMin - 10, yMin - 10, (xMax - xMin) + 20, (yMax - yMin) + 20])
-
+        
+        window.addEventListener("resize",resize);
+        resize();
+    }
+    
+    function resize()
+    {
         // calculate font size
         let container = document.body.querySelector("svg .nodes rect");
-        let box = container.getBoundingClientRect();
-        let real_font_size = box.height * font_size / box_height;
-        let real_max_width = box.width * (box_width + boxPadding) / box_width;
-        
-        if( real_font_size > 16 ) real_font_size = 16;
+        if( container )
+        {
+            let font_size = document.body.querySelector("svg .nodes foreignObject.details").getAttribute("font-size");
+            let box = container.getBoundingClientRect();
+            let real_font_size = box.height * font_size / container.getAttribute("height");
+            let real_max_width = box.width * (container.getAttribute("width") + boxPadding) / container.getAttribute("width");
+            
+            if( real_font_size > 16 ) real_font_size = 16;
 
-        mx.NetworkTooltip.initSize(real_font_size, real_max_width);
+            mx.NetworkTooltip.initSize(real_font_size, real_max_width);
+        }
+        else
+        {
+            window.removeEventListener("resize",resize);
+        }
     }
     
     function redrawState() {
