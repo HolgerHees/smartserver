@@ -592,6 +592,8 @@ mx.NetworkTable = (function( ret )
         data.sort(function(first, second) {
             if( type == "ip" )
                 return compareIP(reverse, first[type], second[type]);
+            else if( type == "ports" )
+                return ( reverse ? Object.keys(first.services).length < Object.keys(second.services).length : Object.keys(first.services).length > Object.keys(second.services).length ) ? 1 : -1;
             else
                 return ( reverse ? first[type] < second[type] : first[type] > second[type] ) ? 1 : -1;
         });
@@ -637,7 +639,7 @@ mx.NetworkTable = (function( ret )
                 { "value": "IP", "sort": { "value": "ip", "reverse": true } },
                 //{ "value": "MAC", "sort": { "value": "mac", "reverse": true } },
                 { "value": "DNS", "sort": { "value": "dns", "reverse": true } },
-                { "value": "Ports", "grow": true },
+                { "value": "Ports", "sort": { "value": "ports", "reverse": true }, "grow": true },
                 { "value": "SSID", "sort": { "value": "wifi_ssid", "reverse": true } },
                 { "value": "Band", "sort": { "value": "wifi_band", "reverse": true } },
                 { "value": "Signal", "sort": { "value": "wifi_signal", "reverse": true } },
