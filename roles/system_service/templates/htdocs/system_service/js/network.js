@@ -415,6 +415,13 @@ mx.NetworkTooltip = (function( ret )
         return active_tooltip_d;
     }
     
+    ret.init = function()
+    {
+        mx.$("body").addEventListener("click", function(e){
+            mx.NetworkTooltip.hideTooltip();
+        });
+    }
+    
     return ret;
 })( mx.NetworkTooltip || {} );
 
@@ -607,17 +614,11 @@ mx.NetworkTable = (function( ret )
             rows.push({
                 "events": {
                     "click": function(event){
+                        event.stopPropagation();
+
                         mx.NetworkTooltip.toggleTooltip(device);
                         mx.NetworkTooltip.positionTooltip(event);
-        
-        //mx.NetworkTooltip.showTooltip(event.currentTarget,device);
-                    },
-                    /*"mouseout": function(event){
-                        
-                        //console.log(event);
-                        
-                        mx.NetworkTooltip.hideTooltip();
-                    }*/
+                    }
                 },
                 "columns": [
                     { "value": device["ip"] },
@@ -672,7 +673,7 @@ mx.NetworkTable = (function( ret )
 
         mx.NetworkHelper.showPage("#networkList");
     }
-    
+
     return ret;
 })( mx.NetworkTable || {} );
 
@@ -885,10 +886,6 @@ mx.NetworkStructure = (function( ret )
             });
                 
                 
-            svg.on("click", function(e, d){
-                mx.NetworkTooltip.hideTooltip();
-            });
-
         node.append("rect")
             .attr("class", "container")
             .attr("width", box_width)

@@ -320,6 +320,8 @@ mx.UNCore = (function( ret ) {
     { 
         mx.I18N.process(document);
         
+        mx.NetworkTooltip.init();
+        
         //refreshDaemonState(null, function(state){});
         
         function handleErrors()
