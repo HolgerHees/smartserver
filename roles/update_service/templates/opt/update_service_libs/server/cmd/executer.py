@@ -156,7 +156,7 @@ class CmdExecuter(watcher.Watcher):
             self.resetKilledJobState()
             return True
 
-    def unlock(self, exit_code):
+    def _unlock(self, exit_code):
         self.initJobs()
 
         self.current_cmd_type = None
@@ -173,7 +173,7 @@ class CmdExecuter(watcher.Watcher):
 
         os.rename(job_log_file, finished_log_file)
         self.current_logfile = finished_log_name
-        self.unlock(exit_status)
+        self._unlock(exit_status)
 
     def initLogFilename(self, cmd_block):
         username = cmd_block["username"]
@@ -223,8 +223,8 @@ class CmdExecuter(watcher.Watcher):
         env["PATH"] = CmdExecuter.env_path
         env["HOME"] = CmdExecuter.home_path
 
-        self.current_child = pexpect.spawn(cmd, timeout=3600, cwd=cwd, env=env)
-        self.current_child.logfile_read = lf
+        self.current_child = child = pexpect.spawn(cmd, timeout=3600, cwd=cwd, env=env)
+        child.logfile_read = lf
         
         if interaction is not None:
             patterns = list(interaction.keys())
@@ -233,17 +233,17 @@ class CmdExecuter(watcher.Watcher):
             patterns = None
             responses = None
             
-        while self.current_child.isalive():
+        while child.isalive():
             try:
-                index = self.current_child.expect(patterns)
-                self.current_child.sendline(responses[index])
+                index = child.expect(patterns)
+                child.sendline(responses[index])
             except TIMEOUT:
                 break
             except EOF:
                 break
 
-        self.current_child.close()
-        exit_status = self.current_child.exitstatus
+        child.close()
+        exit_status = child.exitstatus
 
         delta = datetime.now() - start_time
         delta = delta - timedelta(microseconds = delta.microseconds)
