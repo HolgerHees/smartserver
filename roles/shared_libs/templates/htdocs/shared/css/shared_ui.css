@@ -96,6 +96,8 @@ body.dark .form.button:focus {
 /* TABLE */
 div.form.table {
   border-top: var(--table-border);
+  width: -moz-fit-content;
+  width: fit-content;
 }
 div.form.table > div.row > div:first-child {
   border-left: var(--table-border);

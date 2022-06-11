@@ -47,6 +47,7 @@ body, svg {
 }
 #networkList .row div.network_ports {
     white-space: normal;
+    min-width: 100px;
 }
 .tooltip {
     background: var(--bg);

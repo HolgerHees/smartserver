@@ -5,7 +5,6 @@ body.software div.is_running {
 }
 
 body.software div.form.table {
-    width: 100%;
     max-width: 800px;
     margin: auto;
 }
