@@ -3,6 +3,7 @@
 import json
 import sys
 from datetime import datetime
+from functools import cmp_to_key
 
 from config import config
 
@@ -89,13 +90,32 @@ for line in lines[0:-1]:
     
     created = datetime.strptime(obj["CreatedAt"], DATETIME_FORMAT)
     image = Image(obj["ID"],obj["Repository"] if obj["Repository"] != "<none>" else None,obj["Tag"] if obj["Tag"] != "<none>" else None,created)
-    if image.name not in images:
-        images[image.name] = []
-    images[image.name].append(image)
-
+    if image.repository not in images:
+        images[image.repository] = []
+    images[image.repository].append(image)
+    
 cleaned = False
 
-for name in sorted(images):
+def custom_sorted(item1, item2):
+    item1_is_custom = item1.startswith("custom")
+    item2_is_custom = item2.startswith("custom")
+    
+    if item1_is_custom and not item2_is_custom:
+        return -1
+    if item2_is_custom and not item1_is_custom:
+        return 1
+    
+    if item1 < item2:
+        return -1
+    
+    if item1 > item2:
+        return 1
+    
+    return 0
+
+#for name in sorted(images):
+for name in sorted(images,key=cmp_to_key(custom_sorted)):
+    
     image_versions = sorted(images[name], reverse=True)
     
     for image_version in image_versions:
