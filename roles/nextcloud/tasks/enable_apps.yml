@@ -292,10 +292,6 @@
       ]
   when: "nextcloud_additional_apps | length > 0"
   
-- name: debug
-  debug:
-    msg: "{{nextcloud_additional_icons}}"
-
 - name: register additional app webui
   vars:
     name: "nextcloud_additional_apps"
