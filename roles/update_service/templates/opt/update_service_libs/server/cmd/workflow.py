@@ -17,8 +17,8 @@ MAX_DAEMON_RESTART_TIME = 30
 MAX_SYSTEM_REBOOT_TIME = 600
 
 MIN_PROCESS_INACTIVITY_TIME = 30
-MAX_STARTUP_WAITING_TIME = 1200
-MAX_WORKFLOW_WAITING_TIME = 300
+MAX_STARTUP_WAITING_TIME = 1800
+MAX_WORKFLOW_WAITING_TIME = 1800
 
 
 class CmdWorkflow: 
@@ -99,14 +99,14 @@ class CmdWorkflow:
         return is_success
 
     def _handleWorkflow(self,workflow,log_file_name,start_time_str):
-        thread = threading.Thread(target=self._proceedWorkflow, args=(workflow, log_file_name, start_time_str ))
+        thread = threading.Thread(target=self._resumeWorkflow, args=(workflow, log_file_name, start_time_str ))
         thread.start()
         
-    def _waitToProceed(self, lf, min_process_inactivity_time, max_startup_waiting_time ):
+    def _waitToProceed(self, lf, min_process_inactivity_time, max_startup_waiting_time, suffix ):
         if not self.cmd_executer.isExternalJobRunning():
             return True
         
-        msg = "Waiting for {}s of inactivity to proceed".format(min_process_inactivity_time)
+        msg = "Waiting a maximum of {}s for {}s of inactivity to {}".format(max_startup_waiting_time, min_process_inactivity_time, suffix)
         logging.info(msg)
         self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
 
@@ -150,7 +150,7 @@ class CmdWorkflow:
             
         return can_proceed
 
-    def _proceedWorkflow(self,workflow, log_file_name, start_time_str):
+    def _resumeWorkflow(self,workflow, log_file_name, start_time_str):
         start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
 
         exit_code = 1
@@ -161,7 +161,7 @@ class CmdWorkflow:
             lf = LogFile(f)
 
             if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
-                can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MAX_STARTUP_WAITING_TIME)
+                can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MAX_STARTUP_WAITING_TIME, "resume")
             else:
                 can_proceed = True
                     
@@ -229,7 +229,7 @@ class CmdWorkflow:
             with open(job_log_file, 'w') as f:
                 lf = LogFile(f)
 
-                can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MAX_WORKFLOW_WAITING_TIME)
+                can_proceed = self._waitToProceed(lf, MIN_PROCESS_INACTIVITY_TIME, MAX_WORKFLOW_WAITING_TIME, "proceed")
                 finish_run = False
                 if can_proceed:
                     if self.cmd_executer.lock(cmd_block["cmd_type"], job_log_name):
