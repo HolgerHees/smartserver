@@ -12,8 +12,9 @@ require "./shared/libs/ressources.php";
     <link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
     <link href="<?php echo Ressources::getCSSPath('/main/'); ?>" rel="stylesheet">
 
-    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };<?php
+    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return mx.User.user == usergroups || usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };<?php
         require "./shared/libs/auth.php";
+        echo " mx.User.user = " . json_encode(Auth::getUser()) . ";";
         echo " mx.User.name = " . json_encode(Auth::getFullname()) . ";";
         echo " mx.User.groups = " . json_encode(Auth::getGroups()) . ";";
     ?></script>

@@ -28,7 +28,7 @@
   changed_when: no
   register: app_list_result
 
-- name: install apps
+- name: install core apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item}}\""
   register: app_install_result
   failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
@@ -45,6 +45,14 @@
     - notes
     - tasks
     
+- name: install additional_apps
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item.app}}\""
+  register: app_install_result
+  failed_when: "'installed' not in app_install_result.stdout and 'enabled' not in app_install_result.stdout and 'already exists' not in app_install_result.stdout"
+  changed_when: "'enabled' in app_install_result.stdout"
+  when: "'- ' + item.app + ':' not in app_list_result.stdout"
+  with_items: "{{nextcloud_additional_apps}}"
+
 #docker exec php sh -c "php -f /dataDisk/htdocs/nextcloud/occ update:check"
 - name: check available app updates
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --showonly\""
@@ -252,7 +260,7 @@
   register: app_status
   changed_when: no
 
-- name: enable disabled apps
+- name: enable disabled core apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item}} --force\""
   register: app_enable_result
   failed_when: "'enabled' not in app_enable_result.stdout"
@@ -264,6 +272,38 @@
     - previewgenerator
     - keeweb
     - news
+
+- name: enable disabled additional_apps apps
+  shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item.app}} --force\""
+  register: app_enable_result
+  failed_when: "'enabled' not in app_enable_result.stdout"
+  when: "item.app not in app_status.stdout.split('Disabled')[0]"
+  with_items: "{{nextcloud_additional_apps}}"
+
+- name: collect additional app icons
+  set_fact:
+    nextcloud_additional_icons: |
+      [
+        {% for entry in nextcloud_additional_apps %}
+          {% if entry.icon %}
+            '{{entry.icon}}',
+          {% endif %}
+        {% endfor %}
+      ]
+  when: "nextcloud_additional_apps | length > 0"
+  
+- name: debug
+  debug:
+    msg: "{{nextcloud_additional_icons}}"
+
+- name: register additional app webui
+  vars:
+    name: "nextcloud_additional_apps"
+    js_file: "templates/nextcloud_additional_apps.js"
+    i18n_files: []
+    icons: "{{nextcloud_additional_icons}}"
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  when: "nextcloud_additional_apps | length > 0"
 
 - name: register news update notifier
   vars:

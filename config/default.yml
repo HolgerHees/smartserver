@@ -132,7 +132,19 @@ default_variables: {
     "vault_nextcloud_mysql_password": {},
     "vault_nextcloud_admin_username": { "default": "admin" },     # used to login as a nextcloud data
     "vault_nextcloud_admin_password": {},
-
+    
+    "nextcloud_additional_apps": { "default": [] },               # additional apps for nextcloud
+    # *** EXAMPLE ***
+    # { 
+    #  "app": { "default": None },                                # app id. e.g. "cookbook"
+    #  "name": { "default": None },                               # webui menu name. e.g. "Cookbook"
+    #  "description": { "default": None },                        # webui menu info. e.g. "Recipes"
+    #  "icon": { "default": None },                               # webui icon. e.g. "icons/nextcloud_cookbook.svg"
+    #
+    #  "usergroups": { "default": [] }                            # optional. limit visibility to specific groups or users. e.g. ["admin", "user", "<username>"]
+    #  "order": { "default": 200 }                                # optional. control order in webui menu
+    #}
+    
     "vault_onlyoffice_shared_key": {},                            # e.g. "qwe0983yxcxy435"
     "vault_onlyoffice_mysql_username": { "default": "onlyoffice" }, # used for onlyoffice data
     "vault_onlyoffice_mysql_password": {},
