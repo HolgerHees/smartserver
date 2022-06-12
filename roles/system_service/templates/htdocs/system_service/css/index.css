@@ -39,7 +39,7 @@ body, svg {
     /*transition: transform 0.15s;*/
 }
 #networkList {
-    max-width: 900px;
+    max-width: 1024px;
     margin: auto;
 }
 #networkList .row:not(:first-child) {

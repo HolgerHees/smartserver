@@ -622,7 +622,7 @@ mx.NetworkTable = (function( ret )
                 },
                 "columns": [
                     { "value": device["ip"] },
-                    //{ "value": device["mac"] },
+                    { "value": device["mac"] },
                     { "value": device["dns"], "class": "network_dns" },
                     { "value": Object.keys(device.services).join(", "), "class": "network_ports" },
                     { "value": device["wifi_ssid"] },
@@ -638,7 +638,7 @@ mx.NetworkTable = (function( ret )
             "sort": { "value": type, "reverse": reverse, "callback": function(_type,_reverse){ buildTable(searchTerm, _type, type != _type ? reverse : _reverse, data) } },
             "header": [
                 { "value": "IP", "sort": { "value": "ip", "reverse": true } },
-                //{ "value": "MAC", "sort": { "value": "mac", "reverse": true } },
+                { "value": "MAC", "sort": { "value": "mac", "reverse": true } },
                 { "value": "DNS", "sort": { "value": "dns", "reverse": true } },
                 { "value": "Ports", "sort": { "value": "ports", "reverse": true }, "grow": true },
                 { "value": "SSID", "sort": { "value": "wifi_ssid", "reverse": true } },
