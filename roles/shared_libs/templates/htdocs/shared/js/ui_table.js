@@ -19,8 +19,12 @@ mx.Table = (function( ret ) {
             if( column["grow"] ) cls.push("grow");
             if( column["class"] ) cls.push(column["class"]);
             if( column["align"] ) cls.push(column["align"] == "left" ? "left-align" : "right-align");
-            if( options["sort"] && column["sort"] ) cls.push("sort");
-            
+            if( options["sort"] && column["sort"] )
+            {
+                cls.push("sort");
+                if( !column["value"] ) cls.push("sort_empty");
+            }
+
             content += "<div";
             if( cls.length ) content += " class=\"" + cls.join(" ") + "\"";
             content += ">";

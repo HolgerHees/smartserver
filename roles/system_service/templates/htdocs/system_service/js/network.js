@@ -644,8 +644,8 @@ mx.NetworkTable = (function( ret )
                 { "value": "SSID", "sort": { "value": "wifi_ssid", "reverse": true } },
                 { "value": "Band", "sort": { "value": "wifi_band", "reverse": true } },
                 { "value": "Signal", "sort": { "value": "wifi_signal", "reverse": true } },
-                { "value": "" }
-                //{ "value": "", "sort": { "value": "isOnline", "reverse": true } }
+                //{ "value": "" }
+                { "value": "", "sort": { "value": "isOnline", "reverse": true } }
             ],
             "rows": rows
         });
