@@ -145,6 +145,21 @@ div.form.table > div.row:first-child > div.sort > span {
 div.form.table > div.row:first-child > div.sort {
     cursor: pointer;
 }
+div.form.table > div.row:first-child > div.sort_empty > span {
+    position: absolute;
+    padding: 0;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+div.form.table > div.row:first-child > div.sort_empty {
+    position: relative;
+}
 /* DIALOG */
 .dialogLayer {
     background-color: var(--info-panel-layer);
