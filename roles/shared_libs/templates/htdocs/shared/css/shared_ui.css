@@ -117,7 +117,8 @@ div.form.table > div.row > div {
 } 
 div.form.table {
   font-size: 16px;
-  overflow: auto;
+  overflow: visible;
+  width: 100%;
 }
 div.form.table > div.row {
   display: table-row;

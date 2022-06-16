@@ -118,10 +118,12 @@ div.log {
     background-color: #222;
     padding: 5px;
     color: #cdcdcd;
-    overflow-x: auto;
     font-family: monospace;
     white-space: pre;
     font-size: 15px;
+    overflow: visible;
+    width: -moz-fit-content;
+    width: fit-content;
 }
 /*@media (hover: hover) {
     div.log {

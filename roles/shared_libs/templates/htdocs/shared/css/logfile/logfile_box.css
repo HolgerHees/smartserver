@@ -1,9 +1,7 @@
 div.form.table.logfileBox {
-  width: 100%;
   max-width: 800px;
   margin: auto;
   font-size: 16px;
-  overflow: auto;
 }
 div.form.table.logfileBox > div.row {
   cursor: pointer;
