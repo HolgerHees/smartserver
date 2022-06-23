@@ -83,7 +83,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
 
                     let columns = []
 
-                    columns.push({"value": "<span class=\"" + icon + "\"></span>", "class": "typeLink", "onclick": function(){ mx.SNCore.openUrl(event,state["url"]); } });
+                    columns.push({"value": "<span class=\"" + icon + "\"></span>", "class": "typeLink", "events": { "click": function(){ mx.SNCore.openUrl(event,state["url"]); } } });
                     columns.push({"value": state["name"] });
 
                     let latestDate = new Date( state["current"]["date"] );
