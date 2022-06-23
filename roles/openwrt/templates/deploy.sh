@@ -76,7 +76,7 @@ echo "Installing software ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update"
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl"
 
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc wpad-wolfssl hostapd-utils"
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc openssh-sftp-server wpad-wolfssl hostapd-utils"
 
 if [ -f "$SOURCE/$IP/etc/config/snmp" ]; then
   echo "Install snmpd packages ..."
