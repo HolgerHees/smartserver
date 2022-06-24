@@ -48,7 +48,7 @@ class Handler(Server):
         self.software_versions_watcher = SoftwareVersionWatcher()
 
         self.cmd_builder = CmdBuilder( self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
-        self.cmd_executer = CmdExecuter( self)
+        self.cmd_executer = CmdExecuter( self, self.process_watcher )
         self.cmd_workflow = CmdWorkflow( self, self.cmd_executer, self.cmd_builder )
         
         self.service_base_path = os.path.dirname(__file__)

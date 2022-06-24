@@ -40,10 +40,11 @@ class CmdExecuter(watcher.Watcher):
         "systemctl": "service_restart",
     }
 
-    def __init__(self,handler):
+    def __init__(self,handler, process_watcher):
         super().__init__()
       
         self.handler = handler
+        self.process_watcher = process_watcher
         
         self.killed_job = False
         self.killed_logfile = None
@@ -329,6 +330,9 @@ class CmdExecuter(watcher.Watcher):
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
         else:
+            if self.external_cmd_type is not None:
+                self.process_watcher.refresh()
+
             self.external_cmd_type = None
             self.external_cmd_type_pid = None
         
