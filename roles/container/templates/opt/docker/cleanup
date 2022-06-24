@@ -97,18 +97,18 @@ for line in lines[0:-1]:
 cleaned = False
 
 def custom_sorted(item1, item2):
-    item1_is_custom = item1.startswith("custom")
-    item2_is_custom = item2.startswith("custom")
+    item1_is_custom = item1 is not None and item1.startswith("custom")
+    item2_is_custom = item2 is not None and item2.startswith("custom")
     
     if item1_is_custom and not item2_is_custom:
         return -1
     if item2_is_custom and not item1_is_custom:
         return 1
     
-    if item1 < item2:
+    if item1 is None or item1 < item2:
         return -1
     
-    if item1 > item2:
+    if item2 is None or item1 > item2:
         return 1
     
     return 0
