@@ -7,7 +7,7 @@
 - name: set openhab version
   set_fact:
     speedtest_version: "1.1.1"
-    openhab_version: "3.2.0"
+    openhab_version: "3.3.0"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"
     openhab_gid: "{{system_groups['openhab'].id}}"
@@ -28,7 +28,7 @@
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/addons" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/html" }
-    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/icons" }
+#    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/icons" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/python" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/jsondb" }
@@ -60,7 +60,8 @@
   with_items:
     - "python/shared"
     - "conf/html/shared"
-    - "conf/icons/classic"
+#    - "conf/icons/classic"
+    - "conf/icons"
 
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
