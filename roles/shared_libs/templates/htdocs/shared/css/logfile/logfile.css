@@ -112,10 +112,11 @@ div.scrollControl.active {
     background-color: yellow;
 }
 
-
+div.logContainer {
+    background-color: #222;
+}
 
 div.log {
-    background-color: #222;
     padding: 5px;
     color: #cdcdcd;
     font-family: monospace;

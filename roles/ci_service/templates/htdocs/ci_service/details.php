@@ -91,14 +91,16 @@ mx.OnDocReady.push( initPage );
     <div><span class="runtime icon-clock">' . LogFile::formatDuration($job->getDuration()) . '</span><span class="datetime icon-calendar-empty">' . $job->getDateTime()->format('d.m.Y H:i:s') . '</span></div>
     </div>
 
-    </div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div><div class="log">';
+    </div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
+
+    echo '<div class="logContainer"><div class="log">';
     
     foreach( $logfile->getLines() as $line )
     {
         echo LogFile::getLogLine($line);
     }
     
-    echo '</div>';
+    echo '</div></div>';
 ?>
 </body>
 </html>

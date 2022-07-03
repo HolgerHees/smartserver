@@ -99,14 +99,14 @@ mx.OnDocReady.push( initPage );
 
     </div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
 
-    echo '<div class="log">';
+    echo '<div class="logContainer"><div class="log">';
     
     foreach( $logfile->getLines() as $line )
     {
         echo LogFile::getLogLine($line);
     }
     
-    echo '</div>';
+    echo '</div></div>';
 ?>
 </body>
 </html>
