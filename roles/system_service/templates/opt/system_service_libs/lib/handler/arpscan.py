@@ -463,9 +463,7 @@ class ArpScanner(_handler.Handler):
             # check if there is another device with the same IP
             similarDevices = list(filter(lambda d: d.getMAC() != device.getMAC() and d.getIP() == device.getIP(), self.cache.getDevices() ))
             if len(similarDevices) > 0:
-                self.cache.lock(self)
                 self._removeDevice(device.getMAC(), events)
-                self.cache.unlock(self)
                 return
         
         if stat.isOnline():
@@ -496,12 +494,14 @@ class ArpScanner(_handler.Handler):
             self.registered_devices[mac].start()
     
     def _removeDevice(self,mac, events):
+        self.cache.lock(self)
         self.cache.removeDevice(mac, lambda event: events.append(event))
         self.cache.removeDeviceStat(mac, lambda event: events.append(event))
         if self.registered_devices[mac] is not None:
             self.registered_devices[mac].terminate()
             del self.registered_devices[mac]
-            
+        self.cache.unlock(self)
+
     def getEventTypes(self):
         return [ 
             { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE,Event.ACTION_MODIFY], "details": None }
