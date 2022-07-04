@@ -1,0 +1,37 @@
+#!/usr/bin/python3
+
+import socket
+import time
+
+hostnames=[{% for host in fping_test_hosts %}'{{host}}',{% endfor %}{% for peer in cloud_vpn.peers %}'{{cloud_vpn.peers[peer].host}}',{% endfor %}]
+retries = 12
+
+def hostname_resolves(hostname):
+    try:
+        socket.gethostbyname(hostname)
+        return 1
+    except socket.error:
+        return 0
+
+print("Check resolvability of all fping hostnames")
+
+while retries > 0:
+    not_resolveable_hosts = []
+
+    for hostname in hostnames:
+        if not hostname_resolves(hostname):
+            not_resolveable_hosts.append(hostname)
+
+    if len(not_resolveable_hosts) == 0:
+        print("All hosts found")
+        break
+
+    retries -= 1
+
+    if retries == 0:
+        print("Timeout exceeded and hosts {} still missing".format(not_resolveable_hosts))
+    else:
+        print("Missing hosts {}. Trying again in 5 seconds.".format(not_resolveable_hosts))
+        time.sleep(5)
+
+exit(1 if retries == 0 else 0)

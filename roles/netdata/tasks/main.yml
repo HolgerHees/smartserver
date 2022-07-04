@@ -149,8 +149,9 @@
   with_items:
     - "/opt/netdata_helper/send_notification.sh"
     - "/opt/netdata_helper/inform_openhab"
+    - "/opt/netdata_helper/check_fping"
 
-- name: change runtime user
+- name: change service config
   lineinfile:
     path: /usr/lib/systemd/system/netdata.service
     insertafter: '^\[Service\]'
@@ -158,6 +159,7 @@
     line: '{{item.value}}'
   with_items:
     - { field: "User\\s*=", value: "User=root" }
+    - { field: "ExecStartPre=/opt/netdata_helper/check_fping", value: "ExecStartPre=/opt/netdata_helper/check_fping" }
     #- { field: "ReadWriteDirectories\\s*=\\s*{{ global_lib }}netdata", value: "ReadWriteDirectories={{ global_lib }}netdata" }
     #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
     #- { field: "Nice", value: "0" } # was "#Nice=0" before
