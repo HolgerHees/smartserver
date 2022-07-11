@@ -285,13 +285,15 @@ class LibreNMS(_handler.Handler):
             for device_id in self.connected_macs:
                 for mac in list(self.connected_macs[device_id].keys()):
                     if mac not in _active_connected_macs:
-                        details = self.connected_macs[device_id][mac]["details"]
-                        target_mac = self.connected_macs[device_id][mac]["target_mac"]
-                        target_interface = self.connected_macs[device_id][mac]["target_interface"]
-                        
-                        device = self.cache.getDevice(mac)
-                        device.removeHopConnection(Connection.ETHERNET, target_mac, target_interface, details)
-                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+                        device = self.cache.getUnlockedDevice(mac)
+                        if device is not None:
+                            details = self.connected_macs[device_id][mac]["details"]
+                            target_mac = self.connected_macs[device_id][mac]["target_mac"]
+                            target_interface = self.connected_macs[device_id][mac]["target_interface"]
+
+                            device.lock(self)
+                            device.removeHopConnection(Connection.ETHERNET, target_mac, target_interface, details)
+                            self.cache.confirmDevice( device, lambda event: events.append(event) )
                     
                         del self.connected_macs[device_id][mac]
             

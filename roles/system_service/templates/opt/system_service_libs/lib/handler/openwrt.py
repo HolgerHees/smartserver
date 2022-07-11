@@ -309,9 +309,11 @@ class OpenWRT(_handler.Handler):
                     
             for [ _, uid, mac, gid, vlan, target_mac, target_interface, connection_details ] in list(self.wifi_associations[openwrt_ip].values()):
                 if uid not in _active_associations:
-                    device = self.cache.getDevice(mac)
-                    device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    device = self.cache.getUnlockedDevice(mac)
+                    if device is not None:
+                        device.lock(self)
+                        device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
+                        self.cache.confirmDevice( device, lambda event: events.append(event) )
 
                     self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
                     
