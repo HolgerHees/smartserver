@@ -72,7 +72,7 @@ class OpenWRT(_handler.Handler):
                         self._initNextRuns(openwrt_ip)
                     else:
                         self.cache.cleanLocks(self, events)
-                        self._handleExpectedException("OpenWRT '{}' got exception {} - '{}'".format(openwrt_ip, e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
+                        self._handleExpectedException("OpenWRT '{}' ({})' got exception {} - '{}'".format(openwrt_ip, e.getType(), e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
                 except NetworkException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
@@ -377,14 +377,14 @@ class OpenWRT(_handler.Handler):
         start = datetime.now()
         r = self._post(ip, json)
         Helper.logProfiler(self, start, "Network details of '{}' fetched".format(ip))
-        return self._parseResult(ip, r, "device_details")
+        return self._parseResult(ip, r, "device_details of '{}'".format(interface))
 
     def _getWifiClients(self, ip, session, interface ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ session, "hostapd.{}".format(interface), "get_clients", {} ] }
         start = datetime.now()
         r = self._post(ip, json)
         Helper.logProfiler(self, start, "Clients of '{}' fetched".format(ip))
-        return self._parseResult(ip, r, "client_list")
+        return self._parseResult(ip, r, "client_list of '{}'".format(interface))
     
     def _isKnownWifiClient(self, mac):
         for openwrt_ip in self.config.openwrt_devices:
@@ -465,6 +465,9 @@ class UbusCallException(Exception):
     def getCode(self):
         return self.code
     
+    def getType(self):
+        return self.type
+
 class UbusResponseException(Exception):
     def __init__(self, ip, type, message):
         super().__init__(message)
