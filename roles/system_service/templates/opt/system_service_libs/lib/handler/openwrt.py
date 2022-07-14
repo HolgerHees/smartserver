@@ -151,7 +151,15 @@ class OpenWRT(_handler.Handler):
                 band = _wifi_network["config"]["band"];
                 gid = "{}-{}-{}".format(openwrt_ip,ssid,band)
                 
-                wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, ifname)
+                try:
+                    wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, ifname)
+                except UbusCallException as e:
+                    if e.getCode() == -32000:
+                        logging.warning("OpenWRT '{}' interface '{}' has gone during processing wifi networks".format(openwrt_ip, ifname))
+                        continue
+                    else:
+                        raise e
+
                 channel = wifi_interface_details_result["channel"]
                 priority = 1 if channel > 13 else 0
                 
@@ -227,8 +235,7 @@ class OpenWRT(_handler.Handler):
                 client_results.append([client_result,wlan_network])
             except UbusCallException as e:
                 if e.getCode() == -32000:
-                    logging.warning("OpenWRT '{}' interface '{}' has gone".format(openwrt_ip, wlan_network["ifname"]))
-                    
+                    logging.warning("OpenWRT '{}' interface '{}' has gone during processing wifi clients".format(openwrt_ip, wlan_network["ifname"]))
                     # force refresh for wifi networks & clients
                     self.next_run[openwrt_ip]["wifi_networks"] = datetime.now()
                 else:
