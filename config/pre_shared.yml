@@ -54,4 +54,4 @@ docker_fluentd_ip:                "172.30.8.200"
 docker_librenms_ip:               "172.30.9.200"
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.16.0"
+alpine_version:                   "3.16.1"
