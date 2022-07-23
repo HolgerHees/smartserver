@@ -107,7 +107,7 @@ class CmdWorkflow:
         thread.start()
         
     def _waitToProceed(self, lf, min_process_inactivity_time, min_waiting_time, max_waiting_time, suffix ):
-        if not self.cmd_executer.isExternalJobRunning():
+        if min_waiting_time == 0 and not self.cmd_executer.isExternalJobRunning():
             return True
         
         msg = "Waiting a maximum of {}s for {}s of inactivity to {}".format(max_waiting_time, min_process_inactivity_time, suffix)
