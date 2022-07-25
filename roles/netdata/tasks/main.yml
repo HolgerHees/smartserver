@@ -58,7 +58,7 @@
   zypper_repository:
     name: Network (netdata)
 #    repo: "http://download.opensuse.org/repositories/network/openSUSE_Leap_{{ansible_distribution_version}}/"
-    repo: "http://download.opensuse.org/repositories/network/{{ansible_distribution_version}}/"
+    repo: "http://download.opensuse.org/repositories/network/{{ 'openSUSE_Leap_' if ansible_distribution_version == '15.3' else ''}}{{ansible_distribution_version}}/"
     auto_import_keys: yes
     priority: "100"
     state: present
