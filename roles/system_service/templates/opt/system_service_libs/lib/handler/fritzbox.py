@@ -44,9 +44,6 @@ class Fritzbox(_handler.Handler):
 
         self.fc = {}
         self.fh = {}
-        for fritzbox_ip in self.config.fritzbox_devices:
-            self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
-            self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
         
         self.delayed_lock = threading.Lock()
         self.delayed_dhcp_devices = {}
@@ -74,6 +71,16 @@ class Fritzbox(_handler.Handler):
             
             self.fritzbox_macs[fritzbox_ip] = None
         
+        for fritzbox_ip in self.config.fritzbox_devices:
+            while True:
+                try:
+                    self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
+                    self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
+                    break
+                except FritzConnectionException as e:
+                    self._handleExpectedException("Fritzbox '{}' not accessible.".format(fritzbox_ip), fritzbox_ip)
+                    self._wait(self._getSuspendTimeout(fritzbox_ip))
+
         while self._isRunning():
             events = []
 
@@ -86,7 +93,7 @@ class Fritzbox(_handler.Handler):
                 except FritzConnectionException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
-                    self._handleExpectedException(e, "Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
+                    self._handleExpectedException("Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
