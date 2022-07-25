@@ -47,16 +47,12 @@ Example: vagrant --config=demo --os=suse up
       when '--os'
         if arg == "suse" then
             setup_os = "suse"
-            #setup_version = "15.2"
-            #setup_image = "bento/opensuse-leap-" + setup_version
             setup_version = "15.3"
             setup_image = "opensuse/Leap-" + setup_version + ".x86_64"
         elsif arg == "ubuntu" then
             setup_os = "ubuntu"
-            #setup_version = "20.04"
-            #setup_image = "ubuntu/focal64"
-            setup_version = "21.04"
-            setup_image = "ubuntu/impish64"
+            setup_version = "22.10"
+            setup_image = "ubuntu/jammy64"
         elsif arg == "fedora" then
             setup_os = "fedora"
             setup_version = "35"
