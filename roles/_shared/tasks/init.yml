@@ -59,9 +59,10 @@
     system_users: {}
     system_groups: {}
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
-    is_fedora: "{{ansible_distribution == 'Fedora'}}"
+    is_fedora: "{{ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux'}}"
+#    is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
     is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
-    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
+    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
     is_production: "{{host_ip == production_ip}}"
     default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
 #    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
