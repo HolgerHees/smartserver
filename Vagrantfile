@@ -29,11 +29,11 @@ vagrant [OPTION] ... CMD
 --os <suse|fedora|ubuntu|alma>:
   Used linux distribution. 
   
-  <suse>   : openSUSE Leap 15.4 (bento/opensuse-leap-15.4)
-  <fedora> : Fedora 35 Server (fedora/35-cloud-base)
-  <ubuntu> : Ubuntu 21.10 (ubuntu/jammy64)
+  <suse>      : openSUSE Leap 15.4 (bento/opensuse-leap-15.4)
+  <fedora>    : Fedora 35 Server (fedora/35-cloud-base)
+  <ubuntu>    : Ubuntu 21.10 (ubuntu/jammy64)
 
-  <alma>   : Alma 9 (almalinux/9) (BETA)
+  <almalinux> : AlmaLinux 9 (almalinux/9) (BETA)
 
 --ansible [-vvv]:
   Optional argument to provide additional parameters for ansible. 
@@ -60,8 +60,8 @@ Example: vagrant --config=demo --os=suse up
             #setup_version = "36" => https://github.com/hashicorp/vagrant/issues/12762
             setup_version = "35"
             setup_image = "fedora/" + setup_version + "-cloud-base"
-        elsif arg == "alma" then
-            setup_os = "alma"
+        elsif arg == "almalinux" then
+            setup_os = "almalinux"
             setup_version = "9"
             setup_image = "almalinux/" + setup_version
         end
@@ -163,7 +163,7 @@ Vagrant.configure(2) do |config|
         sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install ansible==2.10.7
         SHELL
-    elsif setup_os == 'alma' then
+    elsif setup_os == 'almalinux' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install ansible==2.10.7
