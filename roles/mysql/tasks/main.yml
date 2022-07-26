@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mysql_version: "10.7.4"
+    mysql_version: "10.8.3"
   tags: [ 'update_notifier_config' ]
   
 - name: prepare needed folder
@@ -62,6 +62,7 @@
     networks_cli_compatible: yes
     exposed_ports:
       - "3306"  
+  register: mysql_container
   notify: "restart mysql"
 
 - name: add container name
@@ -115,6 +116,14 @@
     notify: "restart mysql"
     service: "mysql.service"
   import_tasks: roles/_shared/tasks/service_check.yml
+
+- name: check mysql service
+  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  when: mysql_container.changed
+
+- name: check mysql upgrade
+  shell: "docker exec mysql sh -c \"/usr/bin/mysql_upgrade\""
+  when: mysql_container.changed
   
 # ***** SHARED DATABASE ****
 - name: create database
