@@ -326,7 +326,9 @@ class CmdExecuter(watcher.Watcher):
                             if external_cmd_type is not None:
                                 break
                 
-                    
+                if external_cmd_type is None and self.external_cmd_type is not None:
+                    self.process_watcher.refresh()
+
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
         else:
@@ -335,7 +337,7 @@ class CmdExecuter(watcher.Watcher):
 
             self.external_cmd_type = None
             self.external_cmd_type_pid = None
-        
+
         self.external_cmd_type_refreshed = datetime.now()
 
     def getExternalCmdType(self, refresh = True):
