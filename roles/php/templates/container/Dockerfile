@@ -61,7 +61,9 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   echo "apc.enable_cli=1\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-apcu.ini" && \
   
   echo "opcache.jit_buffer_size = 100M\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
-  echo "opcache.jit = 1255\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
+  echo "opcache.jit = 1205\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
+  # https://github.com/php/php-src/issues/7817
+  #echo "opcache.jit = 1255\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   # interned_strings_buffer was running full
   echo "opcache.interned_strings_buffer = 16\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   
