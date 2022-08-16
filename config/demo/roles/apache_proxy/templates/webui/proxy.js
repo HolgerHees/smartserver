@@ -11,5 +11,4 @@ subGroup.addUrl('automover', '/automowerDevice/', 'admin', 110, '{i18n_Automower
 subGroup.addUrl('inverter', 'https://{{pv_inverter_garage_ip}}', 'admin', 120, '{i18n_Inverter}', '{i18n_Solar (Extern)}', "proxy_solar.svg", true);
 subGroup.addUrl('printer', 'https://{{printer_ip}}', 'user', 210, '{i18n_Laserprinter}', '{i18n_HPLaserJet}', "proxy_printer.svg", true);
 subGroup.addUrl('gateway', 'https://{{server_gateway}}', 'admin', 220, '{i18n_Router}', '{i18n_FritzBox}', "proxy_router.svg", true);
-subGroup.addUrl('switch', 'https://{{switch_ip}}', 'admin', 220, '{i18n_Switch}', '{i18n_Zyxel}', "proxy_router.svg");
 subGroup.addUrl('camera', 'http://{{camera_streedside_ip}}', 'admin', 310, '{i18n_Camera}', '{i18n_Streedside}', "proxy_camera.svg", true);
