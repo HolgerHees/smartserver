@@ -306,7 +306,8 @@ mx.Actions = (function( ret ) {
 
         var submenu = mx.$('#content #submenu');
 
-        if( mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().getType() == "entry" )
+        if( isIFrameVisible() )
+        //mx.History.getActiveNavigation() == null || mx.History.getActiveNavigation().getType() == "entry" )
         {
             submenu.style.opacity = "0";
             submenu.innerHTML = content;
