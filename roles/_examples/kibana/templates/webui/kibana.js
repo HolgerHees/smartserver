@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('other').getSubGroup('states').addUrl('kibana',200, 'admin', '//kibana.{host}/app/kibana#/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175', '{i18n_Analytics}', '{i18n_Kibana}', false);
+mx.Menu.getMainGroup('other').getSubGroup('states').addUrl('kibana',200, 'admin', '//kibana.{host}/app/kibana#/dashboard/1431e9e0-1ce7-11ea-8fe5-3b6764e6f175', '{i18n_Analytics}', '{i18n_Kibana}', null, false);

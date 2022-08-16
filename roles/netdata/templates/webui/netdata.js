@@ -8,7 +8,7 @@ mx.Netdata = (function( ret ) {
   return ret;
 })( mx.Netdata || {} ); 
 
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('netdata',{ "url": '//netdata.{host}/', "callback": mx.Netdata.applyTheme }, 'admin', 110, '{i18n_Server State}', '{i18n_Netdata}', false, "netdata_logo.svg");
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('netdata',{ "url": '//netdata.{host}/', "callback": mx.Netdata.applyTheme }, 'admin', 110, '{i18n_Server State}', '{i18n_Netdata}', "netdata_logo.svg", false);
 
 mx.Alarms = (function( ret ) {
     var buttonSelector;

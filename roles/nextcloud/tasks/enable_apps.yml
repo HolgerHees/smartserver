@@ -291,7 +291,8 @@
         {% endfor %}
       ]
   when: "nextcloud_additional_apps | length > 0"
-  
+  tags: ['apache_webui_config']
+
 - name: register additional app webui
   vars:
     name: "nextcloud_additional_apps"

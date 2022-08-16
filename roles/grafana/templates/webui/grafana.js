@@ -8,4 +8,4 @@ mx.Grafana = (function( ret ) {
   return ret;
 })( mx.Grafana || {} ); 
 
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('grafana_ui', { "url": '//grafana.{host}/', "callback": mx.Grafana.applyTheme },'admin', 210, '{i18n_Grafana}', '{i18n_Dashboards}', false, 'grafana_logo.svg');
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('grafana_ui', { "url": '//grafana.{host}/', "callback": mx.Grafana.applyTheme },'admin', 210, '{i18n_Grafana}', '{i18n_Dashboards}', 'grafana_logo.svg', false);

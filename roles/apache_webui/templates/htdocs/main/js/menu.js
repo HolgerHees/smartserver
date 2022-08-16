@@ -39,7 +39,7 @@ mx.Menu = (function( ret ) {
     
     function filterMenuEntries(subGroup)
     {
-        return subGroup.isSingleEntryGroup() ? [] : subGroup.getEntries().filter(entry => entry.getContentType() == 'url' && entry.getTitle() );
+        return subGroup.isSingleEntryGroup() ? [] : subGroup.getEntries().filter(entry => entry.getTitle() );
     }
 
     ret.getMainGroup = function(mainGroupId)
@@ -88,7 +88,7 @@ mx.Menu = (function( ret ) {
                             getEntries: function(){ return filterAllowedEntries(Object.values(subGroup['menuEntries']).map( entry => entry['_'] )); },
                             isSingleEntryGroup: function(){ return Object.values(subGroup['menuEntries']).length == 1; },
                             getMenuEntries: function(){ return filterMenuEntries(subGroup['_']) },
-                            addUrl: function(entryId,url,usergroups,order,title,info,newWindow,iconUrl){
+                            addUrl: function(entryId, url, usergroups,order = 0, title = null, info = null, iconUrl = null, newWindow = false){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                 let entries = subGroup['menuEntries'];
                                 let entry = entries[entryId] = {
@@ -101,19 +101,21 @@ mx.Menu = (function( ret ) {
                                         getUserGroups: function(){ return entry['usergroups']; },
                                         getContentType: function(){ return entry['type']; },
                                         getSubGroup: function(){ return subGroup['_']; },
+
                                         getTitle: function(){ return entry['title']; },
                                         getInfo: function(){ return entry['info']; },
-                                        getNewWindow: function(){ return entry['newWindow']; },
                                         getIconUrl: function(){ return entry['iconUrl']; },
+
+                                        getNewWindow: function(){ return entry['newWindow']; },
                                         getUrl: function(){ return typeof entry['url'] === 'object' ? entry['url']['callback'](entry['url']['url']) : entry['url']; }
                                     }
                                 };
                             },
-                            addHtml: function(entryId,html,callback,usergroups,order){
+                            addHtml: function(entryId, html, callback, usergroups, order = 0, title = null, info = null, iconUrl = null){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                 let entries = subGroup['menuEntries'];
                                 let entry = entries[entryId] = {
-                                    id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,
+                                    id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,title:title,info:info, iconUrl: iconUrl,
                                     _: {
                                         getId: function(){ return entry['id']; },
                                         getUId: function(){ return entry['uid']; },
@@ -122,6 +124,11 @@ mx.Menu = (function( ret ) {
                                         getUserGroups: function(){ return entry['usergroups']; },
                                         getContentType: function(){ return entry['type']; },
                                         getSubGroup: function(){ return subGroup['_']; },
+
+                                        getTitle: function(){ return entry['title']; },
+                                        getInfo: function(){ return entry['info']; },
+                                        getIconUrl: function(){ return entry['iconUrl']; },
+
                                         getHtml: function(){ return entry['html']; },
                                         getCallback: function(){ return entry['callback']; }
                                     }
@@ -157,11 +164,11 @@ mx.Menu = (function( ret ) {
                 {
                     let entry = subGroup['menuEntries'][entryKey];
 
+                    if( entry['title'] ) entry['title'] = processI18N(entry['title'],mainKey+'_'+subKey);
+                    if( entry['info'] ) entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
+
                     if( entry['type'] === 'url' )
                     {
-                        if( entry['title'] ) entry['title'] = processI18N(entry['title'],mainKey+'_'+subKey);
-                        if( entry['info'] ) entry['info'] = processI18N(entry['info'],mainKey+'_'+subKey);
-
                         let reference = entry;
                         if( typeof reference['url'] === "object" ) reference = reference['url'];
                         match = reference['url'].match(/(\/\/)([^\.]*)\.({host})/);
@@ -289,7 +296,7 @@ mx.Menu = (function( ret ) {
         let callbacks = [];
 
         let menuEntries = subGroup.getEntries();
-        let currentIndex = 1;
+        let currentIndex = -1;
         
         let lastOrder = Math.max.apply(Math, menuEntries.map(function(o) { return o.getOrder(); }));
 
@@ -305,16 +312,14 @@ mx.Menu = (function( ret ) {
             
             if( currentIndex != index )
             {
-                entries.push('</div><div class="group">');
+                if( currentIndex != -1 )
+                {
+                    entries.push('</div><div class="group">');
+                }
                 currentIndex = index;
             }
             
-            if( entry.getContentType() == 'html' )
-            {
-                entries.push(entry.getHtml());
-                callbacks.push(entry.getCallback());
-            }
-            else if(entry.getTitle())
+            if(entry.getTitle())
             {
                 let html = '<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + entry.getUId() + '\')">';
                 html += '<div>';
@@ -325,6 +330,11 @@ mx.Menu = (function( ret ) {
                 
                 entries.push(html);
             }
+            else if( entry.getContentType() == 'html' )
+            {
+                entries.push(entry.getHtml());
+                callbacks.push(entry.getCallback());
+            }
         }
         
         if( hasGroups ) entries.push('</div>')
@@ -334,6 +344,8 @@ mx.Menu = (function( ret ) {
     
     ret.activateMenu = function(entry)
     {
+        let test = entry.getTitle();
+
         let lastActiveElement = mx.$(".service.active");
         let lastActiveElementId = lastActiveElement ? lastActiveElement.id : null;
         

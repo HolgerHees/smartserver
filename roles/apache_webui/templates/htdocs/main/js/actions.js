@@ -93,7 +93,8 @@ mx.Actions = (function( ret ) {
         {
             //console.log("iframe loaded");
             var url = e.target.contentWindow.location.href;
-            if( url == 'about:blank' && history.state && history.state["entryId"] )
+            //if( url == 'about:blank' && history.state && history.state["entryId"] )
+            if( url == 'about:blank' && history.state && history.state["url"] )
             {
                 //debugger;
                 console.log("iFrameLoadHandler: ADDITIONAL HISTORY POP");
@@ -353,7 +354,7 @@ mx.Actions = (function( ret ) {
         [mainGroupId,subGroupId,entryId] = entryUId.split("-");
         var entry = mx.Menu.getMainGroup(mainGroupId).getSubGroup(subGroupId).getEntry(entryId);
 
-        if( (event && event.ctrlKey) || entry.getNewWindow() )
+        if( entry.getContentType() == "url" && ( (event && event.ctrlKey) || entry.getNewWindow() ) )
         {
             var win = window.open(entry.getUrl(), '_blank');
             win.focus();
@@ -368,17 +369,24 @@ mx.Actions = (function( ret ) {
     {
         mx.History.addEntry( entry, url );
 
-        mx.Menu.activateMenu(entry);
+        if( entry.getContentType() == "url" )
+        {
+            var new_url = url ? url : entry.getUrl();
 
-        var new_url = url ? url : entry.getUrl();
-        
-        //showIFrame();
-        
-        setIFrameUrl(new_url, entry.getTitle());
+            //showIFrame();
+
+            setIFrameUrl(new_url, entry.getTitle());
+        }
+        else
+        {
+            showMenuContent(entry.getHtml(), entry.getCallback(), entry.getTitle());
+        }
 
         if( visualisationType != "desktop" ) menuPanel.close();
 
         inlineElement.classList.add("content");
+
+        mx.Menu.activateMenu(entry);
     };
 
     ret.openMenuById = function(event,subGroupUId)
