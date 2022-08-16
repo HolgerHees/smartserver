@@ -344,8 +344,6 @@ mx.Menu = (function( ret ) {
     
     ret.activateMenu = function(entry)
     {
-        let test = entry.getTitle();
-
         let lastActiveElement = mx.$(".service.active");
         let lastActiveElementId = lastActiveElement ? lastActiveElement.id : null;
         
