@@ -1,0 +1,79 @@
+- name: register webui
+  vars:
+    name: "guest_wifi"
+    js_file: "templates/webui/guest_wifi.js"
+    i18n_files: [ { language: "de", file: "templates/webui/guest_wifi.de.json" } ]
+    icons: [ 'templates/webui/icons/guest_wifi.svg' ]
+  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: synchronize webui
+  synchronize:
+    src: "templates/htdocs/guest_wifi"
+    dest: "{{htdocs_path}}"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
+  tags: ['apache_webui_page']
+
+#- name: prepare needed folder
+#  file:
+#    path: "{{item.dir}}"
+#    state: directory
+#    owner: "{{item.owner}}"
+#    group: "{{item.group}}"
+#    mode: 0755
+#  with_items:
+#    - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}guest_wifi/" }
+
+#- name: install SettingsContainerAbstract
+#  unarchive:
+#    src: "https://github.com/chillerlan/php-settings-container/archive/refs/tags/2.1.4.zip"
+#    dest: "{{htdocs_path}}guest_wifi/"
+#    remote_src: yes
+#    creates: "{{htdocs_path}}guest_wifi/php-settings-container-2.1.4/"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+
+#- name: install Image_QRCode
+#  unarchive:
+#    src: "https://github.com/chillerlan/php-qrcode/archive/refs/tags/4.3.4.zip"
+#    #src: "https://github.com/pear/Image_QRCode/archive/refs/tags/RELEASE-0.1.3.zip"
+#    dest: "{{htdocs_path}}guest_wifi/"
+#    remote_src: yes
+#    creates: "{{htdocs_path}}guest_wifi/php-qrcode-4.3.4/"
+#    #creates: "{{htdocs_path}}guest_wifi/Image_QRCode-RELEASE-0.1.31/"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+
+- name: install qrcode
+  get_url:
+    url: "https://raw.githubusercontent.com/psyon/php-qrcode/master/qrcode.php"
+    dest: "{{htdocs_path}}guest_wifi/qrcode.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+
+- name: copy web config
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}guest_wifi/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0644
+
+#- name: copy qrcodes
+#  copy:
+#    src: "{{item}}"
+#    dest: "{{htdocs_path}}guest_wifi/{{item | basename}}"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#    mode: 0644
+#  with_items:
+#    - "{{config_path}}vault/sirius-wifi-qrcode.png"
+#  tags: ['apache_webui_page']
+

@@ -171,6 +171,8 @@ default_variables: {
     
     "librenms_poller_interval": { "default": 5 },               # interval in minutes
 
+    "vault_wifi_guest_networks": { "default": [] },
+
     "vault_librenms_mysql_username": { "default": "librenms" },
     "vault_librenms_mysql_password": { 
         condition: "{{librenms_devices | length > 0}}"
