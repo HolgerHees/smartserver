@@ -49,7 +49,7 @@
   changed_when: False
 
 - name: create task => task does not exists => downsampling active and task does not exists
-  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | docker exec -i influxdb sh -c \"influx task create --org default-org\""
+  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | docker exec -i influxdb sh -c \"cat > tmp.flux && influx task create --org default-org -f tmp.flux\""
   when: "item.name is defined and '\tdownsampling_' + database + '_' + item.name + '\t' not in influxdb_task_result.stdout"
   with_items: "{{retentions}}"
 
