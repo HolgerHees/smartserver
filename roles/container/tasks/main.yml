@@ -298,7 +298,7 @@
     ipam_config:
       - subnet: '{{server_network}}'
         gateway: '{{server_gateway}}'
-        
+
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:

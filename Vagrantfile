@@ -125,6 +125,8 @@ Vagrant.configure(2) do |config|
         vb.name = $image_name
         vb.customize ["modifyvm", :id, "--memory", "6144"]
         vb.customize ["modifyvm", :id, "--cpus", "2"]
+        #vb.customize ["natnetwork", "add", "--netname", "smartserver", "--network", "#{$env_ip}/24", "--enable"]
+        #vb.customize ["modifyvm", :id, "--nic2", "natnetwork"]
     end
 
     setup.vm.provider "hyperv" do |hv|

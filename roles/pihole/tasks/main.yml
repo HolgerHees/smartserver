@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    pihole_version: '2022.07.1'
+    pihole_version: '2022.08.2'
   tags: [ 'update_notifier_config' ]
   
 - name: prepare needed folder
@@ -19,6 +19,28 @@
     name: docker
     state: started
 
+- name: set production facts
+  set_fact:
+    pihole_network_mode: "default"
+    pihole_networks:
+      - name: "macvlan"
+        ipv4_address: "{{pihole_ip}}"
+    pihole_exposed_ports:
+      - "53/tcp"
+      - "53/udp"
+    # - "67:67/udp"
+      - "80/tcp"
+      - "443/tcp"
+  when: is_production
+
+# needed, because macvlan in a VM has no internet access, but pihole needs internet access during startup
+- name: set staging facts
+  set_fact:
+    pihole_network_mode: "host"
+    pihole_networks: []
+    pihole_exposed_ports: []
+  when: not is_production
+
 - name: create docker container
   docker_container:
     name: pihole
@@ -36,20 +58,13 @@
     log_options:
       tag: pihole
     container_default_behavior: "compatibility"
-    network_mode: "default"
-    networks:
-      - name: "macvlan"
-        ipv4_address: "{{pihole_ip}}"
+    network_mode: "{{pihole_network_mode}}"
+    networks: "{{pihole_networks}}"
     networks_cli_compatible: yes
     volumes:
       - '{{ global_etc }}pihole/:/etc/pihole/:z'
       - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
-    exposed_ports:
-      - "53/tcp"
-      - "53/udp"
-    # - "67:67/udp"
-      - "80/tcp"
-      - "443/tcp"
+    exposed_ports: "{{pihole_exposed_ports}}"
   notify: "restart pihole"
 
 # ***** FINALIZE *****
