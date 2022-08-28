@@ -21,24 +21,16 @@
 
 - name: set production facts
   set_fact:
-    pihole_network_mode: "default"
     pihole_networks:
       - name: "macvlan"
         ipv4_address: "{{pihole_ip}}"
-    pihole_exposed_ports:
-      - "53/tcp"
-      - "53/udp"
-    # - "67:67/udp"
-      - "80/tcp"
-      - "443/tcp"
   when: is_production
 
 # needed, because macvlan in a VM has no internet access, but pihole needs internet access during startup
 - name: set staging facts
   set_fact:
-    pihole_network_mode: "host"
-    pihole_networks: []
-    pihole_exposed_ports: []
+    pihole_networks:
+      - name: "isolated"
   when: not is_production
 
 - name: create docker container
@@ -58,13 +50,18 @@
     log_options:
       tag: pihole
     container_default_behavior: "compatibility"
-    network_mode: "{{pihole_network_mode}}"
+    network_mode: "default"
     networks: "{{pihole_networks}}"
     networks_cli_compatible: yes
     volumes:
       - '{{ global_etc }}pihole/:/etc/pihole/:z'
       - '{{ global_etc }}pihole/dnsmasq.d/:/etc/dnsmasq.d/:z'
-    exposed_ports: "{{pihole_exposed_ports}}"
+    exposed_ports:
+      - "53/tcp"
+      - "53/udp"
+    # - "67:67/udp"
+      - "80/tcp"
+      - "443/tcp"
   notify: "restart pihole"
 
 # ***** FINALIZE *****

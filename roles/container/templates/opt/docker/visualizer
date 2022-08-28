@@ -148,7 +148,7 @@ for additional_port in additional_port_list:
     additional_port = additional_port.split(" ")
     additional_port = list(filter(lambda item: item.strip(), additional_port))
         
-    if additional_port[8][0] == "[":
+    if len(additional_port) < 9 or additional_port[8][0] == "[":
         continue
     
     columns = additional_port[8].split(":")
