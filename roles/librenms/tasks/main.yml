@@ -121,7 +121,7 @@
     librenms_ferm_rules: |
       [
       {% for network in intern_networks %}
-        "outerface {{main_network_interface}} saddr {{docker_librenms_ip}} daddr {{network}}"
+        "saddr {{docker_librenms_ip}} daddr {{network}}"
       {% endfor %}
       ]
   tags: [ 'firewall_config' ]

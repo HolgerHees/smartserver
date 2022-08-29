@@ -13,6 +13,10 @@ domain (ip ip6) {
             saddr {{vpn_mobile_network}}/24 ACCEPT;
         }
         chain DOCKER-USER {
+            # container of same network are allowe to talk to each other
+{% for network in docker_service_networks %}
+            saddr {{network}}/24 daddr {{network}}/24 ACCEPT;
+{% endfor %}
             # internal ip's can forward to containers
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;
