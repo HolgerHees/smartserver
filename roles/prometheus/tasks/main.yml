@@ -30,12 +30,12 @@
     state: started
 
 - name: create docker network
-  docker_network:
-    name: prometheus
-    ipam_config:
-      - subnet: "{{docker_prometheus_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_prometheus_ip.split('.')[:3] | join('.')}}.1"
-    appends: yes
+  vars:
+    network_name: "prometheus"
+    network_ip: "{{docker_prometheus_ip}}"
+    network_internal: no
+    network_container: []
+  import_tasks: roles/container/tasks/add_docker_network.yml
   
 - name: create docker container
   docker_container:

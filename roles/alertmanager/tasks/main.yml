@@ -28,15 +28,13 @@
     state: started
 
 - name: create docker network
-  docker_network:
-    name: alertmanager
-    internal: yes
-    ipam_config:
-      - subnet: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_alertmanager_ip.split('.')[:3] | join('.')}}.1"
-    connected:
+  vars:
+    network_name: "alertmanager"
+    network_ip: "{{docker_alertmanager_ip}}"
+    network_internal: yes
+    network_container:
       - postfix
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'postfix', 'alpine' ]
 
 - name: create docker container

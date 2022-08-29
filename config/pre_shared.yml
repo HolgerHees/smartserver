@@ -41,8 +41,6 @@ docker_mysql_ip:                  "172.16.0.205"
 docker_mosquitto_ip:              "172.16.0.206"
 docker_speedtest_ip:              "172.16.0.207"
 
-docker_default_network:           "172.17.0.0"
-
 docker_onlyoffice_ip:             "172.30.1.200"
 docker_php_ip:                    "172.30.2.200"
 docker_grafana_ip:                "172.30.3.200"
@@ -53,7 +51,7 @@ docker_loki_ip:                   "172.30.7.200"
 docker_fluentd_ip:                "172.30.8.200"
 docker_librenms_ip:               "172.30.9.200"
 
-docker_service_networks:          ["172.30.1.0","172.30.2.0","172.30.3.0","172.30.4.0","172.30.5.0","172.30.6.0","172.30.7.0","172.30.8.0","172.30.9.0"]
+docker_vcontrold_ip:              "172.30.50.200"
 
 # version of alpine linux used in several container based roles
 alpine_version:                   "3.16.2"

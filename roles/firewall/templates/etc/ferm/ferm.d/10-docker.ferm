@@ -1,7 +1,3 @@
 domain (ip ip6) table filter chain DOCKER-USER {
     mod conntrack ctstate (RELATED ESTABLISHED) ACCEPT;
-    saddr {{docker_base_network}}/16 daddr {{docker_base_network}}/16 LOG;
-    saddr {{docker_base_network}}/16 daddr {{docker_base_network}}/16 DROP;
-    saddr {{docker_default_network}}/16 daddr {{docker_default_network}}/16 LOG;
-    saddr {{docker_default_network}}/16 daddr {{docker_default_network}}/16 DROP;
 } 

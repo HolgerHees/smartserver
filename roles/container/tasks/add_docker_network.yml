@@ -1,0 +1,15 @@
+- name: create docker network {{network_name}}
+  docker_network:
+    name: "{{network_name}}"
+    internal: "{{network_internal}}"
+    ipam_config:
+      - subnet: "{{network_ip.split('.')[:3] | join('.')}}.0/24"
+        gateway: "{{network_ip.split('.')[:3] | join('.')}}.1"
+    connected: "{{network_container}}"
+    appends: yes
+ 
+- name: allow docker network {{network_name}}
+  vars:
+    network_saddr: "{{network_ip.split('.')[:3] | join('.')}}.0/24"
+    network_daddr: "{{network_ip.split('.')[:3] | join('.')}}.0/24"
+  import_tasks: roles/firewall/tasks/allow_network.yml

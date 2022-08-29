@@ -27,15 +27,13 @@
   import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: create docker network
-  docker_network:
-    name: fluentd
-    internal: yes
-    ipam_config:
-      - subnet: "{{docker_fluentd_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_fluentd_ip.split('.')[:3] | join('.')}}.1"
-    connected:
+  vars:
+    network_name: "fluentd"
+    network_ip: "{{docker_fluentd_ip}}"
+    network_internal: yes
+    network_container:
       - loki
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'loki' ]
 
 - name: create docker container

@@ -1,11 +1,5 @@
 domain (ip ip6) table filter chain DOCKER-USER {
-    interface {{main_network_interface}} {
-        LOG;
-        DROP;
-    }
-    outerface {{main_network_interface}} {
-        LOG;
-        DROP;
-    }
+    LOG;
+    DROP;
     RETURN;
 } 

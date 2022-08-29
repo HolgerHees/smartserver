@@ -28,15 +28,13 @@
     state: started
 
 - name: create docker network
-  docker_network:
-    name: telegraf
-    internal: yes
-    ipam_config:
-      - subnet: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_telegraf_ip.split('.')[:3] | join('.')}}.1"
-    connected:
+  vars:
+    network_name: "telegraf"
+    network_ip: "{{docker_telegraf_ip}}"
+    network_internal: yes
+    network_container:
       - influxdb
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'influxdb' ]
 
 - name: create docker container

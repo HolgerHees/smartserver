@@ -94,19 +94,17 @@
   import_tasks: roles/container/tasks/build_docker_image.yml
     
 - name: create docker network
-  docker_network:
-    name: grafana
-    internal: yes
-    ipam_config:
-      - subnet: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_grafana_ip.split('.')[:3] | join('.')}}.1"
-    connected:
+  vars:
+    network_name: "grafana"
+    network_ip: "{{docker_grafana_ip}}"
+    network_internal: yes
+    network_container:
       - mysql
       - influxdb
       - loki
       - prometheus
       - alertmanager
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'influxdb', 'loki', 'mysql', 'prometheus', 'alertmanager' ]
 
 - name: create docker container

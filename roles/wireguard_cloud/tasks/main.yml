@@ -87,17 +87,19 @@
       - roles/wireguard_cloud/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-#- name: create docker network
-#  docker_network:
-#    name: cloud
-#    appends: yes
-
 - name: create docker network
   docker_network:
     name: cloud_vpn
     ipam_config:
       - subnet: "{{cloud_vpn.interface.network}}"
         gateway: "{{vpn_cloud_services.local.bridge}}"
+
+- name: allow docker network cloud_vpn
+  vars:
+    network_name: "cloud_vpn"
+    network_saddr: "{{vpn_cloud_subnet}}.0.0/16"
+    network_daddr: "{{vpn_cloud_subnet}}.0.0/16"
+  import_tasks: roles/firewall/tasks/allow_network.yml
 
 - name: create docker container
   docker_container:

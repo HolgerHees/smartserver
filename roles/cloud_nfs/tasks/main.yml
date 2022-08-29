@@ -68,11 +68,6 @@
       - roles/cloud_nfs/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
-#- name: create docker network
-#  docker_network:
-#    name: cloud
-#    appends: yes
-
 - name: create docker container
   docker_container:
     name: "cloud_nfs"

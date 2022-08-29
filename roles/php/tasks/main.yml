@@ -13,17 +13,16 @@
   import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: create docker network
-  docker_network:
-    name: php
-    ipam_config:
-      - subnet: "{{docker_php_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_php_ip.split('.')[:3] | join('.')}}.1"
-    connected:
+  vars:
+    network_name: "php"
+    network_ip: "{{docker_php_ip}}"
+    network_internal: no
+    network_container:
       - mysql
       - influxdb
       - redis
       - postfix # => used by nextcloud
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'mysql', 'influxdb', 'redis', 'postfix', 'alpine' ]
 
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
@@ -65,16 +64,6 @@
     host_name: "php"
     host_ip_address: "{{docker_php_ip}}"
   import_tasks: roles/network/tasks/add_to_hosts.yml
-
-#- name: create docker network
-#  docker_network:
-#    name: php
-#    connected:
-#      - php
-#      - mysql
-#      - influxdb
-#      - elasticsearch
-#      - redis
 
 # ***** FINALIZE *****
 - name: allow http php service

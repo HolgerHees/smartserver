@@ -5,7 +5,7 @@
     ferm_type: "{{ 'DROP' if is_drop is defined else 'ACCEPT' }}"
     ferm_prefix: "{{ '15' if is_drop is defined else '30' }}"
   template:
-    src: "roles/firewall/templates/ferm.template"
+    src: "roles/firewall/templates/ferm_service.template"
     dest: "/etc/ferm/ferm.d/{{ferm_prefix}}-{{name}}.ferm"
     owner: root
     group: root

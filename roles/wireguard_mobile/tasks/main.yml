@@ -57,7 +57,7 @@
       {% endif %}
       {% endfor %}
       ]
-  tags: [ 'user' ]
+  tags: [ 'user', 'firewall_config' ]
       
 - name: generate client keys
   shell: "cd {{global_etc}}wireguard_mobile/keys/ && ([ ! -f ./client_{{item}}_privatekey ] || [ ! -f ./client_{{item}}_publickey ]) && wg genkey | tee ./client_{{item}}_privatekey | wg pubkey > ./client_{{item}}_publickey"

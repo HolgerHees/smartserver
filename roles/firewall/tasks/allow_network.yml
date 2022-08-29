@@ -1,0 +1,9 @@
+- name: "allow network '{{network_name}}'"
+  template:
+    src: "roles/firewall/templates/ferm_network.template"
+    dest: "/etc/ferm/ferm.d/19-trusted-{{network_name}}.ferm"
+    owner: root
+    group: root
+    mode: 0644
+  tags: [ 'firewall_config' ]
+  notify: "restart ferm"

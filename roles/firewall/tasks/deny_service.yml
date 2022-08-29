@@ -3,7 +3,7 @@
     ferm_chain: "{{ 'DOCKER-USER' if is_docker is defined and is_docker else 'INPUT' }}"
     ferm_rules: "{{ [rule] if rules is not defined else rules }}"
   template:
-    src: "roles/firewall/templates/ferm.template"
+    src: "roles/firewall/templates/ferm_service.template"
     dest: "/etc/ferm/ferm.d/30-{{name}}.ferm"
     owner: root
     group: root

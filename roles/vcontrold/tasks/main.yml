@@ -29,12 +29,13 @@
   import_tasks: roles/container/tasks/build_docker_image.yml
 
 - name: create docker network
-  docker_network:
-    name: vcontrold
-    internal: yes
-    connected:
+  vars:
+    network_name: "vcontrold"
+    network_ip: "{{docker_vcontrold_ip}}"
+    network_internal: yes
+    network_container:
       - mosquitto
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: ['mosquitto']
 
 - name: create docker container

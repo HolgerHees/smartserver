@@ -34,15 +34,13 @@
     state: started
     
 - name: create docker network
-  docker_network:
-    name: loki
-    internal: yes
-    ipam_config:
-      - subnet: "{{docker_loki_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{docker_loki_ip.split('.')[:3] | join('.')}}.1"
-    connected:
+  vars:
+    network_name: "loki"
+    network_ip: "{{docker_loki_ip}}"
+    network_internal: yes
+    network_container:
       - alertmanager
-    appends: yes
+  import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'alertmanager' ]
 
 - name: create docker container
