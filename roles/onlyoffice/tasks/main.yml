@@ -29,7 +29,7 @@
   vars:
     network_name: "onlyoffice"
     network_ip: "{{docker_onlyoffice_ip}}"
-    network_internal: no
+    network_internal: yes
     network_container:
       - mysql
       - redis
