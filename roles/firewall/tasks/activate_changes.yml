@@ -1,0 +1,5 @@
+- name: force ferm restart
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: ferm

@@ -3,13 +3,13 @@
     name: "{{network_name}}"
     internal: "{{network_internal}}"
     ipam_config:
-      - subnet: "{{network_ip.split('.')[:3] | join('.')}}.0/24"
-        gateway: "{{network_ip.split('.')[:3] | join('.')}}.1"
-    connected: "{{network_container}}"
+      - subnet: "{{network_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
+        gateway: "{{network_gateway | default(network_ip.split('.')[:3] | join('.') + '.1')}}"
+    connected: "{{network_container | default([])}}"
     appends: yes
  
 - name: allow docker network {{network_name}}
   vars:
-    network_saddr: "{{network_ip.split('.')[:3] | join('.')}}.0/24"
-    network_daddr: "{{network_ip.split('.')[:3] | join('.')}}.0/24"
+    network_saddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
+    network_daddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
   import_tasks: roles/firewall/tasks/allow_network.yml

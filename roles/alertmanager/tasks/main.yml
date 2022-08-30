@@ -66,11 +66,11 @@
   notify: "restart alertmanager"
   
 - name: attach to prometheus docker network
-  docker_network:
-    name: prometheus
-    connected:
+  vars:
+    network_name: "prometheus"
+    network_container:
       - alertmanager
-    appends: yes
+  import_tasks: roles/container/tasks/attach_docker_network.yml
   tags: [ 'prometheus' ]  
 
 - name: add container name
