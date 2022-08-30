@@ -61,7 +61,8 @@
 - name: create systemd service
   vars:
     container_name: "cloud_mosquitto"
-    container_exec_start_post: "/bin/bash -c \"sleep 1 && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} cloud_mosquitto) ip route add {{vpn_cloud_subnet}}.0.0/16 via {{vpn_cloud_services.local.gateway}}\""
+    container_routes:
+      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 #- name: register update notifier
