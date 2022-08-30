@@ -107,12 +107,10 @@
     config_file: "templates/etc/fluent/_.ansible.d/prometheus.conf"
   import_tasks: roles/fluentd/tasks/add_config.yml
     
-#nsenter -n -t $(docker inspect --format {{.State.Pid}} prometheus) ip route del default
-#nsenter -n -t $(docker inspect --format {{.State.Pid}} prometheus) ip route add default via 172.16.0.1
 - name: create systemd service
   vars:
     container_name: "prometheus"
-#    container_exec_start_post: "nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} prometheus) ip route del default && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} prometheus) ip route add default via {{docker_base_gateway}}"
+    container_exec_start_post: "/bin/bash -c \"sleep 1 && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} prometheus) ip route del default && nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} prometheus) ip route add default via {{docker_prometheus_ip.split('.')[:3] | join('.')}}.1\""
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier
