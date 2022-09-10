@@ -192,7 +192,7 @@ class Job:
                 self.cancel_reason = None
             else:
                 if self.cancel_reason == None:
-                    log_lines = deploy_output.split(b"\n")
+                    log_lines = deploy_output.split("\n")
                     
                     log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
                     i = i + 1
