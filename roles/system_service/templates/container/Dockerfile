@@ -11,13 +11,10 @@ RUN chmod 755 /entrypoint.sh \
     && apk --update --no-cache add git autoconf automake make gcc g++ libpcap-dev \
     && git clone https://github.com/royhills/arp-scan.git \
     && cd arp-scan/ \
-    && git checkout 716fa8be141a4509620ab42193a813e02e5498f7 \
     && autoreconf --install \
     && ./configure \
     && make \
     && make install
-
-#git checkout 716fa8be141a4509620ab42193a813e02e5498f7 => https://github.com/royhills/arp-scan/issues/73
 
 #ENTRYPOINT ["/bin/sleep","3000000"]
 ENTRYPOINT ["/entrypoint.sh"]
