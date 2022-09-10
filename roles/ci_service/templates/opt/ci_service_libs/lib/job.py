@@ -173,7 +173,7 @@ class Job:
             #helper.log( u"{}".format(update_output) )
 
             # Deployment start
-            deploy_output = ""
+            deploy_output = b""
             cmd = u"{} --config={} --os={}{} up".format(vagrant_path,config_name,os_name,argsStr)
             #cmd = u"echo '\033[31mtest1\033[0m' && echo '\033[200mtest2' && echo 1 && sleep 5 && echo 2 && sleep 5 && echo 3 2>&1"
             helper.log( u"Deployment for commit '{}' ('{}') started".format(self.git_hash,cmd) )
@@ -192,7 +192,7 @@ class Job:
                 self.cancel_reason = None
             else:
                 if self.cancel_reason == None:
-                    log_lines = deploy_output.split("\n")
+                    log_lines = deploy_output.split(b"\n")
                     
                     log_lines_to_check = log_lines[-100:] if len(log_lines) > 100 else log_lines
                     i = i + 1
