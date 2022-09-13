@@ -55,6 +55,12 @@ echo "
         text-align: center;
       }
     </style>
+  <script>document.domain = '" . $_SERVER['SERVER_NAME'] . "';";
+
+$fp = fopen("../main/listener/frame.js", 'rb');
+fpassthru($fp);
+
+echo "</script>
   </head>
   <body>
     <div><div class=\"box\">
