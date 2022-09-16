@@ -70,7 +70,7 @@ connectivity
 
 authenticate
 
-source "$IP.env"
+source "$SOURCE/$IP.env"
 
 echo "Installing software ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update"
