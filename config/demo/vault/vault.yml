@@ -69,6 +69,8 @@ vault_homecontrol_coffeemaker: "<vault_homecontrol_coffeemaker>"
 vault_garbage_calendar_url: "<google_ical_url>"
 
 # used in custom external openhab config repository and custom role 'apache_proxy'
+vault_wallmounted_tablet_password: "default123"
+
 vault_automower_device_username: "automower"
 vault_automower_device_password: "default123"
 
