@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    rclone_version: "1.59.1"
+    rclone_version: "1.59.2"
   tags: [ 'update_notifier_config' ]
   
 # FOLDER
