@@ -101,7 +101,8 @@ mx.UpdateServiceActions = (function( ret ) {
         }
         
         var has_tags = args != null && args.hasOwnProperty("tags");
-        
+        var is_redeploy = args != null && args.hasOwnProperty("redeploy");
+
         var passwordField = null;
         var passwordRemember = null;
         var passwordHint = null;
@@ -115,6 +116,10 @@ mx.UpdateServiceActions = (function( ret ) {
             {
                 var msg = args["tags"].indexOf(',') != -1 ? mx.I18N.get('all outdated roles') : args["tags"];
                 body += mx.I18N.get("You want to <span class='important'>redeploy '{}'</span>?").fill(msg);            
+            }
+            else if( is_redeploy )
+            {
+                body += mx.I18N.get("You want to <span class='important'>redeploy smartserver roles</span>?");
             }
             else
             {
@@ -180,16 +185,27 @@ mx.UpdateServiceActions = (function( ret ) {
                 body += "    <input name=\"tag\" autocomplete=\"off\"><div class=\"tag hint red\">" + mx.I18N.get("Please select a tag. e.g 'all'") + "</div>";
                 body += "  </div>";
                 body += "</div>";
-                body += "<div class=\"row\">";
-                body += "  <div>&nbsp;</div>";
-                body += "  <div>&nbsp;</div>";
-                body += "</div>";
-                
+
+                if( !is_redeploy )
+                {
+                    body += "<div class=\"row\">";
+                    body += "  <div>&nbsp;</div>";
+                    body += "  <div>&nbsp;</div>";
+                    body += "</div>";
+                }
+
                 body += "</div>"; // => table close
                 
-                body += "<div class=\"deployConfirmation middle\">";
-                body += "  <input type=\"checkbox\" id=\"confirm\" name=\"confirm\" checked><label for=\"confirm\">" + mx.I18N.get("Mark all changes as deployed") + "</label>";
-                body += "</div>";
+                if( is_redeploy )
+                {
+                    body += "  <input type=\"hidden\" id=\"confirm\" name=\"confirm\" checked>";
+                }
+                else
+                {
+                    body += "<div class=\"deployConfirmation middle\">";
+                    body += "  <input type=\"checkbox\" id=\"confirm\" name=\"confirm\" checked><label for=\"confirm\">" + mx.I18N.get("Mark all changes as deployed") + "</label>";
+                    body += "</div>";
+                }
             }
             else
             {
@@ -363,10 +379,11 @@ mx.UpdateServiceActions = (function( ret ) {
         confirmAction(btn,'installSystemUpdates',mx.UNCore.getUpdateHashes(),mx.I18N.get("You want to <span class='important'>install system updates</span>?"),"green");          
     }
     
-    ret.actionDeployUpdates = function(btn)
+    ret.actionDeployUpdates = function(btn, )
     {
         var tag = btn.dataset.tag;
-        parameter = tag ? { "tags": tag } : null;
+        var redeploy = btn.dataset.redeploy;
+        let parameter = tag ? { "tags": tag } : ( redeploy ? { "redeploy": redeploy } : null );
         updateDialog("deployment",btn,parameter,function(parameter){
             runAction(btn, 'deploySmartserverUpdates', parameter); 
         });

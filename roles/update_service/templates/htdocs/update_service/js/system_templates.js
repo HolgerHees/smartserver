@@ -448,7 +448,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         else
         {
-            headerElement.innerHTML = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div>";
+            let i18n_main_msg = "No smartserver updates available";
+
+            headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" data-redeploy=1 onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install again") + "</div></div>";
+
+            headerElement.innerHTML = headerMsg;
+            //headerElement.innerHTML = "<div class=\"info\">" + mx.I18N.get("No smartserver updates available") + "</div>";
             tableElement.innerHTML = "";
             tableElement.style.display = "none";
         }

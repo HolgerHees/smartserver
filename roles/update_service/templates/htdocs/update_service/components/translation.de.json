@@ -92,6 +92,8 @@
     "all outdated roles": "alle veralteten Rollen",
     "You want to <span class='important'>redeploy '{}'</span>?": "Du möchtest '{}' neu deployen?",
     "You want to <span class='important'>deploy smartserver updates</span>?": "Du möchtest <span class='important'>Smartserver Updates deployen</span>?",
+    "You want to <span class='important'>redeploy smartserver roles</span>?": "Du möchtest <span class='important'>Smartserver Roles deployen</span>?",
+
 
     "You want to <span class='important'>update everything</span>? This includes the following steps:": "Du möchtest <span class='important'>alles aktualisieren</span>? Dabei werden folgende Schritte ausgeführt:",
     "Check for updates again": "Erneute Suche nach Updates",
@@ -162,6 +164,7 @@
     "Everything up to date": "Alles auf dem neuesten Stand",
 
     "Install": "Installieren",
+    "Install again": "Erneut Installieren",
   
     "system": "System",
     "smartserver": "Smartserver",
