@@ -256,7 +256,7 @@ mx.UpdateServiceActions = (function( ret ) {
                                 tagHint.style.maxHeight = "";
                                 localStorage.setItem("lastSelectedDeploymentTags", selectedTagsAsString);
                                 parameter["tags"] = selectedTagsAsString;
-                                parameter["confirm"] = confirmField.checked;
+                                parameter["confirm"] = is_redeploy ? false : confirmField.checked;
                             }
                         }
                         else
