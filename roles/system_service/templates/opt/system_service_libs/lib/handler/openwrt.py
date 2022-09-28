@@ -125,90 +125,92 @@ class OpenWRT(_handler.Handler):
         self.next_run[openwrt_ip]["wifi_networks"] = datetime.now() + timedelta(seconds=self.config.openwrt_network_interval)
 
         wifi_network_result = self._getWifiNetworks(openwrt_ip, ubus_session_id)
-        
-        wifi_network_changed = False
-        
-        _active_vlans = {}
-        device_result = self._getDevices(openwrt_ip, ubus_session_id)
-        for device_name in device_result:
-            _device = device_result[device_name]
-            if "bridge-vlans" not in _device:
-                continue
-            for vlan in _device["bridge-vlans"]:
-                for port in vlan["ports"]:
-                    _active_vlans[port] = vlan["id"]
-        
-        _active_networks = {}
-        for wifi_network_name in wifi_network_result:
-            _wifi_network = wifi_network_result[wifi_network_name]
-            for _interface in _wifi_network["interfaces"]:
-                # skip non configured interfaces
-                if "ifname" not in _interface:
+        if wifi_network_result is None:
+            self.wifi_networks[openwrt_ip] = {}
+        else:
+            wifi_network_changed = False
+
+            _active_vlans = {}
+            device_result = self._getDevices(openwrt_ip, ubus_session_id)
+            for device_name in device_result:
+                _device = device_result[device_name]
+                if "bridge-vlans" not in _device:
                     continue
-                
-                ifname = _interface["ifname"];
-                ssid = _interface["config"]["ssid"];
-                band = _wifi_network["config"]["band"];
-                gid = "{}-{}-{}".format(openwrt_ip,ssid,band)
-                
-                try:
-                    wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, ifname)
-                except UbusCallException as e:
-                    if e.getCode() == -32000:
-                        logging.warning("OpenWRT '{}' interface '{}' has gone during processing wifi networks".format(openwrt_ip, ifname))
+                for vlan in _device["bridge-vlans"]:
+                    for port in vlan["ports"]:
+                        _active_vlans[port] = vlan["id"]
+
+            _active_networks = {}
+            for wifi_network_name in wifi_network_result:
+                _wifi_network = wifi_network_result[wifi_network_name]
+                for _interface in _wifi_network["interfaces"]:
+                    # skip non configured interfaces
+                    if "ifname" not in _interface:
                         continue
-                    else:
-                        raise e
 
-                channel = wifi_interface_details_result["channel"]
-                priority = 1 if channel > 13 else 0
-                
-                network = { 
-                    "gid": gid,
-                    "ifname": ifname,
-                    "ssid": ssid,
-                    "band": band,
-                    "channel": channel,
-                    "priority": priority,
-                    "vlan": _active_vlans[ifname] if ifname in _active_vlans else self.config.default_vlan,
-                    "device": wifi_network_name
-                }
-                
-                if gid not in self.wifi_networks[openwrt_ip]:
-                    wifi_network_changed = True
-                
-                _active_networks[gid] = network
-                self.wifi_networks[openwrt_ip][gid] = network
-                
-        #print(self.wifi_networks[openwrt_ip])
-        
-        if _active_networks or self.wifi_networks[openwrt_ip]:
-            self.cache.lock(self)
+                    ifname = _interface["ifname"];
+                    ssid = _interface["config"]["ssid"];
+                    band = _wifi_network["config"]["band"];
+                    gid = "{}-{}-{}".format(openwrt_ip,ssid,band)
 
-            for gid in _active_networks:
-                network = _active_networks[gid]
+                    try:
+                        wifi_interface_details_result = self._getWifiInterfaceDetails(openwrt_ip, ubus_session_id, ifname)
+                    except UbusCallException as e:
+                        if e.getCode() == -32000:
+                            logging.warning("OpenWRT '{}' interface '{}' has gone during processing wifi networks".format(openwrt_ip, ifname))
+                            continue
+                        else:
+                            raise e
 
-                group = self.cache.getGroup(gid, Group.WIFI)
-                group.setDetail("ssid", network["ssid"], "string")
-                group.setDetail("band", network["band"], "string")
-                group.setDetail("channel", network["channel"], "string")
-                group.setDetail("priority", network["priority"], "hidden")
-                #group.setDetail("vlan", network["vlan"], "string")
-                self.cache.confirmGroup(group, lambda event: events.append(event))
-                        
-            for gid in list(self.wifi_networks[openwrt_ip].keys()):
-                if gid not in _active_networks:
-                    wifi_network_changed = True
-                    
-                    self.cache.removeGroup(gid, lambda event: events.append(event))
-                    del self.wifi_networks[openwrt_ip][gid]
-                    
-            self.cache.unlock(self)
-            
-        if wifi_network_changed:
-            # force a client refresh
-            self.next_run[openwrt_ip]["wifi_clients"] = datetime.now()
-            
+                    channel = wifi_interface_details_result["channel"]
+                    priority = 1 if channel > 13 else 0
+
+                    network = {
+                        "gid": gid,
+                        "ifname": ifname,
+                        "ssid": ssid,
+                        "band": band,
+                        "channel": channel,
+                        "priority": priority,
+                        "vlan": _active_vlans[ifname] if ifname in _active_vlans else self.config.default_vlan,
+                        "device": wifi_network_name
+                    }
+
+                    if gid not in self.wifi_networks[openwrt_ip]:
+                        wifi_network_changed = True
+
+                    _active_networks[gid] = network
+                    self.wifi_networks[openwrt_ip][gid] = network
+
+            #print(self.wifi_networks[openwrt_ip])
+
+            if _active_networks or self.wifi_networks[openwrt_ip]:
+                self.cache.lock(self)
+
+                for gid in _active_networks:
+                    network = _active_networks[gid]
+
+                    group = self.cache.getGroup(gid, Group.WIFI)
+                    group.setDetail("ssid", network["ssid"], "string")
+                    group.setDetail("band", network["band"], "string")
+                    group.setDetail("channel", network["channel"], "string")
+                    group.setDetail("priority", network["priority"], "hidden")
+                    #group.setDetail("vlan", network["vlan"], "string")
+                    self.cache.confirmGroup(group, lambda event: events.append(event))
+
+                for gid in list(self.wifi_networks[openwrt_ip].keys()):
+                    if gid not in _active_networks:
+                        wifi_network_changed = True
+
+                        self.cache.removeGroup(gid, lambda event: events.append(event))
+                        del self.wifi_networks[openwrt_ip][gid]
+
+                self.cache.unlock(self)
+
+            if wifi_network_changed:
+                # force a client refresh
+                self.next_run[openwrt_ip]["wifi_clients"] = datetime.now()
+
         # set device type
         device = self.cache.getUnlockedDevice(openwrt_mac)
         if device is not None and not device.hasType("openwrt"):
@@ -217,7 +219,7 @@ class OpenWRT(_handler.Handler):
             device.setType("openwrt", 100, "network")
             self.cache.confirmDevice( device, lambda event: events.append(event) )
             self.cache.unlock(self)
-            
+
         has_wifi_networks = False
         for _openwrt_ip in self.config.openwrt_devices:
             if self.wifi_networks[_openwrt_ip]:
@@ -347,7 +349,7 @@ class OpenWRT(_handler.Handler):
         if "result" not in result or result["result"][0] != 0:
             raise UbusResponseException( ip, type, _json )
 
-        return result["result"][1]
+        return result["result"][1] if len(result["result"]) > 1 else None
         #logging.warning("OpenWRT {} - {} - got unexpected device result '{}'".format(ip, type, _json))
         #return None
     

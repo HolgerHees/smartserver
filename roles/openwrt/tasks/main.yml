@@ -61,11 +61,17 @@
       [
         {% for device in openwrt_devices %}
           {% for file in dynamic_shared_file_result.files %}
-            { 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path | regex_replace('roles/openwrt/templates/config_ap_dynamic/','') }}' },
+            { 'name': '{{device.name}}', 'is_ap': {{'1' if 'ap' in device.config.roles else '0'}}, 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path | regex_replace('roles/openwrt/templates/config_ap_dynamic/','') }}' },
           {% endfor %}
         {% endfor %}
       ]
       
+- name: check target paths
+  file:
+    dest: "{{item.dest | dirname}}"
+    state: "directory"
+  with_items: "{{dynamic_shared_files}}"
+
 - name: copy dynamic configs
   template:
     src: "{{item.src}}"
@@ -76,26 +82,32 @@
   changed_when: no
   with_items: "{{dynamic_shared_files}}"
 
-- name: check for custom shared configs
+- name: check for custom shared ap configs
   find:
-    paths: "{{config_path}}vault/openwrt/shared/"
+    paths: "{{config_path}}vault/openwrt/shared_ap/"
     file_type: "file"
     recurse: yes
   delegate_to: 127.0.0.1
-  register: custom_shared_file_result
+  register: custom_shared_ap_file_result
 
-- name: prepare custom shared configs
+- name: prepare custom shared ap configs
   set_fact:
-    custom_shared_files: |
+    custom_shared_ap_files: |
       [
         {% for device in openwrt_devices %}
-          {% for file in custom_shared_file_result.files %}
-            { 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path | regex_replace(config_path + 'vault/openwrt/shared/','') }}' },
-          {% endfor %}
+          {% if 'ap' in device.config.roles %}{% for file in custom_shared_ap_file_result.files %}
+            { 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path | regex_replace(config_path + 'vault/openwrt/shared_ap/','') }}' },
+          {% endfor %}{% endif %}
         {% endfor %}
       ]
 
-- name: copy custom shared configs
+- name: check target paths
+  file:
+    dest: "{{item.dest | dirname}}"
+    state: "directory"
+  with_items: "{{custom_shared_ap_files}}"
+
+- name: copy custom shared ap configs
   template:
     src: "{{item.src}}"
     dest: "{{item.dest}}"
@@ -103,7 +115,7 @@
     group: "root"
     mode: "u=rwX,g=rX,o="
   changed_when: no
-  with_items: "{{custom_shared_files}}"
+  with_items: "{{custom_shared_ap_files}}"
 
 - name: check for custom host configs
   find:
@@ -124,6 +136,12 @@
         {% endfor %}
         {% endfor %}
       ]
+
+- name: check target paths
+  file:
+    dest: "{{item.dest | dirname}}"
+    state: "directory"
+  with_items: "{{custom_host_files}}"
 
 - name: copy custom host configs
   template:

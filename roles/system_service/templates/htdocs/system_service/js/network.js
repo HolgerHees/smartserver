@@ -38,13 +38,24 @@ mx.NetworkTooltip = (function( ret )
         if( !Array.isArray(rows) )
         {
             let _rows = [];
-            Object.entries(rows).forEach(function([key, value])
+            Object.entries(rows).forEach(function([key, _value])
             {
-                _rows.push({"name": key, "value": value});
+                if( typeof(_value) == "object" )
+                {
+                    value = _value["value"];
+                    format = _value["format"];
+                }
+                else
+                {
+                    value = _value;
+                    format = "string";
+                }
+
+                _rows.push({"name": key, "value": value, "format": format});
             });
             rows = _rows;
         }
-        
+
         let html = '';
         if( rows.length > 0)
         {
@@ -118,7 +129,7 @@ mx.NetworkTooltip = (function( ret )
         }
         if( device.info ) html += "<div><div>Info:</div><div>" + device.info + "</div></div>";
         html += "<div><div>Type:</div><div>" + device.type + "</div></div>";
-    
+
         html += _showRows(device.details,"Details","rows");
 
         services = [];
