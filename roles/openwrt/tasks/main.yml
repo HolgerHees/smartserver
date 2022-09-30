@@ -44,7 +44,7 @@
     recursive: yes
     rsync_opts:
       - "--chown=root:root"
-      - "--chmod=D750,F640"
+    #  - "--chmod=D750,F640"
   with_items: "{{openwrt_devices}}"
       
 - name: check for dynamic configs
@@ -61,7 +61,7 @@
       [
         {% for device in openwrt_devices %}
           {% for file in dynamic_shared_file_result.files %}
-            { 'name': '{{device.name}}', 'is_ap': {{'1' if 'ap' in device.config.roles else '0'}}, 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path | regex_replace('roles/openwrt/templates/config_ap_dynamic/','') }}' },
+            { 'name': '{{device.name}}', 'email': "{{root_email}}", 'is_ap': {{'1' if 'ap' in device.config.roles else '0'}}, 'src': '{{file.path}}', 'dest': '{{global_etc}}openwrt/ap/{{device.host}}/{{file.path | regex_replace('roles/openwrt/templates/config_ap_dynamic/','') }}' },
           {% endfor %}
         {% endfor %}
       ]

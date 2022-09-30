@@ -26,12 +26,16 @@ class OpenWRT(_handler.Handler):
         
         self.next_run = {}
         
+        self.devices = {}
+
+        self.active_vlans = {}
+
         self.has_wifi_networks = False
         self.wifi_networks = {}
-        
+
         self.wifi_associations = {}
         self.wifi_clients = {}
-        
+
         self.delayed_lock = threading.Lock()
         self.delayed_wifi_devices = {}
         self.delayed_wakeup_timer = None
@@ -44,12 +48,14 @@ class OpenWRT(_handler.Handler):
             if limit_openwrt_ip is not None and limit_openwrt_ip != openwrt_ip:
                 continue
             self.sessions[openwrt_ip] = [ None, datetime.now()]
-            self.next_run[openwrt_ip] = {"wifi_networks": now, "wifi_clients": now}
+            self.next_run[openwrt_ip] = {"interfaces": now, "wifi_networks": now, "wifi_clients": now}
 
     def _run(self):
         self._initNextRuns()
 
         for openwrt_ip in self.config.openwrt_devices:
+            self.active_vlans[openwrt_ip] = {}
+
             self.wifi_networks[openwrt_ip] = {}
 
             self.wifi_associations[openwrt_ip] = {}
@@ -115,12 +121,110 @@ class OpenWRT(_handler.Handler):
         
         ubus_session_id = self.sessions[openwrt_ip][0]
                             
+        if self.next_run[openwrt_ip]["interfaces"] <= datetime.now():
+            self._processInterfaces(openwrt_ip, ubus_session_id, events, openwrt_mac)
+
         if self.next_run[openwrt_ip]["wifi_networks"] <= datetime.now():
             self._processWifiNetworks(openwrt_ip, ubus_session_id, events, openwrt_mac)
                             
         if self.next_run[openwrt_ip]["wifi_clients"] <= datetime.now():  
             self._processWifiClients(openwrt_ip, ubus_session_id, events, openwrt_mac)
                 
+    def _processInterfaces(self, openwrt_ip, ubus_session_id, events, openwrt_mac):
+        now = datetime.now()
+        is_gateway = openwrt_mac == self.cache.getGatewayMAC()
+
+        self.next_run[openwrt_ip]["interfaces"] = now + timedelta(seconds=self.config.openwrt_client_interval if is_gateway else self.config.openwrt_network_interval)
+
+        self.cache.lock(self)
+
+        if is_gateway:
+            openhab_device = self.cache.getDevice(openwrt_mac)
+            openhab_device.addHopConnection(Connection.ETHERNET, self.cache.getWanMAC(), self.cache.getWanInterface() );
+            self.cache.confirmDevice( openhab_device, lambda event: events.append(event) )
+
+        _active_vlans = {}
+        _interfaces = {}
+        device_result = self._getDevices(openwrt_ip, ubus_session_id)
+
+        wan_stats = { "max_up": 0, "max_down": 0, "sum_sent": 0, "sum_received": 0 }
+        lan_stats = { "max_up": 0, "max_down": 0, "sum_sent": 0, "sum_received": 0 }
+
+        for device_name in device_result:
+            _device = device_result[device_name]
+
+            if is_gateway:
+                if device_name[0:3] == "br-" and "speed" in _device:
+                #if "bridge-members" in _device and ("wan" in _device["bridge-members"] or "lan" in _device["bridge-members"]):
+                    is_wan = True if device_name == "br-wan" else False
+                    _ref = wan_stats if is_wan else lan_stats
+
+                    #logging.info(_device)
+                    #logging.info(is_wan)
+                    #logging.info(_ref)
+
+                    speed = _device["speed"][:-1]
+                    if _ref["max_up"] < int(speed):
+                        _ref["max_up"] = int(speed)
+                        _ref["max_down"] = int(speed)
+
+                    _ref["sum_sent"] += int(_device["statistics"]["tx_bytes"])
+                    _ref["sum_received"] += int(_device["statistics"]["rx_bytes"])
+
+                    #logging.info(str(stat.getSerializeable()))
+
+            if "bridge-vlans" in _device:
+                for vlan in _device["bridge-vlans"]:
+                    for port in vlan["ports"]:
+                        _active_vlans[port] = vlan["id"]
+
+        if is_gateway:
+            for is_wan in [True,False]:
+                #link_state = {'up': int(speed), 'down': int(speed)}
+                #traffic_state = {'sent': int(_device["statistics"]["tx_bytes"]), 'received': int(_device["statistics"]["rx_bytes"])}
+
+                _ref = wan_stats if is_wan else lan_stats
+
+                if is_wan:
+                    stat = self.cache.getConnectionStat(self.cache.getWanMAC(), self.cache.getWanInterface() )
+                    stat_data = stat.getData()
+                    stat_data.setDetail("wan_type","Ethernet", "string")
+                    stat_data.setDetail("wan_state","Up" if _device["up"] else "Down", "string")
+                else:
+                    stat = self.cache.getConnectionStat(openwrt_mac, self.cache.getGatewayInterface(self.config.default_vlan) )
+                    stat_data = stat.getData()
+
+                interface = "wan" if is_wan else "lan"
+
+                if openwrt_ip in self.devices and interface in self.devices[openwrt_ip]:
+                    time_diff = (now - self.devices[openwrt_ip][interface]).total_seconds()
+
+                    in_bytes = stat_data.getInBytes()
+                    if in_bytes is not None:
+                        byte_diff = _ref["sum_received"] - in_bytes
+                        if byte_diff > 0:
+                            stat_data.setInAvg(byte_diff / time_diff)
+
+                    out_bytes = stat_data.getOutBytes()
+                    if out_bytes is not None:
+                        byte_diff = _ref["sum_sent"] - out_bytes
+                        if byte_diff > 0:
+                            stat_data.setOutAvg(byte_diff / time_diff)
+
+                stat_data.setInBytes(_ref["sum_received"])
+                stat_data.setOutBytes(_ref["sum_sent"])
+                stat_data.setInSpeed(_ref["max_down"] * 1000000)
+                stat_data.setOutSpeed(_ref["max_up"] * 1000000)
+                self.cache.confirmStat( stat, lambda event: events.append(event) )
+
+                _interfaces[interface] = now
+
+        self.cache.unlock(self)
+
+        self.devices[openwrt_ip] = _interfaces
+
+        self.active_vlans[openwrt_ip] = _active_vlans
+
     def _processWifiNetworks(self, openwrt_ip, ubus_session_id, events, openwrt_mac):
         self.next_run[openwrt_ip]["wifi_networks"] = datetime.now() + timedelta(seconds=self.config.openwrt_network_interval)
 
@@ -129,16 +233,6 @@ class OpenWRT(_handler.Handler):
             self.wifi_networks[openwrt_ip] = {}
         else:
             wifi_network_changed = False
-
-            _active_vlans = {}
-            device_result = self._getDevices(openwrt_ip, ubus_session_id)
-            for device_name in device_result:
-                _device = device_result[device_name]
-                if "bridge-vlans" not in _device:
-                    continue
-                for vlan in _device["bridge-vlans"]:
-                    for port in vlan["ports"]:
-                        _active_vlans[port] = vlan["id"]
 
             _active_networks = {}
             for wifi_network_name in wifi_network_result:
@@ -172,7 +266,7 @@ class OpenWRT(_handler.Handler):
                         "band": band,
                         "channel": channel,
                         "priority": priority,
-                        "vlan": _active_vlans[ifname] if ifname in _active_vlans else self.config.default_vlan,
+                        "vlan": self.active_vlans[openwrt_ip][ifname] if ifname in self.active_vlans[openwrt_ip] else self.config.default_vlan,
                         "device": wifi_network_name
                     }
 

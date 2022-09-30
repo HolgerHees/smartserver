@@ -64,6 +64,10 @@ connectivity() {
   fi
 }
 
+if [[ -n $1 ]]; then
+  IP=$1
+fi
+
 SOURCE=`dirname "$0"`
 
 connectivity
@@ -103,7 +107,7 @@ if [[ "$IS_AP" == 1 ]]; then
 fi
 
 echo "Copy configs ..."
-sshpass -f <(printf '%s\n' $PASSWORD) scp -r $SOURCE/$IP/* root@$IP:/
+sshpass -f <(printf '%s\n' $PASSWORD) scp -rp $SOURCE/$IP/* root@$IP:/
 
 #authenticate
 
