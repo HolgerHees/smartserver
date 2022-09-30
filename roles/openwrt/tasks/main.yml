@@ -158,5 +158,5 @@
     name: "openwrt"
     js_file: "templates/webui/openwrt.js"
     i18n_files: [ { language: "de", file: "templates/webui/openwrt.de.json" } ]
-    icons: [ 'templates/webui/icons/openwrt_logo.svg' ]
+    icons: []
   import_tasks: roles/apache_webui/tasks/add_webui.yml

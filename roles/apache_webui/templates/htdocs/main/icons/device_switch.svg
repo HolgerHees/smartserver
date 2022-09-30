@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   viewBox="0 0 16 16"
+   id="svg18"
+   sodipodi:docname="openwrt_switch.svg"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)">
+  <metadata
+     id="metadata24">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs22" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2560"
+     inkscape:window-height="1367"
+     id="namedview20"
+     showgrid="false"
+     inkscape:zoom="44.6875"
+     inkscape:cx="8"
+     inkscape:cy="8.3356643"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g15" />
+  <g
+     id="icon">
+    <g
+       transform="matrix(.025 0 0 .025 .40633 1.9378)"
+       id="g15">
+      <g
+         id="g873"
+         transform="translate(0,-160)">
+        <path
+           d="M 15,8.5 C 6.1855022,8.541294 4.8109216,8.50934 1,8.5 0.44775,8.5 0,8.94769 0,9.5 v 5 c 0,0.55231 0.44775,1 1,1 h 14 c 0.55225,0 1,-0.44769 1,-1 v -5 c 0,-0.55231 -0.44775,-1 -1,-1 z m -1,5 H 2 v -3 h 12 z"
+           stroke-width="0.03125"
+           id="path11"
+           sodipodi:nodetypes="ccsssssscccccc"
+           transform="matrix(40,0,0,40,-16.2532,-77.512)" />
+        <circle
+           id="circle16"
+           cx="128"
+           cy="402"
+           r="32" />
+        <circle
+           id="circle18"
+           cx="224"
+           cy="402"
+           r="32" />
+        <circle
+           id="circle16-3"
+           cx="382.96967"
+           cy="401.89996"
+           r="32"
+           style="stroke-width:1" />
+        <circle
+           id="circle18-6"
+           cx="478.96964"
+           cy="401.89996"
+           r="32"
+           style="stroke-width:1" />
+      </g>
+    </g>
+  </g>
+</svg>
