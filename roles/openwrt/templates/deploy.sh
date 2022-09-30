@@ -114,6 +114,9 @@ sshpass -f <(printf '%s\n' $PASSWORD) scp -rp $SOURCE/$IP/* root@$IP:/
 echo "Apply hostname and timezone ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.hostname='$HOSTNAME' & uci set system.cfg01e48a.zonename='$TIMEZONE' & uci commit;"
 
+echo "Force web redirect ..."
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set uhttpd.main.redirect_https='on' & uci commit;"
+
 #/etc/init.d/rpcd restart
 #/etc/init.d/snmpd restart
 
