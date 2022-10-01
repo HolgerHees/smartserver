@@ -28,7 +28,7 @@ default_variables: {
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
     "pihole_ip":      { "default": None },                        # pihole ip address from same network as your server ip => 'None' means disabled
-    "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] },
+    "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] }, # domains are needed to use google search results
 
     "dlna_ip":        { "default": None },                        # dlna ip address from same network as your server ip => 'None' means disabled
 
