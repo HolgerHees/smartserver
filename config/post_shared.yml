@@ -11,7 +11,8 @@ vpn_cloud_services:               "{
       \"bridge\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.1\",
       \"gateway\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2\",
       \"nfs\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.3\",
-      \"mosquitto\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.4\"
+      \"mosquitto\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.4\",
+      \"check\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.100\"
   },
   \"remote\": {
       {% for peer in cloud_vpn.peers %}

@@ -1,0 +1,74 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{global_etc}}cloud_check/"
+
+- name: build docker image
+  vars:
+    name: "cloud_check"
+    image_name: "custom_cloud_check"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/cloud_check/templates/container/Dockerfile
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: cloud_check
+    image: "custom_cloud_check:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: cloud_check
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "cloud_vpn"
+        ipv4_address: "{{vpn_cloud_services.local.check}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}cloud_check/:/etc/cloud_check:ro,z'
+  notify: "restart cloud_check"
+
+- name: copy service
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/config.py", dest: "{{global_etc}}cloud_check/config.py" }
+    - { src: "/etc/daemon.py", dest: "{{global_etc}}cloud_check/daemon.py" }
+  notify: "restart cloud_check"
+
+# ***** FINALIZE *****
+- name: allow cloud_check service
+  vars:
+    name: "cloud"
+    rule: "saddr {{vpn_cloud_services.local.check}}"
+    is_docker: True
+  import_tasks: roles/firewall/tasks/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+- name: create systemd service
+  vars:
+    container_name: "cloud_check"
+    container_routes:
+      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
+    container_after: [ "cloud_mosquitto" ]
+  import_tasks: roles/container/tasks/add_docker_service.yml
+
+- name: trigger cloud_check handler
+  vars:
+    notify: "restart cloud_check"
+    service: "cloud_check.service"
+  import_tasks: roles/_shared/tasks/service_check.yml

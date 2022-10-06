@@ -1,0 +1,8 @@
+- name: restart cloud_check
+  systemd:
+    name: cloud_check
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart cloud_check"
