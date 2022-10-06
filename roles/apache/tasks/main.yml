@@ -98,10 +98,10 @@
     group: "{{system_groups['www'].name}}"
     mode: 0750
   with_items:
-    - "{{htdocs_path}}letsencrypt"
-    - "{{htdocs_path}}letsencrypt/.well-known"
-    - "{{htdocs_path}}fallback"
-    - "{{htdocs_path}}fallback/domain"
+    - "{{htdocs_path}}_public"
+    - "{{htdocs_path}}_public/.well-known"
+    - "{{htdocs_path}}_fallback"
+    - "{{htdocs_path}}_fallback/domain"
     - "{{global_log}}apache2/"
     - "{{global_etc}}apache2/_.ansible.auth/"
     - "{{global_etc}}apache2/_.ansible.vhost.d/auth/"
@@ -170,7 +170,7 @@
 
 - name: synchronize login form
   synchronize:
-    src: "templates/htdocs/auth"
+    src: "templates/htdocs/_auth"
     dest: "{{htdocs_path}}"
     archive: no
     checksum: yes
@@ -184,8 +184,8 @@
 
 - name: copy domain fallback
   template:
-    src: "templates/htdocs/fallback/{{item}}"
-    dest: "{{htdocs_path}}fallback/{{item}}"
+    src: "templates/htdocs/_fallback/{{item}}"
+    dest: "{{htdocs_path}}_fallback/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
@@ -193,6 +193,14 @@
     - error.php
     - domain/index.html
     - domain/style.css
+
+- name: copy state file
+  copy:
+    src: "templates/htdocs/_public/state"
+    dest: "{{htdocs_path}}_public/state"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0644
 
 - name: build docker image
   vars:

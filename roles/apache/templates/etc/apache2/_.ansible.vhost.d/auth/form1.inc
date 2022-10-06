@@ -6,7 +6,7 @@ RewriteMap lookupFullname "txt:/etc/apache2/_.ansible.auth/auth_user_fullnames.t
     AuthFormUsername bw_username
     AuthFormPassword bw_password
     AuthFormLocation bw_url
-    ErrorDocument 401 /auth/login.html
+    ErrorDocument 401 /_auth/login.html
 
     AuthName "Authentication required"
 

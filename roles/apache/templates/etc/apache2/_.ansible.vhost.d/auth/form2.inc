@@ -1,14 +1,14 @@
-Alias /auth/relogin/ "{{htdocs_path}}auth/relogin.html"
-Alias /auth/ "{{htdocs_path}}auth/"
+Alias /_auth/relogin/ "{{htdocs_path}}_auth/relogin.html"
+Alias /_auth/ "{{htdocs_path}}_auth/"
 
-<Location "/auth/">
+<Location "/_auth/">
     ProxyPass !
     Require all granted
 </Location>
 
-<Location "/auth/logout/">
+<Location "/_auth/logout/">
     SetHandler form-logout-handler
-    AuthFormLogoutLocation "/auth/relogin/"
+    AuthFormLogoutLocation "/_auth/relogin/"
 
     Session on
     SessionCryptoPassphrase {{vault_form_auth_passphrase}}

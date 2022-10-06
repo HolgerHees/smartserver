@@ -263,7 +263,7 @@ require "./shared/libs/ressources.php";
                 <svg transform="scale(1)" enable-background="new 0 0 91 91" fill="currentColor" stroke="currentColor" version="1.1" viewBox="0 0 91 91" xmlns="http://www.w3.org/2000/svg"><g transform="translate(-1.995 -1.162)"><rect x="27.594" y="31.362" width="39.802" height="3.4"/><rect x="27.594" y="44.962" width="39.802" height="3.4"/><rect x="27.594" y="58.562" width="39.802" height="3.4"/></g></svg>
 
             </div>
-            <div class="logout button" onclick="document.location.href='/auth/logout/'">
+            <div class="logout button" onclick="document.location.href='/_auth/logout/'">
                 <svg version="1.1" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="m31.5 42h-16.334c-0.7 0-1.1657-0.46572-1.1657-1.1657v-25.669c0-0.7 0.46572-1.1657 1.1657-1.1657h16.334c0.7 0 1.1657 0.46572 1.1657 1.1657v8.1657c0 0.7-0.46572 1.1657-1.1657 1.1657s-1.1657-0.46572-1.1657-1.1657v-7h-14v23.334h14v-7c0-0.7 0.46571-1.1657 1.1657-1.1657s1.1657 0.46571 1.1657 1.1657v8.1657c0 0.70286-0.46572 1.1686-1.1657 1.1686z"/><path fill="currentColor" d="m40.834 29.166h-17.5c-0.7 0-1.1657-0.46571-1.1657-1.1657s0.46571-1.1657 1.1657-1.1657h17.5c0.7 0 1.1657 0.46571 1.1657 1.1657s-0.46572 1.1657-1.1657 1.1657z"/><path fill="currentColor" d="m40.834 29.166c-0.35143 0-0.58286-0.11714-0.81714-0.35143l-4.6657-4.6629c-0.46571-0.46571-0.46571-1.1657 0-1.6343 0.46571-0.46572 1.1657-0.46572 1.6343 0l4.6657 4.6657c0.46572 0.46571 0.46572 1.1657 0 1.6343-0.23428 0.23429-0.46857 0.34857-0.81714 0.34857z"/><path fill="currentColor" d="m36.165 33.834c-0.35143 0-0.58286-0.11714-0.81714-0.35143-0.46572-0.46571-0.46572-1.1657 0-1.6343l4.6657-4.6657c0.46572-0.46571 1.1657-0.46571 1.6343 0 0.46571 0.46571 0.46571 1.1657 0 1.6343l-4.6657 4.6657c-0.23143 0.23429-0.46572 0.35143-0.81714 0.35143z"/></svg>
             </div>
         </div>
@@ -272,7 +272,7 @@ require "./shared/libs/ressources.php";
             if( !isset($_SERVER['AUTH_TYPE']) || $_SERVER['AUTH_TYPE'] != "Basic" )
             {
         ?>
-        <a class="logout form button" href="/auth/logout/" data-i18n="Logout"></a>
+        <a class="logout form button" href="/_auth/logout/" data-i18n="Logout"></a>
         <?php
             }
         ?>
