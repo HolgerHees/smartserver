@@ -128,11 +128,11 @@ class Handler(object):
                             break
 
                         if peer not in self.mount_last_notified or (datetime.now() - self.mount_last_notified[peer]).total_seconds() > 3600:
-                            print("Peer '{}' mount problem".format(peer), flush=True, file=sys.stderr)
+                            print("Cloud nfs mount from peer '{}' has problem".format(peer), flush=True, file=sys.stderr)
                             self.mount_last_notified[peer] = datetime.now()
 
                     elif peer in self.mount_last_notified:
-                        print("Peer '{}' mount available again".format(peer), flush=True)
+                        print("Cloud nfs mount from peer '{}' is available again".format(peer), flush=True)
                         del self.mount_last_notified[peer]
 
                 sleep_time = 60
