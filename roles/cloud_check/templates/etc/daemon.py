@@ -33,18 +33,20 @@ class Handler(object):
         
         while True:
             error_count = 0
-          
+
+            published = {}
             try:
                 for peer in config.cloud_peers:
                     host = config.cloud_peers[peer]
                     is_reachable = 0
                     try:
-                        #self.log.info("http://{}/state".format(host))
-                        response = requests.get("http://{}/state".format(host))
+                        #print("http://{}/state".format(host))
+                        response = requests.get("http://{}/state".format(host), allow_redirects = False, timeout = 5 )
                         #self.log.info("{} {} {}".format(peer,response_code == 200,response_body == "online"))
                         is_reachable = 2 if response.status_code == 200 and response.text.rstrip() == "online" else 1
                         #self.log.info("{}".format(is_reachable))
                     except Exception as e:
+                        #print(e)
                         #state_result = Exec.executeCommandLine(Duration.ofSeconds(100),"/usr/bin/wget","-O", "-", "http://{}/state".format(host))
                         #self.log.error(state_result)
                         #self.log.error(u"network cloud ({}) http data exception: {}".format(peer,e))
@@ -52,17 +54,17 @@ class Handler(object):
 
                     if is_reachable == 0:
                         try:
-                            result = subprocess.run({["/bin/ping","-W", "5", "-c", "1", host], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-                            print(result.returncode)
+                            result = subprocess.run(["/bin/ping","-W", "5", "-c", "1", host], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
                             if result.returncode == 0:
                                 is_reachable = 1
                         except Exception as e:
                             print(u"network cloud ({}) ping data exception: {}".format(peer,e))
                             pass
 
-                    print("{} {}".format(peer,is_reachable))
+                    #print("{} {}".format(peer,is_reachable))
 
-                    self.mqtt_client.publish("{}/{}/cloud/peer/".format(config.peer_name,peer), payload=is_reachable, qos=0, retain=False)
+                    published[peer] = is_reachable
+                    self.mqtt_client.publish("{}/cloud/peer/{}/".format(config.peer_name,peer), payload=is_reachable, qos=0, retain=False)
 
                 sleep_time = 60
 
@@ -77,14 +79,13 @@ class Handler(object):
                 except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
                     print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=sys.stderr)
 
-            print("Sleep {} seconds".format(sleep_time),flush=True)
+            print("Published: {}, Sleep now for {} seconds".format(published, sleep_time),flush=True)
             time.sleep(sleep_time)
 
             #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
 
     def on_connect(self,client,userdata,flags,rc):
         print("Connected to mqtt with result code:"+str(rc), flush=True)
-        client.subscribe('+/weather/#')
         
     def on_disconnect(self,client, userdata, rc):
         print("Disconnect from mqtt with result code:"+str(rc), flush=True)

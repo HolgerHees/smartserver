@@ -36,6 +36,7 @@
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}cloud_check/:/etc/cloud_check:ro,z'
+      - '{{cloud_path}}/remote:/cloud/remote:z,ro'
   notify: "restart cloud_check"
 
 - name: copy service
@@ -53,8 +54,10 @@
 # ***** FINALIZE *****
 - name: allow cloud_check service
   vars:
-    name: "cloud"
-    rule: "saddr {{vpn_cloud_services.local.check}}"
+    name: "wireguard.cloud_check"
+    rules:
+        - "outerface {{main_network_interface}} saddr {{vpn_cloud_services.local.check}} proto tcp dport 80"
+        - "outerface {{main_network_interface}} saddr {{vpn_cloud_services.local.check}} proto icmp"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]

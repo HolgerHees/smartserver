@@ -9,7 +9,7 @@
 - { import_role: { name: cloud_check }, tags: [ 'cloud_check', 'alpine' ] }
 #- { import_role: { name: cloud_backup }, tags: [ 'cloud_backup' ], vars: { cloud_backup_sync_target_path: "{{cloud_path}}remote/<client1>/" } }
 
-- { import_role: { name: weather_forecast }, tags: [ 'weather_forecast', 'alpine' ], vars: { publish_topic: no } } 
+- { import_role: { name: weather_forecast }, tags: [ 'weather_forecast', 'alpine' ], vars: { publish_topic: no } }
 
 # *** OPTIONAL OTHERS ***
 #- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'alpine' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]
