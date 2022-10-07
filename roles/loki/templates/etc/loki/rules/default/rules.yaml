@@ -9,7 +9,7 @@
                 {level="ERROR"}
                 # extract the entire log line as a label
                 | regexp `(?P<log>(?s).+)`
-                [60m]
+                [2m]
               )
             )
             > 0.0
@@ -23,7 +23,7 @@
                 {level="ALERT"}
                 # extract the entire log line as a label
                 | regexp `(?P<log>(?s).+)`
-                [60m]
+                [2m]
               )
             )
             > 0.0
