@@ -123,7 +123,7 @@ class PeerJob(threading.Thread):
                         #print("{} {}".format(self.peer,running_state))
                         if self.last_running_state != running_state:
                             print("New state for pear '{}' is '{}'".format(self.peer, running_state),flush=True)
-                        self.mqtt_client.publish("{}/cloud/peer/{}/".format(config.peer_name,self.peer), payload=running_state, qos=0, retain=False)
+                        self.mqtt_client.publish("{}/cloud/peer/{}".format(config.peer_name,self.peer), payload=running_state, qos=0, retain=False)
                         self.last_running_state = running_state
 
                         if running_state == 2:
