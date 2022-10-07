@@ -21,6 +21,8 @@ class Helper(object):
         try:
             result = subprocess.run(["/bin/ping","-W", str(timeout), "-c", "1", host], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
             is_success = result.returncode == 0
+            #if not is_success:
+            #    print("Polling host '{}' was not successful. CODE: {}, BODY: {}".format(host, result.returncode, result.stdout))
         except Exception as e:
             is_success = False
 
@@ -74,6 +76,7 @@ class PeerJob(threading.Thread):
             running_state = 2 if response.status_code == 200 and response.text.rstrip() == "online" else 1
         except requests.exceptions.ConnectionError as e:
             running_state = 0
+            print("State check connection error {} - {}".format(type(e), str(e)), flush=True)
         except Exception as e:
             running_state = 0
             print("State check exception {} - {}".format(type(e), str(e)), flush=True, file=sys.stderr)
@@ -92,7 +95,7 @@ class PeerJob(threading.Thread):
         return is_success
 
     def run(self):
-        print("Polling job for peer '{}' is initialized".format(self.peer))
+        #print("Polling job for peer '{}' is initialized".format(self.peer))
 
         error_count = 0
         while self.is_running:
@@ -112,7 +115,7 @@ class PeerJob(threading.Thread):
                         running_state = 1
 
                     if running_state == 0:
-                        self.is_suspended = True
+                        self.is_suspended = None
 
                         self.handler.forceOnlineCheck()
                         self.event.wait()
@@ -156,19 +159,25 @@ class PeerJob(threading.Thread):
         if self.is_suspended:
             return
 
+        show_log = self.is_suspended is not None
+
         self.is_suspended = True
         self.event.set()
 
-        print("Suspend polling job for peer '{}'".format(self.peer))
+        if show_log:
+            print("Suspend polling job for peer '{}'".format(self.peer))
 
     def resume(self):
-        if not self.is_suspended:
+        if self.is_suspended is not None and not self.is_suspended:
             return
+
+        show_log = self.is_suspended is not None
 
         self.is_suspended = False
         self.event.set()
 
-        print("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= 0 else "Start", self.peer))
+        if show_log:
+            print("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= 0 else "Start", self.peer))
 
     def terminate(self):
         self.is_running = False
