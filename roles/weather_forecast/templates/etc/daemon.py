@@ -1,424 +1,330 @@
 import signal
+import threading
 import paho.mqtt.client as mqtt
 import sys
+import subprocess
 
 import traceback
 
-import MySQLdb
-
-from datetime import datetime, timedelta
-from pytz import timezone
 import time
+from datetime import datetime
 
 import requests
-import urllib.parse
-import json
-import decimal
 
 import config
 
-token_url    = "https://auth.weather.mg/oauth/token"
-current_url  = 'https://point-observation.weather.mg/search?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
-current_fields = [
-    "airTemperatureInCelsius", 
-    "feelsLikeTemperatureInCelsius",
-    "relativeHumidityInPercent",
-    "windSpeedInKilometerPerHour",
-    "windDirectionInDegree",
-    "effectiveCloudCoverInOcta"
-]
+check_interval = 60
+grouped_message_timeout = 900
 
-forecast_url = 'https://point-forecast.weather.mg/search?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
-forecast_config = {
-	'PT0S': [
-		"airTemperatureInCelsius", 
-		"feelsLikeTemperatureInCelsius", 
-        "relativeHumidityInPercent",
-		"windSpeedInKilometerPerHour", 
-		"windDirectionInDegree", 
-		"effectiveCloudCoverInOcta", 
-		"thunderstormProbabilityInPercent",
-		"freezingRainProbabilityInPercent",
-		"hailProbabilityInPercent",
-		"snowfallProbabilityInPercent",
-		"precipitationProbabilityInPercent",
-		# https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
-		"precipitationType"
-	],
-	'PT1H': [
-		"precipitationAmountInMillimeter", 
-		"sunshineDurationInMinutes"
-	],
-	'PT3H': [
-		"maxWindSpeedInKilometerPerHour"
-	]
-}
-    
-summeryOffsets = [0,4,8]
-summeryFields = ["airTemperatureInCelsius","effectiveCloudCoverInOcta"]
+class Helper(object):
+    lastNotified = {}
 
-class AuthException(Exception):
-    pass
+    @staticmethod
+    def ping(host, timeout):
+        try:
+            result = subprocess.run(["/bin/ping","-W", str(timeout), "-c", "1", host], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+            is_success = result.returncode == 0
+            #if not is_success:
+            #    print("Polling host '{}' was not successful. CODE: {}, BODY: {}".format(host, result.returncode, result.stdout))
+        except Exception as e:
+            is_success = False
 
-class RequestDataException(Exception):
-    pass
+        return is_success
 
-class CurrentDataException(RequestDataException):
-    pass
-  
-class ForecastDataException(RequestDataException):
-    pass
+    @staticmethod
+    def logInfo(msg, end="\n"):
+        print(msg, end=end, flush=True)
 
-class MySQL(object):
-    def getFullDaySQL():
-        return "SELECT * FROM {} WHERE `datetime` >= NOW() AND `datetime` <= DATE_ADD(NOW(), INTERVAL 24 HOUR) ORDER BY `datetime` ASC".format(config.db_table)
+    @staticmethod
+    def logError(msg, end="\n"):
+        print(msg, end=end, flush=True, file=sys.stderr)
 
-    def getOffsetSQL(offset):
-        return "SELECT * FROM {} WHERE `datetime` > DATE_ADD(NOW(), INTERVAL {} HOUR) ORDER BY `datetime` ASC LIMIT 1".format(config.db_table,offset-1)
-
-    def getEntrySQL(timestamp):
-        return u"SELECT * FROM {} WHERE `datetime`=from_unixtime({})".format(config.db_table,timestamp)
-      
-    def getUpdateSQL(timestamp,fields):
-        return u"UPDATE {} SET {} WHERE `datetime`=from_unixtime({})".format(config.db_table,",".join(fields),timestamp)
-    
-    def getInsertUpdateSQL(timestamp,fields):
-        insert_values = [ u"`datetime`=from_unixtime({})".format(timestamp) ]
-        insert_values.extend(fields)
-        return u"INSERT INTO {} SET {} ON DUPLICATE KEY UPDATE {}".format(config.db_table,",".join(insert_values),",".join(fields))
-    
-class Fetcher(object):
-    def getAuth(self):
-      
-        fields = {'grant_type': 'client_credentials'};
-      
-        r = requests.post(token_url, data=fields, auth=(config.api_username, config.api_password))
-        if r.status_code != 200:
-            raise AuthException("Failed getting auth token. Code: {}, Raeson: {}".format(r.status_code, r.reason))
+    @staticmethod
+    def logGroupedMsg(group, msg, timeout = None):
+        if timeout is None:
+            if group in Helper.lastNotified:
+                Helper.logInfo(msg)
+                del Helper.lastNotified[group]
         else:
-            data = json.loads(r.text)
-            if "access_token" in data:
-                return data["access_token"]
-            
-        raise AuthException("Failed getting auth token. Content: {}".format(r.text))
-      
-    def get(self, url, token):
-      
-        headers = {"Authorization": "Bearer {}".format(token)}
-        r = requests.get(url, headers=headers)
-        if r.status_code != 200:
-            raise RequestDataException("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.reason))
-        else:
-            return json.loads(r.text)
-      
-    def fetchCurrent(self, token, mqtt_client ):
-        
-        date = datetime.now(timezone(config.timezone))
-        end_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
-        end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
-        
-        date = date - timedelta(hours=2)
-        start_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
-        start_date = u"{0}:{1}".format(start_date[:-2],start_date[-2:])
-        
-        latitude, longitude = config.location.split(",")
-        location = u"{},{}".format(longitude,latitude)
-        
-        url = current_url.format(location=location, period="PT0S", fields=",".join(current_fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
-        
-        data = self.get(url,token)
-        if "observations" not in data:
-            raise CurrentDataException("Failed getting current data. Content: {}".format(data))
-        else:
-            data["observations"].reverse()
-            observedFrom = None
-            for observation in data["observations"]:
-                if len(observation) != 10:
-                    continue
-                  
-                for field in current_fields:
-                    mqtt_client.publish("{}/weather/current/{}".format(config.publish_topic,field), payload=observation[field], qos=0, retain=False)            
-                observedFrom = observation["observedFrom"]
+            if group not in Helper.lastNotified or (datetime.now() - Helper.lastNotified[group]).total_seconds() > timeout:
+                Helper.logError(msg)
+                Helper.lastNotified[group] = datetime.now()
+
+class PeerJob(threading.Thread):
+    '''Device client'''
+    def __init__(self, peer, data, mqtt_client, handler):
+        threading.Thread.__init__(self)
+
+        self.is_running = True
+        self.is_suspended = True
+
+        self.peer = peer
+        self.data = data
+
+        self.mqtt_client = mqtt_client
+        self.handler = handler
+
+        self.event = threading.Event()
+
+        self.last_notified = None
+        self.has_mount_error = False
+        self.has_state_error = False
+        self.has_ping_error = False
+
+        self.last_running_state = -1
+
+    def _getTimeout(self,has_error):
+        if has_error:
+            return 1
+        return 5
+
+    def _checkmount(self, peer):
+        try:
+            result = subprocess.run(["/bin/mountpoint","-q","/cloud/remote/{}".format(peer)], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout = self._getTimeout(self.has_mount_error) )
+            is_success = result.returncode == 0
+        except Exception as e:
+            is_success = False
+            Helper.logError("Mount check exception {} - {}".format(type(e), str(e)))
+
+        self.has_mount_error = not is_success
+        return is_success
+
+    def _checkstate(self, peer, host):
+        try:
+            #print("http://{}/state".format(host))
+            response = requests.get("http://{}/state".format(host), allow_redirects = False, timeout = self._getTimeout(self.has_state_error) )
+            #print("{} {}".format(response.status_code,response.text))
+            #self.log.info("{} {} {}".format(host,response_code == 200,response_body == "online"))
+            running_state = 2 if response.status_code == 200 and response.text.rstrip() == "online" else 1
+        except requests.exceptions.ConnectionError as e:
+            running_state = 0
+            Helper.logInfo("State check connection error {} - {}".format(type(e), str(e)))
+        except Exception as e:
+            running_state = 0
+            Helper.logError("State check exception {} - {}".format(type(e), str(e)))
+
+        self.has_state_error = running_state == 0
+        return running_state
+
+    def _ping(self, peer, host):
+        try:
+            is_success = Helper.ping(host, self._getTimeout(self.has_ping_error))
+        except Exception as e:
+            is_success = False
+            Helper.logError("Ping check exception {} - {}".format(type(e), str(e)))
+
+        self.has_ping_error = not is_success
+        return is_success
+
+    def run(self):
+        #print("Polling job for peer '{}' is initialized".format(self.peer))
+
+        error_count = 0
+        while self.is_running:
+            sleep_time = check_interval
+
+            if not self.is_suspended:
+                try:
+                    start = time.time()
+
+                    host = self.data["host"]
+
+                    # CHECK STATE URL
+                    running_state = self._checkstate(self.peer, host)
+
+                    # CHECK PING
+                    if running_state == 0 and self._ping(self.peer, host):
+                        running_state = 1
+
+                    if running_state == 0:
+                        self.is_suspended = None
+
+                        self.handler.forceOnlineCheck()
+                        self.event.wait()
+                        self.event.clear()
+
+                    if self.handler.isOnline():
+                        # PUBLISH
+                        #print("{} {}".format(self.peer,running_state))
+                        if self.last_running_state != running_state:
+                            Helper.logInfo("New state for pear '{}' is '{}'".format(self.peer, running_state))
+                        self.mqtt_client.publish("{}/cloud/peer/{}".format(config.peer_name,self.peer), payload=running_state, qos=0, retain=False)
+                        self.last_running_state = running_state
+
+                        if running_state == 2:
+                            # CHECK mountpoint
+                            if not self._checkmount(self.peer):
+                                Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' has problem".format(self.peer), grouped_message_timeout)
+                            else:
+                                Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' is available again".format(self.peer))
+
+                    end = time.time()
+                    sleep_time = sleep_time - (end-start)
+                    error_count = 0
+                except Exception as e:
+                    error_count += 1
+                    sleep_time = ( sleep_time * error_count ) if error_count < 6 else 360
+                    Helper.logError("Main loop exception {} - {}".format(type(e), str(e)))
+
+            if sleep_time > 0:
+                self.event.wait(sleep_time)
+            self.event.clear()
+
+            if not self.is_running:
                 break
-          
-            if observedFrom is None:
-                raise CurrentDataException("Failed processing current data. Content: {}".format(data))
-            else:
-                mqtt_client.publish("{}/weather/current/refreshed".format(config.publish_topic), payload=observedFrom, qos=0, retain=False)            
 
-            print("Current data published", flush=True)
-            
-    def fetchForecast(self, token, mqtt_client ):
-        date = datetime.now(timezone(config.timezone))
-        start_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
-        start_date = u"{0}:{1}".format(start_date[:-2],start_date[-2:])
-        
-        date = date + timedelta(hours=169) # 7 days + 1 hour
-        end_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
-        end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
+    def getPeer(self):
+        return self.peer
 
-        latitude, longitude = config.location.split(",")
-        location = u"{},{}".format(longitude,latitude)
-        
-        entries = {}
-        for period in forecast_config:
-            fields = forecast_config[period]
-            url = forecast_url.format(location=location, period=period, fields=",".join(fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
-                   
-            data = self.get(url,token)
-            if data == None or "forecasts" not in data:
-                raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
-              
-            for forecast in data["forecasts"]:
-                key = forecast["validFrom"]
-                if key not in entries:
-                    values = {} 
-                    values["validFrom"] = forecast["validFrom"]
-                    entries[key] = values
-                else:
-                    values = entries[key];
-                    
-                for field in fields:
-                    values[field] = forecast[field]
-                
-        sets = []
-        for key in sorted(entries.keys()):
-            sets.append(entries[key])
-            
-        for field in forecast_config["PT3H"]:
-            value = None
-            for values in sets:
-                if field in values:
-                    value = values[field]
-                elif value != None:
-                    values[field] = value
-                else:
-                    raise ForecastDataException("Missing PT3H value")
-          
-        sets = list(filter(lambda d: len(d) == 16, sets))
-        
-        if len(sets) < 168:
-            raise ForecastDataException("Not enough forecast data. Count: {}".format(len(sets)))
+    def isOnline(self):
+        return self.last_running_state == 2
 
-        for forecast in sets:
-            date = forecast["validFrom"]
-            forecast.pop("validFrom") 
-            date = date.replace("+","plus")
-            for field in forecast:
-                mqtt_client.publish("{}/weather/forecast/{}/{}".format(config.publish_topic,field,date), payload=forecast[field], qos=0, retain=False)  
-            #mqtt_client.publish("{}/weather/forecast/refreshed/{}".format(config.publish_topic,date), payload="1", qos=0, retain=False)            
-        mqtt_client.publish("{}/weather/forecast/refreshed".format(config.publish_topic), payload="1", qos=0, retain=False)            
+    def suspend(self):
+        if self.is_suspended:
+            return
 
-        print("Forecast data published • Total: {}".format(len(sets)), flush=True)
+        show_log = self.is_suspended is not None
 
-    def triggerSummerizedItems(self, mqtt_client):
-        db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
-        cursor = db.cursor()
-        
-        cursor.execute(MySQL.getFullDaySQL())
-        result = cursor.fetchall() 
-        fields = list(map(lambda x:x[0], cursor.description))
-        
-        tmp = {}
-        for field in summeryFields:
-            tmp[field] = [ None, None, decimal.Decimal(0.0) ]
-        for data in result:
-            for field in summeryFields:
-                index = fields.index(field)
-                if tmp[field][0] == None:
-                    tmp[field][0] = decimal.Decimal(0.0) + data[index]
-                    tmp[field][1] = decimal.Decimal(0.0) + data[index]
-                else:
-                    if tmp[field][0] > data[index]:
-                        tmp[field][0] = data[index]
-                    if tmp[field][1] < data[index]:
-                        tmp[field][1] = data[index]
-                        
-                tmp[field][2] = tmp[field][2] + data[index]
-        for field in summeryFields:
-            tmp[field][2] = tmp[field][2] / len(result)
+        self.is_suspended = True
+        self.event.set()
 
-            mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
-            mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
-            mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
-        
-        for offset in summeryOffsets:            
-            cursor.execute(MySQL.getOffsetSQL(offset))
-            data = cursor.fetchone()
-            
-            fields = list(map(lambda x:x[0], cursor.description))
-            
-            for field in summeryFields:
-                index = fields.index(field)
-                mqtt_client.publish("{}/weather/items/{}/{}".format(config.publish_topic,field,offset), payload=str(data[index]).encode("utf-8"), qos=0, retain=False)
-        mqtt_client.publish("{}/weather/items/refreshed".format(config.publish_topic), payload="1", qos=0, retain=False)    
-            
-        cursor.close()
-        db.close()
-            
-        print("Summery data published", flush=True)
+        if show_log:
+            Helper.logInfo("Suspend polling job for peer '{}'".format(self.peer))
+
+    def resume(self):
+        if self.is_suspended is not None and not self.is_suspended:
+            return
+
+        show_log = self.is_suspended is not None
+
+        self.is_suspended = False
+        self.event.set()
+
+        if show_log:
+            Helper.logInfo("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= 0 else "Start", self.peer))
+
+    def terminate(self):
+        self.is_running = False
+        self.event.set()
+
+        Helper.logInfo("Terminate polling job for peer '{}'".format(self.peer))
 
 class Handler(object):
     '''Handler client'''
     def __init__(self):
+        self.is_online = False
+        self.is_checking = True
+
         self.mqtt_client = None
-        
-        self.current_values = None
-        self.forecast_values = None
-        
+
+        self.peer_jobs = {}
+        self.watched_topics = {}
+
+        self.event = threading.Event()
+
     def connectMqtt(self):
-        print("Connection to mqtt ...", end='', flush=True)
+        Helper.logInfo("Connection to mqtt ...", end='')
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
         self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
         self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
         self.mqtt_client.connect(config.mosquitto_host, 1883, 60)
-        print(" initialized", flush=True)
+        Helper.logInfo(" initialized")
         
         self.mqtt_client.loop_start()
-        
-    def loop(self):        
+
+    def isOnline(self):
+        return self.is_online
+
+    def forceOnlineCheck(self):
+        if self.is_checking:
+            return
+
+        self.is_checking = True
+        self.event.set()
+
+    def loop(self):
         #status = os.fdopen(self.dhcpListenerProcess.stdout.fileno())
         #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
         
+        for peer in config.cloud_peers:
+            host = config.cloud_peers[peer]
+            job = PeerJob(peer, {"host": host}, self.mqtt_client, self)
+            job.start()
+            self.peer_jobs[peer] = job
+
         while True:
-            error_count = 0
-          
-            try:
-                if config.publish_topic and config.api_username and config.api_password:
-                    fetcher = Fetcher()
+            if self.is_checking:
+                Helper.logInfo("Check internet connectivity")
+                self.is_online = Helper.ping("8.8.8.8", 5)
+                self.is_checking = False
 
-                    authToken = fetcher.getAuth()
+                if not self.is_online:
+                    Helper.logGroupedMsg("internet", "Internet is down", grouped_message_timeout)
 
-                    fetcher.fetchCurrent(authToken,self.mqtt_client)
-                    fetcher.fetchForecast(authToken,self.mqtt_client)
-                    fetcher.triggerSummerizedItems(self.mqtt_client)
-                
-                date = datetime.now(timezone(config.timezone))
-                target = date.replace(minute=5,second=0)
-                
-                if target <= date:
-                    target = target + timedelta(hours=1)
+                    for job in self.peer_jobs.values():
+                        job.suspend()
+                else:
+                    Helper.logGroupedMsg("internet", "Internet is up again")
 
-                diff = target - date
-                
-                sleepTime = diff.total_seconds()  
-                
-                error_count = 0                
-            except Exception as e:
-                error_count += 1
-                sleepTime = 600 * error_count if error_count < 6 else 3600
-                try:
-                    raise e
-                except (CurrentDataException,ForecastDataException) as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=(sys.stderr if error_count > 3 else sys.stdout))
-                except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=sys.stderr)
+                    for job in self.peer_jobs.values():
+                        job.resume()
 
-            print("Sleep {} seconds".format(sleepTime),flush=True)
-            time.sleep(sleepTime)
-
-            #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
+            self.event.wait(check_interval)
+            self.event.clear()
 
     def on_connect(self,client,userdata,flags,rc):
-        print("Connected to mqtt with result code:"+str(rc), flush=True)
-        client.subscribe('+/weather/#')
+        Helper.logInfo("Connected to mqtt with result code:"+str(rc))
+
+        self.watched_topics = {}
+        for peer in config.cloud_peers:
+            topic = "{}/cloud/peer/{}".format(config.peer_name,peer)
+            self.watched_topics[topic] = datetime.now()
+
+            topic = "{}/cloud/peer/{}".format(peer,config.peer_name)
+            self.watched_topics[topic] = datetime.now()
+
+            for _peer in config.cloud_peers:
+                if peer == _peer:
+                    continue
+
+                topic = "{}/cloud/peer/{}".format(peer,_peer)
+                self.watched_topics[topic] = datetime.now()
+
+        for peer in config.cloud_peers:
+            client.subscribe('+/cloud/peer/#')
         
     def on_disconnect(self,client, userdata, rc):
-        print("Disconnect from mqtt with result code:"+str(rc), flush=True)
+        Helper.logInfo("Disconnect from mqtt with result code:"+str(rc))
 
     def on_message(self,client,userdata,msg):
-        try:
-            #print("Topic " + msg.topic + ", message:" + str(msg.payload), flush=True)
-            topic = msg.topic.split("/")
-            if topic[2] == u"current":
-                if topic[3] == u"refreshed":
-                    db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
-                    cursor = db.cursor()
+        #print("Topic " + msg.topic + ", message:" + str(msg.payload), flush=True)
 
-                    datetime_str = msg.payload.decode("utf-8") 
-                    datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
-                    validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
-                    
-                    update_values = []
-                    for field in self.current_values:
-                        update_values.append("`{}`='{}'".format(field,self.current_values[field]))
-                        
-                    cursor.execute(MySQL.getEntrySQL(validFrom.timestamp()))
-                    if cursor.rowcount == 1:
-                        cursor.execute(MySQL.getUpdateSQL(validFrom.timestamp(),update_values))
-                        db.commit()        
-                        print(u"Current data processed • Updated {}".format( "yes" if cursor.rowcount != 0 else "no" ), flush=True)
-                    else:
-                        print(u"Current data not updated: Topic: " + msg.topic + ", message:" + str(msg.payload), flush=True, file=sys.stderr)
-                        
-                    self.current_values = None
+        self.watched_topics[msg.topic] = datetime.now()
 
-                    cursor.close()
-                    db.close()
-                else:
-                    if self.current_values is None:
-                        self.current_values = {}
-                    self.current_values[topic[3]] = msg.payload.decode("utf-8")
-            elif topic[2] == u"forecast":
-                if topic[3] == u"refreshed":
-                    if self.forecast_values is not None:
-                        db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
-                        cursor = db.cursor()
-                        
-                        updateCount = 0
-                        insertCount = 0
-                        for datetime_str in self.forecast_values:
-                            validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
+        missing_topics = []
+        for watched_topic in self.watched_topics:
+            if (datetime.now() - self.watched_topics[watched_topic]).total_seconds() < check_interval * 2:
+                continue
 
-                            update_values = []
-                            for field in self.forecast_values[datetime_str]:
-                                update_values.append(u"`{}`='{}'".format(field,self.forecast_values[datetime_str][field]))
-                                
-                            cursor.execute(MySQL.getEntrySQL(validFrom.timestamp()))
-                            isUpdate = True if cursor.rowcount == 1 else False
-                          
-                            cursor.execute(MySQL.getInsertUpdateSQL(validFrom.timestamp(),update_values))
-                            
-                            if cursor.rowcount > 0:
-                                if isUpdate:
-                                    updateCount += 1
-                                else:
-                                    insertCount += 1
-                            db.commit()        
-                            
-                        print("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.forecast_values),updateCount,insertCount), flush=True)
-                        
-                        self.forecast_values = None
+            peer = watched_topic.split("/")[0]
 
-                        cursor.close()
-                        db.close()
-                    else:
-                        print("Forcecasts not processed", flush=True, file=sys.stderr)
-                else:
-                    if self.forecast_values is None:
-                        self.forecast_values = {}
-                        
-                    field = topic[3]
-                    datetime_str = topic[4].replace("plus","+")
-                    datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
-                    
-                    if datetime_str not in self.forecast_values:
-                        self.forecast_values[datetime_str] = {}
-                        
-                    self.forecast_values[datetime_str][field] = msg.payload.decode("utf-8")
-            elif topic[2] == u"items":
-                if topic[3] == u"refreshed":
-                    print("Summery data processed", flush=True)
-            else:
-                print("Unknown topic " + msg.topic + ", message:" + str(msg.payload), flush=True, file=sys.stderr)
-        except Exception as e:
-            print("Exception: {}".format(str(e)))
-            traceback.print_exc()
-            
+            if peer in self.peer_jobs and not self.peer_jobs[peer].isOnline():
+                continue
+
+            missing_topics.append(watched_topic)
+
+        if len(missing_topics) > 0:
+            Helper.logGroupedMsg("mqtt", "Peers are not sending messages. MISSING TOPICS: {}".format(missing_topics), grouped_message_timeout)
+        else:
+            Helper.logGroupedMsg("mqtt", "Peers are not sending messages again")
+
     def terminate(self):
+        for job in self.peer_jobs.values():
+            job.terminate()
+
         if self.mqtt_client != None:
-            print("Close connection to mqtt", flush=True)
+            Helper.logInfo("Close connection to mqtt")
             self.mqtt_client.loop_stop()
             self.mqtt_client.disconnect()
         
