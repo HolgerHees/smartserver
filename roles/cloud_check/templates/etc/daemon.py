@@ -14,8 +14,11 @@ import requests
 import config
 
 check_interval = 60
+grouped_message_timeout = 3600
 
 class Helper(object):
+    lastNotified = {}
+
     @staticmethod
     def ping(host, timeout):
         try:
@@ -27,6 +30,25 @@ class Helper(object):
             is_success = False
 
         return is_success
+
+    @staticmethod
+    def logInfo(msg, end="\n"):
+        print(msg, end=end, flush=True)
+
+    @staticmethod
+    def logError(msg, end="\n"):
+        print(msg, end=end, flush=True, file=sys.stderr)
+
+    @staticmethod
+    def logGroupedMsg(group, msg, timeout = None):
+        if timeout is None:
+            if group in Helper.lastNotified:
+                Helper.logInfo(msg)
+                del Helper.lastNotified[group]
+        else:
+            if group not in Helper.lastNotified or (datetime.now() - Helper.lastNotified[group]).total_seconds() > timeout:
+                Helper.logError(msg)
+                Helper.lastNotified[group] = datetime.now()
 
 class PeerJob(threading.Thread):
     '''Device client'''
@@ -62,7 +84,7 @@ class PeerJob(threading.Thread):
             is_success = result.returncode == 0
         except Exception as e:
             is_success = False
-            print("Mount check exception {} - {}".format(type(e), str(e)), flush=True, file=sys.stderr)
+            Helper.logError("Mount check exception {} - {}".format(type(e), str(e)))
 
         self.has_mount_error = not is_success
         return is_success
@@ -76,10 +98,10 @@ class PeerJob(threading.Thread):
             running_state = 2 if response.status_code == 200 and response.text.rstrip() == "online" else 1
         except requests.exceptions.ConnectionError as e:
             running_state = 0
-            print("State check connection error {} - {}".format(type(e), str(e)), flush=True)
+            Helper.logInfo("State check connection error {} - {}".format(type(e), str(e)))
         except Exception as e:
             running_state = 0
-            print("State check exception {} - {}".format(type(e), str(e)), flush=True, file=sys.stderr)
+            Helper.logError("State check exception {} - {}".format(type(e), str(e)))
 
         self.has_state_error = running_state == 0
         return running_state
@@ -89,7 +111,7 @@ class PeerJob(threading.Thread):
             is_success = Helper.ping(host, self._getTimeout(self.has_ping_error))
         except Exception as e:
             is_success = False
-            print("Ping check exception {} - {}".format(type(e), str(e)), flush=True, file=sys.stderr)
+            Helper.logError("Ping check exception {} - {}".format(type(e), str(e)))
 
         self.has_ping_error = not is_success
         return is_success
@@ -99,7 +121,7 @@ class PeerJob(threading.Thread):
 
         error_count = 0
         while self.is_running:
-            sleep_time = 60
+            sleep_time = check_interval
 
             if not self.is_suspended:
                 try:
@@ -125,28 +147,24 @@ class PeerJob(threading.Thread):
                         # PUBLISH
                         #print("{} {}".format(self.peer,running_state))
                         if self.last_running_state != running_state:
-                            print("New state for pear '{}' is '{}'".format(self.peer, running_state),flush=True)
+                            Helper.logInfo("New state for pear '{}' is '{}'".format(self.peer, running_state))
                         self.mqtt_client.publish("{}/cloud/peer/{}".format(config.peer_name,self.peer), payload=running_state, qos=0, retain=False)
                         self.last_running_state = running_state
 
                         if running_state == 2:
                             # CHECK mountpoint
                             if not self._checkmount(self.peer):
-                                if not self.last_notified or (datetime.now() - self.last_notified).total_seconds() > 3600:
-                                    print("Cloud nfs mount of peer '{}' has problem".format(self.peer), flush=True, file=sys.stderr)
-                                    self.last_notified = datetime.now()
-
-                            elif self.last_notified:
-                                print("Cloud nfs mount of peer '{}' is available again".format(self.peer), flush=True)
-                                self.last_notified = None
+                                Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' has problem".format(self.peer), grouped_message_timeout)
+                            else:
+                                Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' is available again".format(self.peer))
 
                     end = time.time()
                     sleep_time = sleep_time - (end-start)
                     error_count = 0
                 except Exception as e:
                     error_count += 1
-                    sleep_time = 60 * error_count if error_count < 6 else 360
-                    print("Main loop exception {} - {}".format(type(e), str(e)), flush=True, file=sys.stderr)
+                    sleep_time = ( sleep_time * error_count ) if error_count < 6 else 360
+                    Helper.logError("Main loop exception {} - {}".format(type(e), str(e)))
 
             if sleep_time > 0:
                 self.event.wait(sleep_time)
@@ -165,7 +183,7 @@ class PeerJob(threading.Thread):
         self.event.set()
 
         if show_log:
-            print("Suspend polling job for peer '{}'".format(self.peer))
+            Helper.logInfo("Suspend polling job for peer '{}'".format(self.peer))
 
     def resume(self):
         if self.is_suspended is not None and not self.is_suspended:
@@ -177,13 +195,13 @@ class PeerJob(threading.Thread):
         self.event.set()
 
         if show_log:
-            print("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= 0 else "Start", self.peer))
+            Helper.logInfo("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= 0 else "Start", self.peer))
 
     def terminate(self):
         self.is_running = False
         self.event.set()
 
-        print("Terminate polling job for peer '{}'".format(self.peer))
+        Helper.logInfo("Terminate polling job for peer '{}'".format(self.peer))
 
 class Handler(object):
     '''Handler client'''
@@ -198,13 +216,13 @@ class Handler(object):
         self.event = threading.Event()
 
     def connectMqtt(self):
-        print("Connection to mqtt ...", end='', flush=True)
+        Helper.logInfo("Connection to mqtt ...", end='')
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
         self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
         self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
         self.mqtt_client.connect(config.mosquitto_host, 1883, 60)
-        print(" initialized", flush=True)
+        Helper.logInfo(" initialized")
         
         self.mqtt_client.loop_start()
 
@@ -230,25 +248,29 @@ class Handler(object):
 
         while True:
             if self.is_checking:
-                print("Check internet connectivity", flush=True)
+                Helper.logInfo("Check internet connectivity")
                 self.is_online = Helper.ping("8.8.8.8", 5)
                 self.is_checking = False
 
                 if not self.is_online:
+                    Helper.logGroupedMsg("internet", "Internet is down", grouped_message_timeout)
+
                     for checker in self.peer_checkers:
                         checker.suspend()
                 else:
+                    Helper.logGroupedMsg("internet", "Internet is up again")
+
                     for checker in self.peer_checkers:
                         checker.resume()
 
-            self.event.wait(60)
+            self.event.wait(check_interval)
             self.event.clear()
 
     def on_connect(self,client,userdata,flags,rc):
-        print("Connected to mqtt with result code:"+str(rc), flush=True)
+        Helper.logInfo("Connected to mqtt with result code:"+str(rc))
         
     def on_disconnect(self,client, userdata, rc):
-        print("Disconnect from mqtt with result code:"+str(rc), flush=True)
+        Helper.logInfo("Disconnect from mqtt with result code:"+str(rc))
 
     def on_message(self,client,userdata,msg):
         pass
@@ -258,7 +280,7 @@ class Handler(object):
             checker.terminate()
 
         if self.mqtt_client != None:
-            print("Close connection to mqtt", flush=True)
+            Helper.logInfo("Close connection to mqtt")
             self.mqtt_client.loop_stop()
             self.mqtt_client.disconnect()
         
