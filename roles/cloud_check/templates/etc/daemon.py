@@ -233,6 +233,24 @@ class Handler(object):
         
         self.mqtt_client.loop_start()
 
+    def initWatchedTopics(self, is_online):
+        watched_topics = {}
+        if is_online:
+            for peer in config.cloud_peers:
+                topic = "{}/cloud/peer/{}".format(config.peer_name,peer)
+                self.watched_topics[topic] = datetime.now()
+
+                topic = "{}/cloud/peer/{}".format(peer,config.peer_name)
+                self.watched_topics[topic] = datetime.now()
+
+                for _peer in config.cloud_peers:
+                    if peer == _peer:
+                        continue
+
+                    topic = "{}/cloud/peer/{}".format(peer,_peer)
+                    watched_topics[topic] = datetime.now()
+        self.watched_topics = watched_topics
+
     def isOnline(self):
         return self.is_online
 
@@ -256,7 +274,12 @@ class Handler(object):
         while True:
             if self.is_checking:
                 Helper.logInfo("Check internet connectivity")
-                self.is_online = Helper.ping("8.8.8.8", 5)
+                is_online = Helper.ping("8.8.8.8", 5)
+
+                if self.is_online != is_online:
+                    self.initWatchedTopics(is_online)
+
+                self.is_online = is_online
                 self.is_checking = False
 
                 if not self.is_online:
@@ -270,54 +293,39 @@ class Handler(object):
                     for job in self.peer_jobs.values():
                         job.resume()
 
+            if self.is_online:
+                missing_topics = []
+                for watched_topic in self.watched_topics:
+                    if (datetime.now() - self.watched_topics[watched_topic]).total_seconds() < check_interval * 2:
+                        continue
+
+                    peer = watched_topic.split("/")[0]
+
+                    if peer in self.peer_jobs and not self.peer_jobs[peer].isOnline():
+                        continue
+
+                    missing_topics.append(watched_topic)
+
+                if len(missing_topics) > 0:
+                    Helper.logGroupedMsg("mqtt", "Peers are not sending messages. MISSING TOPICS: {}".format(missing_topics), grouped_message_timeout)
+                else:
+                    Helper.logGroupedMsg("mqtt", "Peers are sending messages again")
+
             self.event.wait(check_interval)
             self.event.clear()
 
     def on_connect(self,client,userdata,flags,rc):
         Helper.logInfo("Connected to mqtt with result code:"+str(rc))
 
-        self.watched_topics = {}
-        for peer in config.cloud_peers:
-            topic = "{}/cloud/peer/{}".format(config.peer_name,peer)
-            self.watched_topics[topic] = datetime.now()
-
-            topic = "{}/cloud/peer/{}".format(peer,config.peer_name)
-            self.watched_topics[topic] = datetime.now()
-
-            for _peer in config.cloud_peers:
-                if peer == _peer:
-                    continue
-
-                topic = "{}/cloud/peer/{}".format(peer,_peer)
-                self.watched_topics[topic] = datetime.now()
-
         for peer in config.cloud_peers:
             client.subscribe('+/cloud/peer/#')
-        
+
     def on_disconnect(self,client, userdata, rc):
         Helper.logInfo("Disconnect from mqtt with result code:"+str(rc))
 
     def on_message(self,client,userdata,msg):
         #print("Topic " + msg.topic + ", message:" + str(msg.payload), flush=True)
-
         self.watched_topics[msg.topic] = datetime.now()
-
-        missing_topics = []
-        for watched_topic in self.watched_topics:
-            if (datetime.now() - self.watched_topics[watched_topic]).total_seconds() < check_interval * 2:
-                continue
-
-            peer = watched_topic.split("/")[0]
-
-            if peer in self.peer_jobs and not self.peer_jobs[peer].isOnline():
-                continue
-
-            missing_topics.append(watched_topic)
-
-        if len(missing_topics) > 0:
-            Helper.logGroupedMsg("mqtt", "Peers are not sending messages. MISSING TOPICS: {}".format(missing_topics), grouped_message_timeout)
-        else:
-            Helper.logGroupedMsg("mqtt", "Peers are not sending messages again")
 
     def terminate(self):
         for job in self.peer_jobs.values():
