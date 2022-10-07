@@ -68,7 +68,7 @@ class PeerJob(threading.Thread):
     def _checkstate(self, peer, host):
         try:
             #print("http://{}/state".format(host))
-            response = requests.get("http://{}1/state".format(host), allow_redirects = False, timeout = self._getTimeout(self.has_state_error) )
+            response = requests.get("http://{}/state".format(host), allow_redirects = False, timeout = self._getTimeout(self.has_state_error) )
             #print("{} {}".format(response.status_code,response.text))
             #self.log.info("{} {} {}".format(host,response_code == 200,response_body == "online"))
             running_state = 2 if response.status_code == 200 and response.text.rstrip() == "online" else 1
