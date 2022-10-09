@@ -20,11 +20,14 @@ GROUPED_MESSAGE_TIMEOUT = 900
 
 MESH_OFFLINE_TIMEOUT = 300
 
-STATE_OFFLINE = 0
-STATE_PING_OK = 1
-STATE_ONLINE  = 2
+PEER_STATE_OFFLINE = 0
+PEER_STATE_PING_OK = 1
+PEER_STATE_ONLINE  = 2
+PEER_STATE_UNKNOWN = -1
 
-STATE_UNKNOWN = -1
+MOUNT_STATE_UNMOUNTED = 0
+MOUNT_STATE_MOUNTED = 1
+MOUNT_STATE_UNKNOWN = -1
 
 class Helper(object):
     lastNotified = {}
@@ -89,7 +92,8 @@ class PeerJob(threading.Thread):
         self.has_state_error = False
         self.has_ping_error = False
 
-        self.last_running_state = -1
+        self.last_running_state = PEER_STATE_UNKNOWN
+        self.last_mount_state = MOUNT_STATE_UNMOUNTED
 
         self.error_count = 0
 
@@ -115,15 +119,15 @@ class PeerJob(threading.Thread):
             response = requests.get("http://{}/state".format(host), allow_redirects = False, timeout = self._getTimeout(self.has_state_error) )
             #print("{} {}".format(response.status_code,response.text))
             #self.log.info("{} {} {}".format(host,response_code == 200,response_body == "online"))
-            running_state = STATE_ONLINE if response.status_code == 200 and response.text.rstrip() == "online" else STATE_PING_OK
+            running_state = PEER_STATE_ONLINE if response.status_code == 200 and response.text.rstrip() == "online" else PEER_STATE_OFFLINE
         except requests.exceptions.ConnectionError as e:
-            running_state = STATE_OFFLINE
+            running_state = PEER_STATE_OFFLINE
             Helper.logInfo("State check connection error {} - {}".format(type(e), str(e)))
         except Exception as e:
-            running_state = STATE_OFFLINE
+            running_state = PEER_STATE_OFFLINE
             Helper.logError("State check exception {} - {}".format(type(e), str(e)))
 
-        self.has_state_error = running_state == STATE_OFFLINE
+        self.has_state_error = running_state == PEER_STATE_OFFLINE
         return running_state
 
     def _ping(self, peer, host):
@@ -150,10 +154,10 @@ class PeerJob(threading.Thread):
                     running_state = self._checkstate(self.peer, self.data["host"])
 
                     # **** CHECK PING ****
-                    if running_state == STATE_OFFLINE and self._ping(self.peer, self.data["host"]):
-                        running_state = STATE_PING_OK
+                    if running_state == PEER_STATE_OFFLINE and self._ping(self.peer, self.data["host"]):
+                        running_state = PEER_STATE_PING_OK
 
-                    if running_state == STATE_OFFLINE:
+                    if running_state == PEER_STATE_OFFLINE:
                         self.is_suspended = None
 
                         # **** CONFIRM THAT WE ARE ONLINE ****
@@ -169,12 +173,16 @@ class PeerJob(threading.Thread):
                         self.mqtt_client.publish("{}/cloud/peer/{}".format(config.peer_name,self.peer), payload=running_state, qos=0, retain=False)
                         self.last_running_state = running_state
 
-                        if running_state == STATE_ONLINE:
+                        if running_state == PEER_STATE_ONLINE:
                             # CHECK mountpoint
                             if not self._checkmount(self.peer):
+                                self.last_mount_state = MOUNT_STATE_UNMOUNTED
                                 Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' has problem".format(self.peer), GROUPED_MESSAGE_TIMEOUT)
                             else:
+                                self.last_mount_state = MOUNT_STATE_MOUNTED
                                 Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' is available again".format(self.peer))
+                        else:
+                            self.last_mount_state = MOUNT_STATE_UNKNOWN
 
                     end = time.time()
                     sleep_time = sleep_time - (end-start)
@@ -195,7 +203,10 @@ class PeerJob(threading.Thread):
         return self.peer
 
     def isOnline(self):
-        return self.last_running_state == STATE_ONLINE
+        return self.last_running_state == PEER_STATE_ONLINE
+
+    def getMountState(self):
+        return self.last_mount_state
 
     def setMeshOffline(self):
         if self.mesh_offline_since is None:
@@ -229,7 +240,7 @@ class PeerJob(threading.Thread):
         self.event.set()
 
         if show_log:
-            Helper.logInfo("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= STATE_OFFLINE else "Start", self.peer))
+            Helper.logInfo("{} polling job for peer '{}'".format("Resume" if self.last_running_state >= PEER_STATE_OFFLINE else "Start", self.peer))
 
     def terminate(self):
         self.is_running = False
@@ -268,17 +279,17 @@ class Handler(object):
         if is_online:
             for peer in config.cloud_peers:
                 topic = "{}/cloud/peer/{}".format(config.peer_name,peer)
-                watched_topics[topic] = { "updated": datetime.now(), "state": STATE_UNKNOWN }
+                watched_topics[topic] = { "updated": datetime.now(), "state": PEER_STATE_UNKNOWN }
 
                 topic = "{}/cloud/peer/{}".format(peer,config.peer_name)
-                watched_topics[topic] = { "updated": datetime.now(), "state": STATE_UNKNOWN }
+                watched_topics[topic] = { "updated": datetime.now(), "state": PEER_STATE_UNKNOWN }
 
                 for _peer in config.cloud_peers:
                     if peer == _peer:
                         continue
 
                     topic = "{}/cloud/peer/{}".format(peer,_peer)
-                    watched_topics[topic] = { "updated": datetime.now(), "state": STATE_UNKNOWN }
+                    watched_topics[topic] = { "updated": datetime.now(), "state": PEER_STATE_UNKNOWN }
         self.watched_topics = watched_topics
 
     def isOnline(self):
@@ -327,6 +338,8 @@ class Handler(object):
 
             if self.is_online:
                 if (next_topic_checks - datetime.now()).total_seconds() <= 0:
+                    #states = { "topics": {}, "peers": {}, "mounts": {} }
+
                     # **** CHECK MISSING TOPICS ****
                     missing_topics = []
                     for watched_topic in self.watched_topics:
@@ -334,9 +347,11 @@ class Handler(object):
                         source_peer = watched_topic.split("/")[0]
 
                         if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
+                            #states["topics"][watched_topic] = topic_data["state"]
                             continue
                         else:
-                            topic_data["state"] = STATE_UNKNOWN
+                            #states["topics"][watched_topic] = PEER_STATE_UNKNOWN
+                            topic_data["state"] = PEER_STATE_UNKNOWN
 
                         if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
                             continue
@@ -350,7 +365,7 @@ class Handler(object):
 
                     # **** CHECK IF ALL PEERS ARE ONLINE ****
                     for peer in config.cloud_peers:
-                        max_state = STATE_UNKNOWN
+                        max_state = PEER_STATE_UNKNOWN
                         state_count = 0
                         for watched_topic in self.watched_topics:
                             topic_data = self.watched_topics[watched_topic]
@@ -369,12 +384,16 @@ class Handler(object):
                         # **** NOTIFY PEERS IF THEY ARE OFFLINE ****
                         peer_job = self.peer_jobs[peer]
                         if state_count == len(config.cloud_peers):
-                            if max_state not in [STATE_UNKNOWN, STATE_ONLINE]:
+                            #states["peers"][peer] = max_state
+                            if max_state not in [PEER_STATE_UNKNOWN, PEER_STATE_ONLINE]:
                                 peer_job.setMeshOffline()
                             else:
                                 peer_job.resetMeshOffline()
                         else:
+                            #states["peers"][peer] = PEER_STATE_UNKNOWN
                             peer_job.resetMeshOffline()
+
+                        #states["mounts"][peer] = peer_job.getMountState()
 
                         if peer_job.getMeshOffline() is not None and Helper.getAgeInSeconds(peer_job.getMeshOffline()) > MESH_OFFLINE_TIMEOUT:
                             msg = "Peer '{}' is offline".format(peer)
