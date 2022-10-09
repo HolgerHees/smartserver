@@ -55,10 +55,14 @@ class Helper(object):
             if group in Helper.lastNotified:
                 Helper.logInfo(msg)
                 del Helper.lastNotified[group]
+                return True
         else:
             if group not in Helper.lastNotified or (datetime.now() - Helper.lastNotified[group]).total_seconds() > timeout:
                 Helper.logError(msg)
                 Helper.lastNotified[group] = datetime.now()
+                return True
+
+        return False
 
     @staticmethod
     def getAgeInSeconds(ref_datetime):
@@ -374,12 +378,12 @@ class Handler(object):
 
                         if peer_job.getMeshOffline() is not None and Helper.getAgeInSeconds(peer_job.getMeshOffline()) > MESH_OFFLINE_TIMEOUT:
                             msg = "Peer '{}' is offline".format(peer)
-                            self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], msg)
-                            Helper.logGroupedMsg("peer_{}".format(peer), msg, GROUPED_MESSAGE_TIMEOUT)
+                            if Helper.logGroupedMsg("peer_{}".format(peer), msg, GROUPED_MESSAGE_TIMEOUT):
+                                self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], "Subject: Cloud Check\n\n{}".format(msg))
                         else:
-                            msg = "Peer '{}' is back again"
-                            self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], msg)
-                            Helper.logGroupedMsg("peer_{}".format(peer), msg.format(peer))
+                            msg = "Peer '{}' is back again".format(peer)
+                            if Helper.logGroupedMsg("peer_{}".format(peer), msg):
+                                self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], "Subject: Cloud Check\n\n{}".format(msg))
 
                     next_topic_checks = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
             else:
