@@ -123,22 +123,27 @@ def custom_sorted(item1, item2):
 for name in sorted(images,key=cmp_to_key(custom_sorted)):
     
     image_versions = sorted(images[name], reverse=True)
-    
+
     for image_version in image_versions:
-        container_image = image_version.name
-        
-        if container_image in containers:
+        if image_version.name in containers:
+            container_image_ref = image_version.name
+        elif image_version.id in containers:
+            container_image_ref = image_version.id
+        else:
+            container_image_ref = None
+
+        if container_image_ref in containers:
             container_used = False
-            for container in containers[container_image]:
+            for container in containers[container_image_ref]:
                 if container.is_stopped_since is not None:
                     # remove containers, stopped more then 1 week ago
                     if container.is_stopped_since.total_seconds() < 60 * 60 * 24 * 7:
                         if not is_quite:
                             stopped_since = str(container.is_stopped_since).split(".")[0]
-                            print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}' stopped since {}".format(container.id,container.name, image_version.id, container_image, stopped_since))
+                            print(u"\033[0;33mSTOPPED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}' stopped since {}".format(container.id,container.name, image_version.id, image_version.name, stopped_since))
                         container_used = True
                     else:
-                        print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}'".format(container.id, container.name, image_version.id, container_image))
+                        print(u"\033[0;91mDELETED\033[0m   : CNT '{}', '{}' => IMG '{}', '{}'".format(container.id, container.name, image_version.id, image_version.name))
                         command.exec(["docker", "rm", "{}".format(container.id)])
                         
                 else:
@@ -146,15 +151,15 @@ for name in sorted(images,key=cmp_to_key(custom_sorted)):
                
             if container_used:
                 if not is_quite:
-                    print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image_version.id,container_image))
+                    print(u"\033[0;32mUSED\033[0m      : IMG '{}', '{}'".format(image_version.id,image_version.name))
                 continue
 
-        if container_image in build_images:
+        if image_version.name in build_images:
             if not is_quite:
-                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image_version.id,container_image))
+                print(u"\033[0;33mREFERENCED\033[0m: IMG '{}', '{}'".format(image_version.id,image_version.name))
             continue
 
-        print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image_version.id,container_image))
+        print(u"\033[0;91mDELETED\033[0m   : IMG '{}', '{}'".format(image_version.id,image_version.name))
         
         cleaned = True
 
