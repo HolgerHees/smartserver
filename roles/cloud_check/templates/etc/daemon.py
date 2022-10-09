@@ -11,6 +11,11 @@ import traceback
 import time
 from datetime import datetime, timedelta
 
+from flask import Flask, request, make_response
+from werkzeug.serving import WSGIRequestHandler
+
+import logging
+
 import requests
 
 import config
@@ -248,9 +253,13 @@ class PeerJob(threading.Thread):
 
         Helper.logInfo("Terminate polling job for peer '{}'".format(self.peer))
 
-class Handler(object):
+class Handler(threading.Thread):
     '''Handler client'''
     def __init__(self):
+        threading.Thread.__init__(self)
+
+        self.is_running = True
+
         self.is_online = False
         self.is_checking = True
 
@@ -258,6 +267,8 @@ class Handler(object):
 
         self.peer_jobs = {}
         self.watched_topics = {}
+
+        self.state_metrics = []
 
         self.event = threading.Event()
 
@@ -295,6 +306,9 @@ class Handler(object):
     def isOnline(self):
         return self.is_online
 
+    def getStateMetrics(self):
+        return "{}\n".format( "\n".join(self.state_metrics) )
+
     def forceOnlineCheck(self):
         if self.is_checking:
             return
@@ -302,7 +316,7 @@ class Handler(object):
         self.is_checking = True
         self.event.set()
 
-    def loop(self):
+    def run(self):
         #status = os.fdopen(self.dhcpListenerProcess.stdout.fileno())
         #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
         
@@ -313,7 +327,7 @@ class Handler(object):
             self.peer_jobs[peer] = job
 
         next_topic_checks = datetime.now()
-        while True:
+        while self.is_running:
             if self.is_checking:
                 # **** CHECK INTERNET CONNECTIVITY ****
                 Helper.logInfo("Check internet connectivity")
@@ -338,19 +352,20 @@ class Handler(object):
 
             if self.is_online:
                 if (next_topic_checks - datetime.now()).total_seconds() <= 0:
-                    #states = { "topics": {}, "peers": {}, "mounts": {} }
+                    state_metrics = []
 
                     # **** CHECK MISSING TOPICS ****
                     missing_topics = []
                     for watched_topic in self.watched_topics:
                         topic_data = self.watched_topics[watched_topic]
                         source_peer = watched_topic.split("/")[0]
+                        target_peer = watched_topic.split("/")[-1]
 
                         if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
-                            #states["topics"][watched_topic] = topic_data["state"]
+                            state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,int(topic_data["state"])))
                             continue
                         else:
-                            #states["topics"][watched_topic] = PEER_STATE_UNKNOWN
+                            state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,PEER_STATE_UNKNOWN))
                             topic_data["state"] = PEER_STATE_UNKNOWN
 
                         if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
@@ -361,7 +376,7 @@ class Handler(object):
                     if len(missing_topics) > 0:
                         Helper.logGroupedMsg("mqtt", "Peers are not sending messages. MISSING TOPICS: {}".format(missing_topics), GROUPED_MESSAGE_TIMEOUT)
                     else:
-                        Helper.logGroupedMsg("mqtt", "Peers are sending messages again")
+                        Helper.logGroupedMsg("mqtt", "Peers a re sending messages again")
 
                     # **** CHECK IF ALL PEERS ARE ONLINE ****
                     for peer in config.cloud_peers:
@@ -376,7 +391,7 @@ class Handler(object):
 
                             state_count += 1
 
-                            if max_state > int(topic_data["state"]):
+                            if max_state < int(topic_data["state"]):
                                 max_state = int(topic_data["state"])
 
                         #Helper.logInfo("{} {} {}".format(peer, max_state, state_count))
@@ -384,16 +399,16 @@ class Handler(object):
                         # **** NOTIFY PEERS IF THEY ARE OFFLINE ****
                         peer_job = self.peer_jobs[peer]
                         if state_count == len(config.cloud_peers):
-                            #states["peers"][peer] = max_state
+                            state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,max_state))
                             if max_state not in [PEER_STATE_UNKNOWN, PEER_STATE_ONLINE]:
                                 peer_job.setMeshOffline()
                             else:
                                 peer_job.resetMeshOffline()
                         else:
-                            #states["peers"][peer] = PEER_STATE_UNKNOWN
+                            state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,PEER_STATE_UNKNOWN))
                             peer_job.resetMeshOffline()
 
-                        #states["mounts"][peer] = peer_job.getMountState()
+                        state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
 
                         if peer_job.getMeshOffline() is not None and Helper.getAgeInSeconds(peer_job.getMeshOffline()) > MESH_OFFLINE_TIMEOUT:
                             msg = "Peer '{}' is offline".format(peer)
@@ -404,9 +419,13 @@ class Handler(object):
                             if Helper.logGroupedMsg("peer_{}".format(peer), msg):
                                 self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], "Subject: Cloud Check\n\n{}".format(msg))
 
+                    self.state_metrics = state_metrics
+
                     next_topic_checks = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
             else:
                  next_topic_checks = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
+
+                 self.state_metrics = []
 
             sleep_time = (next_topic_checks - datetime.now()).total_seconds()
             #Helper.logInfo(sleep_time)
@@ -428,6 +447,9 @@ class Handler(object):
         self.watched_topics[msg.topic] = { "updated": datetime.now(), "state": msg.payload }
 
     def terminate(self):
+        self.is_running = False
+        self.event.set()
+
         for job in self.peer_jobs.values():
             job.terminate()
 
@@ -435,17 +457,40 @@ class Handler(object):
             Helper.logInfo("Close connection to mqtt")
             self.mqtt_client.loop_stop()
             self.mqtt_client.disconnect()
+
+app = Flask(__name__)
+
+@app.route('/metrics/', methods = ['GET'])
+def metrics():
+    return handler.getStateMetrics()
         
-handler = Handler()
-handler.connectMqtt()
+logging_handler = logging.StreamHandler(sys.stdout)
+logging.basicConfig(
+    handlers = [logging_handler],
+    level=logging.ERROR
+    #format=logging.Formatter(fmt="[%(levelname)s] - %(module)s - %(message)s")
+)
+
+class ShutdownException(Exception):
+    pass
 
 def cleanup(signum, frame):
-    #print(signum)
-    #print(frame)
-    handler.terminate()
-    exit(0)
+    raise ShutdownException()
 
 signal.signal(signal.SIGTERM, cleanup)
 signal.signal(signal.SIGINT, cleanup)
 
-handler.loop()
+handler = Handler()
+handler.connectMqtt()
+handler.start()
+
+try:
+    WSGIRequestHandler.protocol_version = "HTTP/1.1"
+    app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
+except ShutdownException as e:
+    pass
+
+handler.terminate()
+exit(0)
+
+

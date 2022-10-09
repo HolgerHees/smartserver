@@ -25,10 +25,12 @@
     network_container:
       - postfix
       - cloud_mosquitto
+      - prometheus
   import_tasks: roles/container/tasks/add_docker_network.yml
-  tags: [ 'postfix', 'cloud_mosquitto', 'alpine' ]
+  tags: [ 'postfix', 'prometheus', 'cloud_mosquitto', 'alpine' ]
   notify: 
     - "restart postfix"
+    - "restart prometheus"
     - "restart cloud_mosquitto"
 
 - name: create docker container
@@ -53,7 +55,7 @@
       - '{{cloud_path}}/remote:/cloud/remote:z,ro'
   notify: "restart cloud_check"
 
-- name: copy service
+- name: copy config
   template:
     src: "templates{{item.src}}"
     dest: "{{item.dest}}"
@@ -62,6 +64,16 @@
     mode: 0640
   with_items:
     - { src: "/config.py", dest: "{{global_etc}}cloud_check/config.py" }
+  notify: "restart cloud_check"
+
+- name: copy service
+  copy:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
     - { src: "/etc/daemon.py", dest: "{{global_etc}}cloud_check/daemon.py" }
   notify: "restart cloud_check"
 

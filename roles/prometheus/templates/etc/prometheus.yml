@@ -6,3 +6,13 @@ scrape_configs:
     static_configs:
     - targets:
       - 'openhab.{{server_domain}}'
+
+{% if cloud_vpn != 'None' %}
+  - job_name: 'cloud_check'
+    scrape_interval: 1m
+    scheme: http
+    metrics_path: /metrics/
+    static_configs:
+    - targets:
+      - 'cloud_check'
+{% endif %}
