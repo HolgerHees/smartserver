@@ -4,6 +4,8 @@ import paho.mqtt.client as mqtt
 import sys
 import subprocess
 
+import smtplib
+
 import traceback
 
 import time
@@ -244,6 +246,8 @@ class Handler(object):
 
         self.event = threading.Event()
 
+        self.smtp = smtplib.SMTP(config.postfix_host)
+
     def connectMqtt(self):
         Helper.logInfo("Connection to mqtt ...", end='')
         self.mqtt_client = mqtt.Client()
@@ -292,7 +296,6 @@ class Handler(object):
             job = PeerJob(peer, {"host": host}, self.mqtt_client, self)
             job.start()
             self.peer_jobs[peer] = job
-
 
         next_topic_checks = datetime.now()
         while True:
@@ -370,9 +373,13 @@ class Handler(object):
                             peer_job.resetMeshOffline()
 
                         if peer_job.getMeshOffline() is not None and Helper.getAgeInSeconds(peer_job.getMeshOffline()) > MESH_OFFLINE_TIMEOUT:
-                            Helper.logGroupedMsg("peer_{}".format(peer), "Peer '{}' is offline".format(peer), GROUPED_MESSAGE_TIMEOUT)
+                            msg = "Peer '{}' is offline".format(peer)
+                            self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], msg)
+                            Helper.logGroupedMsg("peer_{}".format(peer), msg, GROUPED_MESSAGE_TIMEOUT)
                         else:
-                            Helper.logGroupedMsg("peer_{}".format(peer), "Peer '{}' is back again".format(peer))
+                            msg = "Peer '{}' is back again"
+                            self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], msg)
+                            Helper.logGroupedMsg("peer_{}".format(peer), msg.format(peer))
 
                     next_topic_checks = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
             else:

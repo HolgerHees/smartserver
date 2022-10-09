@@ -17,6 +17,20 @@
       - roles/cloud_check/templates/container/Dockerfile
   import_tasks: roles/container/tasks/build_docker_image.yml
 
+- name: create docker network
+  vars:
+    network_name: "cloud_check"
+    network_ip: "{{vpn_cloud_check_ip}}"
+    network_internal: no
+    network_container:
+      - postfix
+      - cloud_mosquitto
+  import_tasks: roles/container/tasks/add_docker_network.yml
+  tags: [ 'postfix', 'cloud_mosquitto', 'alpine' ]
+  notify: 
+    - "restart postfix"
+    - "restart cloud_mosquitto"
+
 - name: create docker container
   docker_container:
     name: cloud_check
@@ -31,8 +45,8 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "cloud_vpn"
-        ipv4_address: "{{vpn_cloud_services.local.check}}"
+      - name: "cloud_check"
+        ipv4_address: "{{vpn_cloud_check_ip}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}cloud_check/:/etc/cloud_check:ro,z'
@@ -56,8 +70,8 @@
   vars:
     name: "wireguard.cloud_check"
     rules:
-        - "outerface {{main_network_interface}} saddr {{vpn_cloud_services.local.check}} proto tcp dport 80"
-        - "outerface {{main_network_interface}} saddr {{vpn_cloud_services.local.check}} proto icmp"
+        - "outerface {{main_network_interface}} saddr {{vpn_cloud_check_ip}} proto tcp dport 80"
+        - "outerface {{main_network_interface}} saddr {{vpn_cloud_check_ip}} proto icmp"
     is_docker: True
   import_tasks: roles/firewall/tasks/allow_service.yml
   tags: [ 'firewall_config' ]
@@ -65,8 +79,6 @@
 - name: create systemd service
   vars:
     container_name: "cloud_check"
-    container_routes:
-      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
     container_after: [ "cloud_mosquitto" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
 

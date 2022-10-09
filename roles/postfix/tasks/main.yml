@@ -136,6 +136,8 @@
 - name: create systemd service
   vars:
     container_name: "postfix"
+    container_routes:
+      - { "subnet": "default", "gateway": "{{docker_postfix_ip.split('.')[:3] | join('.')}}.1"}
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register systemd service watcher

@@ -24,6 +24,8 @@
       - postfix # => used by nextcloud
   import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'mysql', 'influxdb', 'redis', 'postfix', 'alpine' ]
+  notify: 
+    - "restart postfix"
 
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default

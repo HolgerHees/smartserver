@@ -36,6 +36,8 @@
       - postfix
   import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'postfix', 'alpine' ]
+  notify: 
+    - "restart postfix"
 
 - name: create docker container
   docker_container:
