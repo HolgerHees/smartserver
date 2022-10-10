@@ -4,8 +4,6 @@ import paho.mqtt.client as mqtt
 import sys
 import subprocess
 
-import smtplib
-
 import traceback
 
 import time
@@ -21,7 +19,6 @@ import requests
 import config
 
 CHECK_INTERVAL = 60
-GROUPED_MESSAGE_TIMEOUT = 900
 
 MESH_OFFLINE_TIMEOUT = 300
 
@@ -56,21 +53,6 @@ class Helper(object):
     @staticmethod
     def logError(msg, end="\n"):
         print(msg, end=end, flush=True, file=sys.stderr)
-
-    @staticmethod
-    def logGroupedMsg(group, msg, timeout = None):
-        if timeout is None:
-            if group in Helper.lastNotified:
-                Helper.logInfo(msg)
-                del Helper.lastNotified[group]
-                return True
-        else:
-            if group not in Helper.lastNotified or (datetime.now() - Helper.lastNotified[group]).total_seconds() > timeout:
-                Helper.logError(msg)
-                Helper.lastNotified[group] = datetime.now()
-                return True
-
-        return False
 
     @staticmethod
     def getAgeInSeconds(ref_datetime):
@@ -182,10 +164,8 @@ class PeerJob(threading.Thread):
                             # CHECK mountpoint
                             if not self._checkmount(self.peer):
                                 self.last_mount_state = MOUNT_STATE_UNMOUNTED
-                                Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' has problem".format(self.peer), GROUPED_MESSAGE_TIMEOUT)
                             else:
                                 self.last_mount_state = MOUNT_STATE_MOUNTED
-                                Helper.logGroupedMsg("mount", "Cloud nfs mount of peer '{}' is available again".format(self.peer))
                         else:
                             self.last_mount_state = MOUNT_STATE_UNKNOWN
 
@@ -272,8 +252,6 @@ class Handler(threading.Thread):
 
         self.event = threading.Event()
 
-        self.smtp = smtplib.SMTP(config.postfix_host)
-
     def connectMqtt(self):
         Helper.logInfo("Connection to mqtt ...", end='')
         self.mqtt_client = mqtt.Client()
@@ -340,13 +318,9 @@ class Handler(threading.Thread):
                 self.is_checking = False
 
                 if not self.is_online:
-                    Helper.logGroupedMsg("internet", "Internet is down", GROUPED_MESSAGE_TIMEOUT)
-
                     for job in self.peer_jobs.values():
                         job.suspend()
                 else:
-                    Helper.logGroupedMsg("internet", "Internet is up again")
-
                     for job in self.peer_jobs.values():
                         job.resume()
 
@@ -355,28 +329,28 @@ class Handler(threading.Thread):
                     state_metrics = []
 
                     # **** CHECK MISSING TOPICS ****
-                    missing_topics = []
+                    topic_state = {}
                     for watched_topic in self.watched_topics:
                         topic_data = self.watched_topics[watched_topic]
                         source_peer = watched_topic.split("/")[0]
                         target_peer = watched_topic.split("/")[-1]
 
+                        if source_peer not in topic_state:
+                            if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
+                                topic_state[source_peer] = -1
+                            else:
+                                topic_state[source_peer] = 0
+
                         if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
                             state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,int(topic_data["state"])))
+                            topic_state[source_peer] = 1
                             continue
                         else:
                             state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,PEER_STATE_UNKNOWN))
                             topic_data["state"] = PEER_STATE_UNKNOWN
 
-                        if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
-                            continue
-
-                        missing_topics.append(watched_topic)
-
-                    if len(missing_topics) > 0:
-                        Helper.logGroupedMsg("mqtt", "Peers are not sending messages. MISSING TOPICS: {}".format(missing_topics), GROUPED_MESSAGE_TIMEOUT)
-                    else:
-                        Helper.logGroupedMsg("mqtt", "Peers a re sending messages again")
+                    for peer in topic_state:
+                        state_metrics.append("cloud_check_peer_mqtt_state{{peer=\"{}\"}} {}".format(peer,topic_state[peer]))
 
                     # **** CHECK IF ALL PEERS ARE ONLINE ****
                     for peer in config.cloud_peers:
@@ -409,15 +383,6 @@ class Handler(threading.Thread):
                             peer_job.resetMeshOffline()
 
                         state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
-
-                        if peer_job.getMeshOffline() is not None and Helper.getAgeInSeconds(peer_job.getMeshOffline()) > MESH_OFFLINE_TIMEOUT:
-                            msg = "Peer '{}' is offline".format(peer)
-                            if Helper.logGroupedMsg("peer_{}".format(peer), msg, GROUPED_MESSAGE_TIMEOUT):
-                                self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], "Subject: Cloud Check\n\n{}".format(msg))
-                        else:
-                            msg = "Peer '{}' is back again".format(peer)
-                            if Helper.logGroupedMsg("peer_{}".format(peer), msg):
-                                self.smtp.sendmail("cloud_check", config.cloud_peers[peer]["email"], "Subject: Cloud Check\n\n{}".format(msg))
 
                     self.state_metrics = state_metrics
 

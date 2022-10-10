@@ -148,8 +148,7 @@
     group: root
     mode: 750
   with_items:
-    - "/opt/netdata_helper/send_notification.sh"
-    - "/opt/netdata_helper/inform_openhab"
+    - "/opt/netdata_helper/send_notification"
     - "/opt/netdata_helper/check_fping"
 
 - name: change service config
@@ -207,7 +206,7 @@
 - name: create cron job
   vars:
     name: "Netdata error check"
-    cmd: "/opt/netdata_helper/inform_openhab"
+    cmd: "/opt/netdata_helper/send_notification"
     file: "ansible_netdata"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   

@@ -12,6 +12,9 @@ TimeoutStartSec=0
 TimeoutStopSec={{container_stop_timeout | default('300')}}
 Restart=always
 ExecStart=/usr/bin/docker start -a {{container_name}}
+{% if container_pre_exec is defined %}
+ExecStartPre={{container_pre_exec}}
+{% endif %}
 {% if container_routes is defined %}{% for route in container_routes %}
 ExecStartPost=/bin/bash -c "sleep 1 && {% if route.subnet == 'default' %}nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} {{container_name}}) ip route del {{route.subnet}} && {% endif %}nsenter -n -t $(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} {{container_name}}) ip route add {{route.subnet}} via {{route.gateway}}"
 {% endfor %}{% endif %}

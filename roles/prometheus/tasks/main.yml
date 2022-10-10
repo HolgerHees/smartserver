@@ -11,17 +11,28 @@
     group: "{{item.group}}"
     mode: 0750
   with_items:
-    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_etc }}prometheus" }
     - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_lib }}prometheus" }
     - { user: "root", group: "root", path: "{{backup_path}}prometheus" }
 
+#- name: copy config
+#  template:
+#    src: "templates/etc/prometheus.yml"
+#    dest: "{{ global_etc }}prometheus/prometheus.yml"
+#    owner: nobody
+#    group: "{{ 'nobody' if is_fedora else 'nogroup'}}"
+#    mode: 0640
+#  notify: "restart prometheus"
+
 - name: copy config
-  template:
-    src: "templates/etc/prometheus.yml"
-    dest: "{{ global_etc }}prometheus/prometheus.yml"
+  copy:
+    src: "{{item.path}}"
+    dest: "{{ global_etc }}prometheus/{{item.path | basename}}"
     owner: nobody
     group: "{{ 'nobody' if is_fedora else 'nogroup'}}"
-    mode: 0640
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rw,g=r,o=", path: "templates/etc/prometheus.yml.tpl" }
+    - { mode: "u=rwx,g=rx,o=", path: "templates/etc/generator" }
   notify: "restart prometheus"
 
 - name: check started docker
@@ -110,6 +121,7 @@
 - name: create systemd service
   vars:
     container_name: "prometheus"
+    container_pre_exec: "{{ global_etc }}prometheus/generator"
     container_routes:
       - { "subnet": "default", "gateway": "{{docker_prometheus_ip.split('.')[:3] | join('.')}}.1"}
   import_tasks: roles/container/tasks/add_docker_service.yml

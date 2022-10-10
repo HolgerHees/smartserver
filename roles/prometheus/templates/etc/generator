@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+
+import glob
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+with open("{}/prometheus.yml.tpl".format(dir_path)) as f:
+    prometheus_yml = f.read()
+
+    rule_files = []
+    for file in glob.glob("{}/rules/*.yml".format(dir_path)):
+        rule_files.append("  - \"/etc/prometheus/rules/{}\"".format(os.path.basename(file)))
+
+    prometheus_yml = prometheus_yml.replace("{{RULE_FILES}}", "\n".join(rule_files))
+
+    scrape_configs = []
+    for file in glob.glob("{}/scrapes/*.yml".format(dir_path)):
+        with open(file) as scrape_f:
+            for scrape_line in scrape_f:
+                scrape_configs.append("  {}".format(scrape_line))
+        scrape_configs.append("\n")
+
+    prometheus_yml = prometheus_yml.replace("{{SCRAPE_CONFIGS}}", "".join(scrape_configs))
+
+with open("{}/prometheus.yml".format(dir_path), "w") as f:
+    f.write(prometheus_yml)
+    f.close()

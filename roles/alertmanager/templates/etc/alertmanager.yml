@@ -9,48 +9,70 @@ global:
 
 route:
   group_by: 
-    - group
-    - alertname
+    - notifyGroup
 #    - log
   group_wait: 1m
   group_interval: 1m
   repeat_interval: 5m
-  receiver: email-receiver
+  receiver: default
   routes:
     - matchers:
+      - notifyGroup=~"logs-.*"
       - group="netdata"
-      receiver: dummy
+      receiver: silent
     - matchers:
+      - notifyGroup=~"logs-.*"
       - group="crony"
-      receiver: dummy
+      receiver: silent
     - matchers:
+      - notifyGroup=~"logs-.*"
       - group="sshd"
       - log=~".*Failed to release session.*"
-      receiver: dummy
+      receiver: silent
 #    - matchers:
+#      - notifyGroup=~"logs-.*"
 #      - group="php"
 #      - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
-#      receiver: dummy
+#      receiver: silent
     - matchers:
+      - notifyGroup=~"logs-.*"
       - group="grafana"
       - log=~".*abort Handler.*"
-      receiver: dummy
+      receiver: silent
 #    - matchers:
+#      - notifyGroup=~"logs-.*"
 #      - group="apache"
 #      - log=~".*/grafana/api/live/ws.*Mobile.*"
-#      receiver: dummy
+#      receiver: silent
     - matchers:
+      - notifyGroup=~"logs-.*"
       - group="apache"
       - log=~".*/update_service/api.php.*503.*"
-      receiver: dummy
+      receiver: silent
     - matchers:
+      - notifyGroup=~"logs-.*"
       - group="apache"
       - log=~".*/cgi-bin/.%2e/.*"
-      receiver: dummy
+      receiver: silent
+# **********************************
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      receiver: logs
+{% if cloud_vpn != 'None' %}{% for peer in cloud_vpn.peers %}
+    - matchers:
+      - notifyGroup=~"cloud-peer-{{peer}}"
+      receiver: cloud-peer-{{peer}}
+{% endfor %}{% endif %}
 
 receivers:
-  - name: dummy
-  - name: email-receiver
+  - name: silent
+  - name: default
+    email_configs:
+      - to: {{root_email}}
+        headers:
+          Reply-To: '{{root_email}}'
+          send_resolved: true
+  - name: logs
     email_configs:
       - to: {{root_email}}
         headers:
@@ -59,3 +81,13 @@ receivers:
 #          send_resolved: true
 #        html: ''
 #        text: ''
+{% if cloud_vpn != 'None' %}{% for peer in cloud_vpn.peers %}
+  - name: cloud-peer-{{peer}}
+    email_configs:
+      - to: {{cloud_vpn.peers[peer]["notification_email"]}}
+        headers:
+          Reply-To: '{{root_email}}'
+          subject: 'Cloud peer status'
+          text: '{{'{{'}} .Status | toUpper {{'}} • {{'}} range .Alerts {{'}}{{'}} .Annotations.summary {{'}}{{'}} end {{'}}'}}'
+          send_resolved: true
+{% endfor %}{% endif %}

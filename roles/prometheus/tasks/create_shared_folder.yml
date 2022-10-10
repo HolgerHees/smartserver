@@ -1,0 +1,11 @@
+- name: prepare needed folder
+  file:
+    path: '{{item.path}}'
+    state: directory
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
+    mode: 0750
+  with_items:
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_etc }}prometheus" }
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_etc }}prometheus/rules" }
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_etc }}prometheus/scrapes" }

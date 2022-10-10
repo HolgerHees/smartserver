@@ -42,6 +42,9 @@
     # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones
     - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_config", ] }    # creates {{htdocs_path}}main/components
 
+    # needed by all roles which needs to register their own prometheus endpoints and rules
+    - { import_role: { name: prometheus, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'prometheus', "prometheus_config" ] }    # creates {{ global_etc }}prometheus/rules/ & {{ global_etc }}prometheus/scrapes/
+
     # needed by all roles which needs to register their own datasources or dashboards
     - { import_role: { name: grafana, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'grafana', "grafana_config" ] }    # creates {{ global_etc }}grafana/provisioning/datasources/ & {{ global_lib }}grafana/dashboards/
 

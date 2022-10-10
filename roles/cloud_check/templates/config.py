@@ -1,5 +1,4 @@
 mosquitto_host  = "cloud_mosquitto"
-postfix_host = "postfix"
 
 peer_name = "{{cloud_vpn.name}}"
 
