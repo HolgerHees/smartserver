@@ -7,7 +7,7 @@ RUN chmod 755 /entrypoint.sh \
     && apk upgrade \
     && apk --update --no-cache add python3 py3-inotify py3-paho-mqtt py3-pip coreutils tcpdump arping nmap nmap-scripts tzdata \
     && pip3 install --upgrade pip \
-    && pip3 install flask flask-socketio simple-websocket fritzconnection \
+    && pip3 install flask flask-socketio==5.2.0 simple-websocket fritzconnection \
     && apk --update --no-cache add git autoconf automake make gcc g++ libpcap-dev \
     && git clone https://github.com/royhills/arp-scan.git \
     && cd arp-scan/ \
