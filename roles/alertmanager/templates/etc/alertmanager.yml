@@ -16,6 +16,10 @@ route:
   repeat_interval: 5m
   receiver: default
   routes:
+#    - matchers:
+#      - notifyGroup="netdata"
+#      - severity="warning"
+#      receiver: silent
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="netdata"
@@ -71,7 +75,7 @@ receivers:
       - to: {{root_email}}
         headers:
           Reply-To: '{{root_email}}'
-          send_resolved: true
+        send_resolved: true
   - name: logs
     email_configs:
       - to: {{root_email}}
@@ -89,5 +93,5 @@ receivers:
           Reply-To: '{{root_email}}'
           subject: 'Cloud peer status'
           text: '{{'{{'}} .Status | toUpper {{'}} • {{'}} range .Alerts {{'}}{{'}} .Annotations.summary {{'}}{{'}} end {{'}}'}}'
-          send_resolved: true
+        send_resolved: true
 {% endfor %}{% endif %}
