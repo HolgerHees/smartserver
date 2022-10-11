@@ -50,8 +50,8 @@
         ipv4_address: "{{vpn_cloud_check_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}cloud_check/:/etc/cloud_check:ro,z'
-      - '{{cloud_path}}/remote:/cloud/remote:z,ro'
+      - '{{global_etc}}cloud_check/:/etc/cloud_check:z'
+      - '{{cloud_path}}/remote:/cloud/remote:z,rshared'
   notify: "restart cloud_check"
 
 - name: copy config
