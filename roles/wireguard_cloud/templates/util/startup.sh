@@ -13,7 +13,7 @@ stop()
     echo "SIGTERM caught, shutting down..."
     
     echo "shutting down wireguard interface"
-    wg-quick down wg0
+    wg-quick down wg0 2>&1
 
     echo "done"
     exit
@@ -27,7 +27,13 @@ startWireguard()
     #cat /etc/exports
 
     echo "setting up wireguard interface"
-    wg-quick up ./wg0.conf
+    wg-quick up ./wg0.conf 2>&1
+
+    wg show | grep -q 'wg0'
+    if [[ $? -eq 1 ]]; then
+        >&2 echo "Interface wg0 not up"
+        exit 1
+    fi
 }
 
 trap "stop" SIGTERM SIGINT
