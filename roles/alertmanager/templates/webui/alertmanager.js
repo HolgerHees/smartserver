@@ -8,17 +8,27 @@ mx.Alarms = (function( ret ) {
 
     function handleAlarms(data)
     {
+        var infoCount = 0;
         var warnCount = 0;
         var errorCount = 0;
 
-        console.log(data);
-
-        for(x in data.data)
+        for(alarm of data.data)
         {
-            if(!data.data.hasOwnProperty(x)) continue;
+            let is_silent = false
+            for( receiver of alarm.receivers )
+            {
+                if( receiver == 'silent' )
+                {
+                    is_silent = true;
+                    break;
+                }
+            }
 
-            var alarm = data.data[x];
-            if(alarm.labels.severity === 'error' || alarm.labels.severity === 'critical')
+            if( is_silent )
+            {
+                infoCount++;
+            }
+            else if(alarm.labels.severity === 'error' || alarm.labels.severity === 'critical')
             {
                 errorCount++;
             }
@@ -29,7 +39,7 @@ mx.Alarms = (function( ret ) {
             }
         }
 
-        mx.$$(counterSelector).forEach(function(element){ element.innerText = warnCount + errorCount });
+        mx.$$(counterSelector).forEach(function(element){ element.innerText = infoCount + warnCount + errorCount });
 
         var badgeButtons = mx.$$(buttonSelector);
         if( warnCount > 0 )
