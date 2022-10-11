@@ -30,13 +30,15 @@ class LibreNMS(_handler.Handler):
         # use request session for keepalive support of librenms
         self.request_session = requests.Session()
 
+        self._setServiceMetricState("librenms", -1)
+
     def _initNextRuns(self):
         now = datetime.now()
         self.next_run = {"device": now, "vlan": now, "port": now, "fdb": now}
                     
     def _run(self):
         self._initNextRuns()
-        
+
         while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
@@ -44,15 +46,20 @@ class LibreNMS(_handler.Handler):
                 events = []
                 try:
                     self._processLibreNMS(events)
+                    self._setServiceMetricState("librenms", 1)
                 except NetworkException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
+
                     self._handleExpectedException(str(e), None, e.getTimeout())
+                    self._setServiceMetricState("librenms", 0)
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
+
                     self._handleUnexpectedException(e)
-                        
+                    self._setServiceMetricState("librenms", -1)
+
                 if len(events) > 0:
                     self._getDispatcher().dispatch(self,events)
                 

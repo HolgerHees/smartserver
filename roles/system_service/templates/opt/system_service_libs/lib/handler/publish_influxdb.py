@@ -1,11 +1,10 @@
-import logging
 import requests
 import time
 
 from lib.handler import _handler
 from lib.dto.group import Group
 from lib.dto.connection_stat import ConnectionStat
-
+from lib.helper import Helper
 
 class InfluxDBHandler(): 
     def __init__(self):
@@ -15,17 +14,23 @@ class InfluxDBPublisher(_handler.Handler):
     def __init__(self, config, cache ):
         super().__init__(config,cache)
 
+        self._setServiceMetricState("influxdb", -1)
+
     def _run(self):
         while self._isRunning():
             if not self._isSuspended():
                 try:
                     messurements = self._collectMessurements()
                     self._submitMessurements(messurements)
+
+                    self._setServiceMetricState("influxdb", 1)
                 except requests.exceptions.ConnectionError:
-                    logging.warning("InfluxDB currently not available. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
+                    Helper.logInfo("InfluxDB currently not available. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
+                    self._setServiceMetricState("influxdb", 0)
                 except Exception as e:
                     self._handleUnexpectedException(e)
-                
+                    self._setServiceMetricState("influxdb", -1)
+
             suspend_timeout = self._getSuspendTimeout()
             if suspend_timeout > 0:
                 timeout = suspend_timeout
@@ -74,13 +79,13 @@ class InfluxDBPublisher(_handler.Handler):
         if len(messurements) == 0:
             return
         
-        #logging.info(messurements)
-        logging.info("Submit {} messurements".format(len(messurements)))
+        #Helper.logInfo(messurements)
+        Helper.logInfo("Submit {} messurements".format(len(messurements)))
         
-        #logging.info(messurements)
+        #Helper.logInfo(messurements)
         headers = {'Authorization': "Token {}".format(self.config.influxdb_token)}
         r = requests.post( "{}/write?db={}&rp=autogen&precision=s&consistency=one".format(self.config.influxdb_rest,self.config.influxdb_database), headers=headers, data="\n".join(messurements))
         if r.status_code != 204:
             msg = "Wrong status code: {}".format(r.status_code)
-            logging.error(msg)
+            Helper.logError(msg)
             raise requests.exceptions.ConnectionError(msg)

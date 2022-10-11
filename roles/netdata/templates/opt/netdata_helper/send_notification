@@ -60,7 +60,9 @@ while True:
 
         level = "info"
         if status == "WARNING":
-            level = "warning"
+            level = "warn"
+        #elif status == "ERROR":
+        #    level = "error"
         elif status == "CRITICAL":
             level = "critical"
 
@@ -107,6 +109,9 @@ while True:
     solved_alerts = []
     for alertmanager_alert in alertmanager_alerts:
         #print(alert)
+
+        if "notifyGroup" not in alertmanager_alert["labels"] or alertmanager_alert["labels"]["notifyGroup"] != "netdata":
+            continue
 
         name = alertmanager_alert["labels"]["alertname"]
         level = alertmanager_alert["labels"]["severity"]

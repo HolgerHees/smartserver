@@ -250,3 +250,9 @@ class Dispatcher():
     def getData(self):
         devices = self.cache.getDevices() + self.virtual_devices
         return self._prepareChanges(devices, [], [], False, devices, self.cache.getGroups(), [], [], self.cache.getStats(), [], [])
+
+    def getStateMetrics(self):
+        metrics = []
+        for handler in self.registered_handler:
+            metrics += handler.getStateMetrics()
+        return metrics

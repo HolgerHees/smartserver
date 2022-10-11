@@ -49,7 +49,7 @@ class Fritzbox(_handler.Handler):
         self.delayed_dhcp_devices = {}
         self.delayed_wifi_devices = {}
         self.delayed_wakeup_timer = None
-        
+
         requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
     def _initNextRuns(self):
@@ -70,16 +70,22 @@ class Fritzbox(_handler.Handler):
             self.dhcp_clients[fritzbox_ip] = {}
             
             self.fritzbox_macs[fritzbox_ip] = None
+
+            self._setDeviceMetricState(fritzbox_ip, -1)
         
         for fritzbox_ip in self.config.fritzbox_devices:
             while True:
                 try:
                     self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
                     self.fh[fritzbox_ip] = FritzHosts(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
+
+                    self._setDeviceMetricState(fritzbox_ip, 1)
                     break
                 except FritzConnectionException as e:
                     self._handleExpectedException("Fritzbox '{}' not accessible.".format(fritzbox_ip), fritzbox_ip)
                     self._wait(self._getSuspendTimeout(fritzbox_ip))
+
+                    self._setDeviceMetricState(fritzbox_ip, 0)
 
         while self._isRunning():
             events = []
@@ -90,15 +96,21 @@ class Fritzbox(_handler.Handler):
                         continue
                         
                     self._processDevice(fritzbox_ip, events)
+
+                    self._setDeviceMetricState(fritzbox_ip, 1)
                 except FritzConnectionException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
+
                     self._handleExpectedException("Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
+                    self._setDeviceMetricState(fritzbox_ip, 0)
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
+
                     self._handleUnexpectedException(e, fritzbox_ip)
-                    
+                    self._setDeviceMetricState(fritzbox_ip, -1)
+
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
 

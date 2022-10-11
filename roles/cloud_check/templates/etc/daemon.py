@@ -285,7 +285,68 @@ class Handler(threading.Thread):
         return self.is_online
 
     def getStateMetrics(self):
-        return "{}\n".format( "\n".join(self.state_metrics) )
+        if self.is_online:
+            state_metrics = []
+
+            # **** CHECK MISSING TOPICS ****
+            topic_state = {}
+            for watched_topic in self.watched_topics:
+                topic_data = self.watched_topics[watched_topic]
+                source_peer = watched_topic.split("/")[0]
+                target_peer = watched_topic.split("/")[-1]
+
+                if source_peer not in topic_state:
+                    if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
+                        topic_state[source_peer] = -1
+                    else:
+                        topic_state[source_peer] = 0
+
+                if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
+                    state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,int(topic_data["state"])))
+                    topic_state[source_peer] = 1
+                    continue
+                else:
+                    state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,PEER_STATE_UNKNOWN))
+                    topic_data["state"] = PEER_STATE_UNKNOWN
+
+            for peer in topic_state:
+                state_metrics.append("cloud_check_peer_mqtt_state{{peer=\"{}\"}} {}".format(peer,topic_state[peer]))
+
+            # **** CHECK IF ALL PEERS ARE ONLINE ****
+            for peer in config.cloud_peers:
+                max_state = PEER_STATE_UNKNOWN
+                state_count = 0
+                for watched_topic in self.watched_topics:
+                    topic_data = self.watched_topics[watched_topic]
+                    target_peer = watched_topic.split("/")[-1]
+
+                    if target_peer != peer:
+                        continue
+
+                    state_count += 1
+
+                    if max_state < int(topic_data["state"]):
+                        max_state = int(topic_data["state"])
+
+                #Helper.logInfo("{} {} {}".format(peer, max_state, state_count))
+
+                # **** NOTIFY PEERS IF THEY ARE OFFLINE ****
+                peer_job = self.peer_jobs[peer]
+                if state_count == len(config.cloud_peers):
+                    state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,max_state))
+                    if max_state not in [PEER_STATE_UNKNOWN, PEER_STATE_ONLINE]:
+                        peer_job.setMeshOffline()
+                    else:
+                        peer_job.resetMeshOffline()
+                else:
+                    state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,PEER_STATE_UNKNOWN))
+                    peer_job.resetMeshOffline()
+
+                state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
+        else:
+            state_metrics = []
+
+        return "{}\n".format( "\n".join(state_metrics) )
 
     def forceOnlineCheck(self):
         if self.is_checking:
@@ -324,78 +385,8 @@ class Handler(threading.Thread):
                     for job in self.peer_jobs.values():
                         job.resume()
 
-            if self.is_online:
-                if (next_topic_checks - datetime.now()).total_seconds() <= 0:
-                    state_metrics = []
-
-                    # **** CHECK MISSING TOPICS ****
-                    topic_state = {}
-                    for watched_topic in self.watched_topics:
-                        topic_data = self.watched_topics[watched_topic]
-                        source_peer = watched_topic.split("/")[0]
-                        target_peer = watched_topic.split("/")[-1]
-
-                        if source_peer not in topic_state:
-                            if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
-                                topic_state[source_peer] = -1
-                            else:
-                                topic_state[source_peer] = 0
-
-                        if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
-                            state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,int(topic_data["state"])))
-                            topic_state[source_peer] = 1
-                            continue
-                        else:
-                            state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,PEER_STATE_UNKNOWN))
-                            topic_data["state"] = PEER_STATE_UNKNOWN
-
-                    for peer in topic_state:
-                        state_metrics.append("cloud_check_peer_mqtt_state{{peer=\"{}\"}} {}".format(peer,topic_state[peer]))
-
-                    # **** CHECK IF ALL PEERS ARE ONLINE ****
-                    for peer in config.cloud_peers:
-                        max_state = PEER_STATE_UNKNOWN
-                        state_count = 0
-                        for watched_topic in self.watched_topics:
-                            topic_data = self.watched_topics[watched_topic]
-                            target_peer = watched_topic.split("/")[-1]
-
-                            if target_peer != peer:
-                                continue
-
-                            state_count += 1
-
-                            if max_state < int(topic_data["state"]):
-                                max_state = int(topic_data["state"])
-
-                        #Helper.logInfo("{} {} {}".format(peer, max_state, state_count))
-
-                        # **** NOTIFY PEERS IF THEY ARE OFFLINE ****
-                        peer_job = self.peer_jobs[peer]
-                        if state_count == len(config.cloud_peers):
-                            state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,max_state))
-                            if max_state not in [PEER_STATE_UNKNOWN, PEER_STATE_ONLINE]:
-                                peer_job.setMeshOffline()
-                            else:
-                                peer_job.resetMeshOffline()
-                        else:
-                            state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,PEER_STATE_UNKNOWN))
-                            peer_job.resetMeshOffline()
-
-                        state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
-
-                    self.state_metrics = state_metrics
-
-                    next_topic_checks = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
-            else:
-                 next_topic_checks = datetime.now() + timedelta(seconds=CHECK_INTERVAL)
-
-                 self.state_metrics = []
-
-            sleep_time = (next_topic_checks - datetime.now()).total_seconds()
             #Helper.logInfo(sleep_time)
-            if sleep_time > 0:
-                self.event.wait( sleep_time )
+            self.event.wait( CHECK_INTERVAL )
             self.event.clear()
 
     def on_connect(self,client,userdata,flags,rc):

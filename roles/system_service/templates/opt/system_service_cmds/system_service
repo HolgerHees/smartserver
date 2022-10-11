@@ -76,12 +76,20 @@ class Handler(Server):
 
         data["root"] = self.cache.getGatewayMAC()
         emit('network_data', data)
+
+    def getStateMetrics(self):
+        metrics = self.dispatcher.getStateMetrics()
+        return "{}\n".format( "\n".join(metrics) )
           
 #@app.route('/state/', methods = ['POST'])
 #def state():
 #    pass
 
 #https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
+
+@app.route('/metrics/', methods = ['GET'])
+def metrics():
+    return handler.getStateMetrics()
 
 @socketio.on_error_default
 def on_error(e):

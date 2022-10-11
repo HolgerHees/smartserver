@@ -18,13 +18,14 @@ mx.Alarms = (function( ret ) {
             if(!data.data.hasOwnProperty(x)) continue;
 
             var alarm = data.data[x];
-            if(alarm.labels.severity === 'warning')
-            {
-                warnCount++;
-            }
-            if(alarm.labels.severity === 'critical')
+            if(alarm.labels.severity === 'error' || alarm.labels.severity === 'critical')
             {
                 errorCount++;
+            }
+            //if(alarm.labels.severity === 'warn')
+            else
+            {
+                warnCount++;
             }
         }
 

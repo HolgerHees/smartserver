@@ -60,7 +60,9 @@ class OpenWRT(_handler.Handler):
 
             self.wifi_associations[openwrt_ip] = {}
             self.wifi_clients[openwrt_ip] = {}
-            
+
+            self._setDeviceMetricState(openwrt_ip, -1)
+
         while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
@@ -72,22 +74,30 @@ class OpenWRT(_handler.Handler):
                         continue
                     
                     self._processDevice(openwrt_ip, events)
+
+                    self._setDeviceMetricState(openwrt_ip, 1)
                 except UbusCallException as e:
                     if self.sessions[openwrt_ip][0] is not None and e.getCode() == -32002:
                         logging.info("OpenWRT '{}' has invalid session. Will refresh.".format(openwrt_ip))
                         self._initNextRuns(openwrt_ip)
                     else:
                         self.cache.cleanLocks(self, events)
+
                         self._handleExpectedException("OpenWRT '{}' ({})' got exception {} - '{}'".format(openwrt_ip, e.getType(), e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
+                        self._setDeviceMetricState(openwrt_ip, 0)
                 except NetworkException as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
+
                     self._handleExpectedException(str(e), openwrt_ip, e.getTimeout())
+                    self._setDeviceMetricState(openwrt_ip, 0)
                 except Exception as e:
                     self._initNextRuns()
                     self.cache.cleanLocks(self, events)
+
                     self._handleUnexpectedException(e, openwrt_ip)
-                    
+                    self._setDeviceMetricState(openwrt_ip, -1)
+
             if len(events) > 0:
                 self._getDispatcher().dispatch(self,events)
                 

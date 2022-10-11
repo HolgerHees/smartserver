@@ -24,6 +24,8 @@ influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
 influxdb_token = "{{vault_influxdb_admin_token}}"
 
+mqtt_host = "mosquitto"
+
 default_vlan = 1
 
 startup_error_timeout = 5

@@ -27,7 +27,25 @@ class Handler:
         else:
             self.event = None
             self.thread = None
-        
+
+        self.device_metric_states = {}
+        self.service_metric_states = {}
+
+    def getStateMetrics(self):
+        metrics = []
+        for hostname in self.device_metric_states:
+            metrics.append("system_service_state{{type=\"{}\",hostname=\"{}\"}} {}".format(self.__class__.__name__.lower(), hostname, self.device_metric_states[hostname]))
+
+        for service in self.service_metric_states:
+            metrics.append("system_service_state{{type=\"{}\"}} {}".format(service, self.service_metric_states[service]))
+        return metrics
+
+    def _setDeviceMetricState(self, hostname, value):
+        self.device_metric_states[hostname] = value
+
+    def _setServiceMetricState(self, service, value):
+        self.service_metric_states[service] = value
+
     def start(self):
         if self.thread is not None:
             self.thread.start()
@@ -65,7 +83,7 @@ class Handler:
         return 0
         
     def _handleExpectedException(self, msg, key, timeout = 60):
-        Helper.logError("{}.{}".format(msg, " Will suspend{} for {}.".format(" {}".format(key) if key is not None else "", timedelta(seconds=timeout) if timeout >= 0 else "")), 2)
+        Helper.logInfo("{}.{}".format(msg, " Will suspend{} for {}.".format(" {}".format(key) if key is not None else "", timedelta(seconds=timeout) if timeout >= 0 else "")), 2)
         self.is_suspended[key] = [datetime.now(), timeout]
     
     def _handleUnexpectedException(self, e, key = None, timeout = 900):
@@ -78,7 +96,7 @@ class Handler:
         
     def _getDispatcher(self):
         return self.dispatcher
-        
+
     def getStartupTimestamp(self):
         return round(self.getNowAsTimestamp() - 0.1,3)
 

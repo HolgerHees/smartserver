@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    prometheus_version: '2.39.0'
+    prometheus_version: '2.39.1'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
@@ -27,13 +27,24 @@
   copy:
     src: "{{item.path}}"
     dest: "{{ global_etc }}prometheus/{{item.path | basename}}"
-    owner: nobody
-    group: "{{ 'nobody' if is_fedora else 'nogroup'}}"
+    owner: "{{item.user}}"
+    group: "{{item.group}}"
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rw,g=r,o=", path: "templates/etc/prometheus.yml.tpl" }
-    - { mode: "u=rwx,g=rx,o=", path: "templates/etc/generator" }
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", mode: "u=rw,g=r,o=", path: "templates/etc/prometheus.yml.tpl" }
+    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "templates/etc/generator" }
   notify: "restart prometheus"
+
+- name: set docker selinux configuration => is_fedora
+  sefcontext:
+    target: "{{ global_etc }}prometheus/generator"
+    setype: "bin_t"
+  register: sefcontext_result
+  when: is_fedora|bool
+
+- name: reload selinux configuration => is_fedora and sefcontext changed
+  shell: "restorecon -irv {{ global_etc }}prometheus"
+  when: is_fedora|bool and sefcontext_result.changed
 
 - name: check started docker
   systemd:

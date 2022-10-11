@@ -16,7 +16,9 @@
         for: 0s
         labels:
             notifyGroup: "logs-{{'{{'}} $labels.group {{'}}'}}"
-        generatorURL: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
+            severity: error
+        annotations:
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
       - alert: alert
         expr: |
             sum by (group,log)(
@@ -31,5 +33,7 @@
         for: 0s
         labels:
             notifyGroup: "logs-{{'{{'}} $labels.group {{'}}'}}"
-        generatorURL: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
+            severity: critical
+        annotations:
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
 
