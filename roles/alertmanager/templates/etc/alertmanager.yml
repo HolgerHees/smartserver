@@ -8,12 +8,12 @@ global:
 #  - /etc/alertmanager/templates/*.tmpl
 
 route:
-  group_by: 
+  group_by:
     - notifyGroup
 #    - log
   group_wait: 30s
   group_interval: 5m
-  repeat_interval: 4h
+  repeat_interval: 24h
   receiver: default
   routes:
     - matchers:
@@ -26,41 +26,48 @@ route:
       receiver: silent
     - matchers:
       - notifyGroup=~"logs-.*"
-      - group="crony"
-      receiver: silent
-    - matchers:
-      - notifyGroup=~"logs-.*"
       - group="sshd"
       - log=~".*Failed to release session.*"
       receiver: silent
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      - group="apache"
+      - logfile="access.log"
+#      - log=~".*/update_service/api.php.*503.*"
+      receiver: silent
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      - group="loki"
+      - log=~".*error fetching chunks.*"
+      receiver: silent
+#    - matchers:
+#      - notifyGroup=~"logs-.*"
+#      - group="apache"
+#      - log=~".*/cgi-bin/.%2e/.*"
+#      receiver: silent
+#    - matchers:
+#      - notifyGroup=~"logs-.*"
+#      - group="crony"
+#      receiver: silent
 #    - matchers:
 #      - notifyGroup=~"logs-.*"
 #      - group="php"
 #      - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
 #      receiver: silent
-    - matchers:
-      - notifyGroup=~"logs-.*"
-      - group="grafana"
-      - log=~".*abort Handler.*"
-      receiver: silent
+#    - matchers:
+#      - notifyGroup=~"logs-.*"
+#      - group="grafana"
+#      - log=~".*abort Handler.*"
+#      receiver: silent
 #    - matchers:
 #      - notifyGroup=~"logs-.*"
 #      - group="apache"
 #      - log=~".*/grafana/api/live/ws.*Mobile.*"
 #      receiver: silent
-    - matchers:
-      - notifyGroup=~"logs-.*"
-      - group="apache"
-      - log=~".*/update_service/api.php.*503.*"
-      receiver: silent
-    - matchers:
-      - notifyGroup=~"logs-.*"
-      - group="apache"
-      - log=~".*/cgi-bin/.%2e/.*"
-      receiver: silent
 # **********************************
     - matchers:
       - notifyGroup=~"logs-.*"
+      group_interval: 15m
       receiver: logs
 {% if cloud_vpn != 'None' %}{% for peer in cloud_vpn.peers %}
     - matchers:
