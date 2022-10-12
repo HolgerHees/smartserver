@@ -9,11 +9,16 @@ import MySQLdb
 from datetime import datetime, timedelta
 from pytz import timezone
 import time
+import threading
+import logging
 
 import requests
 import urllib.parse
 import json
 import decimal
+
+from flask import Flask, request, make_response
+from werkzeug.serving import WSGIRequestHandler
 
 import config
 
@@ -111,7 +116,7 @@ class Fetcher(object):
         else:
             return json.loads(r.text)
       
-    def fetchCurrent(self, token, mqtt_client ):
+    def fetchCurrent(self, token, mqtt_client, currentFallbacks ):
         
         date = datetime.now(timezone(config.timezone))
         end_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
@@ -132,19 +137,39 @@ class Fetcher(object):
         else:
             data["observations"].reverse()
             observedFrom = None
+            missing_fields = None
+
+            _data = {"observation": None, "missing_fields": current_fields}
             for observation in data["observations"]:
-                if len(observation) != 10:
+                missing_fields = [field for field in current_fields if field not in observation]
+
+                if _data["observation"] is None or len(_data["missing_fields"]) < len(missing_fields):
+                    _data["observation"] = observation
+                    _data["missing_fields"] = missing_fields
+
+                if len(_data["missing_fields"]) == 0:
+                    break
+
+            for missing_field in list(_data["missing_fields"]):
+                if missing_field not in currentFallbacks:
                     continue
-                  
-                for field in current_fields:
-                    mqtt_client.publish("{}/weather/current/{}".format(config.publish_topic,field), payload=observation[field], qos=0, retain=False)            
-                observedFrom = observation["observedFrom"]
-                break
-          
-            if observedFrom is None:
-                raise CurrentDataException("Failed processing current data. Content: {}".format(data))
+
+                print("Use fallback data for field {}".format(missing_field), flush=True)
+
+                _data["observation"][missing_field] = currentFallbacks[missing_field]
+                _data["missing_fields"].remove(missing_field)
+
+
+            #time.sleep(60000)
+
+            if len(_data["missing_fields"]) > 0:
+                raise CurrentDataException("Failed processing current data. Missing fields: {}, Content: {}".format(_data["missing_fields"], _data["observation"]))
             else:
-                mqtt_client.publish("{}/weather/current/refreshed".format(config.publish_topic), payload=observedFrom, qos=0, retain=False)            
+                for field in current_fields:
+                    mqtt_client.publish("{}/weather/current/{}".format(config.publish_topic,field), payload=_data["observation"][field], qos=0, retain=False)
+                observedFrom = _data["observation"]["observedFrom"]
+
+                mqtt_client.publish("{}/weather/current/refreshed".format(config.publish_topic), payload=observedFrom, qos=0, retain=False)
 
             print("Current data published", flush=True)
             
@@ -160,6 +185,7 @@ class Fetcher(object):
         latitude, longitude = config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
         
+        currentFallbacks = None
         entries = {}
         for period in forecast_config:
             fields = forecast_config[period]
@@ -180,6 +206,9 @@ class Fetcher(object):
                     
                 for field in fields:
                     values[field] = forecast[field]
+
+            if period == "PT0S":
+                currentFallbacks = values
                 
         sets = []
         for key in sorted(entries.keys()):
@@ -210,6 +239,8 @@ class Fetcher(object):
         mqtt_client.publish("{}/weather/forecast/refreshed".format(config.publish_topic), payload="1", qos=0, retain=False)            
 
         print("Forecast data published • Total: {}".format(len(sets)), flush=True)
+
+        return currentFallbacks
 
     def triggerSummerizedItems(self, mqtt_client):
         db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
@@ -258,14 +289,22 @@ class Fetcher(object):
             
         print("Summery data published", flush=True)
 
-class Handler(object):
+class Handler(threading.Thread):
     '''Handler client'''
     def __init__(self):
+        threading.Thread.__init__(self)
+
+        self.is_running = True
+
+        self.event = threading.Event()
+
         self.mqtt_client = None
         
         self.current_values = None
         self.forecast_values = None
-        
+
+        self.state_metrics = { "publish": -1, "forecast": -1, "current": -1, "summary": -1 }
+
     def connectMqtt(self):
         print("Connection to mqtt ...", end='', flush=True)
         self.mqtt_client = mqtt.Client()
@@ -277,22 +316,25 @@ class Handler(object):
         
         self.mqtt_client.loop_start()
         
-    def loop(self):        
+    def run(self):
         #status = os.fdopen(self.dhcpListenerProcess.stdout.fileno())
         #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
+        if not config.publish_topic or not config.api_username or not config.api_password:
+            print("Publishing disabled",flush=True)
+            return
         
-        while True:
-            error_count = 0
-          
+        error_count = 0
+        while self.is_running:
             try:
-                if config.publish_topic and config.api_username and config.api_password:
-                    fetcher = Fetcher()
+                fetcher = Fetcher()
 
-                    authToken = fetcher.getAuth()
+                authToken = fetcher.getAuth()
 
-                    fetcher.fetchCurrent(authToken,self.mqtt_client)
-                    fetcher.fetchForecast(authToken,self.mqtt_client)
-                    fetcher.triggerSummerizedItems(self.mqtt_client)
+                currentFallbacks = fetcher.fetchForecast(authToken,self.mqtt_client)
+
+                fetcher.fetchCurrent(authToken,self.mqtt_client, currentFallbacks)
+
+                fetcher.triggerSummerizedItems(self.mqtt_client)
                 
                 date = datetime.now(timezone(config.timezone))
                 target = date.replace(minute=5,second=0)
@@ -304,19 +346,26 @@ class Handler(object):
                 
                 sleepTime = diff.total_seconds()  
                 
-                error_count = 0                
+                error_count = 0
+
+                self.state_metrics["publish"] = 1
             except Exception as e:
                 error_count += 1
                 sleepTime = 600 * error_count if error_count < 6 else 3600
+
+                self.state_metrics["publish"] = 0
                 try:
                     raise e
+                except MySQLdb._exceptions.OperationalError as e:
+                    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
                 except (CurrentDataException,ForecastDataException) as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=(sys.stderr if error_count > 3 else sys.stdout))
+                    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
                 except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True, file=sys.stderr)
+                    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
 
             print("Sleep {} seconds".format(sleepTime),flush=True)
-            time.sleep(sleepTime)
+            self.event.wait(sleepTime)
+            self.event.clear()
 
             #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
 
@@ -328,11 +377,20 @@ class Handler(object):
         print("Disconnect from mqtt with result code:"+str(rc), flush=True)
 
     def on_message(self,client,userdata,msg):
+        topic = msg.topic.split("/")
+        if topic[2] == u"current":
+            state_name = "current"
+        elif topic[2] == u"forecast":
+            state_name = "forecast"
+        if topic[2] == u"items":
+            state_name = "summary"
+
+        is_refreshed = topic[3] == u"refreshed"
+
         try:
             #print("Topic " + msg.topic + ", message:" + str(msg.payload), flush=True)
-            topic = msg.topic.split("/")
-            if topic[2] == u"current":
-                if topic[3] == u"refreshed":
+            if state_name == u"current":
+                if is_refreshed:
                     db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
                     cursor = db.cursor()
 
@@ -360,8 +418,8 @@ class Handler(object):
                     if self.current_values is None:
                         self.current_values = {}
                     self.current_values[topic[3]] = msg.payload.decode("utf-8")
-            elif topic[2] == u"forecast":
-                if topic[3] == u"refreshed":
+            elif state_name == u"forecast":
+                if is_refreshed:
                     if self.forecast_values is not None:
                         db = MySQLdb.connect(host=config.db_host,user=config.db_username,passwd=config.db_password,db=config.db_name)
                         cursor = db.cursor()
@@ -407,31 +465,68 @@ class Handler(object):
                         self.forecast_values[datetime_str] = {}
                         
                     self.forecast_values[datetime_str][field] = msg.payload.decode("utf-8")
-            elif topic[2] == u"items":
-                if topic[3] == u"refreshed":
+            elif state_name == u"summary":
+                if is_refreshed:
                     print("Summery data processed", flush=True)
             else:
                 print("Unknown topic " + msg.topic + ", message:" + str(msg.payload), flush=True, file=sys.stderr)
+
+            if is_refreshed:
+                self.state_metrics[state_name] = 1
+
         except Exception as e:
+            self.state_metrics[state_name] = 0
+
             print("Exception: {}".format(str(e)))
             traceback.print_exc()
+
+    def getStateMetrics(self):
+        state_metrics = []
+        for name in self.state_metrics:
+            state_metrics.append("weather_forecast_state{{type=\"{}\"}} {}".format(name,self.state_metrics[name]))
+        return "{}\n".format( "\n".join(state_metrics) )
             
     def terminate(self):
+        self.is_running = False
+        self.event.set()
+
         if self.mqtt_client != None:
             print("Close connection to mqtt", flush=True)
             self.mqtt_client.loop_stop()
             self.mqtt_client.disconnect()
-        
-handler = Handler()
-handler.connectMqtt()
+
+app = Flask(__name__)
+
+@app.route('/metrics/', methods = ['GET'])
+def metrics():
+    return handler.getStateMetrics()
+
+logging_handler = logging.StreamHandler(sys.stdout)
+logging.basicConfig(
+    handlers = [logging_handler],
+    level=logging.ERROR
+    #format=logging.Formatter(fmt="[%(levelname)s] - %(module)s - %(message)s")
+)
+
+class ShutdownException(Exception):
+    pass
 
 def cleanup(signum, frame):
-    #print(signum)
-    #print(frame)
-    handler.terminate()
-    exit(0)
+    raise ShutdownException()
 
 signal.signal(signal.SIGTERM, cleanup)
 signal.signal(signal.SIGINT, cleanup)
 
-handler.loop()
+handler = Handler()
+handler.connectMqtt()
+handler.start()
+
+try:
+    WSGIRequestHandler.protocol_version = "HTTP/1.1"
+    app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
+except ShutdownException as e:
+    pass
+
+handler.terminate()
+exit(0)
+

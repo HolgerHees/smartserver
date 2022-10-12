@@ -93,6 +93,9 @@ class PeerJob(threading.Thread):
         try:
             result = subprocess.run(["/bin/mountpoint","-q","/cloud/remote/{}".format(peer)], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout = self._getTimeout(self.has_mount_error) )
             is_success = result.returncode == 0
+        except subprocess.TimeoutExpired as e:
+            is_success = False
+            Helper.logInfo("Mount timeout for peer {}".format(peer))
         except Exception as e:
             is_success = False
             Helper.logError("Mount check exception {} - {}".format(type(e), str(e)))
@@ -107,9 +110,9 @@ class PeerJob(threading.Thread):
             #print("{} {}".format(response.status_code,response.text))
             #self.log.info("{} {} {}".format(host,response_code == 200,response_body == "online"))
             running_state = PEER_STATE_ONLINE if response.status_code == 200 and response.text.rstrip() == "online" else PEER_STATE_OFFLINE
-        except requests.exceptions.ConnectionError as e:
+        except (requests.exceptions.ConnectionError,requests.exceptions.ReadTimeout) as e:
             running_state = PEER_STATE_OFFLINE
-            Helper.logInfo("State check connection error {} - {}".format(type(e), str(e)))
+            Helper.logInfo("State connection error for peer {}".format(peer))
         except Exception as e:
             running_state = PEER_STATE_OFFLINE
             Helper.logError("State check exception {} - {}".format(type(e), str(e)))
@@ -192,16 +195,6 @@ class PeerJob(threading.Thread):
 
     def getMountState(self):
         return self.last_mount_state
-
-    def setMeshOffline(self):
-        if self.mesh_offline_since is None:
-            self.mesh_offline_since = datetime.now()
-
-    def getMeshOffline(self):
-        return self.mesh_offline_since
-
-    def resetMeshOffline(self):
-        self.mesh_offline_since = None
 
     def suspend(self):
         if self.is_suspended:
@@ -334,13 +327,8 @@ class Handler(threading.Thread):
                 peer_job = self.peer_jobs[peer]
                 if state_count == len(config.cloud_peers):
                     state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,max_state))
-                    if max_state not in [PEER_STATE_UNKNOWN, PEER_STATE_ONLINE]:
-                        peer_job.setMeshOffline()
-                    else:
-                        peer_job.resetMeshOffline()
                 else:
                     state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,PEER_STATE_UNKNOWN))
-                    peer_job.resetMeshOffline()
 
                 state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
         else:

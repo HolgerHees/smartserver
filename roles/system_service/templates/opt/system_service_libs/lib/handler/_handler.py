@@ -76,7 +76,7 @@ class Handler:
         if suspend_data is not None:
             suspend_time = (datetime.now() - suspend_data[0]).total_seconds()
             if suspend_time > suspend_data[1]:
-                Helper.logWarning("Resume {}{}".format(self.__class__.__name__, " {}".format(key) if key is not None else ""), 2)
+                Helper.logInfo("Resume {}{}".format(self.__class__.__name__, " {}".format(key) if key is not None else ""), 2)
                 self.is_suspended[key] = None
             else:
                 return suspend_data[1] - suspend_time

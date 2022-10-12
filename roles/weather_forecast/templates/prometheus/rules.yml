@@ -1,0 +1,11 @@
+groups:
+- name: weather_forecast
+  rules:
+  - alert: Weather forecast availability
+    expr: 'weather_forecast_state{job="weather_forecast"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_forecast"
+      severity: critical
+    annotations:
+      summary: "Weather forecast '{{'{{'}} $labels.type {{'}}'}}'"

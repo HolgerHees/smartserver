@@ -14,6 +14,11 @@ mx.Alarms = (function( ret ) {
 
         for(alarm of data.data)
         {
+            if( alarm.status.state == 'suppressed' )
+            {
+                continue;
+            }
+
             let is_silent = false
             for( receiver of alarm.receivers )
             {
@@ -64,7 +69,7 @@ mx.Alarms = (function( ret ) {
     {
         var id = Math.round( Date.now() / 1000 );
 
-        var url = "//" + mx.Host.getAuthPrefix() + "alertmanager." + mx.Host.getDomain() + "/api/v1/alerts";
+        var url = "//" + mx.Host.getAuthPrefix() + "alertmanager." + mx.Host.getDomain() + "/api/v1/alerts?time=" + Date.now();
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url );

@@ -77,7 +77,7 @@ exportLocalShares()
         #/usr/sbin/rpc.gssd -v
         
         echo "starting nfs"
-        /usr/sbin/rpc.nfsd --debug --no-nfs-version 3
+        /usr/sbin/rpc.nfsd --debug --no-nfs-version 3 2>&1
         #sleep 1
         #/usr/sbin/rpc.nfsd 0
         #sleep 1

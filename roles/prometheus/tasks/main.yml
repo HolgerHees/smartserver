@@ -25,14 +25,15 @@
 
 - name: copy config
   copy:
-    src: "{{item.path}}"
-    dest: "{{ global_etc }}prometheus/{{item.path | basename}}"
+    src: "templates/etc/prometheus/{{item.path}}"
+    dest: "{{ global_etc }}prometheus/{{item.path}}"
     owner: "{{item.user}}"
     group: "{{item.group}}"
     mode: "{{item.mode}}"
   with_items:
-    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", mode: "u=rw,g=r,o=", path: "templates/etc/prometheus.yml.tpl" }
-    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "templates/etc/generator" }
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", mode: "u=rw,g=r,o=", path: "rules/prometheus.yml" }
+    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", mode: "u=rw,g=r,o=", path: "prometheus.yml.tpl" }
+    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "generator" }
   notify: "restart prometheus"
 
 - name: set docker selinux configuration => is_fedora

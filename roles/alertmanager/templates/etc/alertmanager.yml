@@ -31,14 +31,19 @@ route:
       receiver: silent
     - matchers:
       - notifyGroup=~"logs-.*"
-      - group="apache"
-      - logfile="access.log"
-#      - log=~".*/update_service/api.php.*503.*"
+      - group="loki"
+      - log=~".*error fetching chunks.*"
       receiver: silent
     - matchers:
       - notifyGroup=~"logs-.*"
-      - group="loki"
-      - log=~".*error fetching chunks.*"
+      - group="nextcloud"
+      - log=~".*Unable to parse content from.*"
+      receiver: silent
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      - group="apache"
+      - logfile="access.log"
+#      - log=~".*/update_service/api.php.*503.*"
       receiver: silent
 #    - matchers:
 #      - notifyGroup=~"logs-.*"

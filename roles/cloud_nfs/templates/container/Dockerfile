@@ -26,3 +26,6 @@ RUN mkdir /var/lib/nfs/v4recovery
 # -DUSE_RADOS_RECOV=OFF -DRADOS_URLS=OFF 
  
 ENTRYPOINT [ "/etc/cloud_nfs/util/startup.sh" ]
+
+EXPOSE 2049/tcp
+EXPOSE 2049/udp

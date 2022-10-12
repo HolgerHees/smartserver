@@ -1,0 +1,11 @@
+groups:
+- name: prometheus_targets
+  rules:
+  - alert: Prometheus target availability
+    expr: up == 0
+    for: 5m
+    labels:
+      notifyGroup: prometheus
+      severity: error
+    annotations:
+      summary: "Prometheus target {{ $labels.job }}"
