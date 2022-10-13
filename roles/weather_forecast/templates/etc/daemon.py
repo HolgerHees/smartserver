@@ -303,7 +303,12 @@ class Handler(threading.Thread):
         self.current_values = None
         self.forecast_values = None
 
-        self.state_metrics = { "publish": -1, "forecast": -1, "current": -1, "summary": -1 }
+        self.state_metrics = { "data_provider": -1, "data_current": -1, "data_forecast": -1, "publish": -1 }
+
+        self.consume_errors = { "forecast": None, "current": None, "summery": None }
+        self.consume_refreshed = { "forecast": None, "current": None, "summery": None }
+
+        self.last_consume_error = None
 
     def connectMqtt(self):
         print("Connection to mqtt ...", end='', flush=True)
@@ -331,8 +336,10 @@ class Handler(threading.Thread):
                 authToken = fetcher.getAuth()
 
                 currentFallbacks = fetcher.fetchForecast(authToken,self.mqtt_client)
+                self.state_metrics["data_forecast"] = 1
 
                 fetcher.fetchCurrent(authToken,self.mqtt_client, currentFallbacks)
+                self.state_metrics["data_current"] = 1
 
                 fetcher.triggerSummerizedItems(self.mqtt_client)
                 
@@ -348,20 +355,28 @@ class Handler(threading.Thread):
                 
                 error_count = 0
 
+                self.state_metrics["data_provider"] = 1
                 self.state_metrics["publish"] = 1
-            except Exception as e:
+            except ForecastDataException as e:
+                print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+                self.state_metrics["data_forecast"] = 0
                 error_count += 1
-                sleepTime = 600 * error_count if error_count < 6 else 3600
-
+            except CurrentDataException as e:
+                print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+                self.state_metrics["data_current"] = 0
+                error_count += 1
+            except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
+                print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+                self.state_metrics["data_provider"] = 0
+                error_count += 1
+            except Exception:
+            #except MySQLdb._exceptions.OperationalError as e:
+                print("{}: {}".format(str(e.__class__),str(e)), flush=True)
                 self.state_metrics["publish"] = 0
-                try:
-                    raise e
-                except MySQLdb._exceptions.OperationalError as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
-                except (CurrentDataException,ForecastDataException) as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
-                except (RequestDataException,AuthException,requests.exceptions.RequestException) as e:
-                    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+                error_count += 1
+
+            if error_count > 0:
+                sleepTime = 600 * error_count if error_count < 6 else 3600
 
             print("Sleep {} seconds".format(sleepTime),flush=True)
             self.event.wait(sleepTime)
@@ -472,10 +487,10 @@ class Handler(threading.Thread):
                 print("Unknown topic " + msg.topic + ", message:" + str(msg.payload), flush=True, file=sys.stderr)
 
             if is_refreshed:
-                self.state_metrics[state_name] = 1
+                self.consume_refreshed[state_name] = datetime.now()
 
         except Exception as e:
-            self.state_metrics[state_name] = 0
+            self.consume_errors[state_name] = datetime.now()
 
             print("Exception: {}".format(str(e)))
             traceback.print_exc()
@@ -484,6 +499,18 @@ class Handler(threading.Thread):
         state_metrics = []
         for name in self.state_metrics:
             state_metrics.append("weather_forecast_state{{type=\"{}\"}} {}".format(name,self.state_metrics[name]))
+
+        has_errors = False
+        for state_name in self.consume_errors:
+            if self.consume_errors[state_name] is None or self.consume_refreshed[state_name] is None:
+                continue
+
+            if (self.consume_refreshed[state_name] - self.consume_errors[state_name]).total_seconds() < 300:
+                has_errors = True
+                break
+
+        state_metrics.append("weather_forecast_state{{type=\"consume\"}} {}".format(0 if has_errors else 1))
+
         return "{}\n".format( "\n".join(state_metrics) )
             
     def terminate(self):

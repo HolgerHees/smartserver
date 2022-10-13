@@ -461,7 +461,7 @@ class OpenWRT(_handler.Handler):
         try:
             return requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
         except requests.exceptions.ConnectionError as e:
-            logging.error(str(e))
+            #logging.error(str(e))
             raise NetworkException("OpenWRT {} currently not available".format(ip), self.config.remote_suspend_timeout)
         
     def _getSession(self, ip, username, password ):
