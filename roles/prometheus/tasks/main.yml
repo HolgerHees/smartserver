@@ -136,6 +136,7 @@
     container_pre_exec: "{{ global_etc }}prometheus/generator"
     container_routes:
       - { "subnet": "default", "gateway": "{{docker_prometheus_ip.split('.')[:3] | join('.')}}.1"}
+    container_after: [ "alertmanager" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier

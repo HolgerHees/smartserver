@@ -156,6 +156,7 @@
 - name: create systemd service
   vars:
     container_name: "librenms"
+    container_after: [ "redis", "mysql" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier

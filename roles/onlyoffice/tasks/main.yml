@@ -117,6 +117,7 @@
 - name: create systemd service
   vars:
     container_name: "onlyoffice"
+    container_after: [ "mysql", "redis" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: register update notifier

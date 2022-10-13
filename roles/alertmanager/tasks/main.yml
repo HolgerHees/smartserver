@@ -105,6 +105,7 @@
 - name: create systemd service
   vars:
     container_name: "alertmanager"
+    container_after: [ "postfix" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier

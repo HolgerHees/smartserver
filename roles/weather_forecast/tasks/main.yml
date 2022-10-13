@@ -153,7 +153,7 @@
 - name: create systemd service
   vars:
     container_name: "weather_forecast"
-    container_after: [ "mosquitto" ]
+    container_after: [ "cloud_mosquitto", "mysql" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
 
 - name: trigger weather_forecast handler

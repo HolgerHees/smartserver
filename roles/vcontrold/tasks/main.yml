@@ -53,6 +53,7 @@
     network_mode: "default"
     networks:
       - name: "vcontrold"
+        ipv4_address: "{{docker_vcontrold_ip}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'

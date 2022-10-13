@@ -95,6 +95,7 @@
 - name: create systemd service
   vars:
     container_name: "loki"
+    container_after: [ "alertmanager" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register grafana configs

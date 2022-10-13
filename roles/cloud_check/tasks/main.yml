@@ -26,9 +26,8 @@
       - cloud_mosquitto
       - prometheus
   import_tasks: roles/container/tasks/add_docker_network.yml
-  tags: [ 'postfix', 'prometheus', 'cloud_mosquitto', 'alpine' ]
+  tags: [ 'prometheus', 'cloud_mosquitto', 'alpine' ]
   notify: 
-    - "restart postfix"
     - "restart prometheus"
     - "restart cloud_mosquitto"
 
