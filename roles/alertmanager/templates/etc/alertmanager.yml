@@ -53,8 +53,7 @@ route:
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="apache"
-      - logfile="access.log"
-#      - log=~".*/update_service/api.php.*503.*"
+      - log=~".*logfile=access\.log.*"
       receiver: silent
 #    - matchers:
 #      - notifyGroup=~"logs-.*"
