@@ -16,6 +16,7 @@ route:
   repeat_interval: 24h
   receiver: default
   routes:
+# Netdata logs und warnings
     - matchers:
       - notifyGroup="netdata"
       - severity="warn"
@@ -24,21 +25,31 @@ route:
       - notifyGroup=~"logs-.*"
       - group="netdata"
       receiver: silent
+# SSH Errors 13.10.2022
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="sshd"
       - log=~".*Failed to release session.*"
       receiver: silent
+# Loki errors 13.10.2022
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="loki"
       - log=~".*error fetching chunks.*"
       receiver: silent
+# FS CACHE 13.10.2022
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      - group="kernel"
+      - log=~"FS-Cache .*"
+      receiver: silent
+# Nextcloud News fetcher 13.10.2022
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="nextcloud"
       - log=~".*Unable to parse content from.*"
       receiver: silent
+# Apache access logs
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="apache"
