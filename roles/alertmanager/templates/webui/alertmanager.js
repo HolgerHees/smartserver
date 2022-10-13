@@ -14,7 +14,7 @@ mx.Alarms = (function( ret ) {
 
         for(alarm of data.data)
         {
-            if( alarm.status.state == 'suppressed' )
+            if( alarm.status.state != 'active' )
             {
                 continue;
             }
