@@ -86,7 +86,7 @@ route:
       receiver: logs
 {% if cloud_vpn != 'None' %}{% for peer in cloud_vpn.peers %}
     - matchers:
-      - notifyGroup=~"cloud-peer-{{peer}}"
+      - notifyGroup="cloud-peer-{{peer}}"
       receiver: cloud-peer-{{peer}}
 {% endfor %}{% endif %}
 
