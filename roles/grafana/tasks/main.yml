@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    grafana_version: '9.1.7'
+    grafana_version: '9.2.0'
     natel_discrete_plugin_version: "0.1.1"
   tags: [ 'update_notifier_config' ]    
 
@@ -171,7 +171,7 @@
 - name: create systemd service
   vars:
     container_name: "grafana"
-    container_after: [ "mysql", "influxdb", "loki" ]
+    container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier
