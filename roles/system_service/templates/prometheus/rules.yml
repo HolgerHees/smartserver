@@ -8,7 +8,7 @@ groups:
       notifyGroup: "system_service"
       severity: critical
     annotations:
-      summary: "System service database '{{'{{'}} $labels.type {{'}}'}}'"
+      summary: "System service '{{'{{'}} $labels.type {{'}}'}}'"
 
   - alert: System service device availability
     expr: 'system_service_state{job="system_service",hostname!=""} == 0'
