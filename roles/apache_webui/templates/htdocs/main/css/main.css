@@ -260,6 +260,8 @@ body.phone #menu .group.header .logout.button {
     padding: 0 2px;
     text-align: center;
     color: var(--alarm-button-default);
+    white-space: nowrap;
+    border-radius: 5px;
 }
 #app .alarm.button.warn span.badge {
     background-color: var(--alarm-button-warn);

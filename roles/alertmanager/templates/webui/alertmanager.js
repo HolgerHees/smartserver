@@ -12,6 +12,11 @@ mx.Alarms = (function( ret ) {
         var warnCount = 0;
         var errorCount = 0;
 
+        /*data.data = [
+            {status: {state:"active"}, labels: {severity: "error"}, receivers: ["silent"]},
+            {status: {state:"active"}, labels: {severity: "error"}, receivers: ["default"]}
+        ]*/
+
         for(alarm of data.data)
         {
             if( alarm.status.state != 'active' )
@@ -44,7 +49,14 @@ mx.Alarms = (function( ret ) {
             }
         }
 
-        mx.$$(counterSelector).forEach(function(element){ element.innerText = infoCount + warnCount + errorCount });
+        if( ( warnCount == 0 && errorCount == 0 ) || infoCount == 0 )
+        {
+            mx.$$(counterSelector).forEach(function(element){ element.innerText = warnCount + errorCount + infoCount });
+        }
+        else
+        {
+            mx.$$(counterSelector).forEach(function(element){ element.innerText = (warnCount + errorCount) + "•" + infoCount });
+        }
 
         var badgeButtons = mx.$$(buttonSelector);
         if( warnCount > 0 )
