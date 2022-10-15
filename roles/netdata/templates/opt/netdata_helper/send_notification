@@ -57,6 +57,11 @@ while True:
     for name in netdata_alerts:
         netdata_alert = netdata_alerts[name]
         status = netdata_alert['status']
+        delay_up_to_timestamp = netdata_alert['delay_up_to_timestamp']
+
+        if ts < delay_up_to_timestamp:
+            #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
+            continue
 
         level = "info"
         if status == "WARNING":
