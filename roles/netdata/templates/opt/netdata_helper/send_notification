@@ -25,8 +25,9 @@ def triggerAlert(alerts):
         #response = requests.post( "http://openhab:8080/rest/items/State_Server/state", headers = headers, data = json.dumps(json) )
         if not (200 <= response.status_code < 300):
             response.raise_for_status()
-    except Exception as err:
-        print(f"An error happens when reporting alarm state to openhab => {err}")
+    except Exception as e:
+        print("An error happens when reporting alerts to alertmanager => {}".format(e))
+        print("Maybe alertmanager is down.")
         exit(1)
 
 ts = time.time()
@@ -36,8 +37,8 @@ try:
     response.raise_for_status()
     netdata_alerts = json.loads(response.content)
     netdata_alerts = netdata_alerts['alarms']
-except Exception as err:
-    print(f"An error happens when fetching alarm states from netdata => {err}")
+except Exception as e:
+    print("An error happens when fetching alarm states from netdata => {}".format(e))
     print("Maybe netdata is down.")
     netdata_alerts = {}
 
@@ -93,8 +94,8 @@ try:
         alertmanager_alerts = _alert_response["data"]
     else:
         alertmanager_alerts = []
-except Exception as err:
-    print(f"An error happens when fetching alarm states from netdata => {err}")
+except Exception as e:
+    print("An error happens when fetching alerts from alertmanager => {}".format(e))
     print("Maybe alertmanager is down.")
     alertmanager_alerts = []
 
