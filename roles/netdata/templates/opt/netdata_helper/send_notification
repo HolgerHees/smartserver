@@ -15,6 +15,7 @@ ALERTMANAGER_URL = "http://alertmanager:9093/api/v1/alerts"
 GENERATOR_URL = "https://netdata.{{server_domain}}/"
 INTERVAL = 60
 
+
 def triggerAlert(alerts):
     try:
         #headers = {
@@ -61,19 +62,21 @@ for name in netdata_alerts:
     elif status == "CRITICAL":
         level = "critical"
 
-    active_alert_names["{}-{}".format(name,level)] = 1
+    active_alert_names["{}-{}-{}".format(netdata_alert["name"],netdata_alert["family"],level)] = 1
 
     fired_alert = {}
     #fired_alert["status"] = "firing"
     fired_alert["labels"] = {
         "notifyGroup": "netdata",
-        "alertname": name,
+        "alertname": netdata_alert["name"],
+        "family": netdata_alert["family"],
         "severity": level
     }
     fired_alert["annotations"] = {
-        "subject": netdata_alert["family"],
-        "info": netdata_alert["info"]
+        "summary": "{} was {}".format(netdata_alert["info"].capitalize(),netdata_alert["value_string"])
     }
+
+    #print(fired_alert)
 
     #print(startsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z"))
     startsAt = datetime.utcfromtimestamp(netdata_alert["last_status_change"])
@@ -109,9 +112,10 @@ for alertmanager_alert in alertmanager_alerts:
         continue
 
     name = alertmanager_alert["labels"]["alertname"]
+    family = alertmanager_alert["labels"]["family"]
     level = alertmanager_alert["labels"]["severity"]
 
-    if "{}-{}".format(name,level) in active_alert_names:
+    if "{}-{}-{}".format(name,family,level) in active_alert_names:
         continue
 
     solved_alert = {}
