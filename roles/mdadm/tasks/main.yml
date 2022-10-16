@@ -63,7 +63,7 @@
 - name: create cron 'start' job
   vars:
     name: "RAID Check (Start)"
-    cmd: "/usr/share/mdadm/mdcheck --duration 4 hours"
+    cmd: "/usr/share/mdadm/mdcheck --duration 2 hours"
     file: "ansible_mdadm"
     weekday: "7"
     hour: "1"
@@ -74,7 +74,7 @@
 - name: create cron 'continue' job
   vars:
     name: "RAID Check (Continue)"
-    cmd: "/usr/share/mdadm/mdcheck --continue --duration 4 hours"
+    cmd: "/usr/share/mdadm/mdcheck --continue --duration 2 hours"
     file: "ansible_mdadm"
     weekday: "1-6"
     hour: "1"

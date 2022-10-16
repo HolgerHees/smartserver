@@ -208,6 +208,7 @@
     name: "Netdata error check"
     cmd: "/opt/netdata_helper/send_notification"
     file: "ansible_netdata"
+    minute: "*/5"
   import_tasks: roles/cron/tasks/add_cronjob.yml
   
 # ***** FINALIZE *****
