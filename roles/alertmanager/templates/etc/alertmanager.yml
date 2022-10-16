@@ -55,15 +55,17 @@ route:
       - group="apache"
       - log=~".*logfile=access\.log.*"
       receiver: silent
-#    - matchers:
-#      - notifyGroup=~"logs-.*"
-#      - group="apache"
-#      - log=~".*/cgi-bin/.%2e/.*"
-#      receiver: silent
-#    - matchers:
-#      - notifyGroup=~"logs-.*"
-#      - group="crony"
-#      receiver: silent
+# Apache error logs => "/cgi-bin/.%2e" errors are know attacs, but we are safe, because cgi-bin is disabled globally
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      - group="apache"
+      - log=~".*invalid URI.*/cgi-bin/\.%2e.*logfile=error\.log.*"
+      receiver: silent
+# CRONY => because error output is already sendet out via email
+    - matchers:
+      - notifyGroup=~"logs-.*"
+      - group="crony"
+      receiver: silent
 #    - matchers:
 #      - notifyGroup=~"logs-.*"
 #      - group="php"
