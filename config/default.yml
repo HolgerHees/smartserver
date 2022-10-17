@@ -154,6 +154,9 @@ default_variables: {
     "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
     "vault_deployment_token_git": { "default": None },            # only needed if you enable "ci_service"
 
+    #"vault_dockerhub_username":   { "default": "holgerhees" },
+    #"vault_dockerhub_password":   { "default": None },
+
     "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
     "vault_openhab_mysql_password": {},
