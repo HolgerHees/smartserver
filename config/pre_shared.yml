@@ -50,6 +50,7 @@ docker_alertmanager_ip:           "172.30.6.200"
 docker_loki_ip:                   "172.30.7.200"
 docker_fluentd_ip:                "172.30.8.200"
 docker_librenms_ip:               "172.30.9.200"
+docker_ntopng_ip:                 "172.30.10.200"
 
 docker_vcontrold_ip:              "172.30.50.200"
 docker_weather_forecast_ip:       "172.30.51.200"

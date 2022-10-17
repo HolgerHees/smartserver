@@ -1,0 +1,158 @@
+- name: set version
+  set_fact:
+#    ndpi_version: '4.4'
+    ndpi_version: '4.2'
+    ntopng_version: '5.2'
+  tags: [ 'update_notifier_config' ]
+
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{global_etc}}ntopng/"
+    - "{{global_lib}}ntopng/"
+
+- name: copy config
+  template:
+    src: "templates/{{item}}"
+    dest: "{{ global_etc }}ntopng/{{item}}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "run.sh"
+  notify: "restart ntopng"
+
+- name: build docker image
+  vars:
+    name: "ntopng"
+    image_name: "custom_ntopng"
+    image_version: "{{alpine_version}}-{{ndpi_version}}-{{ndpi_version}}"
+    files:
+      - roles/ntopng/templates/container/Dockerfile
+#      - roles/ntopng/templates/container/Makefile
+#      - roles/ntopng/templates/container/run.sh
+  import_tasks: roles/container/tasks/build_docker_image.yml
+
+- name: create docker network
+  vars:
+    network_name: "ntopng"
+    network_ip: "{{docker_ntopng_ip}}"
+    network_internal: no
+    network_container:
+      - mysql
+      - redis
+  import_tasks: roles/container/tasks/add_docker_network.yml
+  tags: [ 'mysql', 'redis' ]
+
+- name: create docker container
+  docker_container:
+    name: ntopng
+    image: "custom_ntopng:{{alpine_version}}-{{ndpi_version}}-{{ndpi_version}}"
+    state: present
+#    recreate: true
+    env:
+      PUID: "1001"
+      PGID: "1001"
+      FLOWDUMP: "mysql;mysql;shared;ntopng;{{vault_shared_mysql_username}};{{vault_shared_mysql_password}}"
+      REDIS: "redis"
+      LOCALNET: "192.168.0.0/24"
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: ntopng
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "ntopng"
+        ipv4_address: "{{docker_ntopng_ip}}"
+    volumes:
+      - '{{global_etc}}ntopng/:/opt/ntopng/:z'
+      - '{{global_lib}}ntopng/:/var/lib/ntopng/:z'
+    published_ports:
+     - "3000:3000"
+     - "2055:2055/udp"
+  notify: "restart ntopng"
+
+- name: add container name
+  vars:
+    host_name: "ntopng"
+    host_ip_address: "{{docker_librenms_ip}}"
+  import_tasks: roles/network/tasks/add_to_hosts.yml
+
+# ***** MYSQL DATABASE ****
+#- name: create database
+#  vars:
+#    database: "ntopng"
+#    username: "{{vault_librenms_mysql_username}}"
+#    password: "{{vault_librenms_mysql_password}}"
+#    backup: yes
+#  import_tasks: roles/mysql/tasks/add_database.yml
+  
+# ***** FINALIZE *****
+#- name: prepare ferm rules
+#  set_fact:
+#    librenms_ferm_rules: |
+#      [
+#      {% for network in intern_networks %}
+#        "saddr {{docker_librenms_ip}} daddr {{network}}"
+#      {% endfor %}
+#      ]
+#  tags: [ 'firewall_config' ]
+  
+#- name: allow librenms service
+#  vars:
+#    name: "librenms"
+#    rules: "{{librenms_ferm_rules}}"
+#    is_docker: True
+#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  tags: [ 'firewall_config' ]
+
+#- name: register webui
+#  vars:
+#    name: "librenms"
+#    js_file: "templates/webui/librenms.js"
+#    i18n_files: [ { language: "de", file: "templates/webui/librenms.de.json" } ]
+#    icons: [ 'templates/webui/icons/librenms_logo.svg' ]
+#  import_tasks: roles/apache_webui/tasks/add_webui.yml
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "ntopng"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/ntopng.inc"
+  import_tasks: roles/apache/tasks/add_vhost.yml
+
+#- name: copy fluentd config
+#  vars:
+#    config_file: "templates/etc/fluent/_.ansible.d/librenms.conf"
+#  import_tasks: roles/fluentd/tasks/add_config.yml
+    
+- name: create systemd service
+  vars:
+    container_name: "ntopng"
+    container_after: [ "redis", "mysql" ]
+  import_tasks: roles/container/tasks/add_docker_service.yml
+  
+- name: register update notifier
+  vars:
+    name: "ntopng"
+    type: "github"
+    url: "https://github.com/ntop/ntopng/releases"
+    config: {
+      project: "ntop/ntopng",
+      pattern: "^([0-9\\.]+)$",
+      version: "{{ntopng_version}}"
+    }
+  import_tasks: roles/update_service/tasks/add_software.yml
+
+- name: trigger ntopng handler
+  vars:
+    notify: "restart ntopng"
+    service: "ntopng.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
+

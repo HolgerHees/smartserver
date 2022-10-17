@@ -15,8 +15,21 @@ ALERTMANAGER_URL = "http://alertmanager:9093/api/v1/alerts"
 GENERATOR_URL = "https://netdata.{{server_domain}}/"
 INTERVAL = 60
 
+IS_DAEMON = not os.isatty(sys.stdin.fileno())
 
-def triggerAlert(alerts):
+def _log(msg,level):
+    if IS_DAEMON:
+        os.system('echo "{}"  | systemd-cat -t netdata -p "{}"'.format(msg, level))
+    else:
+        print(msg)
+
+def logInfo(msg):
+    _log(msg, "info")
+
+def logWarning(msg):
+    _log(msg, "warning")
+
+def triggerAlertmanagerAlert(alerts):
     try:
         #headers = {
         #    'Accept': 'application/json',
@@ -27,59 +40,102 @@ def triggerAlert(alerts):
         if not (200 <= response.status_code < 300):
             response.raise_for_status()
     except Exception as e:
-        print("An error happens when reporting alerts to alertmanager => {}".format(e))
-        print("Maybe alertmanager is down.")
+        logWarning("An error happens when reporting alerts to alertmanager => {}. Maybe alertmanager is down.".format(e))
         exit(1)
+
+def fetchAlertmanagerAlerts():
+    try:
+        response = requests.get(ALERTMANAGER_URL, timeout=5.0)
+        response.raise_for_status()
+        _alert_response = json.loads(response.content)
+        if _alert_response["status"] == "success":
+            _alertmanager_alerts = _alert_response["data"]
+        else:
+            _alertmanager_alerts = []
+    except Exception as e:
+        logWarning("An error happens when fetching alerts from alertmanager => {}. Maybe alertmanager is down.".format(e))
+        alertmanager_alerts = []
+
+    alertmanager_alerts = {}
+    for alertmanager_alert in _alertmanager_alerts:
+        #print(alert)
+
+        if "notifyGroup" not in alertmanager_alert["labels"] or alertmanager_alert["labels"]["notifyGroup"] != "netdata":
+            continue
+
+        name = alertmanager_alert["labels"]["alertname"]
+        family = alertmanager_alert["labels"]["family"]
+        level = alertmanager_alert["labels"]["severity"]
+
+        alert_key = "{}-{}-{}".format(name,family,level)
+
+        alertmanager_alerts[alert_key] = alertmanager_alert
+
+    return alertmanager_alerts
+
+def fetchNetdataAlerts(ts):
+    try:
+        response = requests.get("{}&_={}".format(NETDATA_URL, ts), timeout=5.0)
+        response.raise_for_status()
+        _netdata_alerts = json.loads(response.content)
+        _netdata_alerts = _netdata_alerts['alarms']
+    except Exception as e:
+        logWarning("An error happens when fetching alerts from netdata => {}. Maybe netdata is down.".format(e))
+        _netdata_alerts = {}
+
+    netdata_alerts = {}
+    for netdata_alert_key in _netdata_alerts:
+        netdata_alert = _netdata_alerts[netdata_alert_key]
+        status = netdata_alert["status"]
+
+        level = "info"
+        if status == "WARNING":
+            level = "warn"
+        #elif status == "ERROR":
+        #    level = "error"
+        elif status == "CRITICAL":
+            level = "critical"
+        netdata_alert['status'] = level
+
+        alert_key = "{}-{}-{}".format(netdata_alert["name"],netdata_alert["family"],netdata_alert['status'])
+        netdata_alerts[alert_key] = netdata_alert
+
+    return netdata_alerts
 
 ts = time.time()
 
-try:
-    response = requests.get("{}&_={}".format(NETDATA_URL, ts), timeout=5.0)
-    response.raise_for_status()
-    netdata_alerts = json.loads(response.content)
-    netdata_alerts = netdata_alerts['alarms']
-except Exception as e:
-    print("An error happens when fetching alarm states from netdata => {}".format(e))
-    print("Maybe netdata is down.")
-    netdata_alerts = {}
+alertmanager_alerts = fetchAlertmanagerAlerts()
+netdata_alerts = fetchNetdataAlerts(ts)
 
-active_alert_names = {}
 fired_alerts = []
-for name in netdata_alerts:
-    netdata_alert = netdata_alerts[name]
-    status = netdata_alert['status']
-    delay_up_to_timestamp = netdata_alert['delay_up_to_timestamp']
+for alert_key in netdata_alerts:
+    alert = netdata_alerts[alert_key]
+    delay_up_to_timestamp = alert['delay_up_to_timestamp']
 
     if ts < delay_up_to_timestamp:
+        #echo "Openhab notification not possible"  | systemd-cat -t netdata -p "warning"
+        logInfo("Delayed alarm {} by {} seconds".format(alert_key, delay_up_to_timestamp-ts))
         #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
         continue
-
-    level = "info"
-    if status == "WARNING":
-        level = "warn"
-    #elif status == "ERROR":
-    #    level = "error"
-    elif status == "CRITICAL":
-        level = "critical"
-
-    active_alert_names["{}-{}-{}".format(netdata_alert["name"],netdata_alert["family"],level)] = 1
+    elif alert_key not in alertmanager_alerts:
+        logInfo("Trigger alarm {}".format(alert_key))
 
     fired_alert = {}
     #fired_alert["status"] = "firing"
     fired_alert["labels"] = {
         "notifyGroup": "netdata",
-        "alertname": netdata_alert["name"],
-        "family": netdata_alert["family"],
-        "severity": level
+        "alertname": alert["name"],
+        "family": alert["family"],
+        "severity": alert['status']
     }
     fired_alert["annotations"] = {
-        "summary": "{} was {}".format(netdata_alert["info"].capitalize(),netdata_alert["value_string"])
+        "summary": "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
     }
 
     #print(fired_alert)
 
     #print(startsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z"))
-    startsAt = datetime.utcfromtimestamp(netdata_alert["last_status_change"])
+    startsAt = datetime.utcfromtimestamp(alert["last_status_change"])
     fired_alert["startsAt"] = startsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
 
     fired_alert["generatorURL"] = GENERATOR_URL
@@ -87,40 +143,22 @@ for name in netdata_alerts:
     fired_alerts.append(fired_alert)
 
 if len(fired_alerts) > 0:
-    triggerAlert(fired_alerts)
-
-try:
-    response = requests.get(ALERTMANAGER_URL, timeout=5.0)
-    response.raise_for_status()
-    _alert_response = json.loads(response.content)
-    if _alert_response["status"] == "success":
-        alertmanager_alerts = _alert_response["data"]
-    else:
-        alertmanager_alerts = []
-except Exception as e:
-    print("An error happens when fetching alerts from alertmanager => {}".format(e))
-    print("Maybe alertmanager is down.")
-    alertmanager_alerts = []
+    triggerAlertmanagerAlert(fired_alerts)
 
 #print(alertmanager_alerts)
 
 solved_alerts = []
-for alertmanager_alert in alertmanager_alerts:
+for alert_key in alertmanager_alerts:
     #print(alert)
 
-    if "notifyGroup" not in alertmanager_alert["labels"] or alertmanager_alert["labels"]["notifyGroup"] != "netdata":
+    if alert_key in netdata_alerts:
         continue
 
-    name = alertmanager_alert["labels"]["alertname"]
-    family = alertmanager_alert["labels"]["family"]
-    level = alertmanager_alert["labels"]["severity"]
-
-    if "{}-{}-{}".format(name,family,level) in active_alert_names:
-        continue
+    alert = alertmanager_alerts[alert_key]
 
     solved_alert = {}
     #solved_alert["status"] = "resolved"
-    solved_alert["labels"] = alertmanager_alert["labels"]
+    solved_alert["labels"] = alert["labels"]
 
     endsAt = datetime.utcnow() - timedelta(seconds=1)
     solved_alert["endsAt"] = endsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
@@ -128,5 +166,6 @@ for alertmanager_alert in alertmanager_alerts:
     solved_alerts.append(solved_alert)
 
 if len(solved_alerts) > 0:
-    triggerAlert(solved_alerts)
+    triggerAlertmanagerAlert(solved_alerts)
     #print(solved_alerts)
+
