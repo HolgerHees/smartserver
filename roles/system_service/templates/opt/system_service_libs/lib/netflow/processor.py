@@ -117,7 +117,7 @@ class Connection:
         else:
             self.is_swapped = False
 
-        self.size = Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS']) + ( Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS']) if self.answer_flow is not None else 0 )
+        self.size = Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS']) + ( Helper.fallback(self.answer_flow, ['IN_BYTES', 'IN_OCTETS']) if self.answer_flow is not None else 0 )
         self.packages = self.request_flow["IN_PKTS"] + ( self.answer_flow["IN_PKTS"] if self.answer_flow is not None else 0 )
 
         # Duration is given in milliseconds
