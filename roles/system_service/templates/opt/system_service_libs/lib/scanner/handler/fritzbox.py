@@ -10,11 +10,11 @@ from fritzconnection.core.exceptions import FritzLookUpError
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.core.exceptions import FritzServiceError
 
-from lib.handler import _handler
-from lib.dto.device import Connection
-from lib.dto.group import Group
-from lib.dto.event import Event
-from lib.helper import Helper
+from lib.scanner.handler import _handler
+from lib.scanner.dto.device import Connection
+from lib.scanner.dto.group import Group
+from lib.scanner.dto.event import Event
+from lib.scanner.helper import Helper
 
 
 class Fritzbox(_handler.Handler): 

@@ -7,9 +7,9 @@ import time
 
 from smartserver import command
 
-from lib.handler import _handler
-from lib.helper import Helper
-from lib.dto.event import Event
+from lib.scanner.handler import _handler
+from lib.scanner.helper import Helper
+from lib.scanner.dto.event import Event
 
 
 class PortScanner(_handler.Handler): 

@@ -1,7 +1,7 @@
 import logging
 
-from lib.dto._changeable import Changeable
-from lib.dto.event import Event
+from lib.scanner.dto._changeable import Changeable
+from lib.scanner.dto.event import Event
 
 
 class Connection():

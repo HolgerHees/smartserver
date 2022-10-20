@@ -7,11 +7,11 @@ import logging
 
 from smartserver import command
 
-from lib.handler import _handler
-from lib.dto._changeable import Changeable
-from lib.dto.device import Device, Connection
-from lib.dto.event import Event
-from lib.helper import Helper
+from lib.scanner.handler import _handler
+from lib.scanner.dto._changeable import Changeable
+from lib.scanner.dto.device import Device, Connection
+from lib.scanner.dto.event import Event
+from lib.scanner.helper import Helper
 
 
 class LibreNMS(_handler.Handler): 

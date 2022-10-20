@@ -277,7 +277,7 @@ mx.NetworkTooltip = (function( ret )
 
         let height = ( window.innerHeight * 0.8 ) / 2;
         let url_prefix = 'https://grafana.' + document.location.host;
-        let url = url_prefix + '/d-solo/system-info/system-info?theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ) + '&var-host=' + ip + '&orgId=1';
+        let url = url_prefix + '/d-solo/system-service-scanner/system-service-scanner?theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ) + '&var-host=' + ip + '&orgId=1';
         let body = "";
         if( has_traffic ) body += '<iframe src="' + url + '&panelId=7&from=now-6h&to=now" width="100%" height="' + height + '" frameborder="0"></iframe>';
         if( has_wifi ) body += '<iframe src="' + url + '&panelId=4&from=now-6h&to=now" width="100%" height="' + height + '" frameborder="0"></iframe>';
@@ -300,7 +300,7 @@ mx.NetworkTooltip = (function( ret )
             body: body,
             buttons: [
                 { "text": timeranges["now-6h"], "class": "timeRange", "callback": function(event){ selectButton.toggle(event); } },
-                { "text": mx.I18N.get("Open Grafana"), "callback": function(){ window.open(url_prefix + '/d/system-info/system-info?orgId=1&theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ), '_blank'); }  },
+                { "text": mx.I18N.get("Open Grafana"), "callback": function(){ window.open(url_prefix + '/d/system-service-scanner/system-service-scanner?orgId=1&theme=' + ( mx.Page.isDarkTheme() ? 'dark': 'light' ), '_blank'); }  },
                 { "text": mx.I18N.get("Close") },
             ],
             class: "confirmDialog",

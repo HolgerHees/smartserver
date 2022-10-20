@@ -5,6 +5,18 @@ server_name = "{{server_name}}"
 server_domain = "{{server_domain}}"
 server_ip = "{{server_ip}}"
 
+netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
+netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}
+
+known_services = {
+{% if cloud_vpn != "None" %}{% for peer in cloud_vpn.peers %}
+  "{{cloud_vpn.peers[peer].port}}/udp": "wireguard",
+{% endfor %}
+  "{{cloud_vpn.interface.port}}/udp": "wireguard",
+{% endif %}
+  "{{mobile_vpn_internal_port}}/udp": "wireguard"
+}
+
 service_ip = "127.0.0.1"
 service_port = "8507"
 

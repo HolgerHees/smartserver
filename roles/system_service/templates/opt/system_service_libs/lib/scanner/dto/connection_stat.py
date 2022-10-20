@@ -1,6 +1,7 @@
-from lib.dto._changeable import Changeable
 from datetime import datetime
-from lib.dto.event import Event
+
+from lib.scanner.dto._changeable import Changeable
+from lib.scanner.dto.event import Event
 
 
 class ConnectionStatDetails(Changeable):

@@ -1,0 +1,378 @@
+#import netflow # https://github.com/bitkeks/python-netflow-v9-softflowd
+import queue
+import threading
+import logging
+#import traceback
+import functools
+import socket
+import ipaddress
+import contextlib
+
+from .collector import ThreadedNetFlowListener
+
+IP_PROTOCOLS = {
+    1: "icmp",
+    2: "igmp",
+    6: "tcp",
+    17: "udp",
+    58: "icmpv6"
+}
+
+class Helper():
+    @staticmethod
+    @functools.lru_cache(maxsize=None)
+    def resolve_hostname(ip: str, is_private) -> str:
+        hostname = socket.getfqdn(ip)
+        if is_private and hostname != ip:
+            hostname = hostname.split('.', 1)[0]
+        return hostname
+
+    @staticmethod
+    def get_service(dest_port, protocol):
+        if protocol == 6 or protocol == 17:
+            protocol_str = IP_PROTOCOLS[protocol]
+            if dest_port is not None:
+                if dest_port < 1024:
+                    with contextlib.suppress(OSError):
+                        return socket.getservbyport(dest_port, protocol_str).lower()
+        return None
+
+    #@staticmethod
+    #def human_size(size_bytes):
+    #    # Calculate a human readable size of the flow
+    #    if size_bytes < 1024:
+    #        return "%dB" % size_bytes
+    #    elif size_bytes / 1024. < 1024:
+    #        return "%.2fK" % (size_bytes / 1024.)
+    #    elif size_bytes / 1024. ** 2 < 1024:
+    #        return "%.2fM" % (size_bytes / 1024. ** 2)
+    #    else:
+    #        return "%.2fG" % (size_bytes / 1024. ** 3)
+
+
+    #@staticmethod
+    #def human_duration(seconds):
+    #    # Calculate human readable duration times
+    #    if seconds < 60:
+    #        # seconds
+    #        return "%d sec" % seconds
+    #    if seconds / 60 > 60:
+    #        # hours
+    #        return "%d:%02d.%02d hours" % (seconds / 60 ** 2, seconds % 60 ** 2 / 60, seconds % 60)
+    #    # minutes
+    #    return "%02d:%02d min" % (seconds / 60, seconds % 60)
+
+    @staticmethod
+    def fallback(d, keys, can_none = False ):
+        for k in keys:
+            if k in d:
+                return d[k]
+        if can_none:
+            return None
+        raise KeyError( "{} - {}".format(", ".join(keys), d.keys()))
+
+class Connection:
+    def __init__(self, request_ts, request_flow, answer_flow, config):
+        self.request_ts = request_ts
+        self.request_flow = request_flow
+        self.answer_flow = answer_flow
+
+        self.config = config
+
+        self.protocol = self.request_flow["PROTOCOL"]
+
+        if request_flow.get('IP_PROTOCOL_VERSION') == 4 or 'IPV4_SRC_ADDR' in request_flow or 'IPV4_DST_ADDR' in request_flow:
+            self.src = ipaddress.ip_address(request_flow['IPV4_SRC_ADDR'])
+            self.dest = ipaddress.ip_address(request_flow['IPV4_DST_ADDR'])
+        else:
+            self.src = ipaddress.ip_address(request_flow['IPV6_SRC_ADDR'])
+            self.dest = ipaddress.ip_address(request_flow['IPV6_DST_ADDR'])
+
+        self.src_port = self.request_flow['L4_SRC_PORT'] if 'L4_SRC_PORT' in self.request_flow else None
+        self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
+
+        # swap direction
+        if ( \
+             self.src_port is not None and self.dest_port is not None \
+             and \
+             ( \
+               ( self.src_port < 1024 and self.dest_port >= 1024 ) \
+                 or \
+               ( self.src_port < 49151 and self.dest_port >= 49151 ) \
+             ) \
+           ) \
+           or not self.src.is_private:
+            _ = self.dest_port
+            self.dest_port = self.src_port
+            self.src_port = _
+            _ = self.dest
+            self.dest = self.src
+            self.src = _
+            self.is_swapped = True
+        else:
+            self.is_swapped = False
+
+        self.size = Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS'])
+        self.packages = self.request_flow["IN_PKTS"] + ( self.answer_flow["IN_PKTS"] if self.answer_flow is not None else 0 )
+
+        # Duration is given in milliseconds
+        self.duration = self.request_flow['LAST_SWITCHED'] - self.request_flow['FIRST_SWITCHED']
+        if self.duration < 0:
+            # 32 bit int has its limits. Handling overflow here
+            # TODO: Should be handled in the collection phase
+            self.duration = (2 ** 32 - self.request_flow['FIRST_SWITCHED']) + self.request_flow['LAST_SWITCHED']
+
+    #@property
+    #def human_size(self):
+    #    return Helper.human_size(self.size)
+
+    #@property
+    #def human_duration(self):
+    #    duration = self.duration // 1000  # uptime in milliseconds, floor it
+    #    return Helper.human_duration(duration)
+
+    @property
+    def protocol_name(self):
+        return IP_PROTOCOLS[self.protocol]
+
+    @property
+    def is_one_direction(self):
+        return self.answer_flow is None
+
+    @property
+    def src_hostname(self):
+        return Helper.resolve_hostname(self.src.compressed, self.src.is_private)
+
+    @property
+    def dest_hostname(self):
+        return Helper.resolve_hostname(self.dest.compressed, self.dest.is_private)
+
+    @property
+    def service(self):
+        service = Helper.get_service(self.dest_port, self.protocol)
+        if service is None:
+            known_service_key = "{}/{}".format(self.dest_port, IP_PROTOCOLS[self.protocol])
+            if known_service_key in self.config.known_services:
+                return self.config.known_services[known_service_key]
+            service = "unknown"
+        return service
+
+    @property
+    def total_packets(self):
+        return self.src_flow["IN_PKTS"] + self.dest_flow["IN_PKTS"]
+
+class Processor(threading.Thread):
+    def __init__(self, config, handler ):
+        threading.Thread.__init__(self)
+
+        #self.is_running = True
+        self.event = threading.Event()
+
+        self.config = config
+
+        self.connections = []
+
+        self.is_enabled = True
+
+    def terminate(self):
+        #self.is_running = False
+        self.event.set()
+
+    def run(self):
+        if self.config.netflow_bind_ip is None:
+            return
+
+        #collectorLogger.setLevel(logging.DEBUG)
+        #collectorCS.setLevel(logging.DEBUG)
+
+        self.listener = ThreadedNetFlowListener(self.config.netflow_bind_ip, self.config.netflow_bind_port)
+        self.listener.start()
+
+        try:
+            pending = {}
+            while not self.event.is_set():
+                try:
+                    ts, client, export = self.listener.get(timeout=0.5)
+
+                    #logging.info(client)
+
+                    #flows = []
+                    #for f in export.flows:
+                    #    flows.append(f.data)
+
+                    if not self.is_enabled:
+                        #logging.info("Netflow flows: {}".format(len(flows)))
+                        continue
+
+                    #for flow in sorted(flows, key=lambda x: x["FIRST_SWITCHED"]):
+                    for f in export.flows:
+                        flow = f.data
+
+                        if "PROTOCOL" not in flow:
+                            if "ICMP_TYPE" in flow:
+                                flow["PROTOCOL"] = 1
+                            elif "MUL_IGMP_TYPE" in flow:
+                                flow["PROTOCOL"] = 2
+                            else:
+                                flow["PROTOCOL"] = 0
+
+                        if flow["PROTOCOL"] not in IP_PROTOCOLS:
+                            flow["PROTOCOL"] = 17
+                            #logging.info("Unknown protocol {}".format(flow["PROTOCOL"]))
+                            #logging.info(flow)
+                            #continue
+
+                        first_switched = flow["FIRST_SWITCHED"]
+
+                        #if first_switched - 1 in pending:
+                        #    # TODO: handle fitting, yet mismatching (here: 1 second) pairs
+                        #    pass
+
+                        # Find the peer for this connection
+                        if "IPV4_SRC_ADDR" in flow or flow.get("IP_PROTOCOL_VERSION") == 4:
+                            src_addr = flow["IPV4_SRC_ADDR"]
+                            dest_addr = flow["IPV4_DST_ADDR"]
+                        else:
+                            src_addr = flow["IPV6_SRC_ADDR"]
+                            dest_addr = flow["IPV6_DST_ADDR"]
+
+                        if src_addr == self.config.netflow_bind_ip or dest_addr == self.config.netflow_bind_ip:
+                            continue
+
+                        #if first_switched not in pending:
+                        #    pending[first_switched] = {}
+
+                        # Match peers
+                        _request_key = "{}-{}".format(dest_addr,first_switched)
+                        if _request_key in pending:
+                            request_flow, request_ts = pending.pop(_request_key)
+                            answer_flow = flow
+                        else:
+                            _request_key = "{}-{}".format(dest_addr,first_switched - 1)
+                            if _request_key in pending:
+                                request_flow, request_ts = pending.pop(_request_key)
+                                answer_flow = flow
+                            else:
+                                request_key = "{}-{}".format(src_addr,first_switched)
+                                if request_key in pending:
+                                    request_flow, request_ts = pending.pop(request_key)
+                                    con = Connection(request_ts, request_flow, None, self.config)
+                                    self.connections.append(con)
+                                pending[request_key] = [ flow, ts ]
+                                continue
+
+                        #logging.info("{}".format(peer_flow))
+                        #logging.info("{}".format(flow))
+                        #logging.info("---------")
+
+                        #raise Exception
+
+                        con = Connection(request_ts, request_flow, answer_flow, self.config)
+                        self.connections.append(con)
+
+                    for request_key in list(pending.keys()):
+                        request_flow, request_ts = pending[request_key]
+                        if ts - request_ts > 15:
+                            con = Connection(request_ts, request_flow, None, self.config)
+                            self.connections.append(con)
+                            del pending[request_key]
+
+                    #self.getMetrics()
+
+                except queue.Empty:
+                    continue
+        finally:
+            self.listener.stop()
+            self.listener.join()
+
+    def getMetrics(self):
+        connections = list(self.connections)
+        self.connections = []
+
+
+        #f = open("/tmp/netflow.log", "w")
+        registry = {}
+        for con in connections:
+            label = []
+            label.append("protocol=\"{}\"".format(con.protocol_name))
+            label.append("service=\"{}\"".format(con.service))
+            label.append("port=\"{}\"".format(con.dest_port))
+            #label.append("size=\"{}\"".format(con.size))
+            #label.append("duration=\"{}\"".format(con.duration))
+            #label.append("packets=\"{}\"".format(con.packages))
+            label.append("src_ip=\"{}\"".format(con.src))
+            label.append("src_host=\"{}\"".format(con.src_hostname))
+            label.append("dest_ip=\"{}\"".format(con.dest))
+            label.append("dest_host=\"{}\"".format(con.dest_hostname))
+            #label.append("oneway=\"{}\"".format(1 if con.is_one_direction else 0))
+
+            label_str = ",".join(label)
+            timestamp = int(con.request_ts * 1000)
+
+            # avoid douplicate timestamps
+            key = "{} {}".format(label_str, timestamp)
+            used_keys = []
+            _con, _, _ = registry.get(key, [None, None, None])
+            if _con is not None:
+                flow_diff = con.request_flow["LAST_SWITCHED"] - _con.request_flow["LAST_SWITCHED"]
+                timestamp += flow_diff
+
+                key = "{} {}".format(label_str, timestamp)
+                _con, _, _ = registry.get(key, [None, None, None])
+
+                while _con is not None:
+                    timestamp += 1
+                    key = "{} {}".format(label_str, timestamp)
+                    _con, _, _ = registry.get(key, [None, None, None])
+                    #logging.info("search")
+
+                #logging.info("fixed")
+
+            registry[key] = [ con, timestamp, "system_service_netflow_size{{{}}} {} {}".format(label_str, con.size, timestamp) ]
+
+        metrics = []
+        pos = 0
+        # process ordered metrics
+        for data in sorted(registry.values(), key=lambda x: x[1]):
+            metrics.append(data[2])
+            #if data[1] < pos:
+            #    logging.info("Out of order")
+            pos = data[1]
+
+            #key = "system_service_netflow_size{{{}}} {}".format(label_str, time_str)
+            #if key in check:
+            #    logging.error("Douplicate metric {}, TS OLD: {}, TS NEW: {}".format(key, check[key].request_ts, con.request_ts))
+            #    logging.error(check[key].request_flow)
+            #    logging.error(con.request_flow)
+            #check[key] = con
+
+            #metrics.append("system_service_netflow_duration{{{}}} {} {}".format(label_str, con.duration, time_str))
+            #metrics.append("system_service_netflow_packets{{{}}} {} {}".format(label_str, con.packages, time_str))
+            #metrics.append("system_service_netflow_oneway{{{}}} {} {}".format(label_str, 1 if con.is_one_direction else 0, time_str))
+
+            #direction = "=>" if con.is_one_direction else "<=>"
+            #info = "{src_host} ({src}) {direction} {dest_host} ({dest})".format(src_host=con.src_hostname, src=con.src, direction=direction, dest_host=con.dest_hostname, dest=con.dest)
+
+            #msg = "{protocol:<7} | {service:<14} | {size:8} | {duration:9} | {packets:6} | {info}".format(protocol=con.human_protocol, service=con.service.upper(), size=con.human_size, #duration=con.human_duration, packets=con.packages, info=info)
+
+            #logging.info(msg)
+            #if con.is_swapped:
+            #    logging.info("--- swapped")
+
+            #if not con.src.is_private:
+            #    logging.info(con.request_flow)
+            #    logging.info(con.answer_flow)
+
+
+            #f.write(msg)
+            #f.write("\n")
+            #f.write(str(con.request_flow))
+            #f.write("\n")
+            #f.write(str(con.answer_flow))
+            #f.write("\n\n")
+
+        #f.close()
+
+        logging.info("Submit {} flows".format(len(metrics)))
+
+        return metrics

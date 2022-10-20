@@ -160,8 +160,9 @@ default_variables: {
     "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
     "vault_openhab_mysql_password": {},
-    
-    
+
+    "netflow_collector": { "default": no },                         # used for librenms and system_service (network monitoring)
+
     "network_devices": { "default": [] },                         # used for librenms and system_service (network monitoring)
     # *** EXAMPLE ***
     # {

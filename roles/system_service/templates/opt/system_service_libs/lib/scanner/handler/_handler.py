@@ -6,8 +6,8 @@ import traceback
 
 import json
 
-from lib.dto.event import Event
-from lib.helper import Helper
+from lib.scanner.dto.event import Event
+from lib.scanner.helper import Helper
 
 
 class Handler:

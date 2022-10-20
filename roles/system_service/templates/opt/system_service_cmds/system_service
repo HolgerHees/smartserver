@@ -12,19 +12,9 @@ from datetime import datetime
 from smartserver.server import Server
 
 from config import config
-from lib.handler.arpscan import ArpScanner
 
-from lib.handler.openwrt import OpenWRT
-from lib.handler.librenms import LibreNMS
-from lib.handler.fritzbox import Fritzbox
-from lib.handler.portscan import PortScanner
-from lib.handler.gateway import Gateway
-
-from lib.handler.publish_mqtt import MQTTPublisher
-from lib.handler.publish_influxdb import InfluxDBPublisher
-
-from lib.dispatcher import Dispatcher
-from lib.cache import Cache
+from lib.scanner.scanner import Scanner as NetworkScanner
+from lib.netflow.processor import Processor as NetflowProcessor
 
 app = Flask(__name__ )
 app.logger = logging.getLogger()
@@ -36,30 +26,19 @@ class Handler(Server):
     def __init__(self):
         super().__init__("system_service")
         
-        self.startup_timestamp = round(datetime.now().timestamp(),3)
+        #self.startup_timestamp = round(datetime.now().timestamp(),3)
         
-        self.pipeline = []
-        self.cache = Cache(config)
+        self.scanner = NetworkScanner(config, self )
+        self.scanner.start()
+        
+        self.netflow = NetflowProcessor(config, self )
+        self.netflow.start()
 
-        self.dispatcher = Dispatcher(config, self.cache, self )
-        
-        self.dispatcher.register(ArpScanner(config, self.cache ))
-        if len(config.openwrt_devices) > 0:
-            self.dispatcher.register(OpenWRT(config, self.cache ))
-        if len(config.fritzbox_devices) > 0:
-            self.dispatcher.register(Fritzbox(config, self.cache ))
-        if config.librenms_token:
-            self.dispatcher.register(LibreNMS(config, self.cache ))
-        self.dispatcher.register(PortScanner(config, self.cache ))
-        self.dispatcher.register(Gateway(config, self.cache ))
-        self.dispatcher.register(MQTTPublisher(config, self.cache ))
-        self.dispatcher.register(InfluxDBPublisher(config, self.cache ))
-        
-        self.dispatcher.start()
-        
     def terminate(self):
-        if self.dispatcher:
-            self.dispatcher.terminate()
+        if self.scanner:
+            self.scanner.terminate()
+        if self.netflow:
+            self.netflow.terminate()
         super().terminate()
         
     def notifyNetworkData(self, changed_data, msg):
@@ -70,17 +49,20 @@ class Handler(Server):
         #socketio.sleep(5)
         
     def emitNetworkData(self):
-        [ data, msg ] = self.dispatcher.getData();
+        [ data, msg ] = self.scanner.getData();
 
         logging.info("Emit initial {}".format(msg))
 
-        data["root"] = self.cache.getGatewayMAC()
+        data["root"] = self.scanner.getGatewayMAC()
         emit('network_data', data)
 
     def getStateMetrics(self):
-        metrics = self.dispatcher.getStateMetrics()
+        scanner_metrics = self.scanner.getStateMetrics()
+        netflow_metrics = self.netflow.getMetrics()
+
+        metrics = scanner_metrics + netflow_metrics
         return "{}\n".format( "\n".join(metrics) )
-          
+
 #@app.route('/state/', methods = ['POST'])
 #def state():
 #    pass

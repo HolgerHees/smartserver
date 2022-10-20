@@ -61,6 +61,7 @@
     network_mode: "host"
     exposed_ports:
       - "8507"
+      - "2055/udp"
     volumes:
       - '{{global_etc}}system_service/:/etc/system_service:ro,z'
       - '/opt/shared/python:/opt/shared/python:ro,z'
@@ -92,8 +93,18 @@
     datasources: 
       - "templates/grafana/datasources/system_info_influxdb.yaml"
     dashboards:
-      - "templates/grafana/dashboards/System Info.json"
+      - "templates/grafana/dashboards/System Service Scanner.json"
   import_tasks: roles/grafana/tasks/add_datasource.yml
+
+- name: register grafana configs
+  vars:
+    name: "system_service"
+    datasources:
+      - "templates/grafana/datasources/system_info_influxdb.yaml"
+    dashboards:
+      - "templates/grafana/dashboards/System Service Netflow.json"
+  import_tasks: roles/grafana/tasks/add_datasource.yml
+  when: "netflow_collector"
 
 - name: synchronize webui
   synchronize:

@@ -116,11 +116,7 @@ class Helper():
                 if len(data) == 1:
                     continue
                 if data[1]:
-                    if data[1].endswith('.fritz.box'):
-                        data[1] = data[1][0:-10]
-                    elif data[1].endswith('.lan'):
-                        data[1] = data[1][0:-4]
-                    return data[1]
+                    return data[1].split('.', 1)[0]
             return None
 
         # ip not found

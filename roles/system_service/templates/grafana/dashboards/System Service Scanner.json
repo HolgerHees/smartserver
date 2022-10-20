@@ -818,8 +818,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "System Info",
-  "uid": "system-info",
+  "title": "System Service Scanner",
+  "uid": "system-service-scanner",
   "version": 5,
   "weekStart": ""
 }

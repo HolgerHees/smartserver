@@ -1,10 +1,11 @@
 import requests
 import time
 
-from lib.handler import _handler
-from lib.dto.group import Group
-from lib.dto.connection_stat import ConnectionStat
-from lib.helper import Helper
+from lib.scanner.handler import _handler
+from lib.scanner.dto.group import Group
+from lib.scanner.dto.connection_stat import ConnectionStat
+from lib.scanner.helper import Helper
+
 
 class InfluxDBHandler(): 
     def __init__(self):

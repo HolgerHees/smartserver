@@ -3,17 +3,30 @@ import threading
 import logging
 from collections import deque
 
-from lib.dto.device import Device, Connection
-from lib.dto.event import Event
+from lib.scanner.dto.device import Device, Connection
+from lib.scanner.dto.event import Event
 
+from lib.scanner.cache import Cache
 
-class Dispatcher(): 
-    def __init__(self, config, cache, handler ):
+from lib.scanner.handler.arpscan import ArpScanner
+
+from lib.scanner.handler.openwrt import OpenWRT
+from lib.scanner.handler.librenms import LibreNMS
+from lib.scanner.handler.fritzbox import Fritzbox
+from lib.scanner.handler.portscan import PortScanner
+from lib.scanner.handler.gateway import Gateway
+
+from lib.scanner.handler.publish_mqtt import MQTTPublisher
+from lib.scanner.handler.publish_influxdb import InfluxDBPublisher
+
+class Scanner(threading.Thread):
+    def __init__(self, config, handler ):
+        threading.Thread.__init__(self)
+
         self.is_running = True
         self.is_initialized = False
         
         self.config = config
-        self.cache = cache
         self.handler = handler
         
         self.event_pipeline = []
@@ -24,9 +37,23 @@ class Dispatcher():
         self.event_queue = deque()
         
         self.event = threading.Event()
-        self.thread = threading.Thread(target=self._worker, args=())
+        #self.thread = threading.Thread(target=self._worker, args=())
         
-    def register(self, handler):
+        self.cache = Cache(config)
+
+        self._register(ArpScanner(config, self.cache ))
+        if len(config.openwrt_devices) > 0:
+            self._register(OpenWRT(config, self.cache ))
+        if len(config.fritzbox_devices) > 0:
+            self._register(Fritzbox(config, self.cache ))
+        if config.librenms_token:
+            self._register(LibreNMS(config, self.cache ))
+        self._register(PortScanner(config, self.cache ))
+        self._register(Gateway(config, self.cache ))
+        self._register(MQTTPublisher(config, self.cache ))
+        self._register(InfluxDBPublisher(config, self.cache ))
+
+    def _register(self, handler):
         handler.setDispatcher(self)
 
         self.registered_handler.append(handler)
@@ -37,8 +64,8 @@ class Dispatcher():
         
         self.event_pipeline.append([event_types, handler])
         
-    def start(self):           
-        self.thread.start()
+    #def start(self):
+    #    self.thread.start()
         
     def terminate(self):
         self.is_running = False
@@ -51,7 +78,7 @@ class Dispatcher():
         self.event_queue.append([source_handler,events])
         self.event.set()
             
-    def _worker(self):
+    def run(self):
         for handler in self.registered_handler:
             handler.start()
 
@@ -250,6 +277,9 @@ class Dispatcher():
     def getData(self):
         devices = self.cache.getDevices() + self.virtual_devices
         return self._prepareChanges(devices, [], [], False, devices, self.cache.getGroups(), [], [], self.cache.getStats(), [], [])
+
+    def getGatewayMAC(self):
+        return self.cache.getGatewayMAC()
 
     def getStateMetrics(self):
         metrics = []
