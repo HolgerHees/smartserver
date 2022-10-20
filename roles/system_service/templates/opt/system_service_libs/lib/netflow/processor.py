@@ -18,6 +18,10 @@ IP_PROTOCOLS = {
     58: "icmpv6"
 }
 
+MDNS_IP4 = ipaddress.IPv4Address("224.0.0.251")
+SSDP_IP4 = ipaddress.IPv4Address("239.255.255.250")
+BROADCAST_IP4 = ipaddress.IPv4Address("255.255.255.255")
+
 class Helper():
     @staticmethod
     @functools.lru_cache(maxsize=None)
@@ -29,12 +33,9 @@ class Helper():
 
     @staticmethod
     def get_service(dest_port, protocol):
-        if protocol == 6 or protocol == 17:
-            protocol_str = IP_PROTOCOLS[protocol]
-            if dest_port is not None:
-                if dest_port < 1024:
-                    with contextlib.suppress(OSError):
-                        return socket.getservbyport(dest_port, protocol_str).lower()
+        if ( protocol == 6 or protocol == 17 ) and dest_port is not None and dest_port < 1024:
+            with contextlib.suppress(OSError):
+                return socket.getservbyport(dest_port, IP_PROTOCOLS[protocol])
         return None
 
     #@staticmethod
@@ -82,11 +83,15 @@ class Connection:
         self.protocol = self.request_flow["PROTOCOL"]
 
         if request_flow.get('IP_PROTOCOL_VERSION') == 4 or 'IPV4_SRC_ADDR' in request_flow or 'IPV4_DST_ADDR' in request_flow:
-            self.src = ipaddress.ip_address(request_flow['IPV4_SRC_ADDR'])
-            self.dest = ipaddress.ip_address(request_flow['IPV4_DST_ADDR'])
+            self.src_raw = request_flow['IPV4_SRC_ADDR']
+            self.src = ipaddress.ip_address(self.src_raw)
+            self.dest_raw = request_flow['IPV4_DST_ADDR']
+            self.dest = ipaddress.ip_address(self.dest_raw)
         else:
-            self.src = ipaddress.ip_address(request_flow['IPV6_SRC_ADDR'])
-            self.dest = ipaddress.ip_address(request_flow['IPV6_DST_ADDR'])
+            self.src_raw = request_flow['IPV6_SRC_ADDR']
+            self.src = ipaddress.ip_address(self.src_raw)
+            self.dest_raw = request_flow['IPV6_DST_ADDR']
+            self.dest = ipaddress.ip_address(self.dest_raw)
 
         self.src_port = self.request_flow['L4_SRC_PORT'] if 'L4_SRC_PORT' in self.request_flow else None
         self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
@@ -150,11 +155,21 @@ class Connection:
     @property
     def service(self):
         service = Helper.get_service(self.dest_port, self.protocol)
+        #logging.info("{} {} {}".format(service, self.dest_port, self.protocol))
         if service is None:
-            known_service_key = "{}/{}".format(self.dest_port, IP_PROTOCOLS[self.protocol])
-            if known_service_key in self.config.known_services:
-                return self.config.known_services[known_service_key]
-            service = "unknown"
+            if self.dest == MDNS_IP4 or self.dest_raw == "ff02:fb":
+                service = "mdns"
+            elif self.dest == SSDP_IP4 or self.dest_raw == "ff02:fb":
+                service = "ssdp"
+            elif self.dest == BROADCAST_IP4:
+                service = "broadcast"
+            elif self.dest.is_multicast:
+                service = "multicast"
+            else:
+                known_service_key = "{}/{}".format(self.dest_port, IP_PROTOCOLS[self.protocol])
+                if known_service_key in self.config.known_services:
+                    return self.config.known_services[known_service_key]
+                service = "unknown"
         return service
 
     @property

@@ -87,7 +87,7 @@
       },
       "gridPos": {
         "h": 12,
-        "w": 24,
+        "w": 18,
         "x": 0,
         "y": 0
       },
@@ -125,6 +125,118 @@
       ],
       "title": "Traffic",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "protocol"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Protocol"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "displayLabels": [
+          "name"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "values": [
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (protocol) (system_service_netflow_size)",
+          "format": "table",
+          "instant": false,
+          "legendFormat": "{{src_host}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Protocol",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Value": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
+              "dest_host": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "protocol": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "src_host": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        }
+      ],
+      "type": "piechart"
     },
     {
       "datasource": {
@@ -189,7 +301,7 @@
         ]
       },
       "gridPos": {
-        "h": 18,
+        "h": 13,
         "w": 5,
         "x": 0,
         "y": 12
@@ -313,7 +425,7 @@
         ]
       },
       "gridPos": {
-        "h": 18,
+        "h": 13,
         "w": 5,
         "x": 5,
         "y": 12
@@ -441,13 +553,6 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Service"
-            },
-            "properties": []
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "Data"
             },
             "properties": [
@@ -460,7 +565,7 @@
         ]
       },
       "gridPos": {
-        "h": 18,
+        "h": 13,
         "w": 4,
         "x": 10,
         "y": 12
@@ -596,7 +701,7 @@
         ]
       },
       "gridPos": {
-        "h": 9,
+        "h": 7,
         "w": 4,
         "x": 14,
         "y": 12
@@ -689,24 +794,24 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "protocol"
+              "options": "service"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "Protocol"
+                "value": "Service"
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 9,
+        "h": 13,
         "w": 6,
         "x": 18,
         "y": 12
       },
-      "id": 9,
+      "id": 8,
       "options": {
         "displayLabels": [
           "name"
@@ -723,6 +828,7 @@
         "reduceOptions": {
           "calcs": [],
           "fields": "",
+          "limit": 5000,
           "values": true
         },
         "tooltip": {
@@ -739,15 +845,15 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (protocol) (system_service_netflow_size)",
+          "expr": "sum by (service) (system_service_netflow_size)",
           "format": "table",
           "instant": false,
-          "legendFormat": "{{src_host}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Protocol",
+      "title": "Services",
       "transformations": [
         {
           "id": "groupBy",
@@ -764,6 +870,10 @@
                 "operation": "groupby"
               },
               "protocol": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "service": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -844,10 +954,10 @@
         ]
       },
       "gridPos": {
-        "h": 9,
+        "h": 6,
         "w": 4,
         "x": 14,
-        "y": 21
+        "y": 19
       },
       "id": 10,
       "options": {
@@ -916,123 +1026,6 @@
         }
       ],
       "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": [],
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "service"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Service"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 18,
-        "y": 21
-      },
-      "id": 8,
-      "options": {
-        "displayLabels": [
-          "name"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false,
-          "values": [
-            "percent"
-          ]
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [],
-          "fields": "",
-          "limit": 5000,
-          "values": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (service) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Services",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "service": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
-          }
-        }
-      ],
-      "type": "piechart"
     }
   ],
   "refresh": "1m",
@@ -1062,6 +1055,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 5,
+  "version": 7,
   "weekStart": ""
 }
