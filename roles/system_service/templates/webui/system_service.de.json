@@ -1,8 +1,8 @@
 {
   "admin_system": {
-    "Network Structure": "Netzwerk Struktur",
-    "Scanner": "Scanner",
+    "Network": "Netzwerk",
+    "Scanner": "Topologie Scanner",
     "Network Traffic": "Netzwerk Traffic",
-    "Netflow": "Netflow"
+    "Netflow": "Netflow Collector"
   }
 }
