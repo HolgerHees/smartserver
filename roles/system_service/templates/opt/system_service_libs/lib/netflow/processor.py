@@ -2,7 +2,7 @@
 import queue
 import threading
 import logging
-#import traceback
+import traceback
 import functools
 import socket
 import ipaddress
@@ -117,7 +117,7 @@ class Connection:
         else:
             self.is_swapped = False
 
-        self.size = Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS'])
+        self.size = Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS']) + ( Helper.fallback(self.request_flow, ['IN_BYTES', 'IN_OCTETS']) if self.answer_flow is not None else 0 )
         self.packages = self.request_flow["IN_PKTS"] + ( self.answer_flow["IN_PKTS"] if self.answer_flow is not None else 0 )
 
         # Duration is given in milliseconds
@@ -172,10 +172,6 @@ class Connection:
                 service = "unknown"
         return service
 
-    @property
-    def total_packets(self):
-        return self.src_flow["IN_PKTS"] + self.dest_flow["IN_PKTS"]
-
 class Processor(threading.Thread):
     def __init__(self, config, handler ):
         threading.Thread.__init__(self)
@@ -209,8 +205,6 @@ class Processor(threading.Thread):
                 try:
                     ts, client, export = self.listener.get(timeout=0.5)
 
-                    #logging.info(client)
-
                     #flows = []
                     #for f in export.flows:
                     #    flows.append(f.data)
@@ -219,9 +213,15 @@ class Processor(threading.Thread):
                         #logging.info("Netflow flows: {}".format(len(flows)))
                         continue
 
+                    if export.header.version != 9:
+                        logging.error("Unsupported netflow version {}. Only version 9 is supported.".format(export.header.version))
+                        continue
+
                     #for flow in sorted(flows, key=lambda x: x["FIRST_SWITCHED"]):
                     for f in export.flows:
                         flow = f.data
+
+                        #logging.info(flow)
 
                         if "PROTOCOL" not in flow:
                             if "ICMP_TYPE" in flow:
@@ -251,7 +251,9 @@ class Processor(threading.Thread):
                             src_addr = flow["IPV6_SRC_ADDR"]
                             dest_addr = flow["IPV6_DST_ADDR"]
 
-                        if src_addr == self.config.netflow_bind_ip or dest_addr == self.config.netflow_bind_ip:
+                        if src_addr == client[0] or dest_addr == client[0]:
+                            #logging.info("SKIPPED")
+                            #logging.info(flow)
                             continue
 
                         #if first_switched not in pending:
@@ -296,6 +298,8 @@ class Processor(threading.Thread):
 
                 except queue.Empty:
                     continue
+                except Exception:
+                    logging.error(traceback.format_exc())
         finally:
             self.listener.stop()
             self.listener.join()
@@ -365,10 +369,15 @@ class Processor(threading.Thread):
             #metrics.append("system_service_netflow_packets{{{}}} {} {}".format(label_str, con.packages, time_str))
             #metrics.append("system_service_netflow_oneway{{{}}} {} {}".format(label_str, 1 if con.is_one_direction else 0, time_str))
 
-            #direction = "=>" if con.is_one_direction else "<=>"
-            #info = "{src_host} ({src}) {direction} {dest_host} ({dest})".format(src_host=con.src_hostname, src=con.src, direction=direction, dest_host=con.dest_hostname, dest=con.dest)
-
-            #msg = "{protocol:<7} | {service:<14} | {size:8} | {duration:9} | {packets:6} | {info}".format(protocol=con.human_protocol, service=con.service.upper(), size=con.human_size, #duration=con.human_duration, packets=con.packages, info=info)
+            #con = data[0]
+            #if "gwdg" in con.src_hostname or "gwdg" in con.dest_hostname:
+            #    logging.info("------------------")
+            #    direction = "=>" if con.is_one_direction else "<=>"
+            #    info = "{src_host} ({src}) {direction} {dest_host} ({dest})".format(src_host=con.src_hostname, src=con.src, direction=direction, dest_host=con.dest_hostname, dest=con.dest)
+            #    msg = "{protocol:<7} | {service:<14} | {size:10} | {info}".format(protocol=con.protocol, service=con.service, size=con.size, info=info)
+            #    logging.info(con.request_flow)
+            #    logging.info(con.answer_flow)
+            #    logging.info(msg)
 
             #logging.info(msg)
             #if con.is_swapped:
