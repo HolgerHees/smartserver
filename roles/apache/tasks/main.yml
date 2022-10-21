@@ -2,7 +2,7 @@
   set_fact:
     apache_version: '2.4.54'
 #    openidc_version: '2.4.1'
-    openidc_version: '2.4.11.3'
+    openidc_version: '2.4.12'
   tags: [ 'update_notifier_config' ]
   
 # SELFSIGNED CERTIFICATE
