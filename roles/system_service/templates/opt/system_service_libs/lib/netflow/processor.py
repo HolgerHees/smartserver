@@ -7,6 +7,7 @@ import functools
 import socket
 import ipaddress
 import contextlib
+import time
 
 from .collector import ThreadedNetFlowListener
 
@@ -185,6 +186,8 @@ class Processor(threading.Thread):
 
         self.is_enabled = True
 
+        self.last_metrics = time.time()
+
     def terminate(self):
         #self.is_running = False
         self.event.set()
@@ -284,7 +287,8 @@ class Processor(threading.Thread):
 
                         #raise Exception
 
-                        con = Connection(request_ts, request_flow, answer_flow, self.config)
+                        # use answer timestamp here to avoid later timefixes during getMetrics()
+                        con = Connection(ts, request_flow, answer_flow, self.config)
                         self.connections.append(con)
 
                     for request_key in list(pending.keys()):
@@ -304,10 +308,10 @@ class Processor(threading.Thread):
             self.listener.stop()
             self.listener.join()
 
-    def getMetrics(self):
+    def getMetrics(self, is_prometheus):
         connections = list(self.connections)
-        self.connections = []
-
+        if is_prometheus:
+            self.connections = []
 
         #f = open("/tmp/netflow.log", "w")
         registry = {}
@@ -326,76 +330,66 @@ class Processor(threading.Thread):
             #label.append("oneway=\"{}\"".format(1 if con.is_one_direction else 0))
 
             label_str = ",".join(label)
-            timestamp = int(con.request_ts * 1000)
+            timestamp = int(con.request_ts)
+            if timestamp <= self.last_metrics:
+                timestamp = self.last_metrics + 1
+                logging.info("fixed")
 
-            # avoid douplicate timestamps
             key = "{} {}".format(label_str, timestamp)
-            used_keys = []
-            _con, _, _ = registry.get(key, [None, None, None])
-            if _con is not None:
-                flow_diff = con.request_flow["LAST_SWITCHED"] - _con.request_flow["LAST_SWITCHED"]
-                timestamp += flow_diff
 
-                key = "{} {}".format(label_str, timestamp)
-                _con, _, _ = registry.get(key, [None, None, None])
+            if key not in registry:
+                registry[key] = [label_str, 0, timestamp]
+            registry[key][1] += con.size
 
-                while _con is not None:
-                    timestamp += 1
-                    key = "{} {}".format(label_str, timestamp)
-                    _con, _, _ = registry.get(key, [None, None, None])
-                    #logging.info("search")
-
-                #logging.info("fixed")
-
-            registry[key] = [ con, timestamp, "system_service_netflow_size{{{}}} {} {}".format(label_str, con.size, timestamp) ]
+            #registry[key] = [ con, timestamp, "system_service_netflow_size{{{}}} {} {}".format(label_str, con.size, timestamp) ]
 
         metrics = []
-        pos = 0
-        # process ordered metrics
-        for data in sorted(registry.values(), key=lambda x: x[1]):
-            metrics.append(data[2])
-            #if data[1] < pos:
-            #    logging.info("Out of order")
-            pos = data[1]
+        sorted_registry = sorted(registry.values(), key=lambda x: x[2])
+        if len(sorted_registry) > 0:
+            for data in sorted_registry:
+                metrics.append("system_service_netflow_size{{{}}} {} {}000".format(data[0], data[1], data[2]))
 
-            #key = "system_service_netflow_size{{{}}} {}".format(label_str, time_str)
-            #if key in check:
-            #    logging.error("Douplicate metric {}, TS OLD: {}, TS NEW: {}".format(key, check[key].request_ts, con.request_ts))
-            #    logging.error(check[key].request_flow)
-            #    logging.error(con.request_flow)
-            #check[key] = con
+                #key = "system_service_netflow_size{{{}}} {}".format(label_str, time_str)
+                #if key in check:
+                #    logging.error("Douplicate metric {}, TS OLD: {}, TS NEW: {}".format(key, check[key].request_ts, con.request_ts))
+                #    logging.error(check[key].request_flow)
+                #    logging.error(con.request_flow)
+                #check[key] = con
 
-            #metrics.append("system_service_netflow_duration{{{}}} {} {}".format(label_str, con.duration, time_str))
-            #metrics.append("system_service_netflow_packets{{{}}} {} {}".format(label_str, con.packages, time_str))
-            #metrics.append("system_service_netflow_oneway{{{}}} {} {}".format(label_str, 1 if con.is_one_direction else 0, time_str))
+                #metrics.append("system_service_netflow_duration{{{}}} {} {}".format(label_str, con.duration, time_str))
+                #metrics.append("system_service_netflow_packets{{{}}} {} {}".format(label_str, con.packages, time_str))
+                #metrics.append("system_service_netflow_oneway{{{}}} {} {}".format(label_str, 1 if con.is_one_direction else 0, time_str))
 
-            #con = data[0]
-            #if "gwdg" in con.src_hostname or "gwdg" in con.dest_hostname:
-            #    logging.info("------------------")
-            #    direction = "=>" if con.is_one_direction else "<=>"
-            #    info = "{src_host} ({src}) {direction} {dest_host} ({dest})".format(src_host=con.src_hostname, src=con.src, direction=direction, dest_host=con.dest_hostname, dest=con.dest)
-            #    msg = "{protocol:<7} | {service:<14} | {size:10} | {info}".format(protocol=con.protocol, service=con.service, size=con.size, info=info)
-            #    logging.info(con.request_flow)
-            #    logging.info(con.answer_flow)
-            #    logging.info(msg)
+                #con = data[0]
+                #if con.src_raw == "134.76.12.6" or con.dest_raw == "134.76.12.6":
+                #    logging.info("------------------")
+                #    direction = "=>" if con.is_one_direction else "<=>"
+                #    info = "{src_host} ({src}) {direction} {dest_host} ({dest})".format(src_host=con.src_hostname, src=con.src, direction=direction, dest_host=con.dest_hostname, dest=con.dest)
+                #    msg = "{protocol:<7} | {service:<14} | {size:10} | {info}".format(protocol=con.protocol, service=con.service, size=con.size, info=info)
+                #    logging.info(con.request_flow)
+                #    logging.info(con.answer_flow)
+                #    logging.info(msg)
 
-            #logging.info(msg)
-            #if con.is_swapped:
-            #    logging.info("--- swapped")
+                #logging.info(msg)
+                #if con.is_swapped:
+                #    logging.info("--- swapped")
 
-            #if not con.src.is_private:
-            #    logging.info(con.request_flow)
-            #    logging.info(con.answer_flow)
+                #if not con.src.is_private:
+                #    logging.info(con.request_flow)
+                #    logging.info(con.answer_flow)
 
 
-            #f.write(msg)
-            #f.write("\n")
-            #f.write(str(con.request_flow))
-            #f.write("\n")
-            #f.write(str(con.answer_flow))
-            #f.write("\n\n")
+                #f.write(msg)
+                #f.write("\n")
+                #f.write(str(con.request_flow))
+                #f.write("\n")
+                #f.write(str(con.answer_flow))
+                #f.write("\n\n")
 
-        #f.close()
+            #f.close()
+
+            if is_prometheus:
+                self.last_metrics = sorted_registry[-1][2]
 
         logging.info("Submit {} flows".format(len(metrics)))
 
