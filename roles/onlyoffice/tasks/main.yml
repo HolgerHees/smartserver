@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    onlyoffice_version: "7.2.0.204"
+    onlyoffice_version: "7.2.1.34"
   tags: [ 'update_notifier_config' ]
   
 - name: prepare needed folder
