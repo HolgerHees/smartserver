@@ -333,7 +333,7 @@ class Processor(threading.Thread):
             timestamp = int(con.request_ts)
             if timestamp <= self.last_metrics:
                 timestamp = self.last_metrics + 1
-                logging.info("fixed")
+                #logging.info("fixed")
 
             key = "{} {}".format(label_str, timestamp)
 
