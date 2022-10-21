@@ -47,7 +47,7 @@ button.primary:focus,
 	background-color: #745bca;
 }*/
 :root {
-    --color-primary: #1976D2;
+    --color-primary: #1976D2 !important;
 }
 #body-user #header
 {
