@@ -27,6 +27,10 @@ PEER_STATE_PING_OK = 1
 PEER_STATE_ONLINE  = 2
 PEER_STATE_UNKNOWN = -1
 
+MQTT_STATE_OFFLINE = 0
+MQTT_STATE_ONLINE = 1
+MQTT_STATE_UNKNOWN = -1
+
 MOUNT_STATE_UNMOUNTED = 0
 MOUNT_STATE_MOUNTED = 1
 MOUNT_STATE_UNKNOWN = -1
@@ -290,13 +294,15 @@ class Handler(threading.Thread):
 
                 if source_peer not in topic_state:
                     if source_peer in self.peer_jobs and not self.peer_jobs[source_peer].isOnline():
-                        topic_state[source_peer] = -1
+                        topic_state[source_peer] = MQTT_STATE_UNKNOWN
                     else:
-                        topic_state[source_peer] = 0
+                        topic_state[source_peer] = MQTT_STATE_OFFLINE
 
                 if Helper.getAgeInSeconds(topic_data["updated"]) < CHECK_INTERVAL * 2:
                     state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,int(topic_data["state"])))
-                    topic_state[source_peer] = 1
+
+                    # mqtt state is unknown during startup where updated is datetime.now() but state is PEER_STATE_UNKNOWN
+                    topic_state[source_peer] = MQTT_STATE_ONLINE if topic_data["state"] != PEER_STATE_UNKNOWN else MQTT_STATE_UNKNOWN
                     continue
                 else:
                     state_metrics.append("cloud_check_topic{{source_peer=\"{}\",target_peer=\"{}\"}} {}".format(source_peer,target_peer,PEER_STATE_UNKNOWN))
@@ -325,7 +331,7 @@ class Handler(threading.Thread):
 
                 # **** NOTIFY PEERS IF THEY ARE OFFLINE ****
                 peer_job = self.peer_jobs[peer]
-                if state_count == len(config.cloud_peers):
+                if state_count == len(config.cloud_peers) or max_state != PEER_STATE_OFFLINE:
                     state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,max_state))
                 else:
                     state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,PEER_STATE_UNKNOWN))
@@ -355,7 +361,7 @@ class Handler(threading.Thread):
 
         next_topic_checks = datetime.now()
         while self.is_running:
-            if self.is_checking:
+            if self.is_checking or not self.is_online:
                 # **** CHECK INTERNET CONNECTIVITY ****
                 Helper.logInfo("Check internet connectivity")
                 is_online = Helper.ping("8.8.8.8", 5)
@@ -374,7 +380,7 @@ class Handler(threading.Thread):
                         job.resume()
 
             #Helper.logInfo(sleep_time)
-            self.event.wait( CHECK_INTERVAL )
+            self.event.wait( CHECK_INTERVAL if self.is_online else CHECK_INTERVAL * 10 )
             self.event.clear()
 
     def on_connect(self,client,userdata,flags,rc):
