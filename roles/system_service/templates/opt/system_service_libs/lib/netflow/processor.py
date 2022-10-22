@@ -254,10 +254,10 @@ class Processor(threading.Thread):
                             src_addr = flow["IPV6_SRC_ADDR"]
                             dest_addr = flow["IPV6_DST_ADDR"]
 
-                        if src_addr == client[0] or dest_addr == client[0]:
-                            #logging.info("SKIPPED")
-                            #logging.info(flow)
-                            continue
+                        #if src_addr == client[0] or dest_addr == client[0]:
+                        #    logging.info("SKIPPED")
+                        #    logging.info(flow)
+                        #    continue
 
                         #if first_switched not in pending:
                         #    pending[first_switched] = {}
