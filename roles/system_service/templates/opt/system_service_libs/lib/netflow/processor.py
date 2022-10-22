@@ -88,11 +88,13 @@ class Connection:
             self.src = ipaddress.ip_address(self.src_raw)
             self.dest_raw = request_flow['IPV4_DST_ADDR']
             self.dest = ipaddress.ip_address(self.dest_raw)
+            self.ip_type = "v4"
         else:
             self.src_raw = request_flow['IPV6_SRC_ADDR']
             self.src = ipaddress.ip_address(self.src_raw)
             self.dest_raw = request_flow['IPV6_DST_ADDR']
             self.dest = ipaddress.ip_address(self.dest_raw)
+            self.ip_type = "v6"
 
         self.src_port = self.request_flow['L4_SRC_PORT'] if 'L4_SRC_PORT' in self.request_flow else None
         self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
@@ -327,6 +329,7 @@ class Processor(threading.Thread):
             label.append("src_host=\"{}\"".format(con.src_hostname))
             label.append("dest_ip=\"{}\"".format(con.dest))
             label.append("dest_host=\"{}\"".format(con.dest_hostname))
+            label.append("ip_type=\"{}\"".format(con.ip_type))
             #label.append("oneway=\"{}\"".format(1 if con.is_one_direction else 0))
 
             label_str = ",".join(label)
