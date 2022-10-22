@@ -24,6 +24,7 @@ default_variables: {
     "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
 
     "intern_networks": { "default": [ "{{server_network}}" ] },
+    "trusted_networks": { "default": [] },
 
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore

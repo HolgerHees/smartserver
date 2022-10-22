@@ -5,7 +5,13 @@ domain (ip ip6) {
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;
 {% endfor %}
-{% if not default_gateway.startswith(server_subnet) %}            
+{% if trusted_networks | length > 0 %}
+            # trusted ip's can connect to host
+{% for network in trusted_networks %}
+            saddr {{network}} ACCEPT;
+{% endfor %}
+{% endif %}
+{% if not default_gateway.startswith(server_subnet) %}
             # ansible ip can connect to host
             saddr {{default_gateway}} ACCEPT;
 {% endif %}
@@ -17,6 +23,12 @@ domain (ip ip6) {
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;
 {% endfor %}
+{% if trusted_networks | length > 0 %}
+            # trusted ip's can forward to containers
+{% for network in trusted_networks %}
+            saddr {{network}} ACCEPT;
+{% endfor %}
+{% endif %}
 {% if not default_gateway.startswith(server_subnet) %}
             # ansible ip can forward to containers
             saddr {{default_gateway}} ACCEPT;
