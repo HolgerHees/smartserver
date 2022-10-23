@@ -131,6 +131,8 @@ class Connection:
             # TODO: Should be handled in the collection phase
             self.duration = (2 ** 32 - self.request_flow['FIRST_SWITCHED']) + self.request_flow['LAST_SWITCHED']
 
+        #logging.info(self.duration)
+
     #@property
     #def human_size(self):
     #    return Helper.human_size(self.size)
@@ -326,9 +328,12 @@ class Processor(threading.Thread):
         for con in list(self.connections):
             timestamp = int(con.request_ts)
 
-            # we have to wait until all flows arrived to generate metrics in correct order
-            if now - timestamp < 60:
+            # we have to wait until all flows arrived, including the ones from cleanup
+            if now - timestamp <= 15:
                 continue
+
+            # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
+            timestamp -= 60
 
             label = []
             label.append("protocol=\"{}\"".format(con.protocol_name))
