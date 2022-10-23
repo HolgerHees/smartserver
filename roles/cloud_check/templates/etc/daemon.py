@@ -316,7 +316,7 @@ class Handler(threading.Thread):
 
             for peer in topic_state:
                 state_metrics.append("cloud_check_peer_mqtt_state{{peer=\"{}\"}} {}".format(peer,topic_state[peer]))
-                if peer not in self.last_mqtt_state or self.last_mqtt_state[peer] != mqtt_state:
+                if peer not in self.last_mqtt_state or self.last_mqtt_state[peer] != topic_state[peer]:
                     Helper.logInfo("New mqtt state for pear '{}' is '{}'".format(peer, topic_state[peer]))
                     self.last_mqtt_state[peer] = topic_state[peer]
 

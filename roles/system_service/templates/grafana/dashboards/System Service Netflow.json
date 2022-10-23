@@ -92,6 +92,7 @@
         "x": 0,
         "y": 0
       },
+      "hideTimeOverride": true,
       "id": 2,
       "options": {
         "legend": {
@@ -124,6 +125,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Traffic",
       "type": "timeseries"
     },
@@ -168,6 +170,7 @@
         "x": 18,
         "y": 0
       },
+      "hideTimeOverride": true,
       "id": 9,
       "options": {
         "displayLabels": [
@@ -209,6 +212,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Protocol",
       "transformations": [
         {
@@ -307,6 +311,7 @@
         "x": 0,
         "y": 12
       },
+      "hideTimeOverride": true,
       "id": 4,
       "options": {
         "footer": {
@@ -341,6 +346,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Sources",
       "transformations": [
         {
@@ -431,6 +437,7 @@
         "x": 5,
         "y": 12
       },
+      "hideTimeOverride": true,
       "id": 5,
       "options": {
         "footer": {
@@ -465,6 +472,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Targets",
       "transformations": [
         {
@@ -566,11 +574,12 @@
         ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 4,
         "x": 10,
         "y": 12
       },
+      "hideTimeOverride": true,
       "id": 6,
       "options": {
         "footer": {
@@ -605,6 +614,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Services",
       "transformations": [
         {
@@ -711,6 +721,7 @@
         "x": 14,
         "y": 12
       },
+      "hideTimeOverride": true,
       "id": 10,
       "options": {
         "footer": {
@@ -745,6 +756,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Ports",
       "transformations": [
         {
@@ -820,6 +832,7 @@
         "x": 18,
         "y": 12
       },
+      "hideTimeOverride": true,
       "id": 8,
       "options": {
         "displayLabels": [
@@ -862,6 +875,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Services",
       "transformations": [
         {
@@ -964,6 +978,7 @@
         "x": 14,
         "y": 18
       },
+      "hideTimeOverride": true,
       "id": 7,
       "options": {
         "footer": {
@@ -998,6 +1013,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "Protocol",
       "transformations": [
         {
@@ -1095,11 +1111,12 @@
         ]
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 4,
         "x": 10,
-        "y": 20
+        "y": 21
       },
+      "hideTimeOverride": true,
       "id": 11,
       "options": {
         "footer": {
@@ -1134,6 +1151,7 @@
           "refId": "A"
         }
       ],
+      "timeShift": "2m",
       "title": "IP Type",
       "transformations": [
         {
@@ -1207,6 +1225,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 9,
+  "version": 11,
   "weekStart": ""
 }

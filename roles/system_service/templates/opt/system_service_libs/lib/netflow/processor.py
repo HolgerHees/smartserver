@@ -8,6 +8,7 @@ import socket
 import ipaddress
 import contextlib
 import time
+from datetime import datetime
 
 from .collector import ThreadedNetFlowListener
 
@@ -188,7 +189,8 @@ class Processor(threading.Thread):
 
         self.is_enabled = True
 
-        self.last_metrics = time.time()
+        #self.last_metrics = time.time()
+        self.last_labels = {}
 
     def terminate(self):
         #self.is_running = False
@@ -206,6 +208,8 @@ class Processor(threading.Thread):
 
         try:
             pending = {}
+            last_cleanup = datetime.now().timestamp()
+
             while not self.event.is_set():
                 try:
                     ts, client, export = self.listener.get(timeout=0.5)
@@ -289,35 +293,43 @@ class Processor(threading.Thread):
 
                         #raise Exception
 
-                        # use answer timestamp here to avoid later timefixes during getMetrics()
-                        con = Connection(ts, request_flow, answer_flow, self.config)
+                        con = Connection(request_ts, request_flow, answer_flow, self.config)
                         self.connections.append(con)
 
+                    #self.getMetrics()
+
+                except queue.Empty:
+                    pass
+                except Exception:
+                    logging.error(traceback.format_exc())
+
+                now = datetime.now().timestamp()
+                if now - last_cleanup >= 1:
                     for request_key in list(pending.keys()):
                         request_flow, request_ts = pending[request_key]
                         if ts - request_ts > 15:
                             con = Connection(request_ts, request_flow, None, self.config)
                             self.connections.append(con)
                             del pending[request_key]
-
-                    #self.getMetrics()
-
-                except queue.Empty:
-                    continue
-                except Exception:
-                    logging.error(traceback.format_exc())
+                    last_cleanup = now
         finally:
             self.listener.stop()
             self.listener.join()
 
     def getMetrics(self, is_prometheus):
-        connections = list(self.connections)
-        if is_prometheus:
-            self.connections = []
-
         #f = open("/tmp/netflow.log", "w")
+        last_labels = self.last_labels
         registry = {}
-        for con in connections:
+
+        now = datetime.now().timestamp()
+
+        for con in list(self.connections):
+            timestamp = int(con.request_ts)
+
+            # we have to wait until all flows arrived to generate metrics in correct order
+            if now - timestamp < 60:
+                continue
+
             label = []
             label.append("protocol=\"{}\"".format(con.protocol_name))
             label.append("service=\"{}\"".format(con.service))
@@ -333,24 +345,32 @@ class Processor(threading.Thread):
             #label.append("oneway=\"{}\"".format(1 if con.is_one_direction else 0))
 
             label_str = ",".join(label)
-            timestamp = int(con.request_ts)
-            if timestamp <= self.last_metrics:
-                timestamp = self.last_metrics + 1
-                #logging.info("fixed")
 
-            key = "{} {}".format(label_str, timestamp)
-
+            key = label_str
             if key not in registry:
                 registry[key] = [label_str, 0, timestamp]
             registry[key][1] += con.size
 
+            if label_str in last_labels:
+                del last_labels[label_str]
+
+            if is_prometheus:
+                self.connections.remove(con)
+
+        for last_label_str in last_labels:
+            timestamp = last_labels[last_label_str] + 60
+            key = "{} {}".format(last_label_str, timestamp)
+            registry[key] = [last_label_str, 0, timestamp]
             #registry[key] = [ con, timestamp, "system_service_netflow_size{{{}}} {} {}".format(label_str, con.size, timestamp) ]
 
         metrics = []
+        labels = {}
         sorted_registry = sorted(registry.values(), key=lambda x: x[2])
         if len(sorted_registry) > 0:
             for data in sorted_registry:
                 metrics.append("system_service_netflow_size{{{}}} {} {}000".format(data[0], data[1], data[2]))
+                if data[1] > 0:
+                    labels[data[0]] = data[2]
 
                 #key = "system_service_netflow_size{{{}}} {}".format(label_str, time_str)
                 #if key in check:
@@ -392,7 +412,9 @@ class Processor(threading.Thread):
             #f.close()
 
             if is_prometheus:
-                self.last_metrics = sorted_registry[-1][2]
+                #self.last_metrics = time.time()
+                #sorted_registry[-1][2]
+                self.last_labels = labels
 
         logging.info("Submit {} flows".format(len(metrics)))
 
