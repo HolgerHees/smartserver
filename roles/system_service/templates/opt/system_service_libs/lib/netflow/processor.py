@@ -24,6 +24,9 @@ MDNS_IP4 = ipaddress.IPv4Address("224.0.0.251")
 SSDP_IP4 = ipaddress.IPv4Address("239.255.255.250")
 BROADCAST_IP4 = ipaddress.IPv4Address("255.255.255.255")
 
+METRIC_TIMESHIFT = 60
+PROMETHEUS_INTERVAL = 60
+
 class Helper():
     @staticmethod
     @functools.lru_cache(maxsize=None)
@@ -191,7 +194,7 @@ class Processor(threading.Thread):
 
         self.is_enabled = True
 
-        #self.last_metrics = time.time()
+        self.last_metric_end = time.time() - METRIC_TIMESHIFT
         self.last_labels = {}
 
     def terminate(self):
@@ -319,21 +322,24 @@ class Processor(threading.Thread):
             self.listener.join()
 
     def getMetrics(self, is_prometheus):
+        last_labels = dict(self.last_labels)
+
         #f = open("/tmp/netflow.log", "w")
-        last_labels = self.last_labels
+        #now = datetime.now().timestamp()
         registry = {}
-
-        now = datetime.now().timestamp()
-
         for con in list(self.connections):
             timestamp = int(con.request_ts)
 
             # we have to wait until all flows arrived, including the ones from cleanup
-            if now - timestamp <= 15:
-                continue
+            #if now - timestamp <= 30:
+            #    continue
 
             # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
-            timestamp -= 60
+            timestamp -= METRIC_TIMESHIFT
+
+            if timestamp < self.last_metric_end:
+                #logging.info("fix {} by {}".format(con.answer_flow is not None, int(self.last_metric_end + 1) - timestamp))
+                timestamp = int(self.last_metric_end + 1)
 
             label = []
             label.append("protocol=\"{}\"".format(con.protocol_name))
@@ -362,8 +368,9 @@ class Processor(threading.Thread):
             if is_prometheus:
                 self.connections.remove(con)
 
+        # create 0 traffic metric, if there are no new flows from previous generated traffic metrics
         for last_label_str in last_labels:
-            timestamp = last_labels[last_label_str] + 60
+            timestamp = last_labels[last_label_str] + PROMETHEUS_INTERVAL
             key = "{} {}".format(last_label_str, timestamp)
             registry[key] = [last_label_str, 0, timestamp]
             #registry[key] = [ con, timestamp, "system_service_netflow_size{{{}}} {} {}".format(label_str, con.size, timestamp) ]
@@ -417,8 +424,8 @@ class Processor(threading.Thread):
             #f.close()
 
             if is_prometheus:
-                #self.last_metrics = time.time()
-                #sorted_registry[-1][2]
+                #self.last_metric_request = time.time()
+                self.last_metric_end = time.time() - METRIC_TIMESHIFT
                 self.last_labels = labels
 
         logging.info("Submit {} flows".format(len(metrics)))
