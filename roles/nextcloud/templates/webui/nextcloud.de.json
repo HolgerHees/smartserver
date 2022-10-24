@@ -6,12 +6,14 @@
     "Files": "Alle Dateien",
     "Documents": "Dokumente",
     "Notes": "Notizen",
-    "Notes_Infos": "Notizzettel",
+    "Note Infos": "Notizzettel",
     "Photos": "Fotos",
     "Gallery": "Gallerie",
     "News": "News",
     "RSSFeeds": "RSS Feeds",
     "Keys": "Passwörter",
-    "Keeweb": "Keeweb"
+    "Keeweb": "Keeweb",
+    "Tasks": "Aufgaben",
+    "Deck": "Deck"
   }
 }
