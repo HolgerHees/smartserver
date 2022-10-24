@@ -98,13 +98,12 @@
         "legend": {
           "calcs": [
             "last",
-            "max",
-            "sum"
+            "max"
           ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "sortBy": "Last",
+          "sortBy": "Max",
           "sortDesc": true
         },
         "tooltip": {
@@ -126,7 +125,7 @@
         }
       ],
       "timeShift": "2m",
-      "title": "Traffic",
+      "title": "Traffic - Sources",
       "type": "timeseries"
     },
     {
@@ -174,7 +173,8 @@
       "id": 9,
       "options": {
         "displayLabels": [
-          "name"
+          "name",
+          "percent"
         ],
         "legend": {
           "displayMode": "list",
@@ -558,18 +558,6 @@
                 "value": "Service"
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Data"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 71
-              }
-            ]
           }
         ]
       },
@@ -836,7 +824,8 @@
       "id": 8,
       "options": {
         "displayLabels": [
-          "name"
+          "name",
+          "percent"
         ],
         "legend": {
           "displayMode": "list",
@@ -1202,14 +1191,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "filters": [
-          {
-            "condition": "",
-            "key": "src_host",
-            "operator": "!=",
-            "value": "fe80::162b:66e4:7f26:964c"
-          }
-        ],
+        "filters": [],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -1225,6 +1207,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 11,
+  "version": 12,
   "weekStart": ""
 }
