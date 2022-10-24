@@ -149,7 +149,7 @@
     dest: "{{item.dest}}"
     owner: "root"
     group: "root"
-    mode: "u=rwX,g=rX,o="
+    mode: "{{'u=rwx,g=rx,o=rx' if 'init.d' in item.dest else 'u=rwX,g=rX,o='}}"
   changed_when: no
   with_items: "{{custom_host_files}}"
 

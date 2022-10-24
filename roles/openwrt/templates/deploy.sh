@@ -77,31 +77,30 @@ authenticate
 source "$SOURCE/$IP.env"
 
 echo "Refresh package lists ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update"
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update > /dev/null"
 
 echo "Install core packages ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc htop strace tcpdump openssh-sftp-server"
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc htop strace tcpdump openssh-sftp-server > /dev/null"
 
 if [[ "$ADDITIONAL_PACKAGES" != "" ]]; then
   echo "Install custom packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install" $ADDITIONAL_PACKAGES
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install" $ADDITIONAL_PACKAGES " > /dev/null"
 fi
 
-if [ -f "$SOURCE/$IP/etc/config/snmp" ]; then
+if [ -f "$SOURCE/$IP/etc/config/snmpd" ]; then
   echo "Install snmpd packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install snmpd"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install snmpd > /dev/null"
 fi
 
 if [[ "$IS_AP" == 1 ]]; then
   echo "Install wifi packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl"
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install wpad-wolfssl hostapd-utils"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl > /dev/null"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install wpad-wolfssl hostapd-utils > /dev/null"
 
   grep "ieee80211r '1'" "$SOURCE/$IP/etc/config/wireless" > /dev/null
-  if [ $? -eq 0 ]
-  then
+  if [ $? -eq 0 ]; then
     echo "Install roaming packages ..."
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install umdns dawn luci-app-dawn"
+    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install umdns dawn luci-app-dawn > /dev/null"
     sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "[ -f /etc/seccomp/umdns.json ] && mv /etc/seccomp/umdns.json /etc/seccomp/umdns.json.disabled"
   fi
 fi
@@ -119,6 +118,20 @@ sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set uhttpd.main.redirect
 
 #/etc/init.d/rpcd restart
 #/etc/init.d/snmpd restart
+
+echo "Search for upgrades ..."
+AVAILABLE_UPDATES_RESULT=$(sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg list-upgradable")
+
+if [[ "$AVAILABLE_UPDATES_RESULT" != "" ]]; then
+  AVAILABLE_UPDATES=$(echo "$AVAILABLE_UPDATES_RESULT" | wc -l)
+  echo -n "$AVAILABLE_UPDATES Updates available. Run upgrade packages? [y/N]":
+  read UPGRADE
+
+  if [[ $UPGRADE =~ ^[Yy]$ ]]; then
+    echo "Upgrading now ..."
+    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg list-upgradable | cut -f 1 -d ' ' | xargs -r opkg upgrade; > /dev/null"
+  fi
+fi
 
 echo -n "Reboot now? [y/N]": 
 read REBOOT
