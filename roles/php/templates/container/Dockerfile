@@ -68,7 +68,10 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   echo "opcache.interned_strings_buffer = 16\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   
   sed -i 's/memory_limit.*/memory_limit = 1024M/' /usr/local/etc/php/php.ini && \
-  
+  sed -i 's/upload_max_filesize.*/upload_max_filesize = 2048M/' /usr/local/etc/php/php.ini && \
+  sed -i 's/post_max_size.*/post_max_size = 2048M/' /usr/local/etc/php/php.ini && \
+  sed -i 's/max_execution_time.*/max_execution_time = 600/' /usr/local/etc/php/php.ini && \
+
   sed -i 's/pm.max_children.*/pm.max_children = 200/' /usr/local/etc/php-fpm.d/www.conf && \
   
   sed -i 's/pm.start_servers.*/pm.start_servers = 16/' /usr/local/etc/php-fpm.d/www.conf && \
