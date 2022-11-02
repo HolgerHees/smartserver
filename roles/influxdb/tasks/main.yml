@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
-    influxdb_version: '2.4.0'
+    influxdb_branch: '2.5'
+    influxdb_version: '2.5.0'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
@@ -101,7 +102,7 @@
   vars:
     name: "influxdb"
     type: "docker"
-    url: "https://docs.influxdata.com/influxdb/v2.0/reference/release-notes/influxdb/"
+    url: "https://docs.influxdata.com/influxdb/v{{influxdb_branch}}/reference/release-notes/influxdb/"
     config: {
       repository: "influxdb",
       pattern: "^([0-9\\.]+)-alpine$"
