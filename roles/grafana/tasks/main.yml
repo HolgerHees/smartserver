@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    grafana_version: '9.2.2'
+    grafana_version: '9.2.3'
     natel_discrete_plugin_version: "0.1.1"
   tags: [ 'update_notifier_config' ]    
 
@@ -178,7 +178,7 @@
   vars:
     name: "grafana"
     type: "docker"
-    url: "https://grafana.com/docs/grafana/latest/release-notes/"
+    url: "https://github.com/grafana/grafana/blob/main/CHANGELOG.md"
     config: {
       repository: "grafana/grafana",
       pattern: "^([0-9\\.]+)$"
