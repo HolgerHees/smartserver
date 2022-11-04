@@ -6,7 +6,6 @@
 
 - name: set openhab version
   set_fact:
-    speedtest_version: "1.1.1"
     openhab_version: "3.3.0"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"

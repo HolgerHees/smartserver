@@ -18,9 +18,7 @@ RUN chmod 755 /entrypoint.sh \
     && make \
     && make install \
     && cd /build \
-    && wget https://install.speedtest.net/app/cli/ookla-speedtest-{{speedtest_version}}-linux-x86_64.tgz \
-    && tar zxvf ookla-speedtest-{{speedtest_version}}-linux-x86_64.tgz
-
+    && wget -qO- https://install.speedtest.net/app/cli/ookla-speedtest-{{speedtest_version}}-linux-x86_64.tgz | tar xvz -C /build
 
 #ENTRYPOINT ["/bin/sleep","3000000"]
 ENTRYPOINT ["/entrypoint.sh"]
