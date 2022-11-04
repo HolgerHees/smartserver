@@ -62,8 +62,7 @@ class Speedtest(threading.Thread):
 
             logging.info(u"Speedtest done")
 
-            index = json_string.find("{\"type\":\"result\"")
-            if index != -1:
+            try:
                 data = json.loads(json_string)
 
                 resultPing = data["ping"]["latency"]
@@ -95,7 +94,7 @@ class Speedtest(threading.Thread):
                     self.influxdb.submit(messurements)
                 except requests.exceptions.ConnectionError:
                     logging.info("InfluxDB currently not available")
-            else:
+            except json.decoder.JSONDecodeError:
                 location = "Fehler"
                 logging.error(u"Data error: {}".format(result))
         except Exception as e:
