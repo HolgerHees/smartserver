@@ -10,6 +10,7 @@ from collections import namedtuple
 
 from netflow.utils import UnknownExportVersion, parse_packet
 from netflow.v9 import V9TemplateNotRecognized
+from netflow.ipfix import IPFIXTemplateNotRecognized
 
 RawPacket = namedtuple('RawPacket', ['ts', 'client', 'data'])
 ParsedPacket = namedtuple('ParsedPacket', ['ts', 'client', 'export'])
@@ -62,7 +63,7 @@ class ThreadedNetFlowListener(threading.Thread):
                 except UnknownExportVersion as e:
                     logging.error("{}, ignoring the packet".format(e))
                     continue
-                except V9TemplateNotRecognized:
+                except (V9TemplateNotRecognized, IPFIXTemplateNotRecognized):
                     if time.time() - pkt.ts > PACKET_TIMEOUT:
                         logging.warning("Dropping an old and undecodable v9 ExportPacket")
                     else:

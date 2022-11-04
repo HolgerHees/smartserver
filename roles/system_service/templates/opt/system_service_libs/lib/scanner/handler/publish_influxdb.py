@@ -12,8 +12,10 @@ class InfluxDBHandler():
         pass
 
 class InfluxDBPublisher(_handler.Handler): 
-    def __init__(self, config, cache ):
+    def __init__(self, config, cache, influxdb ):
         super().__init__(config,cache)
+
+        self.influxdb = influxdb
 
         self._setServiceMetricState("influxdb", -1)
 
@@ -82,11 +84,4 @@ class InfluxDBPublisher(_handler.Handler):
         
         #Helper.logInfo(messurements)
         Helper.logInfo("Submit {} messurements".format(len(messurements)))
-        
-        #Helper.logInfo(messurements)
-        headers = {'Authorization': "Token {}".format(self.config.influxdb_token)}
-        r = requests.post( "{}/write?db={}&rp=autogen&precision=s&consistency=one".format(self.config.influxdb_rest,self.config.influxdb_database), headers=headers, data="\n".join(messurements))
-        if r.status_code != 204:
-            msg = "Wrong status code: {}".format(r.status_code)
-            Helper.logError(msg)
-            raise requests.exceptions.ConnectionError(msg)
+        self.influxdb.submit(messurements)

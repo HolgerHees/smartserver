@@ -20,7 +20,7 @@ from lib.scanner.handler.publish_mqtt import MQTTPublisher
 from lib.scanner.handler.publish_influxdb import InfluxDBPublisher
 
 class Scanner(threading.Thread):
-    def __init__(self, config, handler ):
+    def __init__(self, config, handler, mqtt, influxdb ):
         threading.Thread.__init__(self)
 
         self.is_running = True
@@ -50,8 +50,8 @@ class Scanner(threading.Thread):
             self._register(LibreNMS(config, self.cache ))
         self._register(PortScanner(config, self.cache ))
         self._register(Gateway(config, self.cache ))
-        self._register(MQTTPublisher(config, self.cache ))
-        self._register(InfluxDBPublisher(config, self.cache ))
+        self._register(MQTTPublisher(config, self.cache, mqtt ))
+        self._register(InfluxDBPublisher(config, self.cache, influxdb ))
 
     def _register(self, handler):
         handler.setDispatcher(self)

@@ -322,34 +322,41 @@ class Handler(threading.Thread):
 
             # **** CHECK IF ALL PEERS ARE ONLINE ****
             for peer in config.cloud_peers:
-                max_state = PEER_STATE_UNKNOWN
-                state_count = 0
-                for watched_topic in self.watched_topics:
-                    topic_data = self.watched_topics[watched_topic]
-                    target_peer = watched_topic.split("/")[-1]
+                state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,self.getWatchedState(peer)))
 
-                    if target_peer != peer:
-                        continue
-
-                    state_count += 1
-
-                    if max_state < int(topic_data["state"]):
-                        max_state = int(topic_data["state"])
-
-                #Helper.logInfo("{} {} {}".format(peer, max_state, state_count))
-
-                # **** NOTIFY PEERS IF THEY ARE OFFLINE ****
                 peer_job = self.peer_jobs[peer]
-                if state_count == len(config.cloud_peers) or max_state != PEER_STATE_OFFLINE:
-                    state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,max_state))
-                else:
-                    state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,PEER_STATE_UNKNOWN))
-
                 state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
+
+            if not self.isOnline():
+                state = "0"
+            else:
+                state = self.getWatchedState(peer)
+
+            state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(config.peer_name, state ))
         else:
             state_metrics = []
 
         return "{}\n".format( "\n".join(state_metrics) )
+
+    def getWatchedState(self, peer):
+        max_state = PEER_STATE_UNKNOWN
+        state_count = 0
+        for watched_topic in self.watched_topics:
+            topic_data = self.watched_topics[watched_topic]
+            target_peer = watched_topic.split("/")[-1]
+
+            if target_peer != peer:
+                continue
+
+            state_count += 1
+
+            if max_state < int(topic_data["state"]):
+                max_state = int(topic_data["state"])
+
+        if state_count == len(config.cloud_peers) or max_state != PEER_STATE_OFFLINE:
+            return max_state
+
+        return PEER_STATE_UNKNOWN
 
     def forceOnlineCheck(self):
         if self.is_checking:

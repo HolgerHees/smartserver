@@ -1,3 +1,8 @@
+- name: set version
+  set_fact:
+    speedtest_version: "1.2.0"
+  tags: [ 'update_notifier_config' ]
+
 - name: prepare needed folder
   file:
     path: "{{item}}"

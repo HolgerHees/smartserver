@@ -15,6 +15,11 @@ from config import config
 
 from lib.scanner.scanner import Scanner as NetworkScanner
 from lib.netflow.processor import Processor as NetflowProcessor
+from lib.speedtest.speedtest import Speedtest
+
+from lib.mqtt import MQTTHandler
+from lib.influxdb import InfluxDB
+
 
 app = Flask(__name__ )
 app.logger = logging.getLogger()
@@ -28,17 +33,30 @@ class Handler(Server):
         
         #self.startup_timestamp = round(datetime.now().timestamp(),3)
         
-        self.scanner = NetworkScanner(config, self )
+        self.mqtt = MQTTHandler(config)
+        self.mqtt.start(self)
+
+        self.influxdb = InfluxDB(config)
+
+        self.scanner = NetworkScanner(config, self, self.mqtt, self.influxdb )
         self.scanner.start()
         
         self.netflow = NetflowProcessor(config, self )
         self.netflow.start()
+
+        self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb )
+        self.speedtest.start()
 
     def terminate(self):
         if self.scanner:
             self.scanner.terminate()
         if self.netflow:
             self.netflow.terminate()
+        if self.speedtest:
+            self.speedtest.terminate()
+
+        self.mqtt_handler.terminate()
+
         super().terminate()
         
     def notifyNetworkData(self, changed_data, msg):
@@ -55,6 +73,9 @@ class Handler(Server):
 
         data["root"] = self.scanner.getGatewayMAC()
         emit('network_data', data)
+
+    def triggerSpeedtest(self):
+        self.speedtest.triggerSpeedtest()
 
     def getStateMetrics(self, is_prometheus ):
         scanner_metrics = self.scanner.getStateMetrics()
@@ -73,6 +94,12 @@ class Handler(Server):
 def metrics():
     #logging.info(request.headers.get('User-Agent'))
     return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
+
+@app.route('/triggerSpeedtest/', methods = ['GET'])
+def speedtest():
+    #logging.info(request.headers.get('User-Agent'))
+    handler.triggerSpeedtest()
+    return "ok"
 
 @socketio.on_error_default
 def on_error(e):

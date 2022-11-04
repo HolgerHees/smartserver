@@ -1,79 +1,32 @@
 from datetime import datetime
 import time
 
-import paho.mqtt.client as mqtt
-
 from lib.scanner.handler import _handler
 from lib.scanner.dto.device_stat import DeviceStat
 from lib.scanner.dto.event import Event
 from lib.scanner.helper import Helper
 
 
-class MQTTHandler(): 
-    def __init__(self, config):
-        self.mqtt_client = None
-        self.config = config
-
-    def start(self, handler):
-        while True:
-            try:
-                Helper.logInfo("Connection to mqtt ...")
-                self.mqtt_client = mqtt.Client()
-                self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
-                self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
-                self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
-                self.mqtt_client.connect(self.config.mqtt_host, 1883, 60)
-
-                self.mqtt_client.loop_start()
-                break
-            except Exception as e:
-                Helper.logInfo("MQTT {}. Retry in 5 seconds".format(str(e)))
-                handler._setServiceMetricState("mqtt", 0)
-                time.sleep(self.config.startup_error_timeout)
-
-    def on_connect(self,client,userdata,flags,rc):
-        Helper.logInfo("Connected to mqtt with result code:"+str(rc))
-        
-    def on_disconnect(self,client, userdata, rc):
-        Helper.logInfo("Disconnect from mqtt with result code:"+str(rc))
-
-    def on_message(self,client,userdata,msg):
-        Helper.logInfo("Topic " + msg.topic + ", message:" + str(msg.payload))
-        
-    def publish(self, name, payload):
-        self.mqtt_client.publish('system_info/{}'.format(name), payload=payload, qos=0, retain=False)
-            
-    def terminate(self):
-        if self.mqtt_client is not None:
-            Helper.logInfo("Close connection to mqtt")
-            self.mqtt_client.loop_stop()
-            self.mqtt_client.disconnect()
-            
-
 class MQTTPublisher(_handler.Handler): 
-    def __init__(self, config, cache ):
+    def __init__(self, config, cache, mqtt ):
         super().__init__(config,cache)
         
         self.skipped_macs = {}
         self.allowed_details = {}
         
-        self.mqtt_handler = MQTTHandler(config)
+        self.mqtt = mqtt
         
         self.published_values = {}
         
         self._setServiceMetricState("mqtt", -1)
 
     def start(self):
-        self.mqtt_handler.start(self)
-
         super().start()
 
         self._setServiceMetricState("mqtt", 1)
 
     def terminate(self):
         super().terminate()
-
-        self.mqtt_handler.terminate() 
         
     def _run(self):
         while self._isRunning():
@@ -152,7 +105,7 @@ class MQTTPublisher(_handler.Handler):
         else:
             for detail in _details:
                 #if detail == "signal":
-                #    self.mqtt_handler.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
+                #    self.mqtt.publish("network/{}/{}".format(device.getIP(),"signal"), stat.getDetail("signal") )
                 for data in stat.getDataList():
                     if detail in ["wan_type","wan_state"] and data.getDetail(detail) is not None:
                         topic = "network/{}/{}".format(device.getIP(),detail)
@@ -175,7 +128,7 @@ class MQTTPublisher(_handler.Handler):
         if mac not in self.published_values:
             self.published_values[mac] = {}
             
-        self.mqtt_handler.publish(topic, value )
+        self.mqtt.publish(topic, value )
         self.published_values[mac][topic] = [detail, topic, value, now]
     
     def getEventTypes(self):
