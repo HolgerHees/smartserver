@@ -29,6 +29,8 @@ class Speedtest(threading.Thread):
         #schedule.every(1).minutes.do(self.triggerSpeedtest)
         #self.triggerSpeedtest()
 
+        self.influxdb.register(self.getMessurements)
+
     def terminate(self):
         #self.is_running = False
         self.event.set()
@@ -50,6 +52,7 @@ class Speedtest(threading.Thread):
 
         self.is_testing = True
 
+        messurements = []
         try:
             logging.info(u"Speedtest started")
 
@@ -84,16 +87,9 @@ class Speedtest(threading.Thread):
                 self.mqtt.publish("speedtest/downstream_rate", resultDown)
                 self.mqtt.publish("speedtest/ping", resultPing)
 
-                messurements = [
-                    "speedtest_upstream_rate value={}".format(resultUp),
-                    "speedtest_downstream_rate value={}".format(resultDown),
-                    "speedtest_ping value={}".format(resultPing)
-                ]
-
-                try:
-                    self.influxdb.submit(messurements)
-                except requests.exceptions.ConnectionError:
-                    logging.info("InfluxDB currently not available")
+                messurements.append("speedtest_upstream_rate value={}".format(resultUp))
+                messurements.append("speedtest_downstream_rate value={}".format(resultDown))
+                messurements.append("speedtest_ping value={}".format(resultPing))
             except json.decoder.JSONDecodeError:
                 location = "Fehler"
                 logging.error(u"Data error: {}".format(result))
@@ -103,4 +99,22 @@ class Speedtest(threading.Thread):
         finally:
             self.mqtt.publish("speedtest/time", "{:02d}:{:02d}".format(datetime.now().hour,datetime.now().minute))
             self.mqtt.publish("speedtest/location", location)
+
+            messurements.append("speedtest_time value=\"{}\"".format("{:02d}:{:02d}".format(datetime.now().hour,datetime.now().minute)))
+            messurements.append("speedtest_location value=\"{}\"".format(location))
+
+            retry_count = 5
+            while not self.event.is_set() and retry_count > 0:
+                state = self.influxdb.submit(messurements)
+                if state == 1:
+                    break
+                self.event.wait(self.config.influxdb_publish_interval)
+                retry_count -= 1
+
+            if retry_count == 0:
+                logging.error("Maximum publish retries reached. Discard results now")
+
             self.is_testing = False
+
+    def getMessurements(self):
+        return []

@@ -16,6 +16,7 @@ from config import config
 from lib.scanner.scanner import Scanner as NetworkScanner
 from lib.netflow.processor import Processor as NetflowProcessor
 from lib.speedtest.speedtest import Speedtest
+from lib.fping.fping import FPing
 
 from lib.mqtt import MQTTHandler
 from lib.influxdb import InfluxDB
@@ -34,9 +35,10 @@ class Handler(Server):
         #self.startup_timestamp = round(datetime.now().timestamp(),3)
         
         self.mqtt = MQTTHandler(config)
-        self.mqtt.start(self)
+        self.mqtt.start()
 
         self.influxdb = InfluxDB(config)
+        self.influxdb.start()
 
         self.scanner = NetworkScanner(config, self, self.mqtt, self.influxdb )
         self.scanner.start()
@@ -47,6 +49,9 @@ class Handler(Server):
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb )
         self.speedtest.start()
 
+        self.fping = FPing(config, self, self.influxdb )
+        self.fping.start()
+
     def terminate(self):
         if self.scanner:
             self.scanner.terminate()
@@ -54,8 +59,12 @@ class Handler(Server):
             self.netflow.terminate()
         if self.speedtest:
             self.speedtest.terminate()
+        if self.fping:
+            self.fping.terminate()
 
-        self.mqtt_handler.terminate()
+        self.mqtt.terminate()
+
+        self.influxdb.terminate()
 
         super().terminate()
         
@@ -80,8 +89,9 @@ class Handler(Server):
     def getStateMetrics(self, is_prometheus ):
         scanner_metrics = self.scanner.getStateMetrics()
         netflow_metrics = self.netflow.getMetrics(is_prometheus)
+        influxdb_metrics = self.influxdb.getStateMetrics()
 
-        metrics = scanner_metrics + netflow_metrics
+        metrics = scanner_metrics + netflow_metrics + influxdb_metrics
         return "{}\n".format( "\n".join(metrics) )
 
 #@app.route('/state/', methods = ['POST'])

@@ -15,7 +15,6 @@
     name: [
         #"https://packagecloud.io/netdata/netdata/packages/fedora/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.fc{{ansible_distribution_version}}.x86_64.rpm/download.rpm"
         netdata
-      , fping
       , lm_sensors
     ]
     state: present
@@ -46,8 +45,7 @@
 - name: install required packages 2/2 => is_ubuntu
   apt:
     name: [
-      fping
-      , lm-sensors
+      lm-sensors
     ]
     state: present
   notify: "restart netdata"
@@ -68,7 +66,6 @@
   zypper:
     name: [
         "netdata>={{netdata_version}}"
-      , fping
       , sensors
       # needed to rebuild rpm package
       #, rpm-build
@@ -137,7 +134,6 @@
     mode: 0644
   with_items:
     - "netdata.conf"
-    - "fping.conf"
   notify: "restart netdata"
 
 - name: copy helper
@@ -149,7 +145,6 @@
     mode: 750
   with_items:
     - "/opt/netdata_helper/send_notification"
-    - "/opt/netdata_helper/check_fping"
 
 - name: change service config
   lineinfile:
@@ -159,7 +154,6 @@
     line: '{{item.value}}'
   with_items:
     - { field: "User\\s*=", value: "User=root" }
-    - { field: "ExecStartPre=/opt/netdata_helper/check_fping", value: "ExecStartPre=/opt/netdata_helper/check_fping" }
     #- { field: "ReadWriteDirectories\\s*=\\s*{{ global_lib }}netdata", value: "ReadWriteDirectories={{ global_lib }}netdata" }
     #- { field: "CPUSchedulingPolicy", value: "other" } # was "idle" before
     #- { field: "Nice", value: "0" } # was "#Nice=0" before

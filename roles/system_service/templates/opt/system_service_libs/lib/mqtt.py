@@ -7,7 +7,7 @@ class MQTTHandler():
         self.mqtt_client = None
         self.config = config
 
-    def start(self, handler):
+    def start(self):
         while True:
             try:
                 logging.info("Connection to mqtt ...")
@@ -21,7 +21,6 @@ class MQTTHandler():
                 break
             except Exception as e:
                 logging.info("MQTT {}. Retry in 5 seconds".format(str(e)))
-                handler._setServiceMetricState("mqtt", 0)
                 time.sleep(self.config.startup_error_timeout)
 
     def on_connect(self,client,userdata,flags,rc):

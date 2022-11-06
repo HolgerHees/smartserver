@@ -1,8 +1,10 @@
 {
   "admin_system": {
     "Network": "Netzwerk",
-    "Scanner": "Topologie Scanner",
-    "Network Traffic": "Netzwerk Traffic",
+    "Scanner": "Scanner",
+    "WAN connection": "WAN Verbindung",
+    "Internet connection state and details": "Verbindungsstatus und details",
+    "WAN traffic": "WAN Traffic",
     "Netflow": "Netflow Collector"
   }
 }
