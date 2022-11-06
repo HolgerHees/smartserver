@@ -19,6 +19,7 @@ class Speedtest(threading.Thread):
         self.event = threading.Event()
 
         self.config = config
+        self.handler = handler
 
         self.is_testing = False
 
@@ -51,6 +52,7 @@ class Speedtest(threading.Thread):
             return
 
         self.is_testing = True
+        self.handler.notifySpeedtestData()
 
         messurements = []
         try:
@@ -115,6 +117,11 @@ class Speedtest(threading.Thread):
                 logging.error("Maximum publish retries reached. Discard results now")
 
             self.is_testing = False
+
+        self.handler.notifySpeedtestData()
+
+    def getData(self):
+        return { "is_running": self.is_testing }
 
     def getMessurements(self):
         return []

@@ -10,6 +10,9 @@
     "Last 12 hours": "Letzten 12 Stunden",
     "Last 24 hours": "Letzten 24 Stunden",
     "Last 2 days": "Letzten 2 Tage",
-    "Last 7 days": "Letzten 7 Tage"
+    "Last 7 days": "Letzten 7 Tage",
+
+    "Start speedtest": "Starte Speedtest",
+    "Speedtest active": "Speedtest aktiv"
   }
 }

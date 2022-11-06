@@ -35,10 +35,175 @@
         "x": 0,
         "y": 0
       },
-      "id": 18,
+      "id": 27,
       "panels": [],
-      "title": "Network",
+      "title": "Speedtest",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Mibits"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "PING"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 23,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "text": {
+          "titleSize": 20,
+          "valueSize": 20
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "9.2.3",
+      "targets": [
+        {
+          "alias": "WAN TYPE",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "network_wan_type",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "WAN STATE",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "network_wan_state",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "WAN",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "WAN TYPE",
+                "WAN STATE"
+              ]
+            }
+          }
+        }
+      ],
+      "type": "stat"
     },
     {
       "datasource": {
@@ -67,7 +232,7 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 0,
+        "x": 4,
         "y": 1
       },
       "id": 22,
@@ -188,8 +353,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 5,
-        "x": 2,
+        "w": 6,
+        "x": 6,
         "y": 1
       },
       "id": 20,
@@ -397,8 +562,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 5,
-        "x": 7,
+        "w": 8,
+        "x": 12,
         "y": 1
       },
       "id": 21,
@@ -482,168 +647,41 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "Mibits"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "PING"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "ms"
-              }
-            ]
-          }
-        ]
+        "type": "datasource",
+        "uid": "grafana"
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
-        "x": 12,
+        "w": 4,
+        "x": 20,
         "y": 1
       },
-      "id": 23,
+      "id": 25,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "vertical",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/.*/",
-          "values": false
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
         },
-        "text": {
-          "titleSize": 20,
-          "valueSize": 20
-        },
-        "textMode": "value"
+        "content": "<iframe \nallowtransparency=\"true\" width=\"100%\" height=\"90%\" frameBorder=\"0\"\nsrc=\"//smartmarvin.de/system_service/speedtest.php\"></iframe>\n",
+        "mode": "html"
       },
       "pluginVersion": "9.2.3",
-      "targets": [
-        {
-          "alias": "WAN TYPE",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "network_wan_type",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "WAN STATE",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "network_wan_state",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "title": "WAN",
-      "transformations": [
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": [
-                "WAN TYPE",
-                "WAN STATE"
-              ]
-            }
-          }
-        }
-      ],
-      "type": "stat"
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 18,
+      "panels": [],
+      "title": "Network",
+      "type": "row"
     },
     {
       "datasource": {
@@ -708,7 +746,7 @@
         "h": 13,
         "w": 12,
         "x": 0,
-        "y": 4
+        "y": 5
       },
       "id": 4,
       "options": {
@@ -885,7 +923,7 @@
         "h": 13,
         "w": 12,
         "x": 12,
-        "y": 4
+        "y": 5
       },
       "id": 8,
       "options": {
@@ -964,7 +1002,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 18
       },
       "id": 10,
       "panels": [],
@@ -1028,7 +1066,7 @@
         "h": 5,
         "w": 9,
         "x": 0,
-        "y": 18
+        "y": 19
       },
       "id": 16,
       "options": {
@@ -1123,7 +1161,7 @@
         "h": 5,
         "w": 8,
         "x": 9,
-        "y": 18
+        "y": 19
       },
       "id": 15,
       "options": {
@@ -1218,7 +1256,7 @@
         "h": 5,
         "w": 7,
         "x": 17,
-        "y": 18
+        "y": 19
       },
       "id": 14,
       "options": {
@@ -1318,7 +1356,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 24
       },
       "id": 12,
       "options": {
@@ -1377,6 +1415,6 @@
   "timezone": "",
   "title": "System Service WAN",
   "uid": "system-service-wan",
-  "version": 39,
+  "version": 3,
   "weekStart": ""
 }
