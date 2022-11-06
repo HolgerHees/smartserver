@@ -76,7 +76,7 @@ class Handler(Server):
         #socketio.sleep(5)
         
     def emitNetworkData(self):
-        [ data, msg ] = self.scanner.getData();
+        [ data, msg ] = self.scanner.getWebSocketData();
 
         logging.info("Emit initial network {}".format(msg))
 
@@ -84,7 +84,7 @@ class Handler(Server):
         emit('network_data', data)
 
     def notifySpeedtestData(self):
-        data = self.speedtest.getData();
+        data = self.speedtest.getWebSocketData();
 
         logging.info("Emit changed speedtest {}".format(data))
 
@@ -93,7 +93,7 @@ class Handler(Server):
         #socketio.sleep(5)
 
     def emitSpeedtestData(self):
-        data = self.speedtest.getData();
+        data = self.speedtest.getWebSocketData();
 
         logging.info("Emit initial speedtest {}".format(data))
 
@@ -105,9 +105,11 @@ class Handler(Server):
     def getStateMetrics(self, is_prometheus ):
         scanner_metrics = self.scanner.getStateMetrics()
         netflow_metrics = self.netflow.getMetrics(is_prometheus)
+        speedtest_metrics = self.speedtest.getMetrics(is_prometheus)
+
         influxdb_metrics = self.influxdb.getStateMetrics()
 
-        metrics = scanner_metrics + netflow_metrics + influxdb_metrics
+        metrics = scanner_metrics + netflow_metrics + speedtest_metrics + influxdb_metrics
         return "{}\n".format( "\n".join(metrics) )
 
 #@app.route('/state/', methods = ['POST'])

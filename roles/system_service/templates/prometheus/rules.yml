@@ -18,3 +18,32 @@ groups:
       severity: critical
     annotations:
       summary: "System service device '{{'{{'}} $labels.type {{'}}'}}' - '{{'{{'}} $labels.hostname {{'}}'}}'"
+
+- name: wan_connection
+  rules:
+  - alert: System service wan connection download speed
+    expr: 'max_over_time(system_service_speedtest{type="downstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "WAN connection download speed too low"
+
+  - alert: System service wan connection upload speed
+    expr: 'max_over_time(system_service_speedtest{type="upstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "WAN connection upload speed too low"
+
+  - alert: System service wan connection ping latency
+    expr: 'min_over_time(system_service_speedtest{type="upstream_rate"}[4h]) > min_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 2'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "WAN connection ping latency too high"

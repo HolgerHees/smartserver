@@ -32,16 +32,39 @@ class Speedtest(threading.Thread):
 
         self.influxdb.register(self.getMessurements)
 
+        self.resetMetrics()
+
     def terminate(self):
         #self.is_running = False
         self.event.set()
 
     def run(self):
+        #max_retries = 20
+        #while max_retries > 0:
+        #    result = self.influxdb.get(["speedtest_upstream_rate","speedtest_downstream_rate","speedtest_ping"])
+        #    if result is not None:
+        #        logging.info("Initialize last data")
+        #        self.resultUp = result["speedtest_upstream_rate"] if "speedtest_upstream_rate" in result else -1
+        #        self.resultDown = result["speedtest_upstream_rate"] if "speedtest_downstream_rate" in result else -1
+        #        self.resultPing = result["speedtest_upstream_rate"] if "speedtest_ping" in result else -1
+        #        break
+
+        #    logging.info("Last data not available. Retry in 15 seconds.")
+        #    self.event.wait(15)
+
+        #if max_retries == 0:
+        #    logging.error("Not able to initialize last data.")
+
         while not self.event.is_set():
             schedule.run_pending()
 
             self.event.wait(60)
             #self.event.clear()
+
+    def resetMetrics(self):
+        self.resultUp = -1
+        self.resultDown = -1
+        self.resultPing = -1
 
     def triggerSpeedtest(self):
         t = threading.Thread(target=self.startSpeedtest, args=(), kwargs={})
@@ -85,6 +108,10 @@ class Speedtest(threading.Thread):
 
                 location = "{} ({})".format(serverName,serverLocation)
 
+                self.resultUp = resultUp
+                self.resultDown = resultDown
+                self.resultPing = resultPing
+
                 self.mqtt.publish("speedtest/upstream_rate", resultUp)
                 self.mqtt.publish("speedtest/downstream_rate", resultDown)
                 self.mqtt.publish("speedtest/ping", resultPing)
@@ -93,9 +120,13 @@ class Speedtest(threading.Thread):
                 messurements.append("speedtest_downstream_rate value={}".format(resultDown))
                 messurements.append("speedtest_ping value={}".format(resultPing))
             except json.decoder.JSONDecodeError:
+                self.resetMetrics()
+
                 location = "Fehler"
                 logging.error(u"Data error: {}".format(result))
         except Exception as e:
+            self.resetMetrics()
+
             location = "Fehler"
             logging.error(traceback.format_exc())
         finally:
@@ -120,7 +151,22 @@ class Speedtest(threading.Thread):
 
         self.handler.notifySpeedtestData()
 
-    def getData(self):
+    def getMetrics(self, is_prometheus):
+        metrics = []
+
+        if self.resultUp != -1:
+            metrics.append("system_service_speedtest{{type=\"upstream_rate\"}} {}".format(self.resultUp))
+        if self.resultDown != -1:
+            metrics.append("system_service_speedtest{{type=\"downstream_rate\"}} {}".format(self.resultDown))
+        if self.resultPing != -1:
+            metrics.append("system_service_speedtest{{type=\"ping\"}} {}".format(self.resultPing))
+
+        if is_prometheus:
+            self.resetMetrics()
+
+        return metrics
+
+    def getWebSocketData(self):
         return { "is_running": self.is_testing }
 
     def getMessurements(self):

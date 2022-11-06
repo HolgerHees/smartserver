@@ -274,7 +274,7 @@ class Scanner(threading.Thread):
 
         return [ changed_data, msg ]
     
-    def getData(self):
+    def getWebSocketData(self):
         devices = self.cache.getDevices() + self.virtual_devices
         return self._prepareChanges(devices, [], [], False, devices, self.cache.getGroups(), [], [], self.cache.getStats(), [], [])
 
