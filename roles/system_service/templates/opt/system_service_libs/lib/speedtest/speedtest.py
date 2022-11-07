@@ -91,6 +91,11 @@ class Speedtest(threading.Thread):
             logging.info(u"Speedtest done")
 
             try:
+                index = json_string.find("{\"type\":\"result\"")
+                # fix to exclude license aggreement on first run
+                if index != -1:
+                    json_string = json_string[index:]
+
                 data = json.loads(json_string)
 
                 resultPing = data["ping"]["latency"]
