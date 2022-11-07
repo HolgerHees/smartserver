@@ -116,10 +116,10 @@ class PeerJob(threading.Thread):
             running_state = PEER_STATE_ONLINE if response.status_code == 200 and response.text.rstrip() == "online" else PEER_STATE_OFFLINE
         except (requests.exceptions.ConnectionError,requests.exceptions.ReadTimeout) as e:
             running_state = PEER_STATE_OFFLINE
-            Helper.logInfo("State connection error for peer {}".format(peer))
+            Helper.logInfo("State connection error for peer {}. Exception: {} - {}".format(peer, type(e), str(e)))
         except Exception as e:
             running_state = PEER_STATE_OFFLINE
-            Helper.logError("State check exception {} - {}".format(type(e), str(e)))
+            Helper.logError("State check exception for peer {}. Exception: {} - {}".format(peer, type(e), str(e)))
 
         self.has_state_error = running_state == PEER_STATE_OFFLINE
         return running_state

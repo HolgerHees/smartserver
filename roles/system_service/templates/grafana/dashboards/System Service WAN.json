@@ -743,7 +743,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 13,
+        "h": 12,
         "w": 12,
         "x": 0,
         "y": 5
@@ -920,7 +920,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 13,
+        "h": 12,
         "w": 12,
         "x": 12,
         "y": 5
@@ -1002,7 +1002,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 17
       },
       "id": 10,
       "panels": [],
@@ -1063,10 +1063,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 9,
         "x": 0,
-        "y": 19
+        "y": 18
       },
       "id": 16,
       "options": {
@@ -1158,10 +1158,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 8,
         "x": 9,
-        "y": 19
+        "y": 18
       },
       "id": 15,
       "options": {
@@ -1253,10 +1253,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 7,
         "x": 17,
-        "y": 19
+        "y": 18
       },
       "id": 14,
       "options": {
@@ -1353,10 +1353,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 22
       },
       "id": 12,
       "options": {
@@ -1415,6 +1415,6 @@
   "timezone": "",
   "title": "System Service WAN",
   "uid": "system-service-wan",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
