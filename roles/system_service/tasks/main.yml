@@ -99,13 +99,12 @@
       - "templates/grafana/datasources/system_info_influxdb.yaml"
     dashboards:
       - "templates/grafana/dashboards/System Service Scanner.json"
+      - "templates/grafana/dashboards/System Service WAN.json"
   import_tasks: roles/grafana/tasks/add_datasource.yml
 
 - name: register grafana configs
   vars:
     name: "system_service"
-    datasources:
-      - "templates/grafana/datasources/system_info_influxdb.yaml"
     dashboards:
       - "templates/grafana/dashboards/System Service Netflow.json"
   import_tasks: roles/grafana/tasks/add_datasource.yml
