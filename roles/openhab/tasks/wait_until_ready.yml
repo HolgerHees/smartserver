@@ -19,7 +19,7 @@
   command: "sshpass -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
   register: result
   until: "'Password authentication' in result.stderr and result.rc == 0"
-  retries: 240
+  retries: 300
   delay: 1
 #  changed_when: "'openhab.service' not in ansible_facts.services or ansible_facts.services['openhab.service'].state != 'running'"
   changed_when: "service_result.rc != 0"

@@ -25,7 +25,7 @@
   command: "docker exec mysql sh -c \"mysqladmin ping -h 127.0.0.1 --silent\""
   register: result
   until: not result.rc  # or result.rc == 0 if you prefer
-  retries: 240
+  retries: 300
   delay: 1
 #  changed_when: "'mysql.service' not in ansible_facts.services or ansible_facts.services['mysql.service'].state != 'running'"
   changed_when: "service_result.rc != 0"
