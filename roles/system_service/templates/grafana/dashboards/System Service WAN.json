@@ -663,7 +663,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe \nallowtransparency=\"true\" width=\"100%\" height=\"90%\" frameBorder=\"0\"\nsrc=\"//smartmarvin.de/system_service/speedtest.php\"></iframe>\n",
+        "content": "<iframe \nallowtransparency=\"true\" width=\"100%\" height=\"90%\" frameBorder=\"0\" id=\"buttonFrame\"\nsrc=\"about:blank\"></iframe>\n<script>\ndomain = document.location.hostname.substr(document.location.hostname.indexOf(\".\")+1); \ndocument.getElementById('buttonFrame').setAttribute(\"src\",\"https://\" + domain + \"/system_service/speedtest.php\");\n</script>\n",
         "mode": "html"
       },
       "pluginVersion": "9.2.3",
@@ -1415,6 +1415,6 @@
   "timezone": "",
   "title": "System Service WAN",
   "uid": "system-service-wan",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }

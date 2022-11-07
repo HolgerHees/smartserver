@@ -37,6 +37,9 @@ class FPing(threading.Thread):
                 #8.8.8.8       : xmt/rcv/%loss = 1/1/0%, min/avg/max = 8.81/8.81/8.81
 
                 [host, s1]          = ping_result.split(" : ")
+                if ", min/avg/max = " not in s1:
+                    continue
+
                 [stats, ping]       = s1.split(", ")
                 [_, ping_values]    = ping.split(" = ")
                 [_, ping_value, _]  = ping_values.split("/")
