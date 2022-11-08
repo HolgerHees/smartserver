@@ -183,8 +183,8 @@ class DeploymentUpdate:
                     continue
                 
                 line = line.strip()
-                flag = line[:1]
-                path = line[1:].strip().strip("\"")
+                flag, path = line.split(" ", 1)
+                path = path.strip().strip("\"")
 
                 if self.filterPath( flag, path, last_deployment.timestamp() ):
                     if path not in filtered_files or flag == "A":

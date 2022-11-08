@@ -1038,8 +1038,9 @@
                   "text": "ONLINE"
                 },
                 "-1": {
+                  "color": "#808080",
                   "index": 3,
-                  "text": "UNINITIALIZED"
+                  "text": "UNKNOWN"
                 }
               },
               "type": "value"
@@ -1133,8 +1134,9 @@
                   "text": "OK"
                 },
                 "-1": {
+                  "color": "#808080",
                   "index": 2,
-                  "text": "UNINITIALIZED"
+                  "text": "UNKNOWN"
                 }
               },
               "type": "value"
@@ -1228,8 +1230,9 @@
                   "text": "OK"
                 },
                 "-1": {
+                  "color": "#808080",
                   "index": 2,
-                  "text": "UNINITIALIZED"
+                  "text": "UNKNOWN"
                 }
               },
               "type": "value"
@@ -1328,8 +1331,9 @@
                   "text": "ONLINE"
                 },
                 "-1": {
+                  "color": "#808080",
                   "index": 3,
-                  "text": "UNINITIALIZED"
+                  "text": "UNKNOWN"
                 }
               },
               "type": "value"
@@ -1415,6 +1419,6 @@
   "timezone": "",
   "title": "System Service WAN",
   "uid": "system-service-wan",
-  "version": 5,
+  "version": 7,
   "weekStart": ""
 }

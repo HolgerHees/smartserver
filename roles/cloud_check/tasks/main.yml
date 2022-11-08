@@ -25,11 +25,11 @@
     network_container:
       - cloud_mosquitto
       - prometheus
+    notify_dependenies:
+      - "restart prometheus"
+      - "restart cloud_mosquitto"
   import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'prometheus', 'cloud_mosquitto', 'alpine' ]
-  notify: 
-    - "restart prometheus"
-    - "restart cloud_mosquitto"
 
 - name: create docker container
   docker_container:

@@ -7,9 +7,15 @@
         gateway: "{{network_gateway | default(network_ip.split('.')[:3] | join('.') + '.1')}}"
     connected: "{{network_container | default([])}}"
     appends: yes
+  register: network_result
  
 - name: allow docker network {{network_name}}
   vars:
     network_saddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
     network_daddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
   import_tasks: roles/firewall/tasks/allow_network.yml
+
+- name: notify dependencies
+  command: "/bin/true"
+  notify: "{{notify_dependenies}}"
+  when: "network_result.changed and notify_dependenies | default([]) | length > 0"

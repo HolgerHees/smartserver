@@ -104,10 +104,10 @@
       - loki
       - prometheus
       - alertmanager
+    notify_dependenies:
+      - "restart prometheus"
   import_tasks: roles/container/tasks/add_docker_network.yml
   tags: [ 'influxdb', 'loki', 'mysql', 'prometheus', 'alertmanager' ]
-  notify: 
-    - "restart prometheus"
 
 - name: create docker container
   docker_container:
