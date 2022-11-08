@@ -48,8 +48,9 @@ class FPing(threading.Thread):
 
             messurements = []
             for host in self.config.fping_test_hosts:
-                ping_value = ping_result_map[host] if host in ping_result_map else 0
-                messurements.append("fping,hostname={} value={}".format(host, ping_value))
+                if host not in ping_result_map:
+                    continue
+                messurements.append("fping,hostname={} value={}".format(host, ping_result_map[host]))
 
             self.messurements = messurements
 
