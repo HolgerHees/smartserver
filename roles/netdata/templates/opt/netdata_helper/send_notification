@@ -4,9 +4,11 @@ import socket
 import requests
 import time
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import sys
+
+from smartserver.alertmanager import Alertmanager
 
 
 NETDATA_URL = "http://localhost:19999/api/v1/alarms?active"
@@ -31,45 +33,17 @@ def logWarning(msg):
 
 def triggerAlertmanagerAlert(alerts):
     try:
-        #headers = {
-        #    'Accept': 'application/json',
-        #    'Content-Type': 'text/plain'
-        #}
-        response = requests.post( ALERTMANAGER_URL, data = json.dumps(alerts) )
-        #response = requests.post( "http://openhab:8080/rest/items/State_Server/state", headers = headers, data = json.dumps(json) )
-        if not (200 <= response.status_code < 300):
-            response.raise_for_status()
+        Alertmanager.trigger(ALERTMANAGER_URL, alerts)
     except Exception as e:
         logWarning("An error happens when reporting alerts to alertmanager => {}. Maybe alertmanager is down.".format(e))
         exit(1)
 
 def fetchAlertmanagerAlerts():
     try:
-        response = requests.get(ALERTMANAGER_URL, timeout=5.0)
-        response.raise_for_status()
-        _alert_response = json.loads(response.content)
-        if _alert_response["status"] == "success":
-            _alertmanager_alerts = _alert_response["data"]
-        else:
-            _alertmanager_alerts = []
+        alertmanager_alerts = Alertmanager.fetch(ALERTMANAGER_URL, "netdata")
     except Exception as e:
         logWarning("An error happens when fetching alerts from alertmanager => {}. Maybe alertmanager is down.".format(e))
         alertmanager_alerts = []
-
-    alertmanager_alerts = {}
-    for alertmanager_alert in _alertmanager_alerts:
-        #print(alert)
-
-        if "notifyGroup" not in alertmanager_alert["labels"] or alertmanager_alert["labels"]["notifyGroup"] != "netdata":
-            continue
-
-        name = alertmanager_alert["labels"]["alertname"]
-        family = alertmanager_alert["labels"]["family"]
-        level = alertmanager_alert["labels"]["severity"]
-
-        alert_key = "{}-{}-{}".format(name,family,level)
-
-        alertmanager_alerts[alert_key] = alertmanager_alert
 
     return alertmanager_alerts
 
@@ -83,7 +57,7 @@ def fetchNetdataAlerts(ts):
         logWarning("An error happens when fetching alerts from netdata => {}. Maybe netdata is down.".format(e))
         _netdata_alerts = {}
 
-    netdata_alerts = {}
+    netdata_alerts = []
     for netdata_alert_key in _netdata_alerts:
         netdata_alert = _netdata_alerts[netdata_alert_key]
         status = netdata_alert["status"]
@@ -97,8 +71,7 @@ def fetchNetdataAlerts(ts):
             level = "critical"
         netdata_alert['status'] = level
 
-        alert_key = "{}-{}-{}".format(netdata_alert["name"],netdata_alert["family"],netdata_alert['status'])
-        netdata_alerts[alert_key] = netdata_alert
+        netdata_alerts.append(netdata_alert)
 
     return netdata_alerts
 
@@ -108,64 +81,33 @@ alertmanager_alerts = fetchAlertmanagerAlerts()
 netdata_alerts = fetchNetdataAlerts(ts)
 
 fired_alerts = []
-for alert_key in netdata_alerts:
-    alert = netdata_alerts[alert_key]
+for alert in netdata_alerts:
     delay_up_to_timestamp = alert['delay_up_to_timestamp']
 
     if ts < delay_up_to_timestamp:
         #echo "Openhab notification not possible"  | systemd-cat -t netdata -p "warning"
-        logInfo("Delayed alarm {} by {} seconds".format(alert_key, delay_up_to_timestamp-ts))
+        #logInfo("Delayed alarm {} by {} seconds".format(alert_key, delay_up_to_timestamp-ts))
         #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
         continue
-    elif alert_key not in alertmanager_alerts:
-        logInfo("Trigger alarm {}".format(alert_key))
 
-    fired_alert = {}
-    #fired_alert["status"] = "firing"
-    fired_alert["labels"] = {
-        "notifyGroup": "netdata",
-        "alertname": alert["name"],
+
+    labels = {
         "family": alert["family"],
         "severity": alert['status']
     }
-    fired_alert["annotations"] = {
-        "summary": "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
-    }
-
-    #print(fired_alert)
-
-    #print(startsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z"))
-    startsAt = datetime.utcfromtimestamp(alert["last_status_change"])
-    fired_alert["startsAt"] = startsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
-
-    fired_alert["generatorURL"] = GENERATOR_URL
-
+    summary = "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
+    startAt = datetime.utcfromtimestamp(alert["last_status_change"])
+    fired_alert = Alertmanager.buildAlert("netdata", alert["name"], summary, startAt, labels, GENERATOR_URL)
     fired_alerts.append(fired_alert)
+
+    if not Alertmanager.find(fired_alert, alertmanager_alerts):
+        logInfo("Trigger alarm {}".format(alert_key))
+
 
 if len(fired_alerts) > 0:
     triggerAlertmanagerAlert(fired_alerts)
 
-#print(alertmanager_alerts)
+resolved_alerts = Alertmanager.buildResolve(fired_alerts, alertmanager_alerts)
 
-solved_alerts = []
-for alert_key in alertmanager_alerts:
-    #print(alert)
-
-    if alert_key in netdata_alerts:
-        continue
-
-    alert = alertmanager_alerts[alert_key]
-
-    solved_alert = {}
-    #solved_alert["status"] = "resolved"
-    solved_alert["labels"] = alert["labels"]
-
-    endsAt = datetime.utcnow() - timedelta(seconds=1)
-    solved_alert["endsAt"] = endsAt.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
-
-    solved_alerts.append(solved_alert)
-
-if len(solved_alerts) > 0:
-    triggerAlertmanagerAlert(solved_alerts)
-    #print(solved_alerts)
-
+if len(resolved_alerts) > 0:
+    triggerAlertmanagerAlert(resolved_alerts)
