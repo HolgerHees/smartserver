@@ -59,7 +59,7 @@ route:
     - matchers:
       - notifyGroup=~"logs-.*"
       - group="apache"
-      - log=~".*invalid URI.*/cgi-bin/\.%2e.*logfile=error\.log.*"
+      - log=~".*invalid URI.*/cgi-bin/.*logfile=error\.log.*"
       receiver: silent
 # CRONY => because error output is already sendet out via email
     - matchers:
