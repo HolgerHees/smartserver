@@ -1,5 +1,5 @@
 - name: check running services
-  shell: "/opt/systemd_watcher/service_check"
+  shell: "/opt/systemd_watcher/service_check --deployment=yes"
   register: service_status
   changed_when: no
   failed_when: service_status.rc != 0

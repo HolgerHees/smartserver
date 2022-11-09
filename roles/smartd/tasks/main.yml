@@ -36,11 +36,11 @@
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
-    name: "smartd"
+    name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
   import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
 
 - name: trigger smartd handler
   vars:
     notify: "restart smartd"
-    service: "smartd.service"
+    service: "{{'smartmontools' if is_ubuntu else 'smartd'}}.service"
   import_tasks: roles/_shared/tasks/service_check.yml

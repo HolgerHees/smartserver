@@ -9,9 +9,13 @@ from datetime import datetime
 import time
 
 from smartserver.alertmanager import Alertmanager
+from smartserver.argsparser import ArgsParser
 
 ALERTMANAGER_URL = "http://alertmanager:9093/api/v1/alerts"
 CONFIG_DIR = "{{global_etc}}systemd_watcher/services/"
+
+args_cfg = { "deployment": False }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
 
 def error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -37,8 +41,6 @@ def buildAlert(name, service, summary = None):
 alertmanager_alerts = fetchAlertmanagerAlerts()
 fired_alerts = []
 
-
-exit_status = 0
 
 result = subprocess.run([ "hostnamectl status | grep -o \"Chassis: vm\"" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 isVirtualized = result.returncode == 0
@@ -70,6 +72,10 @@ for line in result.stdout.decode("utf-8").split("\n"):
         services[active_service]["state"].append(line)
 
 for systemd_service in services:
+        if len(services[systemd_service]["state"]) == 0:
+            fired_alerts.append(buildAlert("Service not found", systemd_service))
+            notified_service.append(systemd_service)
+            continue
 
         role_name = services[systemd_service]["role_name"]
         status = "\n".join(services[systemd_service]["state"])
@@ -135,3 +141,8 @@ resolved_alerts = Alertmanager.buildResolve(fired_alerts, alertmanager_alerts)
 
 if len(resolved_alerts) > 0:
     triggerAlertmanagerAlert(resolved_alerts)
+
+if args_values["deployment"]:
+    for alert in fired_alerts:
+        error("{} - {}".format(alert["labels"]["alertname"],alert["labels"]["service"]))
+    exit(1 if len(fired_alerts) > 0 else 0)
