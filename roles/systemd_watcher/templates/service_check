@@ -11,8 +11,9 @@ import time
 from smartserver.alertmanager import Alertmanager
 from smartserver.argsparser import ArgsParser
 
-ALERTMANAGER_URL = "http://alertmanager:9093/api/v1/alerts"
-CONFIG_DIR = "{{global_etc}}systemd_watcher/services/"
+
+ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
+CONFIG_DIR = "/dataDisk/etc/systemd_watcher/services/"
 
 args_cfg = { "deployment": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -22,13 +23,13 @@ def error(*args, **kwargs):
 
 def triggerAlertmanagerAlert(alerts):
     try:
-        Alertmanager.trigger(ALERTMANAGER_URL, alerts)
+        Alertmanager.triggerAlerts(ALERTMANAGER_BASE_URL, alerts)
     except Exception as e:
         error("An error happens when reporting alerts to alertmanager => {}. Maybe alertmanager is down.".format(e))
 
 def fetchAlertmanagerAlerts():
     try:
-        alertmanager_alerts = Alertmanager.fetch(ALERTMANAGER_URL, "service-check")
+        alertmanager_alerts = Alertmanager.fetchAlerts(ALERTMANAGER_BASE_URL, "service-check")
     except Exception as e:
         error("An error happens when fetching alerts from alertmanager => {}. Maybe alertmanager is down.".format(e))
         alertmanager_alerts = {}
@@ -72,51 +73,47 @@ for line in result.stdout.decode("utf-8").split("\n"):
         services[active_service]["state"].append(line)
 
 for systemd_service in services:
-        if len(services[systemd_service]["state"]) == 0:
-            fired_alerts.append(buildAlert("Service not found", systemd_service))
-            notified_service.append(systemd_service)
-            continue
 
         role_name = services[systemd_service]["role_name"]
-        status = "\n".join(services[systemd_service]["state"])
+        state = "\n".join(services[systemd_service]["state"])
 
         if services[systemd_service]["state"][0].startswith("Warning: "):
             fired_alerts.append(buildAlert("Service warning", systemd_service, services[systemd_service]["state"][0]))
             notified_service.append(systemd_service)
             continue
 
-        m = re.search("could not be found|Loaded: not-found",status)
+        m = re.search("could not be found|Loaded: not-found",state)
         if m:
             fired_alerts.append(buildAlert("Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
             notified_service.append(systemd_service)
             continue
 
-        m = re.search("Loaded: loaded \((.+?);.*",status)
-        service_file = m.group(1)
-
-        m = re.search("Loaded:[^;]+; (enabled|static).*",status)
+        m = re.search("Loaded:[^;]+; (enabled|static).*",state)
         is_enabled = m is not None
 
-        m = re.search("Active: ([^\s]+).*",status)
+        m = re.search("Active: ([^\s]+).*",state)
         is_active = m.group(1) == "active"
 
-        status = []
+        state_flags = []
         if not is_enabled or not is_active:
             if not is_enabled:
-                status.append("enabled")
+                state_flags.append("enabled")
             if not is_active:
                 ignore = False
                 if isVirtualized:
-                    with open(service_file) as f:
-                        content = f.read()
-                        m = re.search("ConditionVirtualization\s*=\s*(false|no)",content,re.IGNORECASE)
-                        if m != None:
-                            ignore = True
+                    m = re.search("Loaded: loaded \((.+?);.*",state)
+                    if m is not None:
+                        service_file = m.group(1)
+                        with open(service_file) as f:
+                            content = f.read()
+                            m = re.search("ConditionVirtualization\s*=\s*(false|no)",content,re.IGNORECASE)
+                            if m != None:
+                                ignore = True
                 if not ignore:
-                    status.append("active")
+                    state_flags.append("active")
 
-        if len(status) > 0:
-            fired_alerts.append(buildAlert("Service is not {}".format(" and ".join(status)), systemd_service))
+        if len(state_flags) > 0:
+            fired_alerts.append(buildAlert("Service is not {}".format(" and ".join(state_flags)), systemd_service))
             notified_service.append(systemd_service)
 
 
@@ -137,12 +134,10 @@ for line in lines:
 if len(fired_alerts) > 0:
     triggerAlertmanagerAlert(fired_alerts)
 
-resolved_alerts = Alertmanager.buildResolve(fired_alerts, alertmanager_alerts)
+expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
 
-if len(resolved_alerts) > 0:
-    triggerAlertmanagerAlert(resolved_alerts)
+if len(expired_alerts) > 0:
+    triggerAlertmanagerAlert(expired_alerts)
 
 if args_values["deployment"]:
-    for alert in fired_alerts:
-        error("{} - {}".format(alert["labels"]["alertname"],alert["labels"]["service"]))
     exit(1 if len(fired_alerts) > 0 else 0)

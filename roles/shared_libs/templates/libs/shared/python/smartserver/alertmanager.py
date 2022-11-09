@@ -22,19 +22,19 @@ class Alertmanager():
 
         return alert
 
-    def buildResolve(fired_alerts, active_alerts):
+    def buildAlertExpire(fired_alerts, active_alerts):
         resolved_alerts = []
         for alert in active_alerts:
             #print(alert)
 
-            if Alertmanager.find(alert, fired_alerts):
+            if Alertmanager.findAlert(alert, fired_alerts):
                 continue
 
-            resolved_alert = Alertmanager._buildResolve(alert)
+            resolved_alert = Alertmanager._buildAlertExpire(alert)
             resolved_alerts.append(resolved_alert)
         return resolved_alerts
 
-    def _buildResolve(alert):
+    def _buildAlertExpire(alert):
         resolved_alert = {}
         #resolved_alert["status"] = "resolved"
         resolved_alert["labels"] = alert["labels"]
@@ -44,24 +44,24 @@ class Alertmanager():
 
         return resolved_alert
 
-    def find(alert, alerts):
+    def findAlert(alert, alerts):
         for _alert in alerts:
             if _alert["labels"] == alert["labels"]:
                 return True
         return False
 
-    def trigger(alertmanager_url, alerts):
+    def triggerAlerts(alertmanager_base_url, alerts):
         #headers = {
         #    'Accept': 'application/json',
         #    'Content-Type': 'text/plain'
         #}
-        response = requests.post( alertmanager_url, data = json.dumps(alerts) )
+        response = requests.post( "{}api/v1/alerts".format(alertmanager_base_url), data = json.dumps(alerts) )
         #response = requests.post( "http://openhab:8080/rest/items/State_Server/state", headers = headers, data = json.dumps(json) )
         if not (200 <= response.status_code < 300):
             response.raise_for_status()
 
-    def fetch(alertmanager_url, notifyGroup):
-        response = requests.get(alertmanager_url, timeout=5.0)
+    def fetchAlerts(alertmanager_base_url, notifyGroup):
+        response = requests.get("{}api/v1/alerts".format(alertmanager_base_url), timeout=5.0)
         response.raise_for_status()
         _alert_response = json.loads(response.content)
         if _alert_response["status"] == "success":
@@ -79,3 +79,64 @@ class Alertmanager():
             alertmanager_alerts.append(alertmanager_alert)
 
         return alertmanager_alerts
+
+    def buildSilence( matchers, name):
+        silence = {}
+
+        silence["matchers"] = matchers
+        silence["createdBy"] = "api"
+        silence["comment"] = name
+        #silence["status"] = { "state": "active" }
+
+        startsAt = datetime.utcnow()
+        silence["startsAt"] = startsAt.isoformat()#.strftime("%Y-%m-%dT%H:%M:%S.000000000Z")
+        silence["endsAt"] = "2999-01-01T01:01:01.000000000Z"
+
+        return silence
+
+    def findSilence(name, silences):
+        for silence in silences:
+            if silence["comment"] == name:
+                return silence
+        return None
+
+    def triggerSilence(alertmanager_base_url, silence):
+        #headers = {
+        #    'Accept': 'application/json',
+        #    'Content-Type': 'text/plain'
+        #}
+        response = requests.post( "{}api/v2/silences".format(alertmanager_base_url), json = silence )
+        #response = requests.post( "http://openhab:8080/rest/items/State_Server/state", headers = headers, data = json.dumps(json) )
+        if not (200 <= response.status_code < 300):
+            response.raise_for_status()
+
+    def deleteSilence(alertmanager_base_url, id):
+        #headers = {
+        #    'Accept': 'application/json',
+        #    'Content-Type': 'text/plain'
+        #}
+        response = requests.delete( "{}api/v2/silence/{}".format(alertmanager_base_url, id))
+        #response = requests.post( "http://openhab:8080/rest/items/State_Server/state", headers = headers, data = json.dumps(json) )
+        if not (200 <= response.status_code < 300):
+            response.raise_for_status()
+
+    def fetchSilences(alertmanager_base_url):
+        response = requests.get("{}api/v1/silences".format(alertmanager_base_url), timeout=5.0)
+        response.raise_for_status()
+        _alert_response = json.loads(response.content)
+        if _alert_response["status"] == "success":
+            _alertmanager_silences = _alert_response["data"]
+        else:
+            _alertmanager_silences = []
+
+        alertmanager_silences = []
+        for alertmanager_silence in _alertmanager_silences:
+            #print(alert)
+
+            if alertmanager_silence["createdBy"] != "api" or alertmanager_silence["status"]["state"] != "active":
+                continue
+
+            alertmanager_silences.append(alertmanager_silence)
+
+        return alertmanager_silences
+

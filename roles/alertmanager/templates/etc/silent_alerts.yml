@@ -1,0 +1,52 @@
+silent_alerts:
+  - name: "Netdata logs und warnings"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="netdata"
+  - name: "SSH Errors 13.10.2022"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="sshd"
+      - log=~".*Failed to release session.*"
+  - name: "Loki errors 13.10.2022"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="loki"
+      - log=~".*error fetching chunks.*"
+  - name: "FS CACHE 13.10.2022"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="kernel"
+      - log=~"FS-Cache .*"
+  - name: "Nextcloud News fetcher 13.10.2022"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="nextcloud"
+      - log=~".*Unable to parse content from.*"
+  - name: "Apache access logs"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="apache"
+      - log=~".*logfile=access\.log.*"
+  - name: "Apache error logs => \"/cgi-bin/\" errors are know attacs, but we are safe, because cgi-bin is disabled globally"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="apache"
+      - log=~".*invalid URI.*/cgi-bin/.*logfile=error\.log.*"
+  - name: "CRONY => because error output is already sendet out via email"
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="crony"
+#    - matchers:
+#      - notifyGroup=~"logs-.*"
+#      - group="php"
+#      - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
+#    - matchers:
+#      - notifyGroup=~"logs-.*"
+#      - group="grafana"
+#      - log=~".*abort Handler.*"
+#    - matchers:
+#      - notifyGroup=~"logs-.*"
+#      - group="apache"
+#      - log=~".*/grafana/api/live/ws.*Mobile.*"
+# **********************************

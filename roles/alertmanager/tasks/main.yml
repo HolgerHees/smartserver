@@ -15,11 +15,15 @@
 
 - name: copy config
   template:
-    src: "templates/etc/alertmanager.yml"
-    dest: "{{ global_etc }}alertmanager/alertmanager.yml"
+    src: "templates/etc/{{item.src}}"
+    dest: "{{ global_etc }}alertmanager/{{item.dest}}"
     owner: nobody
     group: "{{ 'nobody' if is_fedora else 'nogroup'}}"
-    mode: 0640
+    mode: "{{item.mode}}"
+  with_items:
+    - { mode: "u=rw,g=r,o=", src: "alertmanager.yml", dest: "alertmanager.yml"}
+    - { mode: "u=rw,g=r,o=", src: "silent_alerts.yml", dest: "silent_alerts.yml"}
+    - { mode: "u=rwx,g=rx,o=", src: "silent_setup.py", dest: "silent_setup.py"}
   notify: "restart alertmanager"
 
 - name: check started docker
@@ -106,6 +110,7 @@
   vars:
     container_name: "alertmanager"
     container_after: [ "postfix" ]
+    container_post_exec: "nohup /bin/sh -c \"(sleep 15 && /dataDisk/etc/alertmanager/silent_setup.py) &\""
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier

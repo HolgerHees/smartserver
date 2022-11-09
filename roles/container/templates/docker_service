@@ -16,8 +16,11 @@ ExecStart=/usr/bin/docker start -a {{container_name}}
 ExecStartPre={{container_pre_exec}}
 {% endif %}
 {% if container_routes is defined %}{% for route in container_routes %}
-ExecStartPost=/bin/bash -c "sleep 1 && CNS=$(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} {{container_name}});{% if route.subnet == 'default' %} nsenter -n -t $CNS ip route del {{route.subnet}} && {% endif %}nsenter -n -t $CNS ip route add {{route.subnet}} via {{route.gateway}}"
+ExecStartPost=nohup /bin/bash -c "(sleep 1 && CNS=$(docker inspect --format {{'{{'}}.State.Pid{{'}}'}} {{container_name}});{% if route.subnet == 'default' %} nsenter -n -t $CNS ip route del {{route.subnet}} && {% endif %}nsenter -n -t $CNS ip route add {{route.subnet}} via {{route.gateway}}) &"
 {% endfor %}{% endif %}
+{% if container_post_exec is defined %}
+ExecStartPost={{container_post_exec}}
+{% endif %}
 ExecStop=/usr/bin/docker stop {{container_name}}
 #ExecStop=/usr/bin/docker stop -t {{container_stop_timeout | default('300')}} {{container_name}}
 #SyslogIdentifier={{container_name}}

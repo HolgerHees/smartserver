@@ -12,7 +12,7 @@ from smartserver.alertmanager import Alertmanager
 
 
 NETDATA_URL = "http://localhost:19999/api/v1/alarms?active"
-ALERTMANAGER_URL = "http://alertmanager:9093/api/v1/alerts"
+ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
 
 GENERATOR_URL = "https://netdata.{{server_domain}}/"
 INTERVAL = 60
@@ -33,14 +33,14 @@ def logWarning(msg):
 
 def triggerAlertmanagerAlert(alerts):
     try:
-        Alertmanager.trigger(ALERTMANAGER_URL, alerts)
+        Alertmanager.triggerAlerts(ALERTMANAGER_BASE_URL, alerts)
     except Exception as e:
         logWarning("An error happens when reporting alerts to alertmanager => {}. Maybe alertmanager is down.".format(e))
         exit(1)
 
 def fetchAlertmanagerAlerts():
     try:
-        alertmanager_alerts = Alertmanager.fetch(ALERTMANAGER_URL, "netdata")
+        alertmanager_alerts = Alertmanager.fetchAlerts(ALERTMANAGER_BASE_URL, "netdata")
     except Exception as e:
         logWarning("An error happens when fetching alerts from alertmanager => {}. Maybe alertmanager is down.".format(e))
         alertmanager_alerts = []
@@ -100,14 +100,15 @@ for alert in netdata_alerts:
     fired_alert = Alertmanager.buildAlert("netdata", alert["name"], summary, startAt, labels, GENERATOR_URL)
     fired_alerts.append(fired_alert)
 
-    if not Alertmanager.find(fired_alert, alertmanager_alerts):
+    if not Alertmanager.findAlert(fired_alert, alertmanager_alerts):
         logInfo("Trigger alarm {}".format(alert_key))
 
 
 if len(fired_alerts) > 0:
     triggerAlertmanagerAlert(fired_alerts)
 
-resolved_alerts = Alertmanager.buildResolve(fired_alerts, alertmanager_alerts)
+expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
 
-if len(resolved_alerts) > 0:
-    triggerAlertmanagerAlert(resolved_alerts)
+if len(expired_alerts) > 0:
+    triggerAlertmanagerAlert(expired_alerts)
+
