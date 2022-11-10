@@ -1,47 +1,42 @@
 silent_alerts:
-  - name: "Netdata logs und warnings"
+  - name: "Apache => access logs"
     matchers:
-      - notifyGroup=~"logs-.*"
-      - group="netdata"
-  - name: "SSH Errors" # last seen 13.10.2022
-    matchers:
-      - notifyGroup=~"logs-.*"
-      - group="sshd"
-      - log=~".*Failed to release session.*"
-  - name: "Loki errors" # last seen 13.10.2022"
-    matchers:
-      - notifyGroup=~"logs-.*"
-      - group="loki"
-      - log=~".*error fetching chunks.*"
-  - name: "FS CACHE" # last seen 13.10.2022"
-    matchers:
-      - notifyGroup=~"logs-.*"
-      - group="kernel"
-      - log=~"FS-Cache .*"
-  - name: "Nextcloud News fetcher" # last seen 13.10.2022"
-    matchers:
-      - notifyGroup=~"logs-.*"
-      - group="nextcloud"
-      - log=~".*Unable to parse content from.*"
-  - name: "Openhab UPNP errors" # last seen 10.11.2022
-    matchers:
-      - notifyGroup=~"logs-.*"
-      - group="openhab"
-      - log=~".*Could not restart UPnP network components.*"
-  - name: "Apache access logs"
-    matchers:
-      - notifyGroup=~"logs-.*"
-      - group="apache"
+      - notifyGroup="logs-apache"
       - log=~".*logfile=access\.log.*"
-  - name: "Apache error logs => \"/cgi-bin/\" attacts" # errors are know attacs, but we are safe, because cgi-bin is disabled globally
+  - name: "Apache => error logs => \"/cgi-bin/\" attacts" # errors are know attacs, but we are safe, because cgi-bin is disabled globally
     matchers:
-      - notifyGroup=~"logs-.*"
-      - group="apache"
+      - notifyGroup="logs-apache"
       - log=~".*invalid URI.*/cgi-bin/.*logfile=error\.log.*"
-  - name: "CRONY errors" # because error output is already sendet out via email"
+  - name: "CRONY" # because error output is already sendet out via email"
     matchers:
-      - notifyGroup=~"logs-.*"
-      - group="crony"
+      - notifyGroup="logs-crony"
+  - name: "Grafana => client disconnects" # happens if a client close the windows
+    matchers:
+      - notifyGroup="logs-grafana"
+      - log=~".*Error writing to response.*"
+  - name: "Kernel => fs cache" # last seen 13.10.2022"
+    matchers:
+      - notifyGroup="logs-kernel"
+      - log=~"FS-Cache .*"
+  - name: "Loki => chunk errors" # last seen 13.10.2022"
+    matchers:
+      - notifyGroup="logs-loki"
+      - log=~".*error fetching chunks.*"
+  - name: "Netdata => all log errors and warning"
+    matchers:
+      - notifyGroup="logs-netdata"
+  - name: "Nextcloud => news fetcher" # last seen 13.10.2022"
+    matchers:
+      - notifyGroup="logs-nextcloud"
+      - log=~".*Unable to parse content from.*"
+  - name: "Openhab => upnp errors" # last seen 10.11.2022
+    matchers:
+      - notifyGroup="logs-openhab"
+      - log=~".*Could not restart UPnP network components.*"
+  - name: "SSH => release session errors" # last seen 13.10.2022
+    matchers:
+      - notifyGroup="logs-sshd"
+      - log=~".*Failed to release session.*"
 #    - matchers:
 #      - notifyGroup=~"logs-.*"
 #      - group="php"
