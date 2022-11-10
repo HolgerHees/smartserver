@@ -17,6 +17,7 @@
     - "{{ global_etc }}grafana/provisioning/dashboards/"
     - "{{ global_etc }}grafana/provisioning/notifiers/"
     - "{{ global_etc }}grafana/provisioning/plugins/"
+    - "{{ global_etc }}grafana/provisioning/alerting/"
 
 #- name: synchronize shared grafana dashboards
 #  synchronize:
