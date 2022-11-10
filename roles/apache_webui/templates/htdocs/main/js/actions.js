@@ -68,7 +68,7 @@ mx.Actions = (function( ret ) {
     
     function iFrameMessageEventHandler(event)
     {
-        if( 'type' in event.data && [ 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
+        if( typeof event.data == 'object' && 'type' in event.data && [ 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
         {
             setTitle(event.data["title"]);
 
@@ -80,10 +80,11 @@ mx.Actions = (function( ret ) {
                 loadHandler(url,event.data['type']);
             }
         }
-        else
-        {
-            console.error("Wrong message" );
-        }
+        //else
+        //{
+        //    console.warn("Wrong message");
+        //    console.warn(event);
+        //}
         //console.log("iFrameListenerHandler");
     }
     
