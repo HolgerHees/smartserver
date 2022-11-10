@@ -94,10 +94,13 @@ class Alertmanager():
 
         return silence
 
-    def findSilence(name, silences):
+    def findSilence(name, matchers, silences):
         for silence in silences:
             if silence["comment"] == name:
-                return silence
+                pairs = zip(matchers, silence["matchers"])
+                has_differences = any(x != y for x, y in pairs)
+                if not has_differences:
+                    return silence
         return None
 
     def triggerSilence(alertmanager_base_url, silence):

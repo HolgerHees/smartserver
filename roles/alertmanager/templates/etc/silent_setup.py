@@ -35,7 +35,7 @@ with open(CONFIG_YML, "r") as stream:
             }
             matchers.append(matcher)
 
-        silence = Alertmanager.findSilence(silence_config["name"], alertmanager_silences)
+        silence = Alertmanager.findSilence(silence_config["name"], matchers, alertmanager_silences)
         if silence is not None:
             alertmanager_silences.remove(silence)
         else:
