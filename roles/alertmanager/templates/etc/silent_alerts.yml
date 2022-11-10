@@ -27,7 +27,7 @@ silent_alerts:
     matchers:
       - notifyGroup=~"logs-.*"
       - group="openhab"
-      - log=~"Could not restart UPnP network components.*"
+      - log=~".*Could not restart UPnP network components.*"
   - name: "Apache access logs"
     matchers:
       - notifyGroup=~"logs-.*"
