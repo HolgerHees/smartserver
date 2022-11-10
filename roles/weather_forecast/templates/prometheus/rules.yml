@@ -1,6 +1,15 @@
 groups:
 - name: weather_forecast
   rules:
+  - alert: Weather forecast database availability
+    expr: 'weather_forecast_state{job="weather_forecast", type="mysql"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_forecast"
+      severity: critical
+    annotations:
+      summary: "Weather forecast database"
+
   - alert: Weather forecast api availability
     expr: 'weather_forecast_state{job="weather_forecast", type="data_provider"} == 0'
     for: 60m

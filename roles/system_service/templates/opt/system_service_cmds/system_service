@@ -108,8 +108,9 @@ class Handler(Server):
         speedtest_metrics = self.speedtest.getMetrics(is_prometheus)
 
         influxdb_metrics = self.influxdb.getStateMetrics()
+        mqtt_metrics = self.mqtt.getStateMetrics()
 
-        metrics = scanner_metrics + netflow_metrics + speedtest_metrics + influxdb_metrics
+        metrics = scanner_metrics + netflow_metrics + speedtest_metrics + influxdb_metrics + mqtt_metrics
         return "{}\n".format( "\n".join(metrics) )
 
 #@app.route('/state/', methods = ['POST'])

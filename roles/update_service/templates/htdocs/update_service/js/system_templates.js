@@ -43,18 +43,18 @@ mx.UpdateServiceTemplates = (function( ret ) {
     }
     
     let last_cmd_type_map = {
-        "system_reboot": "Last {1}system reboot{2} {3} after {4} {5}",
-        "daemon_restart": "Last {1}daemon restart{2} {3} after {4} {5}",
-        "software_check": "Last {1}software check{2} {3} after {4} {5}",
+        "system_reboot": "Last {1}system reboot{2}: {3} {4}",
+        "daemon_restart": "Last {1}daemon restart{2}: {3} {4}",
+        "software_check": "Last {1}software check{2}: {3} {4}",
 
-        "update_check": "Last {1}update check{2} {3} after {4} {5}",
-        "system_update_check": "Last {1}system update check{2} {3} after {4} {5}",
-        "deployment_update_check": "Last {1}smartserver update check{2} {3} after {4} {5}",
-        "process_check": "Last {1}process check{2} {3} after {4} {5}",
+        "update_check": "Last {1}update check{2}: {3} {4}",
+        "system_update_check": "Last {1}system update check{2}: {3} {4}",
+        "deployment_update_check": "Last {1}smartserver update check{2}: {3} {4}",
+        "process_check": "Last {1}process check{2}: {3}",
 
-        "service_restart": "Last {1}service restart{2} {3} after {4} {5}",
-        "system_update": "Last {1}system update{2} {3} after {4} {5}",
-        "deployment_update": "Last {1}smartserver update{2} {3} after {4} {5}"
+        "service_restart": "Last {1}service restart{2}: {3} {4}",
+        "system_update": "Last {1}system update{2}: {3} {4}",
+        "deployment_update": "Last {1}smartserver update{2}: {3} {4}"
     };
 
     let cmd_type_map = {
@@ -530,8 +530,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let icon = last_job["state"] == "failed" || last_job["state"] == "crashed" ? "icon-attention red" : "icon-ok green";
             
             let last_job_sentence = mx.I18N.get(last_cmd_type_map[last_job["type"]]);
-            let duration = Math.round( last_job["duration"] );
-            let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": state_msg, "4": duration, "5": mx.I18N.get( duration == 1 ? "second" : "seconds" ) });
+            let timestamp = last_job["timestamp"] + Math.round( last_job["duration"] );
+            let [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(  new Date(timestamp * 1000) );
+
+            let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": dateFormatted, "4": state_msg });
           
             headerMsg = "<div class=\"info\"><span class=\"" + icon + "\"></span> " + msg;
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'lastRunningJobsDetails')\"></div></div>";

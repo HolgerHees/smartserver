@@ -33,12 +33,11 @@ class InfluxDB(threading.Thread):
             try:
                 for callback in self.callbacks:
                     messurements += callback()
+                self.state_metrics = self.submit(messurements)
             except Exception as e:
                 logging.error("{} got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
                 logging.error(traceback.format_exc())
                 self.state_metrics = -1
-
-            self.state_metrics = self.submit(messurements)
 
             self.event.wait(self.config.influxdb_publish_interval)
             #self.event.clear()

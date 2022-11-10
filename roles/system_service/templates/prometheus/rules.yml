@@ -22,7 +22,8 @@ groups:
 - name: wan_connection
   rules:
   - alert: System service wan connection download speed
-    expr: 'max_over_time(system_service_speedtest{type="downstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75'
+    expr: 'max_over_time(system_service_speedtest{type="downstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.5
+           or avg_over_time(system_service_speedtest{type="downstream_rate"}[4h]) < avg_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -31,7 +32,8 @@ groups:
       summary: "WAN connection download speed too low"
 
   - alert: System service wan connection upload speed
-    expr: 'max_over_time(system_service_speedtest{type="upstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75'
+    expr: 'max_over_time(system_service_speedtest{type="upstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.5
+           or avg_over_time(system_service_speedtest{type="upstream_rate"}[4h]) < avg_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75'
     for: 0m
     labels:
       notifyGroup: "wan_connection"

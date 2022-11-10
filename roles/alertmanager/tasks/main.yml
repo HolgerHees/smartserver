@@ -110,7 +110,7 @@
   vars:
     container_name: "alertmanager"
     container_after: [ "postfix" ]
-    container_post_exec: "nohup /bin/sh -c \"(sleep 15 && /dataDisk/etc/alertmanager/silent_setup.py) &\""
+    container_post_exec: "nohup /bin/sh -c \"(sleep 15 && {{ global_etc }}alertmanager/silent_setup.py) &\""
   import_tasks: roles/container/tasks/add_docker_service.yml
   
 - name: register update notifier

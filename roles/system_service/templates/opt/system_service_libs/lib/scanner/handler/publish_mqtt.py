@@ -17,13 +17,9 @@ class MQTTPublisher(_handler.Handler):
         self.mqtt = mqtt
         
         self.published_values = {}
-        
-        self._setServiceMetricState("mqtt", -1)
 
     def start(self):
         super().start()
-
-        self._setServiceMetricState("mqtt", 1)
 
     def terminate(self):
         super().terminate()
@@ -57,12 +53,8 @@ class MQTTPublisher(_handler.Handler):
                             Helper.logInfo("REPUBLISH {} of {}".format(list(_to_publish.keys()), _device))
                             for [detail, topic, value] in _to_publish.values():
                                 self._publishValue(mac, detail, topic, value, now)
-
-                    self._setServiceMetricState("mqtt", 1)
-
                 except Exception as e:
                     self._handleUnexpectedException(e)
-                    self._setServiceMetricState("mqtt", -1)
 
             suspend_timeout = self._getSuspendTimeout()
             if suspend_timeout > 0:

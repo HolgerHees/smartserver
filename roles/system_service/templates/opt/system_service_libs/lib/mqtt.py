@@ -8,6 +8,11 @@ class MQTTHandler():
         self.mqtt_client = None
         self.config = config
 
+        self.state_metrics = -1
+
+    def getStateMetrics(self):
+        return ["system_service_state{{type=\"mqtt\"}} {}".format(self.state_metrics)]
+
     def start(self):
         while True:
             try:
@@ -29,12 +34,19 @@ class MQTTHandler():
 
     def on_disconnect(self,client, userdata, rc):
         logging.info("Disconnect from mqtt with result code:"+str(rc))
+        self.state_metrics = 0
 
     def on_message(self,client,userdata,msg):
         logging.info("Topic " + msg.topic + ", message:" + str(msg.payload))
 
     def publish(self, name, payload):
-        self.mqtt_client.publish('system_info/{}'.format(name), payload=payload, qos=0, retain=False)
+        try:
+            self.mqtt_client.publish('system_info/{}'.format(name), payload=payload, qos=0, retain=False)
+            self.state_metrics = 1
+        except Exception as e:
+            logging.error("{} got unexpected exception.")
+            logging.error(traceback.format_exc())
+            self.state_metrics = 0
 
     def terminate(self):
         if self.mqtt_client is not None:

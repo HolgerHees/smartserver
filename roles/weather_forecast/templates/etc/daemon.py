@@ -303,7 +303,7 @@ class Handler(threading.Thread):
         self.current_values = None
         self.forecast_values = None
 
-        self.state_metrics = { "data_provider": -1, "data_current": -1, "data_forecast": -1, "publish": -1 }
+        self.state_metrics = { "data_provider": -1, "data_current": -1, "data_forecast": -1, "publish": -1, "mysql": -1, "mqtt": -1 }
 
         self.consume_errors = { "forecast": None, "current": None, "summery": None }
         self.consume_refreshed = { "forecast": None, "current": None, "summery": None }
@@ -357,6 +357,8 @@ class Handler(threading.Thread):
 
                 self.state_metrics["data_provider"] = 1
                 self.state_metrics["publish"] = 1
+                self.state_metrics["mysql"] = 1
+                self.state_metrics["mqtt"] = 1
             except ForecastDataException as e:
                 print("{}: {}".format(str(e.__class__),str(e)), flush=True)
                 self.state_metrics["data_forecast"] = 0
@@ -369,8 +371,15 @@ class Handler(threading.Thread):
                 print("{}: {}".format(str(e.__class__),str(e)), flush=True)
                 self.state_metrics["data_provider"] = 0
                 error_count += 1
+            except MySQLdb._exceptions.OperationalError as e:
+                print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+                self.state_metrics["mysql"] = 0
+                error_count += 1
+            #except MQTT Exceptions?? as e:
+            #    print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+            #    self.state_metrics["mqtt"] = 0
+            #    error_count += 1
             except Exception:
-            #except MySQLdb._exceptions.OperationalError as e:
                 print("{}: {}".format(str(e.__class__),str(e)), flush=True)
                 self.state_metrics["publish"] = 0
                 error_count += 1
@@ -390,6 +399,7 @@ class Handler(threading.Thread):
         
     def on_disconnect(self,client, userdata, rc):
         print("Disconnect from mqtt with result code:"+str(rc), flush=True)
+        self.state_metrics["mqtt"] = 0
 
     def on_message(self,client,userdata,msg):
         topic = msg.topic.split("/")
@@ -489,11 +499,14 @@ class Handler(threading.Thread):
             if is_refreshed:
                 self.consume_refreshed[state_name] = datetime.now()
 
-        except Exception as e:
+        except MySQLdb._exceptions.OperationalError as e:
+            print("{}: {}".format(str(e.__class__),str(e)), flush=True)
+            self.state_metrics["mysql"] = 0
             self.consume_errors[state_name] = datetime.now()
-
-            print("Exception: {}".format(str(e)))
+        except Exception as e:
+            print("{}: {}".format(str(e.__class__),str(e)), flush=True)
             traceback.print_exc()
+            self.consume_errors[state_name] = datetime.now()
 
     def getStateMetrics(self):
         state_metrics = []

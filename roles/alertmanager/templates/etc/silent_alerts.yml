@@ -3,37 +3,42 @@ silent_alerts:
     matchers:
       - notifyGroup=~"logs-.*"
       - group="netdata"
-  - name: "SSH Errors 13.10.2022"
+  - name: "SSH Errors" # last seen 13.10.2022
     matchers:
       - notifyGroup=~"logs-.*"
       - group="sshd"
       - log=~".*Failed to release session.*"
-  - name: "Loki errors 13.10.2022"
+  - name: "Loki errors" # last seen 13.10.2022"
     matchers:
       - notifyGroup=~"logs-.*"
       - group="loki"
       - log=~".*error fetching chunks.*"
-  - name: "FS CACHE 13.10.2022"
+  - name: "FS CACHE" # last seen 13.10.2022"
     matchers:
       - notifyGroup=~"logs-.*"
       - group="kernel"
       - log=~"FS-Cache .*"
-  - name: "Nextcloud News fetcher 13.10.2022"
+  - name: "Nextcloud News fetcher" # last seen 13.10.2022"
     matchers:
       - notifyGroup=~"logs-.*"
       - group="nextcloud"
       - log=~".*Unable to parse content from.*"
+  - name: "Openhab UPNP errors" # last seen 10.11.2022
+    matchers:
+      - notifyGroup=~"logs-.*"
+      - group="openhab"
+      - log=~"Could not restart UPnP network components.*"
   - name: "Apache access logs"
     matchers:
       - notifyGroup=~"logs-.*"
       - group="apache"
       - log=~".*logfile=access\.log.*"
-  - name: "Apache error logs => \"/cgi-bin/\" errors are know attacs, but we are safe, because cgi-bin is disabled globally"
+  - name: "Apache error logs => \"/cgi-bin/\" attacts" # errors are know attacs, but we are safe, because cgi-bin is disabled globally
     matchers:
       - notifyGroup=~"logs-.*"
       - group="apache"
       - log=~".*invalid URI.*/cgi-bin/.*logfile=error\.log.*"
-  - name: "CRONY => because error output is already sendet out via email"
+  - name: "CRONY errors" # because error output is already sendet out via email"
     matchers:
       - notifyGroup=~"logs-.*"
       - group="crony"
