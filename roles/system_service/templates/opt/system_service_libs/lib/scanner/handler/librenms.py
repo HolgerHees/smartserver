@@ -97,7 +97,7 @@ class LibreNMS(_handler.Handler):
         _device_json = self._get("devices")
         Helper.logProfiler(self, start, "Devices fetched")
         
-        _devices = json.loads(_device_json)["devices"]
+        _devices = _device_json["devices"]
         
         _active_devices = {}
         for _device in _devices:
@@ -163,7 +163,7 @@ class LibreNMS(_handler.Handler):
         _vlan_json = self._get("resources/vlans")
         Helper.logProfiler(self, start, "VLANs fetched")
 
-        _vlans = json.loads(_vlan_json)["vlans"]
+        _vlans = _vlan_json["vlans"]
         
         _active_vlan_ids = []
         for _vlan in _vlans:
@@ -181,7 +181,7 @@ class LibreNMS(_handler.Handler):
         _ports_json = self._get("ports?columns=device_id,ifIndex,ifName,ifInOctets,ifOutOctets,ifSpeed,ifDuplex")
         Helper.logProfiler(self, start, "Ports fetched")
 
-        _ports = json.loads(_ports_json)["ports"]
+        _ports = _ports_json["ports"]
 
         for _port in _ports:
             if _port["device_id"] not in self.devices:
@@ -251,7 +251,7 @@ class LibreNMS(_handler.Handler):
         _connected_arps_json = self._get("resources/fdb")
         Helper.logProfiler(self, start, "Clients fetched")
 
-        _connected_arps = json.loads(_connected_arps_json)["ports_fdb"]
+        _connected_arps = _connected_arps_json["ports_fdb"]
         
         for _connected_arp in _connected_arps:
             if _connected_arp["vlan_id"] not in self.vlan_id_map:
@@ -316,8 +316,13 @@ class LibreNMS(_handler.Handler):
             #print("{}{}".format(self.config.librenms_rest,call))
             r = self.request_session.get( "{}{}".format(self.config.librenms_rest,call), headers=headers)
             if r.status_code != 200:
-                raise NetworkException("Got wrong status code: {}".format(r.status_code), self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout)
-            return r.text
+                raise NetworkException("Got wrong response status code: {}".format(r.status_code), self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout)
+
+            data = json.loads(r.text)
+            if data["status"] != "ok":
+                raise NetworkException("Got wrong data status code: {}".format(data["status"]), self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout)
+
+            return data
         except requests.exceptions.ConnectionError as e:
             #logging.error(str(e))
             raise NetworkException("LibreNMS currently not available", self.config.startup_error_timeout if not self._isInitialized() else self.config.remote_suspend_timeout )
