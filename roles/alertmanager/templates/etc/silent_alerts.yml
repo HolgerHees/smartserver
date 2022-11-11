@@ -37,6 +37,9 @@ silent_alerts:
     matchers:
       - notifyGroup="logs-sshd"
       - log=~".*Failed to release session.*"
+  - name: "WickedD => org.freedesktop.DBus.Error.UnknownMethod" # last seen 11.11.2022
+    matchers:
+      - notifyGroup="logs-wickedd-nanny"
 #    - matchers:
 #      - notifyGroup=~"logs-.*"
 #      - group="php"
