@@ -119,19 +119,20 @@ sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set uhttpd.main.redirect
 #/etc/init.d/rpcd restart
 #/etc/init.d/snmpd restart
 
-echo "Search for upgrades ..."
-AVAILABLE_UPDATES_RESULT=$(sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg list-upgradable")
+# disabled upgrades, because they are using too much additional flash space
+#echo "Search for upgrades ..."
+#AVAILABLE_UPDATES_RESULT=$(sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg list-upgradable")
 
-if [[ "$AVAILABLE_UPDATES_RESULT" != "" ]]; then
-  AVAILABLE_UPDATES=$(echo "$AVAILABLE_UPDATES_RESULT" | wc -l)
-  echo -n "$AVAILABLE_UPDATES Updates available. Run upgrade packages? [y/N]":
-  read UPGRADE
+#if [[ "$AVAILABLE_UPDATES_RESULT" != "" ]]; then
+#  AVAILABLE_UPDATES=$(echo "$AVAILABLE_UPDATES_RESULT" | wc -l)
+#  echo -n "$AVAILABLE_UPDATES Updates available. Run upgrade packages? [y/N]":
+#  read UPGRADE
 
-  if [[ $UPGRADE =~ ^[Yy]$ ]]; then
-    echo "Upgrading now ..."
-    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg list-upgradable | cut -f 1 -d ' ' | xargs -r opkg upgrade; > /dev/null"
-  fi
-fi
+#  if [[ $UPGRADE =~ ^[Yy]$ ]]; then
+#    echo "Upgrading now ..."
+#    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg list-upgradable | cut -f 1 -d ' ' | xargs -r opkg upgrade; > /dev/null"
+#  fi
+#fi
 
 echo -n "Reboot now? [y/N]": 
 read REBOOT
