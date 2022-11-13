@@ -182,7 +182,7 @@ class Connection:
         return service
 
 class Processor(threading.Thread):
-    def __init__(self, config, handler ):
+    def __init__(self, config, handler, influxdb ):
         threading.Thread.__init__(self)
 
         #self.is_running = True
@@ -190,12 +190,13 @@ class Processor(threading.Thread):
 
         self.config = config
 
-        self.connections = []
-
         self.is_enabled = True
 
-        self.last_metric_end = time.time() - METRIC_TIMESHIFT
-        self.last_labels = {}
+        self.connections = []
+        self.last_registry = {}
+        #self.last_metric_end = time.time() - METRIC_TIMESHIFT
+
+        influxdb.register(self.getMessurements)
 
     def terminate(self):
         #self.is_running = False
@@ -321,113 +322,68 @@ class Processor(threading.Thread):
             self.listener.stop()
             self.listener.join()
 
-    def getMetrics(self, is_prometheus):
-        last_labels = dict(self.last_labels)
+    def getMessurements(self):
+        messurements = []
 
         #f = open("/tmp/netflow.log", "w")
         #now = datetime.now().timestamp()
         registry = {}
         for con in list(self.connections):
-            timestamp = int(con.request_ts)
-
-            # we have to wait until all flows arrived, including the ones from cleanup
-            #if now - timestamp <= 30:
-            #    continue
+            timestamp = con.request_ts
 
             # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
             timestamp -= METRIC_TIMESHIFT
 
-            if timestamp < self.last_metric_end:
-                #logging.info("fix {} by {}".format(con.answer_flow is not None, int(self.last_metric_end + 1) - timestamp))
-                timestamp = int(self.last_metric_end + 1)
+            #if timestamp < self.last_metric_end:
+            #    #logging.info("fix {} by {}".format(con.answer_flow is not None, int(self.last_metric_end + 1) - timestamp))
+            #    timestamp = int(self.last_metric_end + 1)
 
             label = []
-            label.append("protocol=\"{}\"".format(con.protocol_name))
-            label.append("service=\"{}\"".format(con.service))
-            label.append("port=\"{}\"".format(con.dest_port))
-            #label.append("size=\"{}\"".format(con.size))
-            #label.append("duration=\"{}\"".format(con.duration))
-            #label.append("packets=\"{}\"".format(con.packages))
-            label.append("src_ip=\"{}\"".format(con.src))
-            label.append("src_host=\"{}\"".format(con.src_hostname))
-            label.append("dest_ip=\"{}\"".format(con.dest))
-            label.append("dest_host=\"{}\"".format(con.dest_hostname))
-            label.append("ip_type=\"{}\"".format(con.ip_type))
-            #label.append("oneway=\"{}\"".format(1 if con.is_one_direction else 0))
+            label.append("protocol={}".format(con.protocol_name))
+            label.append("service={}".format(con.service))
+            label.append("port={}".format(con.dest_port))
+            #label.append("size={}".format(con.size))
+            #label.append("duration={}".format(con.duration))
+            #label.append("packets={}".format(con.packages))
+            label.append("src_ip={}".format(con.src))
+            label.append("src_host={}".format(con.src_hostname))
+            label.append("dest_ip={}".format(con.dest))
+            label.append("dest_host={}".format(con.dest_hostname))
+            label.append("ip_type={}".format(con.ip_type))
+            #label.append("oneway={}".format(1 if con.is_one_direction else 0))
 
             label_str = ",".join(label)
+            timestamp = int(timestamp * 1000)
 
-            key = label_str
+            key = "{}-{}".format(label_str, timestamp)
             if key not in registry:
+                #logging.info("new")
                 registry[key] = [label_str, 0, timestamp]
+            #else:
+            #    logging.info("doublicate")
+
             registry[key][1] += con.size
 
-            if label_str in last_labels:
-                del last_labels[label_str]
+            self.connections.remove(con)
 
-            if is_prometheus:
-                self.connections.remove(con)
+        # old values with same timestamp should be summerized
+        for _key in self.last_registry:
+            if _key in registry:
+                registry[_key][1] += self.last_registry[_key][1]
+                #logging.info("last value")
 
-        # create 0 traffic metric, if there are no new flows from previous generated traffic metrics
-        for last_label_str in last_labels:
-            timestamp = last_labels[last_label_str] + PROMETHEUS_INTERVAL
-            key = "{} {}".format(last_label_str, timestamp)
-            registry[key] = [last_label_str, 0, timestamp]
-            #registry[key] = [ con, timestamp, "system_service_netflow_size{{{}}} {} {}".format(label_str, con.size, timestamp) ]
+        self.last_registry = registry
 
-        metrics = []
-        labels = {}
+        messurements = []
         sorted_registry = sorted(registry.values(), key=lambda x: x[2])
-        if len(sorted_registry) > 0:
-            for data in sorted_registry:
-                metrics.append("system_service_netflow_size{{{}}} {} {}000".format(data[0], data[1], data[2]))
-                if data[1] > 0:
-                    labels[data[0]] = data[2]
+        for data in sorted_registry:
+            messurements.append("netflow_size,{} value={} {}".format(data[0], data[1], data[2]))
 
-                #key = "system_service_netflow_size{{{}}} {}".format(label_str, time_str)
-                #if key in check:
-                #    logging.error("Douplicate metric {}, TS OLD: {}, TS NEW: {}".format(key, check[key].request_ts, con.request_ts))
-                #    logging.error(check[key].request_flow)
-                #    logging.error(con.request_flow)
-                #check[key] = con
+        #logging.info(messurements)
 
-                #metrics.append("system_service_netflow_duration{{{}}} {} {}".format(label_str, con.duration, time_str))
-                #metrics.append("system_service_netflow_packets{{{}}} {} {}".format(label_str, con.packages, time_str))
-                #metrics.append("system_service_netflow_oneway{{{}}} {} {}".format(label_str, 1 if con.is_one_direction else 0, time_str))
+        #self.last_metric_end = time.time() - METRIC_TIMESHIFT
 
-                #con = data[0]
-                #if con.src_raw == "134.76.12.6" or con.dest_raw == "134.76.12.6":
-                #    logging.info("------------------")
-                #    direction = "=>" if con.is_one_direction else "<=>"
-                #    info = "{src_host} ({src}) {direction} {dest_host} ({dest})".format(src_host=con.src_hostname, src=con.src, direction=direction, dest_host=con.dest_hostname, dest=con.dest)
-                #    msg = "{protocol:<7} | {service:<14} | {size:10} | {info}".format(protocol=con.protocol, service=con.service, size=con.size, info=info)
-                #    logging.info(con.request_flow)
-                #    logging.info(con.answer_flow)
-                #    logging.info(msg)
+        return messurements
 
-                #logging.info(msg)
-                #if con.is_swapped:
-                #    logging.info("--- swapped")
-
-                #if not con.src.is_private:
-                #    logging.info(con.request_flow)
-                #    logging.info(con.answer_flow)
-
-
-                #f.write(msg)
-                #f.write("\n")
-                #f.write(str(con.request_flow))
-                #f.write("\n")
-                #f.write(str(con.answer_flow))
-                #f.write("\n\n")
-
-            #f.close()
-
-            if is_prometheus:
-                #self.last_metric_request = time.time()
-                self.last_metric_end = time.time() - METRIC_TIMESHIFT
-                self.last_labels = labels
-
-        logging.info("Submit {} flows".format(len(metrics)))
-
-        return metrics
+    def getMetrics(self, is_prometheus):
+        return []

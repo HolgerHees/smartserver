@@ -29,8 +29,8 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -67,6 +67,7 @@
               "mode": "off"
             }
           },
+          "displayName": "${__field.labels.src_host}",
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -113,14 +114,43 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "expr": "sum by(src_host) (system_service_netflow_size)",
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "1m"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "src_host"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -129,8 +159,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -144,6 +174,7 @@
               "viz": false
             }
           },
+          "displayName": "${__field.labels.protocol}",
           "mappings": [],
           "unit": "bytes"
         },
@@ -198,54 +229,48 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (protocol) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "protocol"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Protocol",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
-          }
-        }
-      ],
+      "transformations": [],
       "type": "piechart"
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -277,7 +302,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (sum)"
+              "options": "sum"
             },
             "properties": [
               {
@@ -328,41 +353,54 @@
           }
         ]
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "9.2.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (src_host) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "src_host"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Sources",
       "transformations": [
         {
-          "id": "groupBy",
+          "id": "organize",
           "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
           }
         }
       ],
@@ -370,8 +408,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -403,7 +441,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (sum)"
+              "options": "sum"
             },
             "properties": [
               {
@@ -454,45 +492,54 @@
           }
         ]
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "9.2.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (dest_host) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "dest_host"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Targets",
       "transformations": [
         {
-          "id": "groupBy",
+          "id": "organize",
           "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
           }
         }
       ],
@@ -500,8 +547,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -533,7 +580,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (sum)"
+              "options": "sum"
             },
             "properties": [
               {
@@ -584,53 +631,54 @@
           }
         ]
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "9.2.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (service) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "service"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Services",
       "transformations": [
         {
-          "id": "groupBy",
+          "id": "organize",
           "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "service": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
           }
         }
       ],
@@ -638,8 +686,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -671,7 +719,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (sum)"
+              "options": "sum"
             },
             "properties": [
               {
@@ -697,6 +745,10 @@
               {
                 "id": "unit",
                 "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
               }
             ]
           }
@@ -726,53 +778,54 @@
           }
         ]
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "9.2.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (port) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Ports",
       "transformations": [
         {
-          "id": "groupBy",
+          "id": "organize",
           "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "port": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
           }
         }
       ],
@@ -780,8 +833,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -795,6 +848,7 @@
               "viz": false
             }
           },
+          "displayName": "${__field.labels.service}",
           "mappings": [],
           "unit": "bytes"
         },
@@ -850,58 +904,48 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (service) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "service"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Services",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "service": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
-          }
-        }
-      ],
+      "transformations": [],
       "type": "piechart"
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -933,7 +977,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (sum)"
+              "options": "sum"
             },
             "properties": [
               {
@@ -984,49 +1028,54 @@
           }
         ]
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "9.2.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (protocol) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "protocol"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "Protocol",
       "transformations": [
         {
-          "id": "groupBy",
+          "id": "organize",
           "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
           }
         }
       ],
@@ -1034,8 +1083,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
@@ -1067,7 +1116,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value (sum)"
+              "options": "sum"
             },
             "properties": [
               {
@@ -1122,57 +1171,54 @@
           }
         ]
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "9.2.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "sum by (ip_type) (system_service_netflow_size)",
-          "format": "table",
-          "instant": false,
-          "legendFormat": "{{src_host}}",
-          "range": true,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "ip_type"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
       "title": "IP Type",
       "transformations": [
         {
-          "id": "groupBy",
+          "id": "organize",
           "options": {
-            "fields": {
-              "Value": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "dest_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "ip_type": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "port": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "protocol": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "src_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
           }
         }
       ],
@@ -1206,6 +1252,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 18,
+  "version": 20,
   "weekStart": ""
 }
