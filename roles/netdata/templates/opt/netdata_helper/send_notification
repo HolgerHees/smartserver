@@ -14,7 +14,7 @@ from smartserver.alertmanager import Alertmanager
 NETDATA_URL = "http://localhost:19999/api/v1/alarms?active"
 ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
 
-GENERATOR_URL = "https://netdata.{{server_domain}}/"
+GENERATOR_URL = "https://netdata.smartmarvin.de/"
 INTERVAL = 60
 
 IS_DAEMON = not os.isatty(sys.stdin.fileno())
@@ -86,7 +86,7 @@ for alert in netdata_alerts:
 
     if ts < delay_up_to_timestamp:
         #echo "Openhab notification not possible"  | systemd-cat -t netdata -p "warning"
-        #logInfo("Delayed alarm {} by {} seconds".format(alert_key, delay_up_to_timestamp-ts))
+        #logInfo("Delayed alarm {} by {} seconds".format(alert["name"], delay_up_to_timestamp-ts))
         #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
         continue
 
@@ -101,7 +101,7 @@ for alert in netdata_alerts:
     fired_alerts.append(fired_alert)
 
     if not Alertmanager.findAlert(fired_alert, alertmanager_alerts):
-        logInfo("Trigger alarm {}".format(alert_key))
+        logInfo("Trigger alarm {}".format(alert["name"]))
 
 
 if len(fired_alerts) > 0:
