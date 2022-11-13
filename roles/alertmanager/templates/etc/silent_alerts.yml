@@ -2,54 +2,51 @@ silent_alerts:
   - name: "Apache => access logs"
     matchers:
       - notifyGroup="logs-apache"
-      - log=~".*logfile=access\.log.*"
+      - log=~"(?s).*logfile=access\.log(?s).*"
   - name: "Apache => error logs => \"/cgi-bin/\" attacts" # errors are know attacs, but we are safe, because cgi-bin is disabled globally
     matchers:
       - notifyGroup="logs-apache"
-      - log=~".*invalid URI.*/cgi-bin/.*logfile=error\.log.*"
+      - log=~"(?s).*invalid URI(?s).*/cgi-bin/(?s).*logfile=error\.log(?s).*"
   - name: "CRONY" # because error output is already sendet out via email"
     matchers:
       - notifyGroup="logs-crony"
   - name: "Grafana => client disconnects" # happens if a client close the windows
     matchers:
       - notifyGroup="logs-grafana"
-      - log=~".*Error writing to response.*"
+      - log=~"(?s).*Error writing to response(?s).*"
   - name: "Kernel => fs cache" # last seen 13.10.2022"
     matchers:
       - notifyGroup="logs-kernel"
-      - log=~"FS-Cache .*"
+      - log=~"FS-Cache (?s).*"
   - name: "Loki => chunk errors" # last seen 13.10.2022"
     matchers:
       - notifyGroup="logs-loki"
-      - log=~".*error fetching chunks.*"
+      - log=~"(?s).*error fetching chunks(?s).*"
   - name: "Netdata => all log errors and warning"
     matchers:
       - notifyGroup="logs-netdata"
   - name: "Nextcloud => news fetcher" # last seen 13.10.2022"
     matchers:
       - notifyGroup="logs-nextcloud"
-      - log=~".*Unable to parse content from.*"
+      - log=~"(?s).*Unable to parse content from(?s).*"
   - name: "Openhab => upnp errors" # last seen 10.11.2022
     matchers:
       - notifyGroup="logs-openhab"
-      - log=~".*Could not restart UPnP network components.*"
+      - log=~"(?s).*Could not restart UPnP network components(?s).*"
   - name: "SSH => release session errors" # last seen 13.10.2022
     matchers:
       - notifyGroup="logs-sshd"
-      - log=~".*Failed to release session.*"
+      - log=~"(?s).*Failed to release session(?s).*"
   - name: "WickedD => org.freedesktop.DBus.Error.UnknownMethod" # last seen 11.11.2022
     matchers:
       - notifyGroup="logs-wickedd-nanny"
 #    - matchers:
-#      - notifyGroup=~"logs-.*"
-#      - group="php"
-#      - log=~".*oops, unknown child \([0-9]*\) exited with code 127.*"
+#      - notifyGroup=~"logs-php"
+#      - log=~"(?s).*oops, unknown child \([0-9]*\) exited with code 127(?s).*"
 #    - matchers:
-#      - notifyGroup=~"logs-.*"
-#      - group="grafana"
-#      - log=~".*abort Handler.*"
+#      - notifyGroup=~"logs-grafana"
+#      - log=~"(?s).*abort Handler(?s).*"
 #    - matchers:
-#      - notifyGroup=~"logs-.*"
-#      - group="apache"
-#      - log=~".*/grafana/api/live/ws.*Mobile.*"
+#      - notifyGroup=~"logs-apache"
+#      - log=~"(?s).*/grafana/api/live/ws(?s).*Mobile(?s).*"
 # **********************************
