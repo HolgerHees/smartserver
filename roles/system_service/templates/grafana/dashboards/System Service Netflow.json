@@ -1233,8 +1233,8 @@
     "list": [
       {
         "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
         },
         "filters": [],
         "hide": 0,
@@ -1252,6 +1252,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 20,
+  "version": 21,
   "weekStart": ""
 }

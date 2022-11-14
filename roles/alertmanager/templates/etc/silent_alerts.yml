@@ -14,6 +14,18 @@ silent_alerts:
     matchers:
       - notifyGroup="logs-grafana"
       - log=~"(?s).*Error writing to response(?s).*"
+  - name: "Grafana => abort handler" # happens if a client close the windows
+    matchers:
+      - notifyGroup="logs-grafana"
+      - log=~"(?s).*Request error(?s).*abort Handler(?s).*"
+  - name: "Grafana => request timeouts" # happens if a client close the windows
+    matchers:
+      - notifyGroup="logs-grafana"
+      - log=~"(?s).*Proxy request timed out(?s).*"
+  - name: "Grafana => request completed" # happens if a client close the windows
+    matchers:
+      - notifyGroup="logs-grafana"
+      - log=~"(?s).*Request Completed(?s).*"
   - name: "Kernel => fs cache" # last seen 13.10.2022"
     matchers:
       - notifyGroup="logs-kernel"
