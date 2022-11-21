@@ -37,7 +37,7 @@ silent_alerts:
   - name: "Netdata => all log errors and warning"
     matchers:
       - notifyGroup="logs-netdata"
-  - name: "Nextcloud => news fetcher" # last seen 13.10.2022"
+  - name: "Nextcloud => news fetcher" # last seen 13.10.2022, invalid content & unable to receive content"
     matchers:
       - notifyGroup="logs-nextcloud"
       - log=~"(?s).*app=news(?s).*"
