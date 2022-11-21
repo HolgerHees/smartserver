@@ -43,7 +43,7 @@ class Handler(Server):
         self.scanner = NetworkScanner(config, self, self.mqtt, self.influxdb )
         self.scanner.start()
         
-        self.netflow = NetflowProcessor(config, self )
+        self.netflow = NetflowProcessor(config, self, self.influxdb )
         self.netflow.start()
 
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb )
