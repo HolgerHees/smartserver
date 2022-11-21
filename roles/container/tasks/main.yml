@@ -334,7 +334,7 @@
 
 - name: copy macvlan_bridge cmd
   template:
-    src: "templates/create_macvlan_bridge.sh"
+    src: "templates/macvlan/create_macvlan_bridge.sh"
     dest: "/opt/macvlan_helper/create_macvlan_bridge.sh"
     owner: root
     group: root
@@ -344,7 +344,7 @@
 
 - name: "create systemd service for 'macvlan_bridge'"
   template:
-    src: "templates/macvlan_bridge.service"
+    src: "templates/macvlan/macvlan_bridge.service"
     dest: "/etc/systemd/system/macvlan_bridge.service"
     owner: root
     group: root
