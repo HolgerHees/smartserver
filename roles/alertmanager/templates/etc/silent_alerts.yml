@@ -40,7 +40,7 @@ silent_alerts:
   - name: "Nextcloud => news fetcher" # last seen 13.10.2022"
     matchers:
       - notifyGroup="logs-nextcloud"
-      - log=~"(?s).*Unable to parse content from(?s).*"
+      - log=~"(?s).*app=news(?s).*"
   - name: "Openhab => upnp errors" # last seen 10.11.2022
     matchers:
       - notifyGroup="logs-openhab"
