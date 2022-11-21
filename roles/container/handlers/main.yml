@@ -1,3 +1,12 @@
+- name: restart macvlan_bridge
+  systemd:
+    name: macvlan_bridge
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart macvlan_bridge"
+
 - name: restart docker
   systemd:
     name: docker
