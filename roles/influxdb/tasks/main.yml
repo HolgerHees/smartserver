@@ -61,7 +61,7 @@
   vars:
     host_name: "influxdb"
     host_ip_address: "{{docker_influxdb_ip}}"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
+  import_tasks: roles/base/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create cron job
@@ -113,7 +113,7 @@
   vars:
     notify: "restart influxdb"
     service: "influxdb.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
 
 # CHECK local cli token => only needed if a new container is created and data folder already exists
 - name: check influxdb service

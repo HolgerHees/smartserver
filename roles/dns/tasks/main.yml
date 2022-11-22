@@ -93,5 +93,5 @@
   vars:
     notify: "restart named"
     service: "named.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
 

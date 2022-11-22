@@ -68,7 +68,7 @@
   vars:
     host_name: "mysql"
     host_ip_address: "{{docker_mysql_ip}}"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
+  import_tasks: roles/base/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create cron job
@@ -114,7 +114,7 @@
   vars:
     notify: "restart mysql"
     service: "mysql.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
 
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml

@@ -223,4 +223,4 @@
   vars:
     notify: "restart wireguard_mobile"
     service: "wireguard_mobile.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml

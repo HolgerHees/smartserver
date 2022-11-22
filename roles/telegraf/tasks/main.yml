@@ -66,7 +66,7 @@
   vars:
     host_name: "telegraf"
     host_ip_address: "{{docker_telegraf_ip}}"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
+  import_tasks: roles/base/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: copy fluentd config
@@ -95,5 +95,5 @@
   vars:
     notify: "restart telegraf"
     service: "telegraf.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
 

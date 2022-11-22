@@ -60,5 +60,5 @@
   vars:
     notify: "restart roomba"
     service: "roomba.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
   when: "is_production|bool" # restart handler is also disabled if no production

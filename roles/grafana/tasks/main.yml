@@ -146,7 +146,7 @@
   vars:
     host_name: "grafana"
     host_ip_address: "{{docker_grafana_ip}}"
-  import_tasks: roles/network/tasks/add_to_hosts.yml
+  import_tasks: roles/base/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: register webui
@@ -190,4 +190,4 @@
   vars:
     notify: "restart grafana"
     service: "grafana.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml

@@ -159,6 +159,6 @@
   vars:
     notify: "restart system_service"
     service: "system_service.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
 
   

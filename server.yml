@@ -6,7 +6,7 @@
     ansible_python_interpreter: /usr/bin/python3
   pre_tasks:
     # ************ INIT CONFIG ***********   
-    - { import_role: { name: _shared, tasks_from: init }, tags: [ 'always' ] }                                       # detect environment and load configs
+    - { import_role: { name: base, tasks_from: init, handlers_from: empty }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************   
 
     - name: loaded values from config files
@@ -61,8 +61,6 @@
 
     - { import_role: { name: alpine }, tags: [ 'alpine' ] }                                      # registers update notifier for alpine based container images
 
-    - { import_role: { name: network }, tags: [ 'network', 'macvlan' ] }                         # basic network tweaks like enabled ipv6
-      
     - { import_role: { name: firewall }, tags: [ 'firewall', 'macvlan' ] }                       # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
@@ -77,7 +75,7 @@
     - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring
     - { import_role: { name: sensors }, tags: [ 'sensors' ] }                                    # sensors monitoring
 
-    - { import_role: { name: container }, tags: [ 'container' ] }                                # installs and initializes the container infrastructure (docker & podman)
+    - { import_role: { name: container }, tags: [ 'container', 'macvlan' ] }                     # installs and initializes the container infrastructure (docker & podman)
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # setup allowed ssh user
 

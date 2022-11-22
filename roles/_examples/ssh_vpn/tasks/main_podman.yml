@@ -71,7 +71,7 @@
   vars:
     notify: "restart ssh_vpn_podman"
     service: "ssh_vpn_podman.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
           
     
     

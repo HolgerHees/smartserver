@@ -161,10 +161,10 @@
     notify: "restart virtualbox"
     service: "vboxdrv.service"
     process: "lsmod | grep vbox"
-  import_tasks: roles/_shared/tasks/service_process_check.yml
+  import_tasks: roles/base/tasks/service_process_check.yml
   
 - name: trigger ci_service handler
   vars:
     notify: "restart ci_service"
     service: "ci_service.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml

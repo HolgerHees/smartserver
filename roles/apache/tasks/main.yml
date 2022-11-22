@@ -323,4 +323,4 @@
   vars:
     notify: "restart apache2"
     service: "apache2.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/base/tasks/service_check.yml
