@@ -160,4 +160,4 @@
   vars:
     notify: "restart weather_forecast"
     service: "weather_forecast.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

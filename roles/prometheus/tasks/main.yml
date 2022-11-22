@@ -93,7 +93,7 @@
   vars:
     host_name: "prometheus"
     host_ip_address: "{{docker_prometheus_ip}}"
-  import_tasks: roles/base/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: allow prometheus service # needed to pull from openhab endpoint
@@ -154,4 +154,4 @@
   vars:
     notify: "restart prometheus"
     service: "prometheus.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

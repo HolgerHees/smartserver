@@ -109,7 +109,7 @@
 #  vars:
 #    host_name: "cloud_nfs"
 #    host_ip_address: "{{vpn_cloud_services.local.nfs}}"
-#  import_tasks: roles/base/tasks/add_to_hosts.yml
+#  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create systemd service
@@ -123,4 +123,4 @@
   vars:
     notify: "restart cloud_nfs"
     service: "cloud_nfs.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

@@ -39,7 +39,7 @@
   vars:
     host_name: "speedtest"
     host_ip_address: "{{docker_speedtest_ip}}"
-  import_tasks: roles/base/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 #- name: allow speedtest to connect ipinfo service
@@ -90,4 +90,4 @@
   vars:
     notify: "restart speedtest"
     service: "speedtest.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

@@ -138,7 +138,7 @@
 #  vars:
 #    host_name: "wireguard_cloud"
 #    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
-#  import_tasks: roles/base/tasks/add_to_hosts.yml
+#  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 - name: prepare used ports
   set_fact:
@@ -180,4 +180,4 @@
   vars:
     notify: "restart wireguard_cloud"
     service: "wireguard_cloud.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

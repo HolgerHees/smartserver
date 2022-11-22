@@ -363,7 +363,7 @@
   vars:
     notify: "restart macvlan_bridge"
     service: "macvlan_bridge.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml
   when: "macvlan_range | length > 0"
 
 - name: register systemd service watcher
@@ -375,7 +375,7 @@
   vars:
     notify: "restart docker"
     service: "docker.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml
 
 #- name: register systemd service watcher
 #  vars:
@@ -386,4 +386,4 @@
 #  vars:
 #    notify: "restart podman"
 #    service: "podman.socket"
-#  import_tasks: roles/base/tasks/service_check.yml
+#  import_tasks: roles/_shared/tasks/service_check.yml

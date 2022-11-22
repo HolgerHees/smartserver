@@ -46,7 +46,7 @@
     git_owner:  "{{openhab_user}}"
     git_group:  "{{openhab_group}}"
     git_mode:  "u=rwX,g=rX,o="
-  import_tasks: roles/base/tasks/git_clone.yml
+  import_tasks: roles/_shared/tasks/git_clone.yml
 
 - name: set symbolic link to shared python scripts
   file:
@@ -71,7 +71,7 @@
     git_owner:  "{{openhab_user}}"
     git_group:  "{{openhab_group}}"
     git_mode:  "u=rwX,g=rX,o="
-  import_tasks: roles/base/tasks/git_clone.yml
+  import_tasks: roles/_shared/tasks/git_clone.yml
 
 # => custom python
 - name: link custom python
@@ -441,7 +441,7 @@
   vars:
     host_name: "openhab"
     host_ip_address: "127.0.0.1"
-  import_tasks: roles/base/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
 - name: create database
@@ -567,4 +567,4 @@
   vars:
     notify: "restart openhab"
     service: "openhab.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml

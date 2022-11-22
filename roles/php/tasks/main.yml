@@ -65,7 +65,7 @@
   vars:
     host_name: "php"
     host_ip_address: "{{docker_php_ip}}"
-  import_tasks: roles/base/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: allow http php service
@@ -109,4 +109,4 @@
   vars:
     notify: "restart php"
     service: "php.service"
-  import_tasks: roles/base/tasks/service_check.yml
+  import_tasks: roles/_shared/tasks/service_check.yml
