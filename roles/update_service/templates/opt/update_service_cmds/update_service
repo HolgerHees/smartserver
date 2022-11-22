@@ -62,9 +62,12 @@ class Handler(Server):
             watched_data_files.append(filename)
         
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
-
-        self.cmd_workflow.handleRunningStates()
         
+    def start(self, callback):
+        self.cmd_workflow.handleRunningStates()
+
+        super().start(callback)
+
     def terminate(self):
         self.process_watcher.terminate()
         self.cmd_executer.terminate()

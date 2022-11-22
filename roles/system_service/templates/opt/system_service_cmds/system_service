@@ -35,36 +35,35 @@ class Handler(Server):
         #self.startup_timestamp = round(datetime.now().timestamp(),3)
         
         self.mqtt = MQTTHandler(config)
-        self.mqtt.start()
-
         self.influxdb = InfluxDB(config)
-        self.influxdb.start()
-
         self.scanner = NetworkScanner(config, self, self.mqtt, self.influxdb )
-        self.scanner.start()
-        
         self.netflow = NetflowProcessor(config, self, self.influxdb )
-        self.netflow.start()
-
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb )
-        self.speedtest.start()
-
         self.fping = FPing(config, self, self.influxdb )
+
+    def start(self, callback):
+        self.mqtt.start()
+        self.influxdb.start()
+        self.scanner.start()
+        self.netflow.start()
+        self.speedtest.start()
         self.fping.start()
 
+        super().start(callback)
+
     def terminate(self):
-        if self.scanner:
-            self.scanner.terminate()
-        if self.netflow:
-            self.netflow.terminate()
-        if self.speedtest:
-            self.speedtest.terminate()
         if self.fping:
             self.fping.terminate()
-
-        self.mqtt.terminate()
-
-        self.influxdb.terminate()
+        if self.speedtest:
+            self.speedtest.terminate()
+        if self.netflow:
+            self.netflow.terminate()
+        if self.scanner:
+            self.scanner.terminate()
+        if self.influxdb:
+            self.influxdb.terminate()
+        if self.mqtt:
+            self.mqtt.terminate()
 
         super().terminate()
         
