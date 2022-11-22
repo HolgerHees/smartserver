@@ -291,11 +291,20 @@ mx.Gallery = (function( ret ) {
     {
         if( isPlaying == false ) return;
                 
-        //console.log("play");
-        var nextContainer = containers[parseInt(activeItem.dataset.index) + 1];
+        var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
+        if( typeof nextContainer == "undefined" )
+        {
+            stopPlay();
+            return;
+        }
         scrollToActiveItem(nextContainer,false);
         
-        nextContainer = containers[parseInt(activeItem.dataset.index) + 1];
+        nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
+        if( typeof nextContainer == "undefined" )
+        {
+            stopPlay();
+            return;
+        }
         var img = nextContainer.querySelector("img");
         if( img == null || img.naturalWidth  == 0 )
         { 
