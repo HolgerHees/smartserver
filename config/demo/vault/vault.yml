@@ -51,12 +51,12 @@ vault_cloud_vpn_keys: {
 vault_cloudsync_password: "default123"
 
 # used in custom external openhab config repository
-vault_telegram_bots: {
-    bot_testuser1: { # for user1
-        chat_id: "<chat_id>",
-        chat_token: "<chat_token>"
-    }
-}
+#vault_telegram_bots: {
+#    bot_testuser1: { # for user1
+#        chat_id: "<chat_id>",
+#        chat_token: "<chat_token>"
+#    }
+#}
 vault_pushover_api_key: "<api_key>"
 vault_pushover_user_key: "<user_key>"
 
