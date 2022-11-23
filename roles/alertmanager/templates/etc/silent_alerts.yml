@@ -30,14 +30,14 @@ silent_alerts:
     matchers:
       - notifyGroup="logs-kernel"
       - log=~"FS-Cache (?s).*"
-  - name: "Loki => chunk errors" # last seen 13.10.2022"
-    matchers:
-      - notifyGroup="logs-loki"
-      - log=~"(?s).*error fetching chunks(?s).*"
   - name: "Loki => context canceled" # last seen 23.11.2022"
     matchers:
       - notifyGroup="logs-loki"
       - log=~"(?s).*context canceled(?s).*"
+  - name: "Loki => error notifying scheduler" # last seen 23.11.2022"
+    matchers:
+      - notifyGroup="logs-loki"
+      - log=~"(?s).*error notifying scheduler(?s).*"
   - name: "Netdata => all log errors and warning"
     matchers:
       - notifyGroup="logs-netdata"
