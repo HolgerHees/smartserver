@@ -311,15 +311,20 @@ class Handler(threading.Thread):
         self.last_consume_error = None
 
     def connectMqtt(self):
-        print("Connection to mqtt ...", end='', flush=True)
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
-        self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
-        self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg) 
-        self.mqtt_client.connect(config.mosquitto_host, 1883, 60)
-        print(" initialized", flush=True)
-        
-        self.mqtt_client.loop_start()
+        while True:
+            try:
+                print("Connection to mqtt ...", flush=True)
+                self.mqtt_client = mqtt.Client()
+                self.mqtt_client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
+                self.mqtt_client.on_disconnect = lambda client, userdata, rc: self.on_disconnect(client, userdata, rc)
+                self.mqtt_client.on_message = lambda client, userdata, msg: self.on_message(client, userdata, msg)
+                self.mqtt_client.connect(config.mosquitto_host, 1883, 60)
+
+                self.mqtt_client.loop_start()
+                break
+            except Exception as e:
+                print("MQTT {}. Retry in 5 seconds".format(str(e)))
+                time.sleep(5)
         
     def run(self):
         #status = os.fdopen(self.dhcpListenerProcess.stdout.fileno())

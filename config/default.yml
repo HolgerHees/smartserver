@@ -71,6 +71,8 @@ default_variables: {
         # }        
     },
     
+    #"notify_log_errors": { "default": no },                        # send notifications for all log errors
+
     "update_service_software_check_enabled": { "default": yes },   # enables the update check for software used inside deployment roles / container
     "update_service_software_check_email": { "default": None },    # None, "testadmin@test.com" => sends a notification email after each check, if new software is available 
     "update_service_system_check_enabled": { "default": yes },     # enables the update check for this deployment

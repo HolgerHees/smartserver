@@ -1,68 +1,65 @@
 silent_alerts:
-  - name: "Apache => access logs"
+#  - name: "Apache => access logs"
+#    matchers:
+#      - notifyGroup="logs-apache"
+#      - log=~"(?s).*logfile=access\.log(?s).*"
+#  - name: "Apache => error logs => \"/cgi-bin/\" attacts" # errors are know attacs, but we are safe, because cgi-bin is disabled globally
+#    matchers:
+#      - notifyGroup="logs-apache"
+#      - log=~"(?s).*invalid URI(?s).*/cgi-bin/(?s).*logfile=error\.log(?s).*"
+#  - name: "CRONY" # because error output is already sendet out via email"
+#    matchers:
+#      - notifyGroup="logs-crony"
+#  - name: "Grafana => client disconnects" # happens if a client close the windows
+#    matchers:
+#      - notifyGroup="logs-grafana"
+#      - log=~"(?s).*Error writing to response(?s).*"
+#  - name: "Grafana => abort handler" # happens if a client close the windows
+#    matchers:
+#      - notifyGroup="logs-grafana"
+#      - log=~"(?s).*Request error(?s).*abort Handler(?s).*"
+#  - name: "Grafana => request timeouts" # happens if a client close the windows
+#    matchers:
+#      - notifyGroup="logs-grafana"
+#      - log=~"(?s).*Proxy request timed out(?s).*"
+#  - name: "Grafana => request completed" # happens if a client close the windows
+#    matchers:
+#      - notifyGroup="logs-grafana"
+#      - log=~"(?s).*Request Completed(?s).*"
+#  - name: "Kernel => fs cache" # last seen 13.10.2022"
+#    matchers:
+#      - notifyGroup="logs-kernel"
+#      - log=~"FS-Cache (?s).*"
+#  - name: "Loki => context canceled" # last seen 23.11.2022"
+#    matchers:
+#      - notifyGroup="logs-loki"
+#      - log=~"(?s).*context canceled(?s).*"
+#  - name: "Loki => error notifying scheduler" # last seen 23.11.2022"
+#    matchers:
+#      - notifyGroup="logs-loki"
+#      - log=~"(?s).*error notifying scheduler(?s).*"
+#  - name: "Netdata => all log errors and warning"
+#    matchers:
+#      - notifyGroup="logs-netdata"
+#  - name: "Nextcloud => news fetcher" # last seen 13.10.2022, invalid content & unable to receive content"
+#    matchers:
+#      - notifyGroup="logs-nextcloud"
+#      - log=~"(?s).*app=news(?s).*"
+#  - name: "Openhab => upnp errors" # last seen 10.11.2022
+#    matchers:
+#      - notifyGroup="logs-openhab"
+#      - log=~"(?s).*Could not restart UPnP network components(?s).*"
+#  - name: "SSH => release session errors" # last seen 13.10.2022
+#    matchers:
+#      - notifyGroup="logs-sshd"
+#      - log=~"(?s).*Failed to release session(?s).*"
+#  - name: "WickedD => org.freedesktop.DBus.Error.UnknownMethod" # last seen 11.11.2022
+#    matchers:
+#      - notifyGroup="logs-wickedd-nanny"
+  - name: "All logs except openhab"
     matchers:
-      - notifyGroup="logs-apache"
-      - log=~"(?s).*logfile=access\.log(?s).*"
-  - name: "Apache => error logs => \"/cgi-bin/\" attacts" # errors are know attacs, but we are safe, because cgi-bin is disabled globally
-    matchers:
-      - notifyGroup="logs-apache"
-      - log=~"(?s).*invalid URI(?s).*/cgi-bin/(?s).*logfile=error\.log(?s).*"
-  - name: "CRONY" # because error output is already sendet out via email"
-    matchers:
-      - notifyGroup="logs-crony"
-  - name: "Grafana => client disconnects" # happens if a client close the windows
-    matchers:
-      - notifyGroup="logs-grafana"
-      - log=~"(?s).*Error writing to response(?s).*"
-  - name: "Grafana => abort handler" # happens if a client close the windows
-    matchers:
-      - notifyGroup="logs-grafana"
-      - log=~"(?s).*Request error(?s).*abort Handler(?s).*"
-  - name: "Grafana => request timeouts" # happens if a client close the windows
-    matchers:
-      - notifyGroup="logs-grafana"
-      - log=~"(?s).*Proxy request timed out(?s).*"
-  - name: "Grafana => request completed" # happens if a client close the windows
-    matchers:
-      - notifyGroup="logs-grafana"
-      - log=~"(?s).*Request Completed(?s).*"
-  - name: "Kernel => fs cache" # last seen 13.10.2022"
-    matchers:
-      - notifyGroup="logs-kernel"
-      - log=~"FS-Cache (?s).*"
-  - name: "Loki => context canceled" # last seen 23.11.2022"
-    matchers:
-      - notifyGroup="logs-loki"
-      - log=~"(?s).*context canceled(?s).*"
-  - name: "Loki => error notifying scheduler" # last seen 23.11.2022"
-    matchers:
-      - notifyGroup="logs-loki"
-      - log=~"(?s).*error notifying scheduler(?s).*"
-  - name: "Netdata => all log errors and warning"
-    matchers:
-      - notifyGroup="logs-netdata"
-  - name: "Nextcloud => news fetcher" # last seen 13.10.2022, invalid content & unable to receive content"
-    matchers:
-      - notifyGroup="logs-nextcloud"
-      - log=~"(?s).*app=news(?s).*"
-  - name: "Openhab => upnp errors" # last seen 10.11.2022
+      - notifyGroup!~"logs-(openhab)"
+  - name: "Skip internal openhab logs"
     matchers:
       - notifyGroup="logs-openhab"
-      - log=~"(?s).*Could not restart UPnP network components(?s).*"
-  - name: "SSH => release session errors" # last seen 13.10.2022
-    matchers:
-      - notifyGroup="logs-sshd"
-      - log=~"(?s).*Failed to release session(?s).*"
-  - name: "WickedD => org.freedesktop.DBus.Error.UnknownMethod" # last seen 11.11.2022
-    matchers:
-      - notifyGroup="logs-wickedd-nanny"
-#    - matchers:
-#      - notifyGroup=~"logs-php"
-#      - log=~"(?s).*oops, unknown child \([0-9]*\) exited with code 127(?s).*"
-#    - matchers:
-#      - notifyGroup=~"logs-grafana"
-#      - log=~"(?s).*abort Handler(?s).*"
-#    - matchers:
-#      - notifyGroup=~"logs-apache"
-#      - log=~"(?s).*/grafana/api/live/ws(?s).*Mobile(?s).*"
-# **********************************
+      - log=~"(?s).*\.internal\.(?s).*"
