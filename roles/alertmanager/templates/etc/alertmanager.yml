@@ -23,7 +23,7 @@ route:
       receiver: silent
     - matchers:
       - notifyGroup="postfix"
-      receiver: silent
+      receiver: dummy
 # **********************************
     - matchers:
       - notifyGroup=~"logs-.*"
@@ -36,6 +36,7 @@ route:
 {% endfor %}{% endif %}
 
 receivers:
+  - name: dummy
   - name: silent
   - name: default
     email_configs:
