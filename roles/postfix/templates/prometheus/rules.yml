@@ -10,20 +10,20 @@ groups:
     annotations:
       summary: "Postfix down"
 
-  - alert: Mailserver outgoing queue
-    expr: 'postfix_showq_message_age_seconds_sum{job="postfix", queue="deferred"} > 900'
+  - alert: Mailserver not sending Mails
+    expr: 'postfix_showq_message_age_seconds_sum{job="postfix", queue=~"deferred|hold|maildrop"} > 900'
     for: 0m
     labels:
       notifyGroup: "postfix"
       severity: critical
     annotations:
-      summary: "Postfix not able to send mails for more then 15 minutes"
+      summary: "Postfix not able to send mails for more then 15 minutes. Check SNMP Server."
 
-  - alert: Mailserver not sending mails
-    expr: 'sum_over_time(postfix_showq_message_size_bytes_count{queue="active"}[24h]) == 0'
+  - alert: Mailserver got no new mails
+    expr: 'sum_over_time(postfix_showq_message_size_bytes_count{job="postfix"}[24h]) == 0'
     for: 0m
     labels:
       notifyGroup: "postfix"
       severity: critical
     annotations:
-      summary: "Postfix handled no mails during the last 24 hours"
+      summary: "Postfix handled no mails during the last 24 hours. Check postfix deployment."
