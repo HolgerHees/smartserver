@@ -13,6 +13,7 @@
   file:
     path: "{{global_etc}}networks/{{network_name}}"
     state: touch
+  changed_when: no
 
 - name: allow docker network {{network_name}}
   vars:

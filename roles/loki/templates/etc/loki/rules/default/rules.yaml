@@ -2,7 +2,7 @@
   - name: alerting
     interval: 60s
     rules:
-      - alert: log error
+      - alert: Log error
         expr: |
             sum by (group,log)(
               count_over_time(
@@ -19,7 +19,8 @@
             severity: error
         annotations:
             url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
-      - alert: log alert
+
+      - alert: Log alert
         expr: |
             sum by (group,log)(
               count_over_time(
@@ -37,3 +38,20 @@
         annotations:
             url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
 
+      - alert: Sendmail not working
+        expr: |
+            sum by (group) (
+              count_over_time(
+                {group="postfix"}
+                |~ "\\[{{docker_base_gateway | replace('.','\\\\.')}}\\]"
+                [24h]
+              )
+            )
+            == 0
+        for: 0s
+        labels:
+            notifyGroup: "postfix"
+            severity: critical
+        annotations:
+            summary: "Sendmail does not work properly. Check postfix deployment."
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
