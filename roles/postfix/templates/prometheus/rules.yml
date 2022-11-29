@@ -11,7 +11,7 @@ groups:
       summary: "Postfix down"
 
   - alert: Mailserver not sending mails
-    expr: 'max( postfix_showq_message_age_seconds_sum{job="postfix", queue=~"deferred|hold|maildrop"} ) > 900'
+    expr: 'max( postfix_showq_message_age_seconds_sum{job="postfix", queue=~"deferred|hold|maildrop"} ) by (instance,job) > 900'
     for: 0m
     labels:
       notifyGroup: "postfix"
@@ -20,7 +20,7 @@ groups:
       summary: "Postfix not able to send mails for more then 15 minutes. Check SNMP Server."
 
   - alert: Mailserver got no new mails
-    expr: 'sum( sum_over_time(postfix_showq_message_size_bytes_count{job="postfix"}[24h]) ) == 0'
+    expr: 'sum( sum_over_time(postfix_showq_message_size_bytes_count{job="postfix"}[24h]) ) by (instance,job) == 0'
     for: 0m
     labels:
       notifyGroup: "postfix"
