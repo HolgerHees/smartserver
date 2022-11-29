@@ -1,29 +1,29 @@
 groups:
 - name: postfix
   rules:
-  - alert: Postfix availability
+  - alert: Mailserver availability
     expr: 'postfix_up{job="postfix"} != 1'
     for: 0m
     labels:
       notifyGroup: "postfix"
       severity: critical
     annotations:
-      summary: "Mailserver down"
+      summary: "Postfix down"
 
-  - alert: Postfix deferred queue
+  - alert: Mailserver outgoing queue
     expr: 'postfix_showq_message_age_seconds_sum{job="postfix", queue="deferred"} > 900'
     for: 0m
     labels:
       notifyGroup: "postfix"
       severity: critical
     annotations:
-      summary: "Mailserver not able to send mails for more then 15 minutes"
+      summary: "Postfix not able to send mails for more then 15 minutes"
 
-  - alert: Postfix successful
+  - alert: Mailserver not sending mails
     expr: 'sum_over_time(postfix_showq_message_size_bytes_count{queue="active"}[24h]) == 0'
     for: 0m
     labels:
       notifyGroup: "postfix"
       severity: critical
     annotations:
-      summary: "Mailserver handled no mails during the last 24 hours"
+      summary: "Postfix handled no mails during the last 24 hours"
