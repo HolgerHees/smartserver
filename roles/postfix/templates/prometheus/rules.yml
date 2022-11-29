@@ -10,7 +10,7 @@ groups:
     annotations:
       summary: "Postfix down"
 
-  - alert: Mailserver not sending Mails
+  - alert: Mailserver not sending mails
     expr: 'postfix_showq_message_age_seconds_sum{job="postfix", queue=~"deferred|hold|maildrop"} > 900'
     for: 0m
     labels:
