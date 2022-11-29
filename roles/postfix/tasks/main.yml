@@ -54,6 +54,16 @@
       - "25/tcp"
   notify: "restart postfix"
 
+- name: connect to docker prometheus network
+  vars:
+    network_name: "prometheus"
+    network_container:
+      - postfix
+    notify_dependenies:
+      - "restart prometheus"
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'prometheus', 'alpine' ]
+
 - name: add container name
   vars:
     host_name: "postfix"
@@ -125,6 +135,13 @@
     mode: 0644
 
 # ***** FINALIZE *****
+- name: register prometheus metrics
+  vars:
+    name: "postfix"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  import_tasks: roles/prometheus/tasks/add_config.yml
+
 - name: allow postfix service
   vars:
     name: "postfix"

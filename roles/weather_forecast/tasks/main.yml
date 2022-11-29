@@ -24,13 +24,11 @@
     network_internal: no
     network_container:
       - cloud_mosquitto
-      - prometheus
       - mysql
     notify_dependenies:
-      - "restart prometheus"
       - "restart cloud_mosquitto"
-  import_tasks: roles/container/tasks/add_docker_network.yml
-  tags: [ 'mysql', 'prometheus', 'cloud_mosquitto', 'alpine' ]
+  import_tasks: roles/container/tasks/create_docker_network.yml
+  tags: [ 'mysql', 'cloud_mosquitto', 'alpine' ]
 
 - name: create docker container
   docker_container:
@@ -52,6 +50,16 @@
     volumes:
       - '{{global_etc}}weather_forecast/:/etc/weather_forecast:ro,z'
   notify: "restart weather_forecast"
+
+- name: connect to docker prometheus network
+  vars:
+    network_name: "prometheus"
+    network_container:
+      - weather_forecast
+    notify_dependenies:
+      - "restart prometheus"
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'prometheus', 'alpine' ]
 
 - name: check mysql service
   import_tasks: roles/mysql/tasks/wait_until_ready.yml

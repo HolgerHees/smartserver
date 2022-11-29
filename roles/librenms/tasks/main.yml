@@ -55,7 +55,7 @@
     network_container:
       - mysql
       - redis
-  import_tasks: roles/container/tasks/add_docker_network.yml
+  import_tasks: roles/container/tasks/create_docker_network.yml
   tags: [ 'mysql', 'redis' ]
 
 - name: create docker container

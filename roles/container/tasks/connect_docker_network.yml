@@ -1,0 +1,11 @@
+- name: connect to docker network {{network_name}}
+  docker_network:
+    name: "{{network_name}}"
+    connected: "{{network_container | default([])}}"
+    appends: yes
+  register: network_result
+
+- name: notify dependencies
+  command: "/bin/true"
+  notify: "{{notify_dependenies}}"
+  when: "network_result.changed and notify_dependenies | default([]) | length > 0"

@@ -423,15 +423,17 @@ for network in sorted_network_r:
                   
                 for rule in rule_r:
                     if rule['sourceIp'] == connection.ip:
-                        if rule['targetPort'] != '':
-                            value = rule['targetPort']
-                            if rule['chain'] == 'input':
-                                value = ( "_" if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp'] ) + ":" + value
-                            else:
-                                value = ( "*" if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp'] ) + ":" + value
-                                #value = rule['targetIp'] + ":" + value
+                        if rule['targetIp'] == network.subnet:
+                            targetIp = "subnet"
+                        elif rule['targetIp'] == '0.0.0.0/0':
+                            targetIp = "host" if rule['chain'] == 'input' else "*"
                         else:
-                            value = '*' if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp']
+                            targetIp = rule['targetIp']
+
+                        if rule['targetPort'] != '':
+                            value = targetIp + ":" + rule['targetPort']
+                        else:
+                            value = targetIp
                         outgoingValue.append(value)
                     
                     if network.driver == "host":

@@ -1,0 +1,11 @@
+groups:
+- name: postfix
+  rules:
+  - alert: Postfix availability
+    expr: 'postfix_up{job="postfix"} != 1'
+    for: 0m
+    labels:
+      notifyGroup: "postfix"
+      severity: critical
+    annotations:
+      summary: "Mailserver down"

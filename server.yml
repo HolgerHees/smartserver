@@ -79,6 +79,8 @@
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # setup allowed ssh user
 
+    - { import_role: { name: prometheus }, tags: [ 'prometheus' ] }                              # prometheus => needed by all service providing metrics             [docker,user:root]
+
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
     - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip != 'None'" }         # adblock server                                                    [docker,user:root]
@@ -86,6 +88,8 @@
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 
     - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
+
+    - { import_role: { name: alertmanager }, tags: [ 'alertmanager' ] }                          # alertmanager => depends on postfix                                [docker,user:root]
 
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 
@@ -96,9 +100,6 @@
     - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab                                     [docker,user:root]
     - { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
     
-    - { import_role: { name: prometheus }, tags: [ 'prometheus' ] }                              # prometheus => needed by openhab                                   [docker,user:root]
-    - { import_role: { name: alertmanager }, tags: [ 'alertmanager' ] }                          # alertmanager => needed by loki alerts                             [docker,user:root]
-
     - { import_role: { name: loki }, tags: [ 'loki' ] }                                          # grafana logstore                                                  [docker,user:10001|10001]
 
     - { import_role: { name: redis }, tags: [ 'redis' ] }                                        # redis db => needed by nextcloud                                   [docker,user:999]

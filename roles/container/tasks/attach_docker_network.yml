@@ -1,5 +1,0 @@
-- name: attach to {{network_name}} docker network
-  docker_network:
-    name: "{{network_name}}"
-    connected: "{{network_container}}"
-    appends: yes

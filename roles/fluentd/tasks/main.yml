@@ -33,7 +33,7 @@
     network_internal: yes
     network_container:
       - loki
-  import_tasks: roles/container/tasks/add_docker_network.yml
+  import_tasks: roles/container/tasks/create_docker_network.yml
   tags: [ 'loki' ]
 
 - name: create docker container

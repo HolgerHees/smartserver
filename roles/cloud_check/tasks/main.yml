@@ -24,12 +24,10 @@
     network_internal: no
     network_container:
       - cloud_mosquitto
-      - prometheus
     notify_dependenies:
-      - "restart prometheus"
       - "restart cloud_mosquitto"
-  import_tasks: roles/container/tasks/add_docker_network.yml
-  tags: [ 'prometheus', 'cloud_mosquitto', 'alpine' ]
+  import_tasks: roles/container/tasks/create_docker_network.yml
+  tags: [ 'cloud_mosquitto', 'alpine' ]
 
 - name: create docker container
   docker_container:
@@ -52,6 +50,16 @@
       - '{{global_etc}}cloud_check/:/etc/cloud_check:z'
       - '{{cloud_path}}/remote:/cloud/remote:z,rshared'
   notify: "restart cloud_check"
+
+- name: connect to docker prometheus network
+  vars:
+    network_name: "prometheus"
+    network_container:
+      - cloud_check
+    notify_dependenies:
+      - "restart prometheus"
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'prometheus', 'alpine' ]
 
 - name: copy config
   template:

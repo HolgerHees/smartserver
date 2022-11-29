@@ -40,7 +40,7 @@
       - postfix
     notify_dependenies:
       - "restart postfix"
-  import_tasks: roles/container/tasks/add_docker_network.yml
+  import_tasks: roles/container/tasks/create_docker_network.yml
   tags: [ 'postfix', 'alpine' ]
 
 - name: create docker container
@@ -71,13 +71,15 @@
      - "9093"
   notify: "restart alertmanager"
   
-- name: attach to prometheus docker network
+- name: connect to docker prometheus network
   vars:
     network_name: "prometheus"
     network_container:
       - alertmanager
-  import_tasks: roles/container/tasks/attach_docker_network.yml
-  tags: [ 'prometheus' ]  
+    notify_dependenies:
+      - "restart prometheus"
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'prometheus', 'alpine' ]
 
 - name: add container name
   vars:
