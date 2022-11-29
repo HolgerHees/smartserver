@@ -17,15 +17,7 @@
     network_name: "php"
     network_ip: "{{docker_php_ip}}"
     network_internal: no
-    network_container:
-      - mysql
-      - influxdb
-      - redis
-      - postfix # => used by nextcloud
-    notify_dependenies:
-      - "restart postfix"
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'mysql', 'influxdb', 'redis', 'postfix', 'alpine' ]
 
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
@@ -52,6 +44,7 @@
       openhab: "{{server_ip}}" # fix to make openhab reachable
       netdata: "{{server_ip}}" # fix to make netdata reachable
     volumes:
+      - '{{global_etc}}networks/php:/etc/hosts:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'                         # needed by update service and ci service
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
@@ -60,6 +53,17 @@
     exposed_ports:
       - "9000"
   notify: "restart php"
+
+- name: connect mysql, influxdb, redis & postfix with php network
+  vars:
+    network_name: "php"
+    network_container:
+      - mysql
+      - influxdb
+      - redis
+      - postfix # => used by nextcloud
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'mysql', 'influxdb', 'redis', 'postfix', 'alpine' ]
 
 - name: add container name
   vars:

@@ -38,10 +38,7 @@
     network_name: "loki"
     network_ip: "{{docker_loki_ip}}"
     network_internal: yes
-    network_container:
-      - alertmanager
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'alertmanager' ]
 
 - name: create docker container
   docker_container:
@@ -66,12 +63,21 @@
         ipv4_address: "{{docker_loki_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/loki:/etc/hosts:z'
       - '{{global_etc}}loki:/etc/loki:z'
       - '{{global_lib}}loki:/loki:z'
     exposed_ports:
      - "3100"
   notify: "restart loki"
       
+- name: connect alertmanager with loki network
+  vars:
+    network_name: "loki"
+    network_container:
+      - alertmanager
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'alertmanager' ]
+
 - name: add container name
   vars:
     host_name: "loki"

@@ -32,10 +32,7 @@
     network_name: "telegraf"
     network_ip: "{{docker_telegraf_ip}}"
     network_internal: yes
-    network_container:
-      - influxdb
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'influxdb' ]
 
 - name: create docker container
   docker_container:
@@ -55,6 +52,7 @@
         ipv4_address: "{{docker_telegraf_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/telegraf:/etc/hosts:z'
       - '{{ global_etc }}telegraf:/etc/telegraf:z'
     exposed_ports:
      - "8092/udp"  
@@ -62,6 +60,14 @@
      - "4242"  
   notify: "restart telegraf"
     
+- name: connect influxdb with telegraf network
+  vars:
+    network_name: "telegraf"
+    network_container:
+      - influxdb
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'influxdb' ]
+
 - name: add container name
   vars:
     host_name: "telegraf"

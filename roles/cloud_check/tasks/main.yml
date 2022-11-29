@@ -22,12 +22,7 @@
     network_name: "cloud_check"
     network_ip: "{{vpn_cloud_check_ip}}"
     network_internal: no
-    network_container:
-      - cloud_mosquitto
-    notify_dependenies:
-      - "restart cloud_mosquitto"
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'cloud_mosquitto', 'alpine' ]
 
 - name: create docker container
   docker_container:
@@ -47,17 +42,24 @@
         ipv4_address: "{{vpn_cloud_check_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/cloud_check:/etc/hosts:z'
       - '{{global_etc}}cloud_check/:/etc/cloud_check:z'
       - '{{cloud_path}}/remote:/cloud/remote:z,rshared'
   notify: "restart cloud_check"
 
-- name: connect to docker prometheus network
+- name: connect cloud_mosquitto with cloud_check network
+  vars:
+    network_name: "cloud_check"
+    network_container:
+      - cloud_mosquitto
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'cloud_mosquitto', 'alpine' ]
+
+- name: connect cloud_check with prometheus network
   vars:
     network_name: "prometheus"
     network_container:
       - cloud_check
-    notify_dependenies:
-      - "restart prometheus"
   import_tasks: roles/container/tasks/connect_docker_network.yml
   tags: [ 'prometheus', 'alpine' ]
 

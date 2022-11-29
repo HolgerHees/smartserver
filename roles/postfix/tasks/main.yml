@@ -54,13 +54,11 @@
       - "25/tcp"
   notify: "restart postfix"
 
-- name: connect to docker prometheus network
+- name: connect postfix with prometheus network
   vars:
     network_name: "prometheus"
     network_container:
       - postfix
-    notify_dependenies:
-      - "restart prometheus"
   import_tasks: roles/container/tasks/connect_docker_network.yml
   tags: [ 'prometheus', 'alpine' ]
 

@@ -31,10 +31,7 @@
     network_name: "fluentd"
     network_ip: "{{docker_fluentd_ip}}"
     network_internal: yes
-    network_container:
-      - loki
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'loki' ]
 
 - name: create docker container
   docker_container:
@@ -54,11 +51,20 @@
         ipv4_address: "{{docker_fluentd_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/fluentd:/etc/hosts:z'
       - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
       - '{{ "/run" if is_suse else "/var" }}/log/journal:{{ "/run" if is_suse else "/var" }}/log/journal:z'
   notify: "restart fluentd"
     
+- name: connect loki with fluentd network
+  vars:
+    network_name: "fluentd"
+    network_container:
+      - loki
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'loki', 'alpine' ]
+
 - name: add container name
   vars:
     host_name: "fluentd"

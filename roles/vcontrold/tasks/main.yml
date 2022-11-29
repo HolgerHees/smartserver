@@ -33,10 +33,7 @@
     network_name: "vcontrold"
     network_ip: "{{docker_vcontrold_ip}}"
     network_internal: yes
-    network_container:
-      - mosquitto
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: ['mosquitto']
 
 - name: create docker container
   docker_container:
@@ -56,6 +53,7 @@
         ipv4_address: "{{docker_vcontrold_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/vcontrold:/etc/hosts:z'
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
     devices:
@@ -63,6 +61,14 @@
     exposed_ports:
       - "3002"
   notify: "restart vcontrold"
+
+- name: connect mosquitto with vcontrold network
+  vars:
+    network_name: "vcontrold"
+    network_container:
+      - mosquitto
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'mosquitto' ]
 
 - name: set logrotate job
   vars:

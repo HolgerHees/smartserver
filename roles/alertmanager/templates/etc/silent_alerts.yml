@@ -58,6 +58,7 @@ silent_alerts:
 #      - notifyGroup="logs-wickedd-nanny"
   - name: "All logs except openhab"
     matchers:
+      - notifyGroup=~"logs-.*"
       - notifyGroup!~"logs-(openhab)"
   - name: "Skip internal openhab logs"
     matchers:

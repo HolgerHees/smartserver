@@ -124,6 +124,7 @@
 #        ipv4_address: "{{docker_wireguard_cloud_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/cloud_vpn:/etc/hosts:z'
       - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
     published_ports:
     # - "2050:2049/tcp"

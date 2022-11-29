@@ -30,11 +30,7 @@
     network_name: "onlyoffice"
     network_ip: "{{docker_onlyoffice_ip}}"
     network_internal: yes
-    network_container:
-      - mysql
-      - redis
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'mysql', 'redis' ]
   
 - name: create docker container
   docker_container:
@@ -66,6 +62,7 @@
         ipv4_address: "{{docker_onlyoffice_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/onlyoffice:/etc/hosts:z'
       - '{{global_etc}}onlyoffice/fonts:/usr/share/fonts/truetype/custom:z'
       - '{{global_log}}onlyoffice:/var/log/onlyoffice:z'
       - '{{global_lib}}onlyoffice:/var/www/onlyoffice/Data:z'
@@ -74,6 +71,15 @@
      - "443"  
   notify: "restart onlyoffice"
     
+- name: connect mysql & redis with onlyoffice network
+  vars:
+    network_name: "onlyoffice"
+    network_container:
+      - mysql
+      - redis
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'mysql', 'redis' ]
+
 - name: add container name
   vars:
     host_name: "onlyoffice"

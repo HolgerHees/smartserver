@@ -99,16 +99,7 @@
     network_name: "grafana"
     network_ip: "{{docker_grafana_ip}}"
     network_internal: yes
-    network_container:
-      - mysql
-      - influxdb
-      - loki
-      - prometheus
-      - alertmanager
-    notify_dependenies:
-      - "restart prometheus"
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'influxdb', 'loki', 'mysql', 'prometheus', 'alertmanager' ]
 
 - name: create docker container
   docker_container:
@@ -136,12 +127,25 @@
         ipv4_address: "{{docker_grafana_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/grafana:/etc/hosts:z'
       - '{{global_lib}}grafana:/var/lib/grafana:z'
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning:z'
     exposed_ports:
      - "3000"
   notify: "restart grafana"
       
+- name: connect mysql, influxdb, loki, prometheus & alertmanager with grafana network
+  vars:
+    network_name: "grafana"
+    network_container:
+      - mysql
+      - influxdb
+      - loki
+      - prometheus
+      - alertmanager
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'influxdb', 'loki', 'mysql', 'prometheus', 'alertmanager' ]
+
 - name: add container name
   vars:
     host_name: "grafana"

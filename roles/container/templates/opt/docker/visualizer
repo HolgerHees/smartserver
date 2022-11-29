@@ -435,6 +435,12 @@ for network in sorted_network_r:
                         else:
                             value = targetIp
                         outgoingValue.append(value)
+                    #elif rule['sourceIp'] == network.subnet:
+                    #    outgoingValue.append("subnet")
+                    elif rule['sourceIp'] != "0.0.0.0/0" and ipaddress.ip_address(connection.ip) in ipaddress.ip_network(rule['sourceIp']):
+                        targetIp = "*" if rule['targetIp'] == '0.0.0.0/0' else rule['targetIp']
+                        outgoingValue.append(targetIp)
+                        #print(rule['sourceIp'])
                     
                     if network.driver == "host":
                         activeChain = 'input' if network.name == 'host' and connection.veth != "forwarded" else 'docker-user'
@@ -458,6 +464,7 @@ for network in sorted_network_r:
                                     sourceIp = sourceIp.lstrip("!") # remove left negates
                                     if hostMatch or ( rule['targetPort'] == key and (sourceIp == '0.0.0.0' or not ipaddress.ip_address(sourceIp).is_private) ):
                                         data["access"] = "extern"
+        outgoingValue = list(set(outgoingValue))
 
         rows.append([TYPE_CONTAINER,container.type,container.name,connection.ip,"",openPorts,connection.veth,", ".join(outgoingValue)])
                 

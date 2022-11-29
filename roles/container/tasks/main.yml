@@ -137,6 +137,7 @@
     - { mode: "u=rwx,g=rx,o=", path: "/opt/docker" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/docker/config" }
     - { mode: "u=rwx,g=x,o=", path: "{{global_lib}}docker" }
+    - { mode: "u=rwx,g=x,o=", path: "{{global_etc}}networks" }
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:
@@ -323,19 +324,10 @@
 #  debug:
 #    msg: "{{macvlan_result}}"
 
-- name: prepare needed folder
-  file:
-    path: "/opt/macvlan_helper"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  when: "macvlan_range | length > 0"
-
 - name: copy macvlan_bridge cmd
   template:
-    src: "templates/macvlan/create_macvlan_bridge.sh"
-    dest: "/opt/macvlan_helper/create_macvlan_bridge.sh"
+    src: "templates/create_macvlan_bridge.sh"
+    dest: "/opt/docker/create_macvlan_bridge.sh"
     owner: root
     group: root
     mode: 0750
@@ -344,7 +336,7 @@
 
 - name: "create systemd service for 'macvlan_bridge'"
   template:
-    src: "templates/macvlan/macvlan_bridge.service"
+    src: "templates/macvlan_bridge_service"
     dest: "/etc/systemd/system/macvlan_bridge.service"
     owner: root
     group: root

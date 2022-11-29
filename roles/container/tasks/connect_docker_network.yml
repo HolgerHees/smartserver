@@ -1,11 +1,27 @@
 - name: connect to docker network {{network_name}}
   docker_network:
     name: "{{network_name}}"
-    connected: "{{network_container | default([])}}"
+    connected: "{{network_container}}"
     appends: yes
   register: network_result
 
-- name: notify dependencies
-  command: "/bin/true"
-  notify: "{{notify_dependenies}}"
-  when: "network_result.changed and notify_dependenies | default([]) | length > 0"
+- name: refresh networks
+  command: "/opt/docker/update_network_hosts {{network_name}}"
+  when: "network_result.changed"
+
+- name: check & process container dependencies
+  shell: "grep \"ip route add default\" /etc/systemd/system/{{item}}.service && systemctl status {{item}} | grep \"running\" && systemctl restart {{item}}"
+  register: service_result
+  changed_when: "service_result.rc == 0"
+  failed_when: no
+  with_items: "{{network_container}}"
+  when: "network_result.changed"
+
+#- name: debug
+#  debug:
+#    msg: "{{service_result}}"
+
+#- name: notify dependencies
+#  command: "/bin/true"
+#  notify: "{{notify_dependenies}}"
+#  when: "network_result.changed and notify_dependenies | default([]) | length > 0"

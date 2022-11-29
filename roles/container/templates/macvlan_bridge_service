@@ -7,7 +7,7 @@ After=network.target network-online.target sys-subsystem-net-devices-{{main_netw
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/opt/macvlan_helper/create_macvlan_bridge.sh
+ExecStart=/opt/docker/create_macvlan_bridge.sh
 
 [Install]
 WantedBy=multi-user.target

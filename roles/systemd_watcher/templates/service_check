@@ -13,7 +13,7 @@ from smartserver.argsparser import ArgsParser
 
 
 ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
-CONFIG_DIR = "/dataDisk/etc/systemd_watcher/services/"
+CONFIG_DIR = "{{global_etc}}systemd_watcher/services/"
 
 args_cfg = { "deployment": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -141,3 +141,5 @@ if len(expired_alerts) > 0:
 
 if args_values["deployment"]:
     exit(1 if len(fired_alerts) > 0 else 0)
+elif len(fired_alerts) > 0:
+    print(fired_alerts)

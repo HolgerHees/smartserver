@@ -52,11 +52,7 @@
     network_name: "librenms"
     network_ip: "{{docker_librenms_ip}}"
     network_internal: no
-    network_container:
-      - mysql
-      - redis
   import_tasks: roles/container/tasks/create_docker_network.yml
-  tags: [ 'mysql', 'redis' ]
 
 - name: create docker container
   docker_container:
@@ -87,6 +83,7 @@
         ipv4_address: "{{docker_librenms_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/librenms:/etc/hosts:z'
       - '{{global_etc}}librenms/nginx/:/tpls/etc/nginx/:z'
       - '{{global_etc}}librenms:/data/config:z'
       - '{{global_log}}librenms:/data/logs:z'
@@ -98,6 +95,15 @@
     exposed_ports:
      - "8000"
   notify: "restart librenms"
+
+- name: connect mysql & redis with librenms network
+  vars:
+    network_name: "librenms"
+    network_container:
+      - mysql
+      - redis
+  import_tasks: roles/container/tasks/connect_docker_network.yml
+  tags: [ 'mysql', 'redis' ]
 
 - name: add container name
   vars:

@@ -83,6 +83,7 @@
         ipv4_address: "{{docker_prometheus_ip}}"
     networks_cli_compatible: yes
     volumes:
+      - '{{global_etc}}networks/prometheus:/etc/hosts:z'
       - '{{ global_etc }}prometheus:/etc/prometheus:z'
       - '{{ global_lib }}prometheus:/prometheus:z'
     exposed_ports:

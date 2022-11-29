@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+import sys
+import json
+
+from config import config
+
+from smartserver.command import exec
+
+BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
+
+if len(sys.argv) == 1:
+    result = exec(["docker", "network", "ls"])
+    lines = result.stdout.decode("utf-8").split("\n")
+    networks = []
+    for line in lines[1:-1]:
+        columns = line.split()
+        network = columns[1]
+        networks.append(network)
+else:
+    networks = [sys.argv[1]]
+
+for network in networks:
+    result = exec(["docker", "network", "inspect", network])
+    json_result = result.stdout.decode("utf-8")
+    data = json.loads(json_result)
+
+    hosts = []
+    hosts.append("127.0.0.1       localhost")
+    hosts.append("::1     localhost ip6-localhost ip6-loopback")
+    hosts.append("fe00::0 ip6-localnet")
+    hosts.append("ff00::0 ip6-mcastprefix")
+    hosts.append("ff02::1 ip6-allnodes")
+    hosts.append("ff02::2 ip6-allrouters")
+
+    for entry in data[0]["Containers"].values():
+        hosts.append("{} {}".format(entry["IPv4Address"].split("/")[0], entry["Name"]))
+
+    if len(hosts) == 0:
+        continue
+
+    with open( "{}{}".format(BASE_PATH,network), 'w') as f:
+        f.write("\n".join(hosts))
