@@ -97,8 +97,8 @@
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
-    - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab                                     [docker,user:root]
-    - { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
+    - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab & system_info                       [docker,user:root]
+    #- { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
     
     - { import_role: { name: loki }, tags: [ 'loki' ] }                                          # grafana logstore                                                  [docker,user:10001|10001]
 

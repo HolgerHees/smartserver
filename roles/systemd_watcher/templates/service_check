@@ -13,7 +13,7 @@ from smartserver.argsparser import ArgsParser
 
 
 ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
-CONFIG_DIR = "{{global_etc}}systemd_watcher/services/"
+CONFIG_DIR = "/dataDisk/etc/systemd_watcher/services/"
 
 args_cfg = { "deployment": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -59,10 +59,11 @@ for config_file in files:
         systemd_service = config[0]
         role_name = config[1]
 
-        services[systemd_service] = { "state": [], "role_name": role_name }
+        services[systemd_service] = { "state": [], "role_name": role_name, "error": [] }
 
 warnings = []
-result = subprocess.run([ "/usr/bin/systemctl status {}".format(" ".join(services.keys())) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+result = subprocess.run([ "/usr/bin/systemctl status {}".format(" ".join(services.keys())) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=None )
+
 active_service = None
 for line in result.stdout.decode("utf-8").split("\n"):
     for systemd_service in services:
@@ -72,9 +73,31 @@ for line in result.stdout.decode("utf-8").split("\n"):
     if active_service is not None:
         services[active_service]["state"].append(line)
 
+active_service = None
+for line in result.stderr.decode("utf-8").split("\n"):
+    for systemd_service in services:
+        if " {}.service".format(systemd_service) in line:
+            active_service = systemd_service
+
+    if active_service is not None:
+        services[active_service]["error"].append(line)
+
 for systemd_service in services:
 
         role_name = services[systemd_service]["role_name"]
+        #print(state)
+
+        if len(services[systemd_service]["error"]) > 0:
+            error = "\n".join(services[systemd_service]["error"]).strip()
+            fired_alerts.append(buildAlert("Service has errors", systemd_service, "{}. Used in role '{}'".format(error, systemd_service,role_name)))
+            notified_service.append(systemd_service)
+            continue
+
+        if len(services[systemd_service]["state"]) == 0:
+            fired_alerts.append(buildAlert("Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
+            notified_service.append(systemd_service)
+            continue
+
         state = "\n".join(services[systemd_service]["state"])
 
         if services[systemd_service]["state"][0].startswith("Warning: "):
@@ -82,11 +105,11 @@ for systemd_service in services:
             notified_service.append(systemd_service)
             continue
 
-        m = re.search("could not be found|Loaded: not-found",state)
-        if m:
-            fired_alerts.append(buildAlert("Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
-            notified_service.append(systemd_service)
-            continue
+        #m = re.search("could not be found|Loaded: not-found",state)
+        #if m:
+        #    fired_alerts.append(buildAlert("Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
+        #    notified_service.append(systemd_service)
+        #    continue
 
         m = re.search("Loaded:[^;]+; (enabled|static).*",state)
         is_enabled = m is not None
@@ -135,7 +158,6 @@ if len(fired_alerts) > 0:
     triggerAlertmanagerAlert(fired_alerts)
 
 expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
-
 if len(expired_alerts) > 0:
     triggerAlertmanagerAlert(expired_alerts)
 

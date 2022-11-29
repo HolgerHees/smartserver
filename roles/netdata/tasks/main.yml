@@ -160,26 +160,26 @@
   notify: "restart netdata"
 
 # ***** INFLUXDB DATABASE ****
-- name: create database
-  vars:
-    database: "opentsdb"
-    retentions: 
-      - { retention: "14d" }
-      - { retention: "90d", name: "090d", interval: "5m", every: "6h" }
-      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
-      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
-    backup: yes
-  import_tasks: roles/influxdb/tasks/add_bucket.yml
+#- name: create database
+#  vars:
+#    database: "opentsdb"
+#    retentions:
+#      - { retention: "14d" }
+#      - { retention: "90d", name: "090d", interval: "5m", every: "6h" }
+#      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
+#      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
+#    backup: yes
+#  import_tasks: roles/influxdb/tasks/add_bucket.yml
   
 # ***** OTHER *****
-- name: register grafana configs
-  vars:
-    name: "netdata"
-    datasources: 
-      - "templates/grafana/datasources/opentsdb_influxdb.yaml"
-    dashboards:
-      - "templates/grafana/dashboards/Server Health.json"
-  import_tasks: roles/grafana/tasks/add_datasource.yml
+#- name: register grafana configs
+#  vars:
+#    name: "netdata"
+#    datasources:
+#      - "templates/grafana/datasources/opentsdb_influxdb.yaml"
+#    dashboards:
+#      - "templates/grafana/dashboards/Server Health.json"
+#  import_tasks: roles/grafana/tasks/add_datasource.yml
 
 - name: register webui
   vars:
@@ -206,6 +206,13 @@
   import_tasks: roles/cron/tasks/add_cronjob.yml
   
 # ***** FINALIZE *****
+- name: register prometheus metrics
+  vars:
+    name: "netdata"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  import_tasks: roles/prometheus/tasks/add_config.yml
+
 - name: register systemd service watcher
   vars:
     name: "netdata"

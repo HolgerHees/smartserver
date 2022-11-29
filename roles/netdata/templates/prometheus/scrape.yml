@@ -1,0 +1,12 @@
+- job_name: 'netdata'
+  scheme: https
+  metrics_path: /api/v1/allmetrics
+  params:
+      format: [prometheus]
+      # sources: as-collected | raw | average | sum | volume
+      # default is: average
+      #source: [as-collected]
+  #honor_labels: true
+  static_configs:
+  - targets:
+    - 'netdata.{{server_domain}}'
