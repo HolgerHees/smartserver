@@ -12,7 +12,7 @@
 - name: touch hosts file
   file:
     path: "{{global_etc}}networks/{{network_name}}"
-    state: file
+    state: touch
 
 - name: allow docker network {{network_name}}
   vars:
