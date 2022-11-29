@@ -65,6 +65,7 @@
     name: "RAID Check (Start)"
     cmd: "/usr/share/mdadm/mdcheck --duration 2 hours"
     file: "ansible_mdadm"
+    day: "1-7"
     weekday: "7"
     hour: "1"
     minute: "0"
