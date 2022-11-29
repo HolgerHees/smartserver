@@ -21,6 +21,9 @@ route:
       - notifyGroup="netdata"
       - severity="warn"
       receiver: silent
+    - matchers:
+      - notifyGroup="postfix"
+      receiver: silent
 # **********************************
     - matchers:
       - notifyGroup=~"logs-.*"
