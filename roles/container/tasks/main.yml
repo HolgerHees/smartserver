@@ -224,6 +224,7 @@
     - { file: 'libpod.conf', field: 'static_dir', value: '{{global_lib}}libpod/storage/' }
     - { file: 'libpod.conf', field: 'tmp_dir', value: '{{global_tmp}}libpod/' }
     - { file: 'libpod.conf', field: 'cgroup_manager', value: "systemd" }
+    - { file: 'storage.conf', field: 'driver', value: 'overlay' }
     - { file: 'storage.conf', field: 'runroot', value: '{{global_tmp}}containers/storage/' }
     - { file: 'storage.conf', field: 'graphroot', value: '{{global_lib}}containers/storage/' }
 
