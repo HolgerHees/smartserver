@@ -5,16 +5,20 @@ import json
 import subprocess
 
 from config import config
+from smartserver.argsparser import ArgsParser
 
 from smartserver.command import exec
 
 
 BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
 
-if len(sys.argv) == 1:
+args_cfg = { "container": None, "subnet": None, "gateway": None }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
+
+if args_values["container"] is None:
     raise Exception("Missing container")
 
-container = sys.argv[1]
+container = args_values["container"]
 
 result = exec(["docker", "inspect", "--format", "{{.State.Pid}}", container], exitstatus_check=False)
 if result.returncode == 1:
@@ -23,9 +27,9 @@ if result.returncode == 1:
 
 container_id = result.stdout.decode("utf-8").strip()
 
-if len(sys.argv) == 4:
-    subnet = sys.argv[2]
-    gateway = sys.argv[3]
+if args_values["subnet"] is not None and args_values["gateway"] is not None:
+    subnet = args_values["subnet"]
+    gateway = args_values["gateway"]
 
     result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
     container_routes = result.stdout.decode("utf-8").strip()

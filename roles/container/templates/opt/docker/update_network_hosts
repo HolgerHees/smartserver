@@ -7,21 +7,32 @@ import subprocess
 from config import config
 
 from smartserver.command import exec
+from smartserver.argsparser import ArgsParser
 
 
 BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
 
-if len(sys.argv) == 1:
+networks = []
 
+args_cfg = { "network": None, "container": None }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
+
+if args_values["network"] is not None:
+    networks.append(args_values["network"])
+elif args_values["container"] is not None:
+        result = exec(["docker", "inspect", args_values["container"]])
+        json_result = result.stdout.decode("utf-8")
+        data = json.loads(json_result)
+
+        for network in data[0]["NetworkSettings"]["Networks"].keys():
+            networks.append(network)
+else:
     result = exec(["docker", "network", "ls"])
     lines = result.stdout.decode("utf-8").split("\n")
-    networks = []
     for line in lines[1:-1]:
         columns = line.split()
         network = columns[1]
         networks.append(network)
-else:
-    networks = [sys.argv[1]]
 
 for network in networks:
     result = exec(["docker", "network", "inspect", network])

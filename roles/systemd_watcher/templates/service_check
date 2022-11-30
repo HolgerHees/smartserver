@@ -88,8 +88,9 @@ for systemd_service in services:
         #print(state)
 
         if len(services[systemd_service]["error"]) > 0:
-            error = "\n".join(services[systemd_service]["error"]).strip()
-            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, "Service has errors", systemd_service, "{}. Used in role '{}'".format(error, systemd_service,role_name)))
+            msg = "\n".join(services[systemd_service]["error"]).strip()
+            severity = Alertmanager.SEVERITY_WARN if "Warning" in msg else Alertmanager.SEVERITY_ERROR
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, "Service has errors", systemd_service, "{}. Used in role '{}'".format(msg, systemd_service,role_name)))
             notified_service.append(systemd_service)
             continue
 

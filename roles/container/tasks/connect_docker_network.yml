@@ -6,11 +6,11 @@
   register: network_result
 
 - name: refresh networks
-  command: "/opt/docker/update_network_hosts {{network_name}}"
+  command: "/opt/docker/update_network_hosts --network={{network_name}}"
   when: "network_result.changed"
 
 - name: fix default gateways
-  command: "/opt/docker/update_default_gateway {{item}}"
+  command: "/opt/docker/update_gateway --container={{item}}"
   register: gateway_result
   changed_when: "'add default' in gateway_result.stdout"
   with_items: "{{network_container}}"
