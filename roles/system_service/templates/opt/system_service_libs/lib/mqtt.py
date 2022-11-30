@@ -31,6 +31,7 @@ class MQTTHandler():
 
     def on_connect(self,client,userdata,flags,rc):
         logging.info("Connected to mqtt with result code:"+str(rc))
+        self.state_metrics = 1 if rc == 0  else 0
 
     def on_disconnect(self,client, userdata, rc):
         logging.info("Disconnect from mqtt with result code:"+str(rc))

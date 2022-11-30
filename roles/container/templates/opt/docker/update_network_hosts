@@ -6,13 +6,10 @@ import subprocess
 
 from config import config
 
-BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
+from smartserver.command import exec
 
-def exec( cmd ):
-    result = subprocess.run(cmd, shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-    if result.returncode != 0:
-        raise Exception(result.stdout.decode("utf-8"))
-    return result
+
+BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
 
 if len(sys.argv) == 1:
 

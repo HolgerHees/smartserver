@@ -4,11 +4,17 @@ import json
 
 
 class Alertmanager():
-    def buildAlert(notifyGroup, name, summary = None, startsAt = datetime.now(), labels = {}, url = None):
+    SEVERITY_INFO = "info"
+    SEVERITY_WARN = "warn"
+    SEVERITY_ERROR = "error"
+    SEVERITY_CRITICAL = "critical"
+
+    def buildAlert(notifyGroup, severity, name, summary = None, startsAt = datetime.now(), labels = {}, url = None):
         alert = {}
         #fired_alert["status"] = "firing"
         alert["labels"] = { **{
             "notifyGroup": notifyGroup,
+            "severity": severity,
             "alertname": name
         }, **labels }
         alert["annotations"] = {}

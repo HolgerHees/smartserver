@@ -62,13 +62,13 @@ def fetchNetdataAlerts(ts):
         netdata_alert = _netdata_alerts[netdata_alert_key]
         status = netdata_alert["status"]
 
-        level = "info"
+        level = Alertmanager.SEVERITY_INFO
         if status == "WARNING":
-            level = "warn"
+            level = Alertmanager.SEVERITY_WARN
         #elif status == "ERROR":
         #    level = "error"
         elif status == "CRITICAL":
-            level = "critical"
+            level = Alertmanager.SEVERITY_CRITICAL
         netdata_alert['status'] = level
 
         netdata_alerts.append(netdata_alert)
@@ -92,12 +92,11 @@ for alert in netdata_alerts:
 
 
     labels = {
-        "family": alert["family"],
-        "severity": alert['status']
+        "family": alert["family"]
     }
     summary = "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
     startAt = datetime.utcfromtimestamp(alert["last_status_change"])
-    fired_alert = Alertmanager.buildAlert("netdata", alert["name"], summary, startAt, labels, GENERATOR_URL)
+    fired_alert = Alertmanager.buildAlert("netdata", alert['status'], alert["name"], summary, startAt, labels, GENERATOR_URL)
     fired_alerts.append(fired_alert)
 
     if not Alertmanager.findAlert(fired_alert, alertmanager_alerts):

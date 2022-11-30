@@ -36,8 +36,8 @@ def fetchAlertmanagerAlerts():
 
     return alertmanager_alerts
 
-def buildAlert(name, service, summary = None):
-    return Alertmanager.buildAlert("service-check", name, summary, datetime.utcnow(), {"service": service})
+def buildAlert(severity, name, service, summary = None):
+    return Alertmanager.buildAlert("service-check", severity, name, summary, datetime.utcnow(), {"service": service})
 
 alertmanager_alerts = fetchAlertmanagerAlerts()
 fired_alerts = []
@@ -89,25 +89,25 @@ for systemd_service in services:
 
         if len(services[systemd_service]["error"]) > 0:
             error = "\n".join(services[systemd_service]["error"]).strip()
-            fired_alerts.append(buildAlert("Service has errors", systemd_service, "{}. Used in role '{}'".format(error, systemd_service,role_name)))
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, "Service has errors", systemd_service, "{}. Used in role '{}'".format(error, systemd_service,role_name)))
             notified_service.append(systemd_service)
             continue
 
         if len(services[systemd_service]["state"]) == 0:
-            fired_alerts.append(buildAlert("Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_WARN, "Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
             notified_service.append(systemd_service)
             continue
 
         state = "\n".join(services[systemd_service]["state"])
 
         if services[systemd_service]["state"][0].startswith("Warning: "):
-            fired_alerts.append(buildAlert("Service warning", systemd_service, services[systemd_service]["state"][0]))
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_WARN, "Service warning", systemd_service, services[systemd_service]["state"][0]))
             notified_service.append(systemd_service)
             continue
 
         #m = re.search("could not be found|Loaded: not-found",state)
         #if m:
-        #    fired_alerts.append(buildAlert("Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
+        #    fired_alerts.append(buildAlert(Alertmanager.SEVERITY_WARN, "Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
         #    notified_service.append(systemd_service)
         #    continue
 
@@ -136,7 +136,7 @@ for systemd_service in services:
                     state_flags.append("active")
 
         if len(state_flags) > 0:
-            fired_alerts.append(buildAlert("Service is not {}".format(" and ".join(state_flags)), systemd_service))
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, "Service is not {}".format(" and ".join(state_flags)), systemd_service))
             notified_service.append(systemd_service)
 
 
@@ -152,7 +152,7 @@ for line in lines:
     if _service in notified_service:
         continue
 
-    fired_alerts.append(buildAlert("Service failed", service))
+    fired_alerts.append(buildAlert(Alertmanager.SEVERITY_CRITICAL, "Service failed", service))
 
 if len(fired_alerts) > 0:
     triggerAlertmanagerAlert(fired_alerts)

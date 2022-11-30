@@ -67,6 +67,8 @@
     - { meta: flush_handlers }                                                                   # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
     # **************************************
 
+    - { import_role: { name: shared_libs }, tags: [ 'shared_libs' ] }                            # php & python libs
+
     - { import_role: { name: cron }, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
 
     - { import_role: { name: systemd_watcher }, tags: [ 'systemd_watcher' ] }                    # checking for failed service starts
@@ -116,8 +118,6 @@
     - { meta: flush_handlers }                                                                   # Previous roles are independent from upcoming roles, But lot of upcoming roles are depending from previous roles
     # **************************************
 
-    - { import_role: { name: shared_libs }, tags: [ 'shared_libs' ] }                            # php & python libs                                                           
-    
     - { import_role: { name: user }, tags: [ 'user' ] }                                          # default users and permissions (linux, samba, web ...)
     
     - { import_role: { name: netdata }, tags: [ 'netdata' ] }                                    # server monitoring

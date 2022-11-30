@@ -1,7 +1,7 @@
 groups:
 - name: system_service
   rules:
-  - alert: System service database availability
+  - alert: System service container availability
     expr: 'system_service_state{job="system_service",hostname=""} == 0'
     for: 0m
     labels:
