@@ -22,10 +22,13 @@ container = args_values["container"]
 
 result = exec(["docker", "inspect", "--format", "{{.State.Pid}}", container], exitstatus_check=False)
 if result.returncode == 1:
-    print("container not running")
+    print("container not exist")
     exit(0)
 
 container_id = result.stdout.decode("utf-8").strip()
+if container_id == "0":
+    print("container not running")
+    exit(0)
 
 if args_values["subnet"] is not None and args_values["gateway"] is not None:
     subnet = args_values["subnet"]
