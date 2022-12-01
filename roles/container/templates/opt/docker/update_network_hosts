@@ -19,7 +19,7 @@ args_cfg = { "network": None, "container": None }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
 
 if args_values["network"] is not None:
-    networks.append(args_values["network"])
+    networks[args_values["network"]] = None
 elif args_values["container"] is not None:
     result = exec(["docker", "inspect", args_values["container"]])
     json_result = result.stdout.decode("utf-8")
@@ -36,14 +36,12 @@ else:
         networks[network] = None
 
 for network in networks.keys():
-
-    check_entry = networks[network]
-
     with open( "{}{}".format(BASE_PATH,network), 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
 
         hosts_data = f.read()
 
+        check_entry = networks[network]
         if check_entry is None or check_entry not in hosts_data:
             result = exec(["docker", "network", "inspect", network])
             json_result = result.stdout.decode("utf-8")
