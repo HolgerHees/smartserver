@@ -71,9 +71,9 @@
 
     - { import_role: { name: systemd_watcher }, tags: [ 'systemd_watcher' ] }                    # checking for failed service starts
 
-    - { import_role: { name: hardware_mdadm }, tags: [ 'mdadm' ] }                               # raid weekly check cron job
-    - { import_role: { name: hardware_smartd }, tags: [ 'smartd' ] }                             # disk monitoring & checks
-    - { import_role: { name: hardware_sensors }, tags: [ 'sensors' ] }                           # sensors setups
+    - { import_role: { name: hardware_mdadm }, tags: [ 'hardware_mdadm' ] }                      # raid weekly check cron job
+    - { import_role: { name: hardware_smartd }, tags: [ 'hardware_smartd' ] }                    # disk monitoring & checks
+    - { import_role: { name: hardware_sensors }, tags: [ 'hardware_sensors' ] }                  # sensors setups
 
     - { import_role: { name: container }, tags: [ 'container', 'macvlan' ] }                     # installs and initializes the container infrastructure (docker & podman)
     - { import_role: { name: container, tasks_from: register_alpine, handlers_from: empty }, tags: [ 'alpine' ] } # registers update notifier for alpine based container images

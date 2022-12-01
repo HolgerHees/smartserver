@@ -8,41 +8,43 @@
   yum:
     name: "mdadm"
     state: present
-#  notify: "restart mdmonitor"
+  notify: "restart mdmonitor"
   when: mdraid.stat.exists and is_fedora|bool
   
 - name: install required packages => is_ubuntu
   apt:
     name: "mdadm"
     state: present
-#  notify: "restart mdmonitor"
+  notify: "restart mdmonitor"
   when: mdraid.stat.exists and is_ubuntu|bool
 
 - name: install required packages => is_suse
   zypper:
     name: "mdadm"
     state: present
-#  notify: "restart mdmonitor"
+  notify: "restart mdmonitor"
   when: mdraid.stat.exists and is_suse|bool
   
-#- name: set config
-#  lineinfile:
-#    path: "/etc/sysconfig/{{ 'mdadm' if is_suse|bool else 'mdmonitor' }}"
-#    regexp: '^{{item.field}}\s*='
-#    line: '{{item.field}}="{{item.value}}"'
-#    create: true
-#    owner: root
-#    group: root
-#    mode: 0640
-#  with_items:
-#    - { field: 'MDADM_DELAY', value: '60' }
-#    - { field: 'MDADM_MAIL', value: 'root' }
-#    - { field: 'MDADM_RAIDDEVICES', value: '/dev/md0' }
-#    - { field: 'MDADM_SCAN', value: 'yes' }
-#    - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
-#    - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
-#  notify: "restart mdmonitor"
-#  when: mdraid.stat.exists
+- name: set config
+  lineinfile:
+    path: "/etc/sysconfig/{{ 'mdadm' if is_suse|bool else 'mdmonitor' }}"
+    regexp: '^{{item.field}}\s*='
+    line: '{{item.field}}="{{item.value}}"'
+    create: true
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { field: 'MDADM_DELAY', value: '60' }
+    - { field: 'MDADM_MAIL', value: '' }
+    - { field: 'MDADM_RAIDDEVICES', value: '/dev/md0' }
+    - { field: 'MDADM_SCAN', value: 'yes' }
+    - { field: 'MDADM_SEND_MAIL_ON_START', value: 'no' }
+    - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
+    - { field: 'MDADM_CHECK_DURATION', value: '' }
+    - { field: 'MDADM_PROGRAM', value: true' } # dummy command, alerting is done with netdata and alertmanager
+  notify: "restart mdmonitor"
+  when: mdraid.stat.exists
 
 - name: disable default check cron jobs
   file: 
@@ -84,15 +86,15 @@
   when: mdraid.stat.exists
 
 # ***** FINALIZE *****
-#- name: register systemd service watcher
-#  vars:
-#    name: "mdmonitor"
-#  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
-#  when: mdraid.stat.exists
+- name: register systemd service watcher
+  vars:
+    name: "mdmonitor"
+  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  when: mdraid.stat.exists
 
-#- name: trigger mdmonitor handler
-#  vars:
-#    notify: "restart mdmonitor"
-#    service: "mdmonitor.service"
-#  import_tasks: roles/_shared/tasks/service_check.yml
-#  when: mdraid.stat.exists
+- name: trigger mdmonitor handler
+  vars:
+    notify: "restart mdmonitor"
+    service: "mdmonitor.service"
+  import_tasks: roles/_shared/tasks/service_check.yml
+  when: mdraid.stat.exists
