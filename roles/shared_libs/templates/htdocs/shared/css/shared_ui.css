@@ -262,6 +262,9 @@ div.buttonSelection div.buttonSelectionSelector {
     cursor: pointer;
     overflow: hidden;
 }
+div.buttonSelection .disabled div.buttonSelectionSelector {
+    cursor: default;
+}
 div.buttonSelection div.buttonSelectionSelector > span:before {
     transition: transform 100ms linear;
     transform: rotate(90deg);
