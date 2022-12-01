@@ -1,5 +1,5 @@
 groups:
-- name: mdadm raids
+- name: raid
   rules:
   - alert: Raid checks missing
     expr: 'max_over_time(netdata_md_status_percent_average{job="netdata",dimension="check"}[31d]) == 0'
@@ -21,7 +21,7 @@ groups:
 
 # DEGRADED missing?
 
-  - alert: Raid disks which are failed
+  - alert: Raid disks are failed
     expr: 'netdata_md_health_failed_disks_average{job="netdata"} > 0'
     for: 0m
     labels:
@@ -32,7 +32,7 @@ groups:
 
 # CRITICAL missing ?
 
-  - alert: Raid risks which are down
+  - alert: Raid disks are down
     expr: 'netdata_md_disks_disks_average{job="netdata",dimension="down"} > 0'
     for: 0m
     labels:
