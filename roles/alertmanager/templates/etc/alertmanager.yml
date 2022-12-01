@@ -16,11 +16,16 @@ route:
   repeat_interval: 24h
   receiver: default
   routes:
-# Netdata logs und warnings
+# Netdata warnings should not be sendet via email and are forced as info in webui
     - matchers:
       - notifyGroup="netdata"
       - severity="warn"
-      receiver: silent
+      receiver: info
+# Infos should not be sendet via email
+    - matchers:
+      - severity="info"
+      receiver: dummy
+# Postfix errors should not be sendet via email. Otherwise it will result in a endless loop
     - matchers:
       - notifyGroup="postfix"
       receiver: dummy
@@ -36,8 +41,8 @@ route:
 {% endfor %}{% endif %}
 
 receivers:
+  - name: info
   - name: dummy
-  - name: silent
   - name: default
     email_configs:
       - to: {{root_email}}

@@ -24,17 +24,7 @@ mx.Alarms = (function( ret ) {
                 continue;
             }
 
-            let is_silent = false
-            for( receiver of alarm.receivers )
-            {
-                if( receiver == 'silent' )
-                {
-                    is_silent = true;
-                    break;
-                }
-            }
-
-            if( is_silent )
+            if( alarm.labels.severity === 'info' || alarm.receivers.includes('info') )
             {
                 infoCount++;
             }
