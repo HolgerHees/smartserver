@@ -26,7 +26,7 @@
 
 - name: copy config
   template:
-    src: roles/smartd/templates/smartd.conf
+    src: templates/smartd.conf
     dest: /etc/smartd.conf
     owner: root
     group: root

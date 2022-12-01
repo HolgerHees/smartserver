@@ -59,25 +59,24 @@
   tasks:
     - { import_role: { name: base }, tags: [ 'base' ] }                                          # basic setup like global folders and some often used basic packages
 
-    - { import_role: { name: alpine }, tags: [ 'alpine' ] }                                      # registers update notifier for alpine based container images
-
     - { import_role: { name: firewall }, tags: [ 'firewall', 'macvlan' ] }                       # firewall configuration
 
     # ************ FLUSH HANDLER ***********    
     - { meta: flush_handlers }                                                                   # activate network configs (network & firewall). Otherwise docker related iptables rules are sometime lost and prevents to continue
     # **************************************
 
-    - { import_role: { name: shared_libs }, tags: [ 'shared_libs' ] }                            # php & python libs
-
     - { import_role: { name: cron }, tags: [ 'cron' ] }                                          # basic cron configuration + common cron jobs
+
+    - { import_role: { name: shared_libs }, tags: [ 'shared_libs' ] }                            # php & python libs
 
     - { import_role: { name: systemd_watcher }, tags: [ 'systemd_watcher' ] }                    # checking for failed service starts
 
-    - { import_role: { name: mdadm }, tags: [ 'mdadm' ] }                                        # raid monitor + weekly check cron job
-    - { import_role: { name: smartd }, tags: [ 'smartd' ] }                                      # disk monitoring
-    - { import_role: { name: sensors }, tags: [ 'sensors' ] }                                    # sensors monitoring
+    - { import_role: { name: hardware_mdadm }, tags: [ 'mdadm' ] }                               # raid weekly check cron job
+    - { import_role: { name: hardware_smartd }, tags: [ 'smartd' ] }                             # disk monitoring & checks
+    - { import_role: { name: hardware_sensors }, tags: [ 'sensors' ] }                           # sensors setups
 
     - { import_role: { name: container }, tags: [ 'container', 'macvlan' ] }                     # installs and initializes the container infrastructure (docker & podman)
+    - { import_role: { name: container, tasks_from: register_alpine, handlers_from: empty }, tags: [ 'alpine' ] } # registers update notifier for alpine based container images
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # setup allowed ssh user
 
@@ -100,7 +99,6 @@
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
     - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab & system_info                       [docker,user:root]
-    #- { import_role: { name: telegraf }, tags: [ 'telegraf' ] }                                  # telegraf => needed by netdata                                     [docker,user:root]
     
     - { import_role: { name: loki }, tags: [ 'loki' ] }                                          # grafana logstore                                                  [docker,user:10001|10001]
 
@@ -144,7 +142,7 @@
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
 
-    - { import_role: { name: rsync_backup }, tags: [ 'rsync_backup' ] }                          # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
+    - { import_role: { name: backup_rsync }, tags: [ 'backup_rsync' ] }                          # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
