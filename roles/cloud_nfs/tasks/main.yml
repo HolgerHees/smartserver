@@ -117,9 +117,9 @@
     container_name: "cloud_nfs"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
-    container_binds:
-      - "wireguard_cloud"
     container_after:
+      - "wireguard_cloud"
+    container_binds:
       - "wireguard_cloud"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
