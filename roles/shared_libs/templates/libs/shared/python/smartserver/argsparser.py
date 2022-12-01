@@ -22,10 +22,14 @@ class ArgsParser():
                 ArgsParser.setParameter(parameter, config, arg[0], arg[1] )
             else:
                 for key in parameter:
-                    if arg[0] == key and i + 1 < len(argv):
-                        ArgsParser.setParameter(parameter, config, key, argv[i+1] )
-                        i += 1
-                        break
+                    if arg[0] == key:
+                        if i + 1 < len(argv):
+                            ArgsParser.setParameter(parameter, config, key, argv[i+1] )
+                            i += 1
+                            break
+                        elif type(config[key]) == type(True):
+                            ArgsParser.setParameter(parameter, config, key, "yes" if not config[key] else "no" )
+                            break
             i += 1
             
         return parameter

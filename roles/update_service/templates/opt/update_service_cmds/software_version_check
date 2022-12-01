@@ -19,7 +19,7 @@ from smartserver.argsparser import ArgsParser
 from smartserver import command
 
 
-args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()) }
+args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()), "confirm": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
 
 last_states = {}
@@ -45,6 +45,14 @@ for config_file in files:
         if args_values["limit"] != None and args_values["limit"] != job_config['name']:
             continue
           
+        if args_values["confirm"]:
+            last_state = last_states.get(job_config['name'], None)
+            if len(last_state["updates"]) == 0:
+                current_states['states'].append(last_state)
+                print("  - '{}' skipped".format(job_config['name']))
+                continue
+            #print(last_state)
+
         print("  - '{}'".format(job_config['name']), end='')
 
         try:
