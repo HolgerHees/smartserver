@@ -10,7 +10,7 @@
   when: "network_result.changed"
 
 - name: fix default gateways
-  command: "/opt/docker/update_gateway --container={{item}}"
+  command: "/opt/docker/update_gateways --container={{item}} --gateway=default"
   register: gateway_result
   changed_when: "'add default' in gateway_result.stdout"
   with_items: "{{network_container}}"

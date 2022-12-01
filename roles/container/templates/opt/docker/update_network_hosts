@@ -2,7 +2,8 @@
 
 import sys
 import json
-import subprocess
+
+import fcntl
 
 from config import config
 
@@ -12,7 +13,7 @@ from smartserver.argsparser import ArgsParser
 
 BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
 
-networks = []
+networks = {}
 
 args_cfg = { "network": None, "container": None }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -20,38 +21,51 @@ args_values = ArgsParser.parse(args_cfg,sys.argv)
 if args_values["network"] is not None:
     networks.append(args_values["network"])
 elif args_values["container"] is not None:
-        result = exec(["docker", "inspect", args_values["container"]])
-        json_result = result.stdout.decode("utf-8")
-        data = json.loads(json_result)
+    result = exec(["docker", "inspect", args_values["container"]])
+    json_result = result.stdout.decode("utf-8")
+    data = json.loads(json_result)
 
-        for network in data[0]["NetworkSettings"]["Networks"].keys():
-            networks.append(network)
+    for network in data[0]["NetworkSettings"]["Networks"].keys():
+        networks[network] = "{} {}".format(data[0]["NetworkSettings"]["Networks"][network]["IPAddress"], args_values["container"])
 else:
     result = exec(["docker", "network", "ls"])
     lines = result.stdout.decode("utf-8").split("\n")
     for line in lines[1:-1]:
         columns = line.split()
         network = columns[1]
-        networks.append(network)
+        networks[network] = None
 
-for network in networks:
-    result = exec(["docker", "network", "inspect", network])
-    json_result = result.stdout.decode("utf-8")
-    data = json.loads(json_result)
+for network in networks.keys():
 
-    hosts = []
-    hosts.append("127.0.0.1       localhost")
-    hosts.append("::1     localhost ip6-localhost ip6-loopback")
-    hosts.append("fe00::0 ip6-localnet")
-    hosts.append("ff00::0 ip6-mcastprefix")
-    hosts.append("ff02::1 ip6-allnodes")
-    hosts.append("ff02::2 ip6-allrouters")
+    check_entry = networks[network]
 
-    for entry in data[0]["Containers"].values():
-        hosts.append("{} {}".format(entry["IPv4Address"].split("/")[0], entry["Name"]))
+    with open( "{}{}".format(BASE_PATH,network), 'r+') as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
 
-    if len(hosts) == 0:
-        continue
+        hosts_data = f.read()
 
-    with open( "{}{}".format(BASE_PATH,network), 'w') as f:
-        f.write("\n".join(hosts))
+        if check_entry is None or check_entry not in hosts_data:
+            result = exec(["docker", "network", "inspect", network])
+            json_result = result.stdout.decode("utf-8")
+            json_data = json.loads(json_result)
+
+            hosts = []
+            hosts.append("127.0.0.1       localhost")
+            hosts.append("::1     localhost ip6-localhost ip6-loopback")
+            hosts.append("fe00::0 ip6-localnet")
+            hosts.append("ff00::0 ip6-mcastprefix")
+            hosts.append("ff02::1 ip6-allnodes")
+            hosts.append("ff02::2 ip6-allrouters")
+
+            for entry in json_data[0]["Containers"].values():
+                hosts.append("{} {}".format(entry["IPv4Address"].split("/")[0], entry["Name"]))
+
+            _hosts_data = "\n".join(hosts)
+            if hosts_data != _hosts_data:
+                f.seek(0)
+                f.truncate()
+                f.write(_hosts_data)
+
+        fcntl.flock(f, fcntl.LOCK_UN);
+
+

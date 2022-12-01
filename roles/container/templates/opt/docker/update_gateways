@@ -1,0 +1,62 @@
+#!/usr/bin/python3
+
+import sys
+import json
+import subprocess
+
+from config import config
+from smartserver.argsparser import ArgsParser
+
+from smartserver.command import exec
+
+
+BASE_PATH = "{}networks/".format(config.GLOBAL_ETC)
+
+args_cfg = { "container": None, "gateway": [] }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
+
+if args_values["container"] is None:
+    raise Exception("Missing container")
+
+container = args_values["container"]
+
+result = exec(["docker", "inspect", "--format", "{{.State.Pid}}", container], exitstatus_check=False)
+if result.returncode == 1:
+    print("container not exist")
+    exit(0)
+
+container_id = result.stdout.decode("utf-8").strip()
+if container_id == "0":
+    print("container not running")
+    exit(0)
+
+for gateway in args_values["gateway"]:
+    if gateway == "default":
+        result = exec(["docker", "inspect", container])
+        json_result = result.stdout.decode("utf-8")
+        data = json.loads(json_result)
+
+        for network in data[0]["NetworkSettings"]["Networks"].values():
+            if network["IPAMConfig"] is None:
+                continue
+
+            default_gateway = network["Gateway"]
+
+            result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
+            container_routes = result.stdout.decode("utf-8").strip()
+
+            if "default via {}".format(default_gateway) not in container_routes:
+                if "default via" in container_routes:
+                    print("ip route del default")
+                    exec(["nsenter", "-n", "-t", container_id, "ip", "route", "del", "default"])
+
+                exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", "default", "via", default_gateway])
+    else:
+        subnet, gateway = gateway.split(":")
+        
+        result = exec(["nsenter", "-n", "-t", container_id, "ip", "route", "list"])
+        container_routes = result.stdout.decode("utf-8").strip()
+
+        if "{} via {}".format(subnet, gateway) not in container_routes:
+            print("ip route add {} via {}".format(subnet,gateway))
+            exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", subnet, "via", gateway])
