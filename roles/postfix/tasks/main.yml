@@ -153,6 +153,15 @@
     container_name: "postfix"
   import_tasks: roles/container/tasks/add_docker_service.yml
 
+- name: create cron 'ping' job
+  vars:
+    name: "Daily Ping"
+    cmd: "printf \"Subject: Daily test ping\\nThis is just a test Message to confirm that mail queue is working\" | /usr/sbin/sendmail root"
+    file: "ansible_postfix"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/tasks/add_cronjob.yml
+
 - name: register systemd service watcher
   vars:
     name: "postfix"
