@@ -144,7 +144,7 @@
   import_tasks: roles/apache_webui/tasks/add_webui.yml
   
 # ***** FINALIZE *****
-- name: register prometheus metrics
+- name: register prometheus rules & metrics
   vars:
     name: "weatcher_forecast"
     rules_file: "templates/prometheus/rules.yml"

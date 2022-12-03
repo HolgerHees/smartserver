@@ -106,7 +106,7 @@
 #  when: mdraid.stat.exists
 
 # ***** FINALIZE *****
-- name: register prometheus metrics
+- name: register prometheus rules & metrics
   vars:
     name: "mdmonitor"
     rules_file: "templates/prometheus/rules.yml"
@@ -114,7 +114,7 @@
   import_tasks: roles/prometheus/tasks/add_config.yml
   when: mdraid.stat.exists
 
-- name: register loki metrics
+- name: register loki rules
   vars:
     name: "mdmonitor"
     rules_file: "templates/loki/rules.yml"

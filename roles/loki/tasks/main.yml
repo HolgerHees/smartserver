@@ -27,7 +27,7 @@
     - "loki/local-config.yaml"
   notify: "restart loki"
   
-- name: register loki metrics
+- name: register loki rules
   vars:
     name: "rules"
     rules_file: "templates/etc/loki/rules/default/rules.yaml"

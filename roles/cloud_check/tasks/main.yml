@@ -86,7 +86,7 @@
   notify: "restart cloud_check"
 
 # ***** FINALIZE *****
-- name: register prometheus metrics
+- name: register prometheus rules & metrics
   vars:
     name: "cloud_check"
     rules_file: "templates/prometheus/rules.yml"

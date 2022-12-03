@@ -133,14 +133,14 @@
     mode: 0644
 
 # ***** FINALIZE *****
-- name: register prometheus metrics
+- name: register prometheus rules & metrics
   vars:
     name: "postfix"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/tasks/add_config.yml
 
-- name: register loki metrics
+- name: register loki rules
   vars:
     name: "postfix"
     rules_file: "templates/loki/rules.yml"

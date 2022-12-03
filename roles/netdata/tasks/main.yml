@@ -206,7 +206,7 @@
   import_tasks: roles/cron/tasks/add_cronjob.yml
   
 # ***** FINALIZE *****
-- name: register prometheus metrics
+- name: register prometheus rules & metrics
   vars:
     name: "netdata"
     rules_file: "templates/prometheus/rules.yml"

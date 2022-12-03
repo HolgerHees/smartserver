@@ -462,7 +462,7 @@
   import_tasks: roles/influxdb/tasks/add_bucket.yml
 
 # ***** FINALIZE *****
-- name: register prometheus metrics
+- name: register prometheus rules & metrics
   vars:
     name: "openhab"
     rules_file: "templates/prometheus/rules.yml"

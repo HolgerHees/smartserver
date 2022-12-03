@@ -7,7 +7,8 @@
 - { import_role: { name: cloud_nfs }, tags: [ 'cloud_nfs', 'alpine' ] }
 - { import_role: { name: cloud_mosquitto }, tags: [ 'cloud_mosquitto', 'alpine' ] }     # [docker,user:1883]
 - { import_role: { name: cloud_check }, tags: [ 'cloud_check', 'alpine' ] }
-#- { import_role: { name: cloud_backup }, tags: [ 'cloud_backup' ], vars: { cloud_backup_sync_target_path: "{{cloud_path}}remote/<client1>/" } }
+
+#- { import_role: { name: backup_cloud }, tags: [ 'cloud_backup', 'backup_cloud' ], vars: { cloud_backup_sync_target_path: "{{cloud_path}}remote/<client1>/", cloud_backup_name: "client1" } }
 
 - { import_role: { name: weather_forecast }, tags: [ 'weather_forecast', 'alpine' ], vars: { publish_topic: no } }
 
