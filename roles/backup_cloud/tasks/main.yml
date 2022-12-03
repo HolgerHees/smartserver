@@ -82,10 +82,6 @@
     dest: "/opt/rclone/backup.sh"
     mode: 0700
 
-#- name: prepare sync cmd
-#  set_fact:
-#    cloudback_sync_cmd: "/usr/bin/flock -n {{global_tmp}}cloud_backup.lock /opt/rclone/rclone --log-file={{global_log}}cloud_backup/cloud_backup.log --log-level INFO --bwlimit \"02:00,30M 05:00,20M 06:00,5M 23:00,10M\" --copy-links --config=/opt/rclone/rclone.config --crypt-remote={{cloud_backup_sync_target_path}}backup sync {{global_lib}}cloud_backup backup:"
-      
 # FINALIZE  
 - name: register loki rules
   vars:
@@ -96,8 +92,7 @@
 - name: create cron job => is_production
   vars:
     name: "RClone {{cloud_backup_name}}"
-    cmd: "/opt/rclone/backup.sh {{cloud_backup_name}} {{cloud_backup_sync_target_path}}backup"
-#    cmd: "( mountpoint -q {{cloud_backup_sync_target_path}} && {{cloudback_sync_cmd}} ) || ((>&2 echo \"{{cloud_backup_sync_target_path}} not mounted\"); exit 1)"
+    cmd: "/opt/rclone/backup.sh {{cloud_backup_name}} {{cloud_backup_sync_target_path}}backup > /dev/null && echo \"Cloud backup '{{cloud_backup_name}}' was successful\" | systemd-cat -t cloud_backup -p 6"
     file: "ansible_cloud_backup"
     hour: "2"
     minute: "0"

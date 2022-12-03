@@ -18,9 +18,10 @@ fi
 /usr/bin/flock -n "$LOCK_FILE" /opt/rclone/rclone --log-file="$LOG_FILE" --log-level INFO --bwlimit="$BW_LIMIT" --copy-links --config=/opt/rclone/rclone.config --crypt-remote="$TARGET" sync "$SOURCE" backup:
 if [ $? -eq 1 ] 
 then
-    >&2 echo "Backup not successful"
+    >&2 echo "Cloud backup '$NAME' was not successful"
     exit 1
 else
-    echo "Cloud backup '$NAME' was successful" | systemd-cat -t cloud_backup -p 6
+    echo "Cloud backup '$NAME' was successful"
+    exit 0
 fi
 
