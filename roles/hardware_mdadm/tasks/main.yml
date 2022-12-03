@@ -59,7 +59,7 @@
     - { field: 'MDADM_MAIL', value: '' }
     - { field: 'MDADM_RAIDDEVICES', value: '/dev/md0' }
     - { field: 'MDADM_SCAN', value: 'yes' }
-    - { field: 'MDADM_SEND_MAIL_ON_START', value: 'no' }
+    - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
     - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
     - { field: 'MDADM_CHECK_DURATION', value: '2 hours' }
     - { field: 'MDADM_PROGRAM', value: /opt/mdadm/mdevents.sh' }

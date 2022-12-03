@@ -7,9 +7,11 @@
             absent_over_time(
               {group="cloud_backup"}
               |~ "Cloud backup '{{cloud_backup_name}}' was successful"
-              [1d]
+#              [1d]
+              [5m]
             )
-        for: 0
+#        for: 0
+        for: 1d
         labels:
             notifyGroup: "cloud_backup"
             severity: critical
