@@ -7,10 +7,8 @@
             absent_over_time(
               {group="postfix"}
               |~ "\\[{{docker_base_gateway | replace('.','\\\\.')}}\\]"
-#              [1d]
               [5m]
             )
-#        for: 0
         for: 1d
         labels:
             notifyGroup: "postfix"

@@ -2,15 +2,13 @@
   - name: backup_{{cloud_backup_name}}
     interval: 60s
     rules:
-      - alert: Cloud backup '{{cloud_backup_name}}'' not working
+      - alert: Cloud backup '{{cloud_backup_name}}' not working
         expr: |
             absent_over_time(
               {group="cloud_backup"}
               |~ "Cloud backup '{{cloud_backup_name}}' was successful"
-#              [1d]
               [5m]
             )
-#        for: 0
         for: 1d
         labels:
             notifyGroup: "cloud_backup"
