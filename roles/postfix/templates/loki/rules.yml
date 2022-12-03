@@ -1,0 +1,18 @@
+ groups:
+  - name: sendmail
+    interval: 60s
+    rules:
+      - alert: Sendmail not working
+        expr: |
+            absent_over_time(
+              {group="postfix"}
+              |~ "\\[{{docker_base_gateway | replace('.','\\\\.')}}\\]"
+              [1d]
+            )
+        for: 0
+        labels:
+            notifyGroup: "postfix"
+            severity: critical
+        annotations:
+            summary: "No mails, comming from sendmail, during the last 24 hours."
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"

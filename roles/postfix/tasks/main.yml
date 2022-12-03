@@ -140,6 +140,13 @@
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/tasks/add_config.yml
 
+- name: register loki metrics
+  vars:
+    name: "postfix"
+    rules_file: "templates/loki/rules.yml"
+  import_tasks: roles/loki/tasks/add_config.yml
+  when: mdraid.stat.exists
+
 - name: allow postfix service
   vars:
     name: "postfix"

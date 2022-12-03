@@ -2,7 +2,7 @@
   stat:
     path: "/etc/mdadm.conf"
   register: mdraid
-  tags: "cron_job"
+  tags: [ "loki_config" ]
 
 - name: install required packages => is_fedora
   yum:
@@ -61,51 +61,66 @@
     - { field: 'MDADM_SCAN', value: 'yes' }
     - { field: 'MDADM_SEND_MAIL_ON_START', value: 'no' }
     - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
-    - { field: 'MDADM_CHECK_DURATION', value: '' }
+    - { field: 'MDADM_CHECK_DURATION', value: '2 hours' }
     - { field: 'MDADM_PROGRAM', value: /opt/mdadm/mdevents.sh' }
   notify: "restart mdmonitor"
   when: mdraid.stat.exists
 
-- name: disable default check cron jobs
-  file: 
-    path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
-    state: absent
-  when: mdraid.stat.exists
+#- name: disable default check cron jobs
+#  file: 
+#    path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
+#    state: absent
+#  when: mdraid.stat.exists
 
-- name: set cron job env
-  cron:
-    name: PATH
-    env: yes
-    value: /sbin:/usr/sbin:/bin:/usr/bin
-    cron_file: ansible_mdadm
-    user: root
-  tags: "cron_job"
-  when: mdraid.stat.exists
+#- name: set cron job env
+#  cron:
+#    name: PATH
+#    env: yes
+#    value: /sbin:/usr/sbin:/bin:/usr/bin
+#    cron_file: ansible_mdadm
+#    user: root
+#  tags: "cron_job"
+#  when: mdraid.stat.exists
     
-- name: create cron 'start' job
-  vars:
-    name: "RAID Check (Start)"
-    cmd: "/usr/share/mdadm/mdcheck --duration 2 hours"
-    file: "ansible_mdadm"
-    day: "1-7"
-    weekday: "7"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: mdraid.stat.exists
+#- name: create cron 'start' job
+#  vars:
+#    name: "RAID Check (Start)"
+#    cmd: "/usr/share/mdadm/mdcheck --duration 2 hours"
+#    file: "ansible_mdadm"
+#    day: "1-7"
+#    weekday: "7"
+#    hour: "1"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: mdraid.stat.exists
 
-- name: create cron 'continue' job
-  vars:
-    name: "RAID Check (Continue)"
-    cmd: "/usr/share/mdadm/mdcheck --continue --duration 2 hours"
-    file: "ansible_mdadm"
-    weekday: "1-6"
-    hour: "1"
-    minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
-  when: mdraid.stat.exists
+#- name: create cron 'continue' job
+#  vars:
+#    name: "RAID Check (Continue)"
+#    cmd: "/usr/share/mdadm/mdcheck --continue --duration 2 hours"
+#    file: "ansible_mdadm"
+#    weekday: "1-6"
+#    hour: "1"
+#    minute: "0"
+#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  when: mdraid.stat.exists
 
 # ***** FINALIZE *****
+- name: register prometheus metrics
+  vars:
+    name: "mdmonitor"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  import_tasks: roles/prometheus/tasks/add_config.yml
+  when: mdraid.stat.exists
+
+- name: register loki metrics
+  vars:
+    name: "mdmonitor"
+    rules_file: "templates/loki/rules.yml"
+  import_tasks: roles/loki/tasks/add_config.yml
+  when: mdraid.stat.exists
+
 - name: register systemd service watcher
   vars:
     name: "mdmonitor"

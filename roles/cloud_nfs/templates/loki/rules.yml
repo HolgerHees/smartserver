@@ -1,0 +1,21 @@
+ groups:
+  - name: cloud_nfs
+    interval: 60s
+    rules:
+      - alert: Cloud NFS timed out
+        expr: |
+            sum by (group) (
+              count_over_time(
+                {group="kernel"}
+                |~ "nfs: server .* not responding, timed out"
+                [2m]
+              )
+            )
+            > 0
+        for: 24h
+        labels:
+            notifyGroup: "cloud_nfs"
+            severity: critical
+        annotations:
+            summary: "Cloud NFS timed out. Check for orphans nfs kernel processes. Maybe you have to reboot your system."
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"

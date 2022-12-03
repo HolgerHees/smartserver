@@ -25,9 +25,14 @@
     mode: 0640
   with_items:
     - "loki/local-config.yaml"
-    - "loki/rules/default/rules.yaml"
   notify: "restart loki"
   
+- name: register loki metrics
+  vars:
+    name: "rules"
+    rules_file: "templates/etc/loki/rules/default/rules.yaml"
+  import_tasks: roles/loki/tasks/add_config.yml
+
 - name: check started docker
   systemd:
     name: docker

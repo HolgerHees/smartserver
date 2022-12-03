@@ -33,8 +33,8 @@ ingester:
         store: inmemory
       replication_factor: 1
     final_sleep: 0s
-  chunk_idle_period: 1h       # Any chunk not receiving new logs in this time will be flushed
-  max_chunk_age: 1h           # All chunks will be flushed when they hit this age, default is 1h
+  chunk_idle_period: 24h       # Any chunk not receiving new logs in this time will be flushed
+  max_chunk_age: 24h           # All chunks will be flushed when they hit this age, default is 1h
   chunk_retain_period: 30s
   max_transfer_retries: 0
   wal:

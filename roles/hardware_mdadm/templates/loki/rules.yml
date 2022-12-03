@@ -1,0 +1,18 @@
+ groups:
+  - name: mdmonitor
+    interval: 60s
+    rules:
+      - alert: MDMonitor not working
+        expr: |
+            absent_over_time(
+              {group="mdmonitor"}
+              |~ "A test message for"
+              [1d]
+            )
+        for: 0
+        labels:
+            notifyGroup: "mdmonitor"
+            severity: critical
+        annotations:
+            summary: "Missing test message for more then 24 hours."
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"

@@ -1,0 +1,53 @@
+groups:
+- name: raid
+  rules:
+  - alert: Raid checks missing
+    expr: 'max_over_time(netdata_md_status_percent_average{job="netdata",dimension="check"}[31d]) == 0'
+    for: 0m
+    labels:
+      notifyGroup: "mdadm"
+      severity: critical
+    annotations:
+      summary: "No raid checks running during last 31 days"
+
+  - alert: Raid operation progress
+    expr: 'netdata_md_status_percent_average{job="netdata"} > 0'
+    for: 0m
+    labels:
+      notifyGroup: "mdadm"
+      severity: info
+    annotations:
+      summary: "Disk '{{'{{'}}$labels.family{{'}}'}}' operation '{{'{{'}}$labels.dimension{{'}}'}}' is {{'{{'}}$value{{'}}'}}% done"
+
+# DEGRADED missing?
+
+  - alert: Raid disks are failed
+    expr: 'netdata_md_health_failed_disks_average{job="netdata"} > 0'
+    for: 0m
+    labels:
+      notifyGroup: "mdadm"
+      severity: critical
+    annotations:
+      summary: "{{'{{'}}$value{{'}}'}} disks on raid '{{'{{'}}$labels.dimension{{'}}'}}' are failed"
+
+# CRITICAL missing ?
+
+  - alert: Raid disks are down
+    expr: 'netdata_md_disks_disks_average{job="netdata",dimension="down"} > 0'
+    for: 0m
+    labels:
+      notifyGroup: "mdadm"
+      severity: critical
+    annotations:
+      summary: "{{'{{'}}$value{{'}}'}} disks on raid '{{'{{'}}$labels.family{{'}}'}}' are down"
+
+#  - alert: Unsynchronized blocks
+#    expr: 'netdata_md_mismatch_cnt_unsynchronized_blocks_average{job="netdata"} > 0'
+#    for: 0m
+#    labels:
+#      notifyGroup: "mdadm"
+#      severity: warning
+#    annotations:
+#      summary: "Disk raid '{{'{{'}}$labels.dimension{{'}}'}}' has {{'{{'}}$value{{'}}'}} unsynchronized blocks"
+
+# SMARTD missing ?

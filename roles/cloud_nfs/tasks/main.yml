@@ -112,6 +112,12 @@
 #  import_tasks: roles/_shared/tasks/add_to_hosts.yml
 
 # ***** FINALIZE *****
+- name: register loki metrics
+  vars:
+    name: "cloud_nfs"
+    rules_file: "templates/loki/rules.yml"
+  import_tasks: roles/loki/tasks/add_config.yml
+
 - name: create systemd service
   vars:
     container_name: "cloud_nfs"
