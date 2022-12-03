@@ -48,7 +48,7 @@ schema_config:
       schema: v11
       index:
         prefix: index_
-        period: 168h
+        period: 24h
 
 storage_config:
   boltdb:
@@ -61,15 +61,23 @@ chunk_store_config:
   max_look_back_period: 0s
 
 limits_config:
-  retention_period: 672h
+  retention_period: 4320h # 180 days
+  #retention_stream:
+  #- selector: '{namespace="dev"}'
+  #  priority: 1
+  #  period: 24h
   enforce_metric_name: false
   reject_old_samples: true
-  reject_old_samples_max_age: 168h
+  reject_old_samples_max_age: 168h # 7 days
   max_query_series: 100000
 
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: 672h
+compactor:
+  working_directory: /loki/compactor
+  shared_store: filesystem
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 100
  
 ruler:
   storage:
