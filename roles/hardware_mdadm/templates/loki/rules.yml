@@ -7,9 +7,9 @@
             absent_over_time(
               {group="mdmonitor"}
               |~ "A test message for"
-              [5m]
+              [1d]
             )
-        for: 1d
+        for: 0
         labels:
             notifyGroup: "mdmonitor"
             severity: critical

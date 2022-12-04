@@ -13,4 +13,6 @@ elif [ $event == "DegradedArray" ]; then
     printf "Subject: RAID: A degraded array has been detected on $device\n\n$state" | sendmail root
 elif [ $event == "TestMessage" ]; then
     printf "A test message for $device" | systemd-cat -t mdmonitor -p 6
+else
+    printf "Unknown $event for $device\n\n$state" | sendmail root
 fi

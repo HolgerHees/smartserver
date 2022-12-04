@@ -62,7 +62,7 @@
     - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
     - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
     - { field: 'MDADM_CHECK_DURATION', value: '2 hours' }
-    - { field: 'MDADM_PROGRAM', value: /opt/mdadm/mdevents.sh' }
+    - { field: 'MDADM_PROGRAM', value: '/opt/mdadm/mdevents.sh' }
   notify: "restart mdmonitor"
   when: mdraid.stat.exists
 
