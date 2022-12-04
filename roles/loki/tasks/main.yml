@@ -13,7 +13,7 @@
   with_items:
     - "{{ global_etc }}loki/"
     - "{{ global_etc }}loki/rules"
-    - "{{ global_etc }}loki/rules/default"
+    - "{{ global_etc }}loki/rules/fake"
     - "{{ global_lib }}loki/"
   
 - name: copy config
@@ -30,7 +30,7 @@
 - name: register loki rules
   vars:
     name: "rules"
-    rules_file: "templates/etc/loki/rules/default/rules.yaml"
+    rules_file: "templates/etc/loki/rules.yaml"
   import_tasks: roles/loki/tasks/add_config.yml
 
 - name: check started docker

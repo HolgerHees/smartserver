@@ -98,6 +98,13 @@
     icons: [ 'templates/webui/icons/alertmanager_logo.svg' ]
   import_tasks: roles/apache_webui/tasks/add_webui.yml
 
+- name: register grafana configs
+  vars:
+    name: "alertmanager"
+    datasources: 
+      - "templates/grafana/datasources/alertmanager.yaml"
+  import_tasks: roles/grafana/tasks/add_datasource.yml
+  
 - name: copy apache vhost
   vars:
     sub_domain: "alertmanager"
