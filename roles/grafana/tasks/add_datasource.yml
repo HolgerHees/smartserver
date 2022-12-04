@@ -6,8 +6,8 @@
     group: root
     mode: 0640
   with_items: "{{datasources | default([]) }}"
-  notify: "restart grafana"
-#  tags: ['grafana_config']
+#  notify: "restart grafana"
+  tags: ['grafana_config']
 
 - name: "copy dashboard files for '{{name}}'"
   copy:
