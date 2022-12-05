@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.35.1"
+    netdata_version: "1.37.0"
   tags: [ 'update_notifier_config' ]
 
 #- name: install docker repository => is_fedora
@@ -20,8 +20,6 @@
     state: present
   notify: "restart netdata"
   when: is_fedora|bool
-
-#wget --content-disposition https://packagecloud.io/netdata/netdata/packages/ubuntu/hirsute/netdata_1.31.0_amd64.deb/download.deb
 
 #- name: add netdata gpg key => is_ubuntu
 #  apt_key:
@@ -51,12 +49,11 @@
   notify: "restart netdata"
   when: is_ubuntu|bool
 
-#https://packagecloud.io/netdata/netdata/packages/opensuse/15.3/netdata-1.31.0-1.x86_64.rpm/download.rpm
 - name: add zypper repository => is_suse
   zypper_repository:
     name: Network (netdata)
-    repo: "http://download.opensuse.org/repositories/network/{{ 'openSUSE_Leap_' if ansible_distribution_version == '15.3' else ''}}{{ansible_distribution_version}}/"
-#    repo: "http://download.opensuse.org/repositories/network/{{ 'openSUSE_Leap_' if ansible_distribution_version == '15.3' else ''}}$releasever/"
+#   repo: "http://download.opensuse.org/repositories/network/{{ 'openSUSE_Leap_' if ansible_distribution_version == '15.3' else ''}}{{ansible_distribution_version}}/"
+    repo: "http://download.opensuse.org/repositories/home:/monitoringslm:/netdata/{{ansible_distribution_version}}/"
     auto_import_keys: yes
     priority: "100"
     state: present
