@@ -163,7 +163,7 @@
 - name: create cron 'ping' job
   vars:
     name: "Daily Ping"
-    cmd: "printf \"Subject: Daily test message\\nThis is just a test message to confirm that mail delivery is working\" | /usr/sbin/sendmail root"
+    cmd: "printf \"Subject: Daily test message\\nThis is a test message to confirm that mail delivery is working\" | /usr/sbin/sendmail root"
     file: "ansible_postfix"
     hour: "1"
     minute: "0"

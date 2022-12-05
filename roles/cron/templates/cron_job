@@ -1,1 +1,1 @@
-/usr/bin/crony.sh '{{cron_name}} | {{cron_cmd}}' 
+/usr/bin/crony.sh '{{cron_name}} | {{cron_cmd | replace("'","'\\''") }}' 

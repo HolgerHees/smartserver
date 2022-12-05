@@ -13,6 +13,16 @@ elif [ $event == "DegradedArray" ]; then
     printf "Subject: RAID: A degraded array has been detected on $device\n\n$state" | sendmail root
 elif [ $event == "TestMessage" ]; then
     printf "A test message for $device" | systemd-cat -t mdmonitor -p 6
-else
-    printf "Unknown $event for $device\n\n$state" | sendmail root
+#elif [ $event == "DeviceDisappeared" ]; then
+#elif [ $event == "RebuildStarted" ]; then
+#elif [ $event == "Rebuild20" ]; then
+#elif [ $event == "Rebuild40" ]; then
+#elif [ $event == "Rebuild60" ]; then
+#elif [ $event == "Rebuild80" ]; then
+#elif [ $event == "RebuildFinished" ]; then
+#elif [ $event == "SpareActive" ]; then
+#elif [ $event == "NewArray" ]; then
+#elif [ $event == "MoveSpare" ]; then
+#elif [ $event == "SparesMissing" ]; then
 fi
+

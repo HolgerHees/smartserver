@@ -26,7 +26,7 @@
 - name: create discovery all cron job
   vars:
     name: "LibreNMS Discovery All"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery-wrapper.py 8 >> /dev/null 2>&1\""
+    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery-wrapper.py 8 > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*/6"
     minute: "33"
@@ -35,7 +35,7 @@
 - name: create discovery new cron job
   vars:
     name: "LibreNMS Discovery New"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery.php  -h new >> /dev/null 2>&1\""
+    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery.php  -h new > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
     minute: "*/5"
@@ -44,7 +44,7 @@
 - name: create poller cron job
   vars:
     name: "LibreNMS Poller"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 >> /dev/null 2>&1\""
+    cmd: "docker exec librenms sh -c \"/opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
     minute: "*/{{librenms_poller_interval}}"
@@ -53,7 +53,7 @@
 - name: create daily cron job
   vars:
     name: "LibreNMS Daily"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/daily.sh >> /dev/null 2>&1\""
+    cmd: "docker exec librenms sh -c \"/opt/librenms/daily.sh > /dev/null 2>&1\""
     file: "ansible_librenms"
     user: "1000"
     hour: "0"
@@ -63,7 +63,7 @@
 - name: create alerts cron job
   vars:
     name: "LibreNMS Alerts"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/alerts.php >> /dev/null 2>&1\""
+    cmd: "docker exec librenms sh -c \"/opt/librenms/alerts.php > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
     minute: "*"
