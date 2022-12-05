@@ -1,5 +1,5 @@
  groups:
-  - name: alerting
+  - name: log_errors
     interval: 60s
     rules:
       - alert: Log error

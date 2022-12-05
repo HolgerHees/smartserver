@@ -27,12 +27,6 @@
     - "loki/local-config.yaml"
   notify: "restart loki"
   
-- name: register loki rules
-  vars:
-    name: "rules"
-    rules_file: "templates/etc/loki/rules.yaml"
-  import_tasks: roles/loki/tasks/add_config.yml
-
 - name: check started docker
   systemd:
     name: docker
@@ -104,6 +98,12 @@
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/tasks/add_config.yml
+
+- name: register loki rules
+  vars:
+    name: "loki"
+    rules_file: "templates/etc/loki/rules.yaml"
+  import_tasks: roles/loki/tasks/add_config.yml
 
 - name: register webui
   vars:
