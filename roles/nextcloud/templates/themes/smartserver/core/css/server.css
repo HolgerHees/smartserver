@@ -1,5 +1,6 @@
-:root {
+:root * {
     --color-primary: #1976D2 !important;
+    --image-background: None !important;
 }
 #body-user #header
 {
