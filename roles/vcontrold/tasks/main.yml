@@ -1,6 +1,6 @@
 - name: set vcontrold version
   set_fact:
-    vcontrold_version: 'v0.98.11'
+    vcontrold_version: 'v0.98.12'
   tags: [ 'update_notifier_config' ]
   
 - name: prepare needed folder
