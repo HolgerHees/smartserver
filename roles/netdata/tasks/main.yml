@@ -46,7 +46,7 @@
 
 - name: add zypper repository => is_suse
   zypper_repository:
-    name: netdata
+    name: "Netdata"
     repo: "https://packagecloud.io/netdata/netdata/opensuse/{{ansible_distribution_version}}/x86_64/"
     auto_import_keys: yes
     priority: "100"
