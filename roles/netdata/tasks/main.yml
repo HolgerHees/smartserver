@@ -1,46 +1,29 @@
 - name: set version
   set_fact:
-    netdata_version: "1.37.0"
+    netdata_version: "1.37.1"
   tags: [ 'update_notifier_config' ]
 
-#- name: install docker repository => is_fedora
-#  command: dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-#  args:
-#    warn: no
-#  changed_when: no
-#  when: is_fedora|bool
-
-- name: install required packages => is_fedora
+- name: install required packages 1/3 => is_fedora
   yum:
     name: [
-        #"https://packagecloud.io/netdata/netdata/packages/fedora/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.fc{{ansible_distribution_version}}.x86_64.rpm/download.rpm"
-        netdata
-      , lm_sensors
+      lm_sensors
     ]
     state: present
   notify: "restart netdata"
   when: is_fedora|bool
 
-#- name: add netdata gpg key => is_ubuntu
-#  apt_key:
-#    url: https://packagecloud.io/netdata/netdata/gpgkey
-#    state: present
-#  when: is_ubuntu|bool
+- name: fetch netdata package 2/3 => is_fedora
+  get_url:
+    url: "https://packagecloud.io/netdata/netdata/packages/fedora/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.fc{{ansible_distribution_version}}.x86_64.rpm/download.rpm"
+    dest: "{{global_build}}netdata-{{netdata_version}}-1.x86_64.rpm"
+  register: netdata_download
+  when: is_fedora|bool
 
-#- name: install netdata repository => is_ubuntu
-#  apt_repository:
-#    repo: "deb [arch=amd64] https://packagecloud.io/netdata/netdata/ubuntu/ {{ansible_distribution_release}} main"
-#    state: present
-#  when: is_ubuntu|bool
+- name: install netdata package 3/3 => is_fedora
+  shell: "rpm -Uvh {{global_build}}netdata-{{netdata_version}}-1.x86_64.rpm"
+  when: "is_fedora|bool and netdata_download.changed"
 
 - name: install required packages 1/2 => is_ubuntu
-  apt:
-    deb: "https://packagecloud.io/netdata/netdata/packages/ubuntu/{{ansible_distribution_release}}/netdata_{{netdata_version}}_amd64.deb/download.deb"
-    state: present
-  notify: "restart netdata"
-  when: is_ubuntu|bool
-
-- name: install required packages 2/2 => is_ubuntu
   apt:
     name: [
       lm-sensors
@@ -49,21 +32,17 @@
   notify: "restart netdata"
   when: is_ubuntu|bool
 
-- name: add zypper repository => is_suse
-  zypper_repository:
-    name: Network (netdata)
-#   repo: "http://download.opensuse.org/repositories/network/{{ 'openSUSE_Leap_' if ansible_distribution_version == '15.3' else ''}}{{ansible_distribution_version}}/"
-    repo: "http://download.opensuse.org/repositories/home:/monitoringslm:/netdata/{{ansible_distribution_version}}/"
-    auto_import_keys: yes
-    priority: "100"
+- name: install netdata package 2/2 => is_ubuntu
+  apt:
+    deb: "https://packagecloud.io/netdata/netdata/packages/ubuntu/{{ansible_distribution_release}}/netdata_{{netdata_version}}_amd64.deb/download.deb"
     state: present
-  when: is_suse|bool
+  notify: "restart netdata"
+  when: is_ubuntu|bool
 
-- name: install required packages => is_suse
+- name: install required packages 1/3 => is_suse
   zypper:
     name: [
-        "netdata>={{netdata_version}}"
-      , sensors
+      sensors
       # needed to rebuild rpm package
       #, rpm-build
       #, cups-devel
@@ -78,6 +57,17 @@
     state: present
   notify: "restart netdata"
   when: is_suse|bool
+
+- name: fetch netdata package 2/3 => is_suse
+  get_url:
+    url: "https://packagecloud.io/netdata/netdata/packages/opensuse/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.x86_64.rpm/download.rpm"
+    dest: "{{global_build}}netdata-{{netdata_version}}-1.x86_64.rpm"
+  register: netdata_download
+  when: is_suse|bool
+
+- name: install netdata package 3/3 => is_suse
+  shell: "rpm -Uvh {{global_build}}netdata-{{netdata_version}}-1.x86_64.rpm"
+  when: "is_suse|bool and netdata_download.changed"
 
 - name: prepare needed folder
   file:
