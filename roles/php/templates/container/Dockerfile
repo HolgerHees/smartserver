@@ -67,27 +67,20 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   # interned_strings_buffer was running full
   echo "opcache.interned_strings_buffer = 16\n" >> "/usr/local/etc/php/conf.d/docker-php-ext-opcache.ini" && \
   
-  sed -i 's/memory_limit.*/memory_limit = 1024M/' /usr/local/etc/php/php.ini && \
-  sed -i 's/upload_max_filesize.*/upload_max_filesize = 2048M/' /usr/local/etc/php/php.ini && \
-  sed -i 's/post_max_size.*/post_max_size = 2048M/' /usr/local/etc/php/php.ini && \
-  sed -i 's/max_execution_time.*/max_execution_time = 600/' /usr/local/etc/php/php.ini && \
+  sed -i 's/^[;]*memory_limit.*$/memory_limit = 1024M/' /usr/local/etc/php/php.ini && \
+  sed -i 's/^[;]*upload_max_filesize.*$/upload_max_filesize = 2048M/' /usr/local/etc/php/php.ini && \
+  sed -i 's/^[;]*post_max_size.*$/post_max_size = 2048M/' /usr/local/etc/php/php.ini && \
+  sed -i 's/^[;]*max_execution_time.*$/max_execution_time = 600/' /usr/local/etc/php/php.ini && \
+  sed -i 's/^[;]*expose_php.*$/expose_php = Off/' /usr/local/etc/php/php.ini && \
 
-  sed -i 's/pm.max_children.*/pm.max_children = 200/' /usr/local/etc/php-fpm.d/www.conf && \
-  
-  sed -i 's/pm.start_servers.*/pm.start_servers = 16/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/pm.min_spare_servers.*/pm.min_spare_servers = 8/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/pm.max_spare_servers.*/pm.max_spare_servers = 16/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm[^\.]*$/pm = dynamic/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm.start_servers.*$/pm.start_servers = 8/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm.min_spare_servers.*$/pm.min_spare_servers = 8/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm.max_spare_servers.*$/pm.max_spare_servers = 16/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm.process_idle_timeout.*$/pm.process_idle_timeout = 15s/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm.max_children.*$/pm.max_children = 200/' /usr/local/etc/php-fpm.d/www.conf && \
+  sed -i 's/^[;]*pm.max_requests.*$/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf && \
 
-  #sed -i 's/pm.max_children.*/pm.max_children = 100/' /usr/local/etc/php-fpm.d/www.conf && \
-  
-  #sed -i 's/pm.start_servers.*/pm.start_servers = 15/' /usr/local/etc/php-fpm.d/www.conf && \
-  #sed -i 's/pm.min_spare_servers.*/pm.min_spare_servers = 15/' /usr/local/etc/php-fpm.d/www.conf && \
-  #sed -i 's/pm.max_spare_servers.*/pm.max_spare_servers = 30/' /usr/local/etc/php-fpm.d/www.conf && \
-
-  sed -i 's/pm.process_idle_timeout.*/pm.process_idle_timeout = 15s/' /usr/local/etc/php-fpm.d/www.conf && \
-  
-  sed -i 's/pm.max_requests.*/pm.max_requests = 500/' /usr/local/etc/php-fpm.d/www.conf && \
-  sed -i 's/expose_php.*/expose_php = Off/' /usr/local/etc/php/php.ini && \
   sed -i 's/access.log.*/access.log = \/dev\/null/' /usr/local/etc/php-fpm.d/docker.conf && \
   sed -i 's/domain="coder" rights="none"/domain="coder" rights="read"/' /etc/ImageMagick-6/policy.xml
 
