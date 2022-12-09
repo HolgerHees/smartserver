@@ -118,6 +118,7 @@
     rsync_opts:
       - "--chown=root:root"
       - "--chmod=D750,F640"
+  notify: "restart netdata"
       
 - name: copy config
   vars:
