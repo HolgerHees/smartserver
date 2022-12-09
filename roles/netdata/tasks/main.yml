@@ -78,17 +78,6 @@
   notify: "restart netdata"
   when: is_suse|bool
 
-#- name: fetch netdata package 2/3 => is_suse
-#  get_url:
-#    url: "https://packagecloud.io/netdata/netdata/packages/opensuse/{{ansible_distribution_version}}/netdata-{{netdata_version}}-1.x86_64.rpm/download.rpm"
-#    dest: "{{global_build}}netdata-{{netdata_version}}-1.x86_64.rpm"
-#  register: netdata_download
-#  when: is_suse|bool
-
-#- name: install netdata package 3/3 => is_suse
-#  shell: "rpm -Uvh {{global_build}}netdata-{{netdata_version}}-1.x86_64.rpm"
-#  when: "is_suse|bool and netdata_download.changed"
-
 - name: prepare needed folder
   file:
     path: '{{item}}'
