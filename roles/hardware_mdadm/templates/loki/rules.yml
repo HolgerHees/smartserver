@@ -5,13 +5,13 @@
       - alert: MDMonitor not working
         expr: |
             absent_over_time(
-              {group="mdmonitor"}
+              {group="mdadm"}
               |~ "A test message for"
               [1d]
             )
         for: 0
         labels:
-            notifyGroup: "mdmonitor"
+            notifyGroup: "mdadm"
             severity: critical
         annotations:
             summary: "Missing test message for more then 24 hours."
