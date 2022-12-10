@@ -7,6 +7,8 @@
 
 - name: refresh networks
   command: "/opt/docker/update_network_hosts --network={{network_name}}"
+  register: hosts_result
+  changed_when: "'change hosts' in hosts_result.stdout"
   when: "network_result.changed"
 
 - name: fix default gateways
