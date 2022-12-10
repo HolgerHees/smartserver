@@ -44,6 +44,7 @@
 
     # needed by all roles which needs to register their own prometheus endpoints and rules
     - { import_role: { name: prometheus, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'prometheus', "prometheus_config" ] }    # creates {{ global_etc }}prometheus/rules/ & {{ global_etc }}prometheus/scrapes/
+    - { import_role: { name: loki, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'loki', "loki_config" ] }    # creates {{ global_etc }}loki/rules/fake
 
     # needed by all roles which needs to register their own datasources or dashboards
     - { import_role: { name: grafana, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'grafana', "grafana_config" ] }    # creates {{ global_etc }}grafana/provisioning/datasources/ & {{ global_lib }}grafana/dashboards/
@@ -80,8 +81,6 @@
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # setup allowed ssh user
 
-    - { import_role: { name: prometheus }, tags: [ 'prometheus' ] }                              # prometheus => needed by all service providing metrics             [docker,user:root]
-
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
     - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip != 'None'" }         # adblock server                                                    [docker,user:root]
@@ -89,6 +88,8 @@
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 
     - { import_role: { name: postfix }, tags: [ 'postfix', 'alpine' ] }                          # mail server to forward root mails                                 [docker,user:root]
+
+    - { import_role: { name: prometheus }, tags: [ 'prometheus' ] }                              # prometheus                                                        [docker,user:root]
 
     - { import_role: { name: alertmanager }, tags: [ 'alertmanager' ] }                          # alertmanager => depends on postfix                                [docker,user:root]
 

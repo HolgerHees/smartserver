@@ -1,0 +1,11 @@
+- name: prepare shared folder
+  file:
+    path: '{{item}}'
+    state: directory
+    owner: "10001"
+    group: "10001"
+    mode: 0750
+  with_items:
+    - "{{ global_etc }}loki/"
+    - "{{ global_etc }}loki/rules"
+    - "{{ global_etc }}loki/rules/fake"
