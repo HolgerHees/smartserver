@@ -36,11 +36,13 @@ else:
         networks[network] = None
 
 for network in networks.keys():
-    # fallback
-    if not os.path.exists(BASE_PATH,network):
-        open(BASE_PATH,network, 'a').close()
+    hosts_path = "{}{}".format(BASE_PATH,network)
 
-    with open( "{}{}".format(BASE_PATH,network), 'r+') as f:
+    # fallback
+    if not os.path.exists(hosts_path):
+        open(hosts_path, 'a').close()
+
+    with open( hosts_path, 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
 
         hosts_data = f.read()
