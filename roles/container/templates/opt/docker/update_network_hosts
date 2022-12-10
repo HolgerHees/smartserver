@@ -2,7 +2,7 @@
 
 import sys
 import json
-
+import os
 import fcntl
 
 from config import config
@@ -36,6 +36,10 @@ else:
         networks[network] = None
 
 for network in networks.keys():
+    # fallback
+    if not os.path.exists(BASE_PATH,network):
+        open(BASE_PATH,network, 'a').close()
+
     with open( "{}{}".format(BASE_PATH,network), 'r+') as f:
         fcntl.flock(f, fcntl.LOCK_EX)
 
