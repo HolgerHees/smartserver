@@ -1,0 +1,56 @@
+groups:
+- name: smartd
+  rules:
+  - alert: Disk error rate changed
+    expr: 'changes({chart=~"smartd_log.*_error_rate",job="netdata"}[1h]) > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd error rate is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Disk temperature is too high
+    expr: '{chart=~"smartd_log.*temperature_celsius",job="netdata"} > 50'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Smartd temperature is {{'{{'}}$value{{'}}'}} °C"
+
+#  - alert: Smartd CRC error count
+#    expr: 'netdata_smartd_log_udma_crc_error_count_errors_average{job="netdata"} > 0'
+#    for: 0m
+#    labels:
+#      notifyGroup: "custom"
+#      severity: critical
+#    annotations:
+#      summary: "Smartd CRC error count is {{'{{'}}$value{{'}}'}}"
+
+#  - alert: Smartd SATA downshift events
+#    expr: 'netdata_smartd_log_sata_interface_downshift_events_average{job="netdata"} > 0'
+#    for: 0m
+#    labels:
+#      notifyGroup: "custom"
+#      severity: critical
+#    annotations:
+#      summary: "Smartd SATA downshift events is {{'{{'}}$value{{'}}'}}"
+
+#  - alert: Smartd reallocation event count
+#    expr: 'netdata_smartd_log_reallocation_event_count_events_average{job="netdata"} > 0'
+#    for: 0m
+#    labels:
+#      notifyGroup: "custom"
+#      severity: critical
+#    annotations:
+#      summary: "Smartd reallocation event count is {{'{{'}}$value{{'}}'}}"
+
+#  - alert: Smartd uncorrectable error count
+#    expr: 'netdata_smartd_log_offline_uncorrectable_sector_count_sectors_average{job="netdata"} > 0'
+#    for: 0m
+#    labels:
+#      notifyGroup: "custom"
+#      severity: critical
+#    annotations:
+#      summary: "Smartd uncorrectable error count is {{'{{'}}$value{{'}}'}}"

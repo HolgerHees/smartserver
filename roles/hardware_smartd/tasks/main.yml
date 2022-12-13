@@ -34,6 +34,12 @@
   notify: "restart smartd"
 
 # ***** FINALIZE *****
+- name: register prometheus rules & metrics
+  vars:
+    name: "smartd"
+    rules_file: "templates/prometheus/rules.yml"
+  import_tasks: roles/prometheus/tasks/add_config.yml
+
 - name: register systemd service watcher
   vars:
     name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
