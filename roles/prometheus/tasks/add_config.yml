@@ -6,7 +6,7 @@
     group: root
     mode: 0644
   notify: "restart prometheus"
-  when: "rules_file is defined"
+  when: "rules_file is defined and rules_file != ''"
   tags: ['prometheus_config']
 
 - name: "copy scrape config '{{name}}'"

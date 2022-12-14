@@ -1,0 +1,25 @@
+{% if netdata_alerts != "None" %}
+groups:
+- name: netdata
+  rules:
+{% if "min_fan_rotation" in netdata_alerts %}{% for fan in netdata_alerts["min_fan_rotation"] %}
+  - alert: Fan speed of fan '{{fan}}' is too low
+    expr: 'netdata_sensors_fan_Rotations_min_average{dimension="{{fan}}", job="netdata"} < {{netdata_alerts["min_fan_rotation"][fan]}}'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Fan rotation speed is {{'{{'}}$value{{'}}'}} rpm"
+{% endfor %}{% endif %}
+{% if "max_temperature" in netdata_alerts %}{% for sensor in netdata_alerts["max_temperature"] %}
+  - alert: Avg temperature of sensor '{{sensor}}' is too high
+    expr: 'avg_over_time (netdata_sensors_temperature_Celsius_average{dimension="{{sensor}}", job="netdata"}[1h]) > {{netdata_alerts["max_temperature"][sensor]}}'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Avg temperature is {{'{{'}}$value{{'}}'}} °C"
+{% endfor %}{% endif %}
+{% endif %}
