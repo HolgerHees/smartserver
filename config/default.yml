@@ -174,16 +174,6 @@ default_variables: {
     #     is_openwrt: { "default": None }                         # True
     # }
 
-    "netdata_alerts": { "default": None },                        # used for custom alerts
-    # *** EXAMPLE ***
-    # {
-    #     min_fan_rotation: {
-    #     fan2:  "500"
-    # },
-    # max_temperature: {
-    #     temp1: "60"
-    # }
-
     "netflow_collector": { "default": no },                       # used for system_service (network monitoring)
     "speedtest_server_id": { "default": "auto" },                 # used for system_service speedtest
 
