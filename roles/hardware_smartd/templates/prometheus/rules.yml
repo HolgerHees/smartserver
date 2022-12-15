@@ -2,22 +2,31 @@ groups:
 - name: smartd
   rules:
   - alert: Disk error rate changed
-    expr: 'changes({chart=~"smartd_log.*_error_rate",job="netdata"}[1h]) > 0'
+    expr: 'changes({chart=~"smartd_log.*",family="errors",job="netdata"}[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
       severity: critical
     annotations:
-      summary: "Smartd error rate is {{'{{'}}$value{{'}}'}}"
+      summary: "Disk error rate is {{'{{'}}$value{{'}}'}}"
+
+  - alert: Disk interface errors occurs
+    expr: '{chart=~"smartd_log.*",family="external failure",job="netdata"} > 0'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Disk interface error count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk temperature is too high
-    expr: '{chart=~"smartd_log.*temperature_celsius",job="netdata"} > 50'
+    expr: '{chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
     for: 0m
     labels:
       notifyGroup: "custom"
       severity: critical
     annotations:
-      summary: "Smartd temperature is {{'{{'}}$value{{'}}'}} °C"
+      summary: "Disk temperature is {{'{{'}}$value{{'}}'}} °C"
 
 #  - alert: Smartd CRC error count
 #    expr: 'netdata_smartd_log_udma_crc_error_count_errors_average{job="netdata"} > 0'
