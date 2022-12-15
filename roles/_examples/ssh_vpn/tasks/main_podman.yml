@@ -17,7 +17,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/ssh_vpn/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_podman_image.yml
+  import_tasks: roles/container/shared/build_podman_image.yml
   
 - name: copy config
   template:
@@ -65,13 +65,13 @@
     container_name: "ssh_vpn_podman"
     service_name: "ssh_vpn_podman"
     trigger_name: "ssh_vpn_podman"
-  import_tasks: roles/container/tasks/add_podman_service.yml
+  import_tasks: roles/container/shared/add_podman_service.yml
   
 - name: trigger ssh_vpn_podman handler
   vars:
     notify: "restart ssh_vpn_podman"
     service: "ssh_vpn_podman.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
           
     
     

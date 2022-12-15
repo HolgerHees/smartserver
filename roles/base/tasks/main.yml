@@ -194,7 +194,7 @@
   vars:
     host_name: "{{server_name}}"
     host_ip_address: "{{server_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 #https://cromwell-intl.com/open-source/performance-tuning/ethernet.html
 #ethtool -K eth0 tx-checksum-ipv4 off tx-checksum-ipv6 off

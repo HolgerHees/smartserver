@@ -4,12 +4,12 @@
     js_file: "templates/webui/proxy.js"
     i18n_files: [ { language: "de", file: "templates/webui/proxy.de.json" } ]
     icons: [ 'templates/webui/icons/proxy_mower.svg', 'templates/webui/icons/proxy_solar.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache config
   vars:
     config_file: "templates/etc/apache2/_.ansible.conf.d/proxy.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+  import_tasks: roles/apache/shared/add_config.yml
 
 - name: prepare needed folder
   file:

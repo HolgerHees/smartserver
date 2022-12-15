@@ -15,14 +15,14 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/weather_forecast/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
     network_name: "weather_forecast"
     network_ip: "{{docker_weather_forecast_ip}}"
     network_internal: no
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -52,7 +52,7 @@
     network_container:
       - cloud_mosquitto
       - mysql
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'mysql', 'cloud_mosquitto', 'alpine' ]
 
 - name: connect weather_forecast with prometheus network
@@ -60,11 +60,11 @@
     network_name: "prometheus"
     network_container:
       - weather_forecast
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'prometheus', 'alpine' ]
 
 - name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  import_tasks: roles/mysql/shared/wait_until_ready.yml
 
 - name: check mysql table
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
@@ -141,7 +141,7 @@
     js_file: "templates/webui/weather_forecast.js"
     i18n_files: [ { language: "de", file: "templates/webui/weather_forecast.de.json" } ]
     icons: [ 'templates/webui/icons/weather_forecast.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
   
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
@@ -149,7 +149,7 @@
     name: "weatcher_forecast"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: allow cloud_check service
   vars:
@@ -157,17 +157,17 @@
     rules:
         - "outerface {{main_network_interface}} saddr {{docker_weather_forecast_ip}} proto tcp dport 443"
     is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
     container_name: "weather_forecast"
     container_after: [ "cloud_mosquitto", "mysql" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger weather_forecast handler
   vars:
     notify: "restart weather_forecast"
     service: "weather_forecast.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

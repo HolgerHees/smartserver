@@ -1,4 +1,4 @@
-- name: check running services
+- name: "check running services"
   shell: "/opt/systemd_watcher/service_check --deployment=yes"
   register: service_status
   changed_when: no

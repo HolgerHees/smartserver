@@ -81,7 +81,7 @@
 - name: register systemd service watcher
   vars:
     name: "ferm"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: register update notifier
   vars:
@@ -93,7 +93,7 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{ferm_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 #- name: trigger ferm handler
 #  command: "/bin/true"
@@ -104,7 +104,7 @@
   vars:
     notify: "restart ferm"
     service: "ferm.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
  
 # nftables rule to filter fritzbox homeplug broadcasts
 #table netdev filter {
@@ -121,4 +121,4 @@
 #  vars:
 #    notify: "restart ferm"
 #    service: "ferm.service"
-#  import_tasks: roles/_shared/tasks/service_check.yml
+#  import_tasks: roles/_shared/service_check.yml

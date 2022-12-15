@@ -6,7 +6,7 @@
   vars:
     user: { name: "ftp", system: true, home: "{{ftp_path}}" }
     group: { name: "ftp", system: true }
-  import_tasks: roles/user/tasks/add_system_user.yml
+  import_tasks: roles/user/shared/add_system_user.yml
 
 - name: prepare ftp folder
   file:
@@ -85,7 +85,7 @@
     files:
       - roles/ftp/templates/container/Dockerfile
       - roles/ftp/templates/container/entrypoint.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -133,18 +133,18 @@
     file: "ansible_ftp_camera"
     hour: "0"
     minute: "50"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: create systemd service
   vars:
     container_name: "vsftpd"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger vsftpd handler
   vars:
     notify: "restart vsftpd"
     service: "vsftpd.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
           
     
     

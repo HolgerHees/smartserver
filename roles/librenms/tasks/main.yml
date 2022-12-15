@@ -52,7 +52,7 @@
     network_name: "librenms"
     network_ip: "{{docker_librenms_ip}}"
     network_internal: no
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -102,14 +102,14 @@
     network_container:
       - mysql
       - redis
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'mysql', 'redis' ]
 
 - name: add container name
   vars:
     host_name: "librenms"
     host_ip_address: "{{docker_librenms_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
 - name: create database
@@ -118,7 +118,7 @@
     username: "{{vault_librenms_mysql_username}}"
     password: "{{vault_librenms_mysql_password}}"
     backup: yes
-  import_tasks: roles/mysql/tasks/add_database.yml
+  import_tasks: roles/mysql/shared/add_database.yml
   
 # ***** FINALIZE *****
 - name: prepare ferm rules
@@ -136,7 +136,7 @@
     name: "librenms"
     rules: "{{librenms_ferm_rules}}"
     is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: register webui
@@ -145,25 +145,25 @@
     js_file: "templates/webui/librenms.js"
     i18n_files: [ { language: "de", file: "templates/webui/librenms.de.json" } ]
     icons: [ 'templates/webui/icons/librenms_logo.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "librenms"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/librenms.inc"
-  import_tasks: roles/apache/tasks/add_vhost.yml
+  import_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/librenms.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
     
 - name: create systemd service
   vars:
     container_name: "librenms"
     container_after: [ "redis", "mysql" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -174,11 +174,11 @@
       repository: "librenms/librenms",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger librenms handler
   vars:
     notify: "restart librenms"
     service: "librenms.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
 

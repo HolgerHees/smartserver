@@ -53,13 +53,13 @@
   vars:
     host_name: "mosquitto"
     host_ip_address: "{{docker_mosquitto_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create systemd service
   vars:
     container_name: "mosquitto"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -70,10 +70,10 @@
       repository: "eclipse-mosquitto", 
       pattern: "^([0-9\\.]+)$" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger mosquitto handler
   vars:
     notify: "restart mosquitto"
     service: "mosquitto.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

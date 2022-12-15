@@ -1,0 +1,19 @@
+- name: "apache : copy include for '{{sub_domain}}.{{server_domain}}'"
+  template:
+    src: "{{include}}"
+    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{sub_domain}}-config.inc"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart apache2"
+  tags: ['apache_config']
+
+- name: "apache : copy vhost for '{{sub_domain}}.{{server_domain}}'"
+  copy:
+    content: "{{ lookup('template', 'roles/apache/templates/vhost-ssl.conf') }}"
+    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{sub_domain}}-ssl.conf"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart apache2"
+  tags: ['apache_config']

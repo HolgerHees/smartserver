@@ -24,14 +24,14 @@
     files:
       - roles/fluentd/templates/container/Dockerfile
       - roles/fluentd/templates/container/patches/out_loki.rb
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
     network_name: "fluentd"
     network_ip: "{{docker_fluentd_ip}}"
     network_internal: yes
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -62,20 +62,20 @@
     network_name: "fluentd"
     network_container:
       - loki
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'loki', 'alpine' ]
 
 - name: add container name
   vars:
     host_name: "fluentd"
     host_ip_address: "{{docker_fluentd_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 - name: create systemd service
   vars:
     container_name: "fluentd"
     container_after: [ "loki" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -86,16 +86,16 @@
       repository: "fluent/fluentd",
       pattern: "^v([0-9\\.]+)-debian.*$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
     name: "fluentd"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: trigger fluentd handler
   vars:
     notify: "restart fluentd"
     service: "fluentd.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

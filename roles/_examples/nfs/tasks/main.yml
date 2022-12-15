@@ -35,13 +35,13 @@
 - name: register systemd service watcher
   vars:
     name: "{{ 'nfsserver' if is_suse|bool else 'nfs-server' }}"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: trigger nfsd handler
   vars:
     notify: "restart nfs-server"
     service: "{{'nfsserver.service' if is_suse|bool else 'nfs-server.service'}}"
     process: "pgrep nfsd"
-  import_tasks: roles/_shared/tasks/service_process_check.yml
+  import_tasks: roles/_shared/service_process_check.yml
 
   

@@ -49,7 +49,7 @@
     files:
       - roles/system_service/templates/container/Dockerfile
       - roles/system_service/templates/container/entrypoint.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -82,7 +82,7 @@
 #      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
     backup: yes
-  import_tasks: roles/influxdb/tasks/add_bucket.yml
+  import_tasks: roles/influxdb/shared/add_bucket.yml
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
@@ -90,7 +90,7 @@
     name: "system_service"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: register grafana configs
   vars:
@@ -100,14 +100,14 @@
     dashboards:
       - "templates/grafana/dashboards/System Service Scanner.json"
       - "templates/grafana/dashboards/System Service WAN.json"
-  import_tasks: roles/grafana/tasks/add_datasource.yml
+  import_tasks: roles/grafana/shared/add_datasource.yml
 
 - name: register grafana configs
   vars:
     name: "system_service"
     dashboards:
       - "templates/grafana/dashboards/System Service Netflow.json"
-  import_tasks: roles/grafana/tasks/add_datasource.yml
+  import_tasks: roles/grafana/shared/add_datasource.yml
   when: "netflow_collector"
 
 - name: synchronize webui
@@ -131,33 +131,33 @@
     js_file: "templates/webui/system_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/system_service.de.json" } ]
     icons: [ 'templates/webui/icons/system_service_logo.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
   
 - name: copy apache api config
   vars:
     config_file: "templates/etc/apache2/_.ansible.conf.d/system_service.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+  import_tasks: roles/apache/shared/add_config.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/system_service.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: register systemd service watcher
   vars:
     name: "system_service"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: create systemd service
   vars:
     container_name: "system_service"
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger device_ping handler
   vars:
     notify: "restart system_service"
     service: "system_service.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
 
   

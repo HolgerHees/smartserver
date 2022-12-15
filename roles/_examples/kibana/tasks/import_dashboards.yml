@@ -1,8 +1,8 @@
 - name: check elasticsearch service
-  import_tasks: roles/elasticsearch/tasks/wait_until_ready.yml
+  import_tasks: roles/elasticsearch/shared/wait_until_ready.yml
 
 - name: check kibana service => kibana status changed
-  import_tasks: roles/kibana/tasks/wait_until_ready.yml
+  import_tasks: roles/kibana/shared/wait_until_ready.yml
 
 - name: check if kibana indices exists
   uri:

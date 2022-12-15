@@ -1,0 +1,15 @@
+- name: "cron : create cron job '{{name}}'"
+  vars:
+    cron_name: "{{name}}"
+    cron_cmd: "{{cmd}}"
+  cron:
+    name: "{{cron_name}}"
+    job: "{{ lookup('template', 'roles/cron/templates/cron_job') }}"
+    cron_file: "{{file}}"
+    user: "{{user | default ('root')}}"
+    day: "{{day | default ('*')}}" 
+    weekday: "{{weekday | default ('*')}}" 
+    hour: "{{hour | default ('*')}}"
+    minute: "{{minute | default ('*')}}"
+    state: present
+  tags: ['cron_job']

@@ -10,14 +10,14 @@
     image_version: "{{php_version}}"
     files:
       - roles/php/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
     network_name: "php"
     network_ip: "{{docker_php_ip}}"
     network_internal: no
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
@@ -62,21 +62,21 @@
       - influxdb
       - redis
       - postfix # => used by nextcloud
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'mysql', 'influxdb', 'redis', 'postfix', 'alpine' ]
 
 - name: add container name
   vars:
     host_name: "php"
     host_ip_address: "{{docker_php_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: allow http php service
   vars:
     name: "https.php"
     rule: "proto tcp dport 443 saddr {{docker_php_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: allow php service
@@ -84,19 +84,19 @@
     name: "php"
     rule: "saddr {{docker_php_ip}}"
     is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/php.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
   
 - name: create systemd service
   vars:
     container_name: "php"
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -107,10 +107,10 @@
       repository: "php",
       pattern: "^([0-9\\.]+)-fpm$" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger php handler
   vars:
     notify: "restart php"
     service: "php.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

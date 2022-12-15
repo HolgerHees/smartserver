@@ -1,0 +1,41 @@
+- name: "user : ensure group \"{{group.name}}\" exists"
+  group:
+    name: "{{group.name}}"
+    gid: "{{group.id | default(omit)}}"
+    system: "{{group.system | default(omit)}}"
+    state: present
+  register: group_result
+
+- name: "user : ensure user \"{{user.name}}\" exists"
+  user:
+    name: "{{user.name}}"
+    group: "{{group.name}}"
+    uid: "{{user.id | default(omit)}}"
+    system: "{{user.system | default(omit)}}"
+    home: "{{user.home | default(omit)}}"
+    shell: "/bin/false"
+    create_home: no
+  register: user_result
+  
+#- name: debug
+#  debug:
+#    msg: "{{group_result}}"
+
+#- name: debug
+#  debug:
+#    msg: "{{user_result}}"
+
+#- name: get uid from "{{user.name}}"
+#  shell: "id -u {{user.name}}"
+#  register: user_id
+#  changed_when: no
+
+#- name: get gid from "{{group.name}}"
+#  shell: "id -g {{user.name}}"
+#  register: group_id
+#  changed_when: no
+
+- name: "user : register uid & gid"
+  set_fact:
+    system_users: "{{ system_users | combine( { user.key | default(user.name): { 'name': user.name, 'id': user_result['uid'] } } ) }}"
+    system_groups: "{{ system_groups | combine( { group.key | default(group.name): { 'name': group.name, 'id': group_result['gid'] } } ) }}"

@@ -28,7 +28,7 @@
     files:
       - roles/postfix/templates/container/Dockerfile
       - roles/postfix/templates/container/entrypoint.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -59,14 +59,14 @@
     network_name: "prometheus"
     network_container:
       - postfix
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'prometheus', 'alpine' ]
 
 - name: add container name
   vars:
     host_name: "postfix"
     host_ip_address: "{{docker_postfix_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # SET LOCAL SMTP CLIENT
 - name: install postfix packages => is_fedora
@@ -138,13 +138,13 @@
     name: "postfix"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: register loki rules
   vars:
     name: "postfix"
     rules_file: "templates/loki/rules.yml"
-  import_tasks: roles/loki/tasks/add_config.yml
+  import_tasks: roles/loki/shared/add_config.yml
   when: mdraid.stat.exists
 
 - name: allow postfix service
@@ -152,13 +152,13 @@
     name: "postfix"
     rule: "outerface {{main_network_interface}} saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}}"
     is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
     container_name: "postfix"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: create cron 'ping' job
   vars:
@@ -167,21 +167,21 @@
     file: "ansible_postfix"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: register systemd service watcher
   vars:
     name: "postfix"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: register system package dependency
   vars:
     tag: "postfix"
     packages: [ "postfix" ]
-  import_tasks: roles/update_service/tasks/add_dependency.yml
+  import_tasks: roles/update_service/shared/add_dependency.yml
 
 - name: trigger postfix handler
   vars:
     notify: "restart postfix"
     service: "postfix.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

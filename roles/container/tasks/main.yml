@@ -166,7 +166,7 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: synchronize docker tools
   synchronize:
@@ -231,7 +231,7 @@
 - name: copy fluentd config => is_suse
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
   
 #http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Tumbleweed/x86_64/
 #- name: clone dnsname git
@@ -349,34 +349,34 @@
 - name: register systemd service watcher
   vars:
     name: "macvlan_bridge"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
   when: "macvlan_range | length > 0"
 
 - name: trigger macvlan_bridge handler
   vars:
     notify: "restart macvlan_bridge"
     service: "macvlan_bridge.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
   when: "macvlan_range | length > 0"
 
 - name: register systemd service watcher
   vars:
     name: "docker"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: trigger docker handler
   vars:
     notify: "restart docker"
     service: "docker.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
 
 #- name: register systemd service watcher
 #  vars:
 #    name: "podman.socket"
-#  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+#  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 #- name: trigger podman handler
 #  vars:
 #    notify: "restart podman"
 #    service: "podman.socket"
-#  import_tasks: roles/_shared/tasks/service_check.yml
+#  import_tasks: roles/_shared/service_check.yml

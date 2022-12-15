@@ -26,14 +26,14 @@
     image_version: "{{alpine_version}}-{{vcontrold_version}}"
     files:
       - roles/vcontrold/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
     network_name: "vcontrold"
     network_ip: "{{docker_vcontrold_ip}}"
     network_internal: yes
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -67,7 +67,7 @@
     network_name: "vcontrold"
     network_container:
       - mosquitto
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'mosquitto' ]
 
 - name: set logrotate job
@@ -99,7 +99,7 @@
   vars:
     container_name: "vcontrold"
     container_after: [ "mosquitto" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -111,10 +111,10 @@
       pattern: "^v([0-9\\.]+)$",
       version: "{{vcontrold_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger vcontrold handler
   vars:
     notify: "restart vcontrold"
     service: "vcontrold.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

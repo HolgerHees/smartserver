@@ -41,4 +41,4 @@
     file: "ansible_letsencrypt"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml

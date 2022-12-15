@@ -1,56 +1,56 @@
 # ***** CHECK *****
-- name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+- name: "check mysql service"
+  import_tasks: roles/mysql/shared/wait_until_ready.yml
     
-- name: check redis service
-  import_tasks: roles/redis/tasks/wait_until_ready.yml
+- name: "check redis service"
+  import_tasks: roles/redis/shared/wait_until_ready.yml
 
-- name: check apache service
-  import_tasks: roles/apache/tasks/wait_until_ready.yml
+- name: "check apache service"
+  import_tasks: roles/apache/shared/wait_until_ready.yml
 
-- name: add devices
+- name: "add devices"
   shell: "docker exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.host}}\""
   register: device_register_result
   changed_when: "device_register_result.rc == 0"
   failed_when: "device_register_result.rc != 0 and 'already exists' not in device_register_result.stdout"
   with_items: "{{librenms_devices}}"
   
-- name: set api token
+- name: "set api token"
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO api_tokens (user_id,token_hash,description,disabled) VALUES (1,'{{vault_librenms_api_token | replace('$', '\\\\\\$') }}','web app usage',0);\\\"\""
   changed_when: no
   
-- name: set http user
+- name: "set http user"
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO users (user_id, auth_type, auth_id, username, password, realname, email, descr, level, can_modify_passwd, remember_token, enabled) VALUES (46, 'http-auth', '46', 'librenms', NULL, '', '{{root_email}}', '', 10, 1, NULL, 1);\\\"\""
   changed_when: no
 
-- name: create discovery all cron job
+- name: "create discovery all cron job"
   vars:
     name: "LibreNMS Discovery All"
     cmd: "docker exec librenms sh -c \"/opt/librenms/discovery-wrapper.py 8 > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*/6"
     minute: "33"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
-- name: create discovery new cron job
+- name: "create discovery new cron job"
   vars:
     name: "LibreNMS Discovery New"
     cmd: "docker exec librenms sh -c \"/opt/librenms/discovery.php  -h new > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
     minute: "*/5"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
-- name: create poller cron job
+- name: "create poller cron job"
   vars:
     name: "LibreNMS Poller"
     cmd: "docker exec librenms sh -c \"/opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
     minute: "*/{{librenms_poller_interval}}"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
-- name: create daily cron job
+- name: "create daily cron job"
   vars:
     name: "LibreNMS Daily"
     cmd: "docker exec librenms sh -c \"/opt/librenms/daily.sh > /dev/null 2>&1\""
@@ -58,13 +58,13 @@
     user: "1000"
     hour: "0"
     minute: "15"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
-- name: create alerts cron job
+- name: "create alerts cron job"
   vars:
     name: "LibreNMS Alerts"
     cmd: "docker exec librenms sh -c \"/opt/librenms/alerts.php > /dev/null 2>&1\""
     file: "ansible_librenms"
     hour: "*"
     minute: "*"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml

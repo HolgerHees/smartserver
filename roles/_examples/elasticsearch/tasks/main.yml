@@ -46,12 +46,12 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/elasticsearch.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: create systemd service
   vars:
     container_name: "elasticsearch"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -62,10 +62,10 @@
       repository: "amazon/opendistro-for-elasticsearch",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger elasticsearch handler
   vars:
     notify: "restart elasticsearch"
     service: "elasticsearch.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

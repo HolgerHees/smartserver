@@ -1,8 +1,0 @@
-- name: "copy dependency config '{{tag}}'"
-  copy:
-    content: "{{ lookup('template', 'roles/update_service/templates/update_system_dependency_config.json') }}"
-    dest: "{{global_etc}}update_service/dependencies/{{tag}}.conf"
-    owner: root
-    group: root
-    mode: 0644
-  tags: ['update_system_config']

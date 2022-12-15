@@ -1,4 +1,3 @@
-
 - name: "parse tags"
   set_fact:
     list_cmd: "ansible-playbook -i {{deployment_inventory_path}} --list-tags server.yml | grep -Po \"TAGS: \\[[^\\]]+\\]\""

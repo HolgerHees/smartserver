@@ -1,0 +1,21 @@
+- name: "prometheus : copy rules config '{{name}}'"
+  template:
+    src: "{{rules_file}}"
+    dest: "{{global_etc}}prometheus/rules/{{name}}.yml"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart prometheus"
+  when: "rules_file is defined"
+  tags: ['prometheus_config']
+
+- name: "prometheus : copy scrape config '{{name}}'"
+  template:
+    src: "{{scrape_file}}"
+    dest: "{{global_etc}}prometheus/scrapes/{{name}}.yml"
+    owner: root
+    group: root
+    mode: 0644
+  notify: "restart prometheus"
+  when: "scrape_file is defined"
+  tags: ['prometheus_config']

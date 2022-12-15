@@ -1,0 +1,22 @@
+- name: "grafana : copy datasource files for '{{name}}'"
+  template:
+    src: "{{item}}"
+    dest: "{{ global_etc }}grafana/provisioning/datasources/{{item | basename}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items: "{{datasources | default([]) }}"
+#  notify: "restart grafana"
+  tags: ['grafana_config']
+
+- name: "grafana : copy dashboard files for '{{name}}'"
+  copy:
+    src: "{{item}}"
+    dest: "{{ global_lib }}grafana/dashboards/{{item | basename}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items: "{{dashboards | default([]) }}"
+#  notify: "restart grafana"
+  tags: ['grafana_config']
+  

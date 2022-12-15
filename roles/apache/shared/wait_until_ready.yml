@@ -1,0 +1,16 @@
+#- name: read service facts
+#  service_facts:
+
+- name: "apache : check if running"
+  shell: "systemctl is-active --quiet apache2"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+  
+- name: "apache : start service"
+  systemd:
+    name: apache2
+    state: started
+    daemon_reload: yes
+#  changed_when: "'apache2.service' not in ansible_facts.services or ansible_facts.services['apache2.service'].state != 'running'"
+  when: "service_result.rc != 0"

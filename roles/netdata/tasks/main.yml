@@ -166,7 +166,7 @@
 #      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
 #    backup: yes
-#  import_tasks: roles/influxdb/tasks/add_bucket.yml
+#  import_tasks: roles/influxdb/shared/add_bucket.yml
   
 # ***** OTHER *****
 #- name: register grafana configs
@@ -176,7 +176,7 @@
 #      - "templates/grafana/datasources/opentsdb_influxdb.yaml"
 #    dashboards:
 #      - "templates/grafana/dashboards/Server Health.json"
-#  import_tasks: roles/grafana/tasks/add_datasource.yml
+#  import_tasks: roles/grafana/shared/add_datasource.yml
 
 - name: register webui
   vars:
@@ -185,14 +185,14 @@
     i18n_files: [ { language: "de", file: "templates/webui/netdata.de.json" } ]
     listener: { "sub_domain": "netdata", "js_file": "templates/webui/netdata.listener.js" }
     icons: [ 'templates/webui/icons/netdata_logo.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "netdata"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
-  import_tasks: roles/apache/tasks/add_vhost.yml
+  import_tasks: roles/apache/shared/add_vhost.yml
 
 - name: create cron job
   vars:
@@ -200,25 +200,25 @@
     cmd: "/opt/netdata_helper/send_notification"
     file: "ansible_netdata"
     minute: "*/5"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   
 # ***** FINALIZE *****
-- name: register prometheus rules & metrics
+- name: register prometheus metrics
   vars:
     name: "netdata"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: register systemd service watcher
   vars:
     name: "netdata"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: register system package dependency
   vars:
     tag: "netdata"
     packages: [ "netdata" ]
-  import_tasks: roles/update_service/tasks/add_dependency.yml
+  import_tasks: roles/update_service/shared/add_dependency.yml
 
 - name: register update notifier
   vars:
@@ -230,10 +230,10 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{netdata_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger netdata handler
   vars:
     notify: "restart netdata"
     service: "netdata.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

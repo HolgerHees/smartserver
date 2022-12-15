@@ -51,7 +51,7 @@
     email:    "{{userdata[item].email}}"
     fullname: "{{userdata[item].name}}"
     usergroups: "{{userdata[item].groups}}"
-  include_tasks: roles/user/tasks/add_web_user.yml
+  include_tasks: roles/user/shared/add_web_user.yml
   when: "'user' in userdata[item].groups"
   with_items: "{{userdata}}"
 

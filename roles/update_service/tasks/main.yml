@@ -75,12 +75,12 @@
     js_file: "templates/webui/update_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/update_service.de.json" } ]
     icons: [ 'templates/webui/icons/update_software_logo.svg', 'templates/webui/icons/update_system_logo.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
   
 - name: copy apache api config
   vars:
     config_file: "templates/etc/apache2/_.ansible.conf.d/update_service.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+  import_tasks: roles/apache/shared/add_config.yml
 
 - name: create version check cron job
   vars:
@@ -89,7 +89,7 @@
     file: "ansible_update_service"
     minute: "0"
     hour: "3"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   when: "update_service_software_check_enabled|bool"
 
 - name: create system check cron job
@@ -99,7 +99,7 @@
     file: "ansible_update_service"
     minute: "30"
     hour: "3"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   when: "update_service_system_check_enabled|bool"
   
 - name: create cleanup cron job
@@ -109,12 +109,12 @@
     file: "ansible_update_service"
     hour: "0"
     minute: "40"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/update_service.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: "create systemd service"
   template:
@@ -127,11 +127,11 @@
 - name: register systemd service watcher
   vars:
     name: "update_service"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: trigger update_service handler
   vars:
     notify: "restart update_service"
     service: "update_service.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
 

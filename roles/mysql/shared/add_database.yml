@@ -1,0 +1,46 @@
+- name: "mysql : check service"
+  import_tasks: roles/mysql/shared/wait_until_ready.yml
+  
+- name: "mysql : check databases"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
+  register: mysql_database_exists
+  changed_when: "database not in mysql_database_exists.stdout"
+
+- name: "mysql : create missing databases => database does not exists"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 create {{database}}\""
+  when: "database not in mysql_database_exists.stdout"
+
+- name: "mysql : create missing user => database does not exists"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"CREATE USER IF NOT EXISTS '{{username}}'@'%' IDENTIFIED BY '{{password}}';\\\"\""
+  when: "database not in mysql_database_exists.stdout"
+
+- name: "mysql : grant permissions to user => database does not exists"
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"GRANT ALL PRIVILEGES ON {{database}}.* TO '{{username}}'@'%';\\\"\""
+  when: "database not in mysql_database_exists.stdout"
+
+- name: "mysql : refresh privileges => database does not exists"
+  shell: "docker exec mysql sh -c \"mysqladmin -u root -h 127.0.0.1 flush-privileges\""
+  when: "database not in mysql_database_exists.stdout"
+
+- name: "mysql : create cron job"
+  vars:
+    name: "MySQL {{database | capitalize}} Backup"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump {{database}} -h 127.0.0.1\" | bzip2 -c > /dataRaid/backups/mysql/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    file: "ansible_mysql"
+    hour: "1"
+    minute: "0"
+  import_tasks: roles/cron/shared/add_cronjob.yml
+  when: "backup|bool"
+
+- name: "mysql : register result state"
+  set_fact:
+    database_added: "{{ database not in mysql_database_exists.stdout }}"
+
+- name: "mysql : copy backup restore script"
+  template:
+    src: "roles/mysql/templates/backup_restore/mysql.sh"
+    dest: "/opt/backup_restore/mysql_{{database}}.sh"
+    owner: root
+    group: root
+    mode: 0750
+  tags: ['backup_restore']

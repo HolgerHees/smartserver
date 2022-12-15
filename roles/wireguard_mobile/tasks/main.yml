@@ -144,7 +144,7 @@
     files:
       - roles/wireguard_mobile/templates/container/Dockerfile
       - roles/wireguard_mobile/templates/container/entrypoint.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -191,7 +191,7 @@
     name: "wireguard.mobile_vpn"
     rule: "proto udp dport {{mobile_vpn_internal_port}}"
 #    is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: prepare mobile vpn admin ip rules
@@ -205,7 +205,7 @@
     name: "wireguard.mobile_vpn_internal"
     rules: "{{vpn_admin_ip_rules}}"
     is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
   
   
@@ -217,10 +217,10 @@
 - name: create systemd service
   vars:
     container_name: "wireguard_mobile"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger wireguard_mobile handler
   vars:
     notify: "restart wireguard_mobile"
     service: "wireguard_mobile.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

@@ -28,18 +28,18 @@
       tags: always
 
     # needed by all roles which needs to register their own fluentd handler
-    # search for "import_tasks: roles/fluentd/tasks/add_config.yml" to see which ones
+    # search for "import_tasks: roles/fluentd/shared/add_config.yml" to see which ones
     - { import_role: { name: fluentd, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'fluentd' ] }  # creates /etc/fluent/_.ansible.d
 
     # is creating and fetching wwwrun uid and gid to make them available globaly for all roles
     - { import_role: { name: apache, tasks_from: ensure_www_user_exists, handlers_from: empty }, tags: [ 'always' ] }
 
     # needed by all roles which needs to register their own vhost
-    # search for "import_tasks: roles/apache/tasks/add_vhost.yml" to see which ones
+    # search for "import_tasks: roles/apache/shared/add_vhost.yml" to see which ones
     - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache', "apache_config" ] }    # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
 
     # needed by all roles which needs to register menu entries in the web ui like
-    # search for "import_tasks: roles/apache_webui/tasks/add_webui.yml" to see which ones
+    # search for "import_tasks: roles/apache_webui/shared/add_webui.yml" to see which ones
     - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_config", ] }    # creates {{htdocs_path}}main/components
 
     # needed by all roles which needs to register their own prometheus endpoints and rules

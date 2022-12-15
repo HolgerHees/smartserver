@@ -209,7 +209,7 @@
     image_version: "{{apache_version}}"
     files:
       - roles/apache/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -282,19 +282,19 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
   
 - name: allow letsencrypt service
   vars:
     name: "http.letsencrypt"
     rule: "proto tcp dport 80"
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
   
 - name: create systemd service
   vars:
     container_name: "apache2"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register apache update notifier
   vars:
@@ -305,7 +305,7 @@
       repository: "httpd", 
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: register openidc update notifier
   vars:
@@ -317,10 +317,10 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{openidc_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
   
 - name: trigger apache2 handler
   vars:
     notify: "restart apache2"
     service: "apache2.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

@@ -34,7 +34,7 @@
     network_name: "loki"
     network_ip: "{{docker_loki_ip}}"
     network_internal: yes
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -71,7 +71,7 @@
     network_name: "prometheus"
     network_container:
       - loki
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'prometheus', 'alpine' ]
 
 - name: connect alertmanager with loki network
@@ -79,27 +79,27 @@
     network_name: "loki"
     network_container:
       - alertmanager
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'alertmanager' ]
 
 - name: add container name
   vars:
     host_name: "loki"
     host_ip_address: "{{docker_loki_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
     name: "loki"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: register loki rules
   vars:
     name: "loki"
     rules_file: "templates/etc/loki/rules.yaml"
-  import_tasks: roles/loki/tasks/add_config.yml
+  import_tasks: roles/loki/shared/add_config.yml
 
 - name: register webui
   vars:
@@ -107,18 +107,18 @@
     js_file: "templates/webui/loki.js"
     i18n_files: [ { language: "de", file: "templates/webui/loki.de.json" } ]
     icons: [ 'templates/webui/icons/loki_logs.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/loki.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: create systemd service
   vars:
     container_name: "loki"
     container_after: [ "alertmanager" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register grafana configs
   vars:
@@ -127,7 +127,7 @@
       - "templates/grafana/datasources/loki.yaml"
     dashboards:
       - "templates/grafana/dashboards/Logs.json"
-  import_tasks: roles/grafana/tasks/add_datasource.yml
+  import_tasks: roles/grafana/shared/add_datasource.yml
 
 - name: register update notifier
   vars:
@@ -138,10 +138,10 @@
       repository: "grafana/loki",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger loki handler
   vars:
     notify: "restart loki"
     service: "loki.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

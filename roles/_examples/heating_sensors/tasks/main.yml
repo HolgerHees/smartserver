@@ -32,5 +32,5 @@
     cmd: "/opt/heating_sensors/sensoren.bash"
     file: "ansible_heating_sensors"
     minute: "*/1"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   when: "is_production|bool"

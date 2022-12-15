@@ -38,7 +38,7 @@
 - name: copy proxy config
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/manifest.conf"
-  import_tasks: roles/apache/tasks/add_config.yml
+  import_tasks: roles/apache/shared/add_config.yml
 
 # POTD FETCHER
 - name: install required packages for fetchPOTD => is_fedora
@@ -92,4 +92,4 @@
     file: "ansible_apache_webui"
     hour: "3"
     minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml

@@ -28,7 +28,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/dns/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -70,13 +70,13 @@
     rules: "{{dns_rules}}"
     is_docker: True
     instant_activation: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
     container_name: "named"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
 - name: enable dns
@@ -93,5 +93,5 @@
   vars:
     notify: "restart named"
     service: "named.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
 

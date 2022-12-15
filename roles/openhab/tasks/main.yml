@@ -2,7 +2,7 @@
   vars:
     user: { name: "openhab", system: true, home: "{{global_etc}}openhab" }
     group: { name: "openhab", system: true }
-  import_tasks: roles/user/tasks/add_system_user.yml
+  import_tasks: roles/user/shared/add_system_user.yml
 
 - name: set openhab version
   set_fact:
@@ -46,7 +46,7 @@
     git_owner:  "{{openhab_user}}"
     git_group:  "{{openhab_group}}"
     git_mode:  "u=rwX,g=rX,o="
-  import_tasks: roles/_shared/tasks/git_clone.yml
+  import_tasks: roles/_shared/git_clone.yml
 
 - name: set symbolic link to shared python scripts
   file:
@@ -71,7 +71,7 @@
     git_owner:  "{{openhab_user}}"
     git_group:  "{{openhab_group}}"
     git_mode:  "u=rwX,g=rX,o="
-  import_tasks: roles/_shared/tasks/git_clone.yml
+  import_tasks: roles/_shared/git_clone.yml
 
 # => custom python
 - name: link custom python
@@ -374,7 +374,7 @@
     files:
       - roles/openhab/templates/container/Dockerfile
       - roles/openhab/templates/container/init.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -441,7 +441,7 @@
   vars:
     host_name: "openhab"
     host_ip_address: "127.0.0.1"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
 - name: create database
@@ -450,7 +450,7 @@
     username: "{{vault_openhab_mysql_username}}"
     password: "{{vault_openhab_mysql_password}}"
     backup: yes
-  import_tasks: roles/mysql/tasks/add_database.yml
+  import_tasks: roles/mysql/shared/add_database.yml
     
 # ***** INFLUXDB DATABASE ****
 - name: create values database
@@ -459,14 +459,14 @@
     retentions:
       - { retention: "0" }
     backup: yes
-  import_tasks: roles/influxdb/tasks/add_bucket.yml
+  import_tasks: roles/influxdb/shared/add_bucket.yml
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
     name: "openhab"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: register grafana configs
   vars:
@@ -476,7 +476,7 @@
       - "templates/grafana/datasources/openhab_mysql.yaml"
     dashboards:
       - "templates/grafana/dashboards/OpenHAB metrics.json"
-  import_tasks: roles/grafana/tasks/add_datasource.yml
+  import_tasks: roles/grafana/shared/add_datasource.yml
 
 - name: register default webui
   vars:
@@ -485,14 +485,14 @@
     i18n_files: [ { language: "de", file: "templates/webui/openhab.de.json" } ]
     listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
     icons: [ 'templates/webui/icons/openhab_logo.svg', 'templates/webui/icons/openhab_basicui.svg', 'templates/webui/icons/openhab_adminui.svg', 'templates/webui/icons/openhab_habot.svg', 'templates/webui/icons/openhab_habpanel.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: register habpanel webui
   vars:
     name: "openhab_habpanel"
     js_file: "templates/webui/openhab_habpanel.js"
     i18n_files: [ { language: "de", file: "templates/webui/openhab_habpanel.de.json" } ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
   when: "habpanel_result.rc == 0"
 
 - name: copy apache vhost
@@ -500,7 +500,7 @@
     sub_domain: "openhab"
     usergroup: "user"
     include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
-  import_tasks: roles/apache/tasks/add_vhost.yml
+  import_tasks: roles/apache/shared/add_vhost.yml
 
 #- name: copy special vhosts
 #  template:
@@ -519,7 +519,7 @@
     file: "ansible_openhab"
     hour: "0"
     minute: "45"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: create backup cron job
   vars:
@@ -528,7 +528,7 @@
     file: "ansible_openhab"
     hour: "0"
     minute: "30"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   
 - name: copy backup restore script
   template:
@@ -542,14 +542,14 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: create systemd service
   vars:
     container_name: "openhab"
     container_after: [ "mysql", "influxdb", "mosquitto" ]
     container_post_exec: "nohup /bin/sh -c \"(sleep 30 && touch {{projects_path}}openhab_config/conf/transform/*) &\""
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register openhab update notifier
   vars:
@@ -560,10 +560,10 @@
       repository: "openhab/openhab",
       pattern: "^([0-9\\.]+)-debian$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger openhab handler
   vars:
     notify: "restart openhab"
     service: "openhab.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

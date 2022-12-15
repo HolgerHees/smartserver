@@ -31,4 +31,4 @@
       pattern: "^([0-9\\.\\-]+)$",
       version: "{{java_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml

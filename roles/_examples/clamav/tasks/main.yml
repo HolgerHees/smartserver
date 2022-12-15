@@ -73,45 +73,45 @@
 #    file: "ansible_clamav_check"
 #    hour: "3"
 #    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  import_tasks: roles/cron/shared/add_cronjob.yml
 #  when: "is_production|bool"
 
 # ***** FINALIZE *****
 - name: register service watcher => is_fedora
   vars:
     name: "clamd@scan"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
   when: is_fedora|bool
 
 - name: register service watcher => is_fedora
   vars:
     name: "clamd"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
   when: is_fedora|bool
 
 - name: register service watcher
   vars:
     name: "freshclam"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
   when: is_suse|bool
 
 - name: trigger clamd@scan handler
   vars:
     notify: "restart clamav"
     service: "clamd@scan.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
   when: is_fedora|bool
 
 - name: trigger freshclam handler
   vars:
     notify: "restart clamav"
     service: "freshclam.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
   when: is_suse|bool
 
 - name: trigger clamd handler
   vars:
     notify: "restart clamav"
     service: "clamd.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
   when: is_suse|bool

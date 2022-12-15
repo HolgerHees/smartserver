@@ -34,5 +34,5 @@
     cmd: "/opt/electricmeter/strom.perl"
     file: "ansible_electricmeter"
     minute: "*/5"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   when: "is_production|bool"

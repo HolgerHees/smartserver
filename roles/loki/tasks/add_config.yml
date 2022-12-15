@@ -1,9 +1,0 @@
-- name: "copy rules config '{{name}}'"
-  template:
-    src: "{{rules_file}}"
-    dest: "{{global_etc}}loki/rules/fake/{{name}}.yaml"
-    owner: "10001"
-    group: "10001"
-    mode: 0640
-  notify: "restart loki"
-  tags: ['loki_config']

@@ -1,5 +1,5 @@
 groups:
-- name: prometheus_targets
+- name: targets
   rules:
   - alert: Prometheus target availability
     expr: up == 0

@@ -1,21 +1,21 @@
 # ***** CHECK *****
-- name: check influxdb service
-  import_tasks: roles/influxdb/tasks/wait_until_ready.yml
+- name: "check service"
+  import_tasks: roles/influxdb/shared/wait_until_ready.yml
 
 # ***** DISABLE APPS *****
-- name: check users
+- name: "check users"
   shell: "docker exec influxdb sh -c \"influx user list\""
   register: influxdb_user_result
   changed_when: False
   tags: [ 'user' ]
 
-- name: add new user
+- name: "add new user"
   shell: "docker exec influxdb sh -c \"influx user create --name {{item}} --password {{vault_userpasswords[item].web_password}} --org default-org\""
   when: "item not in influxdb_user_result.stdout and 'admin' in userdata[item].groups"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
-- name: update user password
+- name: "update user password"
   shell: |
     spawn docker exec -it influxdb sh -c "influx user password --name {{item}}"
     expect "Please type your new password:"
@@ -28,13 +28,13 @@
   changed_when: False
   tags: [ 'user' ]
 
-- name: check auth
+- name: "check auth"
   shell: "docker exec influxdb sh -c \"influx auth list --org default-org\""
   register: influxdb_auth_result
   changed_when: False
   tags: [ 'user' ]
   
-- name: add new auth
+- name: "add new auth"
 #  shell: "docker exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org --operator\""
 # WORKARROUND for influxdb 2.4
   shell: "docker exec influxdb sh -c \"influx auth create --description \\\"{{item}}'s Token\\\" --user {{item}} --org default-org --read-annotations --write-annotations --read-authorizations --write-authorizations  --read-buckets --write-buckets --read-checks --write-checks --read-dashboards --write-dashboards --read-dbrp --write-dbrp --read-documents --write-documents --read-labels --write-labels --read-notebooks --write-notebooks --read-notificationEndpoints --write-notificationEndpoints --read-notificationRules --write-notificationRules --read-orgs --write-orgs --read-scrapers --write-scrapers --read-secrets --write-secrets --read-sources --write-sources  --read-tasks --write-tasks --read-telegrafs --write-telegrafs --read-users --write-users --read-variables --write-variables --read-views --write-views --read-remotes --write-remotes --read-replications --write-replications\""

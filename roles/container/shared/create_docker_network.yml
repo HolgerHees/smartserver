@@ -1,0 +1,28 @@
+- name: "container : create network {{network_name}}"
+  docker_network:
+    name: "{{network_name}}"
+    internal: "{{network_internal}}"
+    ipam_config:
+      - subnet: "{{network_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
+        gateway: "{{network_gateway | default(network_ip.split('.')[:3] | join('.') + '.1')}}"
+#    connected: "{{network_container | default([])}}"
+    appends: no
+  register: network_result
+ 
+- name: "container : touch hosts file"
+  file:
+    path: "{{global_etc}}networks/{{network_name}}"
+    state: touch
+  changed_when: no
+
+- name: "container : allow network {{network_name}}"
+  vars:
+#    network_saddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
+    network_saddr: "{{network_firewall_subnet | default(network_ip)}}"
+    network_daddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
+  import_tasks: roles/firewall/shared/allow_network.yml
+
+#- name: notify dependencies
+#  command: "/bin/true"
+#  notify: "{{notify_dependenies}}"
+#  when: "network_result.changed and notify_dependenies | default([]) | length > 0"

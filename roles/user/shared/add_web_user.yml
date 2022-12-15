@@ -1,0 +1,40 @@
+- name: "user : add user \"{{username}}\" to apache .htpasswd"
+  htpasswd:
+    path: "{{global_etc}}apache2/_.ansible.auth/.htpasswd"
+    name: "{{username}}"
+    password: "{{password}}"
+     
+- name: "user : add fullname of \"{{username}}\" to apache auth_user_fullnames.txt"
+  lineinfile:
+    path: "{{global_etc}}apache2/_.ansible.auth/auth_user_fullnames.txt"
+    regexp: '^{{username}}:'
+    line: '{{username}} {{fullname | default(username)}}'
+  when: "usergroups is defined"
+  
+- name: "user : add groups of \"{{username}}\" to apache auth_user_groups.txt"
+  lineinfile:
+    path: "{{global_etc}}apache2/_.ansible.auth/auth_user_groups.txt"
+    regexp: '^{{username}}:'
+    line: '{{username}} {{usergroups | join(",")}}'
+  when: "usergroups is defined"
+
+- name: "user : add user \"{{username}}\" to apache auth_openidc_users.txt"
+  lineinfile:
+    path: "{{global_etc}}apache2/_.ansible.auth/auth_openidc_users.txt"
+    regexp: '^{{email}}:'
+    line: '{{email}} {{username}}'
+  when: "usergroups is defined and email is defined"
+  
+- name: "user : add user \"{{username}}\" to apache auth_openidc_user_fullnames.txt"
+  lineinfile:
+    path: "{{global_etc}}apache2/_.ansible.auth/auth_openidc_user_fullnames.txt"
+    regexp: '^{{email}}:'
+    line: '{{email}} {{fullname | default(username)}}'
+  when: "usergroups is defined and email is defined"
+
+- name: "user : add user \"{{username}}\" to apache auth_openidc_user_groups.txt"
+  lineinfile:
+    path: "{{global_etc}}apache2/_.ansible.auth/auth_openidc_user_groups.txt"
+    regexp: '^{{email}}:'
+    line: '{{email}} {{usergroups | join(",")}}'
+  when: "usergroups is defined and email is defined"

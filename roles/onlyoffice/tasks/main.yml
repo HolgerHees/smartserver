@@ -23,14 +23,14 @@
     image_version: "{{onlyoffice_version}}"
     files:
       - roles/onlyoffice/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
     network_name: "onlyoffice"
     network_ip: "{{docker_onlyoffice_ip}}"
     network_internal: yes
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
   
 - name: create docker container
   docker_container:
@@ -77,14 +77,14 @@
     network_container:
       - mysql
       - redis
-  import_tasks: roles/container/tasks/connect_docker_network.yml
+  import_tasks: roles/container/shared/connect_docker_network.yml
   tags: [ 'mysql', 'redis' ]
 
 - name: add container name
   vars:
     host_name: "onlyoffice"
     host_ip_address: "{{docker_onlyoffice_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** DATABASE *****
 - name: create database
@@ -93,19 +93,19 @@
     username: "{{vault_onlyoffice_mysql_username}}"
     password: "{{vault_onlyoffice_mysql_password}}"
     backup: no
-  import_tasks: roles/mysql/tasks/add_database.yml
+  import_tasks: roles/mysql/shared/add_database.yml
   
 # ***** FINALIZE *****
 #- name: copy fluentd config
 #  vars:
 #    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
-#  import_tasks: roles/fluentd/tasks/add_config.yml
+#  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: allow onlyoffice service
   vars:
     name: "https.onlyoffice"
     rule: "proto tcp dport 443 saddr {{docker_onlyoffice_ip}}"
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: copy apache vhost
@@ -113,18 +113,18 @@
     sub_domain: "onlyoffice"
     usergroup: "user"
     include: "templates/etc/apache2/_.ansible.vhost.d/onlyoffice.inc"
-  import_tasks: roles/apache/tasks/add_vhost.yml
+  import_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/onlyoffice.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: create systemd service
   vars:
     container_name: "onlyoffice"
     container_after: [ "mysql", "redis" ]
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -135,10 +135,10 @@
       repository: "onlyoffice/documentserver", 
       pattern: "^([0-9\\.]+)$" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger onlyoffice handler
   vars:
     notify: "restart onlyoffice"
     service: "onlyoffice.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

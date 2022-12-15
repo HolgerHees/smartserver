@@ -159,4 +159,4 @@
     js_file: "templates/webui/openwrt.js"
     i18n_files: [ { language: "de", file: "templates/webui/openwrt.de.json" } ]
     icons: []
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml

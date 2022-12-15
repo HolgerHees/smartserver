@@ -12,7 +12,7 @@
       - roles/speedtest/templates/container/Dockerfile
       - roles/speedtest/templates/container/patches/ipInfo.js
       - roles/speedtest/templates/container/patches/gzip.js
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -39,7 +39,7 @@
   vars:
     host_name: "speedtest"
     host_ip_address: "{{docker_speedtest_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 #- name: allow speedtest to connect ipinfo service
@@ -47,7 +47,7 @@
 #    name: "postfix"
 #    rule: "outerface {{main_network_interface}} saddr {{docker_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443"
 #    is_docker: True
-#  import_tasks: roles/firewall/tasks/allow_service.yml
+#  import_tasks: roles/firewall/shared/allow_service.yml
 #  tags: [ 'firewall_config' ]
 
 - name: register webui
@@ -56,24 +56,24 @@
     js_file: "templates/webui/speedtest.js"
     i18n_files: [ { language: "de", file: "templates/webui/speedtest.de.json" } ]
     icons: [ 'templates/webui/icons/speedtest_logo.svg' ]
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "speedtest"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/speedtest.inc"
-  import_tasks: roles/apache/tasks/add_vhost.yml
+  import_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/speedtest.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
     
 - name: create systemd service
   vars:
     container_name: "speedtest"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -84,10 +84,10 @@
       repository: "e7db/speedtest",
       pattern: "^v([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger speedtest handler
   vars:
     notify: "restart speedtest"
     service: "speedtest.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

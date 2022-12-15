@@ -1,0 +1,23 @@
+- name: "firewall : {{'deny' if is_drop is defined else 'allow'}} service '{{name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
+  vars:
+    ferm_chain: "{{ 'DOCKER-USER' if is_docker is defined and is_docker else 'INPUT' }}"
+    ferm_rules: "{{ [rule] if rules is not defined else rules }}"
+    ferm_type: "{{ 'DROP' if is_drop is defined else 'ACCEPT' }}"
+    ferm_prefix: "{{ '15' if is_drop is defined else '30' }}"
+  template:
+    src: "roles/firewall/templates/ferm_service.template"
+    dest: "/etc/ferm/ferm.d/{{ferm_prefix}}-{{name}}.ferm"
+    owner: root
+    group: root
+    mode: 0644
+  register: "firewall_allow_service_result"
+  tags: [ 'firewall_config' ]
+  notify: "restart ferm"
+
+- name: "firewall : apply ferm changes => instant_activation"
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: ferm
+  when: "instant_activation | default(False) and firewall_allow_service_result.changed"
+

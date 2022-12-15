@@ -1,0 +1,25 @@
+#- name: read service facts
+#  service_facts:
+
+- name: "openhab : check if running"
+  shell: "systemctl is-active --quiet openhab"
+  register: "service_result"
+  changed_when: no
+  failed_when: no
+  
+- name: "openhab : start service"
+  systemd:
+    name: openhab
+    state: started
+    daemon_reload: yes
+#  changed_when: "'openhab.service' not in ansible_facts.services or ansible_facts.services['openhab.service'].state != 'running'"
+  when: "service_result.rc != 0"
+
+- name: "openhab : wait to become ready"
+  command: "sshpass -p \"habopen\" ssh -o \"StrictHostKeyChecking no\" -p 8101 openhab@openhab \"users list\""
+  register: result
+  until: "'Password authentication' in result.stderr and result.rc == 0"
+  retries: 300
+  delay: 1
+#  changed_when: "'openhab.service' not in ansible_facts.services or ansible_facts.services['openhab.service'].state != 'running'"
+  changed_when: "service_result.rc != 0"

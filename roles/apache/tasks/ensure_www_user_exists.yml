@@ -3,9 +3,9 @@
 # suse group: wwwrun:!:474:
 # fedora user: apache:x:48:48:Apache:/usr/share/httpd:/sbin/nologin
 # fedora group: apache:x:48:
-- name: ensure user and group exists
+- name: "apache : ensure user and group exists"
   vars:
     user: { key: "www", name: "{{'wwwrun' if is_suse else 'apache'}}", system: true, home: "{{htdocs_path}}" }
     group: { key: "www", name: "{{'www' if is_suse else 'apache'}}", system: true }
-  import_tasks: roles/user/tasks/add_system_user.yml
+  import_tasks: roles/user/shared/add_system_user.yml
 

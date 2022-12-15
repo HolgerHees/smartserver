@@ -1,5 +1,0 @@
-- name: add '{{host_name}}' to /etc/hosts config
-  lineinfile:
-    path: /etc/hosts
-    regexp: "[0-9\\.]+\\s+{{host_name}}"
-    line: "{{host_ip_address}} {{host_name}}"

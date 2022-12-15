@@ -87,7 +87,7 @@
   vars:
     name: "cloud_backup_{{cloud_backup_name}}"
     rules_file: "templates/loki/rules.yml"
-  import_tasks: roles/loki/tasks/add_config.yml
+  import_tasks: roles/loki/shared/add_config.yml
 
 - name: create cron job => is_production
   vars:
@@ -96,7 +96,7 @@
     file: "ansible_cloud_backup"
     hour: "2"
     minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
   when: "is_production|bool"
   
 - name: set logrotate job
@@ -119,4 +119,4 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{rclone_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml

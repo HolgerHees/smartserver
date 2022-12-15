@@ -68,7 +68,7 @@
   vars:
     host_name: "mysql"
     host_ip_address: "{{docker_mysql_ip}}"
-  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+  import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create cron job
@@ -78,7 +78,7 @@
     file: "ansible_mysql"
     hour: "0"
     minute: "45"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: create cron job
   vars:
@@ -87,17 +87,17 @@
     file: "ansible_mysql"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/mysql.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
 
 - name: create systemd service
   vars:
     container_name: "mysql"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
     
 - name: register update notifier
   vars:
@@ -108,16 +108,16 @@
       repository: "mariadb",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger mysql handler
   vars:
     notify: "restart mysql"
     service: "mysql.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
 
 - name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  import_tasks: roles/mysql/shared/wait_until_ready.yml
   when: mysql_container.changed
 
 - name: check mysql upgrade
@@ -131,5 +131,5 @@
     username: "{{vault_shared_mysql_username}}"
     password: "{{vault_shared_mysql_password}}"
     backup: yes
-  import_tasks: roles/mysql/tasks/add_database.yml
+  import_tasks: roles/mysql/shared/add_database.yml
   

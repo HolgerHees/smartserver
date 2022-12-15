@@ -38,15 +38,15 @@
   vars:
     name: "smartd"
     rules_file: "templates/prometheus/rules.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
 
 - name: register systemd service watcher
   vars:
     name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: trigger smartd handler
   vars:
     notify: "restart smartd"
     service: "{{'smartmontools' if is_ubuntu else 'smartd'}}.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

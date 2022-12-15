@@ -20,7 +20,7 @@
     files:
       - roles/elastalert/templates/container/Dockerfile
       - roles/elastalert/templates/container/entrypoint.sh
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: connect elastalert with elasticsearch and postfix
   docker_network:
@@ -69,12 +69,12 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/elastalert.conf"
-  import_tasks: roles/fluentd/tasks/add_config.yml
+  import_tasks: roles/fluentd/shared/add_config.yml
   
 - name: create systemd service
   vars:
     container_name: "elastalert"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -86,10 +86,10 @@
       pattern: "^v([0-9\\.]+)$",
       version: "{{elastalert_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: trigger elastalert handler
   vars:
     notify: "restart elastalert"
     service: "elastalert.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml

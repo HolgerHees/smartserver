@@ -67,10 +67,10 @@ class Speedtest(threading.Thread):
         self.resultPing = -1
 
     def triggerSpeedtest(self):
-        t = threading.Thread(target=self.startSpeedtest, args=(), kwargs={})
+        t = threading.Thread(target=self.startSpeedtest, args=(0), kwargs={})
         t.start()
 
-    def startSpeedtest(self):
+    def startSpeedtest(self, retry = 3):
         if self.is_testing == True:
             return
 
@@ -132,14 +132,20 @@ class Speedtest(threading.Thread):
             except json.decoder.JSONDecodeError:
                 self.resetMetrics()
 
-                location = "Fehler"
+                location = "Error"
                 logging.error(u"Data error: {}".format(result))
         except Exception as e:
             self.resetMetrics()
 
-            location = "Fehler"
+            location = "Error"
             logging.error(traceback.format_exc())
         finally:
+            if self.resultUp == -1 and retry > 0:
+                if not self.event.is_set():
+                    self.event.wait(60 - (retry * 15))
+                    self.startSpeedtest(retry - 1)
+                return
+
             self.mqtt.publish("speedtest/time", "{:02d}:{:02d}".format(datetime.now().hour,datetime.now().minute))
             self.mqtt.publish("speedtest/location", location)
 
@@ -159,7 +165,7 @@ class Speedtest(threading.Thread):
 
             self.is_testing = False
 
-        self.handler.notifySpeedtestData()
+            self.handler.notifySpeedtestData()
 
     def getMetrics(self, is_prometheus):
         metrics = []

@@ -1,0 +1,19 @@
+groups:
+- name: system
+  rules:
+  - alert: Fan speed is too low
+    expr: 'netdata_sensors_fan_Rotations_min_average{dimension="fan2", job="netdata"} < 500'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Fan rotation speed is {{'{{'}}$value{{'}}'}} rpm"
+  - alert: Avg temperature is too high
+    expr: 'avg_over_time (netdata_sensors_temperature_Celsius_average{dimension="temp1", job="netdata"}[1h]) > 60'
+    for: 0m
+    labels:
+      notifyGroup: "custom"
+      severity: critical
+    annotations:
+      summary: "Avg temperature is {{'{{'}}$value{{'}}'}} °C"

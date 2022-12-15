@@ -1,6 +1,6 @@
 # ***** CHECK *****
-- name: check openhab service
-  import_tasks: roles/openhab/tasks/wait_until_ready.yml
+- name: check service
+  import_tasks: roles/openhab/shared/wait_until_ready.yml
 
 # ***** DISABLE APPS *****
 - name: check users

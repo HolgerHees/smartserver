@@ -91,7 +91,7 @@
 #    weekday: "7"
 #    hour: "1"
 #    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  import_tasks: roles/cron/shared/add_cronjob.yml
 #  when: mdraid.stat.exists
 
 #- name: create cron 'continue' job
@@ -102,7 +102,7 @@
 #    weekday: "1-6"
 #    hour: "1"
 #    minute: "0"
-#  import_tasks: roles/cron/tasks/add_cronjob.yml
+#  import_tasks: roles/cron/shared/add_cronjob.yml
 #  when: mdraid.stat.exists
 
 # ***** FINALIZE *****
@@ -110,25 +110,25 @@
   vars:
     name: "mdmonitor"
     rules_file: "templates/prometheus/rules.yml"
-  import_tasks: roles/prometheus/tasks/add_config.yml
+  import_tasks: roles/prometheus/shared/add_config.yml
   when: mdraid.stat.exists
 
 - name: register loki rules
   vars:
     name: "mdmonitor"
     rules_file: "templates/loki/rules.yml"
-  import_tasks: roles/loki/tasks/add_config.yml
+  import_tasks: roles/loki/shared/add_config.yml
   when: mdraid.stat.exists
 
 - name: register systemd service watcher
   vars:
     name: "mdmonitor"
-  import_tasks: roles/systemd_watcher/tasks/add_watcher.yml
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
   when: mdraid.stat.exists
 
 - name: trigger mdmonitor handler
   vars:
     notify: "restart mdmonitor"
     service: "mdmonitor.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
   when: mdraid.stat.exists

@@ -6,7 +6,7 @@
 #    git_owner:  "{{system_users['www'].name}}"
 #    git_group:  "{{system_groups['www'].name}}"
     git_mode:  "u=rwX,g=rwX,o="
-  import_tasks: roles/_shared/tasks/git_clone.yml
+  import_tasks: roles/_shared/git_clone.yml
 
 - name: copy system config
   template:

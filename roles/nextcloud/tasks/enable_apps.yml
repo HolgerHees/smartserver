@@ -5,13 +5,13 @@
   
 # ***** CHECK *****
 - name: check mysql service
-  import_tasks: roles/mysql/tasks/wait_until_ready.yml
+  import_tasks: roles/mysql/shared/wait_until_ready.yml
     
 - name: check redis service
-  import_tasks: roles/redis/tasks/wait_until_ready.yml
+  import_tasks: roles/redis/shared/wait_until_ready.yml
 
 - name: check apache service
-  import_tasks: roles/apache/tasks/wait_until_ready.yml
+  import_tasks: roles/apache/shared/wait_until_ready.yml
 
 # ***** DISABLE APPS *****
 - name: disable apps
@@ -146,7 +146,7 @@
     cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
     file: "ansible_nextcloud"
     minute: "*/15"
-  import_tasks: roles/cron/tasks/add_cronjob.yml
+  import_tasks: roles/cron/shared/add_cronjob.yml
 
 # ***** INSTALL KEEWEB *****
 - name: check for outdated keeweb version
@@ -301,7 +301,7 @@
     js_file: "templates/nextcloud_additional_apps.js"
     i18n_files: []
     icons: "{{nextcloud_additional_icons}}"
-  import_tasks: roles/apache_webui/tasks/add_webui.yml
+  import_tasks: roles/apache_webui/shared/add_webui.yml
   when: "nextcloud_additional_apps | length > 0"
 
 - name: register news update notifier
@@ -314,7 +314,7 @@
       pattern: "^([0-9\\.]+)$",
       version: "{{nextcloud_news_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml
 
 - name: register keeweb update notifier
   vars:
@@ -326,4 +326,4 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{nextcloud_keeweb_version}}" 
     }
-  import_tasks: roles/update_service/tasks/add_software.yml
+  import_tasks: roles/update_service/shared/add_software.yml

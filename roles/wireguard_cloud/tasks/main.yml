@@ -85,7 +85,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/wireguard_cloud/templates/container/Dockerfile
-  import_tasks: roles/container/tasks/build_docker_image.yml
+  import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
@@ -95,7 +95,7 @@
     network_gateway: "{{vpn_cloud_services.local.bridge}}"
     network_internal: no
     network_firewall_subnet: "{{vpn_cloud_subnet}}.0.0/16"
-  import_tasks: roles/container/tasks/create_docker_network.yml
+  import_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -139,7 +139,7 @@
 #  vars:
 #    host_name: "wireguard_cloud"
 #    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
-#  import_tasks: roles/_shared/tasks/add_to_hosts.yml
+#  import_tasks: roles/_shared/add_to_hosts.yml
 
 - name: prepare used ports
   set_fact:
@@ -168,17 +168,17 @@
     name: "wireguard.cloud_vpn"
     rules: "{{wireguard_cloud_ferm_rules}}"
     is_docker: True
-  import_tasks: roles/firewall/tasks/allow_service.yml
+  import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
     container_name: "wireguard_cloud"
     trigger_name: "wireguard_cloud"
-  import_tasks: roles/container/tasks/add_docker_service.yml
+  import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger wireguard_cloud handler
   vars:
     notify: "restart wireguard_cloud"
     service: "wireguard_cloud.service"
-  import_tasks: roles/_shared/tasks/service_check.yml
+  import_tasks: roles/_shared/service_check.yml
