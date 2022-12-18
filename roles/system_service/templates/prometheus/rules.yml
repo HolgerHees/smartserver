@@ -22,11 +22,7 @@ groups:
 - name: wan_connection
   rules:
   - alert: Speedtest is not working
-    expr: 'absent_over_time(system_service_speedtest{type="downstream_rate"}[70m])
-           or
-           absent_over_time(system_service_speedtest{type="upstream_rate"}[70m])
-           or
-           absent_over_time(system_service_speedtest{type="ping"}[70m])'
+    expr: 'absent_over_time(system_service_speedtest[70m])'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
