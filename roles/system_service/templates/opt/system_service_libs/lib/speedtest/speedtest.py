@@ -67,7 +67,7 @@ class Speedtest(threading.Thread):
         self.resultPing = -1
 
     def triggerSpeedtest(self):
-        t = threading.Thread(target=self.startSpeedtest, args=(0), kwargs={})
+        t = threading.Thread(target=self.startSpeedtest, args=(0,), kwargs={})
         t.start()
 
     def startSpeedtest(self, retry = 3):
