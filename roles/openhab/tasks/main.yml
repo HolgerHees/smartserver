@@ -6,7 +6,7 @@
 
 - name: set openhab version
   set_fact:
-    openhab_version: "3.3.0" # remove "container_post_exec" on update to version 3.4.0
+    openhab_version: "3.4.0" # remove "container_post_exec" on update to version 3.4.0
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"
     openhab_gid: "{{system_groups['openhab'].id}}"
@@ -14,6 +14,18 @@
 #    openhab_user: "root"
 #    openhab_group: "root"
   tags: [ 'update_notifier_config' ]
+
+# temporary during upgrade from 3.3.0 => 3.4.0
+- stat:
+    path: "{{global_etc}}openhab/conf/icons"
+  register: icons_link
+
+# temporary during upgrade from 3.3.0 => 3.4.0
+- name: remove symlink
+  file:
+    path: "{{global_etc}}openhab/conf/icons"
+    state: absent
+  when: "icons_link.stat.islnk is defined and icons_link.stat.islnk"
 
 - name: prepare needed config folder
   file:
@@ -27,7 +39,7 @@
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/addons" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/html" }
-#    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/icons" }
+    - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/conf/icons" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_etc}}openhab/python" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/jsondb" }
@@ -59,8 +71,8 @@
   with_items:
     - "python/shared"
     - "conf/html/shared"
-#    - "conf/icons/classic"
-    - "conf/icons"
+    - "conf/icons/classic"
+#    - "conf/icons"
 
 # ****** GITHUB CONFIG PROJECT ******
 - name: clone config git
@@ -548,7 +560,6 @@
   vars:
     container_name: "openhab"
     container_after: [ "mysql", "influxdb", "mosquitto" ]
-    container_post_exec: "nohup /bin/sh -c \"(sleep 30 && touch {{projects_path}}openhab_config/conf/transform/*) &\""
   import_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register openhab update notifier

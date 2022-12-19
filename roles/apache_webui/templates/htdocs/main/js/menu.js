@@ -107,7 +107,11 @@ mx.Menu = (function( ret ) {
                                         getIconUrl: function(){ return entry['iconUrl']; },
 
                                         getNewWindow: function(){ return entry['newWindow']; },
-                                        getUrl: function(){ return typeof entry['url'] === 'object' ? entry['url']['callback'](entry['url']['url']) : entry['url']; }
+                                        getUrl: function(){ return typeof entry['url'] === 'object' ? entry['url']['callback'](entry['url']['url']) : entry['url']; },
+
+                                        disableLoadingGear: function(){ entry['loadingGearEnabled'] = false},
+
+                                        isLoadingGearEnabled: function(){ return 'loadingGearEnabled' in entry ? entry['loadingGearEnabled'] : true; }
                                     }
                                 };
                             },
@@ -130,7 +134,9 @@ mx.Menu = (function( ret ) {
                                         getIconUrl: function(){ return entry['iconUrl']; },
 
                                         getHtml: function(){ return entry['html']; },
-                                        getCallback: function(){ return entry['callback']; }
+                                        getCallback: function(){ return entry['callback']; },
+
+                                        isLoadingGearEnabled: function(){ return true; }
                                     }
                                 };
                             }

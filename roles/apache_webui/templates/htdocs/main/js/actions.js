@@ -115,34 +115,42 @@ mx.Actions = (function( ret ) {
         }
     }
     
-    function setIFrameUrl(url, title)
+    function setIFrameUrl(url, title, showLoadingGear = true )
     {
         setTitle( title ? title : "");
 
         //if( iframeElement.getAttribute("src") != url )
         //{
-        hideIFrame(true);
-        hideError();
-        showProgress();
-        
-        // is needed to show iframe content in case of a loading error.
-        // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
-        iframeLoadingTimer = setTimeout(function(){ 
-            try
-            {
-                let url = iframeElement.contentWindow.location.href;
-                if( url != "about:blank" )
-                {
-                    loadHandler(url,"fallback");
-                    return;
-                }
-            }
-            catch (e) {
-                //console.log(e);
-            }
+        if( showLoadingGear )
+        {
+            hideIFrame(true);
+            hideError();
 
-            showError("loading"); 
-        },10000);
+            showProgress();
+
+            // is needed to show iframe content in case of a loading error.
+            // happens e.g. on firefox and not accepted self signed certificates for subdomains in the demo instance
+            iframeLoadingTimer = setTimeout(function(){
+                try
+                {
+                    let url = iframeElement.contentWindow.location.href;
+                    if( url != "about:blank" )
+                    {
+                        loadHandler(url,"fallback");
+                        return;
+                    }
+                }
+                catch (e) {
+                    //console.log(e);
+                }
+
+                showError("loading");
+            },10000);
+        }
+        else
+        {
+            showIFrame();
+        }
         
         iframeElement.setAttribute('src', url );
 
@@ -377,7 +385,7 @@ mx.Actions = (function( ret ) {
 
             //showIFrame();
 
-            setIFrameUrl(new_url, entry.getTitle());
+            setIFrameUrl(new_url, entry.getTitle(), entry.isLoadingGearEnabled() );
         }
         else
         {
