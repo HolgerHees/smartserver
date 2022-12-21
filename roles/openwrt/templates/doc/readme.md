@@ -8,9 +8,25 @@
 
     Setup vlan together with lan and public interface
 
-![network_device](./img/network_device.png) ![network_interface_lan](./img/network_interface_lan.png) ![network_interface_public](./img/network_interface_public.png)
+# 2.1 Configure "Bridge VLAN filtering" on network device "br-lan"
 
-    Make also sure that dhcp server is disabled on all interfaces
+- VLAN ID 1 has "Egress untagged and Primary VLAN ID" enabled
+- VLAN ID 5 has "Tagged" enabled
+
+![network_device](./img/network_device.png)
+
+
+# 2.2 Change your Interface
+
+Now change your Interface "LAN" to use the new device "br-lan.1"
+
+![network_interface_lan](./img/network_interface_lan.png)
+
+In addition, create a new interface "PUBLIC" which uses the new device "br-lan.5"
+
+![network_interface_public](./img/network_interface_public.png)
+
+And finally disable dhcp server on each interfaces
 
 ![network_dhcp](./img/network_dhcp.png)
 
