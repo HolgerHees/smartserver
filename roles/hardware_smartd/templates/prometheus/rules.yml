@@ -2,7 +2,7 @@ groups:
 - name: smartd
   rules:
   - alert: Disk error rate changed
-    expr: 'changes({chart=~"smartd_log.*",family="errors",job="netdata"}[1h]) > 0'
+    expr: 'changes({__name__=~"netdata.*", chart=~"smartd_log.*",family="errors",job="netdata"}[1h]) > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -11,7 +11,7 @@ groups:
       summary: "Disk error rate is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk interface errors occurs
-    expr: '{chart=~"smartd_log.*",family="external failure",job="netdata"} > 0'
+    expr: '{__name__=~"netdata.*", chart=~"smartd_log.*",family="external failure",job="netdata"} > 0'
     for: 0m
     labels:
       notifyGroup: "custom"
@@ -20,7 +20,7 @@ groups:
       summary: "Disk interface error count is {{'{{'}}$value{{'}}'}}"
 
   - alert: Disk temperature is too high
-    expr: '{chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
+    expr: '{__name__=~"netdata.*", chart=~"smartd_log.*",family="temperature",job="netdata"} > 50'
     for: 0m
     labels:
       notifyGroup: "custom"
