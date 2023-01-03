@@ -16,15 +16,6 @@
     - "{{nextcloud_data_path}}"
     - "{{global_log}}nextcloud"
 
-- name: prepare user folder # => needed for initial cloud backup links
-  file:
-    path: "{{nextcloud_data_path}}/{{item}}"
-    state: directory
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-  when: "'user' in userdata[item].groups"
-  with_items: "{{userdata}}"
-
 #- name: check owner and group
 #  file:
 #    path: "{{item}}"
@@ -200,9 +191,7 @@
     dest: "{{htdocs_path}}nextcloud/config/config.php"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
-    mode: 0640
-
-    
+    mode: 0640  
 
 # ***** INITIALIZE OLD - POST *****
 - name: upgrade existing database => database exists and nextcloud version changed
@@ -255,6 +244,15 @@
 #  changed_when: False
 #  when: "database_added"
       
+- name: prepare user folder # => needed for initial cloud backup links
+  file:
+    path: "{{nextcloud_data_path}}/{{item}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+  when: "'user' in userdata[item].groups"
+  with_items: "{{userdata}}"
+
 # ***** FINALIZE *****
 - name: create cron job
   vars:
