@@ -63,8 +63,8 @@
   vars:
     name: "alertmanager"
     rules:
-      - "saddr {{docker_alertmanager_ip}} daddr {{docker_postfix_ip}}"
       - "saddr {{docker_prometheus_ip}} daddr {{docker_alertmanager_ip}}"
+      - "saddr {{docker_alertmanager_ip}} daddr {{docker_postfix_ip}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

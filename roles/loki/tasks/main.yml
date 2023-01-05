@@ -62,8 +62,8 @@
   vars:
     name: "loki"
     rules:
-      - "saddr {{docker_loki_ip}} daddr {{docker_alertmanager_ip}}"
       - "saddr {{docker_prometheus_ip}} daddr {{docker_loki_ip}}"
+      - "saddr {{docker_loki_ip}} daddr {{docker_alertmanager_ip}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

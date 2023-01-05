@@ -69,7 +69,7 @@
     rules:
       - "saddr {{docker_onlyoffice_ip}} daddr {{docker_mysql_ip}}"
       - "saddr {{docker_onlyoffice_ip}} daddr {{docker_redis_ip}}"
-      - "saddr {{docker_onlyoffice_ip}} proto tcp dport 443 daddr {{server_ip}}"
+      - "saddr {{docker_onlyoffice_ip}} daddr {{server_ip}} proto tcp dport 443"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

@@ -193,7 +193,7 @@
       {% for vpn_admin_ip in vpn_admin_ips %}
         "saddr {{vpn_admin_ip}}",
       {% endfor %}
-      "proto udp dport {{mobile_vpn_internal_port}}"
+      "daddr {{server_ip}} proto udp dport {{mobile_vpn_internal_port}}"
       ]
   tags: [ 'firewall_config' ]
 

@@ -155,7 +155,7 @@
     wireguard_cloud_ferm_rules: |
       [
       {% for port in wireguard_cloud_ports %}
-        "outerface {{main_network_interface}} saddr {{vpn_cloud_services.local.gateway}} proto udp dport {{port}}",
+        "saddr {{vpn_cloud_services.local.gateway}} proto udp dport {{port}} outerface {{main_network_interface}}",
       {% endfor %}
       "daddr {{vpn_cloud_services.local.gateway}} proto udp dport {{cloud_vpn.interface.port}}"
       ]

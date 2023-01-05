@@ -473,8 +473,8 @@ for network in sorted_network_r:
                           
                             #if rule['mode'] == "DROP":
                             #    print(rule)
-                          
-                            hostMatch = rule['targetIp'] == connection.ip# or rule['targetIp'] == "0.0.0.0/0"
+
+                            hostMatch = rule['targetIp'] == connection.ip # or rule['targetIp'] == "0.0.0.0/0"
                             for key in openPorts:
                                 data = openPorts[key]
                                 sourceIp = rule['sourceIp'].split('/')[0]

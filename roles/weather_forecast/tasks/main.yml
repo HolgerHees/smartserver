@@ -42,9 +42,9 @@
   vars:
     name: "weather_forecast"
     rules:
+      - "saddr {{docker_prometheus_ip}} daddr {{docker_weather_forecast_ip}}"
       - "saddr {{docker_weather_forecast_ip}} daddr {{docker_mysql_ip}}"
       - "saddr {{docker_weather_forecast_ip}} daddr {{docker_cloud_mosquitto_ip}}"
-      - "saddr {{docker_prometheus_ip}} daddr {{docker_weather_forecast_ip}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
@@ -140,7 +140,7 @@
   vars:
     name: "weatcher_forecast"
     rules:
-        - "outerface {{main_network_interface}} saddr {{docker_weather_forecast_ip}} proto tcp dport 443"
+        - "saddr {{docker_weather_forecast_ip}} proto tcp dport 443 outerface {{main_network_interface}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

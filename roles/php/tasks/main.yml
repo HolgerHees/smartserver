@@ -69,8 +69,8 @@
       - "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}"
       - "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}"
       - "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}"
+      - "saddr {{docker_php_ip}} daddr {{server_ip}} proto tcp dport 443"
       - "saddr {{docker_php_ip}} outerface {{main_network_interface}}"
-      - "saddr {{docker_php_ip}} proto tcp dport 443 daddr {{server_ip}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
