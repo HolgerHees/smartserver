@@ -82,17 +82,8 @@
   vars:
     name: "ssh_vpn"
     rules: "{{ssh_vpn_rules}}"
-    is_docker: True
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
-
-#- name: allow ssh_vpn_fallback service
-#  vars:
-#    name: "ssh_vpn_fallback"
-#    rule: "proto tcp port {{vault_ssh_vpn_internal_port}}"
-#    is_docker: True
-#  import_tasks: roles/firewall/shared/allow_service.yml
-#  tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:

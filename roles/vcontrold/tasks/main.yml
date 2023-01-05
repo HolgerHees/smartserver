@@ -28,13 +28,6 @@
       - roles/vcontrold/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
 
-- name: create docker network
-  vars:
-    network_name: "vcontrold"
-    network_ip: "{{docker_vcontrold_ip}}"
-    network_internal: yes
-  import_tasks: roles/container/shared/create_docker_network.yml
-
 - name: create docker container
   docker_container:
     name: vcontrold
@@ -49,11 +42,10 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "vcontrold"
+      - name: "isolated"
         ipv4_address: "{{docker_vcontrold_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}networks/vcontrold:/etc/hosts:z'
       - '{{global_etc}}vcontrold/:/etc/vcontrold:ro,z'
       - '{{global_log}}vcontrold/:{{global_log}}vcontrold:z'
     devices:
@@ -62,13 +54,12 @@
       - "3002"
   notify: "restart vcontrold"
 
-- name: connect mosquitto with vcontrold network
+- name: allow vcontrol service
   vars:
-    network_name: "vcontrold"
-    network_container:
-      - mosquitto
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'mosquitto' ]
+    name: "vcontrold"
+    rules: [ "saddr {{docker_vcontrold_ip}} daddr {{docker_mosquitto_ip}}" ]
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: set logrotate job
   vars:

@@ -67,8 +67,7 @@
 - name: allow dns service
   vars:
     name: "dns"
-    rules: "{{dns_rules}}"
-    is_docker: True
+    rules: [ "{{dns_rules}}" ]
     instant_activation: True
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]

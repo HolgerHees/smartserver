@@ -287,7 +287,7 @@
 - name: allow letsencrypt service
   vars:
     name: "http.letsencrypt"
-    rule: "proto tcp dport 80"
+    rules: [ "proto tcp dport 80" ]
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
   

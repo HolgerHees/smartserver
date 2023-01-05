@@ -24,6 +24,7 @@
     network_mode: "default"
     networks:
       - name: "isolated"
+        ipv4_address: "{{docker_redis_ip}}"
     networks_cli_compatible: yes
     exposed_ports:
      - "6379"

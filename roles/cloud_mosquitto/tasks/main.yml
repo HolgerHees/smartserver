@@ -41,6 +41,8 @@
     networks:
       - name: "cloud_vpn"
         ipv4_address: "{{vpn_cloud_services.local.mosquitto}}"
+      - name: "isolated"
+        ipv4_address: "{{docker_cloud_mosquitto_ip}}"
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}cloud_mosquitto:/mosquitto/config:z'

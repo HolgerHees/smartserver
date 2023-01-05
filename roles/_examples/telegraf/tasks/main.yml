@@ -27,13 +27,6 @@
     name: docker
     state: started
 
-- name: create docker network
-  vars:
-    network_name: "telegraf"
-    network_ip: "{{docker_telegraf_ip}}"
-    network_internal: yes
-  import_tasks: roles/container/shared/create_docker_network.yml
-
 - name: create docker container
   docker_container:
     name: telegraf
@@ -48,11 +41,10 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "telegraf"
+      - name: "isolated"
         ipv4_address: "{{docker_telegraf_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}networks/telegraf:/etc/hosts:z'
       - '{{ global_etc }}telegraf:/etc/telegraf:z'
     exposed_ports:
      - "8092/udp"  
@@ -60,14 +52,6 @@
      - "4242"  
   notify: "restart telegraf"
     
-- name: connect influxdb with telegraf network
-  vars:
-    network_name: "telegraf"
-    network_container:
-      - influxdb
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'influxdb' ]
-
 - name: add container name
   vars:
     host_name: "telegraf"

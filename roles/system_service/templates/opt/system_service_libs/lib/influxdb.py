@@ -82,7 +82,7 @@ class InfluxDB(threading.Thread):
     def submit(self, messurements):
         try:
             if len(messurements) == 0:
-                return
+                return 1
 
             logging.info("Submit {} messurements".format(len(messurements)))
 

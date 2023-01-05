@@ -1,5 +1,5 @@
 domain (ip ip6) {
-{% for ferm_rule in ferm_rules %}    table filter chain {{ferm_chain}} {{ferm_rule}} {{ferm_type}};
+{% for ferm_rule in ferm_rules %}    table filter chain {{ 'INPUT' if 'saddr ' not in ferm_rule or 'daddr ' + server_ip in ferm_rule else 'DOCKER-USER' }} {{ferm_rule}} {{ferm_type}};
 {% endfor %}
 } 
 

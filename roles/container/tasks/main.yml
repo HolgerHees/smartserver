@@ -137,7 +137,6 @@
     - { mode: "u=rwx,g=rx,o=", path: "/opt/docker" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/docker/config" }
     - { mode: "u=rwx,g=x,o=", path: "{{global_lib}}docker" }
-    - { mode: "u=rwx,g=x,o=", path: "{{global_etc}}networks" }
 
 - name: set docker selinux configuration => is_fedora
   sefcontext:

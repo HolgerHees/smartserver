@@ -94,13 +94,6 @@
       - roles/grafana/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
     
-- name: create docker network
-  vars:
-    network_name: "grafana"
-    network_ip: "{{docker_grafana_ip}}"
-    network_internal: yes
-  import_tasks: roles/container/shared/create_docker_network.yml
-
 - name: create docker container
   docker_container:
     name: grafana
@@ -123,28 +116,27 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "grafana"
+      - name: "isolated"
         ipv4_address: "{{docker_grafana_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}networks/grafana:/etc/hosts:z'
       - '{{global_lib}}grafana:/var/lib/grafana:z'
       - '{{global_etc}}grafana/provisioning:/etc/grafana/provisioning:z'
     exposed_ports:
      - "3000"
   notify: "restart grafana"
       
-- name: connect mysql, influxdb, loki, prometheus & alertmanager with grafana network
+- name: allow grafana service
   vars:
-    network_name: "grafana"
-    network_container:
-      - mysql
-      - influxdb
-      - loki
-      - prometheus
-      - alertmanager
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'influxdb', 'loki', 'mysql', 'prometheus', 'alertmanager' ]
+    name: "grafana"
+    rules:
+      - "saddr {{docker_grafana_ip}} daddr {{docker_mysql_ip}}"
+      - "saddr {{docker_grafana_ip}} daddr {{docker_influxdb_ip}}"
+      - "saddr {{docker_grafana_ip}} daddr {{docker_loki_ip}}"
+      - "saddr {{docker_grafana_ip}} daddr {{docker_prometheus_ip}}"
+      - "saddr {{docker_grafana_ip}} daddr {{docker_alertmanager_ip}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:

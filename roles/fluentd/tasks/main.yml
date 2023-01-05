@@ -26,13 +26,6 @@
       - roles/fluentd/templates/container/patches/out_loki.rb
   import_tasks: roles/container/shared/build_docker_image.yml
 
-- name: create docker network
-  vars:
-    network_name: "fluentd"
-    network_ip: "{{docker_fluentd_ip}}"
-    network_internal: yes
-  import_tasks: roles/container/shared/create_docker_network.yml
-
 - name: create docker container
   docker_container:
     name: fluentd
@@ -47,24 +40,23 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "fluentd"
+      - name: "isolated"
         ipv4_address: "{{docker_fluentd_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}networks/fluentd:/etc/hosts:z'
       - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
       - '{{ "/run" if is_suse else "/var" }}/log/journal:{{ "/run" if is_suse else "/var" }}/log/journal:z'
   notify: "restart fluentd"
     
-- name: connect loki with fluentd network
+- name: allow fluentd service
   vars:
-    network_name: "fluentd"
-    network_container:
-      - loki
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'loki', 'alpine' ]
-
+    name: "fluentd"
+    rules:
+      - "saddr {{docker_fluentd_ip}} daddr {{docker_loki_ip}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
+  
 - name: add container name
   vars:
     host_name: "fluentd"

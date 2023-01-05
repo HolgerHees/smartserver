@@ -13,7 +13,6 @@ ExecStart=/usr/bin/docker start -a {{container_name}}
 {% if container_pre_exec is defined %}ExecStartPre={{container_pre_exec}}{{''}}
 {% endif %}
 ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/docker/update_gateways --container={{container_name}} --gateway=default{% if container_routes is defined %}{% for route in container_routes %} --gateway={{route.subnet}}:{{route.gateway}}{% endfor %}{% endif %}) &"
-ExecStartPost=nohup /bin/bash -c "(sleep 1 && /opt/docker/update_network_hosts --container={{container_name}}) &"
 {% if container_post_exec is defined %}ExecStartPost={{container_post_exec}}{{''}}
 {% endif %}
 ExecStop=/usr/bin/docker stop {{container_name}}

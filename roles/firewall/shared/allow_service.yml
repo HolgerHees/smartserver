@@ -1,7 +1,6 @@
 - name: "firewall : {{'deny' if is_drop is defined else 'allow'}} service '{{name}}{{' ' if source is defined else ''}}{{source|default('')}}'"
   vars:
-    ferm_chain: "{{ 'DOCKER-USER' if is_docker is defined and is_docker else 'INPUT' }}"
-    ferm_rules: "{{ [rule] if rules is not defined else rules }}"
+    ferm_rules: "{{ rules }}"
     ferm_type: "{{ 'DROP' if is_drop is defined else 'ACCEPT' }}"
     ferm_prefix: "{{ '15' if is_drop is defined else '30' }}"
   template:

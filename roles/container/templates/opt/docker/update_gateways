@@ -51,6 +51,8 @@ for gateway in args_values["gateway"]:
                     exec(["nsenter", "-n", "-t", container_id, "ip", "route", "del", "default"])
 
                 exec(["nsenter", "-n", "-t", container_id, "ip", "route", "add", "default", "via", default_gateway])
+
+            break
     else:
         subnet, gateway = gateway.split(":")
         

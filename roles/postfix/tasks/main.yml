@@ -54,13 +54,14 @@
       - "25/tcp"
   notify: "restart postfix"
 
-- name: connect postfix with prometheus network
+- name: allow postfix service
   vars:
-    network_name: "prometheus"
-    network_container:
-      - postfix
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'prometheus', 'alpine' ]
+    name: "postfix"
+    rules:
+      - "saddr {{docker_prometheus_ip}} daddr {{docker_postfix_ip}}"
+      - "outerface {{main_network_interface}} saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
@@ -145,15 +146,6 @@
     name: "postfix"
     rules_file: "templates/loki/rules.yml"
   import_tasks: roles/loki/shared/add_config.yml
-  when: mdraid.stat.exists
-
-- name: allow postfix service
-  vars:
-    name: "postfix"
-    rule: "outerface {{main_network_interface}} saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}}"
-    is_docker: True
-  import_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:

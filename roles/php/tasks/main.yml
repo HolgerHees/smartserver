@@ -12,13 +12,6 @@
       - roles/php/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
 
-- name: create docker network
-  vars:
-    network_name: "php"
-    network_ip: "{{docker_php_ip}}"
-    network_internal: no
-  import_tasks: roles/container/shared/create_docker_network.yml
-
 # network_mode: "host" can be changed if openhab is a docker container too and netdata helper script has to be replaced with somthing python based
 # php fpm is always listening only to 127.0.0.1 by default
 - name: create docker container
@@ -37,14 +30,13 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks: 
-      - name: "php"
+      - name: "isolated"
         ipv4_address: "{{docker_php_ip}}"
     networks_cli_compatible: yes
     etc_hosts:
       openhab: "{{server_ip}}" # fix to make openhab reachable
       netdata: "{{server_ip}}" # fix to make netdata reachable
     volumes:
-      - '{{global_etc}}networks/php:/etc/hosts:z'
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'                         # needed by update service and ci service
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
@@ -54,16 +46,33 @@
       - "9000"
   notify: "restart php"
 
-- name: connect mysql, influxdb, redis & postfix with php network
+#- name: prepare ferm rules
+#  set_fact:
+#    php_ferm_rules: |
+#      [
+#      "saddr {{docker_php_ip}} daddr {{docker_mysql_ip}}",
+#      "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}",
+#      "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}",
+#      "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}",
+#      "saddr {{docker_php_ip}} outerface {{main_network_interface}}"
+#      {% for network in intern_networks %}
+#        "saddr {{docker_php_ip}} daddr {{network}}",
+#      {% endfor %}
+#      ]
+#  tags: [ 'firewall_config' ]
+
+- name: allow php service
   vars:
-    network_name: "php"
-    network_container:
-      - mysql
-      - influxdb
-      - redis
-      - postfix # => used by nextcloud
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'mysql', 'influxdb', 'redis', 'postfix', 'alpine' ]
+    name: "php"
+    rules:
+      - "saddr {{docker_php_ip}} daddr {{docker_mysql_ip}}"
+      - "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}"
+      - "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}"
+      - "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}"
+      - "saddr {{docker_php_ip}} outerface {{main_network_interface}}"
+      - "saddr {{docker_php_ip}} proto tcp dport 443 daddr {{server_ip}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
@@ -72,21 +81,6 @@
   import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
-- name: allow http php service
-  vars:
-    name: "https.php"
-    rule: "proto tcp dport 443 saddr {{docker_php_ip}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
-
-- name: allow php service
-  vars:
-    name: "php"
-    rule: "saddr {{docker_php_ip}}"
-    is_docker: True
-  import_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
-
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/php.conf"

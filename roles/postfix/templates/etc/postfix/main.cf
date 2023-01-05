@@ -5,8 +5,7 @@ inet_protocols = ipv4
 # general params
 compatibility_level = 1
 myhostname = {{server_name}}
-mynetworks = 127.0.0.0/8 [::1]/128 172.0.0.0/8{% if cloud_vpn != 'None' %} {{vpn_cloud_check_ip}}
-{% endif %}
+mynetworks = 127.0.0.0/8 [::1]/128 172.0.0.0/8
 mydestination = localhost
 relayhost = [{{vault_mailserver_host}}]:{{vault_mailserver_port}}
 recipient_canonical_maps = regexp:/etc/postfix/canonical_maps_recipient

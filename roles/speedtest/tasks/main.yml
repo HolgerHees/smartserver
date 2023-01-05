@@ -45,8 +45,7 @@
 #- name: allow speedtest to connect ipinfo service
 #  vars:
 #    name: "postfix"
-#    rule: "outerface {{main_network_interface}} saddr {{docker_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443"
-#    is_docker: True
+#    rules: [ "outerface {{main_network_interface}} saddr {{docker_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443" ]
 #  import_tasks: roles/firewall/shared/allow_service.yml
 #  tags: [ 'firewall_config' ]
 

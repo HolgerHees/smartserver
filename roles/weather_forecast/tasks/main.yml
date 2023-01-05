@@ -17,13 +17,6 @@
       - roles/weather_forecast/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
 
-- name: create docker network
-  vars:
-    network_name: "weather_forecast"
-    network_ip: "{{docker_weather_forecast_ip}}"
-    network_internal: no
-  import_tasks: roles/container/shared/create_docker_network.yml
-
 - name: create docker container
   docker_container:
     name: weather_forecast
@@ -38,30 +31,22 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "weather_forecast"
+      - name: "isolated"
         ipv4_address: "{{docker_weather_forecast_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}networks/weather_forecast:/etc/hosts:z'
       - '{{global_etc}}weather_forecast/:/etc/weather_forecast:ro,z'
   notify: "restart weather_forecast"
 
-- name: connect cloud_mosquitto & mysql with weather_forecast network
+- name: allow weather_forecast service
   vars:
-    network_name: "weather_forecast"
-    network_container:
-      - cloud_mosquitto
-      - mysql
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'mysql', 'cloud_mosquitto', 'alpine' ]
-
-- name: connect weather_forecast with prometheus network
-  vars:
-    network_name: "prometheus"
-    network_container:
-      - weather_forecast
-  import_tasks: roles/container/shared/connect_docker_network.yml
-  tags: [ 'prometheus', 'alpine' ]
+    name: "weather_forecast"
+    rules:
+      - "saddr {{docker_weather_forecast_ip}} daddr {{docker_mysql_ip}}"
+      - "saddr {{docker_weather_forecast_ip}} daddr {{docker_cloud_mosquitto_ip}}"
+      - "saddr {{docker_prometheus_ip}} daddr {{docker_weather_forecast_ip}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 - name: check mysql service
   import_tasks: roles/mysql/shared/wait_until_ready.yml
@@ -156,7 +141,6 @@
     name: "weatcher_forecast"
     rules:
         - "outerface {{main_network_interface}} saddr {{docker_weather_forecast_ip}} proto tcp dport 443"
-    is_docker: True
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
