@@ -140,7 +140,7 @@
   vars:
     name: "weatcher_forecast"
     rules:
-        - "saddr {{docker_weather_forecast_ip}} proto tcp dport 443 outerface {{main_network_interface}}"
+        - "saddr {{docker_weather_forecast_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

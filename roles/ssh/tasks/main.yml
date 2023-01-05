@@ -4,7 +4,7 @@
     regexp: '^{{item.field}} '
     line: '{{item.field}} {{item.value}}'
   with_items:
-    - { field: 'AllowUsers', value: "{{ '*@' + default_gateway + ' ' if not default_gateway.startswith(server_subnet) else '' }}*@{{intern_networks | join(' *@')}} *@{{vpn_mobile_network}}/24" }
+    - { field: 'AllowUsers', value: "*@{{intern_networks | join(' *@')}} *@{{vpn_mobile_network}}/24" }
   notify: "restart sshd"
 
 # ***** FINALIZE *****

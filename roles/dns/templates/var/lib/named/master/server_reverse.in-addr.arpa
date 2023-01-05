@@ -6,6 +6,6 @@ $TTL 2d
 				1w		; expiry
 				1d )		; minimum
 
-{{server_arpa | regex_replace('^[\d]+\.','')}}.in-addr.arpa.	IN NS		ns.{{server_domain}}.
-{{server_arpa}}.in-addr.arpa.	IN PTR		{{server_domain}}.
-{{server_arpa}}.in-addr.arpa.	IN PTR		ns.{{server_domain}}.
+{{default_server_arpa | regex_replace('^[\d]+\.','')}}.in-addr.arpa.	IN NS		ns.{{server_domain}}.
+{{default_server_arpa}}.in-addr.arpa.	IN PTR		{{server_domain}}.
+{{default_server_arpa}}.in-addr.arpa.	IN PTR		ns.{{server_domain}}.

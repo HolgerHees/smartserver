@@ -1,8 +1,8 @@
 [Unit]
 Description=Create_macvlan_bridge
-BindsTo=sys-subsystem-net-devices-{{main_network_interface}}.device
+BindsTo=sys-subsystem-net-devices-{{default_network_interface}}.device
 Wants=network-online.target
-After=network.target network-online.target sys-subsystem-net-devices-{{main_network_interface}}.device
+After=network.target network-online.target sys-subsystem-net-devices-{{default_network_interface}}.device
 
 [Service]
 Type=oneshot

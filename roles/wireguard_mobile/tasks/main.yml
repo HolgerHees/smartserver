@@ -182,7 +182,7 @@
 
 # https://gist.github.com/insdavm/b1034635ab23b8839bf957aa406b5e39
 # https://www.cyberciti.biz/faq/how-to-set-up-wireguard-firewall-rules-in-linux/
-# iptables -t nat -I POSTROUTING -s {{vpn_gate_client_privatekeys[item]}} -o {{main_network_interface}} -j MASQUERADE
+# iptables -t nat -I POSTROUTING -s {{vpn_gate_client_privatekeys[item]}} -o {{default_network_interface}} -j MASQUERADE
 
 # sysctl net.ipv4.ip_forward=1
 
@@ -193,7 +193,7 @@
       {% for vpn_admin_ip in vpn_admin_ips %}
         "saddr {{vpn_admin_ip}}",
       {% endfor %}
-      "daddr {{server_ip}} proto udp dport {{mobile_vpn_internal_port}}"
+      "daddr {{default_server_ip}} proto udp dport {{mobile_vpn_internal_port}}"
       ]
   tags: [ 'firewall_config' ]
 

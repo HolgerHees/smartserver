@@ -11,10 +11,6 @@ domain (ip ip6) {
             saddr {{network}} ACCEPT;
 {% endfor %}
 {% endif %}
-{% if not default_gateway.startswith(server_subnet) %}
-            # ansible ip can connect to host
-            saddr {{default_gateway}} ACCEPT;
-{% endif %}
             # mobile vpn ip's can connect to host
             saddr {{vpn_mobile_network}}/24 ACCEPT;
         }
@@ -28,10 +24,6 @@ domain (ip ip6) {
 {% for network in trusted_networks %}
             saddr {{network}} ACCEPT;
 {% endfor %}
-{% endif %}
-{% if not default_gateway.startswith(server_subnet) %}
-            # ansible ip can forward to containers
-            saddr {{default_gateway}} ACCEPT;
 {% endif %}
 {% if macvlan_range | length > 0 %}
             # mobile vpn ip's can forward to pihole

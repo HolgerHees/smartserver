@@ -1,1 +1,1 @@
-{{server_ip}} {{server_name}}
+{{default_server_ip}} {{server_name}}

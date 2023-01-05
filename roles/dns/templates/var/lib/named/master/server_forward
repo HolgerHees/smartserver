@@ -7,6 +7,6 @@ $TTL 2d
 				1d )		; minimum
 
 {{server_domain}}.	IN NS		ns.{{server_domain}}.
-{{server_domain}}.	IN A		{{server_ip}}
-*		IN A		{{server_ip}}
-ns		IN A		{{server_ip}}
+{{server_domain}}.	IN A		{{default_server_ip}}
+*		IN A		{{default_server_ip}}
+ns		IN A		{{default_server_ip}}

@@ -193,7 +193,7 @@
 - name: add server name
   vars:
     host_name: "{{server_name}}"
-    host_ip_address: "{{server_ip}}"
+    host_ip_address: "{{default_server_ip}}"
   import_tasks: roles/_shared/add_to_hosts.yml
 
 #https://cromwell-intl.com/open-source/performance-tuning/ethernet.html

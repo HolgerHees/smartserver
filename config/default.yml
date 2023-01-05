@@ -23,7 +23,7 @@ default_variables: {
     "production_ip":  {},                                         # "192.168.7.50" your server ip
     "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
 
-    "intern_networks": { "default": [ "{{server_network}}" ] },
+    "intern_networks": { "default": [ "{{default_server_network}}" ] },
     "trusted_networks": { "default": [] },
 
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
@@ -58,7 +58,7 @@ default_variables: {
         #         bot_testuser1                                  
         #     },              
         #     phone_device: {                                  # optional. used by device_ping role
-        #         ip: "{{server_subnet}}.69", 
+        #         ip: "{{default_server_subnet}}.69", 
         #         timeout: 60 
         #     },
         #     vpn_gates: {                                     # optional. used by wireguard_mobile role
@@ -167,7 +167,7 @@ default_variables: {
     "network_devices": { "default": [] },                         # used for librenms and system_service (network monitoring)
     # *** EXAMPLE ***
     # {
-    #     host: { "default": None },                              # "{{server_subnet}}.100"
+    #     host: { "default": None },                              # "{{default_server_subnet}}.100"
     #     name: { "default": None },                              # "WLan AP Inhouse" => will be used in webui for openwrt devices
     #     snmp_method: { "default": None },                       # "v2c"
     #     snmp_community_string: { "default": None }              # "public"

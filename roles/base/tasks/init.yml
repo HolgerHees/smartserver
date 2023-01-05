@@ -44,20 +44,21 @@
 
     is_production: "{{host_ip == production_ip}}"
 
-    default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
 #    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
-    main_server_ip: "{{ansible_default_ipv4['address']}}"
-    main_network_interface: "{{ansible_default_ipv4['interface']}}"
+    default_server_ip: "{{ansible_default_ipv4['address']}}"
+    default_network_interface: "{{ansible_default_ipv4['interface']}}"
+    default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
+    default_server_network: "{{ ansible_default_ipv4['network'] }}/24"
 
 #- name: detect network interface
 #  #shell: "ip a | grep -P \"inet {{host_ip}}\" | grep -Po \"[a-z0-9]*$\""
 #  shell: "ip route list | grep -Po \"default via [0-9\\.]* dev [a-z0-9]*\" | grep -Po \"[a-z0-9]*$\""
-#  register: "main_network_interface_result"
+#  register: "default_network_interface_result"
 #  changed_when: False
 #  tags: always
 
 #- name: detect network ip
-#  shell: "ip a | grep -Po \"[0-9\\.]*/.*{{main_network_interface_result.stdout_lines[0]}}$\" | grep -Po \"^[0-9\\.]*\""
+#  shell: "ip a | grep -Po \"[0-9\\.]*/.*{{default_network_interface_result.stdout_lines[0]}}$\" | grep -Po \"^[0-9\\.]*\""
 #  register: "main_network_ip_result"
 #  changed_when: False
 #  tags: always

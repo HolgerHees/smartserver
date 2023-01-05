@@ -4,7 +4,7 @@ $CONFIG = array (
   'passwordsalt' => '{{vault_nextcloud_password_salt}}',
   'trusted_domains' => 
   array (
-    0 => '{{server_ip}}',
+    0 => '{{default_server_ip}}',
     1 => '{{server_domain}}',
     2 => 'nextcloud.{{server_domain}}',
     3 => 'fa-nextcloud.{{server_domain}}',

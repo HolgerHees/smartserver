@@ -34,8 +34,8 @@
         ipv4_address: "{{docker_php_ip}}"
     networks_cli_compatible: yes
     etc_hosts:
-      openhab: "{{server_ip}}" # fix to make openhab reachable
-      netdata: "{{server_ip}}" # fix to make netdata reachable
+      openhab: "{{default_server_ip}}" # fix to make openhab reachable
+      netdata: "{{default_server_ip}}" # fix to make netdata reachable
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
       - '{{global_log}}:{{global_log}}:z'                         # needed by update service and ci service
@@ -54,7 +54,7 @@
 #      "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}",
 #      "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}",
 #      "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}",
-#      "saddr {{docker_php_ip}} outerface {{main_network_interface}}"
+#      "saddr {{docker_php_ip}} outerface {{default_network_interface}}"
 #      {% for network in intern_networks %}
 #        "saddr {{docker_php_ip}} daddr {{network}}",
 #      {% endfor %}
@@ -69,8 +69,8 @@
       - "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}"
       - "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}"
       - "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}"
-      - "saddr {{docker_php_ip}} daddr {{server_ip}} proto tcp dport 443"
-      - "saddr {{docker_php_ip}} outerface {{main_network_interface}}"
+      - "saddr {{docker_php_ip}} daddr {{default_server_ip}} proto tcp dport 443"
+      - "saddr {{docker_php_ip}} outerface {{default_network_interface}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

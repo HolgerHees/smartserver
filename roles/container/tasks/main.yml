@@ -296,29 +296,29 @@
     name: 'macvlan'
     driver: macvlan
     driver_options:
-      parent: '{{main_network_interface}}'
+      parent: '{{default_network_interface}}'
     ipam_config:
-      - subnet: '{{server_network}}'
-        gateway: '{{server_gateway}}'
+      - subnet: '{{default_server_network}}'
+        gateway: '{{default_server_gateway}}'
 
 # needed, because macvlan in a VM has no internet access, but pihole needs internet access during startup
-- name: macvlan routing => not is_production
-  shell: |
-    ip a | grep br-macvlan > /dev/null
-    if [ $? -eq 1 ]; then
-      ip link add br-macvlan link {{main_network_interface}} type macvlan mode bridge
-      ip addr add {{server_gateway}}/24 dev br-macvlan
-      ip link set dev br-macvlan up
-      iptables -t filter -I FORWARD --in-interface br-macvlan --out-interface {{ansible_default_ipv4.interface}} --source {{server_network}} --destination {{ansible_default_ipv4.address}} -j ACCEPT
-      iptables -t filter -I FORWARD --in-interface {{ansible_default_ipv4.interface}} --out-interface br-macvlan --source {{ansible_default_ipv4.network}}/24 --destination {{server_network}} -j ACCEPT
-      iptables -t nat -I POSTROUTING -o {{ansible_default_ipv4.interface}} -j MASQUERADE
-      echo "created"
-    else
-      echo "skipped"
-    fi
-  changed_when: macvlan_result.stdout != 'skipped'
-  register: macvlan_result
-  when: "macvlan_range | length > 0 and not is_production"
+#- name: macvlan routing => not is_production
+#  shell: |
+#    ip a | grep br-macvlan > /dev/null
+#    if [ $? -eq 1 ]; then
+#      ip link add br-macvlan link {{default_network_interface}} type macvlan mode bridge
+#      ip addr add {{default_server_network}} dev br-macvlan
+#      ip link set dev br-macvlan up
+#      iptables -t filter -I FORWARD --in-interface br-macvlan --out-interface {{ansible_default_ipv4.interface}} --source {{server_network}} --destination {{ansible_default_ipv4.address}} -j ACCEPT
+#      iptables -t filter -I FORWARD --in-interface {{ansible_default_ipv4.interface}} --out-interface br-macvlan --source {{ansible_default_ipv4.network}}/24 --destination {{server_network}} -j ACCEPT
+#      iptables -t nat -I POSTROUTING -o {{ansible_default_ipv4.interface}} -j MASQUERADE
+#      echo "created"
+#    else
+#      echo "skipped"
+#    fi
+#  changed_when: macvlan_result.stdout != 'skipped'
+#  register: macvlan_result
+#  when: "macvlan_range | length > 0 and not is_production"
 
 #- name: test
 #  debug:

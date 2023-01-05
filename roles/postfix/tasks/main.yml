@@ -59,7 +59,7 @@
     name: "postfix"
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_postfix_ip}}"
-      - "saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}} outerface {{main_network_interface}}"
+      - "saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}} outerface {{default_network_interface}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 

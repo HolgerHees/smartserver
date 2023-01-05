@@ -1,9 +1,9 @@
 networks = ["{{intern_networks | join('","') }}"]
-main_interface = "{{main_network_interface}}"
-default_gateway_ip = "{{default_gateway}}"
+main_interface = "{{default_network_interface}}"
+default_gateway_ip = "{{default_server_gateway}}"
 server_name = "{{server_name}}"
 server_domain = "{{server_domain}}"
-server_ip = "{{server_ip}}"
+server_ip = "{{default_server_ip}}"
 
 netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
 netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}

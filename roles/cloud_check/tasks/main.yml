@@ -45,8 +45,8 @@
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_cloud_check_ip}}"
       - "saddr {{docker_cloud_check_ip}} daddr {{docker_cloud_mosquitto_ip}}"
-      - "saddr {{docker_cloud_check_ip}} proto tcp dport 80 outerface {{main_network_interface}}"
-      - "saddr {{docker_cloud_check_ip}} proto icmp outerface {{main_network_interface}}"
+      - "saddr {{docker_cloud_check_ip}} proto tcp dport 80 outerface {{default_network_interface}}"
+      - "saddr {{docker_cloud_check_ip}} proto icmp outerface {{default_network_interface}}"
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
