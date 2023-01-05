@@ -18,7 +18,7 @@
   tags: always
   
 # detect main ip. must be specified in env.yml
-- name: detect ip address
+- name: detect host ip address
   set_fact:
     host_ip: "{{ item }}"
   with_items: "{{ ansible_all_ipv4_addresses }}"
@@ -31,11 +31,36 @@
     msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), staging ({{ staging_ip if staging_ip else 'disabled' }})"
   tags: always
 
-- name: detect network interface
-  shell: "ip a | grep -P \"inet {{host_ip}}\" | grep -Po \"[a-z0-9]*$\""
-  register: "main_device_result"
-  changed_when: False
-  tags: always
+# set environment specific variables [pre]
+- name: set env state vars
+  set_fact:
+    system_users: {}
+    system_groups: {}
+    is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
+    is_fedora: "{{ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux'}}"
+#    is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
+    is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
+    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
+
+    is_production: "{{host_ip == production_ip}}"
+
+    default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
+#    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
+    main_server_ip: "{{ansible_default_ipv4['address']}}"
+    main_network_interface: "{{ansible_default_ipv4['interface']}}"
+
+#- name: detect network interface
+#  #shell: "ip a | grep -P \"inet {{host_ip}}\" | grep -Po \"[a-z0-9]*$\""
+#  shell: "ip route list | grep -Po \"default via [0-9\\.]* dev [a-z0-9]*\" | grep -Po \"[a-z0-9]*$\""
+#  register: "main_network_interface_result"
+#  changed_when: False
+#  tags: always
+
+#- name: detect network ip
+#  shell: "ip a | grep -Po \"[0-9\\.]*/.*{{main_network_interface_result.stdout_lines[0]}}$\" | grep -Po \"^[0-9\\.]*\""
+#  register: "main_network_ip_result"
+#  changed_when: False
+#  tags: always
 
 # load vault file
 - name: load vault vars
@@ -48,26 +73,14 @@
   failed_when: no
   register: "vault_check_result"
   
+- name: set vault state vars
+  set_fact:
+    has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
+  tags: always
+
 # load shared variables
 - name: load shared vars
   include_vars: "config/pre_shared.yml"
-  tags: always
-
-# set environment specific variables [pre]
-- name: set pre state vars
-  set_fact:
-    system_users: {}
-    system_groups: {}
-    is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
-    is_fedora: "{{ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux'}}"
-#    is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
-    is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
-    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
-    is_production: "{{host_ip == production_ip}}"
-    default_gateway: "{{ ansible_default_ipv4['gateway'] }}"
-#    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
-    main_network_interface: "{{main_device_result.stdout_lines[0]}}"
-    has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
   tags: always
 
 # load initial environment variables

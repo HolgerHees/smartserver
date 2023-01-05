@@ -24,8 +24,8 @@ nextcloud_data_path:              "/dataRaid/nextcloud/"
 
 samba_master:                     "{%if is_production%}yes{%else%}no{%endif%}"
 
-server_ip:                        "{{host_ip}}"
-server_ip_r:                      "{{host_ip.split('.')}}"
+server_ip:                        "{{main_server_ip}}"
+server_ip_r:                      "{{server_ip.split('.')}}"
 server_arpa:                      "{{server_ip_r[3]}}.{{server_ip_r[2]}}.{{server_ip_r[1]}}.{{server_ip_r[0]}}"
 server_subnet:                    "{{server_ip_r[0]}}.{{server_ip_r[1]}}.{{server_ip_r[2]}}"
 
