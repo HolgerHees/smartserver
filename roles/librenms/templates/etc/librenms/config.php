@@ -1,6 +1,6 @@
 <?php
 $config['snmp']['community'] = array();
-$config['nets'] = array("192.168.0.0/24");
+$config['nets'] = array("{{intern_networks | join('\", \"')}}");
 
 $config['auth_mechanism'] = "http-auth";
 $config['http_auth_header'] = "HTTP_X_REMOTE_USER";
