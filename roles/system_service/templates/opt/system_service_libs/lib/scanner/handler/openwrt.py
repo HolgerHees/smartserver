@@ -73,26 +73,37 @@ class OpenWRT(_handler.Handler):
                     if self._isSuspended(openwrt_ip):
                         continue
                     
-                    self._processDevice(openwrt_ip, events)
+                    session_retries = 1
+                    while True:
+                        try:
+                            self._processDevice(openwrt_ip, events)
+                        except UbusCallException as e:
+                            if session_retries > 0 and self.sessions[openwrt_ip][0] is not None and e.getCode() == -32002:
+                                logging.info("OpenWRT '{}' has invalid session. Will refresh.".format(openwrt_ip))
+                                
+                                self._initNextRuns(openwrt_ip)
+                                self.cache.cleanLocks(self, events)
+
+                                session_retries -= 1
+                            else:
+                                raise e
+                        break
 
                     self._setDeviceMetricState(openwrt_ip, 1)
                 except UbusCallException as e:
-                    if self.sessions[openwrt_ip][0] is not None and e.getCode() == -32002:
-                        logging.info("OpenWRT '{}' has invalid session. Will refresh.".format(openwrt_ip))
-                        self._initNextRuns(openwrt_ip)
-                    else:
-                        self.cache.cleanLocks(self, events)
+                    self._initNextRuns(openwrt_ip)
+                    self.cache.cleanLocks(self, events)
 
-                        self._handleExpectedException("OpenWRT '{}' ({})' got exception {} - '{}'".format(openwrt_ip, e.getType(), e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
-                        self._setDeviceMetricState(openwrt_ip, 0)
+                    self._handleExpectedException("OpenWRT '{}' ({})' got exception {} - '{}'".format(openwrt_ip, e.getType(), e.getCode(), e), openwrt_ip, self.config.remote_error_timeout)
+                    self._setDeviceMetricState(openwrt_ip, 0)
                 except NetworkException as e:
-                    self._initNextRuns()
+                    self._initNextRuns(openwrt_ip)
                     self.cache.cleanLocks(self, events)
 
                     self._handleExpectedException(str(e), openwrt_ip, e.getTimeout())
                     self._setDeviceMetricState(openwrt_ip, 0)
                 except Exception as e:
-                    self._initNextRuns()
+                    self._initNextRuns(openwrt_ip)
                     self.cache.cleanLocks(self, events)
 
                     self._handleUnexpectedException(e, openwrt_ip)
