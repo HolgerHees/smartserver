@@ -474,8 +474,8 @@ for network in sorted_network_r:
                             #if rule['mode'] == "DROP":
                             #    print(rule)
 
-                            if container.name == "ci_service":
-                                print(rule)
+                            #if container.name == "ci_service":
+                            #    print(rule)
 
                             #hostMatch = rule['targetIp'] == connection.ip # or rule['targetIp'] == "0.0.0.0/0"
                             for key in openPorts:
