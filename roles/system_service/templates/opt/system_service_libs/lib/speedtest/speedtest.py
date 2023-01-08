@@ -143,6 +143,8 @@ class Speedtest(threading.Thread):
             if self.resultUp == -1 and retry > 0:
                 if not self.event.is_set():
                     self.event.wait(60 - (retry * 15))
+
+                    self.is_testing = False
                     self.startSpeedtest(retry - 1)
                 return
 
