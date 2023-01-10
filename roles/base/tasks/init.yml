@@ -48,7 +48,10 @@
     default_server_ip: "{{ansible_default_ipv4['address']}}"
     default_network_interface: "{{ansible_default_ipv4['interface']}}"
     default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
-    default_server_network: "{{ ansible_default_ipv4['network'] }}/24"
+
+#- name: debug
+#  debug:
+#    msg: "{{ansible_default_ipv4['network'] | ansible.utils.ipaddr('net') }}"
 
 #- name: detect network interface
 #  #shell: "ip a | grep -P \"inet {{host_ip}}\" | grep -Po \"[a-z0-9]*$\""
