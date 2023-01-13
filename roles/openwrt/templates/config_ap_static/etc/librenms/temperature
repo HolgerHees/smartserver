@@ -1,0 +1,15 @@
+#!/bin/sh
+
+IFS=$'\n'
+
+temperatures=$(cat /sys/class/thermal/thermal_zone*/temp)
+for item in $temperatures
+do
+  echo $item | awk '{print $1 / 1000}'
+done
+
+temperatures=$(sensors -u | grep temp1_input | grep -Eo " [0-9\.]+" | sed 's/ *//g')
+for item in $temperatures
+do
+  echo $item | awk '{print $1}'
+done
