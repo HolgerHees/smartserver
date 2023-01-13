@@ -1,0 +1,124 @@
+- name: set devel vars
+  set_fact:
+    cloud_smb_path: "/dataRaid/cloud_smb/"
+  
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0700
+  with_items:
+    - "{{global_etc}}cloud_samba"
+    - "{{global_etc}}cloud_samba/util"
+
+- name: prepare cloud folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items:
+    - "{{cloud_smb_path}}"
+    - "{{cloud_smb_path}}/local"
+    - "{{cloud_smb_path}}/remote"
+    
+- name: prepare samba exported folder
+  file:
+    path: "{{cloud_smb_path}}/local/{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items: "{{cloud_vpn.peers}}"
+
+- name: prepare samba mount points
+  file:
+    path: "{{cloud_smb_path}}/remote/{{item}}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0750
+  with_items: "{{cloud_vpn.peers}}"
+
+- name: copy startup script
+  template:
+    src: "templates/util/startup.sh"
+    dest: "{{global_etc}}cloud_samba/util/startup.sh"
+    owner: root
+    group: root
+    mode: 0700
+  notify: "restart cloud_samba"
+  
+- name: copy server config
+  template:
+    src: "templates/{{item}}"
+    dest: "{{ global_etc }}cloud_samba/{{item}}"
+    mode: 0600
+  notify: "restart cloud_samba"
+  with_items:
+    - "peers"
+    - "smb.conf"
+    - "fstab"
+
+- name: build docker image
+  vars:
+    name: "cloud_samba"
+    image_name: "custom_cloud_samba"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/cloud_samba/templates/container/Dockerfile
+  import_tasks: roles/container/shared/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: "cloud_samba"
+    image: "custom_cloud_samba:{{alpine_version}}"
+    state: present
+#    network_mode: "none"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: "cloud_samba"
+    #capabilities:
+    #  - NET_ADMIN
+    #  - SYS_MODULE
+    #  - SYS_ADMIN
+    #  - SETPCAP
+    privileged: yes
+    #domainname : "cloud"
+    #hostname: "nfsd"
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "cloud_vpn"
+        ipv4_address: "{{vpn_cloud_services.local.samba}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}cloud_samba:/etc/cloud_samba:z'
+      - '{{global_etc}}cloud_samba/smb.conf:/etc/smb.conf:z'
+      - '{{global_etc}}cloud_samba/fstab:/etc/fstab:z'
+      - '{{cloud_smb_path}}:/cloud:z,rshared'
+  notify: "restart cloud_samba"
+
+# ***** FINALIZE *****
+- name: create systemd service
+  vars:
+    container_name: "cloud_samba"
+    container_routes:
+      - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
+    container_after:
+      - "wireguard_cloud"
+    container_binds:
+      - "wireguard_cloud"
+  import_tasks: roles/container/shared/add_docker_service.yml
+
+- name: trigger cloud_samba handler
+  vars:
+    notify: "restart cloud_samba"
+    service: "cloud_samba.service"
+  import_tasks: roles/_shared/service_check.yml

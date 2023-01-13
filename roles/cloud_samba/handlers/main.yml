@@ -1,0 +1,8 @@
+- name: "restart cloud_samba"
+  systemd:
+    name: "cloud_samba"
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart cloud_samba"

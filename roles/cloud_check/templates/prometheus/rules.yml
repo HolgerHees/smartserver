@@ -1,25 +1,25 @@
 groups:
 - name: cloud_check
   rules:
-  - alert: Cloud NFS availability
+  - alert: Cloud mount availability
     expr: 'cloud_check_peer_mount_state{job="cloud_check"} == 0'
     for: 0m
     labels:
-      notifyGroup: "cloud-nfs"
+      notifyGroup: "cloud-mount"
       severity: critical
     annotations:
-      summary: "Cloud NFS of peer '{{'{{'}} $labels.peer {{'}}'}}'"
+      summary: "Cloud mount of peer '{{'{{'}} $labels.peer {{'}}'}}'"
 
-  - alert: Cloud MQTT availability
+  - alert: Cloud mqtt availability
     expr: 'cloud_check_peer_mqtt_state{job="cloud_check"} == 0'
     for: 0m
     labels:
       notifyGroup: "cloud-mqtt"
       severity: error
     annotations:
-      summary: "Cloud MQTT of peer '{{'{{'}} $labels.peer {{'}}'}}'"
+      summary: "Cloud mqtt of peer '{{'{{'}} $labels.peer {{'}}'}}'"
 
-  - alert: Cloud Peer availability
+  - alert: Cloud peer availability
     expr: 'cloud_check_peer_online_state{job="cloud_check"} == 0 or cloud_check_peer_online_state{job="cloud_check"} == 1'
     for: 5m
     labels:

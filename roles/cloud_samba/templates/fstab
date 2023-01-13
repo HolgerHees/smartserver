@@ -1,0 +1,3 @@
+{% for peer_name in cloud_vpn.peers %}
+//{{vpn_cloud_services.remote[peer_name].samba}}/{{peer_name}} /cloud/remote/{{peer_name}} cifs defaults,noauto,nofail 0 0
+{% endfor %}

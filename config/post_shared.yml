@@ -11,13 +11,15 @@ vpn_cloud_services:               "{
       \"bridge\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.1\",
       \"gateway\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2\",
       \"nfs\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.3\",
-      \"mosquitto\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.4\"
+      \"mosquitto\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.4\",
+      \"samba\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.5\"
   },
   \"remote\": {
       {% for peer in cloud_vpn.peers %}
       \"{{peer}}\": {
           \"nfs\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.3\",
-          \"mosquitto\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.4\"
+          \"mosquitto\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.4\",
+          \"samba\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.5\"
       },
       {% endfor %}
   }

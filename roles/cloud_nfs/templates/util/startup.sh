@@ -145,7 +145,7 @@ mountRemoteShares()
                 echo "...done"
                 break
             else
-                sleep 15 & wait
+                sleep 15 & wait $!
             fi
         done
     else
