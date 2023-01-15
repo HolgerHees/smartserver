@@ -89,7 +89,7 @@ fi
 
 if [ -f "$SOURCE/$IP/etc/config/snmpd" ]; then
   echo "Install snmpd packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install snmpd > /dev/null"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install sensors snmpd > /dev/null"
 fi
 
 if [[ "$IS_AP" == 1 ]]; then
