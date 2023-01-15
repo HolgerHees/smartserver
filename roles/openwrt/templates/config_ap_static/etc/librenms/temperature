@@ -2,14 +2,20 @@
 
 IFS=$'\n'
 
-temperatures=$(cat /sys/class/thermal/thermal_zone*/temp)
+temperatures=$(ls /sys/class/thermal/thermal_zone*/temp 2&>/dev/null)
 for item in $temperatures
 do
-  echo $item | awk '{print $1 / 1000}'
+  temperature=$(cat $item)
+  sensor=$(echo $item | sed 's/.*thermal_zone\([0-9]\+\).*/\1/')
+  printf "zone%s: " $sensor
+  echo $temperature | awk '{printf("%.3f\n", $1 / 1000.0)}'
 done
 
-temperatures=$(sensors -u | grep temp1_input | grep -Eo " [0-9\.]+" | sed 's/ *//g')
+temperatures=$(ls /sys/class/ieee80211/phy*/hwmon*/temp1_input 2&>/dev/null)
 for item in $temperatures
 do
-  echo $item | awk '{print $1}'
+  temperature=$(cat $item)
+  sensor=$(echo $item | sed 's/.*hwmon\([0-9]\+\).*/\1/')
+  printf "wifi%s: " $sensor
+  echo $temperature | awk '{printf("%.3f\n", $1 / 1000.0)}'
 done
