@@ -385,5 +385,5 @@ class Processor(threading.Thread):
 
         return messurements
 
-    def getMetrics(self, is_prometheus):
+    def getStateMetrics(self):
         return []

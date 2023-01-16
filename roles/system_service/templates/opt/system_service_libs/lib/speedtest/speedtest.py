@@ -169,7 +169,7 @@ class Speedtest(threading.Thread):
 
             self.handler.notifySpeedtestData()
 
-    def getMetrics(self, is_prometheus):
+    def getStateMetrics(self):
         metrics = []
 
         if self.resultUp != -1:
@@ -178,9 +178,6 @@ class Speedtest(threading.Thread):
             metrics.append("system_service_speedtest{{type=\"downstream_rate\"}} {}".format(self.resultDown))
         if self.resultPing != -1:
             metrics.append("system_service_speedtest{{type=\"ping\"}} {}".format(self.resultPing))
-
-        if is_prometheus:
-            self.resetMetrics()
 
         return metrics
 

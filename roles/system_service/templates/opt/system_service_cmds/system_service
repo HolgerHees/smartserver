@@ -101,10 +101,10 @@ class Handler(Server):
     def triggerSpeedtest(self):
         self.speedtest.triggerSpeedtest()
 
-    def getStateMetrics(self, is_prometheus ):
+    def getStateMetrics(self):
         scanner_metrics = self.scanner.getStateMetrics()
-        netflow_metrics = self.netflow.getMetrics(is_prometheus)
-        speedtest_metrics = self.speedtest.getMetrics(is_prometheus)
+        netflow_metrics = self.netflow.getStateMetrics()
+        speedtest_metrics = self.speedtest.getStateMetrics()
 
         influxdb_metrics = self.influxdb.getStateMetrics()
         mqtt_metrics = self.mqtt.getStateMetrics()
@@ -121,7 +121,8 @@ class Handler(Server):
 @app.route('/metrics/', methods = ['GET'])
 def metrics():
     #logging.info(request.headers.get('User-Agent'))
-    return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
+    #return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
+    return handler.getStateMetrics()
 
 @app.route('/triggerSpeedtest/', methods = ['GET'])
 def speedtest():
