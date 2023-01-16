@@ -58,7 +58,7 @@ Example: vagrant --config=demo --os=suse up
         elsif arg == "fedora" then
             setup_os = "fedora"
             #setup_version = "36" => https://github.com/hashicorp/vagrant/issues/12762
-            setup_version = "35"
+            setup_version = "37"
             setup_image = "fedora/" + setup_version + "-cloud-base"
         elsif arg == "almalinux" then
             setup_os = "almalinux"
