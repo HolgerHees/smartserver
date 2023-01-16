@@ -1,21 +1,109 @@
 #!/bin/sh
 
+COUNTER=1
+
 IFS=$'\n'
 
 temperatures=$(ls /sys/class/thermal/thermal_zone*/temp 2&>/dev/null)
 for item in $temperatures
 do
-  temperature=$(cat $item)
-  sensor=$(echo $item | sed 's/.*thermal_zone\([0-9]\+\).*/\1/')
-  printf "zone%s: " $sensor
-  echo $temperature | awk '{printf("%.3f\n", $1 / 1000.0)}'
+  value=$(cat $item)
+  #value=$(echo $value | awk '{printf("%.3f", $1 / 1000.0)}')
+  name=$(echo $item | sed 's/.*thermal_zone\([0-9]\+\).*/\1/')
+
+  eval NAMES_${COUNTER}="zone\$name"
+  eval VALUES_${COUNTER}="\$value"
+
+  let COUNTER++
 done
 
-temperatures=$(ls /sys/class/ieee80211/phy*/hwmon*/temp1_input 2&>/dev/null)
+temperatures=$(ls /sys/class/hwmon/hwmon*/temp1_input 2&>/dev/null)
 for item in $temperatures
 do
-  temperature=$(cat $item)
-  sensor=$(echo $item | sed 's/.*hwmon\([0-9]\+\).*/\1/')
-  printf "wifi%s: " $sensor
-  echo $temperature | awk '{printf("%.3f\n", $1 / 1000.0)}'
+  value=$(cat $item)
+  #value=$(echo $value | awk '{printf("%.3f", $1 / 1000.0)}')
+  path=$(echo $item | sed 's/\(.*\)temp1_input/\1/')
+  name=$(cat $path/name)
+
+  eval NAMES_${COUNTER}="\$name"
+  eval VALUES_${COUNTER}="\$value"
+
+  let COUNTER++
+done
+
+sensor_index=1
+snmp_index=1
+
+while read line
+do
+  #if [ $sensor_index -eq $COUNTER ]
+  #then
+  #  break
+  #fi
+
+  if [ "$line" == "PING" ]
+  then
+    echo "PONG"
+  elif [ "$line" == "get" ] || [ "$line" == "getnext" ]
+  then
+    read oid
+
+    #.1.3.6.1.4.1.2021.13.16.2.1.{x13}.{x14}
+    snmp_index=$(echo $oid | cut -f13 -d.)
+
+    if [ "$snmp_index" == "" ]
+    then
+      snmp_index=1
+    fi
+
+    sensor_index=$(echo $oid | cut -f14 -d.)
+    if [ "$sensor_index" == "" ]
+    then
+      if [ "$line" == "getnext" ]
+      then
+        sensor_index=0
+      else
+        sensor_index=1
+      fi
+    fi
+
+    if [ "$line" == "getnext" ]
+    then
+      let sensor_index++
+
+      if [ $sensor_index -eq $COUNTER ]
+      then
+        sensor_index=1
+        let snmp_index++
+      fi
+    fi
+
+    if [ $snmp_index -eq 4 ] || [ $sensor_index -eq $COUNTER ]
+    then
+      break
+    fi
+
+    eval name="\$NAMES_${sensor_index}"
+    eval value="\$VALUES_${sensor_index}"
+
+    if [ $snmp_index -eq 1 ]
+    then
+      printf ".1.3.6.1.4.1.2021.13.16.2.1.1.%s\n" $sensor_index
+      echo "integer"
+      index_value=$(expr $sensor_index - 1)
+      echo $index_value
+    elif [ $snmp_index -eq 2 ]
+    then
+      printf ".1.3.6.1.4.1.2021.13.16.2.1.2.%s\n" $sensor_index
+      echo "string"
+      echo $name
+    elif [ $snmp_index -eq 3 ]
+    then
+      printf ".1.3.6.1.4.1.2021.13.16.2.1.3.%s\n" $sensor_index
+      echo "gauge32"
+      echo $value
+    fi
+  else
+    echo "NONE"
+  fi
 done
