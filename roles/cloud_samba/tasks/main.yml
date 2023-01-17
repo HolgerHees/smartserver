@@ -100,7 +100,7 @@
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}cloud_samba:/etc/cloud_samba:z'
-      - '{{global_etc}}cloud_samba/smb.conf:/etc/smb.conf:z'
+      - '{{global_etc}}cloud_samba/smb.conf:/etc/samba/smb.conf:z'
       - '{{global_etc}}cloud_samba/fstab:/etc/fstab:z'
       - '{{cloud_smb_path}}:/cloud:z,rshared'
   notify: "restart cloud_samba"
