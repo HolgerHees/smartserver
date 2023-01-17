@@ -84,10 +84,10 @@
     log_driver: journald
     log_options:
       tag: "cloud_samba"
-    #capabilities:
+    capabilities:
     #  - NET_ADMIN
     #  - SYS_MODULE
-    #  - SYS_ADMIN
+      - SYS_ADMIN
     #  - SETPCAP
     privileged: yes
     #domainname : "cloud"
