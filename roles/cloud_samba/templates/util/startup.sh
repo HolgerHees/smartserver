@@ -112,9 +112,9 @@ mountRemoteShares()
 
 trap "stop" SIGTERM SIGINT
 
-exportLocalShares
+#exportLocalShares
 
-mountRemoteShares
+#mountRemoteShares
 
 # wait forever or until we get SIGTERM or SIGINT
 while :; do sleep 360 & wait; done
