@@ -29,21 +29,15 @@
 
 - name: copy startup script
   template:
-    src: "roles/wireguard_cloud/templates/util/startup.sh"
-    dest: "{{global_etc}}wireguard_cloud/util/startup.sh"
+    src: "roles/wireguard_cloud/templates/util/{{item}}"
+    dest: "{{global_etc}}wireguard_cloud/util/{{item}}"
     owner: root
     group: root
     mode: 0700
+  with_items:
+    - startup.sh
+    - create_cloud_route.sh
   notify: "restart wireguard_cloud"
-
-- name: copy routing script
-  template:
-    src: "roles/wireguard_cloud/templates/util/create_cloud_route.sh"
-    dest: "{{global_etc}}wireguard_cloud/util/create_cloud_route.sh"
-    owner: root
-    group: root
-    mode: 0700
-  notify: "restart cloud_route"
 
 - name: generate server keys if not exists
   shell: "cd {{global_etc}}wireguard_cloud/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
