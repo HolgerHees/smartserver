@@ -88,6 +88,7 @@
     #  - NET_ADMIN
     #  - SYS_MODULE
       - SYS_ADMIN
+      - DAC_READ_SEARCH
     #  - SETPCAP
     privileged: yes
     #domainname : "cloud"
