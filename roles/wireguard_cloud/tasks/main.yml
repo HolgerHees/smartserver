@@ -35,7 +35,16 @@
     group: root
     mode: 0700
   notify: "restart wireguard_cloud"
-  
+
+- name: copy routing script
+  template:
+    src: "roles/wireguard_cloud/templates/util/create_cloud_route.sh"
+    dest: "{{global_etc}}wireguard_cloud/util/create_cloud_route.sh"
+    owner: root
+    group: root
+    mode: 0700
+  notify: "restart cloud_route"
+
 - name: generate server keys if not exists
   shell: "cd {{global_etc}}wireguard_cloud/keys/ && ([ ! -f ./server_privatekey ] || [ ! -f ./server_publickey ]) && wg genkey | tee ./server_privatekey | wg pubkey > ./server_publickey"
   register: stat_server_key_result
@@ -173,6 +182,7 @@
   vars:
     container_name: "wireguard_cloud"
     trigger_name: "wireguard_cloud"
+    container_post_exec: "{{data_path}}/etc/wireguard_cloud/util/create_cloud_route.sh"
   import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger wireguard_cloud handler

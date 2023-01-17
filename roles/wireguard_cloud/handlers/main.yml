@@ -6,3 +6,12 @@
     enabled: yes
     masked: no
   listen: "restart wireguard_cloud"
+
+- name: "restart cloud_route"
+  systemd:
+    name: "cloud_route"
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart cloud_route"

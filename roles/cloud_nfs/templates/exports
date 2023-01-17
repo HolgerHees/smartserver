@@ -1,3 +1,7 @@
 {% for peer_name in cloud_vpn.peers %}
+{% if cloud_vpn.peers[peer_name].legacy is defined %}
 /cloud/local/{{peer_name}} {{vpn_cloud_services.remote[peer_name].nfs}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
+{% else %}
+/cloud/local/{{peer_name}} {{vpn_cloud_services.remote[peer_name].bridge}}(fsid=0,rw,sync,no_root_squash,no_subtree_check)
+{% endif %}
 {% endfor %}

@@ -39,6 +39,24 @@
     mode: 0750
   with_items: "{{cloud_vpn.peers}}"
 
+- name: create fstab mount entries
+  mount:
+    path: "{{cloud_path}}/remote/{{item}}"
+    src: "{{vpn_cloud_services.remote[item].nfs}}:/"
+    fstype: nfs
+    opts: "nfsvers=4.2,soft,actimeo=0,rw,timeo=30,retrans=3,noauto,nofail,x-systemd.automount,x-systemd.mount-timeout=5,x-systemd.idle-timeout=300"
+    state: present
+  register: "fstab_result"
+  with_items: "{{cloud_vpn.peers}}"
+
+- name: "activate automount"
+  shell: "systemctl daemon-reload"
+  when: "fstab_result.changed"
+
+- name: "start automount"
+  shell: "systemctl --all start *remote*.automount"
+  when: "fstab_result.changed"
+
 - name: copy startup script
   template:
     src: "templates/util/startup.sh"
@@ -57,7 +75,6 @@
   with_items:
     - "peers"
     - "exports"
-    - "fstab"
 
 - name: build docker image
   vars:
@@ -97,7 +114,6 @@
     volumes:
       - '{{global_etc}}cloud_nfs:/etc/cloud_nfs:z'
       - '{{global_etc}}cloud_nfs/exports:/etc/exports:z'
-      - '{{global_etc}}cloud_nfs/fstab:/etc/fstab:z'
       - '{{cloud_path}}:/cloud:z,rshared'
   notify: "restart cloud_nfs"
 
