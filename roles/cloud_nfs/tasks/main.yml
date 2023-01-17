@@ -103,8 +103,6 @@
     #  - SYS_ADMIN
     #  - SETPCAP
     privileged: yes
-    #domainname : "cloud"
-    #hostname: "nfsd"
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
