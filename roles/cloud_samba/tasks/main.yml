@@ -90,7 +90,7 @@
       - SYS_ADMIN
       - DAC_READ_SEARCH
     #  - SETPCAP
-    privileged: yes
+    #privileged: yes
     #domainname : "cloud"
     #hostname: "nfsd"
     container_default_behavior: "compatibility"
