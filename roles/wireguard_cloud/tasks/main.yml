@@ -29,14 +29,11 @@
 
 - name: copy startup script
   template:
-    src: "roles/wireguard_cloud/templates/util/{{item}}"
-    dest: "{{global_etc}}wireguard_cloud/util/{{item}}"
+    src: "roles/wireguard_cloud/templates/util/startup.sh"
+    dest: "{{global_etc}}wireguard_cloud/util/startup.sh"
     owner: root
     group: root
     mode: 0700
-  with_items:
-    - startup.sh
-    - create_cloud_route.sh
   notify: "restart wireguard_cloud"
 
 - name: generate server keys if not exists
@@ -176,7 +173,7 @@
   vars:
     container_name: "wireguard_cloud"
     trigger_name: "wireguard_cloud"
-    container_post_exec: "{{data_path}}/etc/wireguard_cloud/util/create_cloud_route.sh"
+    container_post_exec: "/opt/docker/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
   import_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger wireguard_cloud handler

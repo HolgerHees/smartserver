@@ -36,7 +36,7 @@
     - "echo 'yes' | easyrsa init-pki"
   when: "easy_rsa_file_mode =='create'"
 
-- name: Create a symbolic config link => is_fedora and easy_rsa_file_mode =='create'
+- name: Create a symbolic config link => (is_rhel or is_fedora) and easy_rsa_file_mode =='create'
   file:
     src: "/etc/easy-rsa/{{item}}"
     dest: "/etc/easy-rsa/pki/{{item}}"
@@ -47,7 +47,7 @@
   with_items:
     - openssl-easyrsa.cnf
     - x509-types
-  when: "is_fedora|bool and easy_rsa_file_mode =='create'"
+  when: "(is_rhel|bool or is_fedora|bool) and easy_rsa_file_mode =='create'"
   
 #- name: init easyrsa => easy_rsa_file_mode =='create'
 #  command: "echo 'yes' | easyrsa init-pki"
@@ -180,14 +180,14 @@
     - "mobile.ovpn"
   notify: "restart openvpn@mobile"
   
-- name: set selinux mobile port configuration => is_fedora
+- name: set selinux mobile port configuration => is_rhel or is_fedora
   seport:
     ports: "{{vault_vpn_mobile_port}}"
     proto: tcp
     setype: openvpn_port_t
     state: present
   notify: "restart openvpn@mobile"
-  when: is_fedora|bool
+  when: is_rhel|bool or is_fedora|bool
 
 # ***** FINALIZE *****
 - name: register systemd service watcher

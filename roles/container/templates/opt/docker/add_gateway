@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if /usr/sbin/ip route list | grep -q $1; then
+  ip route del $1
+fi
+
+ip route add $1 via $2

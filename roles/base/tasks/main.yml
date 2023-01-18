@@ -23,7 +23,13 @@
 
     - { mode: "u=rwx,g=rx,o=", path: "/opt/backup_restore" }
 
-- name: install required packages => is_fedora
+- name: enable epel repository => is_rhel
+  dnf:
+    name: epel-release
+    state: latest
+  when: is_rhel
+
+- name: install required packages => is_rhel or is_fedora
   yum:
     name: [
         mc
@@ -38,6 +44,7 @@
       , bzip2
       , lsof
 
+      , rsync              
       , zip
       , unzip
       , git
@@ -59,7 +66,7 @@
 #      , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
-  when: is_fedora|bool
+  when: is_rhel|bool or is_fedora|bool
 
 - name: install required packages => is_ubuntu
   apt:

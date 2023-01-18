@@ -146,7 +146,7 @@ for systemd_service in services:
             notified_service.append(systemd_service)
 
 
-result = subprocess.run([ "/usr/sbin/service --status-all | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+result = subprocess.run([ "/usr/bin/systemctl list-units --type=service | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 lines = result.stdout.decode("utf-8").split("\n")
 for line in lines:
     columns = line.split()

@@ -37,10 +37,10 @@
     system_users: {}
     system_groups: {}
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
-    is_fedora: "{{ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux'}}"
-#    is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
+    is_fedora: "{{ansible_distribution == 'Fedora'}}"
+    is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
     is_ubuntu: "{{ansible_distribution == 'Ubuntu'}}"
-    os_type: "{{ 'fedora' if ansible_distribution == 'Fedora' or ansible_distribution == 'AlmaLinux' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
+    os_type: "{{ 'rhel' if ansible_distribution == 'AlmaLinux' else 'fedora' if ansible_distribution == 'Fedora' else 'ubuntu' if ansible_distribution == 'Ubuntu' else 'opensuse'}}"
 
     is_production: "{{host_ip == production_ip}}"
 
@@ -123,7 +123,7 @@
     item.state in ['failed','default']
   failed_when: >
     item.state  == 'failed'
-  ignore_errors: yes
+  ignore_errors: True
   register: check_result
   with_items: "{{default_variables_check}}"
 

@@ -1,35 +1,47 @@
 #!/bin/sh
 
-COUNTER=1
+COUNTER=0
 
 IFS=$'\n'
 
 temperatures=$(ls /sys/class/thermal/thermal_zone*/temp 2&>/dev/null)
 for item in $temperatures
 do
-  value=$(cat $item)
+  let COUNTER++
+
+    value=$(cat $item)
   #value=$(echo $value | awk '{printf("%.3f", $1 / 1000.0)}')
   name=$(echo $item | sed 's/.*thermal_zone\([0-9]\+\).*/\1/')
 
   eval NAMES_${COUNTER}="zone\$name"
   eval VALUES_${COUNTER}="\$value"
-
-  let COUNTER++
 done
 
 temperatures=$(ls /sys/class/hwmon/hwmon*/temp1_input 2&>/dev/null)
 for item in $temperatures
 do
-  value=$(cat $item)
+  let COUNTER++
+
+    value=$(cat $item)
   #value=$(echo $value | awk '{printf("%.3f", $1 / 1000.0)}')
   path=$(echo $item | sed 's/\(.*\)temp1_input/\1/')
   name=$(cat $path/name)
 
   eval NAMES_${COUNTER}="\$name"
   eval VALUES_${COUNTER}="\$value"
-
-  let COUNTER++
 done
+
+if [ "$1" == "print" ]
+then
+  for i in `seq 1 $COUNTER`;
+  do
+    eval name="\$NAMES_${i}"
+    eval value="\$VALUES_${i}"
+    value=$(echo $value | awk '{printf("%.2f\n", $1 / 1000.0)}')
+    echo $name $value"°C"
+  done
+  exit 0
+fi
 
 sensor_index=1
 snmp_index=1
@@ -71,14 +83,14 @@ do
     then
       let sensor_index++
 
-      if [ $sensor_index -eq $COUNTER ]
+      if [ $sensor_index -gt $COUNTER ]
       then
         sensor_index=1
         let snmp_index++
       fi
     fi
 
-    if [ $snmp_index -eq 4 ] || [ $sensor_index -eq $COUNTER ]
+    if [ $snmp_index -gt 3 ] || [ $sensor_index -gt $COUNTER ]
     then
       break
     fi

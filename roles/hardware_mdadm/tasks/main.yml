@@ -4,12 +4,12 @@
   register: mdraid
   tags: [ "loki_config" ]
 
-- name: install required packages => is_fedora
+- name: install required packages => is_rhel or is_fedora|bool
   yum:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: mdraid.stat.exists and is_fedora|bool
+  when: mdraid.stat.exists and is_rhel|bool or is_fedora|bool
   
 - name: install required packages => is_ubuntu
   apt:

@@ -1,17 +1,17 @@
-- name: check if nfs-utils is installed
+- name: check if nfs-utils is installed => is_rhel or is_fedora
   yum:
     list: nfs-utils
     state: present
   register: nfsutilsresult
-  when: is_fedora|bool
+  when: is_rhel|bool or is_fedora|bool
   
-- name: upgrade libnfsidmap => is_fedora
+- name: upgrade libnfsidmap => is_rhel or is_fedora
   yum:
     name: libnfsidmap
     state: latest
-  when: "is_fedora|bool and nfsutilsresult.results|selectattr('yumstate', 'match', 'installed')|list|length == 0"
+  when: "(is_rhel|bool or is_fedora|bool ) and nfsutilsresult.results|selectattr('yumstate', 'match', 'installed')|list|length == 0"
 
-- name: install required packages => is_fedora
+- name: install required packages => is_rhel or is_fedora|bool
   yum:
     name: [
         nfs-utils
@@ -19,7 +19,7 @@
     ]
     state: present
   notify: "restart nfs-server"
-  when: is_fedora|bool
+  when: is_rhel|bool or is_fedora|bool
 
 - name: install required packages => is_suse
   zypper:

@@ -23,7 +23,7 @@ import pexpect
 branch = "master"
 
 #deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" }, { "config": "demo", "os": "ubuntu" } ]
-deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "ubuntu" } ]
+deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "alma" }, { "config": "demo", "os": "ubuntu" } ]
 
 repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 

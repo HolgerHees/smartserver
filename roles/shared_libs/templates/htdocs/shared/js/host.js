@@ -2,7 +2,7 @@ mx.Host = (function( ret ) {
     var BASE_DOMAIN = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "base_domain" ];
 
     var authType = false;
-    var domain = location.host;
+    var domain = location.hostname;
     if( domain != BASE_DOMAIN )
     {
         var parts = domain.split(".");
@@ -11,6 +11,12 @@ mx.Host = (function( ret ) {
         else if( subDomain.indexOf("ba") === 0 ) authType = "ba";
         
         domain = parts.join(".");
+    }
+
+    var port = location.port;
+    if( location.host.endsWith(":" + port) )
+    {
+        domain += ":" + port;
     }
     
     var base = window.location.href;

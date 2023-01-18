@@ -11,14 +11,14 @@
     group: "{{item.group}}"
     mode: 0750
   with_items:
-    - { user: "nobody", group: "{{ 'nobody' if is_fedora else 'nogroup'}}", path: "{{ global_etc }}alertmanager" }
+    - { user: "nobody", group: "{{ 'nobody' if is_rhel or is_fedora else 'nogroup'}}", path: "{{ global_etc }}alertmanager" }
 
 - name: copy config
   template:
     src: "templates/etc/{{item.src}}"
     dest: "{{ global_etc }}alertmanager/{{item.dest}}"
     owner: nobody
-    group: "{{ 'nobody' if is_fedora else 'nogroup'}}"
+    group: "{{ 'nobody' if is_rhel or is_fedora else 'nogroup'}}"
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rw,g=r,o=", src: "alertmanager.yml", dest: "alertmanager.yml"}

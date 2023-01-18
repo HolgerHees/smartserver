@@ -41,13 +41,13 @@
   import_tasks: roles/apache/shared/add_config.yml
 
 # POTD FETCHER
-- name: install required packages for fetchPOTD => is_fedora
+- name: install required packages for fetchPOTD => is_rhel or is_fedora
   yum:
     name: 
       - ImageMagick
       - perl-Image-ExifTool
     state: present
-  when: is_fedora|bool
+  when: is_rhel|bool or is_fedora|bool
 
 - name: install required packages for fetchPOTD => is_ubuntu
   apt:

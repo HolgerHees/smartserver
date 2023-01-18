@@ -60,8 +60,8 @@ Example: vagrant --config=demo --os=suse up
             #setup_version = "36" => https://github.com/hashicorp/vagrant/issues/12762
             setup_version = "37"
             setup_image = "fedora/" + setup_version + "-cloud-base"
-        elsif arg == "almalinux" then
-            setup_os = "almalinux"
+        elsif arg == "alma" then
+            setup_os = "alma"
             setup_version = "9"
             setup_image = "almalinux/" + setup_version
         end
@@ -116,7 +116,6 @@ Vagrant.configure(2) do |config|
         end
     end
     
-    setup.vm.network "private_network", ip: $env_ip
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
     #, automount: true
@@ -146,6 +145,8 @@ Vagrant.configure(2) do |config|
     timezone = 'Etc/GMT' + timezone_suffix
     setup.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/" + timezone + " /etc/localtime", run: "always"
 
+    setup.vm.network "private_network", ip: $env_ip
+
     # Ask for vault password
     password = Environment.getPassword()
    
@@ -165,10 +166,10 @@ Vagrant.configure(2) do |config|
         sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install ansible==2.10.7
         SHELL
-    elsif setup_os == 'almalinux' then
+    elsif setup_os == 'alma' then
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
-        sudo pip install ansible==2.10.7
+        sudo pip install --prefix=/usr/ ansible==2.10.7
         SHELL
     else
         print "*** not supported ***"
