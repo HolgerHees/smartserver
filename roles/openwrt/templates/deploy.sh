@@ -80,7 +80,7 @@ echo "Refresh package lists ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update > /dev/null"
 
 echo "Install core packages ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc htop strace tcpdump openssh-sftp-server > /dev/null"
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc htop strace tcpdump ntpclient openssh-sftp-server > /dev/null"
 
 if [[ "$ADDITIONAL_PACKAGES" != "" ]]; then
   echo "Install custom packages ..."
@@ -111,7 +111,7 @@ sshpass -f <(printf '%s\n' $PASSWORD) scp -rp $SOURCE/$IP/* root@$IP:/
 #authenticate
 
 echo "Apply hostname and timezone ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.hostname='$HOSTNAME' & uci set system.cfg01e48a.zonename='$TIMEZONE' & uci set system.ntp.use_dhcp='0' & uci commit;"
+sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.hostname='$HOSTNAME' & uci set system.cfg01e48a.zonename='$TIMEZONE' & uci commit;"
 
 echo "Force web redirect ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set uhttpd.main.redirect_https='on' & uci commit;"
