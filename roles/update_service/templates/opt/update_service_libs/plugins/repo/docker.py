@@ -89,7 +89,11 @@ class Repository(Repo):
     def getCurrentVersion(self):
         branch = Version(self.current_version).getBranchString()
         
-        creationDate = self._getCreationDate(self.current_tag)
+        try:
+          creationDate = self._getCreationDate(self.current_tag)
+        except SkipableVersionError as e:
+          creationDate = "1970-01-01 00:00:00"
+
         return self.createUpdate( version = self.current_version, branch = branch, date = creationDate, url = self._getUpdateUrl(self.current_tag) )
 
     def getCurrentVersionString(self):
