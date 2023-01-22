@@ -1,6 +1,6 @@
 import threading
 from datetime import datetime, timedelta
-import re
+#import time
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 import json
@@ -468,12 +468,17 @@ class OpenWRT(_handler.Handler):
         #logging.warning("OpenWRT {} - {} - got unexpected device result '{}'".format(ip, type, _json))
         #return None
     
-    def _post(self, ip, json):
+    def _post(self, ip, json, retry=1):
         try:
             return requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
         except requests.exceptions.ConnectionError as e:
-            #logging.error(str(e))
-            raise NetworkException("OpenWRT {} currently not available".format(ip), self.config.remote_suspend_timeout)
+            logging.error(str(e))
+            msg = "OpenWRT {} currently not available".format(ip)
+            if retry > 0:
+                #time.sleep(1)
+                logging.warning("{}. Retry".format(msg))
+                return self._post(ip, json, retry - 1)
+            raise NetworkException(msg, self.config.remote_suspend_timeout)
         
     def _getSession(self, ip, username, password ):
         json = { "jsonrpc": "2.0", "id": 1, "method": "call", "params": [ "00000000000000000000000000000000", "session", "login", { "username": username, "password": password } ] }
