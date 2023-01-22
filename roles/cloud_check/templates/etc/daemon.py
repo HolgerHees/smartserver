@@ -330,7 +330,7 @@ class Handler(threading.Thread):
             if not self.isOnline():
                 state = "0"
             else:
-                state = self.getWatchedState(peer)
+                state = self.getWatchedState(config.peer_name)
 
             state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(config.peer_name, state ))
         else:
