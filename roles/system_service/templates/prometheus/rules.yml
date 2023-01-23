@@ -31,11 +31,9 @@ groups:
       summary: "Speedtest is not working. Maybe your wan connection is broken."
 
   - alert: WAN connection download speed is too low
-    expr: 'system_service_speedtest{type="downstream_rate"} < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75
-           and (
-             max_over_time(system_service_speedtest{type="downstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.5
-             or avg_over_time(system_service_speedtest{type="downstream_rate"}[4h]) < avg_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75
-           )'
+    expr: 'max_over_time(system_service_speedtest{type="downstream_rate"}[12h]) < max_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.5
+           or
+           avg_over_time(system_service_speedtest{type="downstream_rate"}[48h]) < avg_over_time(system_service_speedtest{type="downstream_rate"}[30d]) * 0.75'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -44,11 +42,9 @@ groups:
       summary: "WAN connection download speed is {{'{{'}}printf \"%.0f\" $value{{'}}'}} mbit/s"
 
   - alert: WAN connection upload speed is too low
-    expr: 'system_service_speedtest{type="upstream_rate"} < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75
-           and (
-             max_over_time(system_service_speedtest{type="upstream_rate"}[4h]) < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.5
-             or avg_over_time(system_service_speedtest{type="upstream_rate"}[4h]) < avg_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75
-           )'
+    expr: 'max_over_time(system_service_speedtest{type="upstream_rate"}[12h]) < max_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.5
+           or
+           avg_over_time(system_service_speedtest{type="upstream_rate"}[48h]) < avg_over_time(system_service_speedtest{type="upstream_rate"}[30d]) * 0.75'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
@@ -57,7 +53,7 @@ groups:
       summary: "WAN connection upload speed is {{'{{'}}printf \"%.0f\" $value{{'}}'}} mbit/s"
 
   - alert: WAN connection ping latency is too high
-    expr: 'min_over_time(system_service_speedtest{type="ping"}[4h]) > min_over_time(system_service_speedtest{type="ping"}[30d]) * 2'
+    expr: 'min_over_time(system_service_speedtest{type="ping"}[12h]) > min_over_time(system_service_speedtest{type="ping"}[30d]) * 2'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
