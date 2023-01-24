@@ -105,9 +105,11 @@ class LibreNMS(_handler.Handler):
             if mac is None:
                 if _device["device_id"] in self.devices:
                     mac = self.devices[_device["device_id"]]["mac"]
-                    logging.warning("Device {} currently not resolvable. Use old mac address for now.".format(_device["hostname"]))
+                    logging.info("Device {} currently not resolvable. Use old mac address for now.".format(_device["hostname"]))
                 else:
-                    raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]), self.config.startup_error_timeout)
+                    logging.info("Device {} currently not resolvable. Skip for now.".format(_device["hostname"]))
+                    continue
+                    #raise NetworkException("Device {} currently not resolvable".format(_device["hostname"]), self.config.startup_error_timeout)
             
             device = {
                 "mac": mac,
@@ -186,9 +188,10 @@ class LibreNMS(_handler.Handler):
         for _port in _ports:
             if _port["device_id"] not in self.devices:
                 self._processDevices(events)
-                for __port in _ports:
-                    if __port["device_id"] not in self.devices:
-                        raise Exception("Missing device {}".format(__port["device_id"]))
+                #for __port in _ports:
+                #    if __port["device_id"] not in self.devices:
+                #        logging.warning("Device {} currently not resolvable. Skip for now.".format(_device["hostname"]))
+                #        #raise Exception("Missing device {}".format(__port["device_id"]))
                 break
             
         if _ports or self.device_ports:
@@ -199,6 +202,8 @@ class LibreNMS(_handler.Handler):
             _active_ports_ids = []
             for _port in _ports:
                 device_id = _port["device_id"]
+                if device_id not in self.devices:
+                  continue
                 mac = self.devices[device_id]["mac"]
                 port_ifname = _port["ifName"]
                 port_id = _port["ifIndex"]
