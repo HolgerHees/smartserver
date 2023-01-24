@@ -45,7 +45,7 @@ class Cache():
         return self.gateway_mac
     
     def getGatewayInterface(self, vlan):
-        return "lan{}".format(vlan)
+        return "lan.{}".format(vlan)
     
     def getWanMAC(self):
         return "00:00:00:00:00:00"
