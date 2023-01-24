@@ -4,10 +4,8 @@ import paho.mqtt.client as mqtt
 import sys
 import subprocess
 
-import traceback
-
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from flask import Flask, request, make_response
 from werkzeug.serving import WSGIRequestHandler
@@ -36,8 +34,6 @@ MOUNT_STATE_MOUNTED = 1
 MOUNT_STATE_UNKNOWN = -1
 
 class Helper(object):
-    lastNotified = {}
-
     @staticmethod
     def ping(host, timeout):
         try:
@@ -375,7 +371,6 @@ class Handler(threading.Thread):
             job.start()
             self.peer_jobs[peer] = job
 
-        next_topic_checks = datetime.now()
         while self.is_running:
             if self.is_checking or not self.is_online:
                 # **** CHECK INTERNET CONNECTIVITY ****

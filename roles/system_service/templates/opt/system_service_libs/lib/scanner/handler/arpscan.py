@@ -109,10 +109,10 @@ class DeviceChecker(threading.Thread):
                         time.sleep(0.05)
                         
                     methods = ["arping"]
-                    answering_mac = Helper.arpping(ip_address, self.interface, timeout)
+                    answering_mac = Helper.getMacFromArpPing(ip_address, self.interface, timeout)
                     if answering_mac is None and self.stat.isOnline():
                         methods.append("ping")
-                        answering_mac = Helper.ping(ip_address, self.interface, timeout)
+                        answering_mac = Helper.getMacFromPing(ip_address, timeout)
                         
                     duration = round((datetime.now() - startTime).total_seconds(),2)
 
@@ -431,10 +431,10 @@ class ArpScanner(_handler.Handler):
         events = []
         try:
             methods = ["arping"]
-            answering_mac = Helper.arpping(device.getIP(), self.config.main_interface, 10)
+            answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 10)
             if answering_mac is None:
                 methods.append("ping")
-                answering_mac = Helper.ping(device.getIP(), self.config.main_interface, 5)
+                answering_mac = Helper.getMacFromPing(device.getIP(), 5)
 
             duration = round((datetime.now() - startTime).total_seconds(),2)
             if answering_mac is not None:

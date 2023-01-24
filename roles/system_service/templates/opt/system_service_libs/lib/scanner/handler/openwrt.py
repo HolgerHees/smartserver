@@ -1,6 +1,6 @@
 import threading
 from datetime import datetime, timedelta
-#import time
+import time
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 import json
@@ -472,9 +472,9 @@ class OpenWRT(_handler.Handler):
         try:
             return requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
         except requests.exceptions.ConnectionError as e:
-            logging.error(str(e))
             msg = "OpenWRT {} currently not available".format(ip)
-            if retry > 0:
+            if retry > 0 and Helper.ping(ip, 5): # ubus calls are sometimes (~ones every 2 days) answered with a 500
+                logging.warning(str(e))
                 #time.sleep(1)
                 logging.warning("{}. Retry".format(msg))
                 return self._post(ip, json, retry - 1)

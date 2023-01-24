@@ -248,11 +248,11 @@ class Cache():
     def ip2mac(self,ip):
         now = datetime.now()
         if ip not in self.ip_mac_map or (now - self.ip_mac_map[ip][1]).total_seconds() > self.config.cache_ip_mac_revalidation_interval:
-            mac = Helper.ip2mac(ip, self.config.main_interface)
+            mac = Helper.ip2mac(ip)
             if mac is None:
                 logging.info("Not able to resolve ip2mac. Fallback to ping")
                 # try a ping to force an arp table update
-                mac = Helper.ping(ip, self.config.main_interface, 5)
+                mac = Helper.getMacFromPing(ip, 5)
                 if mac is None:
                     return None
             self.ip_mac_map[ip] = [mac, now]

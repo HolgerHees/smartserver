@@ -48,13 +48,17 @@ class Helper():
                                 bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                 universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
-    def ping(ip, interface, timeout):
+    def ping(ip, timeout):
         result = command.exec(["/bin/ping", "-W", str(timeout), "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, exitstatus_check = False)
-        if result.returncode == 0:
-            return Helper.ip2mac(ip, interface)
+        return result.returncode == 0
+
+    def getMacFromPing(ip, timeout):
+        is_success = Helper.ping(ip, timeout)
+        if is_success:
+            return Helper.ip2mac(ip)
         return None
     
-    def arpping(ip, interface, timeout):
+    def getMacFromArpPing(ip, interface, timeout):
         result = command.exec(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode()
@@ -80,7 +84,7 @@ class Helper():
 
         raise Exception("Cmd 'arp-scan' was not successful")
             
-    def ip2mac(ip, interface):
+    def ip2mac(ip):
         result = command.exec(["/sbin/arp", "-n"], exitstatus_check = False)
         if result.returncode == 0:
             rows = result.stdout.decode().strip()
