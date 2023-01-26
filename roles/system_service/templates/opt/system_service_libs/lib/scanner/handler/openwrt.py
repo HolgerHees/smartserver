@@ -475,11 +475,16 @@ class OpenWRT(_handler.Handler):
             return requests.post( "https://{}/ubus".format(ip), json=json, verify=False)
         except requests.exceptions.ConnectionError as e:
             msg = "OpenWRT {} currently not available".format(ip)
-            if retry > 0 and Helper.ping(ip, 5): # ubus calls are sometimes (~ones every 2 days) answered with a 500
-                logging.warning(str(e))
-                #time.sleep(1)
-                logging.warning("{}. Retry".format(msg))
-                return self._post(ip, json, retry - 1)
+            if retry > 0: 
+                self.log.info(msg)
+                for i in range(3):
+                    if Helper.ping(ip, 5): # ubus calls are sometimes (~ones every 2 days) answered with a 500
+                        logging.info(str(e))
+                        logging.info("Retry connecting {}".format(ip))
+                        return self._post(ip, json, retry - 1)
+                    else:
+                        self.log.info("{}. retry connecting {} in 5 seconds.".format(i + 1, ip))
+                        time.sleep(5)
             raise NetworkException(msg, self.config.remote_suspend_timeout)
         
     def _getSession(self, ip, username, password ):
