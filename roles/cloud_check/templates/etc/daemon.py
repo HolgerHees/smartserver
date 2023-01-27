@@ -84,10 +84,10 @@ class PeerJob(threading.Thread):
 
         self.error_count = 0
 
-    def _getTimeout(self,has_error):
+    def _getTimeout(self, has_error, default_timeout=5):
         if has_error:
             return 1
-        return 5
+        return default_timeout
 
     def _checkmount(self, peer):
         try:
@@ -106,7 +106,7 @@ class PeerJob(threading.Thread):
     def _checkstate(self, peer, host):
         try:
             #print("http://{}/state".format(host))
-            response = requests.get("http://{}/state".format(host), allow_redirects = False, timeout = self._getTimeout(self.has_state_error) )
+            response = requests.get("http://{}/state".format(host), allow_redirects = False, timeout = self._getTimeout(self.has_state_error,15) )
             #print("{} {}".format(response.status_code,response.text))
             #self.log.info("{} {} {}".format(host,response_code == 200,response_body == "online"))
             running_state = PEER_STATE_ONLINE if response.status_code == 200 and response.text.rstrip() == "online" else PEER_STATE_OFFLINE
@@ -146,6 +146,12 @@ class PeerJob(threading.Thread):
                     # **** CHECK PING ****
                     if running_state == PEER_STATE_OFFLINE and self._ping(self.peer, self.data["host"]):
                         running_state = PEER_STATE_PING_OK
+                        #if self.last_running_state == PEER_STATE_ONLINE:
+                        #    Helper.logInfo("Retry connection state for peer {} in 15 seconds".format(self.peer))
+                        #    self.event.wait(15)
+                        #    _running_state = self._checkstate(self.peer, self.data["host"])
+                        #    if _running_state == PEER_STATE_ONLINE:
+                        #        running_state = _running_state
 
                     if running_state == PEER_STATE_OFFLINE:
                         self.is_suspended = None
