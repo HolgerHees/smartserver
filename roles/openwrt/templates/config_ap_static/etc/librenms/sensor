@@ -1,10 +1,27 @@
 #!/bin/sh
 
-#OID_order=".1.3.6.1.4.1.2021.13.16.2"
-#OID_order=".1.3.6.1.4.1.2021.13.16.2 .1.3.6.1.4.1.2021.13.16.3"
-OID_order=".1.3.6.1.4.1.2021.13.16.2 .1.3.6.1.4.1.2021.13.16.3 .1.3.6.1.4.1.2021.13.16.5"
+OID_order=".1.3.6.1.4.1.2021.13.16.2 .1.3.6.1.4.1.2021.13.16.3"
 
 ACTIVE_FUNCTION=""
+
+if [ $# -gt 0 ]
+then
+IS_DEBUG=true
+else
+IS_DEBUG=false
+fi
+
+SCRIPT=$(readlink -f $0)
+SCRIPTPATH=`dirname $SCRIPT`
+CONFIGFILE="$SCRIPTPATH/sensor.conf"
+if [ -f "$CONFIGFILE" ]; then
+  . "$CONFIGFILE"
+fi
+
+print_help(){
+  echo $1
+  echo $2
+}
 
 sensor_1_3_6_1_4_1_2021_13_16_2(){
   COUNTER=0
@@ -61,36 +78,28 @@ sensor_1_3_6_1_4_1_2021_13_16_3(){
   INDEX=0
 
   fan_rpm=$(ls /sys/class/hwmon/hwmon*/fan*_input 2&>/dev/null)
-  for item in $fan_rpm
-  do
-    let COUNTER++
-    let INDEX++
-
-    value=$(cat $item 2> /dev/null)
-    #value=$(echo $value | awk '{printf("%d", $1 * 100 / 255)}')
-    path=$(echo $item | sed 's/\(.*\)fan.*/\1/')
-    name=$(cat $path/name)
-
-    eval NAMES_${COUNTER}="\$name"
-    fmt_value=$(echo $value)
-    eval FMT_VALUES_${COUNTER}="\$fmt_value"
-    eval VALUES_${COUNTER}="\$value"
-    eval TYPE_${COUNTER}=".1.3.6.1.4.1.2021.13.16.3.1"
-    eval UNIT_${COUNTER}="rpm"
-    eval INDEX_${COUNTER}="$INDEX"
-    eval COUNT_1_3_6_1_4_1_2021_13_16_3_1_${INDEX}="$COUNTER"
-  done
-}
-
-sensor_1_3_6_1_4_1_2021_13_16_5(){
-  COUNTER=0
-  INDEX=0
-
-  IFS=$'\n'
-
-  fan_rpm=$(ls /sys/class/hwmon/hwmon*/fan*_input 2&>/dev/null)
-  if [ $? -eq 1 ]
+  if [ $? -eq 0 ]
   then
+    for item in $fan_rpm
+    do
+      let COUNTER++
+      let INDEX++
+
+      value=$(cat $item 2> /dev/null)
+      #value=$(echo $value | awk '{printf("%d", $1 * 100 / 255)}')
+      path=$(echo $item | sed 's/\(.*\)fan.*/\1/')
+      name=$(cat $path/name)
+
+      eval NAMES_${COUNTER}="\$name"
+      fmt_value=$(echo $value)
+      eval FMT_VALUES_${COUNTER}="\$fmt_value"
+      eval VALUES_${COUNTER}="\$value"
+      eval TYPE_${COUNTER}=".1.3.6.1.4.1.2021.13.16.3.1"
+      eval UNIT_${COUNTER}="rpm"
+      eval INDEX_${COUNTER}="$INDEX"
+      eval COUNT_1_3_6_1_4_1_2021_13_16_3_1_${INDEX}="$COUNTER"
+    done
+  else
     fan_pwm=$(ls /sys/class/hwmon/hwmon*/pwm1 2&>/dev/null)
     for item in $fan_pwm
     do
@@ -102,14 +111,25 @@ sensor_1_3_6_1_4_1_2021_13_16_5(){
       path=$(echo $item | sed 's/\(.*\)pwm1/\1/')
       name=$(cat $path/name)
 
-      eval NAMES_${COUNTER}="\$name"
-      fmt_value=$(echo $value)
-      eval FMT_VALUES_${COUNTER}="\$fmt_value"
-      eval VALUES_${COUNTER}="\$value"
-      eval TYPE_${COUNTER}=".1.3.6.1.4.1.2021.13.16.5.1"
-      eval UNIT_${COUNTER}="%"
-      eval INDEX_${COUNTER}="$INDEX"
-      eval COUNT_1_3_6_1_4_1_2021_13_16_5_1_${INDEX}="$COUNTER"
+      eval max_speed="\$FAN_MAX_SPEED_${name}"
+
+      if [ "$max_speed" != "" ]
+      then
+        value=$(awk -v a=$value -v b=$max_speed 'BEGIN {ans=a * b / 100; print ans}')
+
+        eval NAMES_${COUNTER}="\$name"
+        fmt_value=$(echo $value)
+        eval FMT_VALUES_${COUNTER}="\$fmt_value"
+        eval VALUES_${COUNTER}="\$value"
+        eval TYPE_${COUNTER}=".1.3.6.1.4.1.2021.13.16.3.1"
+        eval UNIT_${COUNTER}="rpm"
+        eval INDEX_${COUNTER}="$INDEX"
+        eval COUNT_1_3_6_1_4_1_2021_13_16_3_1_${INDEX}="$COUNTER"
+      elif [ $IS_DEBUG = true ]
+      then
+        print_help "ERROR: Missing maxspeed for fan '$name'." "echo 'FAN_MAX_SPEED_<fanname>=<maxspeed>' > $CONFIGFILE"
+        exit 1
+      fi
     done
   fi
 }
@@ -123,7 +143,7 @@ eval_function(){
   eval "$@"
 }
 
-if [ $# -gt 0 ]
+if [ "$IS_DEBUG" = true ]
 then
   IFS=$' '
   for _oid in $OID_order
