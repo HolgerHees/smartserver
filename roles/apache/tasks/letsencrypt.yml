@@ -24,16 +24,21 @@
   command: "mv {{global_etc}}letsencrypt/live/{{server_domain}} {{global_etc}}letsencrypt/live/{{server_domain}}.bak"
   when: "certificate_mode == 'create' and certificate_files.stat.exists"
 
-- name: collect domain names => certificate_mode = 'create'
-  shell: "grep -ohP \"ServerName\\s*\\K(.*){{server_domain}}\" {{global_etc}}apache2/_.ansible.vhost.d/*.conf"
-  register: domain_result
-  when: "certificate_mode == 'create'"
+#- name: collect domain names => certificate_mode = 'create'
+#  shell: "grep -ohP \"ServerName\\s*\\K(.*){{server_domain}}\" {{global_etc}}apache2/_.ansible.vhost.d/*.conf"
+#  register: domain_result
+#  when: "certificate_mode == 'create'"
+
+#- name: create certificates => certificate_mode = 'create'
+#  shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
+#  notify: "restart apache2"
+#  when: "certificate_mode == 'create'"
 
 - name: create certificates => certificate_mode = 'create'
-  shell: "docker exec apache2 sh -c \"certbot certonly --webroot -w {{htdocs_path}}letsencrypt --preferred-challenges http --agree-tos --email {{root_email}} -d {{ domain_result.stdout_lines | unique | join(' -d ') }}\""
-  notify: "restart apache2"
+  shell: "/opt/letsencrypt/check.sh update"
+#  notify: "restart apache2"
   when: "certificate_mode == 'create'"
-  
+
 - name: create cron job
   vars:
     name: "Letsencrypt renew job"

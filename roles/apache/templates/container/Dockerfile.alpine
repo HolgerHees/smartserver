@@ -1,0 +1,90 @@
+FROM httpd:{{image_version}}-alpine
+
+RUN addgroup -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
+  && adduser -u {{system_users['www'].id}} -g {{system_groups['www'].id}} -S -s /bin/false {{system_users['www'].name}}
+#  && mv /usr/local/apache2/conf/httpd.conf /usr/local/apache2/conf/httpd.conf.bak
+#  && apt-get update \
+#  && apt-get install -y sudo
+
+  # OpenID Connect
+  # - installation of openidc module first already enabled the needed apache configs
+  # - after, we just compile and overwrite the module
+  #RUN apt-get install -y libapache2-mod-auth-openidc
+
+RUN apk --update --no-cache add git autoconf automake pkgconfig libtool g++ apr-dev apr-util-dev curl-dev jansson-dev \
+  && git clone https://github.com/zmartzone/mod_auth_openidc.git \
+  && cd mod_auth_openidc/ \
+  && git checkout v{{openidc_version}} \
+  && ./autogen.sh \
+  && autoreconf -fi \
+
+#RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjansson-dev libcjose-dev libpcre++-dev pkg-config certbot \
+#    && mkdir /usr/lib/apache2/ \
+#    && mkdir /usr/lib/apache2/modules \
+#    && git clone https://github.com/zmartzone/mod_auth_openidc.git \
+#    && cd mod_auth_openidc/ \
+#    && git checkout v{{openidc_version}} \
+#    && ./autogen.sh \
+#    && autoreconf -fi \
+#    && ./configure CFLAGS="-g -O0" LDFLAGS="-lrt" \
+#    && make clean && make test \
+#    && make \
+#    && cp .libs/mod_auth_openidc.so /usr/local/apache2/modules/mod_auth_openidc.so \
+#    && cd / \
+#    && rm -rf /mod_auth_openidc \
+#    && apt-get purge -y git pkg-config \
+#    && apt-get autoremove -y \
+#    && apt-get clean \
+#    && rm -rf /var/lib/apt/lists/*
+
+
+
+
+
+
+#&& make install \
+#&& cp .libs/mod_auth_openidc.lai /usr/local/apache2/modules/mod_auth_openidc.la \
+#&& cp .libs/mod_auth_openidc.a /usr/local/apache2/modules/mod_auth_openidc.a \
+#&& touch /usr/local/apache2/conf/httpd.conf \ # needed to proceed successful with "make install"
+#&& cp /usr/lib/apache2/modules/mod_auth_openidc.so /usr/local/apache2/modules/ \
+
+
+
+#RUN apt-get install -y libapache2-mod-auth-openidc
+
+#https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=759209
+#  && ln -s /etc/apache2/mods-available/auth_openidc.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/auth_openidc.load /etc/apache2/mods-enabled/
+#  && ln -s /etc/apache2/mods-available/http2.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/http2.load /etc/apache2/mods-enabled/ \
+
+# auth_form, request, session, session_cookie and session_crypto are needed for apache session support
+
+#RUN ln -s /etc/apache2/mods-available/auth_digest.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/auth_form.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/authz_groupfile.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/expires.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/lbmethod_bytraffic.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy_html.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy_html.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy_http.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy_balancer.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy_balancer.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/proxy_wstunnel.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/request.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/session.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/session_cookie.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/session_crypto.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/slotmem_shm.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/socache_shmcb.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/ssl.conf /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/ssl.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/substitute.load /etc/apache2/mods-enabled/ \
+#  && ln -s /etc/apache2/mods-available/xml2enc.load /etc/apache2/mods-enabled/ \
+#  && sed -i "s@ErrorLog.*@ErrorLog {{global_log}}apache2/error.log@g" /etc/apache2/apache2.conf \
+#  && sed -i "s/Include ports\.conf/#Include ports\.conf/g" /etc/apache2/apache2.conf \
+#  && echo 'Include /etc/apache2/_.ansible.server.conf' >> /etc/apache2/apache2.conf \
+#  && echo 'Include /etc/apache2/_.ansible.vhost.d/*.conf' >> /etc/apache2/apache2.conf
