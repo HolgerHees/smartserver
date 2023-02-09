@@ -1,7 +1,6 @@
 - name: set version
   set_fact:
     fluentd_version: '1.15.3-debian-1.0'
-    grafana_loki_version: '1.2.18'
   tags: [ 'update_notifier_config' ]    
   
 - name: copy config and service
@@ -23,7 +22,6 @@
     image_version: "{{fluentd_version}}"
     files:
       - roles/fluentd/templates/container/Dockerfile
-      - roles/fluentd/templates/container/patches/out_loki.rb
   import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container

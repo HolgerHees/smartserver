@@ -2,7 +2,7 @@ FROM fluent/fluentd:v{{image_version}}
 
 USER root
 
-COPY out_loki.rb /out_loki.rb
+#COPY out_loki.rb /out_loki.rb
 
 RUN buildDeps="sudo make gcc g++ libc-dev" \
  && apt-get update \
@@ -17,9 +17,7 @@ RUN buildDeps="sudo make gcc g++ libc-dev" \
                   -o APT::AutoRemove::RecommendsImportant=false \
                   $buildDeps \
  && rm -rf /var/lib/apt/lists/* \
- && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem \
- && path="$(gem which 'fluent/plugin/out_loki.rb' | grep '{{grafana_loki_version}}')" \
- && mv /out_loki.rb $path || (echo 'wrong grafana-loki plugin version' && exit 1)
+ && rm -rf /tmp/* /var/tmp/* /usr/lib/ruby/gems/*/cache/*.gem
  
 #RUN locale-gen en_US.UTF-8
 #ENV LANG en_US.UTF-8
