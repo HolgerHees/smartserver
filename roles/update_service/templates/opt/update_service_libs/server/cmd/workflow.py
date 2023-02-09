@@ -38,16 +38,16 @@ class CmdWorkflow:
         thread.start()
 
     def _handleRunningStates(self):
-        for name in glob.glob(u"{}*-*-running-*-*.log".format(config.job_log_folder)):
-            name_parts = os.path.basename(name).split("-")
+        for job_log_file in glob.glob(u"{}*-*-running-*-*.log".format(config.job_log_folder)):
+            name_parts = os.path.basename(job_log_file).split("-")
             
             result = False
             if self.cmd_executer.isInterruptableJob(name_parts[3]):
-                result = self._checkWorkflow(name,name_parts[0],name_parts[3])
+                result = self._checkWorkflow(job_log_file,name_parts[0],name_parts[3])
                 if type(result) != bool:
-                    self._handleWorkflow(result,name,name_parts[0])
+                    self._handleWorkflow(result,job_log_file,name_parts[0])
             else:
-                result = self._handleCrash(name)
+                result = self._handleCrash(job_log_file)
 
             if type(result) == bool:
                 logging.info("Mark job '{}' as '{}'".format(name_parts[3], 'success' if result else 'failed'))
@@ -55,20 +55,20 @@ class CmdWorkflow:
         if os.path.isfile(config.deployment_workflow_file):
             os.unlink(config.deployment_workflow_file)
 
-    def _handleCrash(self,file_name):
-        with open(file_name, 'a') as f:
+    def _handleCrash(self,job_log_file):
+        with open(job_log_file, 'a') as f:
             lf = LogFile(f)
             lf.getFile().write("\n")
             lf.write("The command crashed, because logfile was still marked as running.\n")
 
-        os.rename(file_name, file_name.replace("-running-","-crashed-"))
+        os.rename(job_log_file, job_log_file.replace("-running-","-crashed-"))
         
         return False
 
-    def _checkWorkflow(self,log_file_name,start_time_str,expected_workflow):
+    def _checkWorkflow(self,job_log_file,start_time_str,expected_workflow):
         is_system_reboot = expected_workflow == "system_reboot"
 
-        log_mtime = os.stat(log_file_name).st_mtime
+        log_mtime = os.stat(job_log_file).st_mtime
         log_modified_time = datetime.fromtimestamp(log_mtime, tz=timezone.utc)
         log_file_age = datetime.now().timestamp() - log_modified_time.timestamp()
         
@@ -94,16 +94,16 @@ class CmdWorkflow:
             msg = "The command crashed, because logfile was too old.\n"
             flag = "crashed"
 
-        with open(log_file_name, 'a') as f:
+        with open(job_log_file, 'a') as f:
             lf = LogFile(f)
             self.cmd_executer.logInterruptedCmd(lf, msg)
             
-        os.rename(log_file_name, log_file_name.replace("-running-", "-{}-".format(flag)))
+        os.rename(job_log_file, job_log_file.replace("-running-", "-{}-".format(flag)))
         
         return is_success
 
-    def _handleWorkflow(self,workflow,log_file_name,start_time_str):
-        thread = threading.Thread(target=self._resumeWorkflow, args=(workflow, log_file_name, start_time_str ))
+    def _handleWorkflow(self,workflow,job_log_file,start_time_str):
+        thread = threading.Thread(target=self._resumeWorkflow, args=(workflow, job_log_file, start_time_str ))
         thread.start()
         
     def _waitToProceed(self, lf, min_process_inactivity_time, min_waiting_time, max_waiting_time, suffix ):
@@ -154,14 +154,14 @@ class CmdWorkflow:
             
         return can_proceed
 
-    def _resumeWorkflow(self,workflow, log_file_name, start_time_str):
+    def _resumeWorkflow(self,workflow, job_log_file, start_time_str):
         start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
 
         exit_code = 1
-        with open(log_file_name, 'a') as f:
+        with open(job_log_file, 'a') as f:
             cmd_block = workflow.pop(0)
 
-            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,log_file_name)
+            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,os.basename(job_log_file))
             lf = LogFile(f)
 
             if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
@@ -178,7 +178,7 @@ class CmdWorkflow:
                 # system reboot has only one cmd, means after reboot 'cmds' is empty
                 exit_code = self.cmd_executer.processCmdBlock(cmd_block,lf) if has_cmds else 0
                  
-        self.cmd_executer.finishRun(log_file_name,exit_code,start_time,cmd_block["cmd_type"],cmd_block["username"])
+        self.cmd_executer.finishRun(job_log_file,exit_code,start_time,cmd_block["cmd_type"],cmd_block["username"])
                       
         if exit_code == 0 and len(workflow) > 0:
             self._runWorkflow( workflow )
