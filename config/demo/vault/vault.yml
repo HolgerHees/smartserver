@@ -67,6 +67,9 @@ vault_homecontrol_washer: "<vault_homecontrol_washer>"
 vault_homecontrol_dishwasher: "<vault_homecontrol_dishwasher>"
 vault_homecontrol_coffeemaker: "<vault_homecontrol_coffeemaker>"
 vault_garbage_calendar_url: "<google_ical_url>"
+vault_tuya_humidifier_product_id: "<vault_tuya_humidifier_product_id>"
+vault_tuya_humidifier_device_id: "<vault_tuya_humidifier_device_id>"
+vault_tuya_humidifier_local_key: "<vault_tuya_humidifier_local_key>"
 
 # used in custom external openhab config repository and custom role 'apache_proxy'
 vault_wallmounted_tablet_password: "default123"
