@@ -105,11 +105,12 @@ class Handler(Server):
         scanner_metrics = self.scanner.getStateMetrics()
         netflow_metrics = self.netflow.getStateMetrics()
         speedtest_metrics = self.speedtest.getStateMetrics()
+        fping_metrics = self.fping.getStateMetrics()
 
         influxdb_metrics = self.influxdb.getStateMetrics()
         mqtt_metrics = self.mqtt.getStateMetrics()
 
-        metrics = scanner_metrics + netflow_metrics + speedtest_metrics + influxdb_metrics + mqtt_metrics
+        metrics = scanner_metrics + netflow_metrics + speedtest_metrics + fping_metrics + influxdb_metrics + mqtt_metrics
         return "{}\n".format( "\n".join(metrics) )
 
 #@app.route('/state/', methods = ['POST'])

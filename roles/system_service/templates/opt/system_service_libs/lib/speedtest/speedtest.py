@@ -15,7 +15,7 @@ class Speedtest(threading.Thread):
     def __init__(self, config, handler, mqtt, influxdb ):
         threading.Thread.__init__(self)
 
-        #self.is_running = True
+        self.is_running = True
         self.event = threading.Event()
 
         self.config = config
@@ -35,7 +35,7 @@ class Speedtest(threading.Thread):
         self.resetMetrics()
 
     def terminate(self):
-        #self.is_running = False
+        self.is_running = False
         self.event.set()
 
     def run(self):
@@ -55,11 +55,15 @@ class Speedtest(threading.Thread):
         #if max_retries == 0:
         #    logging.error("Not able to initialize last data.")
 
-        while not self.event.is_set():
-            schedule.run_pending()
+        try:
+            while self.is_running:
+                schedule.run_pending()
 
-            self.event.wait(60)
-            #self.event.clear()
+                self.event.wait(60)
+                self.event.clear()
+        except Exception:
+            logging.error(traceback.format_exc())
+            self.is_running = False
 
     def resetMetrics(self):
         self.resultUp = -1
@@ -178,6 +182,8 @@ class Speedtest(threading.Thread):
             metrics.append("system_service_speedtest{{type=\"downstream_rate\"}} {}".format(self.resultDown))
         if self.resultPing != -1:
             metrics.append("system_service_speedtest{{type=\"ping\"}} {}".format(self.resultPing))
+
+        metrics.append("system_service_process{{type=\"speedtest\",}} {}".format("1" if self.is_running else "0"))
 
         return metrics
 

@@ -19,6 +19,15 @@ groups:
     annotations:
       summary: "System service device '{{'{{'}} $labels.type {{'}}'}}' - '{{'{{'}} $labels.hostname {{'}}'}}'"
 
+  - alert: System service process crashed
+    expr: 'system_service_process{job="system_service"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "system_service"
+      severity: critical
+    annotations:
+      summary: "System service process '{{'{{'}} $labels.type {{'}}'}}' crashed"
+
 - name: wan_connection
   rules:
   - alert: Speedtest is not working

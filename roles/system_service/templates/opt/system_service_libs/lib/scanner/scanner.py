@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import threading
 import logging
 from collections import deque
+import traceback
 
 from lib.scanner.dto.device import Device, Connection
 from lib.scanner.dto.event import Event
@@ -82,12 +83,17 @@ class Scanner(threading.Thread):
         for handler in self.registered_handler:
             handler.start()
 
-        while self.is_running:
-            while len(self.event_queue) > 0:
-                [source_handler,events] = self.event_queue.popleft()
-                self._dispatch(source_handler, events)
-            self.event.wait()
-            self.event.clear()
+        try:
+            while self.is_running:
+                while len(self.event_queue) > 0:
+                    [source_handler,events] = self.event_queue.popleft()
+                    self._dispatch(source_handler, events)
+                self.event.wait()
+                self.event.clear()
+        except Exception:
+            logging.error(traceback.format_exc())
+            self.is_running = False
+
 
     #def dispatch(self, source_handler, events):
     def _dispatch(self, source_handler, events):
@@ -285,4 +291,5 @@ class Scanner(threading.Thread):
         metrics = []
         for handler in self.registered_handler:
             metrics += handler.getStateMetrics()
+        metrics.append("system_service_process{{type=\"scanner\",}} {}".format("1" if self.is_running else "0"))
         return metrics

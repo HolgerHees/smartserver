@@ -97,8 +97,10 @@ class PortScanner(_handler.Handler):
             for event in events:
                 mac = event.getObject().getMAC()
                 if event.getAction() == Event.ACTION_DELETE:
-                    logging.info("Remove device {}".format(event.getObject()))
-                    del self.monitored_devices[mac]
+                    # device exists only if it has an IP, Otherwise it was never added.
+                    if mac in self.monitored_devices:
+                        logging.info("Remove device {}".format(event.getObject()))
+                        del self.monitored_devices[mac]
                 else:
                     if mac not in self.monitored_devices:
                         logging.info("Add device {}".format(event.getObject()))

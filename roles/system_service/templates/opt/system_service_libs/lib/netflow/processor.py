@@ -185,8 +185,7 @@ class Processor(threading.Thread):
     def __init__(self, config, handler, influxdb ):
         threading.Thread.__init__(self)
 
-        #self.is_running = True
-        self.event = threading.Event()
+        self.is_running = True
 
         self.config = config
 
@@ -199,8 +198,7 @@ class Processor(threading.Thread):
         influxdb.register(self.getMessurements)
 
     def terminate(self):
-        #self.is_running = False
-        self.event.set()
+        self.is_running = False
 
     def run(self):
         if self.config.netflow_bind_ip is None:
@@ -216,7 +214,7 @@ class Processor(threading.Thread):
             pending = {}
             last_cleanup = datetime.now().timestamp()
 
-            while not self.event.is_set():
+            while self.is_running:
                 try:
                     ts, client, export = self.listener.get(timeout=0.5)
 
@@ -318,6 +316,9 @@ class Processor(threading.Thread):
                             self.connections.append(con)
                             del pending[request_key]
                     last_cleanup = now
+        except Exception:
+            logging.error(traceback.format_exc())
+            self.is_running = False
         finally:
             self.listener.stop()
             self.listener.join()
@@ -386,4 +387,4 @@ class Processor(threading.Thread):
         return messurements
 
     def getStateMetrics(self):
-        return []
+        return ["system_service_process{{type=\"netflow\",}} {}".format("1" if self.is_running else "0")]
