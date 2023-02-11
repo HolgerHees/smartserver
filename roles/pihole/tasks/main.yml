@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    pihole_version: '2023.01.10'
+    pihole_version: '2023.02.0'
   tags: [ 'update_notifier_config' ]
   
 - name: prepare needed folder
