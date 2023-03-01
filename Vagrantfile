@@ -158,6 +158,7 @@ Vagrant.configure(2) do |config|
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install --prefix=/usr/ ansible==2.10.7
+        sudo /usr/bin/dnf makecache # is needed to avoid that 'dnf-makecache.timer' is running during deployemnt. Could result in failed 'dnf-makecache.service' because of restarted named container
         SHELL
     else
         print "*** not supported ***"
