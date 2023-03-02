@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    redis_version: '7.0.8'
+    redis_version: '7.0.9'
   tags: [ 'update_notifier_config' ]
   
 - name: check started docker
@@ -35,6 +35,14 @@
 #  when: "'custom_redis' not in image_exists.stdout"
   
 # ***** FINALIZE *****
+- name: allow redis service
+  vars:
+    name: "redis"
+    rules:
+      - "saddr {{docker_redis_ip}} daddr {{docker_php_ip}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: create systemd service
   vars:
     container_name: "redis"
