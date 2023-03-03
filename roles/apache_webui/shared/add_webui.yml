@@ -33,23 +33,5 @@
   with_items: "{{icons | default([])}}"
   tags: ['apache_webui_config']
 
-- name: "apache_webui : copy js listener for '{{name}}'"
-  template:
-    src: "{{listener.js_file}}"
-    dest: "{{htdocs_path}}main/listener/{{name}}.js"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0644
-  when: "listener is defined"
-  tags: ['apache_webui_config']
-
-- name: "apache_webui : copy apache subdomain listener for '{{name}}'"
-  copy:
-    content: "{{ lookup('template', 'roles/apache_webui/templates/listener.inc') }}"
-    dest: "{{global_etc}}apache2/_.ansible.vhost.d/{{listener.sub_domain | default('default')}}-{{listener.prefix + '-' if listener.prefix is defined else ''}}listener.inc"
-    owner: root
-    group: root
-    mode: 0644
-  when: "listener is defined"
-  notify: "restart apache2"
-  tags: ['apache_webui_config']
+- name: register listener
+  import_tasks: roles/apache_webui/shared/add_listener.yml

@@ -72,6 +72,12 @@
   import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
+- name: register style
+  vars:
+    name: "libreoffice"
+    listener: { "sub_domain": "libreoffice", "js_file": "templates/webui/libreoffice.listener.js" }
+  import_tasks: roles/apache_webui/shared/add_listener.yml
+
 - name: copy apache vhost
   vars:
     sub_domain: "libreoffice"
