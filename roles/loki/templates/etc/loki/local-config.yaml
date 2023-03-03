@@ -5,25 +5,25 @@ analytics:
 
 server:
   http_listen_port: 3100
-#  http_server_read_timeout: 60s # allow longer time span queries
-#  http_server_write_timeout: 60s # allow longer time span queries
+  http_server_read_timeout: 300s # allow longer time span queries
+  http_server_write_timeout: 300s # allow longer time span queries
   
-# used to reduce amount of "context canceled" log messages
-#frontend:
-#  address: 127.0.0.1
-    
 # will fix a lot of "context canceled" log messages
 # https://github.com/grafana/loki/pull/5077/files#diff-025adfc5a8f641b9f5a1869996e3297b6c17f13933f52354cd9b375548ad7970R399
 query_range:
   parallelise_shardable_queries: false
   split_queries_by_interval: 0s
 
-#frontend:
+# used to reduce amount of "context canceled" log messages
+frontend:
+  address: 127.0.0.1           # avoids "caller=scheduler_processor.go:182 org_id=fake msg="error notifying frontend about finished query" err="rpc error: code = Canceled desc = context canceled" frontend=172.16.0.110:9095"
 #  max_outstanding_per_tenant: 2048 # default = 100]
 #  log_queries_longer_than: 20s
 
-#querier:
+querier:
 #  max_concurrent: 20
+  engine:
+    timeout: 5m
 
 ingester:
   lifecycler:
@@ -70,6 +70,8 @@ limits_config:
   reject_old_samples: true
   reject_old_samples_max_age: 168h # 7 days
   max_query_series: 100000
+  query_timeout: 5m
+#  max_query_parallelism: 64
 
 compactor:
   working_directory: /loki/compactor
