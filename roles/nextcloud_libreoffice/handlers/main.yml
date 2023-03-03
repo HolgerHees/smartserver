@@ -1,0 +1,8 @@
+- name: restart libreoffice
+  systemd:
+    name: libreoffice
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart libreoffice"

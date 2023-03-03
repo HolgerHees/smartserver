@@ -37,7 +37,8 @@
   when: "'- ' + item + ':' not in app_list_result.stdout"
   with_items:
     - user_saml
-    - onlyoffice
+#    - onlyoffice
+    - richdocuments
     - jsloader
     - previewgenerator
     - bookmarks
@@ -89,27 +90,34 @@
       - { app: "user_saml", name: "general-uid_mapping", value: "REMOTE_USERNAME" }
       - { app: "user_saml", name: "saml-attribute-mapping-displayName_mapping", value: "REMOTE_USERFULLNAME" }
 
-      - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
-      - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
-      - { app: "onlyoffice", name: "StorageUrl", value: "" }
-      - { app: "onlyoffice", name: "customizationChat", value: "false" }
-      - { app: "onlyoffice", name: "customizationCompactHeader", value: "true" }
-      - { app: "onlyoffice", name: "customizationForcesave", value: "true" }
-      - { app: "onlyoffice", name: "customizationFeedback", value: "false" }
-      - { app: "onlyoffice", name: "customizationHelp", value: "true" }
-      - { app: "onlyoffice", name: "customizationReviewDisplay", value: "original" }
-      - { app: "onlyoffice", name: "customizationToolbarNoTabs", value: "true" }
-      - { app: "onlyoffice", name: "defFormats", value: '{"csv":"true","doc":"true","docm":"false","docx":"true","dotx":"true","epub":"false","html":"false","odp":"true","ods":"true","odt":"true","otp":"false","ots":"false","ott":"false","pdf":"false","potm":"false","potx":"false","ppsm":"false","ppsx":"true","ppt":"false","pptm":"false","pptx":"false","rtf":"true","txt":"true","xls":"true","xlsm":"false","xlsx":"true","xltm":"false","xltx":"false"}' }
-      - { app: "onlyoffice", name: "editFormats", value: '{"csv":"true","odp":"false","ods":"false","odt":"false","rtf":"false","txt":"true"}' }
-      - { app: "onlyoffice", name: "enabled", value: "yes" }
-      - { app: "onlyoffice", name: "groups", value: "[]" }
-      - { app: "onlyoffice", name: "preview", value: "false" }
-      - { app: "onlyoffice", name: "sameTab", value: "false" }
-      - { app: "onlyoffice", name: "settings_error", value: "" }
-      - { app: "onlyoffice", name: "types", value: "prevent_group_restriction" }
-      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
-      - { app: "onlyoffice", name: "versionHistory", value: "true" }
-#      - { app: "onlyoffice", name: "jwt_secret", value: "{{vault_onlyoffice_shared_key}}" }
+      - { app: "richdocuments", name: "disable_certificate_verification", value: "" }
+      - { app: "richdocuments", name: "enabled", value: "yes" }
+#      - { app: "richdocuments", name: "installed_version", value: "" }
+#      - { app: "richdocuments", name: "public_wopi_url", value: "" }
+      - { app: "richdocuments", name: "types", value: "prevent_group_restriction" }
+      - { app: "richdocuments", name: "wopi_allowlist", value: "{{docker_libreoffice_ip}}" }
+      - { app: "richdocuments", name: "wopi_url", value: "https://libreoffice.{{server_domain}}" }
+
+#      - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
+#      - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
+#      - { app: "onlyoffice", name: "StorageUrl", value: "" }
+#      - { app: "onlyoffice", name: "customizationChat", value: "false" }
+#      - { app: "onlyoffice", name: "customizationCompactHeader", value: "true" }
+#      - { app: "onlyoffice", name: "customizationForcesave", value: "true" }
+#      - { app: "onlyoffice", name: "customizationFeedback", value: "false" }
+#      - { app: "onlyoffice", name: "customizationHelp", value: "true" }
+#      - { app: "onlyoffice", name: "customizationReviewDisplay", value: "original" }
+#      - { app: "onlyoffice", name: "customizationToolbarNoTabs", value: "true" }
+#      - { app: "onlyoffice", name: "defFormats", value: '{"csv":"true","doc":"true","docm":"false","docx":"true","dotx":"true","epub":"false","html":"false","odp":"true","ods":"true","odt":"true","otp":"false","ots":"false","ott":"false","pdf":"false","potm":"false","potx":"false","ppsm":"false","ppsx":"true","ppt":"false","pptm":"false","pptx":"false","rtf":"true","txt":"true","xls":"true","xlsm":"false","xlsx":"true","xltm":"false","xltx":"false"}' }
+#      - { app: "onlyoffice", name: "editFormats", value: '{"csv":"true","odp":"false","ods":"false","odt":"false","rtf":"false","txt":"true"}' }
+#      - { app: "onlyoffice", name: "enabled", value: "yes" }
+#      - { app: "onlyoffice", name: "groups", value: "[]" }
+#      - { app: "onlyoffice", name: "preview", value: "false" }
+#      - { app: "onlyoffice", name: "sameTab", value: "false" }
+#      - { app: "onlyoffice", name: "settings_error", value: "" }
+#      - { app: "onlyoffice", name: "types", value: "prevent_group_restriction" }
+#      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
+#      - { app: "onlyoffice", name: "versionHistory", value: "true" }
 
       - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top && ['','fa.','ba.'].indexOf(window.top.location.host.replace('{{server_domain}}','')) != -1){ var script = document.createElement('script'); script.src = 'https://' + window.top.location.host + '/main/listener/frame.js'; document.head.appendChild(script); }" }
 
@@ -132,12 +140,11 @@
   with_items: "{{prepared_app_configs}}"
   when: "prepared_app_configs is defined"
 
-- name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
-  register: set_shared_key_result
-  changed_when: no
-  failed_when: set_shared_key_result.rc != 0
-#  when: "app_install_result.results[1].changed"
+#- name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
+#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
+#  register: set_shared_key_result
+#  changed_when: no
+#  failed_when: set_shared_key_result.rc != 0
 
 # ***** PREVIEW GENERATOR CRON JOB *****
 - name: create previewgenerator incremental cron job
@@ -269,7 +276,8 @@
   when: "item not in app_status.stdout.split('Disabled')[0]"
   with_items:
     - user_saml
-    - onlyoffice
+#    - onlyoffice
+    - richdocuments
     - jsloader
     - previewgenerator
     - keeweb

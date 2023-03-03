@@ -1,0 +1,108 @@
+- name: set version
+  set_fact:
+    libreoffice_version: "22.05.10.8.1"
+    libreoffice_changelog_version: "22-05"
+  tags: [ 'update_notifier_config' ]
+  
+#- name: prepare needed folder
+#  file:
+#    path: "{{item.path}}"
+#    state: directory
+#    owner: "109" # user id from docker container
+#    group: "112" # group id from docker container
+#    mode: "{{item.mode}}"
+#  with_items:
+#    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}libreoffice" }
+#    - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}libreoffice" }
+#    - { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}libreoffice" }
+
+#- name: build docker image
+#  vars:
+#    name: "libreoffice"
+#    image_name: "custom_libreoffice"
+#    image_version: "{{libreoffice_version}}"
+#    files:
+#      - roles/nextcloud_libreoffice/templates/container/Dockerfile
+#  import_tasks: roles/container/shared/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: libreoffice
+    image: "collabora/code:{{libreoffice_version}}"
+#    image: "custom_libreoffice:{{libreoffice_version}}"
+    state: present
+#    network_mode: "host"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+      extra_params: "--o:ssl.enable=false --o:ssl.termination=true"
+      server_name: "libreoffice.{{server_domain}}"
+    #capabilities:
+    #  - MKNOD
+    privileged: yes
+    log_driver: journald
+    log_options:
+      tag: libreoffice
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_libreoffice_ip}}"
+    networks_cli_compatible: yes
+#    volumes:
+#      - '{{global_etc}}libreoffice/fonts:/usr/share/fonts/truetype/custom:z'
+#      - '{{global_log}}libreoffice:/var/log/libreoffice:z'
+#      - '{{global_lib}}libreoffice:/var/www/libreoffice/Data:z'
+    exposed_ports:
+     - "9980:9980"
+  notify: "restart libreoffice"
+    
+- name: allow libreoffice service
+  vars:
+    name: "libreoffice"
+    rules:
+      - "saddr {{docker_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+- name: add container name
+  vars:
+    host_name: "libreoffice"
+    host_ip_address: "{{docker_libreoffice_ip}}"
+  import_tasks: roles/_shared/add_to_hosts.yml
+
+# ***** FINALIZE *****
+- name: copy apache vhost
+  vars:
+    sub_domain: "libreoffice"
+    usergroup: "user"
+    include: "templates/etc/apache2/_.ansible.vhost.d/libreoffice.inc"
+  import_tasks: roles/apache/shared/add_vhost.yml
+
+- name: copy fluentd config
+  vars:
+    config_file: "templates/etc/fluent/_.ansible.d/libreoffice.conf"
+  import_tasks: roles/fluentd/shared/add_config.yml
+
+- name: create systemd service
+  vars:
+    container_name: "libreoffice"
+#    container_after: [ "mysql", "redis" ]
+  import_tasks: roles/container/shared/add_docker_service.yml
+
+- name: register update notifier
+  vars:
+    name: "libreoffice"
+    type: "docker"
+    url: "https://www.collaboraoffice.com/collabora-online-{{libreoffice_changelog_version}}-release-notes/"
+    config: { 
+      repository: "collabora/code",
+      pattern: "^([0-9\\.]+)$" 
+    }
+  import_tasks: roles/update_service/shared/add_software.yml
+
+- name: trigger libreoffice handler
+  vars:
+    notify: "restart libreoffice"
+    service: "libreoffice.service"
+  import_tasks: roles/_shared/service_check.yml

@@ -143,7 +143,7 @@
     - { import_role: { name: apache_webui }, tags: [ 'apache_webui' ] }                          # responsive web ui
 
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
-    - { import_role: { name: onlyoffice }, tags: [ 'onlyoffice' ] }                              # office editor                                                     [docker,user:106|108]
+    - { import_role: { name: nextcloud_libreoffice }, tags: [ 'nextcloud_libreoffice' ] }        # office editor                                                     [docker,user:106|108]
 
     - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_ip != 'None' and ( dlna_volumes | length ) > 0" } # dlna media server           [docker,user:wwwrun|apache]
      
