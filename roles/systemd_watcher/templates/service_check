@@ -18,6 +18,8 @@ CONFIG_DIR = "/dataDisk/etc/systemd_watcher/services/"
 args_cfg = { "deployment": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
 
+is_cli = sys.stdin and sys.stdin.isatty()
+
 def error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -160,14 +162,15 @@ for line in lines:
 
     fired_alerts.append(buildAlert(Alertmanager.SEVERITY_CRITICAL, "Service failed", service))
 
-if len(fired_alerts) > 0:
-    triggerAlertmanagerAlert(fired_alerts)
-
-expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
-if len(expired_alerts) > 0:
-    triggerAlertmanagerAlert(expired_alerts)
+if len(fired_alerts) > 0 and ( is_cli or args_values["deployment"]):
+    print(fired_alerts)
 
 if args_values["deployment"]:
     exit(1 if len(fired_alerts) > 0 else 0)
-elif len(fired_alerts) > 0:
-    print(fired_alerts)
+else:
+    if len(fired_alerts) > 0:
+        triggerAlertmanagerAlert(fired_alerts)
+
+    expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
+    if len(expired_alerts) > 0:
+        triggerAlertmanagerAlert(expired_alerts)
