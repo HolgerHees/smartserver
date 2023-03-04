@@ -1,6 +1,7 @@
 - name: set version
   set_fact:
-    grafana_version: '9.4.1'
+#    grafana_version: '9.4.3' => https://github.com/grafana/grafana/issues/63936
+    grafana_version: '9.3.8'
     natel_discrete_plugin_version: "0.1.1"
   tags: [ 'update_notifier_config' ]    
 
