@@ -97,6 +97,9 @@
       - { app: "richdocuments", name: "types", value: "prevent_group_restriction" }
       - { app: "richdocuments", name: "wopi_allowlist", value: "{{docker_libreoffice_ip}}" }
       - { app: "richdocuments", name: "wopi_url", value: "https://libreoffice.{{server_domain}}" }
+      - { app: "richdocuments", name: "uiDefaults-UIMode", value: "tabbed" }
+
+
 
 #      - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
 #      - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }

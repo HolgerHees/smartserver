@@ -35,7 +35,7 @@
 #    recreate: true
     env:
       TZ: "{{timezone}}"
-      extra_params: "--o:ssl.enable=false --o:ssl.termination=true" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
+      extra_params: "--o:ssl.enable=false --o:ssl.termination=true --o:welcome.enable=false" # --o:user_interface.mode=tabbed --o:user_interface.use_integration_theme=false"
       server_name: "libreoffice.{{server_domain}}"
     #capabilities:
     #  - MKNOD
@@ -72,11 +72,11 @@
   import_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
-- name: register style
-  vars:
-    name: "libreoffice"
-    listener: { "sub_domain": "libreoffice", "js_file": "templates/webui/libreoffice.listener.js" }
-  import_tasks: roles/apache_webui/shared/add_listener.yml
+#- name: register style
+#  vars:
+#    name: "libreoffice"
+#    listener: { "sub_domain": "libreoffice", "js_file": "templates/webui/libreoffice.listener.js" }
+#  import_tasks: roles/apache_webui/shared/add_listener.yml
 
 - name: copy apache vhost
   vars:
