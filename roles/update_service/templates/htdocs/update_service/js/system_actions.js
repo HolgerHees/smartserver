@@ -42,9 +42,13 @@ mx.UpdateServiceActions = (function( ret ) {
                         mx.Error.handleServerError(response["message"]);
                     }
                 }
-                else if( this.status == 0 || this.status == 503 ) 
+                else if( mx.UpdateServiceHelper.isRestarting() )
                 {
-                    mx.Error.handleError( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
+                    mx.Error.handleError( mx.I18N.get( "Service is restarting" ) );
+                }
+                else if( this.status == 0 || this.status == 503 )
+                {
+                    mx.Error.handleError( mx.I18N.get( "Service is currently not available")  );
                 }
                 else
                 {
