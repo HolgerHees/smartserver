@@ -161,7 +161,7 @@ class CmdWorkflow:
         with open(job_log_file, 'a') as f:
             cmd_block = workflow.pop(0)
 
-            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,os.basename(job_log_file))
+            self.cmd_executer.restoreLock(cmd_block["cmd_type"],start_time,os.path.basename(job_log_file))
             lf = LogFile(f)
 
             if len(cmd_block["cmds"]) > 0 or len(workflow) > 0:
