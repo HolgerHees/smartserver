@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     apache_version: '2.4.56'
-    openidc_version: '2.4.12.3'
+    openidc_version: '2.4.13.1'
   tags: [ 'update_notifier_config' ]
   
 # SELFSIGNED CERTIFICATE
@@ -310,7 +310,7 @@
   vars:
     name: "apache - openidc"
     type: "github"
-    url: "https://github.com/zmartzone/mod_auth_openidc"
+    url: "https://github.com/OpenIDC/mod_auth_openidc/releases"
     config: { 
       project: "zmartzone/mod_auth_openidc", 
       pattern: "^v([0-9\\.]+)$",
