@@ -142,7 +142,7 @@
     dest: "{{item}}"
     owner: root
     group: root
-    mode: 750
+    mode: 0750
   with_items:
     - "/opt/netdata_helper/send_notification"
 
