@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    nextcloud_news_version: '21.0.0'
+    nextcloud_news_version: '21.1.0'
     nextcloud_keeweb_version: '0.6.10'
   
 # ***** CHECK *****
@@ -21,8 +21,9 @@
 #  failed_when: "'disabled' not in app_disable_result.stdout and 'such app enabled' not in app_disable_result.stdout"
   with_items:
     - dashboard
-    - tasks
-    - notes
+    - collectives
+#    - tasks
+#    - notes
 
 # ***** INSTALL APPS *****
 - name: check installed apps
@@ -45,10 +46,10 @@
     - bookmarks
     - contacts
     - calendar
-#    - notes
-    - collectives
+    - notes
+#    - collectives
     - deck
-#    - tasks
+    - tasks
     
 - name: install additional_apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item.app}}\""
@@ -100,8 +101,6 @@
       - { app: "richdocuments", name: "wopi_allowlist", value: "{{docker_libreoffice_ip}}" }
       - { app: "richdocuments", name: "wopi_url", value: "https://libreoffice.{{server_domain}}" }
       - { app: "richdocuments", name: "uiDefaults-UIMode", value: "tabbed" }
-
-
 
 #      - { app: "onlyoffice", name: "DocumentServerInternalUrl", value: "" }
 #      - { app: "onlyoffice", name: "DocumentServerUrl", value: "https://onlyoffice.{{server_domain}}/" }
@@ -283,11 +282,13 @@
     - user_saml
 #    - onlyoffice
     - richdocuments
-    - collectives
+#    - collectives
     - jsloader
     - previewgenerator
     - keeweb
     - news
+    - notes
+    - tasks
 
 - name: enable disabled additional_apps apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item.app}} --force\""
