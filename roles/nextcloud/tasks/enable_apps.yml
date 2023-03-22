@@ -128,7 +128,9 @@
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
       - { app: "previewgenerator", name: "heightSizes", value: "256" }
-      
+
+      - { app: "notes", name: "fileSuffix", value: ".md" }
+
       - { app: "text", name: "workspace_available", value: "0" }
       
 - name: prepare app configs
