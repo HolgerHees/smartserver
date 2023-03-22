@@ -35,6 +35,11 @@ class Version:
         result = 1
         for index in range(len(self.id_r)):
             if index < len(version.id_r):
+                # invalid version number => grafana docker repo 9799770991.1
+                if index == 0 and int(version.id_r[index]) > 10000:
+                    result = -1
+                    break;
+
                 if int(self.id_r[index]) > int(version.id_r[index]):
                     result = -1
                     break;
