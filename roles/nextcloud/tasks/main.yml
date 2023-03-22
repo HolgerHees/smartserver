@@ -193,6 +193,17 @@
     group: "{{system_groups['www'].name}}"
     mode: 0640  
 
+- name: apply patches
+  copy:
+    src: "templates/patches/{{item}}"
+    dest: "{{htdocs_path}}nextcloud/{{item}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+  with_items:
+    - "lib/private/Authentication/Token/PublicKeyTokenProvider.php"
+    - "apps/notes/lib/Controller/SettingsController.php"
+
 # ***** INITIALIZE OLD - POST *****
 - name: upgrade existing database => database exists and nextcloud version changed
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ upgrade\""

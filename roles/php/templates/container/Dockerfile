@@ -10,6 +10,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   docker-php-ext-install exif && \
   docker-php-ext-install bcmath && \
   docker-php-ext-install mysqli pdo_mysql && \
+  docker-php-ext-install sysvsem && \
 
 # preview generator nextcloud
   apt-get install -y ffmpeg && \
@@ -49,10 +50,6 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} && \
   pecl install redis && \
   docker-php-ext-enable redis && \
   
-# Redis
-#  pecl install inotify && \
-#  docker-php-ext-enable inotify && \
-
 # CLEANUPS
   apt-get autoremove -y && \
   apt-get clean && \
