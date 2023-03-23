@@ -344,3 +344,15 @@
       version: "v{{nextcloud_keeweb_version}}" 
     }
   import_tasks: roles/update_service/shared/add_software.yml
+
+- name: apply patches
+  copy:
+    src: "templates/patches/{{item}}"
+    dest: "{{htdocs_path}}nextcloud/{{item}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+  with_items:
+    - "lib/private/Authentication/Token/PublicKeyTokenProvider.php"
+    - "apps/notes/lib/Controller/SettingsController.php"
+

@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '26.0.0' # patches beim nächsten Update überprüfen
+    nextcloud_version: '26.0.0' # patches in "enable_apps" beim nächsten Update überprüfen
   tags: [ 'update_notifier_config', 'user' ]
 
 # ***** PREPARE FOLDER *****
@@ -192,17 +192,6 @@
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0640  
-
-- name: apply patches
-  copy:
-    src: "templates/patches/{{item}}"
-    dest: "{{htdocs_path}}nextcloud/{{item}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  with_items:
-    - "lib/private/Authentication/Token/PublicKeyTokenProvider.php"
-    - "apps/notes/lib/Controller/SettingsController.php"
 
 # ***** INITIALIZE OLD - POST *****
 - name: upgrade existing database => database exists and nextcloud version changed
