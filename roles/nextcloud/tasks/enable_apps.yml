@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     nextcloud_news_version: '21.1.0'
-    nextcloud_keeweb_version: '0.6.10'
+    nextcloud_keeweb_version: '0.6.12'
   
 # ***** CHECK *****
 - name: check mysql service
