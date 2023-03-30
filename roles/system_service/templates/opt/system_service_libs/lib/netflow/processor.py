@@ -10,6 +10,12 @@ import contextlib
 import time
 from datetime import datetime
 
+import requests
+import json
+
+import schedule
+import os
+
 from .collector import ThreadedNetFlowListener
 
 IP_PROTOCOLS = {
@@ -197,6 +203,112 @@ class Processor(threading.Thread):
 
         influxdb.register(self.getMessurements)
 
+        self.ip2location_state = True
+        self.ip2location_map = {}
+
+        #print(self.resolveLocation(ipaddress.ip_address("185.89.37.91")))
+        #print(self.resolveLocation(ipaddress.ip_address("40.77.167.196")))
+        #print(self.resolveLocation(ipaddress.ip_address("80.158.67.40")))
+        #print(self.resolveLocation(ipaddress.ip_address("192.168.0.50")))
+        #print(self.resolveLocation(ipaddress.ip_address("ff02::1:ff6d:914d")))
+        #print(self.resolveLocation(ipaddress.ip_address("239.255.255.250")))
+
+        #schedule.every().hour.at("00:00").do(self.fetchDatabase)
+
+        #netflow_ip2location_url = "https://api.hostip.info/get_json.php?ip="
+        #https://db-ip.com/db/download/ip-to-country-lite
+
+        #https://github.com/sapics/ip-location-db
+
+        # => http://www.iwik.org/ipcountry/
+
+        self.ip2location_state = True
+        self.ip2location_map = {}
+        self.ip2location_db = "/tmp/ip2location.bin"
+        #self.ip2location_database = IP2Location.IP2Location(os.path.join("tmp", "ip2location.db1.bin")) if os.path.exists(self.ip2location_db) else None
+
+        self.fetchDatabase()
+
+    #def fetchIpCountry(self, ip):
+    #    self.ip2location_database
+
+    def fetchDatabase(self):
+        if os.path.exists(self.ip2location_db):
+            st=os.stat(self.ip2location_db)
+            age = time.time() - st.st_mtime
+        else:
+            age = time.time()
+
+        if age > 60 * 60 * 24:
+            pass
+            #content = requests.get(self.config.ip2location_url)
+            #zf = ZipFile(BytesIO(content.content))
+
+            #for item in zf.namelist():
+            #    if not item.endswith(".BIN"):
+            #        continue
+
+            #    tmp_file = "{}.tmp".format(self.ip2location_db)
+            #    with zf.open(item) as f:
+            #        with open(tmp_file, "wb") as _f:
+            #            _f.write(f.read())
+
+            #    if os.path.exists(tmp_file):
+            #        st=os.stat(tmp_file)
+            #        if st.st_size > 0:
+            #            age = time.time() - st.st_mtime
+            #            os.replace(tmp_file, self.ip2location_db)
+            #            self.ip2location_database = IP2Location.IP2Location(os.path.join("tmp", "ip2location.db1.bin"))
+            #            self.ip2location_map = {}
+            #        else:
+            #            os.remove(tmp_file)
+            #    break
+
+
+        self.ip2location_state = 1 if age < 60 * 60 * 24 * 2 else -1
+
+        #self.ip2location_database.get_country_long("192.168.0.1")
+
+    #def resolveLocation(self, ip):
+    #    _ip = str(ip)
+    #    location = self.ip2location_map.get(_ip, None)
+    #    if location and time.time() - location["time"] > 60 * 60 * 24:
+    #        location is None
+
+    #    if location is None:
+    #        if ip.is_private:
+    #            location = { "data": { "country_name": "Private", "country_code": "xx", "city": "Private" }, "time": time.time() }
+    #            self.ip2location_map[_ip] = None
+    #        else:
+    #            response = requests.get("{}{}".format(self.config.netflow_ip2location_url, _ip))
+
+    #            if response.status_code == 200:
+    #                try:
+    #                    if len(response.content) > 0:
+    #                        data = json.loads(response.content)
+    #                        if "Private" in data["country_name"]:
+    #                            location = { "data": {"country_name": "Private", "country_code": "xx", "city": "Private" }, "time": time.time() }
+    #                        else:
+    #                            if "Unknown" in data["country_name"]:
+    #                                data["country_name"] = "Unknown"
+    #                                data["country_code"] = "xx"
+    #                                data["city"] = "Unknown"
+    #                            location = { "data": {"country_name": data["country_name"].title().replace(" ","\\ ").replace(",","\\,"), "country_code": data["country_code"].lower(), "city": data["city"].replace(" ","\\ ").replace(",","\\,") }, "time": time.time() }
+    #                    else:
+    #                        location = { "data": { "country_name": "Unknown", "country_code": "xx", "city": "Unknown" }, "time": time.time() }
+    #                    self.ip2location_map[_ip] = location
+    #                    self.ip2location_state = True
+    #                except:
+    #                    logging.error("Error fetching ip {}".format(_ip))
+    #                    logging.error(":{}:".format(response.content))
+    #                    logging.error(traceback.format_exc())
+    #                    return None
+    #            else:
+    #                self.ip2location_state = False
+    #                return None
+
+    #    return location["data"]
+
     def terminate(self):
         self.is_running = False
 
@@ -328,6 +440,10 @@ class Processor(threading.Thread):
 
         #f = open("/tmp/netflow.log", "w")
         #now = datetime.now().timestamp()
+
+        start = time.time()
+        logging.info("PROCESSING")
+
         registry = {}
         for con in list(self.connections):
             timestamp = con.request_ts
@@ -339,6 +455,9 @@ class Processor(threading.Thread):
             #    #logging.info("fix {} by {}".format(con.answer_flow is not None, int(self.last_metric_end + 1) - timestamp))
             #    timestamp = int(self.last_metric_end + 1)
 
+            src_location = None#self.resolveLocation(con.src)
+            dest_location = None#self.resolveLocation(con.dest)
+
             label = []
             label.append("protocol={}".format(con.protocol_name))
             label.append("service={}".format(con.service))
@@ -348,8 +467,16 @@ class Processor(threading.Thread):
             #label.append("packets={}".format(con.packages))
             label.append("src_ip={}".format(con.src))
             label.append("src_host={}".format(con.src_hostname))
+            if src_location is not None:
+                label.append("src_country_name={}".format(src_location["country_name"]))
+                label.append("src_country_code={}".format(src_location["country_code"]))
+                label.append("src_city=\"{}\"".format(src_location["city"]))
             label.append("dest_ip={}".format(con.dest))
             label.append("dest_host={}".format(con.dest_hostname))
+            if dest_location is not None:
+                label.append("dest_country_name={}".format(dest_location["country_name"]))
+                label.append("dest_country_code={}".format(dest_location["country_code"]))
+                label.append("dest_city=\"{}\"".format(dest_location["city"]))
             label.append("ip_type={}".format(con.ip_type))
             #label.append("oneway={}".format(1 if con.is_one_direction else 0))
 
@@ -380,6 +507,11 @@ class Processor(threading.Thread):
         for data in sorted_registry:
             messurements.append("netflow_size,{} value={} {}".format(data[0], data[1], data[2]))
 
+        end = time.time()
+
+        logging.info("FINISHED in {} seconds".format(end-start))
+        #logging.info(messurements)
+
         #logging.info(messurements)
 
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
@@ -387,4 +519,7 @@ class Processor(threading.Thread):
         return messurements
 
     def getStateMetrics(self):
-        return ["system_service_process{{type=\"netflow\",}} {}".format("1" if self.is_running else "0")]
+        return [
+            "system_service_process{{type=\"netflow\",}} {}".format("1" if self.is_running else "0"),
+            "system_service_process{{type=\"ip2location\",}} {}".format("1" if self.ip2location_state else "0"),
+        ]
