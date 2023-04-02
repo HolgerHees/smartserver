@@ -67,6 +67,8 @@ class Handler(Server):
             self.influxdb.terminate()
         if self.mqtt:
             self.mqtt.terminate()
+        if self.scheduler:
+            self.scheduler.terminate()
 
         super().terminate()
         
@@ -105,15 +107,17 @@ class Handler(Server):
         self.speedtest.triggerSpeedtest()
 
     def getStateMetrics(self):
-        scanner_metrics = self.scanner.getStateMetrics()
-        netflow_metrics = self.netflow.getStateMetrics()
-        speedtest_metrics = self.speedtest.getStateMetrics()
-        fping_metrics = self.fping.getStateMetrics()
+        metrics = []
+        metrics = metrics + self.scanner.getStateMetrics()
+        metrics = metrics + self.netflow.getStateMetrics()
+        metrics = metrics + self.speedtest.getStateMetrics()
+        metrics = metrics + self.fping.getStateMetrics()
 
-        influxdb_metrics = self.influxdb.getStateMetrics()
-        mqtt_metrics = self.mqtt.getStateMetrics()
+        metrics = metrics + self.influxdb.getStateMetrics()
+        metrics = metrics + self.mqtt.getStateMetrics()
 
-        metrics = scanner_metrics + netflow_metrics + speedtest_metrics + fping_metrics + influxdb_metrics + mqtt_metrics
+        metrics = metrics + self.scheduler.getStateMetrics()
+
         return "{}\n".format( "\n".join(metrics) )
 
 #@app.route('/state/', methods = ['POST'])

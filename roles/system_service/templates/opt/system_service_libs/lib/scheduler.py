@@ -1,6 +1,7 @@
 import schedule
 import threading
 import logging
+import traceback
 
 class Scheduler(threading.Thread):
     def __init__(self):
@@ -27,3 +28,7 @@ class Scheduler(threading.Thread):
             logging.error(traceback.format_exc())
             self.is_running = False
 
+    def getStateMetrics(self):
+        return [
+            "system_service_process{{type=\"scheduler\",}} {}".format("1" if self.is_running else "0")
+        ]

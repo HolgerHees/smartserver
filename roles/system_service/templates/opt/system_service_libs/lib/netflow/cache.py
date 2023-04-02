@@ -67,14 +67,14 @@ class Cache(threading.Thread):
         _now = time.time()
         location_count = 0
         with self.location_lock:
-            for _ip in self.ip2location_map:
+            for _ip in list(self.ip2location_map.keys()):
                 if _now - self.ip2location_map[_ip]["time"] > self.max_location_cache_age:
                     del self.ip2location_map[_ip]
                     location_count += 1
 
         hostname_count = 0
         with self.hostname_lock:
-            for _ip in self.hostname_map:
+            for _ip in list(self.hostname_map.keys()):
                 if _now - self.hostname_map[_ip]["time"] > self.max_hostname_cache_age:
                     del self.hostname_map[_ip]
                     hostname_count += 1
@@ -87,18 +87,20 @@ class Cache(threading.Thread):
 
     def run(self):
         logging.info("Netflow cache started")
-
-        while self.is_running:
-            try:
-                type, ip = self.queue.get(timeout=0.5)
-                if type == "location":
-                    self._resolveLocationData(ip)
-                elif type == "hostname":
-                    self._resolveHostnameData(ip)
-            except queue.Empty:
-                pass
-
-        logging.info("Netflow cache stopped")
+        try:
+            while self.is_running:
+                try:
+                    type, ip = self.queue.get(timeout=0.5)
+                    if type == "location":
+                        self._resolveLocationData(ip)
+                    elif type == "hostname":
+                        self._resolveHostnameData(ip)
+                except queue.Empty:
+                    pass
+            logging.info("Netflow cache stopped")
+        except Exception:
+            logging.error(traceback.format_exc())
+            self.is_running = False
 
     def increaseStats(self, type):
         with self.counter_lock:
@@ -109,6 +111,9 @@ class Cache(threading.Thread):
             counter_values = self.counter_values
             self.counter_values = {"location_fetch": 0, "location_cache": 0, "hostname_fetch": 0, "hostname_cache": 0}
         return counter_values
+
+    def isRunning(self):
+        return self.is_running
 
     def getState(self):
         return self.ip2location_state
