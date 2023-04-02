@@ -20,7 +20,7 @@
   when: is_suse|bool
   
 - name: collect devices
-  shell: "smartctl --scan | grep -oP \"^[A-z/]+\""
+  shell: "smartctl --scan | grep -oP \"^[A-z0-9/]+\""
   changed_when: no
   register: device_result
 
