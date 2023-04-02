@@ -88,7 +88,7 @@
       },
       "gridPos": {
         "h": 12,
-        "w": 18,
+        "w": 16,
         "x": 0,
         "y": 0
       },
@@ -162,680 +162,7 @@
         "type": "influxdb",
         "uid": "system_info_influxdb"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "displayName": "${__field.labels.protocol}",
-          "mappings": [],
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "protocol"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Protocol"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 6,
-        "x": 18,
-        "y": 0
-      },
-      "hideTimeOverride": true,
-      "id": 9,
-      "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false,
-          "values": [
-            "percent"
-          ]
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [],
-          "fields": "",
-          "values": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "protocol"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Protocol",
-      "transformations": [],
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sum"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 99
-              },
-              {
-                "id": "displayName",
-                "value": "Data"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "src_host"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Source"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 5,
-        "x": 0,
-        "y": 12
-      },
-      "hideTimeOverride": true,
-      "id": 4,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Data"
-          }
-        ]
-      },
-      "pluginVersion": "9.2.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "src_host"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Sources",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sum"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 94
-              },
-              {
-                "id": "displayName",
-                "value": "Data"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "dest_host"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Target"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 5,
-        "x": 5,
-        "y": 12
-      },
-      "hideTimeOverride": true,
-      "id": 5,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Data"
-          }
-        ]
-      },
-      "pluginVersion": "9.2.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "dest_host"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Targets",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sum"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 86
-              },
-              {
-                "id": "displayName",
-                "value": "Data"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "service"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Service"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 4,
-        "x": 10,
-        "y": 12
-      },
-      "hideTimeOverride": true,
-      "id": 6,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Data"
-          }
-        ]
-      },
-      "pluginVersion": "9.2.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "service"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Services",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sum"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 93
-              },
-              {
-                "id": "displayName",
-                "value": "Data"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "port"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Protocol"
-              },
-              {
-                "id": "unit",
-                "value": "string"
-              },
-              {
-                "id": "custom.align",
-                "value": "left"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 14,
-        "y": 12
-      },
-      "hideTimeOverride": true,
-      "id": 10,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Data"
-          }
-        ]
-      },
-      "pluginVersion": "9.2.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "port"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Ports",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
+      "description": "without speedtest data",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -868,10 +195,10 @@
         ]
       },
       "gridPos": {
-        "h": 13,
-        "w": 6,
-        "x": 18,
-        "y": 12
+        "h": 12,
+        "w": 4,
+        "x": 16,
+        "y": 0
       },
       "hideTimeOverride": true,
       "id": 8,
@@ -934,12 +261,179 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "dest_host",
+              "operator": "!~",
+              "value": "/^.*speedtest.*$/"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
       "title": "Services",
       "transformations": [],
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "description": "without unknown, private and speedtest data",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "hideTimeOverride": true,
+      "id": 9,
+      "options": {
+        "displayLabels": [
+          "percent",
+          "name"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "values": [
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "dest_country_name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "dest_country_code",
+              "operator": "!=",
+              "value": "xx"
+            },
+            {
+              "condition": "AND",
+              "key": "dest_host",
+              "operator": "!~",
+              "value": "/^.*speedtest.*$/"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "dest_country_name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "dest_country_code",
+              "operator": "!=",
+              "value": "xx"
+            },
+            {
+              "condition": "AND",
+              "key": "dest_host",
+              "operator": "!~",
+              "value": "/^.*speedtest.*$/"
+            }
+          ]
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Country",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ],
       "type": "piechart"
     },
     {
@@ -954,7 +448,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
@@ -982,38 +478,23 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 93
-              },
-              {
-                "id": "displayName",
-                "value": "Data"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "protocol"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Protocol"
+                "value": 99
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 7,
+        "h": 13,
         "w": 4,
-        "x": 14,
-        "y": 18
+        "x": 0,
+        "y": 12
       },
       "hideTimeOverride": true,
-      "id": 7,
+      "id": 4,
       "options": {
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -1028,7 +509,7 @@
           }
         ]
       },
-      "pluginVersion": "9.2.4",
+      "pluginVersion": "9.4.7",
       "targets": [
         {
           "datasource": {
@@ -1038,7 +519,7 @@
           "groupBy": [
             {
               "params": [
-                "protocol"
+                "src_host"
               ],
               "type": "tag"
             }
@@ -1066,7 +547,7 @@
         }
       ],
       "timeShift": "2m",
-      "title": "Protocol",
+      "title": "Source",
       "transformations": [
         {
           "id": "organize",
@@ -1075,7 +556,10 @@
               "Time": true
             },
             "indexByName": {},
-            "renameByName": {}
+            "renameByName": {
+              "src_host": "Host",
+              "sum": "Data"
+            }
           }
         }
       ],
@@ -1093,7 +577,410 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "displayName": "Data",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 4,
+        "x": 4,
+        "y": 12
+      },
+      "id": 13,
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Data"
+          }
+        ]
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "src_country_name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE $timeFilter GROUP BY \"src_country_name\", \"dest_country_name\"",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Source",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "dest_country_name": 2,
+              "src_country_name": 1,
+              "sum": 3
+            },
+            "renameByName": {
+              "dest_country_name": "Destination",
+              "src_country_name": "Country",
+              "sum": "Data"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 4,
+        "x": 8,
+        "y": 12
+      },
+      "hideTimeOverride": true,
+      "id": 5,
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Data"
+          }
+        ]
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "dest_host"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Destination",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "dest_host": "Host",
+              "sum": "Data"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "displayName": "Data",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 4,
+        "x": 12,
+        "y": 12
+      },
+      "id": 14,
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Data"
+          }
+        ]
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "dest_country_name"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE $timeFilter GROUP BY \"src_country_name\", \"dest_country_name\"",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Destination",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "dest_country_name": 2,
+              "src_country_name": 1,
+              "sum": 3
+            },
+            "renameByName": {
+              "dest_country_name": "Country",
+              "src_country_name": "Source",
+              "sum": "Data"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
@@ -1122,41 +1009,38 @@
               {
                 "id": "custom.width",
                 "value": 93
-              },
-              {
-                "id": "displayName",
-                "value": "Data"
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "ip_type"
+              "options": "port"
             },
             "properties": [
               {
-                "id": "displayName",
-                "value": "Type"
-              },
-              {
                 "id": "unit",
                 "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 4,
-        "x": 10,
-        "y": 21
+        "x": 16,
+        "y": 12
       },
       "hideTimeOverride": true,
-      "id": 11,
+      "id": 10,
       "options": {
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -1171,7 +1055,148 @@
           }
         ]
       },
-      "pluginVersion": "9.2.4",
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "port"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Ports",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "port": "Port",
+              "sum": "Data"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ip_type"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 12
+      },
+      "hideTimeOverride": true,
+      "id": 11,
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Data"
+          }
+        ]
+      },
+      "pluginVersion": "9.4.7",
       "targets": [
         {
           "datasource": {
@@ -1218,7 +1243,268 @@
               "Time": true
             },
             "indexByName": {},
-            "renameByName": {}
+            "renameByName": {
+              "ip_type": "Type",
+              "sum": "Data"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 86
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 20,
+        "y": 17
+      },
+      "hideTimeOverride": true,
+      "id": 6,
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Data"
+          }
+        ]
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "service"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Services",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "service": "Service",
+              "sum": "Data"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 93
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 16,
+        "y": 18
+      },
+      "hideTimeOverride": true,
+      "id": 7,
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Data"
+          }
+        ]
+      },
+      "pluginVersion": "9.4.7",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "protocol"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Protocol",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "protocol": "Protocol",
+              "sum": "Data"
+            }
           }
         }
       ],
@@ -1226,7 +1512,8 @@
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 37,
+  "revision": 1,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -1252,6 +1539,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 21,
+  "version": 28,
   "weekStart": ""
 }

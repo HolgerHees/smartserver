@@ -12,6 +12,7 @@ class InfluxDB(threading.Thread):
     def __init__(self, config ):
       threading.Thread.__init__(self)
 
+      self.is_running = False
       self.event = threading.Event()
 
       self.config = config
@@ -23,24 +24,32 @@ class InfluxDB(threading.Thread):
     def getStateMetrics(self):
         return ["system_service_state{{type=\"influxdb\"}} {}".format(self.state_metrics)]
 
+    def start(self):
+        self.is_running = True
+        super().start()
+
     def terminate(self):
-        #self.is_running = False
+        #logging.info("Shutdown influxdb")
+
+        self.is_running = False
         self.event.set()
 
     def run(self):
-        while not self.event.is_set():
+        logging.info("Influxdb started")
+        while self.is_running:
             messurements = []
             try:
                 for callback in self.callbacks:
                     messurements += callback()
                 self.state_metrics = self.submit(messurements)
             except Exception as e:
-                logging.error("{} got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
+                logging.error("Got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
                 logging.error(traceback.format_exc())
                 self.state_metrics = -1
 
             self.event.wait(self.config.influxdb_publish_interval)
-            #self.event.clear()
+
+        logging.info("Influxdb stopped")
 
     def register(self, callback):
         self.callbacks.append(callback)
@@ -75,7 +84,7 @@ class InfluxDB(threading.Thread):
             return values
 
         except Exception as e:
-            logging.error("{} got unexpected exception".format(e, self.config.influxdb_publish_interval))
+            logging.error("Got unexpected exception")
             logging.error(traceback.format_exc())
             return None
 
@@ -100,6 +109,6 @@ class InfluxDB(threading.Thread):
             logging.info("InfluxDB currently not available. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
             return 0
         except Exception as e:
-            logging.error("{} got unexpected exception. Will retry in {} seconds".format(e, self.config.influxdb_publish_interval))
+            logging.error("Got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
             logging.error(traceback.format_exc())
             return -1

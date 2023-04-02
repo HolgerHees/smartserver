@@ -41,6 +41,7 @@ class DeviceChecker(threading.Thread):
         threading.Thread.__init__(self) 
         
         self.is_running = True
+        self.event = threading.Event()
 
         self.arpscanner = arpscanner
         self.cache = cache
@@ -65,19 +66,20 @@ class DeviceChecker(threading.Thread):
         self.offlineSleepTime = timeout - (self.offlineArpRetries * self.offlineArpCheckTime)
                 
         self.process = None
-        
-        self.event = threading.Event()
 
         #self.lastSeen = datetime(1, 1, 1, 0, 0)
         #self.lastPublished = datetime(1, 1, 1, 0, 0)
         
         #self.isOnline = None
+
+    def _isRunning(self):
+        return self.is_running
       
     def run(self):
         logging.info("Device checker for {} started".format(self.device))
         is_supended = False
         
-        while self.is_running:
+        while self._isRunning():
             events = []
 
             try:
@@ -88,9 +90,8 @@ class DeviceChecker(threading.Thread):
                 sleepTime = self.onlineSleepTime if self.stat.isOnline() else self.offlineSleepTime
                 
                 self.event.wait(sleepTime)
-                self.event.clear()
                     
-                if not self.is_running:
+                if not self._isRunning():
                     break
                 
                 timeout = self.onlineArpCheckTime if self.stat.isOnline() else self.offlineArpCheckTime
@@ -103,16 +104,16 @@ class DeviceChecker(threading.Thread):
                 address_family = AddressHelper.getAddressFamily(ip_address)
                 
                 loopIndex = 0
-                while self.is_running:
+                while self._isRunning():
                     if self.type != "android":
                         AddressHelper.knock(self.address_family,ip_address)
                         time.sleep(0.05)
                         
                     methods = ["arping"]
-                    answering_mac = Helper.getMacFromArpPing(ip_address, self.interface, timeout)
+                    answering_mac = Helper.getMacFromArpPing(ip_address, self.interface, timeout, self._isRunning)
                     if answering_mac is None and self.stat.isOnline():
                         methods.append("ping")
-                        answering_mac = Helper.getMacFromPing(ip_address, timeout)
+                        answering_mac = Helper.getMacFromPing(ip_address, timeout, self._isRunning)
                         
                     duration = round((datetime.now() - startTime).total_seconds(),2)
 
@@ -152,27 +153,30 @@ class DeviceChecker(threading.Thread):
                 self.arpscanner._dispatch(events)
                 
             if is_supended:
-                time.sleep(900)
-        
+                self.event.wait(900)
+
+        logging.info("Device checker for {} stopped".format(self.device))
+
     def terminate(self):
         if self.process != None:
             self.process.terminate()
 
         self.is_running = False
         self.event.set()
-
-        logging.info("Terminate device checker for {}".format(self.device))
         
 class DHCPListener(threading.Thread):
     def __init__(self, arpscanner, cache, interface):
         threading.Thread.__init__(self) 
         
         self.is_running = True
+        self.event = threading.Event()
 
         self.arpscanner = arpscanner
         self.cache = cache
         
         self.interface = interface
+
+        self.dhcpListenerProcess = None
 
     def run(self):
         logging.info("DHCP listener started")
@@ -190,7 +194,7 @@ class DHCPListener(threading.Thread):
             if output == '' and self.dhcpListenerProcess.poll() is not None:
                 if not self.is_running:
                     break
-                raise Exception("DHCP Listener stoppen")
+                raise Exception("DHCP Listener stopped")
             
             if is_supended:
                 logging.warning("Resume DHCPListener")
@@ -246,20 +250,21 @@ class DHCPListener(threading.Thread):
                             self.arpscanner._dispatch(events)
                             
                         if is_supended:
-                            time.sleep(900)
+                            self.event.wait(900)
                         
                         client_mac = None
                         client_ip = None
                             
         rc = self.dhcpListenerProcess.poll()
         
+        logging.info("DHCP listener stopped")
+
     def terminate(self):
         self.is_running = False
-        
+        self.event.set()
+
         if self.dhcpListenerProcess != None:
             self.dhcpListenerProcess.terminate()
-
-        logging.info("Terminate dhcp listener")
 
 class ArpScanner(_handler.Handler): 
     def __init__(self, config, cache ):
@@ -358,11 +363,11 @@ class ArpScanner(_handler.Handler):
                 timeout = self.config.arp_scan_interval
                         
             self._wait(timeout)
-                
+
     def _fetchArpResult(self):
         collected_arps = []
         for network in self.config.networks:
-            arp_result = Helper.arpscan(self.config.main_interface, network)
+            arp_result = Helper.arpscan(self.config.main_interface, network, self._isRunning)
             for arp_data in arp_result:
                 ip = arp_data["ip"]
                 mac = arp_data["mac"]
@@ -431,10 +436,10 @@ class ArpScanner(_handler.Handler):
         events = []
         try:
             methods = ["arping"]
-            answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 10)
+            answering_mac = Helper.getMacFromArpPing(device.getIP(), self.config.main_interface, 10, self._isRunning)
             if answering_mac is None:
                 methods.append("ping")
-                answering_mac = Helper.getMacFromPing(device.getIP(), 5)
+                answering_mac = Helper.getMacFromPing(device.getIP(), 5, self._isRunning)
 
             duration = round((datetime.now() - startTime).total_seconds(),2)
             if answering_mac is not None:

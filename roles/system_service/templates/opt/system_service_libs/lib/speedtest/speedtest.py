@@ -1,5 +1,6 @@
 #import netflow # https://github.com/bitkeks/python-netflow-v9-softflowd
 import threading
+import traceback
 import schedule
 import traceback
 import json
@@ -11,24 +12,17 @@ from datetime import datetime
 
 from smartserver import command
 
-class Speedtest(threading.Thread):
+class Speedtest():
     def __init__(self, config, handler, mqtt, influxdb ):
-        threading.Thread.__init__(self)
-
-        self.is_running = True
-        self.event = threading.Event()
-
         self.config = config
         self.handler = handler
 
         self.is_testing = False
+        self.is_running = False
+        self.event = threading.Event()
 
         self.mqtt = mqtt
         self.influxdb = influxdb
-
-        schedule.every().hour.at("00:00").do(self.startSpeedtest)
-        #schedule.every(1).minutes.do(self.triggerSpeedtest)
-        #self.triggerSpeedtest()
 
         self.influxdb.register(self.getMessurements)
 
@@ -36,34 +30,13 @@ class Speedtest(threading.Thread):
 
     def terminate(self):
         self.is_running = False
-        self.event.set()
 
-    def run(self):
-        #max_retries = 20
-        #while max_retries > 0:
-        #    result = self.influxdb.get(["speedtest_upstream_rate","speedtest_downstream_rate","speedtest_ping"])
-        #    if result is not None:
-        #        logging.info("Initialize last data")
-        #        self.resultUp = result["speedtest_upstream_rate"] if "speedtest_upstream_rate" in result else -1
-        #        self.resultDown = result["speedtest_upstream_rate"] if "speedtest_downstream_rate" in result else -1
-        #        self.resultPing = result["speedtest_upstream_rate"] if "speedtest_ping" in result else -1
-        #        break
+    def start(self):
+        self.is_running = True
+        schedule.every().hour.at("00:00").do(self.startSpeedtest)
 
-        #    logging.info("Last data not available. Retry in 15 seconds.")
-        #    self.event.wait(15)
-
-        #if max_retries == 0:
-        #    logging.error("Not able to initialize last data.")
-
-        try:
-            while self.is_running:
-                schedule.run_pending()
-
-                self.event.wait(60)
-                self.event.clear()
-        except Exception:
-            logging.error(traceback.format_exc())
-            self.is_running = False
+    def _isRunning(self):
+        return self.is_running
 
     def resetMetrics(self):
         self.resultUp = -1
@@ -75,7 +48,7 @@ class Speedtest(threading.Thread):
         t.start()
 
     def startSpeedtest(self, retry = 3):
-        if self.is_testing == True:
+        if not self.is_running or self.is_testing:
             return
 
         self.is_testing = True
@@ -93,8 +66,9 @@ class Speedtest(threading.Thread):
                 cmd.append("-s")
                 cmd.append(self.config.speedtest_server_id)
             cmd.append("2>/dev/null")
-            result = command.exec(cmd)
-            json_string = result.stdout.decode("utf-8").strip()
+            result_code, json_string = command.exec2(cmd, isRunningCallback=self._isRunning)
+            if result_code != 0:
+                raise Exception(json_string)
             #json_string = '{"type":"result","timestamp":"2022-11-04T11:33:59Z","ping":{"jitter":0.059,"latency":1.356,"low":1.324,"high":1.425},"download":{"bandwidth":84670091,"bytes":415605496,"elapsed":4907,"latency":{"iqm":10.881,"low":1.791,"high":19.838,"jitter":2.385}},"upload":{"bandwidth":78355241,"bytes":684294663,"elapsed":8806,"latency":{"iqm":15.576,"low":2.088,"high":31.205,"jitter":1.839}},"packetLoss":0,"isp":"Internet bolaget Sverige AB","interface":{"internalIp":"192.168.0.50","name":"eth0","macAddr":"70:85:C2:F3:8A:30","isVpn":false,"externalIp":"185.89.36.59"},"server":{"id":30593,"host":"speed1.syseleven.net","port":8080,"name":"Inter.link GmbH","location":"Berlin","country":"Germany","ip":"37.49.159.242"},"result":{"id":"88ba990a-fb6f-44fa-bf64-5da183688778","url":"https://www.speedtest.net/result/c/88ba990a-fb6f-44fa-bf64-5da183688778","persisted":true}}'
 
             logging.info(u"Speedtest done")

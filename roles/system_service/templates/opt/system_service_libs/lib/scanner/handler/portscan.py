@@ -33,7 +33,7 @@ class PortScanner(_handler.Handler):
                     timeout = self.config.port_scan_interval
 
                     with self.queue_lock:               
-                        while self.is_running and len(self.waiting_queue) > 0 and len(self.running_queue) <= 5:
+                        while self._isRunning() and len(self.waiting_queue) > 0 and len(self.running_queue) <= 5:
                             device = self.waiting_queue.popleft()
                             self.running_queue.append(device)
                             t = threading.Thread(target = self._checkPorts, args = [ device ] )
@@ -58,27 +58,28 @@ class PortScanner(_handler.Handler):
                     self._handleUnexpectedException(e)
             
             suspend_timeout = self._getSuspendTimeout()
-            if suspend_timeout > 0:
+            if self._isRunning() and suspend_timeout > 0:
                 timeout = suspend_timeout
                     
             self._wait(timeout)
 
     def _checkPorts(self, device):
-        services = Helper.nmap(device.getIP())
-                
-        with self.data_lock:
-            self.monitored_devices[device.getMAC()] = datetime.now()
+        services = Helper.nmap(device.getIP(), self._isRunning)
 
-            events = []
+        if self._isRunning():
+            with self.data_lock:
+                self.monitored_devices[device.getMAC()] = datetime.now()
 
-            self.cache.lock(self)
-            device.lock(self)
-            device.setServices(services)
-            self.cache.confirmDevice( device, lambda event: events.append(event) )
-            self.cache.unlock(self)
+                events = []
 
-            if len(events) > 0:
-                self._getDispatcher().dispatch(self,events)
+                self.cache.lock(self)
+                device.lock(self)
+                device.setServices(services)
+                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                self.cache.unlock(self)
+
+                if len(events) > 0:
+                    self._getDispatcher().dispatch(self,events)
 
         with self.queue_lock:
             self.running_queue.remove(device)

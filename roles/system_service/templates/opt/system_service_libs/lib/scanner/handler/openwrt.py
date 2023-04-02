@@ -130,7 +130,7 @@ class OpenWRT(_handler.Handler):
                 self._wait(timeout)
                                         
     def _processDevice(self, openwrt_ip, events ):
-        openwrt_mac = self.cache.ip2mac(openwrt_ip)
+        openwrt_mac = self.cache.ip2mac(openwrt_ip, self._isRunning)
         if openwrt_mac is None:
             raise NetworkException("OpenWRT '{}' not resolvable".format(openwrt_ip), 15)
 
@@ -476,14 +476,14 @@ class OpenWRT(_handler.Handler):
         except requests.exceptions.ConnectionError as e:
             msg = "OpenWRT {} currently not available".format(ip)
             if retry > 0: 
-                self.log.info(msg)
+                logging.info(msg)
                 for i in range(3):
-                    if Helper.ping(ip, 5): # ubus calls are sometimes (~ones every 2 days) answered with a 500
+                    if Helper.ping(ip, 5, self._isRunning): # ubus calls are sometimes (~ones every 2 days) answered with a 500
                         logging.info(str(e))
                         logging.info("Retry connecting {}".format(ip))
                         return self._post(ip, json, retry - 1)
                     else:
-                        self.log.info("{}. retry connecting {} in 5 seconds.".format(i + 1, ip))
+                        logging.info("{}. retry connecting {} in 5 seconds.".format(i + 1, ip))
                         time.sleep(5)
             raise NetworkException(msg, self.config.remote_suspend_timeout)
         

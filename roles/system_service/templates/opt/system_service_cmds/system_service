@@ -20,6 +20,7 @@ from lib.fping.fping import FPing
 
 from lib.mqtt import MQTTHandler
 from lib.influxdb import InfluxDB
+from lib.scheduler import Scheduler
 
 
 app = Flask(__name__ )
@@ -40,6 +41,7 @@ class Handler(Server):
         self.netflow = NetflowProcessor(config, self, self.influxdb )
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb )
         self.fping = FPing(config, self, self.influxdb )
+        self.scheduler = Scheduler()
 
     def start(self, callback):
         self.mqtt.start()
@@ -48,6 +50,7 @@ class Handler(Server):
         self.netflow.start()
         self.speedtest.start()
         self.fping.start()
+        self.scheduler.start()
 
         super().start(callback)
 

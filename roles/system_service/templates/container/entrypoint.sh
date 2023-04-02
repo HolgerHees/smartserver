@@ -2,8 +2,10 @@
  
 stop()
 {
-    echo "Shutting system service"
-    killall python3
+    echo "Shutting down system service"
+    PID="$(pidof python3)"
+    kill -s TERM $PID
+    wait
     exit
 }
 

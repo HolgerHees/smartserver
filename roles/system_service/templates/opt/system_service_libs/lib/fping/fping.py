@@ -14,7 +14,7 @@ class FPing(threading.Thread):
     def __init__(self, config, handler, influxdb ):
         threading.Thread.__init__(self)
 
-        self.is_running = True
+        self.is_running = False
         self.event = threading.Event()
 
         self.config = config
@@ -23,18 +23,27 @@ class FPing(threading.Thread):
 
         influxdb.register(self.getMessurements)
 
+    def start(self):
+        self.is_running = True
+        super().start()
+
     def terminate(self):
+        #logging.info("Shutdown fping")
+
         self.is_running = False
         self.event.set()
 
+    def _isRunning(self):
+        return self.is_running
+
     def run(self):
+        logging.info("FPing started")
         try:
-            while self.is_running:
-                result = command.exec([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, exitstatus_check = False )
-                ping_results = result.stdout.decode("utf-8").strip().split("\n")
+            while self._isRunning():
+                returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, isRunningCallback=self._isRunning)
 
                 ping_result_map = {}
-                for ping_result in ping_results:
+                for ping_result in result.split("\n"):
                     #8.8.8.8       : xmt/rcv/%loss = 1/1/0%, min/avg/max = 8.81/8.81/8.81
 
                     [host, s1]          = ping_result.split(" : ")
@@ -56,7 +65,8 @@ class FPing(threading.Thread):
                 self.messurements = messurements
 
                 self.event.wait(60)
-                self.event.clear()
+
+            logging.info("FPing stopped")
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False

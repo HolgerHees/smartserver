@@ -101,7 +101,7 @@ class LibreNMS(_handler.Handler):
         
         _active_devices = {}
         for _device in _devices:
-            mac = self.cache.ip2mac(_device["hostname"])
+            mac = self.cache.ip2mac(_device["hostname"],self._isRunning)
             if mac is None:
                 if _device["device_id"] in self.devices:
                     mac = self.devices[_device["device_id"]]["mac"]

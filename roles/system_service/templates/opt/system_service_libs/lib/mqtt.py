@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
 import logging
-
+import traceback
 
 class MQTTHandler():
     def __init__(self, config):
@@ -41,11 +41,13 @@ class MQTTHandler():
         logging.info("Topic " + msg.topic + ", message:" + str(msg.payload))
 
     def publish(self, name, payload):
+        if self.mqtt_client is None:
+            return
         try:
             self.mqtt_client.publish('system_info/{}'.format(name), payload=payload, qos=0, retain=False)
             self.state_metrics = 1
         except Exception as e:
-            logging.error("{} got unexpected exception.")
+            logging.error("Got unexpected exception.")
             logging.error(traceback.format_exc())
             self.state_metrics = 0
 
@@ -54,4 +56,5 @@ class MQTTHandler():
             logging.info("Close connection to mqtt")
             self.mqtt_client.loop_stop()
             self.mqtt_client.disconnect()
+            logging.info("MQTT stopped")
 

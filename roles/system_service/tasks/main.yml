@@ -13,6 +13,7 @@
   with_items:
     - "{{global_etc}}system_service/"
     - "{{global_etc}}system_service/config"
+    - "{{global_lib}}system_service/"
 
 - name: synchronize service
   synchronize:
@@ -69,6 +70,7 @@
       - "2055/udp"
     volumes:
       - '{{global_etc}}system_service/:/etc/system_service:ro,z'
+      - "{{global_lib}}system_service/:/var/lib/system_service:rw,z"
       - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart system_service"
 

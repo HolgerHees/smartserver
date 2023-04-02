@@ -3,24 +3,11 @@ import subprocess
 import logging
 from datetime import datetime
 import sys
+import time
 
 from smartserver import command
 
 class Helper():       
-    #def arp():
-    #    result = command.exec(["/usr/bin/arp", "-n"])
-    #    rows = result.stdout.decode().strip().split("\n")
-
-    #    arp_result = []
-    #    for row in rows:
-    #        columns = row.split("\t")
-    #        if len(columns) != 3:
-    #            continue
-            
-    #        arp_result.append({"ip": columns[0], "mac": columns[1], "info": columns[2] })
-            
-    #    return arp_result
-    
     def logError(msg, caller_frame = 1):
         Helper._log(logging.error, msg, caller_frame)
 
@@ -42,48 +29,62 @@ class Helper():
     def logProfiler(cls, start, msg):
         pass
         #logging.info("*** PROFILER *** {} - {} in {} seconds".format(cls.__class__.__name__, msg, round( (datetime.now() - start).total_seconds(), 3 ) ) )
-    
+
     def dhcplisten(interface):
         return subprocess.Popen( ["/usr/bin/stdbuf", "-oL", "/usr/bin/tcpdump", "-i", interface, "-pvn", "port", "67", "or", "port", "68"],
                                 bufsize=1,  # 0=unbuffered, 1=line-buffered, else buffer-size
                                 universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
 
-    def ping(ip, timeout):
-        result = command.exec(["/bin/ping", "-W", str(timeout), "-c", "1", ip ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, exitstatus_check = False)
-        return result.returncode == 0
+    def ping(ip, timeout, isRunningCallback = None):
+        returncode, result = command.exec2(["/bin/ping", "-W", str(timeout), "-c", "1", ip ], isRunningCallback=isRunningCallback)
+        return returncode == 0
 
-    def getMacFromPing(ip, timeout):
-        is_success = Helper.ping(ip, timeout)
+    def getMacFromPing(ip, timeout, isRunningCallback = None):
+        is_success = Helper.ping(ip, timeout, isRunningCallback)
         if is_success:
             return Helper.ip2mac(ip)
         return None
     
-    def getMacFromArpPing(ip, interface, timeout):
-        result = command.exec(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], exitstatus_check = False)
-        if result.returncode == 0:
-            rows = result.stdout.decode()
-            match = re.search(r"({}) \({}\)".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}",ip), rows)
-            if match:
-                return match[1]
+    def getMacFromArpPing(ip, interface, timeout, isRunningCallback = None):
+        returncode, result = command.exec2(["/usr/sbin/arping", "-w", str(timeout), "-C", "1", "-I", interface, ip], isRunningCallback=isRunningCallback)
+        if returncode != 0:
+            return None
+
+        match = re.search(r"({}) \({}\)".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}",ip), result)
+        if match:
+            return match[1]
         return None
 
-    def arpscan(interface, network ):
-        result = command.exec(["/usr/local/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], exitstatus_check = False)
-        if result.returncode == 0:
-            rows = result.stdout.decode().strip().split("\n")
-            
-            arp_result = []
-            for row in rows:
-                columns = row.split("\t")
-                if len(columns) != 3:
-                    continue
-                
-                arp_result.append({"ip": columns[0], "mac": columns[1], "info": columns[2] })
-                
-            return arp_result
+    def arpscan(interface, network, isRunningCallback = None):
+        returncode, result = command.exec2(["/usr/local/bin/arp-scan", "--numeric", "--plain", "--timeout=2000", "--retry=1", "--interface", interface, network], isRunningCallback=isRunningCallback)
+        if returncode != 0:
+            raise Exception("Cmd 'arpscan' was not successful")
 
-        raise Exception("Cmd 'arp-scan' was not successful")
+        arp_result = []
+        for row in result.split("\n"):
+            columns = row.split("\t")
+            if len(columns) != 3:
+                continue
+
+            arp_result.append({"ip": columns[0], "mac": columns[1], "info": columns[2] })
+
+        return arp_result
             
+    def nmap(ip, isRunningCallback = None):
+        returncode, result = command.exec2(["/usr/bin/nmap", "-sS", "-PN", ip], isRunningCallback=isRunningCallback)
+        if returncode != 0:
+            raise Exception("Cmd 'nmap' was not successful")
+
+        services = {}
+        for row in result.split("\n"):
+            match = re.match("([0-9]*)/([a-z]*)\s*([a-z]*)\s*(.*)",row)
+            if not match:
+                continue
+
+            services[match[1]] = match[4]
+            #ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
+        return services
+
     def ip2mac(ip):
         result = command.exec(["/sbin/arp", "-n"], exitstatus_check = False)
         if result.returncode == 0:
@@ -95,22 +96,6 @@ class Helper():
 
         raise Exception("Cmd 'arp' was not successful")
 
-    def nmap(ip):
-        result = command.exec(["/usr/bin/nmap", "-sS", "-PN", ip], exitstatus_check = False)
-        if result.returncode == 0:
-            rows = result.stdout.decode().strip().split("\n")
-            services = {}
-            for row in rows:
-                match = re.match("([0-9]*)/([a-z]*)\s*([a-z]*)\s*(.*)",row)
-                if not match:
-                    continue
-            
-                services[match[1]] = match[4]
-                #ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
-            return services
-        else:
-            raise Exception("Cmd 'nmap' was not successful")
-        
     def nslookup(ip):
         result = command.exec(["/usr/bin/nslookup", ip], exitstatus_check = False)
         if result.returncode == 0:

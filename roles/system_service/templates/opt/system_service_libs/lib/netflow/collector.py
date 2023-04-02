@@ -36,9 +36,10 @@ class QueuingUDPListener(socketserver.ThreadingUDPServer):
 
 class ThreadedNetFlowListener(threading.Thread):
     def __init__(self, host: str, port: int):
-        logging.info("Starting the NetFlow listener on {}:{}".format(host, port))
         self.output = queue.Queue()
         self.input = queue.Queue()
+        self.host = host
+        self.port = port
         self.server = QueuingUDPListener((host, port), self.input)
         self.thread = threading.Thread(target=self.server.serve_forever)
         self.thread.start()
@@ -49,6 +50,7 @@ class ThreadedNetFlowListener(threading.Thread):
         return self.output.get(block, timeout)
 
     def run(self):
+        logging.info("NetFlow listener started on {}:{}".format(self.host, self.port))
         try:
             templates = {"netflow": {}, "ipfix": {}}
             to_retry = []
@@ -85,12 +87,14 @@ class ThreadedNetFlowListener(threading.Thread):
                     to_retry.clear()
 
                 self.output.put(ParsedPacket(pkt.ts, pkt.client, export))
+
+            logging.info("Netflow listener stopped")
         finally:
             self.server.shutdown()
             self.server.server_close()
 
     def stop(self):
-        logging.info("Shutting down the NetFlow listener")
+        #logging.info("Shuttdown netflow listener")
         self._shutdown.set()
 
     def join(self, timeout=None):

@@ -54,7 +54,6 @@ class Server():
         self.filewatcher = None
 
         def shutdown(signum, frame):
-            logging.info("Shutdown initiated")
             self.terminate()
             
         signal.signal(signal.SIGTERM, shutdown)
@@ -107,9 +106,11 @@ class Server():
         except Exception as e:
             logging.error(traceback.format_exc())
 
-        logging.info("Stopped")
+        logging.info("Server stopped")
 
     def terminate(self):
+        logging.info("Shutdown server")
+
         if self.filewatcher is not None:
             self.filewatcher.terminate()
         raise ShutdownException()

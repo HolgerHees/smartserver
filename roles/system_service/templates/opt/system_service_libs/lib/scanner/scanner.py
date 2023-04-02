@@ -24,7 +24,7 @@ class Scanner(threading.Thread):
     def __init__(self, config, handler, mqtt, influxdb ):
         threading.Thread.__init__(self)
 
-        self.is_running = True
+        self.is_running = False
         self.is_initialized = False
         
         self.config = config
@@ -65,21 +65,24 @@ class Scanner(threading.Thread):
         
         self.event_pipeline.append([event_types, handler])
         
-    #def start(self):
-    #    self.thread.start()
+    def start(self):
+        self.is_running = True
+        super().start()
         
     def terminate(self):
-        self.is_running = False
-        self.event.set()
-        
         for handler in self.registered_handler:
             handler.terminate()
                
+        self.is_running = False
+        self.event.set()
+
     def dispatch(self, source_handler, events):
         self.event_queue.append([source_handler,events])
         self.event.set()
             
     def run(self):
+        logging.info("Scanner started")
+
         for handler in self.registered_handler:
             handler.start()
 
@@ -90,6 +93,8 @@ class Scanner(threading.Thread):
                     self._dispatch(source_handler, events)
                 self.event.wait()
                 self.event.clear()
+
+            logging.info("Scanner stopped")
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
