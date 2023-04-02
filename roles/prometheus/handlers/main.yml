@@ -6,3 +6,7 @@
     enabled: yes
     masked: no
   listen: "restart prometheus"
+
+- name: refresh prometheus
+  command: "docker kill --signal=HUP prometheus"
+  listen: "refresh prometheus"

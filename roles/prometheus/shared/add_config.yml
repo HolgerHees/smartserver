@@ -5,7 +5,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: "restart prometheus"
+  notify: "refresh prometheus"
   when: "rules_file is defined"
   tags: ['prometheus_config']
 
@@ -16,6 +16,6 @@
     owner: root
     group: root
     mode: 0644
-  notify: "restart prometheus"
+  notify: "refresh prometheus"
   when: "scrape_file is defined"
   tags: ['prometheus_config']
