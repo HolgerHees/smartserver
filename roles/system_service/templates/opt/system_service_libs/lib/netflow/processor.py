@@ -36,11 +36,15 @@ PROMETHEUS_INTERVAL = 60
 
 class Helper():
     @staticmethod
-    def get_service(dest_port, protocol):
+    def getService(dest_port, protocol):
         if ( protocol == 6 or protocol == 17 ) and dest_port is not None and dest_port < 1024:
             with contextlib.suppress(OSError):
                 return socket.getservbyport(dest_port, IP_PROTOCOLS[protocol])
         return None
+
+    @staticmethod
+    def getServiceKey(ip, port):
+        return "{}:{}".format(ip.compressed, port)
 
     @staticmethod
     def fallback(d, keys, can_none = False ):
@@ -80,23 +84,11 @@ class Connection:
 
         # swap direction
         if ( \
+             self.src.is_global \
+             and \
+             Helper.getServiceKey(self.dest, self.dest_port) not in self.config.netflow_incoming_ports \
              # PING
-             ( self.protocol in PING_PROTOCOLS and self.src.is_global ) \
-             or \
-             ( \
-                 self.src_port is not None and self.dest_port is not None \
-                 and \
-                 ( \
-                   # NTP
-                   ( self.src_port == self.dest_port and self.src.is_global ) \
-                     or \
-                   ( self.src_port < 1024 and self.dest_port >= 1024 ) \
-                     or \
-                   ( self.src_port < 9999 and self.dest_port >= 9999 ) \
-                     or \
-                   ( self.src_port < 49151 and self.dest_port >= 49151 ) \
-                 ) \
-             )
+             #( self.protocol in PING_PROTOCOLS and self.src.is_global ) \
            ):
            #or not self.src.is_private:
             _ = self.dest_port
@@ -129,10 +121,10 @@ class Connection:
             self._src_hostname = self.cache.getHostname(self.src, True)
             self._dest_hostname = self.cache.getHostname(self.dest, True)
 
-        if self.src.is_global and self.dest_port not in [80,51829]:
-            logging.error("WIRED")
-            logging.error(self.request_flow)
-            logging.error(self.is_swapped)
+        #if self.src.is_global and self.dest_port not in [80,10114,51828,51829]:
+        #    logging.error("WIRED")
+        #    logging.error(self.request_flow)
+        #    logging.error(self.is_swapped)
         #elif self.is_swapped:
         #    logging.info("SWAPPED {} => {}".format(self.src,self.dest))
 
@@ -152,7 +144,7 @@ class Connection:
 
     @property
     def service(self):
-        service = Helper.get_service(self.dest_port, self.protocol)
+        service = Helper.getService(self.dest_port, self.protocol)
         #logging.info("{} {} {}".format(service, self.dest_port, self.protocol))
         if service is None:
             #if self.dest == MDNS_IP4 or self.dest_raw == "ff02:fb":
@@ -166,9 +158,9 @@ class Connection:
             elif self.protocol in PING_PROTOCOLS:
                 service = "ping"
             else:
-                known_service_key = "{}/{}".format(self.dest_port, IP_PROTOCOLS[self.protocol])
-                if known_service_key in self.config.known_services:
-                    return self.config.known_services[known_service_key]
+                service_key = Helper.getServiceKey(self.dest, self.dest_port)
+                if service_key in self.config.netflow_incoming_ports:
+                    return self.config.netflow_incoming_ports[service_key]
                 service = "unknown"
         return service
 
