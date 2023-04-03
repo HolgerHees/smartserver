@@ -43,18 +43,19 @@ class FPing(threading.Thread):
                 returncode, result = command.exec2([ "/usr/sbin/fping", "-q", "-c1" ] + self.config.fping_test_hosts, isRunningCallback=self._isRunning)
 
                 ping_result_map = {}
-                for ping_result in result.split("\n"):
-                    #8.8.8.8       : xmt/rcv/%loss = 1/1/0%, min/avg/max = 8.81/8.81/8.81
+                if len(result) > 0:
+                    for ping_result in result.split("\n"):
+                        #8.8.8.8       : xmt/rcv/%loss = 1/1/0%, min/avg/max = 8.81/8.81/8.81
 
-                    [host, s1]          = ping_result.split(" : ")
-                    if ", min/avg/max = " not in s1:
-                        continue
+                        [host, s1]          = ping_result.split(" : ")
+                        if ", min/avg/max = " not in s1:
+                            continue
 
-                    [stats, ping]       = s1.split(", ")
-                    [_, ping_values]    = ping.split(" = ")
-                    [_, ping_value, _]  = ping_values.split("/")
+                        [stats, ping]       = s1.split(", ")
+                        [_, ping_values]    = ping.split(" = ")
+                        [_, ping_value, _]  = ping_values.split("/")
 
-                    ping_result_map[host.strip()] = ping_value.strip()
+                        ping_result_map[host.strip()] = ping_value.strip()
 
                 messurements = []
                 for host in self.config.fping_test_hosts:

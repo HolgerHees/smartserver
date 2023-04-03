@@ -25,9 +25,11 @@ IP_PROTOCOLS = {
     58: "icmpv6"
 }
 
-MDNS_IP4 = ipaddress.IPv4Address("224.0.0.251")
-SSDP_IP4 = ipaddress.IPv4Address("239.255.255.250")
-BROADCAST_IP4 = ipaddress.IPv4Address("255.255.255.255")
+PING_PROTOCOLS = [1,58]
+
+#MDNS_IP4 = ipaddress.IPv4Address("224.0.0.251")
+#SSDP_IP4 = ipaddress.IPv4Address("239.255.255.250")
+#BROADCAST_IP4 = ipaddress.IPv4Address("255.255.255.255")
 
 METRIC_TIMESHIFT = 60
 PROMETHEUS_INTERVAL = 60
@@ -78,15 +80,25 @@ class Connection:
 
         # swap direction
         if ( \
-             self.src_port is not None and self.dest_port is not None \
-             and \
+             # PING
+             ( self.protocol in PING_PROTOCOLS and self.src.is_global ) \
+             or \
              ( \
-               ( self.src_port < 1024 and self.dest_port >= 1024 ) \
-                 or \
-               ( self.src_port < 49151 and self.dest_port >= 49151 ) \
-             ) \
-           ) \
-           or not self.src.is_private:
+                 self.src_port is not None and self.dest_port is not None \
+                 and \
+                 ( \
+                   # NTP
+                   ( self.src_port == self.dest_port and self.src.is_global ) \
+                     or \
+                   ( self.src_port < 1024 and self.dest_port >= 1024 ) \
+                     or \
+                   ( self.src_port < 9999 and self.dest_port >= 9999 ) \
+                     or \
+                   ( self.src_port < 49151 and self.dest_port >= 49151 ) \
+                 ) \
+             )
+           ):
+           #or not self.src.is_private:
             _ = self.dest_port
             self.dest_port = self.src_port
             self.src_port = _
@@ -107,11 +119,26 @@ class Connection:
             # TODO: Should be handled in the collection phase
             self.duration = (2 ** 32 - self.request_flow['FIRST_SWITCHED']) + self.request_flow['LAST_SWITCHED']
 
-        self._src_location = self.cache.getLocation(self.src, True)
-        self._dest_location = self.cache.getLocation(self.dest, True)
+        self.is_multicast = True if self.dest.is_multicast or self.src.is_multicast else False
+        self.is_broadcast = True if self.dest.compressed.endswith(".255") or self.src.compressed.endswith(".255") else False
+        self.skipped = self.is_multicast or self.is_broadcast
 
-        self._src_hostname = self.cache.getHostname(self.src, True)
-        self._dest_hostname = self.cache.getHostname(self.dest, True)
+        if not self.skipped:
+            self._location = self.cache.getLocation(self.src if self.src.is_global else self.dest, True)
+
+            self._src_hostname = self.cache.getHostname(self.src, True)
+            self._dest_hostname = self.cache.getHostname(self.dest, True)
+
+        if self.src.is_global and self.dest_port not in [80,51829]:
+            logging.error("WIRED")
+            logging.error(self.request_flow)
+            logging.error(self.is_swapped)
+        #elif self.is_swapped:
+        #    logging.info("SWAPPED {} => {}".format(self.src,self.dest))
+
+
+#Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:121] - {'IPV4_SRC_ADDR': '34.158.0.131', 'IPV4_DST_ADDR': '192.168.0.108', 'FIRST_SWITCHED': 24968747, 'LAST_SWITCHED': 25030465, 'IN_BYTES': 441, 'IN_PKTS': 7, 'INPUT_SNMP': 0, 'OUTPUT_SNMP': 0, 'L4_SRC_PORT': 4070, 'L4_DST_PORT': 48096, 'PROTOCOL': 6, 'TCP_FLAGS': 24, 'IP_PROTOCOL_VERSION': 4, 'SRC_TOS': 0}
+#Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:122] - False
 
         #logging.info(self.duration)
 
@@ -128,14 +155,16 @@ class Connection:
         service = Helper.get_service(self.dest_port, self.protocol)
         #logging.info("{} {} {}".format(service, self.dest_port, self.protocol))
         if service is None:
-            if self.dest == MDNS_IP4 or self.dest_raw == "ff02:fb":
-                service = "mdns"
-            elif self.dest == SSDP_IP4 or self.dest_raw == "ff02:fb":
-                service = "ssdp"
-            elif self.dest == BROADCAST_IP4:
-                service = "broadcast"
-            elif self.dest.is_multicast:
+            #if self.dest == MDNS_IP4 or self.dest_raw == "ff02:fb":
+            #    service = "mdns"
+            #elif self.dest == SSDP_IP4 or self.dest_raw == "ff02:fb":
+            #    service = "ssdp"
+            #elif self.dest == BROADCAST_IP4:
+            #    service = "broadcast"
+            if self.is_multicast:
                 service = "multicast"
+            elif self.protocol in PING_PROTOCOLS:
+                service = "ping"
             else:
                 known_service_key = "{}/{}".format(self.dest_port, IP_PROTOCOLS[self.protocol])
                 if known_service_key in self.config.known_services:
@@ -152,12 +181,8 @@ class Connection:
         return self._dest_hostname if self._dest_hostname is not None else self.cache.getHostname(self.dest, False)
 
     @property
-    def src_location(self):
-        return self._src_location if self._src_location is not None else self.cache.getLocation(self.src, False)
-
-    @property
-    def dest_location(self):
-        return self._dest_location if self._dest_location is not None else self.cache.getLocation(self.dest, False)
+    def location(self):
+        return self._location if self._location is not None else self.cache.getLocation(self.src if self.src.is_global else self.dest, False)
 
 class Processor(threading.Thread):
     def __init__(self, config, handler, influxdb ):
@@ -176,6 +201,30 @@ class Processor(threading.Thread):
         self.cache = Cache(self.config)
 
         influxdb.register(self.getMessurements)
+
+        #logging.info(ipaddress.ip_address("192.168.0.50").is_private)
+        #logging.info(ipaddress.ip_address("ff02::1:ff6d:914d").is_private)
+        #logging.info(ipaddress.ip_address("ff02::1:ff6d:914d").is_multicast)
+        #logging.info(ipaddress.ip_address("ff02::1:ff6d:914d").is_global)
+        #logging.info(ipaddress.ip_address("185.89.37.91").is_global)
+
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_multicast)
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_private)
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_global)
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_unspecified)
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_reserved)
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_loopback)
+        #logging.info(ipaddress.ip_address("192.168.0.255").is_link_local)
+        #logging.info("-----")
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_multicast)
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_private)
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_global)
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_unspecified)
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_reserved)
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_loopback)
+        #logging.info(ipaddress.ip_address("192.168.0.1").is_link_local)
+
+        #print(self.resolveLocation(ipaddress.ip_address("185.89.37.91")))
 
         #print(self.resolveLocation(ipaddress.ip_address("185.89.37.91")))
         #print(self.resolveLocation(ipaddress.ip_address("40.77.167.196")))
@@ -329,6 +378,9 @@ class Processor(threading.Thread):
 
         registry = {}
         for con in list(self.connections):
+            if con.skipped:
+                continue
+
             timestamp = con.request_ts
 
             # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
@@ -338,28 +390,42 @@ class Processor(threading.Thread):
             #    #logging.info("fix {} by {}".format(con.answer_flow is not None, int(self.last_metric_end + 1) - timestamp))
             #    timestamp = int(self.last_metric_end + 1)
 
-            src_location = con.src_location
-            dest_location = con.dest_location
+            _location = con.location
 
             label = []
-            label.append("protocol={}".format(con.protocol_name))
-            label.append("service={}".format(con.service))
+
+            extern_ip = con.src if con.src.is_global else con.dest
+            extern_hostname = con.src_hostname if con.src.is_global else con.dest_hostname
+            intern_ip = con.dest if con.src.is_global else con.src
+            intern_hostname = con.dest_hostname if con.src.is_global else con.src_hostname
+
+            label.append("intern_ip={}".format(intern_ip))
+            label.append("intern_host={}".format(intern_hostname))
+
+            label.append("extern_ip={}".format(extern_ip))
+            label.append("extern_host={}".format(extern_hostname))
+            extern_group = extern_hostname
+            for provider in ["amazonaws.com","awsglobalaccelerator.com","cloudfront.net","akamaitechnologies.com","googleusercontent.com"]:
+                if provider in extern_hostname:
+                    extern_group = "*.{}".format(provider)
+                    break
+            label.append("extern_group={}".format(extern_group))
+
+            label.append("direction={}".format("incoming" if con.src.is_global else "outgoing"))
+
+            service = con.service
+            if service == "unknown" and "speedtest" in extern_hostname:
+                service = "speedtest"
+            label.append("service={}".format(service))
             label.append("port={}".format(con.dest_port))
+            label.append("protocol={}".format(con.protocol_name))
             #label.append("size={}".format(con.size))
             #label.append("duration={}".format(con.duration))
             #label.append("packets={}".format(con.packages))
-            label.append("src_ip={}".format(con.src))
-            label.append("src_host={}".format(con.src_hostname))
-            if src_location is not None:
-                label.append("src_country_name={}".format(src_location["country_name"]))
-                label.append("src_country_code={}".format(src_location["country_code"]))
-                label.append("src_city={}".format(src_location["city"]))
-            label.append("dest_ip={}".format(con.dest))
-            label.append("dest_host={}".format(con.dest_hostname))
-            if dest_location is not None:
-                label.append("dest_country_name={}".format(dest_location["country_name"]))
-                label.append("dest_country_code={}".format(dest_location["country_code"]))
-                label.append("dest_city={}".format(dest_location["city"]))
+
+            label.append("country_name={}".format(_location["country_name"]))
+            label.append("country_code={}".format(_location["country_code"]))
+            label.append("city={}".format(_location["city"]))
             label.append("ip_type={}".format(con.ip_type))
             #label.append("oneway={}".format(1 if con.is_one_direction else 0))
 

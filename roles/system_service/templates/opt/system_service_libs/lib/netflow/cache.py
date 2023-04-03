@@ -51,6 +51,9 @@ class Cache(threading.Thread):
                 with open(self.dump_path) as f:
                     self.ip2location_map, self.hostname_map  = json.load(f)
                 logging.info("{} locations and {} hostnames loaded".format(len(self.ip2location_map),len(self.hostname_map)))
+                #for ip in self.ip2location_map:
+                #    if self.ip2location_map[ip] is None:
+                #        logging.info(ip)
                 return
             else:
                 logging.info("No locations or hostnames loaded [empty file]")
@@ -155,7 +158,7 @@ class Cache(threading.Thread):
         _ip = ip.compressed
         location = self.ip2location_map.get(_ip, None)
         if location is None:
-            if ip.is_private:
+            if not ip.is_global:
                 self.increaseStats("location_cache")
                 location = self._getPrivateLocationData(_now)
                 with self.location_lock:
