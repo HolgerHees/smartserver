@@ -280,6 +280,7 @@
             "indexByName": {},
             "renameByName": {
               "dest_host": "Host",
+              "extern_host": "Host",
               "sum": "Data"
             }
           }
@@ -1497,13 +1498,13 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 47,
+  "version": 48,
   "weekStart": ""
 }
