@@ -550,9 +550,9 @@
           ],
           "tags": [
             {
-              "key": "extern_host",
-              "operator": "!~",
-              "value": "/^.*speedtest.*$/"
+              "key": "service",
+              "operator": "!=",
+              "value": "speedtest"
             }
           ]
         }
@@ -796,9 +796,9 @@
             },
             {
               "condition": "AND",
-              "key": "extern_host",
-              "operator": "!~",
-              "value": "/^.*speedtest.*$/"
+              "key": "service",
+              "operator": "!=",
+              "value": "speedtest"
             }
           ]
         }
@@ -1504,6 +1504,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 46,
+  "version": 47,
   "weekStart": ""
 }
