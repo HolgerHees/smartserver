@@ -358,6 +358,7 @@
         "x": 8,
         "y": 0
       },
+      "hideTimeOverride": true,
       "id": 14,
       "options": {
         "footer": {
@@ -1630,6 +1631,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 55,
+  "version": 56,
   "weekStart": ""
 }
