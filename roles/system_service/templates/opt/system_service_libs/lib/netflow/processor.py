@@ -135,9 +135,6 @@ class Connection:
             self._src_hostname = self.cache.getHostname(self.src, True)
             self._dest_hostname = self.cache.getHostname(self.dest, True)
 
-        if self.src.compressed == "3.250.153.232" or self.dest.compressed == "3.250.153.232":
-            logging.info(self.request_flow)
-
         #if self.src.is_global and self.dest_port not in [80,10114,51828,51829]:
         #    logging.error("WIRED")
         #    logging.error(self.request_flow)
