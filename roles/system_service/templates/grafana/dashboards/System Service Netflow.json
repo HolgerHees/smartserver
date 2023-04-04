@@ -343,7 +343,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 80
+                "value": 70
               },
               {
                 "id": "unit",
@@ -1505,6 +1505,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 48,
+  "version": 49,
   "weekStart": ""
 }
