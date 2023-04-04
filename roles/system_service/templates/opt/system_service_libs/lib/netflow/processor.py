@@ -55,6 +55,26 @@ class Helper():
             return None
         raise KeyError( "{} - {}".format(", ".join(keys), d.keys()))
 
+    @staticmethod
+    def shouldSwapDirection(connection, config):
+        if config.netflow_incoming_ports:
+            return connection.src.is_global and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_ports
+
+        return ( connection.protocol in PING_PROTOCOLS and connection.src.is_global ) \
+               or \
+               ( \
+                   connection.src_port is not None and connection.dest_port is not None \
+                   and \
+                   ( \
+                       ( connection.src_port < 1024 and connection.dest_port >= 1024 ) \
+                       or \
+                       ( connection.src_port < 9999 and connection.dest_port >= 9999 ) \
+                       or \
+                       ( connection.src_port < 49151 and connection.dest_port >= 49151 ) \
+                   ) \
+               )
+
+
 class Connection:
     def __init__(self, request_ts, request_flow, answer_flow, config, cache):
         self.request_ts = request_ts
@@ -83,13 +103,7 @@ class Connection:
         self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
 
         # swap direction
-        if ( \
-             self.src.is_global \
-             and \
-             Helper.getServiceKey(self.dest, self.dest_port) not in self.config.netflow_incoming_ports \
-             # PING
-             #( self.protocol in PING_PROTOCOLS and self.src.is_global ) \
-           ):
+        if Helper.shouldSwapDirection(self, config):
            #or not self.src.is_private:
             _ = self.dest_port
             self.dest_port = self.src_port
