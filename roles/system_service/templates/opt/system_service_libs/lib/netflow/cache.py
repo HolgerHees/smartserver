@@ -239,7 +239,7 @@ class Cache(threading.Thread):
                                 "location_region_name": self._prepareField("regionName",data),
                                 "location_region_code": data["region"].lower(),
                                 "location_city": self._prepareField("city",data),
-                                "location_zip": data["zip"],
+                                "location_zip": self._prepareField("zip",data),
                                 "location_lat": int(data["lat"]),
                                 "location_lon": int(data["lon"]),
                                 "location_org": self._prepareField("org", data)
