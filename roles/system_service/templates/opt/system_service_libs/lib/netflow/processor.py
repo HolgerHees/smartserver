@@ -57,8 +57,8 @@ class Helper():
 
     @staticmethod
     def shouldSwapDirection(connection, config):
-        if config.netflow_incoming_ports:
-            return connection.src.is_global and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_ports
+        if config.netflow_incoming_traffic:
+            return connection.src.is_global and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic
 
         return ( connection.protocol in PING_PROTOCOLS and connection.src.is_global ) \
                or \
@@ -135,6 +135,9 @@ class Connection:
             self._src_hostname = self.cache.getHostname(self.src, True)
             self._dest_hostname = self.cache.getHostname(self.dest, True)
 
+        if self.src.compressed == "3.250.153.232" or self.dest.compressed == "3.250.153.232":
+            logging.info(self.request_flow)
+
         #if self.src.is_global and self.dest_port not in [80,10114,51828,51829]:
         #    logging.error("WIRED")
         #    logging.error(self.request_flow)
@@ -173,8 +176,8 @@ class Connection:
                 service = "ping"
             else:
                 service_key = Helper.getServiceKey(self.dest, self.dest_port)
-                if service_key in self.config.netflow_incoming_ports:
-                    return self.config.netflow_incoming_ports[service_key]
+                if service_key in self.config.netflow_incoming_traffic:
+                    return self.config.netflow_incoming_traffic[service_key].replace(" ","\\ ").replace(",","\\,")
                 service = "unknown"
         return service
 

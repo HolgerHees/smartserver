@@ -101,8 +101,8 @@ class InfluxDB(threading.Thread):
             if r.status_code != 204:
                 msg = "Wrong status code {} for query {}".format(r.status_code, url)
                 logging.error(msg)
-                #if r.content != "":
-                #    logging.error("BODY: {}".format(r.content))
+                if r.content != "":
+                    logging.error("BODY: {}".format(r.content))
                 raise requests.exceptions.ConnectionError(msg)
             return 1
         except requests.exceptions.ConnectionError:
