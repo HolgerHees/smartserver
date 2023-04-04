@@ -27,7 +27,7 @@ class Cache(threading.Thread):
 
         self.dump_path = "/var/lib/system_service/netflow_cache.json"
 
-        self.ip2location_url = "http://ip-api.com/json/{}?fields=country,countryCode,city,status,message"
+        self.ip2location_url = "http://ip-api.com/json/{}?fields=continent,continentCode,country,countryCode,region,regionName,city,zip,lat,lon,org,status,message"
         #self.ip2location_url = "https://api.hostip.info/get_json.php?ip={}"
         self.ip2location_state = True
         self.ip2location_throttled_until = 0
@@ -141,10 +141,41 @@ class Cache(threading.Thread):
         return location["data"]
 
     def _getUnknownLocationData(self, _now):
-        return { "data": { "country_name": "Unknown", "country_code": "xx", "city": "Unknown" }, "time": _now }
+        return { "data": {
+            "location_continent_name": "Unknown",
+            "location_continent_code": "xx",
+            "location_country_name": "Unknown",
+            "location_country_code": "xx",
+            "location_region_name": "Unknown",
+            "location_region_code": "xx",
+            "location_city": "Unknown",
+            "location_zip": "0",
+            "location_lat": 0,
+            "location_lon": 0,
+            "location_org": "Unknown",
+        }, "time": _now }
 
     def _getPrivateLocationData(self, _now):
-        return { "data": { "country_name": "Private", "country_code": "xx", "city": "Private" }, "time": _now }
+        return { "data": {
+            "location_continent_name": "Private",
+            "location_continent_code": "xx",
+            "location_country_name": "Private",
+            "location_country_code": "xx",
+            "location_region_name": "Private",
+            "location_region_code": "xx",
+            "location_city": "Private",
+            "location_zip": "0",
+            "location_lat": 0,
+            "location_lon": 0,
+            "location_org": "Private"
+        }, "time": _now }
+
+    def _checkField(self, key, data, fallback):
+        if key not in data or data[key] == "":
+            data[key] = fallback
+
+    def _prepareField(self, key, data):
+        return data[key].title().replace(" ","\\ ").replace(",","\\,")
 
     def _resolveLocationData(self, ip):
         _now = time.time()
@@ -188,13 +219,31 @@ class Cache(threading.Thread):
                             return None
 
                         if data["status"] == "success":
-                            if data["country"] == "":
-                                data["country"] = "Unknown"
-                            if data["countryCode"] == "":
-                                data["countryCode"] = "xx"
-                            if data["city"] == "":
-                                data["city"] = "Unknown"
-                            location = { "data": {"country_name": data["country"].title().replace(" ","\\ ").replace(",","\\,"), "country_code": data["countryCode"].lower(), "city": data["city"].replace(" ","\\ ").replace(",","\\,") }, "time": _now }
+                            self._checkField("continentCode",data,"xx")
+                            self._checkField("continent",data,"Unknown")
+                            self._checkField("countryCode",data,"xx")
+                            self._checkField("country",data,"Unknown")
+                            self._checkField("region",data,"xx")
+                            self._checkField("regionName",data,"Unknown")
+                            self._checkField("city",data,"Unknown")
+                            self._checkField("zip",data,"0")
+                            self._checkField("lat",data,0)
+                            self._checkField("lon",data,0)
+                            self._checkField("org",data,"Unknown")
+
+                            location = { "data": {
+                                "location_continent_name": self._prepareField("continent",data),
+                                "location_continent_code": data["continentCode"].lower(),
+                                "location_country_name": self._prepareField("country",data),
+                                "location_country_code": data["countryCode"].lower(),
+                                "location_region_name": self._prepareField("regionName",data),
+                                "location_region_code": data["region"].lower(),
+                                "location_city": self._prepareField("city",data),
+                                "location_zip": data["zip"],
+                                "location_lat": int(data["lat"]),
+                                "location_lon": int(data["lon"]),
+                                "location_org": self._prepareField("org", data)
+                                }, "time": _now }
                         elif data["status"] == "fail":
                             if "private" in data["message"] or "reserved" in data["message"]:
                                 location = self._getPrivateLocationData(_now)

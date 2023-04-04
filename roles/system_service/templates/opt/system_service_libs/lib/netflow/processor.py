@@ -429,9 +429,13 @@ class Processor(threading.Thread):
             #label.append("duration={}".format(con.duration))
             #label.append("packets={}".format(con.packages))
 
-            label.append("country_name={}".format(_location["country_name"]))
-            label.append("country_code={}".format(_location["country_code"]))
-            label.append("city={}".format(_location["city"]))
+            label.append("location_country_name={}".format(_location["location_country_name"]))
+            label.append("location_country_code={}".format(_location["location_country_code"]))
+            label.append("location_city={}".format(_location["location_city"]))
+            label.append("location_zip={}".format(_location["location_zip"]))
+            label.append("location_lat={}".format(_location["location_lat"]))
+            label.append("location_lon={}".format(_location["location_lon"]))
+
             label.append("ip_type={}".format(con.ip_type))
             #label.append("oneway={}".format(1 if con.is_one_direction else 0))
 
