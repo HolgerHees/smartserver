@@ -65,7 +65,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "sum"
+              "options": "Traffic"
             },
             "properties": [
               {
@@ -109,11 +109,11 @@
           ],
           "show": false
         },
-        "showHeader": false,
+        "showHeader": true,
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Data"
+            "displayName": "Traffic"
           }
         ]
       },
@@ -177,8 +177,8 @@
             },
             "renameByName": {
               "port": "Port",
-              "service": "Service",
-              "sum": "Data"
+              "service": "Name",
+              "sum": "Traffic"
             }
           }
         }
@@ -341,7 +341,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "sum"
+              "options": "Traffic"
             },
             "properties": [
               {
@@ -368,11 +368,11 @@
           ],
           "show": false
         },
-        "showHeader": false,
+        "showHeader": true,
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Data"
+            "displayName": "Traffic"
           }
         ]
       },
@@ -429,10 +429,10 @@
               "sum": 2
             },
             "renameByName": {
-              "country_name": "Country",
+              "country_name": "Name",
               "dest_country_name": "Country",
               "src_country_name": "Source",
-              "sum": "Data"
+              "sum": "Traffic"
             }
           }
         }
@@ -586,7 +586,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "sum"
+              "options": "Traffic"
             },
             "properties": [
               {
@@ -614,11 +614,11 @@
           ],
           "show": false
         },
-        "showHeader": false,
+        "showHeader": true,
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Data"
+            "displayName": "Traffic"
           }
         ]
       },
@@ -670,9 +670,9 @@
             },
             "indexByName": {},
             "renameByName": {
-              "intern_host": "Host",
+              "intern_host": "Name",
               "src_host": "Host",
-              "sum": "Data"
+              "sum": "Traffic"
             }
           }
         }
@@ -716,7 +716,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "sum"
+              "options": "Traffic"
             },
             "properties": [
               {
@@ -744,11 +744,11 @@
           ],
           "show": false
         },
-        "showHeader": false,
+        "showHeader": true,
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Data"
+            "displayName": "Traffic"
           }
         ]
       },
@@ -801,8 +801,8 @@
             "indexByName": {},
             "renameByName": {
               "dest_host": "Host",
-              "extern_host": "Host",
-              "sum": "Data"
+              "extern_host": "Name",
+              "sum": "Traffic"
             }
           }
         }
@@ -1004,7 +1004,7 @@
             "fields": {
               "Time": {
                 "aggregations": [
-                  "lastNotNull"
+                  "firstNotNull"
                 ],
                 "operation": "aggregate"
               },
@@ -1069,7 +1069,7 @@
             },
             "renameByName": {
               "Time": "Time",
-              "Time (firstNotNull)": "Until",
+              "Time (firstNotNull)": "Time",
               "Time (lastNotNull)": "Time",
               "Time (range)": "Since",
               "country_name": "Country",
@@ -1390,7 +1390,7 @@
             "fields": {
               "Time": {
                 "aggregations": [
-                  "lastNotNull"
+                  "firstNotNull"
                 ],
                 "operation": "aggregate"
               },
@@ -1455,7 +1455,7 @@
             },
             "renameByName": {
               "Time": "Time",
-              "Time (firstNotNull)": "Until",
+              "Time (firstNotNull)": "Time",
               "Time (lastNotNull)": "Time",
               "Time (range)": "Since",
               "country_name": "Country",
@@ -1624,6 +1624,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 51,
+  "version": 53,
   "weekStart": ""
 }
