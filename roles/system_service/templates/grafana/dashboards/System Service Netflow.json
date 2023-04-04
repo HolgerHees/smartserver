@@ -415,6 +415,7 @@
           "tags": []
         }
       ],
+      "timeShift": "2m",
       "title": "Country",
       "transformations": [
         {
@@ -854,7 +855,7 @@
               },
               {
                 "id": "unit",
-                "value": "binBps"
+                "value": "bytes"
               }
             ]
           },
@@ -1242,7 +1243,7 @@
               },
               {
                 "id": "unit",
-                "value": "binBps"
+                "value": "bytes"
               }
             ]
           },
@@ -1629,6 +1630,6 @@
   "timezone": "",
   "title": "System Service Netflow",
   "uid": "system-service-netflow",
-  "version": 54,
+  "version": 55,
   "weekStart": ""
 }
