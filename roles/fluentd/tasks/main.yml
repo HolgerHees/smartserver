@@ -13,6 +13,7 @@
   with_items:
     - "fluent.conf"
     - "_.ansible.d/systemd.conf"
+    - "_.ansible.d/fluentd.conf"
   notify: "restart fluentd"
 
 - name: build docker image
