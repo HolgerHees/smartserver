@@ -7,9 +7,9 @@ server_ip = "{{default_server_ip}}"
 
 netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
 netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}
-netflow_incoming_ports = {
-{% for key in netflow_incoming_ports %}
-  "{{key}}": "{{netflow_incoming_ports[key]}}",
+netflow_incoming_traffic = {
+{% for data in netflow_incoming_traffic %}
+  "{{data.target}}": "{{data.name}}",
 {% endfor %}
 }
 

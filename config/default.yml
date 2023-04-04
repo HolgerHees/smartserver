@@ -182,12 +182,12 @@ default_variables: {
     # ]
 
     "netflow_collector": { "default": no },                       # enable netflow collector in system_service
-    "netflow_incoming_ports": { "default": {} },                  # from internet reachable ports, (used to validate netflow traffic direction)
+    "netflow_incoming_traffic": { "default": [] },                # from internet allowed traffic, (used to validate netflow traffic direction)
     # *** EXAMPLE ***
-    # {
-    #     "192.168.0.50:80": "http",
-    #     "192.168.0.50:51828": "wireguard"
-    # }
+    # [
+    #     { target: "{{production_ip}}:80", name: "http" },
+    #     { target: "{{production_ip}}:51829", name: "wireguard" }
+    # ]
     "speedtest_server_id": { "default": "auto" },                 # used for system_service speedtest
 
     "librenms_poller_interval": { "default": 5 },                 # interval in minutes
