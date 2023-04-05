@@ -165,6 +165,7 @@
             "renameByName": {
               "dest_host": "Host",
               "extern_host": "Name",
+              "location_org": "Organisation",
               "sum": "Traffic"
             }
           }
@@ -1776,6 +1777,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 5,
+  "version": 6,
   "weekStart": ""
 }
