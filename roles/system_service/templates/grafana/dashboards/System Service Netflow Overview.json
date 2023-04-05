@@ -24,7 +24,22 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "netflow"
+      ],
+      "targetBlank": false,
+      "title": "GeopMap",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
@@ -1607,7 +1622,9 @@
   "revision": 1,
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "netflow"
+  ],
   "templating": {
     "list": [
       {
@@ -1629,8 +1646,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "System Service Netflow",
-  "uid": "system-service-netflow",
-  "version": 56,
+  "title": "System Service Netflow Overview",
+  "uid": "system-service-netflow-overview",
+  "version": 2,
   "weekStart": ""
 }

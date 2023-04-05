@@ -112,3 +112,7 @@ class InfluxDB(threading.Thread):
             logging.error("Got unexpected exception. Will retry in {} seconds".format(self.config.influxdb_publish_interval))
             logging.error(traceback.format_exc())
             return -1
+
+    @staticmethod
+    def escapeValue(value):
+        return value.replace(" ","\\ ").replace(",","\\,")

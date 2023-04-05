@@ -12,6 +12,10 @@ import schedule
 import os
 
 class Cache(threading.Thread):
+    TYPE_LOCATION = "Location"
+    TYPE_UNKNOWN = "Unknown"
+    TYPE_PRIVATE = "Private"
+
     def __init__(self, config):
         threading.Thread.__init__(self)
 
@@ -38,6 +42,8 @@ class Cache(threading.Thread):
         self.ip2location_map = {}
         self.hostname_map = {}
 
+        self.version = 1
+
     def start(self):
         self.is_running = True
         schedule.every().day.at("01:00").do(self.dump)
@@ -49,8 +55,13 @@ class Cache(threading.Thread):
         try:
             if os.path.exists(self.dump_path):
                 with open(self.dump_path) as f:
-                    self.ip2location_map, self.hostname_map  = json.load(f)
-                logging.info("{} locations and {} hostnames loaded".format(len(self.ip2location_map),len(self.hostname_map)))
+                    data = json.load(f)
+                    if "version" in data and data["version"] == self.version:
+                        self.ip2location_map = data["ip2location_map"]
+                        self.hostname_map = data["hostname_map"]
+                        logging.info("{} locations and {} hostnames loaded".format(len(self.ip2location_map),len(self.hostname_map)))
+                    else:
+                        logging.info("No locations or hostnames loaded [wrong version]")
                 #for ip in self.ip2location_map:
                 #    if self.ip2location_map[ip] is None:
                 #        logging.info(ip)
@@ -63,7 +74,7 @@ class Cache(threading.Thread):
     def dump(self):
         with open(self.dump_path, 'w') as f:
             with self.location_lock and self.hostname_lock:
-                json.dump( [ self.ip2location_map, self.hostname_map ], f, ensure_ascii=False)
+                json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
                 logging.info("{} locations and {} hostnames saved".format(len(self.ip2location_map),len(self.hostname_map)))
 
     def cleanup(self):
@@ -141,34 +152,10 @@ class Cache(threading.Thread):
         return location["data"]
 
     def _getUnknownLocationData(self, _now):
-        return { "data": {
-            "location_continent_name": "Unknown",
-            "location_continent_code": "xx",
-            "location_country_name": "Unknown",
-            "location_country_code": "xx",
-            "location_region_name": "Unknown",
-            "location_region_code": "xx",
-            "location_city": "Unknown",
-            "location_zip": "0",
-            "location_lat": 0,
-            "location_lon": 0,
-            "location_org": "Unknown",
-        }, "time": _now }
+        return { "data": { "type": Cache.TYPE_UNKNOWN }, "time": _now }
 
     def _getPrivateLocationData(self, _now):
-        return { "data": {
-            "location_continent_name": "Private",
-            "location_continent_code": "xx",
-            "location_country_name": "Private",
-            "location_country_code": "xx",
-            "location_region_name": "Private",
-            "location_region_code": "xx",
-            "location_city": "Private",
-            "location_zip": "0",
-            "location_lat": 0,
-            "location_lon": 0,
-            "location_org": "Private"
-        }, "time": _now }
+        return { "data": { "type": Cache.TYPE_PRIVATE }, "time": _now }
 
     def _checkField(self, key, data, fallback):
         if key not in data or data[key] == "":
@@ -219,30 +206,19 @@ class Cache(threading.Thread):
                             return None
 
                         if data["status"] == "success":
-                            self._checkField("continentCode",data,"xx")
-                            self._checkField("continent",data,"Unknown")
-                            self._checkField("countryCode",data,"xx")
-                            self._checkField("country",data,"Unknown")
-                            self._checkField("region",data,"xx")
-                            self._checkField("regionName",data,"Unknown")
-                            self._checkField("city",data,"Unknown")
-                            self._checkField("zip",data,"0")
-                            self._checkField("lat",data,0)
-                            self._checkField("lon",data,0)
-                            self._checkField("org",data,"Unknown")
-
                             location = { "data": {
-                                "location_continent_name": self._prepareField("continent",data),
-                                "location_continent_code": data["continentCode"].lower(),
-                                "location_country_name": self._prepareField("country",data),
-                                "location_country_code": data["countryCode"].lower(),
-                                "location_region_name": self._prepareField("regionName",data),
-                                "location_region_code": data["region"].lower(),
-                                "location_city": self._prepareField("city",data),
-                                "location_zip": self._prepareField("zip",data),
-                                "location_lat": int(data["lat"]),
-                                "location_lon": int(data["lon"]),
-                                "location_org": self._prepareField("org", data)
+                                "type": Cache.TYPE_LOCATION,
+                                "continent_name": data["continent"].title(),
+                                "continent_code": data["continentCode"].lower(),
+                                "country_name": data["country"].title(),
+                                "country_code": data["countryCode"].lower(),
+                                "region_name": data["regionName"].title(),
+                                "region_code": data["region"].lower(),
+                                "city": data["city"].title(),
+                                "zip": data["zip"],
+                                "lat": data["lat"],
+                                "lon": data["lon"],
+                                "org": data["org"].title()
                                 }, "time": _now }
                         elif data["status"] == "fail":
                             if "private" in data["message"] or "reserved" in data["message"]:
