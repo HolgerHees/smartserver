@@ -57,8 +57,7 @@
             "cellOptions": {
               "type": "auto"
             },
-            "inspect": false,
-            "minWidth": 120
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -85,36 +84,20 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 86
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Port"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 70
-              },
-              {
-                "id": "unit",
-                "value": "none"
+                "value": 94
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 13,
-        "w": 4,
+        "h": 12,
+        "w": 5,
         "x": 0,
         "y": 0
       },
       "hideTimeOverride": true,
-      "id": 6,
+      "id": 17,
       "options": {
         "footer": {
           "countRows": false,
@@ -142,13 +125,7 @@
           "groupBy": [
             {
               "params": [
-                "service"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "port"
+                "location_org"
               ],
               "type": "tag"
             }
@@ -176,7 +153,7 @@
         }
       ],
       "timeShift": "2m",
-      "title": "Services",
+      "title": "Organisations",
       "transformations": [
         {
           "id": "organize",
@@ -184,138 +161,16 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {
-              "Time": 0,
-              "port": 2,
-              "service": 1,
-              "sum": 3
-            },
+            "indexByName": {},
             "renameByName": {
-              "port": "Port",
-              "service": "Name",
+              "dest_host": "Host",
+              "extern_host": "Name",
               "sum": "Traffic"
             }
           }
         }
       ],
       "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "description": "without speedtest data",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": [],
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "service"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Service"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 4,
-        "x": 4,
-        "y": 0
-      },
-      "hideTimeOverride": true,
-      "id": 8,
-      "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false,
-          "values": [
-            "percent"
-          ]
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [],
-          "fields": "",
-          "limit": 5000,
-          "values": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "service"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "service",
-              "operator": "!=",
-              "value": "speedtest"
-            }
-          ]
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Services",
-      "transformations": [],
-      "type": "piechart"
     },
     {
       "datasource": {
@@ -368,9 +223,9 @@
         ]
       },
       "gridPos": {
-        "h": 13,
+        "h": 12,
         "w": 4,
-        "x": 8,
+        "x": 5,
         "y": 0
       },
       "hideTimeOverride": true,
@@ -481,9 +336,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 13,
-        "w": 4,
-        "x": 12,
+        "h": 6,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "hideTimeOverride": true,
@@ -562,7 +417,6 @@
         }
       ],
       "timeShift": "2m",
-      "title": "Country",
       "transformations": [],
       "type": "piechart"
     },
@@ -581,7 +435,8 @@
             "cellOptions": {
               "type": "auto"
             },
-            "inspect": false
+            "inspect": false,
+            "minWidth": 120
           },
           "mappings": [],
           "thresholds": {
@@ -608,20 +463,36 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 94
+                "value": 86
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Port"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              },
+              {
+                "id": "unit",
+                "value": "none"
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 13,
+        "h": 12,
         "w": 4,
-        "x": 16,
+        "x": 12,
         "y": 0
       },
       "hideTimeOverride": true,
-      "id": 17,
+      "id": 6,
       "options": {
         "footer": {
           "countRows": false,
@@ -649,7 +520,13 @@
           "groupBy": [
             {
               "params": [
-                "location_org"
+                "service"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "port"
               ],
               "type": "tag"
             }
@@ -677,7 +554,7 @@
         }
       ],
       "timeShift": "2m",
-      "title": "Organisations",
+      "title": "Services",
       "transformations": [
         {
           "id": "organize",
@@ -685,10 +562,15 @@
             "excludeByName": {
               "Time": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "Time": 0,
+              "port": 2,
+              "service": 1,
+              "sum": 3
+            },
             "renameByName": {
-              "dest_host": "Host",
-              "extern_host": "Name",
+              "port": "Port",
+              "service": "Name",
               "sum": "Traffic"
             }
           }
@@ -746,9 +628,9 @@
         ]
       },
       "gridPos": {
-        "h": 6,
+        "h": 12,
         "w": 4,
-        "x": 20,
+        "x": 16,
         "y": 0
       },
       "hideTimeOverride": true,
@@ -876,10 +758,10 @@
         ]
       },
       "gridPos": {
-        "h": 7,
+        "h": 12,
         "w": 4,
         "x": 20,
-        "y": 6
+        "y": 0
       },
       "hideTimeOverride": true,
       "id": 5,
@@ -956,6 +838,122 @@
         }
       ],
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "description": "without speedtest data",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Service"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 9,
+        "y": 6
+      },
+      "hideTimeOverride": true,
+      "id": 8,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false,
+          "values": [
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "limit": 5000,
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "service"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "service",
+              "operator": "!=",
+              "value": "speedtest"
+            }
+          ]
+        }
+      ],
+      "timeShift": "2m",
+      "transformations": [],
+      "type": "piechart"
     },
     {
       "datasource": {
@@ -1063,7 +1061,7 @@
         "h": 12,
         "w": 11,
         "x": 0,
-        "y": 13
+        "y": 12
       },
       "hideTimeOverride": true,
       "id": 15,
@@ -1278,7 +1276,7 @@
         "h": 6,
         "w": 2,
         "x": 11,
-        "y": 13
+        "y": 12
       },
       "hideTimeOverride": true,
       "id": 7,
@@ -1451,7 +1449,7 @@
         "h": 12,
         "w": 11,
         "x": 13,
-        "y": 13
+        "y": 12
       },
       "hideTimeOverride": true,
       "id": 16,
@@ -1680,7 +1678,7 @@
         "h": 6,
         "w": 2,
         "x": 11,
-        "y": 19
+        "y": 18
       },
       "hideTimeOverride": true,
       "id": 11,
@@ -1778,6 +1776,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }
