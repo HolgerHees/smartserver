@@ -438,19 +438,19 @@ class Processor(threading.Thread):
                 location_country_code = _location["country_code"] if _location["country_code"] else "xx"
                 location_city = _location["city"] if _location["city"] else "Unknown"
                 location_zip = _location["zip"] if _location["zip"] else "0"
-                location_geohash = Helper.encodeGeohash(_location["lat"], _location["lon"], 5) if _location["lat"] and _location["lon"] else ""
+                location_geohash = Helper.encodeGeohash(_location["lat"], _location["lon"], 5) if _location["lat"] and _location["lon"] else None
             elif _location["type"] == Cache.TYPE_UNKNOWN:
                 location_country_name = "Unknown"
                 location_country_code = "xx"
                 location_city = "Unknown"
                 location_zip = "0"
-                location_geohash = ""
+                location_geohash = None
             elif _location["type"] == Cache.TYPE_PRIVATE:
                 location_country_name = "Private"
                 location_country_code = "xx"
                 location_city = "Private"
                 location_zip = "0"
-                location_geohash = ""
+                location_geohash = None
 
             label = []
 
@@ -487,7 +487,8 @@ class Processor(threading.Thread):
             label.append("location_country_code={}".format(location_country_code))
             label.append("location_city={}".format(InfluxDB.escapeValue(location_city)))
             label.append("location_zip={}".format(InfluxDB.escapeValue(location_zip)))
-            label.append("location_geohash={}".format(location_geohash))
+            if location_geohash:
+                label.append("location_geohash={}".format(location_geohash))
 
             label.append("ip_type={}".format(con.ip_type))
             #label.append("oneway={}".format(1 if con.is_one_direction else 0))
