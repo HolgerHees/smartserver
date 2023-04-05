@@ -95,7 +95,7 @@ class InfluxDB(threading.Thread):
 
             logging.info("Submit {} messurements".format(len(messurements)))
 
-            headers = {'Authorization': "Token {}".format(self.config.influxdb_token)}
+            headers = {'Authorization': "Token {}".format(self.config.influxdb_token), 'Content-type': 'application/json; charset=utf-8' }
             url = "{}/write?db={}&rp=autogen&precision=ms&consistency=one".format(self.config.influxdb_rest,self.config.influxdb_database)
             r = requests.post( url, headers=headers, data="\n".join(messurements))
             if r.status_code != 204:
