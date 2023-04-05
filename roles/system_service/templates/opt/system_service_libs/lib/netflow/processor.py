@@ -72,7 +72,7 @@ class Helper():
         ):
             return True
 
-        if config.netflow_incoming_traffic and connection.src.is_global and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
+        if connection.src.is_global and config.netflow_incoming_traffic and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
             return True
 
         return False
