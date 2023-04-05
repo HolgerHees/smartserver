@@ -124,6 +124,30 @@
                 "value": "Endpoints"
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location_org"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Provider"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "location_district"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "District"
+              }
+            ]
           }
         ]
       },
@@ -221,15 +245,11 @@
                   "field": "count",
                   "fixed": 5,
                   "max": 15,
-                  "min": 3
+                  "min": 2
                 },
                 "symbol": {
                   "fixed": "img/icons/marker/circle.svg",
                   "mode": "fixed"
-                },
-                "text": {
-                  "fixed": "",
-                  "mode": "field"
                 },
                 "textConfig": {
                   "fontSize": 12,
@@ -246,8 +266,6 @@
             },
             "location": {
               "geohash": "location_geohash",
-              "latitude": "location_lat",
-              "longitude": "location_lon",
               "mode": "geohash"
             },
             "name": "Incoming Traffic",
@@ -285,6 +303,12 @@
             {
               "params": [
                 "location_city"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_org"
               ],
               "type": "tag"
             }
@@ -337,6 +361,12 @@
             {
               "params": [
                 "location_city"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_org"
               ],
               "type": "tag"
             }
@@ -400,6 +430,6 @@
   "timezone": "",
   "title": "System Service Netflow GeoMap",
   "uid": "system-service-netflow-geopmap",
-  "version": 5,
+  "version": 6,
   "weekStart": ""
 }

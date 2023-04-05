@@ -208,18 +208,18 @@ class Cache(threading.Thread):
                         if data["status"] == "success":
                             location = { "data": {
                                 "type": Cache.TYPE_LOCATION,
-                                "continent_name": data["continent"].title(),
+                                "continent_name": data["continent"],
                                 "continent_code": data["continentCode"].lower(),
-                                "country_name": data["country"].title(),
+                                "country_name": data["country"],
                                 "country_code": data["countryCode"].lower(),
-                                "region_name": data["regionName"].title(),
+                                "region_name": data["regionName"],
                                 "region_code": data["region"].lower(),
                                 "zip": data["zip"],
-                                "city": data["city"].title(),
-                                "district": data["district"].title(), # optional, default = ""
+                                "city": data["city"],
+                                "district": data["district"], # optional, default = ""
                                 "lat": data["lat"],
                                 "lon": data["lon"],
-                                "org": data["org"].title()
+                                "org": data["org"]
                                 }, "time": _now }
                         elif data["status"] == "fail":
                             if "private" in data["message"] or "reserved" in data["message"]:
