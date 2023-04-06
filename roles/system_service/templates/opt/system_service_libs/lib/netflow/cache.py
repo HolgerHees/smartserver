@@ -31,7 +31,7 @@ class Cache(threading.Thread):
 
         self.dump_path = "/var/lib/system_service/netflow_cache.json"
 
-        self.ip2location_url = "http://ip-api.com/json/{}?fields=continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,org,status,message"
+        self.ip2location_url = "http://ip-api.com/json/{}?fields=continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,org,isp,status,message"
         #self.ip2location_url = "https://api.hostip.info/get_json.php?ip={}"
         self.ip2location_state = True
         self.ip2location_throttled_until = 0
@@ -42,7 +42,7 @@ class Cache(threading.Thread):
         self.ip2location_map = {}
         self.hostname_map = {}
 
-        self.version = 2
+        self.version = 3
 
     def start(self):
         self.is_running = True
@@ -219,7 +219,8 @@ class Cache(threading.Thread):
                                 "district": data["district"], # optional, default = ""
                                 "lat": data["lat"],
                                 "lon": data["lon"],
-                                "org": data["org"]
+                                "org": data["org"],
+                                "isp": data["isp"]
                                 }, "time": _now }
                         elif data["status"] == "fail":
                             if "private" in data["message"] or "reserved" in data["message"]:

@@ -441,7 +441,7 @@ class Processor(threading.Thread):
                 location_city = _location["city"] if _location["city"] else "Unknown"
                 #location_district = _location["district"] if _location["district"] else None
                 location_geohash = Helper.encodeGeohash(_location["lat"], _location["lon"], 5) if _location["lat"] and _location["lon"] else None
-                location_org = _location["org"] if _location["org"] else None
+                location_org = _location["org"] if _location["org"] else ( _location["isp"] if _location["isp"] else None )
             elif _location["type"] == Cache.TYPE_UNKNOWN:
                 location_country_name = "Unknown"
                 location_country_code = "xx"
@@ -449,7 +449,7 @@ class Processor(threading.Thread):
                 location_city = "Unknown"
                 #location_district = None
                 location_geohash = None
-                location_org = None
+                location_org = "Unknown"
             elif _location["type"] == Cache.TYPE_PRIVATE:
                 location_country_name = "Private"
                 location_country_code = "xx"
@@ -457,7 +457,7 @@ class Processor(threading.Thread):
                 location_city = "Private"
                 #location_district = None
                 location_geohash = None
-                location_org = None
+                location_org = "Unknown"
 
             label = []
 
