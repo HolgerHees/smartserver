@@ -6,6 +6,7 @@ import traceback
 #import ipaddress
 import time
 from datetime import datetime
+import re
 
 import socket
 import ipaddress
@@ -471,10 +472,13 @@ class Processor(threading.Thread):
             label.append("extern_ip={}".format(extern_ip))
             label.append("extern_host={}".format(extern_hostname))
             extern_group = extern_hostname
-            for provider in ["amazonaws.com","awsglobalaccelerator.com","cloudfront.net","akamaitechnologies.com","googleusercontent.com"]:
-                if provider in extern_hostname:
-                    extern_group = "*.{}".format(provider)
-                    break
+            m = re.search('^.*?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|[a-z0-9-]+\.[a-z0-9]+)$', extern_group)
+            if m and m.group(1) != extern_group:
+                extern_group = "*.{}".format(m.group(1))
+            #for provider in ["amazonaws.com","awsglobalaccelerator.com","cloudfront.net","akamaitechnologies.com","googleusercontent.com"]:
+            #    if provider in extern_hostname:
+            #        extern_group = "*.{}".format(provider)
+            #        break
             label.append("extern_group={}".format(extern_group))
 
             label.append("direction={}".format("incoming" if con.src.is_global else "outgoing"))

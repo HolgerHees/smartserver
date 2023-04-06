@@ -60,7 +60,7 @@
             }
           },
           "mappings": [],
-          "max": 50,
+          "max": 500,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
@@ -193,7 +193,7 @@
                 "size": {
                   "field": "count",
                   "fixed": 5,
-                  "max": 15,
+                  "max": 12,
                   "min": 3
                 },
                 "symbol": {
@@ -244,8 +244,8 @@
                 "size": {
                   "field": "count",
                   "fixed": 5,
-                  "max": 15,
-                  "min": 2
+                  "max": 12,
+                  "min": 3
                 },
                 "symbol": {
                   "fixed": "img/icons/marker/circle.svg",
@@ -343,6 +343,54 @@
               "key": "location_geohash",
               "operator": "!=",
               "value": "\"\""
+            },
+            {
+              "condition": "AND",
+              "key": "location_org",
+              "operator": "=~",
+              "value": "/^$Organisation$/"
+            },
+            {
+              "condition": "AND",
+              "key": "location_country_name",
+              "operator": "=~",
+              "value": "/^$Country$/"
+            },
+            {
+              "condition": "AND",
+              "key": "service",
+              "operator": "=~",
+              "value": "/^$Service$/"
+            },
+            {
+              "condition": "AND",
+              "key": "intern_host",
+              "operator": "=~",
+              "value": "/^$InternHost$/"
+            },
+            {
+              "condition": "AND",
+              "key": "intern_ip",
+              "operator": "=~",
+              "value": "/^$InternIP$/"
+            },
+            {
+              "condition": "AND",
+              "key": "extern_group",
+              "operator": "=~",
+              "value": "/^$ExternGroup$/"
+            },
+            {
+              "condition": "AND",
+              "key": "extern_host",
+              "operator": "=~",
+              "value": "/^$ExternHost$/"
+            },
+            {
+              "condition": "AND",
+              "key": "extern_ip",
+              "operator": "=~",
+              "value": "/^$ExternIP$/"
             }
           ]
         },
@@ -402,6 +450,54 @@
               "key": "location_geohash",
               "operator": "!=",
               "value": "\"\""
+            },
+            {
+              "condition": "AND",
+              "key": "location_org",
+              "operator": "=~",
+              "value": "/^$Organisation$/"
+            },
+            {
+              "condition": "AND",
+              "key": "location_country_name",
+              "operator": "=~",
+              "value": "/^$Country$/"
+            },
+            {
+              "condition": "AND",
+              "key": "service",
+              "operator": "=~",
+              "value": "/^$Service$/"
+            },
+            {
+              "condition": "AND",
+              "key": "intern_host",
+              "operator": "=~",
+              "value": "/^$InternHost$/"
+            },
+            {
+              "condition": "AND",
+              "key": "intern_ip",
+              "operator": "=~",
+              "value": "/^$InternIP$/"
+            },
+            {
+              "condition": "AND",
+              "key": "extern_group",
+              "operator": "=~",
+              "value": "/^$ExternGroup$/"
+            },
+            {
+              "condition": "AND",
+              "key": "extern_host",
+              "operator": "=~",
+              "value": "/^$ExternHost$/"
+            },
+            {
+              "condition": "AND",
+              "key": "extern_ip",
+              "operator": "=~",
+              "value": "/^$ExternIP$/"
             }
           ]
         }
@@ -422,15 +518,228 @@
   "templating": {
     "list": [
       {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
         "datasource": {
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [],
+        "definition": "SHOW TAG VALUES WITH KEY = \"location_org\"",
         "hide": 0,
-        "name": "Filters",
+        "includeAll": true,
+        "multi": true,
+        "name": "Organisation",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"location_org\"",
+        "refresh": 1,
+        "regex": "",
         "skipUrlSync": false,
-        "type": "adhoc"
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"location_country_name\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "Country",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"location_country_name\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"service\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "Service",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"service\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"intern_host\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "InternHost",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"intern_host\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"intern_ip\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "InternIP",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"intern_ip\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"extern_group\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "ExternGroup",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"extern_group\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"extern_host\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "ExternHost",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"extern_host\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "definition": "SHOW TAG VALUES WITH KEY = \"extern_ip\"",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "ExternIP",
+        "options": [],
+        "query": "SHOW TAG VALUES WITH KEY = \"extern_ip\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
       }
     ]
   },
@@ -442,6 +751,6 @@
   "timezone": "",
   "title": "System Service Netflow GeoMap",
   "uid": "system-service-netflow-geopmap",
-  "version": 8,
+  "version": 11,
   "weekStart": ""
 }
