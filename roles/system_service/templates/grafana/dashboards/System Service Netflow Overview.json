@@ -1393,6 +1393,18 @@
                 "value": 200
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Req"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 50
+              }
+            ]
           }
         ]
       },
@@ -1564,7 +1576,8 @@
               },
               "value": {
                 "aggregations": [
-                  "sum"
+                  "sum",
+                  "count"
                 ],
                 "operation": "aggregate"
               }
@@ -1584,7 +1597,8 @@
               "intern_host": 1,
               "location_country_name": 3,
               "service": 4,
-              "value (sum)": 5
+              "value (count)": 5,
+              "value (sum)": 6
             },
             "renameByName": {
               "Time": "Time",
@@ -1599,6 +1613,7 @@
               "service": "Service",
               "sum": "Traffic",
               "value": "",
+              "value (count)": "Req",
               "value (sum)": "Traffic"
             }
           }
@@ -1858,6 +1873,18 @@
                 "value": 200
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Req"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 50
+              }
+            ]
           }
         ]
       },
@@ -2027,9 +2054,13 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "sum": {
+                "aggregations": []
+              },
               "value": {
                 "aggregations": [
-                  "sum"
+                  "sum",
+                  "count"
                 ],
                 "operation": "aggregate"
               }
@@ -2049,7 +2080,8 @@
               "intern_host": 1,
               "location_country_name": 3,
               "service": 4,
-              "value (sum)": 5
+              "value (count)": 5,
+              "value (sum)": 6
             },
             "renameByName": {
               "Time": "Time",
@@ -2064,6 +2096,7 @@
               "service": "Service",
               "sum": "Traffic",
               "value": "",
+              "value (count)": "Req",
               "value (sum)": "Traffic"
             }
           }
@@ -2251,7 +2284,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2279,7 +2312,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2307,7 +2340,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2335,7 +2368,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2363,7 +2396,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2391,7 +2424,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2419,7 +2452,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2447,7 +2480,7 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],
@@ -2482,6 +2515,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 18,
+  "version": 20,
   "weekStart": ""
 }
