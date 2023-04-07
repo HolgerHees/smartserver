@@ -87,6 +87,18 @@
                 "value": 94
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Organisation"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
           }
         ]
       },
@@ -150,55 +162,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -270,6 +233,18 @@
                 "value": 94
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Name"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
           }
         ]
       },
@@ -333,55 +308,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -505,54 +431,6 @@
           "tags": [
             {
               "condition": "AND",
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            },
-            {
-              "condition": "AND",
               "key": "service",
               "operator": "!=",
               "value": "speedtest"
@@ -624,6 +502,22 @@
               {
                 "id": "unit",
                 "value": "none"
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Name"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           }
@@ -695,55 +589,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -818,6 +663,18 @@
                 "value": 99
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Name"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
           }
         ]
       },
@@ -879,55 +736,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -996,6 +804,18 @@
                 "value": 94
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Name"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
           }
         ]
       },
@@ -1057,55 +877,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -1235,54 +1006,6 @@
           "tags": [
             {
               "condition": "AND",
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            },
-            {
-              "condition": "AND",
               "key": "service",
               "operator": "!=",
               "value": "speedtest"
@@ -1351,6 +1074,10 @@
               {
                 "id": "custom.width",
                 "value": 90
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           },
@@ -1363,6 +1090,10 @@
               {
                 "id": "custom.width",
                 "value": 130
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           },
@@ -1391,6 +1122,10 @@
               {
                 "id": "custom.minWidth",
                 "value": 200
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           },
@@ -1403,6 +1138,18 @@
               {
                 "id": "custom.width",
                 "value": 50
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Intern Hosts"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           }
@@ -1484,54 +1231,6 @@
             ]
           ],
           "tags": [
-            {
-              "condition": "AND",
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            },
             {
               "condition": "AND",
               "key": "direction",
@@ -1718,55 +1417,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -1831,6 +1481,10 @@
               {
                 "id": "custom.width",
                 "value": 90
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           },
@@ -1843,6 +1497,10 @@
               {
                 "id": "custom.width",
                 "value": 130
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           },
@@ -1871,6 +1529,10 @@
               {
                 "id": "custom.minWidth",
                 "value": 200
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           },
@@ -1883,6 +1545,18 @@
               {
                 "id": "custom.width",
                 "value": 50
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Intern Hosts"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           }
@@ -1964,54 +1638,6 @@
             ]
           ],
           "tags": [
-            {
-              "condition": "AND",
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            },
             {
               "condition": "AND",
               "key": "direction",
@@ -2215,55 +1841,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "location_org",
-              "operator": "=~",
-              "value": "/^$Organisation$/"
-            },
-            {
-              "condition": "AND",
-              "key": "location_country_name",
-              "operator": "=~",
-              "value": "/^$Country$/"
-            },
-            {
-              "condition": "AND",
-              "key": "service",
-              "operator": "=~",
-              "value": "/^$Service$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_host",
-              "operator": "=~",
-              "value": "/^$InternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "intern_ip",
-              "operator": "=~",
-              "value": "/^$InternIP$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_group",
-              "operator": "=~",
-              "value": "/^$ExternGroup$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_host",
-              "operator": "=~",
-              "value": "/^$ExternHost$/"
-            },
-            {
-              "condition": "AND",
-              "key": "extern_ip",
-              "operator": "=~",
-              "value": "/^$ExternIP$/"
-            }
           ]
         }
       ],
@@ -2282,228 +1859,15 @@
   "templating": {
     "list": [
       {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
         "datasource": {
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "definition": "SHOW TAG VALUES WITH KEY = \"location_org\"",
+        "filters": [],
         "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "Organisation",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"location_org\"",
-        "refresh": 1,
-        "regex": "",
+        "name": "Filters",
         "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"location_country_name\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "Country",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"location_country_name\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"service\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "Service",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"service\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"intern_host\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "InternHost",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"intern_host\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"intern_ip\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "InternIP",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"intern_ip\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"extern_group\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "ExternGroup",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"extern_group\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"extern_host\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "ExternHost",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"extern_host\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": {
-          "type": "influxdb",
-          "uid": "system_info_influxdb"
-        },
-        "definition": "SHOW TAG VALUES WITH KEY = \"extern_ip\"",
-        "hide": 0,
-        "includeAll": true,
-        "multi": true,
-        "name": "ExternIP",
-        "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"extern_ip\"",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
+        "type": "adhoc"
       }
     ]
   },
@@ -2515,6 +1879,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 20,
+  "version": 21,
   "weekStart": ""
 }
