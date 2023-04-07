@@ -1316,18 +1316,6 @@
               "value (sum)": "Traffic"
             }
           }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "desc": true,
-                "field": "Time"
-              }
-            ]
-          }
         }
       ],
       "type": "table"
@@ -1726,18 +1714,6 @@
               "value (sum)": "Traffic"
             }
           }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "desc": true,
-                "field": "Time"
-              }
-            ]
-          }
         }
       ],
       "type": "table"
@@ -1879,6 +1855,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 21,
+  "version": 22,
   "weekStart": ""
 }
