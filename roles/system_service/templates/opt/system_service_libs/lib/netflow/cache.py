@@ -72,12 +72,14 @@ class Cache(threading.Thread):
             logging.info("No locations or hostnames loaded [invalid file]")
 
     def dump(self):
-        with open(self.dump_path, 'w') as f:
-            with self.location_lock and self.hostname_lock:
+        if len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
+            with self.location_lock and self.hostname_lock and open(self.dump_path, 'w') as f:
+                logging.info("Start saving locations and hostnames")
                 json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
                 logging.info("{} locations and {} hostnames saved".format(len(self.ip2location_map),len(self.hostname_map)))
 
     def cleanup(self):
+        logging.info("Start cleanup locations and hostnames")
         _now = time.time()
         location_count = 0
         with self.location_lock:
@@ -92,7 +94,7 @@ class Cache(threading.Thread):
                 if _now - self.hostname_map[_ip]["time"] > self.max_hostname_cache_age:
                     del self.hostname_map[_ip]
                     hostname_count += 1
-        logging.info("Cleanup {} locations and {} hostnames".format(location_count, hostname_count))
+        logging.info("{} locations and {} hostnames cleaned".format(location_count, hostname_count))
 
     def terminate(self):
         if self.is_running:
