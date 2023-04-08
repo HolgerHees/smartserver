@@ -44,6 +44,8 @@ class Cache(threading.Thread):
 
         self.version = 3
 
+        self.valid_cache_file = True
+
     def start(self):
         self.is_running = True
         schedule.every().day.at("01:00").do(self.dump)
@@ -68,11 +70,13 @@ class Cache(threading.Thread):
                 return
             else:
                 logging.info("No locations or hostnames loaded [empty file]")
+            self.valid_cache_file = True
         except Exception:
             logging.info("No locations or hostnames loaded [invalid file]")
+            self.valid_cache_file = False
 
     def dump(self):
-        if len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
+        if self.valid_cache_file and len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
             with self.location_lock and self.hostname_lock and open(self.dump_path, 'w') as f:
                 logging.info("Start saving locations and hostnames")
                 json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
@@ -131,8 +135,11 @@ class Cache(threading.Thread):
     def isRunning(self):
         return self.is_running
 
-    def getState(self):
+    def getLocationState(self):
         return self.ip2location_state
+
+    def getCacheFileState(self):
+        return self.valid_cache_file
 
     def getLocationSize(self):
         return len(self.ip2location_map)

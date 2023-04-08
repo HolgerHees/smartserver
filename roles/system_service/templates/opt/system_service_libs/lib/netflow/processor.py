@@ -559,5 +559,6 @@ class Processor(threading.Thread):
         return [
             "system_service_process{{type=\"netflow_processor\",}} {}".format("1" if self.is_running else "0"),
             "system_service_process{{type=\"netflow_cache\",}} {}".format("1" if self.cache.isRunning() else "0"),
-            "system_service_state{{type=\"netflow_ip2location\",}} {}".format("1" if self.cache.getState() else "0"),
+            "system_service_state{{type=\"netflow_ip2location\",}} {}".format("1" if self.cache.getLocationState() else "0"),
+            "system_service_state{{type=\"netflow_cache_file\",}} {}".format("1" if self.cache.getCacheFileState() else "0")
         ]
