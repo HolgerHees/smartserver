@@ -61,29 +61,27 @@ class Cache(threading.Thread):
                     if "version" in data and data["version"] == self.version:
                         self.ip2location_map = data["ip2location_map"]
                         self.hostname_map = data["hostname_map"]
-                        logging.info("{} locations and {} hostnames loaded".format(len(self.ip2location_map),len(self.hostname_map)))
+                        logging.info("Cache data loaded ({} locations and {} hostnames)".format(len(self.ip2location_map),len(self.hostname_map)))
                     else:
-                        logging.info("No locations or hostnames loaded [wrong version]")
+                        logging.info("No cache data loaded (wrong version)")
                 #for ip in self.ip2location_map:
                 #    if self.ip2location_map[ip] is None:
                 #        logging.info(ip)
                 return
             else:
-                logging.info("No locations or hostnames loaded [empty file]")
+                logging.info("No cache data loaded (empty file)")
             self.valid_cache_file = True
         except Exception:
-            logging.info("No locations or hostnames loaded [invalid file]")
+            logging.info("No cache data loaded (invalid file)")
             self.valid_cache_file = False
 
     def dump(self):
         if self.valid_cache_file and len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
             with self.location_lock and self.hostname_lock and open(self.dump_path, 'w') as f:
-                logging.info("Start saving locations and hostnames")
                 json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
-                logging.info("{} locations and {} hostnames saved".format(len(self.ip2location_map),len(self.hostname_map)))
+                logging.info("Cache data saved ({} locations and {} hostnames)".format(len(self.ip2location_map),len(self.hostname_map)))
 
     def cleanup(self):
-        logging.info("Start cleanup locations and hostnames")
         _now = time.time()
         location_count = 0
         with self.location_lock:
@@ -98,7 +96,7 @@ class Cache(threading.Thread):
                 if _now - self.hostname_map[_ip]["time"] > self.max_hostname_cache_age:
                     del self.hostname_map[_ip]
                     hostname_count += 1
-        logging.info("{} locations and {} hostnames cleaned".format(location_count, hostname_count))
+        logging.info("Cache data cleaned ({} locations and {} hostnames)".format(location_count, hostname_count))
 
     def terminate(self):
         if self.is_running:
