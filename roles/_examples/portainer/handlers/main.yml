@@ -1,0 +1,8 @@
+- name: restart portainer
+  systemd:
+    name: portainer
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart portainer"

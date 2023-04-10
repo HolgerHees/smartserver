@@ -1,0 +1,77 @@
+- name: set version
+  set_fact:
+    portainer_version: '2.17.1'
+  tags: [ 'update_notifier_config' ]
+  
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "{{global_lib}}/portainer"
+
+- name: check started docker
+  systemd:
+    name: docker
+    state: started
+
+- name: create docker container
+  docker_container:
+    name: portainer
+    image: "portainer/portainer-ce:{{portainer_version}}-alpine"
+    state: present
+#    network_mode: "none"
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: portainer
+    command:
+        - "--admin-password"
+        - "$2y$05$sQsw2.YkRViQ43lNJYfm5..R2vy/sqxbcRy.Jzyods0D5pIyV4Y6W"
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_portainer_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:z"
+      - "{{global_lib}}/portainer:/data:z"
+    exposed_ports:
+     - "8000"
+     - "9443"
+  notify: "restart portainer"
+
+- name: copy apache vhost
+  vars:
+    sub_domain: "portainer"
+    usergroup: "admin"
+    include: "templates/etc/apache2/_.ansible.vhost.d/portainer.inc"
+  import_tasks: roles/apache/shared/add_vhost.yml
+
+- name: create systemd service
+  vars:
+    container_name: "portainer"
+  import_tasks: roles/container/shared/add_docker_service.yml
+
+#- name: register update notifier
+#  vars:
+#    name: "portainer"
+#    type: "docker"
+#    url: "https://docs.portainer.io/release-notes"
+#    config: {
+#      repository: "portainer",
+#      pattern: "^([0-9\\.]+)-alpine$"
+#    }
+#  import_tasks: roles/update_service/shared/add_software.yml
+
+- name: trigger portainer handler
+  vars:
+    notify: "restart portainer"
+    service: "portainer.service"
+  import_tasks: roles/_shared/service_check.yml
