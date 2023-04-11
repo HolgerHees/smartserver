@@ -193,7 +193,6 @@ class Cache(threading.Thread):
                     response = requests.get(self.ip2location_url.format(_ip))
                 except:
                     logging.error("Error fetching ip {}".format(_ip))
-                    logging.error(":{}:".format(response.content))
                     logging.error(traceback.format_exc())
                     return None
 
