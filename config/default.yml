@@ -183,6 +183,7 @@ default_variables: {
 
     "netflow_collector": { "default": no },                       # enable netflow collector in system_service
     "netflow_incoming_traffic": { "default": [] },                # from internet allowed traffic, (used to validate netflow traffic direction)
+
     # *** EXAMPLE ***
     # [
     #     { target: "{{production_ip}}:80", name: "http" },
