@@ -3,7 +3,6 @@ import queue
 import threading
 import logging
 import traceback
-#import ipaddress
 import time
 from datetime import datetime
 import re
@@ -39,6 +38,7 @@ PROMETHEUS_INTERVAL = 60
 
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
+    nonprivate_internal_networks = []
 
     @staticmethod
     def getService(dest_port, protocol):
@@ -61,9 +61,22 @@ class Helper():
         raise KeyError( "{} - {}".format(", ".join(keys), d.keys()))
 
     @staticmethod
+    def isExternal(address):
+        if address.is_global:
+            if not Helper.nonprivate_internal_networks:
+                return True
+            for network in Helper.nonprivate_internal_networks:
+                if address in network:
+                    return False
+            return True
+
+        return False
+
+    @staticmethod
     def shouldSwapDirection(connection, config):
+        srcIsExternal = Helper.isExternal(connection.src)
         if ( \
-            ( connection.protocol in PING_PROTOCOLS and connection.src.is_global ) \
+            ( connection.protocol in PING_PROTOCOLS and srcIsExternal ) \
             or \
             ( \
                 connection.src_port is not None and connection.dest_port is not None \
@@ -73,11 +86,10 @@ class Helper():
         ):
             return True
 
-        if connection.src.is_global and config.netflow_incoming_traffic and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
+        if srcIsExternal and config.netflow_incoming_traffic and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
             return True
 
         return False
-
 
     @staticmethod
     def encodeGeohash(latitude, longitude, precision=12):
@@ -241,40 +253,15 @@ class Processor(threading.Thread):
         self.last_registry = {}
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
 
+        for network in config.internal_networks:
+            network = ipaddress.ip_network(network)
+            if network.is_private:
+                continue
+            Helper.nonprivate_internal_networks.append(network)
+
         self.cache = Cache(self.config)
 
         influxdb.register(self.getMessurements)
-
-        #logging.info(ipaddress.ip_address("192.168.0.50").is_private)
-        #logging.info(ipaddress.ip_address("ff02::1:ff6d:914d").is_private)
-        #logging.info(ipaddress.ip_address("ff02::1:ff6d:914d").is_multicast)
-        #logging.info(ipaddress.ip_address("ff02::1:ff6d:914d").is_global)
-        #logging.info(ipaddress.ip_address("185.89.37.91").is_global)
-
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_multicast)
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_private)
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_global)
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_unspecified)
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_reserved)
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_loopback)
-        #logging.info(ipaddress.ip_address("192.168.0.255").is_link_local)
-        #logging.info("-----")
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_multicast)
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_private)
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_global)
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_unspecified)
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_reserved)
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_loopback)
-        #logging.info(ipaddress.ip_address("192.168.0.1").is_link_local)
-
-        #print(self.resolveLocation(ipaddress.ip_address("185.89.37.91")))
-
-        #print(self.resolveLocation(ipaddress.ip_address("185.89.37.91")))
-        #print(self.resolveLocation(ipaddress.ip_address("40.77.167.196")))
-        #print(self.resolveLocation(ipaddress.ip_address("80.158.67.40")))
-        #print(self.resolveLocation(ipaddress.ip_address("192.168.0.50")))
-        #print(self.resolveLocation(ipaddress.ip_address("ff02::1:ff6d:914d")))
-        #print(self.cache.getLocation(ipaddress.ip_address("239.255.255.250")))
 
     def terminate(self):
         self.cache.terminate()
@@ -461,10 +448,11 @@ class Processor(threading.Thread):
 
             label = []
 
-            extern_ip = con.src if con.src.is_global else con.dest
-            extern_hostname = con.src_hostname if con.src.is_global else con.dest_hostname
-            intern_ip = con.dest if con.src.is_global else con.src
-            intern_hostname = con.dest_hostname if con.src.is_global else con.src_hostname
+            _srcIsExternal = Helper.isExternal(con.src)
+            extern_ip = con.src if _srcIsExternal else con.dest
+            extern_hostname = con.src_hostname if _srcIsExternal else con.dest_hostname
+            intern_ip = con.dest if _srcIsExternal else con.src
+            intern_hostname = con.dest_hostname if _srcIsExternal else con.src_hostname
 
             label.append("intern_ip={}".format(intern_ip))
             label.append("intern_host={}".format(intern_hostname))
@@ -481,13 +469,14 @@ class Processor(threading.Thread):
             #        break
             label.append("extern_group={}".format(extern_group))
 
-            label.append("direction={}".format("incoming" if con.src.is_global else "outgoing"))
+            label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
 
             service = con.service
             if service == "unknown" and "speedtest" in extern_hostname:
                 service = "speedtest"
             label.append("service={}".format(service))
             label.append("port={}".format(con.dest_port))
+            label.append("_port={}".format(con.src_port))
             label.append("protocol={}".format(con.protocol_name))
             #label.append("size={}".format(con.size))
             #label.append("duration={}".format(con.duration))

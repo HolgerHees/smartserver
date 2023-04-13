@@ -295,11 +295,17 @@ class ArpScanner(_handler.Handler):
                 server_mac = f.read().strip()
         except (IOError, OSError) as e:
             pass
-        
+
+        ipv4_networks = []
+        for network in self.config.internal_networks:
+            match = re.match(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/.*", network)
+            if match:
+               ipv4_networks.append(network)
+
         while self._isRunning():
             if not self._isSuspended():
                 try:
-                    collected_arps = self._fetchArpResult()
+                    collected_arps = self._fetchArpResult(ipv4_networks)
                 except Exception as e:
                     if not self.is_running:
                         break
@@ -364,9 +370,9 @@ class ArpScanner(_handler.Handler):
                         
             self._wait(timeout)
 
-    def _fetchArpResult(self):
+    def _fetchArpResult(self, ipv4_networks):
         collected_arps = []
-        for network in self.config.networks:
+        for network in ipv4_networks:
             arp_result = Helper.arpscan(self.config.main_interface, network, self._isRunning)
             for arp_data in arp_result:
                 ip = arp_data["ip"]
