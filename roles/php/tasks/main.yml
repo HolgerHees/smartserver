@@ -46,21 +46,6 @@
       - "9000"
   notify: "restart php"
 
-#- name: prepare ferm rules
-#  set_fact:
-#    php_ferm_rules: |
-#      [
-#      "saddr {{docker_php_ip}} daddr {{docker_mysql_ip}}",
-#      "saddr {{docker_php_ip}} daddr {{docker_influxdb_ip}}",
-#      "saddr {{docker_php_ip}} daddr {{docker_redis_ip}}",
-#      "saddr {{docker_php_ip}} daddr {{docker_postfix_ip}}",
-#      "saddr {{docker_php_ip}} outerface {{default_network_interface}}"
-#      {% for network in intern_networks %}
-#        "saddr {{docker_php_ip}} daddr {{network}}",
-#      {% endfor %}
-#      ]
-#  tags: [ 'firewall_config' ]
-
 - name: allow php service
   vars:
     name: "php"
