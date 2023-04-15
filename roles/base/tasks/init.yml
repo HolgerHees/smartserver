@@ -50,10 +50,6 @@
     default_server_ip: "{{ansible_default_ipv4['address']}}"
     default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
 
-    default_server_ipv6: "{{server_ipv6}}"
-    default_server_gateway_ipv6: "{{ansible_default_ipv6['gateway'] if 'gateway' in ansible_default_ipv6 and server_ipv6 != 'None' else 'None'}}"
-    default_server_network_ipv6: "{{server_network_ipv6}}"
-
 #- name: debug
 #  debug:
 #    msg: "{{ansible_default_ipv4['network'] | ansible.utils.ipaddr('net') }}"

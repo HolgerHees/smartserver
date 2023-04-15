@@ -1,4 +1,7 @@
-# 0 => production, 1 => production
+default_server_ipv6:              "{{server_ipv6}}"
+default_server_gateway_ipv6:      "{{ansible_default_ipv6['gateway'] if 'gateway' in ansible_default_ipv6 and server_ipv6 != 'None' else 'None'}}"
+default_server_network_ipv6:      "{{server_network_ipv6}}"
+
 netgroup:                         "{{default_server_ip_r[2]}}"
 
 vpn_mobile_network:               "10.100.{{netgroup}}.0"
