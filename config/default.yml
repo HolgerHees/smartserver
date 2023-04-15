@@ -24,6 +24,7 @@ default_variables: {
     "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
 
     "intern_networks": { "default": [ "{{default_server_network}}" ] },
+    "public_networks": { "default": [] },                         # e.g. public ipv6 address ranges
     "trusted_networks": { "default": [] },
 
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network

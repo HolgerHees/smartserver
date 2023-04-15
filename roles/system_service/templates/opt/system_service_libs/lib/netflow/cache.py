@@ -4,6 +4,7 @@ import logging
 import traceback
 import time
 import socket
+import ipaddress
 
 import requests
 import json
@@ -16,13 +17,15 @@ class Cache(threading.Thread):
     TYPE_UNKNOWN = "Unknown"
     TYPE_PRIVATE = "Private"
 
-    def __init__(self, config):
+    def __init__(self, config, helper):
         threading.Thread.__init__(self)
 
         self.max_location_cache_age = 60 * 60 * 24 * 7
         self.max_hostname_cache_age = 60 * 60 * 24 * 1
 
         self.is_running = False
+
+        self.helper = helper
 
         self.queue = queue.Queue()
 
@@ -281,8 +284,12 @@ class Cache(threading.Thread):
         if hostname is None:
             self.increaseStats("hostname_fetch")
             _hostname = socket.getfqdn(_ip)
-            if ip.is_private and _hostname != _ip:
-                _hostname = _hostname.split('.', 1)[0]
+            if _hostname != _ip:
+                if not self.helper.isExternal(ip):
+                    _hostname = _hostname.split('.', 1)[0]
+            elif type(ip) is ipaddress.IPv6Address and not self.helper.isExternal(ip):
+                # don't cache internal IPv6 Addresses, because they can get a dns name soon
+                return { "data": _hostname, "time": time.time() }
             hostname = { "data": _hostname, "time": time.time() }
             with self.hostname_lock:
                 self.hostname_map[_ip] = hostname

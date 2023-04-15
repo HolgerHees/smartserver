@@ -38,7 +38,7 @@ PROMETHEUS_INTERVAL = 60
 
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
-    nonprivate_internal_networks = []
+    public_networks = []
 
     @staticmethod
     def getService(dest_port, protocol):
@@ -63,9 +63,9 @@ class Helper():
     @staticmethod
     def isExternal(address):
         if address.is_global:
-            if not Helper.nonprivate_internal_networks:
+            if not Helper.public_networks:
                 return True
-            for network in Helper.nonprivate_internal_networks:
+            for network in Helper.public_networks:
                 if address in network:
                     return False
             return True
@@ -253,13 +253,13 @@ class Processor(threading.Thread):
         self.last_registry = {}
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
 
-        for network in config.internal_networks:
+        for network in config.public_networks:
             network = ipaddress.ip_network(network)
-            if network.is_private:
-                continue
-            Helper.nonprivate_internal_networks.append(network)
+            #if network.is_private:
+            #    continue
+            Helper.public_networks.append(network)
 
-        self.cache = Cache(self.config)
+        self.cache = Cache(self.config, Helper)
 
         influxdb.register(self.getMessurements)
 

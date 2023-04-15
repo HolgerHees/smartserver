@@ -1,4 +1,5 @@
 internal_networks = ["{{intern_networks | join('","') }}"]
+public_networks = ["{{public_networks | join('","') }}"]
 main_interface = "{{default_network_interface}}"
 default_gateway_ip = "{{default_server_gateway}}"
 server_name = "{{server_name}}"
