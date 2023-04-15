@@ -48,7 +48,6 @@
     default_server_ip: "{{host_ip}}"
     default_network_interface: "{{ansible_default_ipv4['interface']}}"
     default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
-    default_server_ipv6: "{{production_ipv6 if host_ip == production_ip else staging_ipv6}}"
 
 #- name: debug
 #  debug:
