@@ -1,8 +1,6 @@
 # 0 => production, 1 => production
 netgroup:                         "{{default_server_ip_r[2]}}"
 
-default_server_ipv6:              "{{production_ipv6 if is_production else staging_ipv6}}"
-
 vpn_mobile_network:               "10.100.{{netgroup}}.0"
 vpn_mobile_subnet:                "10.100.{{netgroup}}"
 

@@ -21,9 +21,10 @@ default_variables: {
     "ssl_certificate": { "default": "selfsigned" },               # "selfsigned", "letsencrypt"
     
     "production_ip":  {},                                         # "192.168.7.50" your server ip
-    "production_ipv6": { "default": "" },                         # "fde7:1250:3eaf:10:7285:c2ff:fef3:8a30" your server ipv6
     "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
-    "staging_ipv6":   { "default": "" },                          # "fde7:1250:3eaf:20:7285:c2ff:fef3:8a30" your testserver ipv6
+
+    "server_ipv6": { "default": None },                             # "fde7:1250:3eaf:10:7285:c2ff:fef3:8a30" your server ipv6
+    "server_network_ipv6": { "default": None },                     # "fde7:1250:3eaf::/48" your networkmask for ipv6
 
     "intern_networks": { "default": [ "{{default_server_network}}" ] }, # e.g. intern ipv4 & ipv6 address ranges
     "public_networks": { "default": [] },                         # e.g. public ipv6 address ranges
