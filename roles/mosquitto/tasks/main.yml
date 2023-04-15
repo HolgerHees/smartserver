@@ -47,6 +47,8 @@
     published_ports:
      - "1883:1883"  
      - "9001:9001"  
+     - "[::]:1883:1883"
+     - "[::]:9001:9001"
   notify: "restart mosquitto"
     
 - name: add container name

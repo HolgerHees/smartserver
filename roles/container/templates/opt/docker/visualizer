@@ -126,7 +126,10 @@ for rule in iptables_rules:
     else:
         if ( rule_r[2] != "ACCEPT" and rule_r[2] != "DROP" ) or rule_r[5] == "lo":
             continue
-        #print(rule_r)
+
+        if len(rule_r) < 9:
+            continue
+
         source_ip = rule_r[7]
         target_ip = rule_r[8]
         target_port = ""

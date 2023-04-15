@@ -128,6 +128,7 @@
     published_ports:
     # - "2050:2049/tcp"
      - "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp"
+     - "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp"
   notify: "restart wireguard_cloud"
 
 #- name: clean old docker images => image does not exists

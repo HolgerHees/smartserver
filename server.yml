@@ -23,7 +23,7 @@
           - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}} ({{ansible_distribution_release}})"
           - "-------------------------------------------------------------"
           - "mode:       {{inventory_hostname}}"
-          - "server:     {{default_server_ip}}"
+          - "server:     {{default_server_ip}}{{ ', ' + default_server_ipv6 if default_server_ipv6 != '' else ''}}"
           - "gateway:    {{default_server_gateway}}"
           - "network:    {{intern_networks | join(',') }}"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'None'}}"

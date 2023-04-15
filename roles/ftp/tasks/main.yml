@@ -119,6 +119,8 @@
     published_ports:
       - "21:21"
       - "30000-30005:30000-30005"
+      - "[::]:21:21"
+      - "[::]:30000-30005:30000-30005"
   notify: "restart vsftpd"
 
 #- name: clean old docker images => image does not exists
