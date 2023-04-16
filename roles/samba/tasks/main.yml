@@ -53,15 +53,19 @@
       - '/etc/group:/etc/group:ro,z'
       - '/etc/passwd:/etc/passwd:ro,z'
       - '/etc/shadow:/etc/shadow:ro,z'
-    published_ports:
-      - "137:137/udp"
-      - "138:138/udp"
-      - "139:139/tcp"
-      - "445:445/tcp"
-      - "[::]:137:137/udp"
-      - "[::]:138:138/udp"
-      - "[::]:139:139/tcp"
-      - "[::]:445:445/tcp"
+    published_ports: |
+      [
+        "137:137/udp",
+        "138:138/udp",
+        "139:139/tcp",
+        "445:445/tcp",
+        {% if default_server_ipv6 != 'None' %}
+          "[{{default_server_ipv6}}]:137:137/udp",
+          "[{{default_server_ipv6}}]:138:138/udp",
+          "[{{default_server_ipv6}}]:137:137/tcp",
+          "[{{default_server_ipv6}}]:138:138/tcp",
+        {% endif %}
+      ]
   notify: "restart samba"
 
 - name: create systemd service

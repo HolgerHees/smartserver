@@ -44,11 +44,15 @@
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}mosquitto:/mosquitto/config:z'
-    published_ports:
-     - "1883:1883"  
-     - "9001:9001"  
-     - "[::]:1883:1883"
-     - "[::]:9001:9001"
+    published_ports: |
+      [
+        "1883:1883",
+        "9001:9001",
+        {% if default_server_ipv6 != 'None' %}
+          "[{{default_server_ipv6}}]:1883:1883",
+          "[{{default_server_ipv6}}]:9001:9001",
+        {% endif %}
+      ]
   notify: "restart mosquitto"
     
 - name: add container name

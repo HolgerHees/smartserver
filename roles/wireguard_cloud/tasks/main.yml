@@ -125,10 +125,13 @@
     networks_cli_compatible: yes
     volumes:
       - '{{global_etc}}wireguard_cloud:/etc/wireguard:z'
-    published_ports:
-    # - "2050:2049/tcp"
-     - "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp"
-     - "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp"
+    published_ports: |
+      [
+        "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+        {% if default_server_ipv6 != 'None' %}
+          "[{{default_server_ipv6}}]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+        {% endif %}
+      ]
   notify: "restart wireguard_cloud"
 
 #- name: clean old docker images => image does not exists

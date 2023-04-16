@@ -116,11 +116,15 @@
     networks:
       - name: "isolated"
     networks_cli_compatible: yes
-    published_ports:
-      - "21:21"
-      - "30000-30005:30000-30005"
-      - "[::]:21:21"
-      - "[::]:30000-30005:30000-30005"
+    published_ports: |
+      [
+        "21:21",
+        "30000-30005:30000-30005",
+        {% if default_server_ipv6 != 'None' %}
+          "[{{default_server_ipv6}}]:21:21",
+          "[{{default_server_ipv6}}]:30000-30005:30000-30005",
+        {% endif %}
+      ]
   notify: "restart vsftpd"
 
 #- name: clean old docker images => image does not exists

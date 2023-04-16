@@ -48,6 +48,17 @@
       {% endfor %}
       ]
 
+- name: prepare pihole networks
+  set_fact:
+    dlna_networks: |
+      {
+        "name": "macvlan",
+        "ipv4_address": "{{dlna_ip}}"
+        {% if dlna_ipv6 != 'None' %}
+            , "ipv6_address": "{{dlna_ipv6}}"
+        {% endif %}
+      }
+
 - name: create docker container
   docker_container:
     name: minidlna
@@ -64,8 +75,7 @@
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
-      - name: "macvlan"
-        ipv4_address: "{{dlna_ip}}"
+      - "{{dlna_networks}}"
     networks_cli_compatible: yes
     volumes: "{{minidlna_volumes}}"
     exposed_ports:
