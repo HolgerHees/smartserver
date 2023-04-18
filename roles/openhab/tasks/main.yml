@@ -507,10 +507,21 @@
   import_tasks: roles/apache_webui/shared/add_webui.yml
   when: "habpanel_result.rc == 0"
 
+#- name: add admin web user
+#  vars:
+#    username: "{{vault_openhab_tablet_username}}"
+#    password: "{{vault_openhab_tablet_password}}"
+#    fullname: "Openhab Tablet User"
+#    usergroups: []
+#  import_tasks: roles/user/shared/add_web_user.yml
+#  tags: [ 'user' ]
+
 - name: copy apache vhost
   vars:
     sub_domain: "openhab"
     usergroup: "user"
+#    additional_users:
+#      - "{{vault_openhab_tablet_username}}"
     include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
   import_tasks: roles/apache/shared/add_vhost.yml
 

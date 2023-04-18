@@ -80,17 +80,14 @@ TZ=`tail -1 "/usr/share/zoneinfo/$TIMEZONE"`
 echo "Refresh package lists ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg update > /dev/null"
 
-echo "Install core packages ..."
-sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install mc htop strace tcpdump ntpclient openssh-sftp-server > /dev/null"
-
-if [[ "$ADDITIONAL_PACKAGES" != "" ]]; then
-  echo "Install custom packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install" $ADDITIONAL_PACKAGES " > /dev/null"
+if [[ "$INSTALL_PACKAGES" != "" ]]; then
+  echo "Install packages ..."
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install" $INSTALL_PACKAGES " > /dev/null"
 fi
 
-if [ -f "$SOURCE/$IP/etc/config/snmpd" ]; then
-  echo "Install snmpd packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install snmpd > /dev/null"
+if [[ "$REMOVE_PACKAGES" != "" ]]; then
+  echo "Uninstall packages ..."
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg uninstall" $REMOVE_PACKAGES " > /dev/null"
 fi
 
 if [[ "$IS_AP" == 1 ]]; then
@@ -117,6 +114,15 @@ sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set system.cfg01e48a.zon
 
 echo "Force web redirect ..."
 sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "uci set uhttpd.main.redirect_https='on' & uci commit;"
+
+if [[ "$ENABLED_SERVICES" != "" ]]; then
+  for SERVICE in "$ENABLED_SERVICES";
+  do
+    echo "Enable and start $SERVICE ..."
+    sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "/etc/init.d/$SERVICE enable & /etc/init.d/$SERVICE start"
+  done
+fi
+
 
 #/etc/init.d/rpcd restart
 #/etc/init.d/snmpd restart

@@ -1,0 +1,14 @@
+config ipv6-to-host 'main'
+	option interface 'br-lan'
+
+	option leases '/tmp/dhcp.leases'
+ 	option dhcp_config '/var/etc/dnsmasq.conf.cfg01411c'
+
+ 	option dynamic_target '/tmp/hosts/ipv6tohosts.dynamic'
+ 	option static_target '/tmp/hosts/ipv6tohosts.static'
+
+ 	# '0' => error
+ 	# '1' => warn
+ 	# '2' => info
+ 	# '3' => debug
+ 	option loglevel '2'

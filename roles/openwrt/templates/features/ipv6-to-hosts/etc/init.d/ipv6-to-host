@@ -1,0 +1,83 @@
+#!/bin/sh /etc/rc.common
+
+CONFIGURATION=ipv6-to-host
+
+USE_PROCD=1
+#START=95
+#STOP=01
+
+add_host() {
+	local cfg="$1"
+	local static_target="$2"
+
+    local name
+    local option
+
+    config_get name "$cfg" name
+	[ -n "$name" ] || return 0
+
+	config_get option "$cfg" ipv6
+	for ipv6 in $option; do
+        [ -n "$ipv6" ] || continue
+        printf "$ipv6 $name\n" >> $static_target
+    done
+}
+
+filter_host() {
+    local cfg="$1" func="$2" match_cfg="$3" static_target="$4" found_cfg
+
+	# use entry when no instance entry set, or if it matches
+	config_get found_cfg "$cfg" "instance"
+	if [ -z "$found_cfg" ] || [ "$found_cfg" = "$match_cfg" ]; then
+		$func $cfg $static_target
+	fi
+}
+
+start_service() {
+
+    config_load "${CONFIGURATION}"
+
+    local interface
+    local leases
+    local dhcp_config
+    local dynamic_target
+    local static_target
+    local loglevel
+
+    config_get interface main interface
+    config_get leases main leases
+    config_get dhcp_config main dhcp_config
+    config_get dynamic_target main dynamic_target
+    config_get static_target main static_target
+    config_get loglevel main loglevel
+
+    echo "# auto-generated config file from ipv6-to-hosts" > $static_target
+
+    # Reading config
+    config_load "dhcp"
+
+    config_foreach filter_host host add_host "dhcp" $static_target
+
+    procd_open_instance
+    procd_set_param command /etc/ipv6-to-hosts/ipv6-to-hosts.sh $interface $leases $dhcp_config $static_target $dynamic_target $loglevel
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_set_param term_timeout 5
+    procd_close_instance
+}
+
+stop_service() {
+    PID=$(pidof ipv6-to-hosts.sh)
+    if [[ ! -z $PID ]]; then
+        PPIDs=$(pgrep -P $PID)
+        for _PID in $PPIDs;
+        do
+            kill -SIGTERM $_PID
+        done
+
+        kill -SIGTERM $PID
+    fi
+
+    #killall ipv6-to-hosts.sh 2> /dev/null
+    #killall tcpdump 2> /dev/null
+}
