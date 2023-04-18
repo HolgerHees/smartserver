@@ -16,8 +16,9 @@
 
 # **** PREPARE & BUILD CONFIGS ****
 - name: check for custom files
-  shell: "find {{config_path}}vault/openwrt/ -type f"
+  shell: "find {{config_path}}vault/openwrt/ -type f 2>/dev/null"
   changed_when: no
+  failed_when: no
   delegate_to: 127.0.0.1
   register: customfile_result
 
