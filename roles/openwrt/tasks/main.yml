@@ -1,7 +1,8 @@
 - name: prepare default configs
   set_fact:
     default_packages: [ "mc", "htop", "strace", "tcpdump", "ntpclient", "openssh-sftp-server" ]
-    default_services: [ "rpcd", "snmpd" ]
+    default_features: [ "rpcd", "snmpd" ]
+    device_files: {}
 
 - name: prepare needed folder
   file:
@@ -15,111 +16,84 @@
     - { user: "1000", group: "1000", mode: "u=rwx,g=rx,o=", path: "{{global_etc}}openwrt/ap/" }
 
 # **** PREPARE & BUILD CONFIGS ****
-- name: check for custom files
+- name: prepare used services
+  set_fact:
+    devices: |
+      {
+        {% for device in openwrt_devices %}
+          '{{device.host}}': {
+             'host': '{{device.host}}', 'name': '{{device.name}}', 'is_ap': {{'1' if 'ap' in device.config.roles else '0'}},
+             'features': [
+               {% for feature in default_features %}
+                 { 'name': '{{feature}}', 'cfg': 'service_config_{{feature}}'},
+               {% endfor %}
+               {% if device.config.features is defined %}{% for feature in device.config.features %}
+                 { 'name': '{{feature}}', 'cfg': 'service_config_{{feature}}'},
+               {% endfor %}{% endif %}
+             ]
+           },
+        {% endfor %}
+      }
+
+# check feature files
+- name: check for custom host data
   shell: "find {{config_path}}vault/openwrt/ -type f 2>/dev/null"
   changed_when: no
   failed_when: no
   delegate_to: 127.0.0.1
-  register: customfile_result
+  register: custom_feature_result
 
-- name: check for service files
+- name: check for core feature data
   shell: "find roles/openwrt/templates/features/ -type f"
   changed_when: no
   delegate_to: 127.0.0.1
-  register: servicefile_result
+  register: core_feature_result
 
-# load all (default & devices) service configs
-- name: include service configs
+# include feature configs
+- name: include custom feature configs
   include_vars:
-    file: "roles/openwrt/templates/features/{{item}}/config.yml"
-    name: "service_config_{{item}}"
-  with_items:  |
-      [
-        {% for service in default_services %}
-            '{{service}}',
-        {% endfor %}
-        {% for device in openwrt_devices %}{% if device.config.services is defined %}{% for service in device.config.services %}
-            '{{service}}',
-        {% endfor %}{% endif %}{% endfor %}
-      ]
+    file: "{{config_path}}vault/openwrt/config.yml"
+    name: "{{item.value['cfg']}}"
+  when: "config_path + 'vault/openwrt/' + item.value['name'] + '/config.yml' in custom_feature_result.stdout_lines"
+  with_dict:  |
+    {
+      {% for host in devices %}{% for feature in devices[host]['features'] %}
+          '{{feature['name']}}': {{feature | to_json}},
+      {% endfor %}{% endfor %}
+    }
 
-- name: prepare device configs 1/3
-  set_fact:
-    device_custom_files: |
-      {
-        {% for device in openwrt_devices %}
-          '{{device.host}}': {
-            {% for customfile in customfile_result.stdout_lines %}
-              {% if '/' + device.host + '/' in customfile or 'shared_ap' in customfile %}
-                '{{ customfile | replace( config_path + 'vault/openwrt/' + ( device.host if '/' + device.host + '/' in customfile else 'shared_ap' ) + '/','') }}',
-              {% endif %}
-            {% endfor %}
-          },
-        {% endfor %}
-      }
-    device_service_names: |
-      {
-        {% for device in openwrt_devices %}
-            '{{device.host}}': [
-                {% for service in default_services %}
-                    { 'name': '{{service}}', 'cfg': 'service_config_{{service}}' },
-                {% endfor %}
-                {% if device.config.services is defined %}{% for service in device.config.services %}
-                    { 'name': '{{service}}', 'cfg': 'service_config_{{service}}' },
-                {% endfor %}{% endif %}
-            ],
-        {% endfor %}
-      }
+- name: include core feature configs
+  include_vars:
+    file: "roles/openwrt/templates/features/{{item.value['name']}}/config.yml"
+    name: "{{item.value['cfg']}}"
+  when: "'roles/openwrt/templates/features/' + item.value['name'] + '/config.yml' in core_feature_result.stdout_lines"
+  with_dict:  |
+    {
+      {% for host in devices %}{% for feature in devices[host]['features'] %}
+          '{{feature['name']}}': {{feature | to_json}},
+      {% endfor %}{% endfor %}
+    }
 
-#- name: debug
-#  debug:
-#    msg: "{{device_service_names}}"
-
-- name: prepare device configs 2/3
+- name: prepare removed packages
   set_fact:
     device_remove_packages: |
       {
         {% for device in openwrt_devices %}
           '{{device.host}}': [
-              {% if device.config.remove_packages is defined %}{% for package in device.config.remove_packages %}
-                  '{{package}}',
-              {% endfor %}{% endif %}
-              {% for service in device_service_names[device.host] %}
-                 {% if 'remove_packages' in vars[service['cfg']] %}{% for package in vars[service['cfg']]['remove_packages'] %}
+              {% for feature in devices[device.host]['features'] %}
+                 {% if feature['cfg'] in vars and 'remove_packages' in vars[feature['cfg']] %}{% for package in vars[feature['cfg']]['remove_packages'] %}
                     '{{package}}',
                   {% endfor %}{% endif %}
               {% endfor %}
+              {% if device.config.remove_packages is defined %}{% for package in device.config.remove_packages %}
+                  '{{package}}',
+              {% endfor %}{% endif %}
           ],
         {% endfor %}
       }
 
-- name: prepare device configs 3/3
+- name: prepare installed packages
   set_fact:
-    device_files: |
-      {
-        {% for device in openwrt_devices %}
-          '{{device.host}}': [
-                {% for customfile in customfile_result.stdout_lines %}
-                  {% if '/' + device.host + '/' in customfile or ( 'shared_ap' in customfile and 'ap' in device.config.roles ) %}
-                      {
-                          'host': '{{device.host}}', 'name': '{{device.name}}', 'email': "{{root_email}}", 'is_ap': {{'1' if 'ap' in device.config.roles else '0'}},
-                          'src': '{{customfile}}', 'filename': '{{ customfile | replace( config_path + 'vault/openwrt/' + ( device.host if '/' + device.host + '/' in customfile else 'shared_ap' ) + '/','') }}'
-                      },
-                  {% endif %}
-                {% endfor %}
-                {% for service in device_service_names[device.host] %}
-                    {% for servicefile in servicefile_result.stdout_lines %}
-                      {% if 'config.yml' not in servicefile and 'roles/openwrt/templates/features/' + service['name'] + '/' in servicefile and servicefile | regex_replace( 'roles/openwrt/templates/features/' + service['name'] + '/','') not in device_custom_files %}
-                          {
-                              'host': '{{device.host}}', 'name': '{{device.name}}', 'email': "{{root_email}}", 'is_ap': {{'1' if 'ap' in device.config.roles else '0'}},
-                              'src': '{{servicefile}}', 'filename': '{{servicefile | regex_replace( 'roles/openwrt/templates/features/' + service['name'] + '/','') }}'
-                          },
-                      {% endif %}
-                    {% endfor %}
-                {% endfor %}
-            ],
-        {% endfor %}
-      }
     device_install_packages: |
       {
         {% for device in openwrt_devices %}
@@ -127,25 +101,29 @@
               {% for package in default_packages %}{% if package not in device_remove_packages[device.host] %}
                   '{{package}}',
               {% endif %}{% endfor %}
-              {% if device.config.install_packages is defined %}{% for package in device.config.install_packages %}
-                  '{{package}}',
-              {% endfor %}{% endif %}
-              {% for service in device_service_names[device.host] %}
-                  {% if 'install_packages' in vars[service['cfg']] %}{% for package in vars[service['cfg']]['install_packages'] %}
+              {% for feature in devices[device.host]['features'] %}
+                  {% if feature['cfg'] in vars and 'install_packages' in vars[feature['cfg']] %}{% for package in vars[feature['cfg']]['install_packages'] %}
                     '{{package}}',
                   {% endfor %}{% endif %}
               {% endfor %}
+              {% if device.config.install_packages is defined %}{% for package in device.config.install_packages %}
+                  '{{package}}',
+              {% endfor %}{% endif %}
           ],
         {% endfor %}
       }
 
-#- name: debug
-#  debug:
-#    msg: "{{device_service_names}}"
-
-#- name: debug
-#  debug:
-#    msg: "{{device_files}}"
+# process feature files
+- name: process file data
+  vars:
+    device_list: "{{devices.values() | list}}"
+    custom_files: "{{custom_feature_result.stdout_lines}}"
+    core_files: "{{core_feature_result.stdout_lines}}"
+  include_tasks: process_device.yml
+  with_items:
+    - { path: "{{config_path}}vault/openwrt/", files: "custom_files", type: "host" }
+    - { path: "{{config_path}}vault/openwrt/", files: "custom_files", type: "features" }
+    - { path: "roles/openwrt/templates/features/", files: "core_files", type: "features" }
 
 # **** DEPLOYMENT CONFIG ****
 - name: synchronize deployment script
@@ -168,56 +146,50 @@
     remove_packages: "{{device_remove_packages[item.host]}}"
     enabled_services: |
       [
-          {% for service in device_service_names[item.host] %}{% if 'noinitd' not in vars[service['cfg']] or not vars[service['cfg']]['noinitd'] %}
-              '{{service['name']}}',
-          {% endif %}{% endfor %}
+        {% for feature in devices[item.host]['features'] %}{% if feature['cfg'] in vars and 'initd' in vars[feature['cfg']] and vars[feature['cfg']]['initd'] %}
+          '{{feature['name']}}',
+        {% endif %}{% endfor %}
       ]
     hostname: "{{item.name | lower}}"
-    is_ap: "{{ '1' if 'ap' in item.config.roles else '0'}}"
+    is_ap: "{{ item.is_ap }}"
   template:
     src: "templates/deploy.env"
     dest: "{{global_etc}}openwrt/ap/{{item.host}}.env"
     owner: "root"
     group: "root"
     mode: "u=rw,g=r,o="
-  with_items: "{{openwrt_devices}}"
+  with_items: "{{devices.values() | list}}"
 
 # **** TEMPLATE CONFIGS ****
-- name: prepare template configs
-  set_fact:
-    all_device_files: |
-      [
-        {% for host in device_files %}
-          {% for file in device_files[host] %}
-            { 'host': '{{file.host}}', 'name': '{{file.name}}', 'email': "{{file.email}}", 'is_ap': '{{file.is_ap}}', 'src': '{{file.src}}', 'dest': '{{file.filename}}' },
-          {% endfor %}
-        {% endfor %}
-      ]
-
-    all_device_folder: |
-      [
-        {% for host in device_files %}
-          {% for file in device_files[host] %}
-            '{{file.host}}/{{file.filename | dirname}}',
-          {% endfor %}
-        {% endfor %}
-      ]
-
 - name: check template paths
   file:
     dest: "{{global_etc}}openwrt/ap/{{item}}"
     state: "directory"
-  with_items: "{{all_device_folder | unique}}"
+  with_items: |
+    {
+      {% for host in device_files %}{% for file in device_files[host].values() %}
+          '{{file.host}}/{{file.filename | dirname}}' : 1,
+      {% endfor %}{% endfor %}
+    }
 
 - name: copy template configs
+  vars:
+    device_email: "{{root_email}}"
+    device_name:  "{{item['name']}}"
+    device_is_ap: "{{devices[item.host]['is_ap']}}"
   template:
     src: "{{item.src}}"
-    dest: "{{global_etc}}openwrt/ap/{{item.host}}/{{item.dest}}"
+    dest: "{{global_etc}}openwrt/ap/{{item.host}}/{{item.filename}}"
     owner: "root"
     group: "root"
     mode: "u=rwX,g=rX,o="
-  changed_when: no
-  with_items: "{{all_device_files}}"
+#  changed_when: no
+  with_items: |
+    [
+      {% for host in device_files %}{% for file in device_files[host].values() %}
+          {{file | to_json }},
+      {% endfor %}{% endfor %}
+    ]
 
 # **** WEB UI ****
 - name: register webui

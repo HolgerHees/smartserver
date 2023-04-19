@@ -1,2 +1,3 @@
 # https://openwrt.org/docs/guide-user/services/ddns/client
 install_packages: [ "ddns-scripts", "luci-app-ddns", "ca-certificates", "curl", "bind-host" ]
+initd: yes

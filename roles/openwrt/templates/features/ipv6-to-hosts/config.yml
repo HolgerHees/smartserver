@@ -1,1 +1,2 @@
 install_packages: [ "tcpdump", "dnsmasq" ]
+initd: yes

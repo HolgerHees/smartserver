@@ -10,5 +10,5 @@ config login
 
 config login
         option username '{{vault_openwrt_api_username}}'
-        option password '{{vault_openwrt_api_password | password_hash('md5')}}'
+        option password '{{vault_openwrt_api_password | password_hash('md5', default_password_salt[0:8])}}'
         list read api 
