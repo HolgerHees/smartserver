@@ -345,14 +345,14 @@
     }
   import_tasks: roles/update_service/shared/add_software.yml
 
-- name: apply patches
-  copy:
-    src: "templates/patches/{{item}}"
-    dest: "{{htdocs_path}}nextcloud/{{item}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  with_items:
-    - "lib/private/Authentication/Token/PublicKeyTokenProvider.php"
-    - "apps/notes/lib/Controller/SettingsController.php"
+#- name: apply patches
+#  copy:
+#    src: "templates/patches/{{item}}"
+#    dest: "{{htdocs_path}}nextcloud/{{item}}"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#    mode: 0640
+#  with_items:
+#    - "lib/private/Authentication/Token/PublicKeyTokenProvider.php" # https://github.com/nextcloud/server/commit/6881d2f2f15976514cc52d6ea49ff09c5bb81d2b
+#    - "apps/notes/lib/Controller/SettingsController.php" # https://github.com/nextcloud/notes/commit/9246308612ab883d5e74c063acc13463216c4a3c
 
