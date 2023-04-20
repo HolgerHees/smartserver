@@ -89,7 +89,7 @@ class ProcessWatcher(watcher.Watcher):
         self.is_running = False
         self.event.set()
         
-    def refresh():
+    def refresh(self):
         self._refresh()
         self.event.set()
 
