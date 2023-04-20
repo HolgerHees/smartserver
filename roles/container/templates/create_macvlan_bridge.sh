@@ -9,4 +9,4 @@ ip addr add {{default_server_ip}}/32 dev mac0
 ip link set mac0 up
 ip route add {{macvlan_range}} dev mac0
 
-sysctl -w net.ipv6.conf.mac0.autoconf=0
+sysctl -w net.ipv6.conf.mac0.autoconf=0 > /dev/null

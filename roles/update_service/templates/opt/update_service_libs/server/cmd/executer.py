@@ -64,14 +64,13 @@ class CmdExecuter(watcher.Watcher):
         self.external_cmd_type_requested = datetime.now() - timedelta(hours=1)
 
         self.is_running = True
-        self.condition = threading.Condition()
+        self.event = threading.Event()
         self.thread = threading.Thread(target=self._checkExternalCmdTypes, args=())
         self.thread.start()
 
     def terminate(self):
-        with self.condition:
-            self.is_running = False
-            self.condition.notifyAll()
+        self.is_running = False
+        self.event.set()
             
     def isInterruptableJob(self,cmd_type):
         return cmd_type in [ "system_reboot", "daemon_restart" ]
@@ -303,10 +302,11 @@ class CmdExecuter(watcher.Watcher):
         return 0
     
     def _checkExternalCmdTypes(self):
-        with self.condition:
-            while self.is_running:
-                self._refreshExternalCmdType()
-                self.condition.wait( 1 if (datetime.now() - self.external_cmd_type_requested).total_seconds() < 10 else 60)
+        while self.is_running:
+            self._refreshExternalCmdType()
+            threading.Event()
+            self.event.wait( 1 if (datetime.now() - self.external_cmd_type_requested).total_seconds() < 10 else 60)
+            self.event.clear()
                 
     def _refreshExternalCmdType(self): 
         if not self.isDaemonJobRunning():
@@ -327,13 +327,13 @@ class CmdExecuter(watcher.Watcher):
                                 break
                 
                 if external_cmd_type is None and self.external_cmd_type is not None:
-                    self.process_watcher.refresh()
+                    self.process_watcher.refresh( datetime.now() + timedelta(minutes=1) ) # prioritized "reboot state" refresh for one more minute
 
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
         else:
             if self.external_cmd_type is not None:
-                self.process_watcher.refresh()
+                self.process_watcher.refresh( datetime.now() + timedelta(minutes=1) ) # prioritized "reboot state" refresh for one more minute
 
             self.external_cmd_type = None
             self.external_cmd_type_pid = None
@@ -346,6 +346,5 @@ class CmdExecuter(watcher.Watcher):
             self._refreshExternalCmdType()
         else:
             if (self.external_cmd_type_requested - self.external_cmd_type_refreshed).total_seconds() > 2:
-                with self.condition:
-                    self.condition.notifyAll()
+                self.event.set()
         return self.external_cmd_type
