@@ -200,7 +200,11 @@ default_variables: {
 
     "librenms_poller_interval": { "default": 5 },                 # interval in minutes
 
-    "vault_wifi_guest_networks": { "default": [] },
+    "vault_wifi_networks": { "default": {} },
+    # {
+    #     test1: { password: "1234", type: "public" },
+    #     test2: { password: "3456", type: "intern" }
+    # }
 
     "vault_librenms_mysql_username": { "default": "librenms" },
     "vault_librenms_mysql_password": { 

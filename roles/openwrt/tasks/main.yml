@@ -37,7 +37,7 @@
 
 # check feature files
 - name: check for custom host data
-  shell: "find {{config_path}}vault/openwrt/ -type f 2>/dev/null"
+  shell: "find {{config_path}}templates/openwrt/ -type f 2>/dev/null"
   changed_when: no
   failed_when: no
   delegate_to: 127.0.0.1
@@ -50,27 +50,21 @@
   register: core_feature_result
 
 # include feature configs
-- name: include custom feature configs
+- name: include feature configs
   include_vars:
-    file: "{{config_path}}vault/openwrt/config.yml"
+    file: "{{item.value['src']}}"
     name: "{{item.value['cfg']}}"
-  when: "config_path + 'vault/openwrt/' + item.value['name'] + '/config.yml' in custom_feature_result.stdout_lines"
+#  when: "'roles/openwrt/templates/features/' + item.value['name'] + '/config.yml' in core_feature_result.stdout_lines"
   with_dict:  |
     {
       {% for host in devices %}{% for feature in devices[host]['features'] %}
-          '{{feature['name']}}': {{feature | to_json}},
-      {% endfor %}{% endfor %}
-    }
 
-- name: include core feature configs
-  include_vars:
-    file: "roles/openwrt/templates/features/{{item.value['name']}}/config.yml"
-    name: "{{item.value['cfg']}}"
-  when: "'roles/openwrt/templates/features/' + item.value['name'] + '/config.yml' in core_feature_result.stdout_lines"
-  with_dict:  |
-    {
-      {% for host in devices %}{% for feature in devices[host]['features'] %}
-          '{{feature['name']}}': {{feature | to_json}},
+      {% if config_path + 'templates/openwrt/' + feature['name'] + '/config.yml' in custom_feature_result.stdout_lines %}
+          '{{feature['name']}}': { 'cfg': '{{feature['cfg']}}', 'src': '{{ config_path + 'templates/openwrt/' + feature['name'] + '/config.yml' }}' },
+      {% elif 'roles/openwrt/templates/features/' + feature['name'] + '/config.yml' in core_feature_result.stdout_lines %}
+          '{{feature['name']}}': { 'cfg': '{{feature['cfg']}}', 'src': '{{ 'roles/openwrt/templates/features/' + feature['name'] + '/config.yml' }}' },
+      {% endif %}
+
       {% endfor %}{% endfor %}
     }
 
@@ -121,8 +115,8 @@
     core_files: "{{core_feature_result.stdout_lines}}"
   include_tasks: process_device.yml
   with_items:
-    - { path: "{{config_path}}vault/openwrt/", files: "custom_files", type: "host" }
-    - { path: "{{config_path}}vault/openwrt/", files: "custom_files", type: "features" }
+    - { path: "{{config_path}}templates/openwrt/", files: "custom_files", type: "host" }
+    - { path: "{{config_path}}templates/openwrt/", files: "custom_files", type: "features" }
     - { path: "roles/openwrt/templates/features/", files: "core_files", type: "features" }
 
 # **** DEPLOYMENT CONFIG ****
