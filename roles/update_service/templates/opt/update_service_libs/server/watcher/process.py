@@ -2,6 +2,7 @@ import threading
 from datetime import datetime, timedelta
 import re
 import logging
+import time
 
 from smartserver.processlist import Processlist
 
@@ -20,7 +21,8 @@ class ProcessWatcher(watcher.Watcher):
         
         self.is_running = True
         self.last_refresh = self.last_cleanup = datetime.now() - timedelta(hours=24) # to force a full refresh
-        self.prioritized_reboot_state_refresh_until = None
+
+        self.prioritized_state_refresh_after_reboot = ( datetime.now() + timedelta(minutes=5) ) if time.monotonic() < 300 else None
         
         self.is_reboot_needed_by_core_update = False
         self.system_reboot_modified = self.getStartupTimestamp()
@@ -36,7 +38,7 @@ class ProcessWatcher(watcher.Watcher):
 
         self.thread = threading.Thread(target=self.checkProcesses, args=())
         self.thread.start()
-        
+
     def process(self, outdated_processes):
         is_reboot_needed = False
         for pid in outdated_processes:
@@ -87,9 +89,7 @@ class ProcessWatcher(watcher.Watcher):
         self.is_running = False
         self.event.set()
         
-    def refresh(self, prioritized_reboot_state_refresh_until=None):
-        self.prioritized_reboot_state_refresh_until = prioritized_reboot_state_refresh_until
-
+    def refresh():
         self._refresh()
         self.event.set()
 
@@ -112,17 +112,16 @@ class ProcessWatcher(watcher.Watcher):
             self.last_refresh = self.last_cleanup = datetime.now()
 
     def _cleanupRequired(self):
-        return self.prioritized_reboot_state_refresh_until is not None or len(self.outdated_processes) > 0
+        return self.prioritized_state_refresh_after_reboot is not None or len(self.outdated_processes) > 0
 
     def _cleanupRebootState(self):
-        if self.prioritized_reboot_state_refresh_until is None:
+        if self.prioritized_state_refresh_after_reboot is None:
             return
 
-        if self.is_reboot_needed_by_core_update and datetime.now() < self.prioritized_reboot_state_refresh_until:
-            with self.lock:
-                self._refreshRebootState()
-        else:
-            self.prioritized_reboot_state_refresh_until = None
+        if self.is_reboot_needed_by_core_update:
+            if datetime.now() < self.prioritized_state_refresh_after_reboot:
+                with self.lock:
+                    self._refreshRebootState()
 
     def _cleanupPIDs(self):
         if len(self.outdated_processes) == 0:
@@ -145,6 +144,9 @@ class ProcessWatcher(watcher.Watcher):
             self.is_reboot_needed_by_core_update = is_reboot_needed_by_core_update
             self.system_reboot_modified = self.getNowAsTimestamp()
 
+        if not self.is_reboot_needed_by_core_update:
+            self.prioritized_state_refresh_after_reboot = None
+
     def getOudatedProcesses(self):
         return list(self.outdated_processes.values())
       
@@ -155,6 +157,9 @@ class ProcessWatcher(watcher.Watcher):
         return self.is_update_service_outdated
 
     def isRebootNeededByCoreUpdate(self):
+        if self.prioritized_state_refresh_after_reboot is not None:
+            return False
+
         return self.is_reboot_needed_by_core_update
 
     def isRebootNeededByOutdatedProcesses(self):

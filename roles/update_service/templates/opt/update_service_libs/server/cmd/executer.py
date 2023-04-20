@@ -327,13 +327,13 @@ class CmdExecuter(watcher.Watcher):
                                 break
                 
                 if external_cmd_type is None and self.external_cmd_type is not None:
-                    self.process_watcher.refresh( datetime.now() + timedelta(minutes=1) ) # prioritized "reboot state" refresh for one more minute
+                    self.process_watcher.refresh()
 
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
         else:
             if self.external_cmd_type is not None:
-                self.process_watcher.refresh( datetime.now() + timedelta(minutes=1) ) # prioritized "reboot state" refresh for one more minute
+                self.process_watcher.refresh()
 
             self.external_cmd_type = None
             self.external_cmd_type_pid = None
