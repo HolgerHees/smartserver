@@ -26,9 +26,6 @@ vault_nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2
 vault_nextcloud_mysql_password: "default123"
 vault_nextcloud_admin_password: "default123"
 
-vault_onlyoffice_shared_key: "qwe0983yxcxy435"
-vault_onlyoffice_mysql_password: "default123"
-
 vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
 vault_openhab_mysql_password: "default123"
 
