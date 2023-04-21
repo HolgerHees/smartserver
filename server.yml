@@ -23,8 +23,8 @@
           - "os-name:    {{ansible_distribution}} {{ansible_distribution_version}} ({{ansible_distribution_release}})"
           - "-------------------------------------------------------------"
           - "mode:       {{inventory_hostname}}"
-          - "server:     {{default_server_ip}}{{ ', ' + default_server_ipv6 if default_server_ipv6 != 'None' else ''}}"
-          - "gateway:    {{default_server_gateway}}{{ ', ' + default_server_gateway_ipv6 if default_server_gateway_ipv6 != 'None' else ''}}"
+          - "server:     {{default_server_ip}}{{ ', ' + default_server_ipv6 | default('')}}"
+          - "gateway:    {{default_server_gateway}}{{ ', ' + default_server_gateway_ipv6 | default('')}}"
           - "network:    {{intern_networks | join(', ') }}"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'None'}}"
           - "arpha:      {{default_server_arpa}}"
@@ -33,6 +33,17 @@
           - "vault:      {{'encrypted' if has_encrypted_vault else 'plain'}}"
           - "production: {{ 'active' if is_production else 'inactive' }}"
       tags: always
+
+#    - name: debug
+#      set_fact:
+#        test: "{{item}}"
+#      with_items: |
+#        [
+#          {% for name in vars['default_variables'] %}{% if name in vars %}
+#            '{{name}} => {{lookup('vars', name )}}',
+#          {% endif %}{% endfor %}
+#        ]
+#      tags: always
 
     # needed by all roles which needs to register their own fluentd handler
     # search for "import_tasks: roles/fluentd/shared/add_config.yml" to see which ones
@@ -90,7 +101,7 @@
 
     - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
 
-    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip != 'None'" }         # adblock server                                                    [docker,user:root]
+    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip is defined" }         # adblock server                                                    [docker,user:root]
 
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 
@@ -102,7 +113,7 @@
 
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 
-    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ], when: "vault_ftp_username != 'None'" } # ftp file server for camera picture upload and cleanup        [docker,user:ftp]
+    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ], when: "vault_ftp_username is defined" } # ftp file server for camera picture upload and cleanup        [docker,user:ftp]
 
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
@@ -145,7 +156,7 @@
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
     - { import_role: { name: nextcloud_libreoffice }, tags: [ 'nextcloud_libreoffice' ] }        # office editor                                                     [docker,user:106|108]
 
-    - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_ip != 'None' and ( dlna_volumes | length ) > 0" } # dlna media server           [docker,user:wwwrun|apache]
+    - { import_role: { name: minidlna }, tags: [ 'minidlna', 'alpine' ], when: "dlna_ip is defined and ( dlna_volumes | length ) > 0" } # dlna media server           [docker,user:wwwrun|apache]
      
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools

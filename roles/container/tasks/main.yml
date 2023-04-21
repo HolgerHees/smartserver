@@ -292,14 +292,14 @@
 - name: create macvlan network
   docker_network:
     name: 'macvlan'
-    enable_ipv6: "{{ 'true' if default_server_network_ipv6 != 'None' and default_server_gateway_ipv6 != 'None' else 'false' }}"
+    enable_ipv6: "{{ 'true' if default_server_network_ipv6 is defined and default_server_gateway_ipv6 is defined else 'false' }}"
     driver: macvlan
     driver_options:
       parent: '{{default_network_interface}}'
     ipam_config: |
       [
         { "subnet": "{{default_server_network}}", "gateway": "{{default_server_gateway}}" }
-        {% if default_server_network_ipv6 != 'None' and default_server_gateway_ipv6 != 'None' %}
+        {% if default_server_network_ipv6 is defined and default_server_gateway_ipv6 is defined %}
             , { "subnet": "{{default_server_network_ipv6}}", "gateway": "{{default_server_gateway_ipv6}}" }
         {% endif %}
       ]

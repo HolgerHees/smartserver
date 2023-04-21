@@ -1,5 +1,5 @@
-software_check_email = {{ "'" + update_service_software_check_email + "'" if update_service_software_check_email != 'None' else 'None'}}
-update_check_email = {{ "'" + update_service_system_check_email + "'" if update_service_system_check_email != 'None' else 'None'}}
+software_check_email = {{ "'" + update_service_software_check_email + "'" if update_service_software_check_email is defined else 'None'}}
+update_check_email = {{ "'" + update_service_system_check_email + "'" if update_service_system_check_email is defined else 'None'}}
 
 server_host = "{{server_domain}}"
 
@@ -28,7 +28,7 @@ deployment_directory = "{{deployment_path}}"
 git_remote = "{{vault_deployment_config_git}}"
 
 global_config = { 
-  "github_access_token": "{{vault_deployment_token_git if vault_deployment_token_git != 'None' else ''}}"
+  "github_access_token": "{{vault_deployment_token_git if vault_deployment_token_git is defined else ''}}"
 }
 
 os_type = "{{os_type}}"

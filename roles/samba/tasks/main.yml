@@ -59,7 +59,7 @@
         "138:138/udp",
         "139:139/tcp",
         "445:445/tcp",
-        {% if default_server_ipv6 != 'None' %}
+        {% if default_server_ipv6 is defined %}
           "[{{default_server_ipv6}}]:137:137/udp",
           "[{{default_server_ipv6}}]:138:138/udp",
           "[{{default_server_ipv6}}]:137:137/tcp",

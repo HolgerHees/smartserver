@@ -128,7 +128,7 @@
     published_ports: |
       [
         "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
-        {% if default_server_ipv6 != 'None' %}
+        {% if default_server_ipv6 is defined %}
           "[{{default_server_ipv6}}]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
         {% endif %}
       ]

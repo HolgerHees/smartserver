@@ -48,7 +48,7 @@
       [
         "1883:1883",
         "9001:9001",
-        {% if default_server_ipv6 != 'None' %}
+        {% if default_server_ipv6 is defined %}
           "[{{default_server_ipv6}}]:1883:1883",
           "[{{default_server_ipv6}}]:9001:9001",
         {% endif %}

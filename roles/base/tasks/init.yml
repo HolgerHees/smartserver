@@ -1,7 +1,7 @@
 #- name: debug
 #  debug: msg="{{ hostvars }}"
 #  tags: always
-  
+
 #- name: read service facts
 #  service_facts:
 #  tags: always
@@ -93,62 +93,43 @@
   include_vars: "config/default.yml"
   tags: always
   
-- name: check default variables
-  set_fact: 
-    default_variables_check: |
-      [
-        {% for item in default_variables %}
-            { 'name': '{{item}}',
-              'state':
-            {% if item not in vars and ('condition' not in default_variables[item] or default_variables[item]['condition']) %}
-                {% if 'default' not in default_variables[item] %}
-                  'missing'
-                {% else %}
-                  'default'
-                {% endif %}
-            {% else %}
-                {% if item in vars %}
-                  'custom'
-                {% else %}
-                  'not needed'
-                {% endif %}
-            {% endif %}
-            },
-        {% endfor %}
-      ]
-    
 - name: apply default vars
   set_fact: 
-    "{{item.name}}": "{{ default_variables[item.name]['default']}}"
-  when: >
-    item.state in ['failed','default']
-  failed_when: >
-    item.state  == 'failed'
+    "{{item.name}}": "{{ default_variables[item.name]['default'] }}"
+#    "{{item.name}}": "{{ vars['default_variables'][item.name]['default'] }}"
+  when: "item.state in ['missing','default']"
+  failed_when: "item.state  == 'missing'"
   ignore_errors: True
   register: check_result
-  with_items: "{{default_variables_check}}"
+  with_items:  |
+    [
+      {% for item in default_variables %}
+        { 'name': '{{item}}',
+          'state':
+          {% if item in vars %}
+              'custom'
+          {% else %}
+              {% if ('optional' not in default_variables[item] or not default_variables[item]['optional']) %}
+                  {% if 'default' not in default_variables[item] %}
+                      'missing'
+                  {% else %}
+                      'default'
+                  {% endif %}
+              {% else %}
+                  'not needed'
+              {% endif %}
+          {% endif %}
+        },
+      {% endfor %}
+    ]
 
-#- name: apply default vars => ['green' means DEFAULT value, 'turquoise' means CUSTOM value or skipped, 'red' means MISSING value]
-#  set_fact: 
-#    "{{item}}": "{{ default_variables[item]['default'] if default_variables[item]['default'] is defined else None }}"
-#  when: >
-#    vars[item] is not defined
-#    and
-#    (
-#      default_variables[item]['condition'] is not defined
-#      or
-#      default_variables[item]['condition']
-#    )
-#  failed_when: >
-#    vars[item] is not defined
-#    and 
-#    default_variables[item]['default'] is not defined 
-#    and
-#    default_variables[item]['condition']
-#  ignore_errors: yes
-#  register: check_result
-#  with_items: "{{default_variables}}"
-  
+- name: set ipv6 env state vars
+  set_fact:
+    default_server_ipv6:              "{{server_ipv6}}"
+    default_server_gateway_ipv6:      "{{server_gateway_ipv6}}"
+    default_server_network_ipv6:      "{{server_network_ipv6}}"
+  when: server_ipv6 is defined
+
 - name: check for missing variables
   assert:
     that: "check_result.failed is not defined or not check_result.failed"

@@ -1,7 +1,3 @@
-default_server_ipv6:              "{{server_ipv6}}"
-default_server_gateway_ipv6:      "{{server_gateway_ipv6}}"
-default_server_network_ipv6:      "{{server_network_ipv6}}"
-
 netgroup:                         "{{default_server_ip_r[2]}}"
 
 vpn_mobile_network:               "10.100.{{netgroup}}.0"
@@ -9,7 +5,7 @@ vpn_mobile_subnet:                "10.100.{{netgroup}}"
 
 vpn_cloud_subnet:                 "10.101"
 vpn_cloud_services:               "{
-{% if cloud_vpn != 'None' %}
+{% if cloud_vpn is defined %}
   \"local\": {
       \"bridge\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.1\",
       \"gateway\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2\",
@@ -30,8 +26,8 @@ vpn_cloud_services:               "{
 }"
 
 macvlan_ips:                      "[
-{% if pihole_ip != 'None' %}'{{pihole_ip}}',{% endif %}
-{% if dlna_ip != 'None' %}'{{dlna_ip}}',{% endif %}
+{% if pihole_ip is defined %}'{{pihole_ip}}',{% endif %}
+{% if dlna_ip is defined %}'{{dlna_ip}}',{% endif %}
 ]"
 
 macvlan_range: "{% if macvlan_ips | length > 0 %}{{macvlan_ips | cidr_merge('span')}}{% else %}{% endif %}"

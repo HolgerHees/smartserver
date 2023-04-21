@@ -34,7 +34,7 @@ route:
       - notifyGroup=~"logs-.*"
       group_interval: 15m
       receiver: logs
-{% if cloud_vpn != 'None' %}{% for peer in cloud_vpn.peers %}
+{% if cloud_vpn is defined %}{% for peer in cloud_vpn.peers %}
     - matchers:
       - notifyGroup="cloud-peer-{{peer}}"
       receiver: cloud-peer-{{peer}}
@@ -58,7 +58,7 @@ receivers:
 #          send_resolved: true
 #        html: ''
 #        text: ''
-{% if cloud_vpn != 'None' %}{% for peer in cloud_vpn.peers %}
+{% if cloud_vpn is defined %}{% for peer in cloud_vpn.peers %}
   - name: cloud-peer-{{peer}}
     email_configs:
       - to: {{cloud_vpn.peers[peer]["notification_email"]}}

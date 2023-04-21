@@ -25,7 +25,7 @@
       {
         "name": "macvlan",
         "ipv4_address": "{{pihole_ip}}"
-        {% if pihole_ipv6 != 'None' %}
+        {% if pihole_ipv6 is defined %}
             , "ipv6_address": "{{pihole_ipv6}}"
         {% endif %}
       }

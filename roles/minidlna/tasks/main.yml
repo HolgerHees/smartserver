@@ -54,7 +54,7 @@
       {
         "name": "macvlan",
         "ipv4_address": "{{dlna_ip}}"
-        {% if dlna_ipv6 != 'None' %}
+        {% if dlna_ipv6 is defined %}
             , "ipv6_address": "{{dlna_ipv6}}"
         {% endif %}
       }

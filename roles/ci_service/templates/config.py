@@ -8,7 +8,7 @@ build_dir = "{{global_build}}"
 repository_dir = "{{global_build}}ci_job"
 
 repository_url = "{{vault_deployment_config_git}}"
-access_token = "{{vault_deployment_token_git if vault_deployment_token_git != 'None' else ''}}"
+access_token = "{{vault_deployment_token_git if vault_deployment_token_git is defined else ''}}"
 
 service_ip = "127.0.0.1"
 service_port = "8506"

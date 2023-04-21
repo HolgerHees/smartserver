@@ -1,7 +1,7 @@
 # **** DEFAULT Variables ***
 #
-# - Variables without a default value are MANDATORY except there is a condition. 
-#    - In this case it is only mandatory if the condition is true. e.g variable 'system_update_notification_email'
+# - Variables without a default value are MANDATORY except there is a optional.
+#    - In this case it is only mandatory if the optional is true. e.g variable 'system_update_notification_email'
 #
 # - The default value is used if the variable is not defined in your configuration
 #
@@ -23,9 +23,9 @@ default_variables: {
     "production_ip":  {},                                         # "192.168.7.50" your server ip
     "staging_ip":     { "default": "" },                          # "192.168.8.50" your testserver ip
 
-    "server_ipv6": { "default": None },                           # "fde7:1250:3eaf:10:7285:c2ff:fef3:8a30" your server ipv6
-    "server_network_ipv6": { "default": None },                   # "fde7:1250:3eaf::/48" your networkmask for ipv6
-    "server_gateway_ipv6": { "default": None },                   # "fe80::3895:1ff:fe6c:4b01" your gateway for ipv6
+    "server_ipv6": { "optional": yes },                           # "fde7:1250:3eaf:10:7285:c2ff:fef3:8a30" your server ipv6
+    "server_network_ipv6": { "optional": "{{server_ipv6 is not defined}}" }, # "fde7:1250:3eaf::/48" your networkmask for ipv6
+    "server_gateway_ipv6": { "optional": "{{server_ipv6 is not defined}}" }, # "fe80::3895:1ff:fe6c:4b01" your gateway for ipv6
 
     "intern_networks": { "default": [ "{{default_server_network}}" ] }, # e.g. intern ipv4 & ipv6 address ranges
     "public_networks": { "default": [] },                         # e.g. public ipv6 address ranges
@@ -33,12 +33,12 @@ default_variables: {
 
     # pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
-    "pihole_ip":      { "default": None },                        # pihole ip address from same network as your server ip => 'None' means disabled
-    "pihole_ipv6":    { "default": None },                        # pihole ipv6 address from same network as your server ip => 'None' means disabled
+    "pihole_ip":      { "optional": yes },                        # pihole ip address from same network as your server ip
+    "pihole_ipv6":    { "optional": yes },                        # pihole ipv6 address from same network as your server ip
     "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] }, # domains are needed to use google search results
 
-    "dlna_ip":        { "default": None },                        # dlna ip address from same network as your server ip => 'None' means disabled
-    "dlna_ipv6":      { "default": None },                        # dlna ipv6 address from same network as your server ip => 'None' means disabled
+    "dlna_ip":        { "optional": yes },                        # dlna ip address from same network as your server ip
+    "dlna_ipv6":      { "optional": yes },                        # dlna ipv6 address from same network as your server ip
 
     "dns_forward_ip_addresses": { "default": [ "8.8.8.8", "8.8.4.4" ] }, # used by dnsmasq
     
@@ -53,7 +53,7 @@ default_variables: {
     "mobile_vpn_public_domain": { "default": "public.{{server_domain}}" },
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     
-    "cloud_vpn": { "default": None },                             # used in generic optional role 'wirguard_cloud'
+    "cloud_vpn": { "optional": yes },                             # used in generic optional role 'wirguard_cloud'
 
     "userdata": {},
     # *** EXAMPLE ***
@@ -82,9 +82,9 @@ default_variables: {
     #"notify_log_errors": { "default": no },                      # send notifications for all log errors
 
     "update_service_software_check_enabled": { "default": yes },  # enables the update check for software used inside deployment roles / container
-    "update_service_software_check_email": { "default": None },   # None, "testadmin@test.com" => sends a notification email after each check, if new software is available
+    "update_service_software_check_email": { "optional": yes },   # "testadmin@test.com" => sends a notification email after each check, if new software is available
     "update_service_system_check_enabled": { "default": yes },    # enables the update check for this deployment
-    "update_service_system_check_email": { "default": None },     # None, "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    "update_service_system_check_email": { "optional": yes },     # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
     
     #vault_telegram_bots: {},
     # {
@@ -110,21 +110,17 @@ default_variables: {
 
     # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
     # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
-    "vault_openid_connect_url": { "default": None },              # 'None' means disabled, to enable check documentation urls to get the right values
-    "vault_openid_connect_client_id": { "default": None },
-    "vault_openid_connect_client_secret": { "default": None },
-    "vault_openid_connect_passphrase": { "default": None },
+    "vault_openid_connect_url": { "optional": yes },              # 'optional' means disabled is not defined, to enable check documentation urls to get the right values
+    "vault_openid_connect_client_id": { "optional": yes },
+    "vault_openid_connect_client_secret": { "optional": yes },
+    "vault_openid_connect_passphrase": { "optional": yes },
 
     "vault_form_auth_passphrase": {},                             # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
 
-    "vault_pihole_password": {                                    # used to login into pihole
-        condition: "{{pihole_ip is defined}}"
-    },
+    "vault_pihole_password": { "optional": "{{pihole_ip is not defined}}"}, # used to login into pihole
 
-    "vault_ftp_username": { "default": None },                    # "ftp" => used for e.g. camera image uploads ('None' means disabled) 
-    "vault_ftp_password": {
-        condition: "{{vault_ftp_username is defined}}"
-    },
+    "vault_ftp_username": { "optional": yes },                    # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
+    "vault_ftp_password": { "optional": "{{vault_ftp_username is not defined}}" },
 
     "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
     "vault_influxdb_admin_password": {},
@@ -135,8 +131,8 @@ default_variables: {
 
     # to enable obtain a login from https://api.weather.mg/
     # to disable, leave the username empty
-    "vault_weather_api_username": { "default": None },            # 'None' means disabled
-    "vault_weather_api_password": { "default": None },
+    "vault_weather_api_username": { "optional": yes },            # 'optional' means disabled is not defined
+    "vault_weather_api_password": { "optional": yes },
 
     "vault_nextcloud_instance_id": {},                            # "234sdgzw87399443s" => used internally
     "vault_nextcloud_password_salt": {},                          # "9ad9aus92z4ij20j20idj928912hd1jd0"
@@ -150,10 +146,10 @@ default_variables: {
     # *** EXAMPLE ***
     # [
     #     {
-    #         "app": { "default": None },                         # app id. e.g. "cookbook"
-    #         "name": { "default": None },                        # webui menu name. e.g. "Cookbook"
-    #         "description": { "default": None },                 # webui menu info. e.g. "Recipes"
-    #         "icon": { "default": None },                        # webui icon. e.g. "icons/nextcloud_cookbook.svg"
+    #         "app": { "optional": yes },                         # app id. e.g. "cookbook"
+    #         "name": { "optional": yes },                        # webui menu name. e.g. "Cookbook"
+    #         "description": { "optional": yes },                 # webui menu info. e.g. "Recipes"
+    #         "icon": { "optional": yes },                        # webui icon. e.g. "icons/nextcloud_cookbook.svg"
     #
     #         "usergroups": { "default": [] }                     # optional. limit visibility to specific groups or users. e.g. ["admin", "user", "<username>"]
     #         "order": { "default": 200 }                         # optional. control order in webui menu
@@ -167,10 +163,10 @@ default_variables: {
     "vault_grafana_app_username": { "default": "admin" },
 
     "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
-    "vault_deployment_token_git": { "default": None },            # only needed if you enable "ci_service"
+    "vault_deployment_token_git": { "optional": yes },            # only needed if you enable "ci_service"
 
     #"vault_dockerhub_username":   { "default": "holgerhees" },
-    #"vault_dockerhub_password":   { "default": None },
+    #"vault_dockerhub_password":   { "optional": yes },
 
     "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
@@ -180,11 +176,11 @@ default_variables: {
     # *** EXAMPLE ***
     # [
     #     {
-    #         host: { "default": None },                          # "{{default_server_subnet}}.100"
-    #         name: { "default": None },                          # "WLan AP Inhouse" => will be used in webui for openwrt devices
-    #         snmp_method: { "default": None },                   # "v2c"
-    #         snmp_community_string: { "default": None }          # "public"
-    #         is_openwrt: { "default": None }                     # True
+    #         host: { "optional": yes },                          # "{{default_server_subnet}}.100"
+    #         name: { "optional": yes },                          # "WLan AP Inhouse" => will be used in webui for openwrt devices
+    #         snmp_method: { "optional": yes },                   # "v2c"
+    #         snmp_community_string: { "optional": yes }          # "public"
+    #         is_openwrt: { "optional": yes }                     # True
     #     }
     # ]
 
@@ -206,27 +202,17 @@ default_variables: {
     #     test2: { password: "3456", type: "intern" }
     # }
 
-    "vault_librenms_mysql_username": { "default": "librenms" },
-    "vault_librenms_mysql_password": { 
-        condition: "{{librenms_devices | length > 0}}"
-    },
+    "vault_librenms_mysql_username": { "default": "librenms", "optional": "{{librenms_devices | length == 0}}" },
+    "vault_librenms_mysql_password": { "optional": "{{librenms_devices | length == 0}}" },
 
-    "vault_librenms_api_token": { 
-        condition: "{{librenms_devices | length > 0}}"
-    },
+    "vault_librenms_api_token": { "optional": "{{librenms_devices | length == 0}}" },
 
-    "vault_openwrt_api_username": { "default": "api" },
-    "vault_openwrt_api_password": { 
-        condition: "{{openwrt_devices | length > 0}}"
-    },
-    #"vault_openwrt_root_password": { 
-    #    condition: "{{openwrt_devices | length > 0}}"
-    #},
+    "vault_openwrt_api_username": { "default": "api", "optional": "{{openwrt_devices | length == 0}}" },
+    "vault_openwrt_api_password": { "optional": "{{openwrt_devices | length == 0}}" },
+    #"vault_openwrt_root_password": { "optional": "{{openwrt_devices | length == 0}}" },
 
-    "vault_fritzbox_api_username": { "default": "api" },
-    "vault_fritzbox_api_password": { 
-        condition: "{{fritzbox_devices | length > 0}}"
-    },
+    "vault_fritzbox_api_username": { "default": "api", "optional": "{{fritzbox_devices | length == 0}}" },
+    "vault_fritzbox_api_password": { "optional": "{{fritzbox_devices | length == 0}}" },
 }
 
 librenms_devices: "{{network_devices | default([]) | selectattr('snmp_method', 'defined') | list}}"

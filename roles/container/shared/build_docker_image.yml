@@ -33,7 +33,7 @@
 #  shell: "docker search {{vault_dockerhub_username}}/{{image_name}}:{{image_version}}"
 #  register: image_remote_exists
 #  changed_when: "image_name not in image_remote_exists.stdout"
-#  when: "image_upload | default(False) and vault_dockerhub_username == 'None'"
+#  when: "image_upload | default(False) and vault_dockerhub_username is not defined"
 
 - name: "container : copy dockerfiles"
   template:

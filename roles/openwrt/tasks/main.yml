@@ -58,13 +58,11 @@
   with_dict:  |
     {
       {% for host in devices %}{% for feature in devices[host]['features'] %}
-
-      {% if config_path + 'templates/openwrt/' + feature['name'] + '/config.yml' in custom_feature_result.stdout_lines %}
-          '{{feature['name']}}': { 'cfg': '{{feature['cfg']}}', 'src': '{{ config_path + 'templates/openwrt/' + feature['name'] + '/config.yml' }}' },
-      {% elif 'roles/openwrt/templates/features/' + feature['name'] + '/config.yml' in core_feature_result.stdout_lines %}
-          '{{feature['name']}}': { 'cfg': '{{feature['cfg']}}', 'src': '{{ 'roles/openwrt/templates/features/' + feature['name'] + '/config.yml' }}' },
-      {% endif %}
-
+          {% if config_path + 'templates/openwrt/' + feature['name'] + '/config.yml' in custom_feature_result.stdout_lines %}
+              '{{feature['name']}}': { 'cfg': '{{feature['cfg']}}', 'src': '{{ config_path + 'templates/openwrt/' + feature['name'] + '/config.yml' }}' },
+          {% elif 'roles/openwrt/templates/features/' + feature['name'] + '/config.yml' in core_feature_result.stdout_lines %}
+              '{{feature['name']}}': { 'cfg': '{{feature['cfg']}}', 'src': '{{ 'roles/openwrt/templates/features/' + feature['name'] + '/config.yml' }}' },
+          {% endif %}
       {% endfor %}{% endfor %}
     }
 
