@@ -1,4 +1,5 @@
 require 'getoptlong'
+require 'fileutils'
 
 opts = GetoptLong.new(
     [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
@@ -81,6 +82,9 @@ $with_password = setup_config != 'demo'
 $image_name = "smartserver_" + setup_config + "_" + setup_os
 
 Vagrant.configure(2) do |config|
+  if File.file?("/opt/mitogen") then
+      FileUtils.cp("roles/deployment/templates/ansible.cfg", "ansible.cfg")
+  end
     
   env_config = File.read("config/#{setup_config}/env.yml")
   env_match = env_config.scan(/staging_ip:\s*"([^"]*)"/).last
