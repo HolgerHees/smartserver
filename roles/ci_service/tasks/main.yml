@@ -36,6 +36,7 @@
     mode: "{{item.mode}}"
   with_items:
     - { mode: "u=rwx,g=rx,o=", path: "/opt/ci_service" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/ci_service/config" }
     - { mode: "u=rwx,g=rx,o=", path: "{{global_build}}ci_job" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}ci_service" }
 
