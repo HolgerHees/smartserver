@@ -82,7 +82,7 @@ $with_password = setup_config != 'demo'
 $image_name = "smartserver_" + setup_config + "_" + setup_os
 
 Vagrant.configure(2) do |config|
-  if File.file?("/opt/mitogen") then
+  if File.directory?("/opt/mitogen") then
       FileUtils.cp("roles/deployment/templates/ansible.cfg", "ansible.cfg")
   end
     
