@@ -109,21 +109,21 @@ Vagrant.configure(2) do |config|
     end
 
     # mitogen preparation
-    #mitogen_config = File.read("roles/deployment/tasks/main.yml")
-    #mitogen_match = mitogen_config.scan(/mitogen_version:\s*'([^']*)'/).last
-    #$mitogen_version = mitogen_match.first
-    #setup.vm.provision "shell" do |s|
-    #  s.inline = <<-SHELL
-    #    if [ ! -d "/opt/mitogen" ]; then
-    #      echo "Download and install mitogen #{$mitogen_version}"
-    #      cp /vagrant/roles/deployment/templates/ansible.cfg /vagrant/ansible.cfg
-    #      curl -s -L https://github.com/mitogen-hq/mitogen/archive/refs/tags/v#{$mitogen_version}.tar.gz | tar xvz -C /opt/ > /dev/null
-    #      cd /opt/; ln -s mitogen-0.3.3 mitogen
-    #    else
-    #      echo "Mitogen #{$mitogen_version} already installed"
-    #    fi
-    #  SHELL
-    #end
+    mitogen_config = File.read("roles/deployment/tasks/main.yml")
+    mitogen_match = mitogen_config.scan(/mitogen_version:\s*'([^']*)'/).last
+    $mitogen_version = mitogen_match.first
+    setup.vm.provision "shell" do |s|
+      s.inline = <<-SHELL
+        if [ ! -d "/opt/mitogen" ]; then
+          echo "Download and install mitogen #{$mitogen_version}"
+          cp /vagrant/roles/deployment/templates/ansible.cfg /vagrant/ansible.cfg
+          curl -s -L https://github.com/mitogen-hq/mitogen/archive/refs/tags/v#{$mitogen_version}.tar.gz | tar xvz -C /opt/ > /dev/null
+          cd /opt/; ln -s mitogen-0.3.3 mitogen
+        else
+          echo "Mitogen #{$mitogen_version} already installed"
+        fi
+      SHELL
+    end
 
     #setup.vm.network :public_network, :bridge => 'enp3s0',:use_dhcp_assigned_default_route => true
     setup.vm.synced_folder ".", "/vagrant"
@@ -203,6 +203,10 @@ Vagrant.configure(2) do |config|
       if setup_config != 'demo' then
         ansible.vault_password_file = "/tmp/vault_pass"
       end
+
+      # needed, mitogen because does not support become root
+      ansible.become = true
+      ansible.become_user = "root"
 
       #if setup_os == 'fedora' and setup_image.end_with?('cloud-base') then
       #  ansible.become = true
