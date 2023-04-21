@@ -156,10 +156,6 @@ default_variables: {
     #     }
     # ]
     
-    "vault_onlyoffice_shared_key": {},                            # e.g. "qwe0983yxcxy435"
-    "vault_onlyoffice_mysql_username": { "default": "onlyoffice" }, # used for onlyoffice data
-    "vault_onlyoffice_mysql_password": {},
-
     "vault_grafana_app_username": { "default": "admin" },
 
     "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
