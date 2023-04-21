@@ -10,9 +10,9 @@ from lib import helper
 from lib import log
 
 def initRepository(repository_dir, repository_url, build_dir):
-  if not os.path.isdir(repository_dir):
-      log.info("Clone repository: {} ... ".format(repository_url), end='', flush=True)
-      cloneResult = helper.execCommand( u"git clone {}".format(repository_url), build_dir )
+  if not os.path.isdir(repository_dir) or not os.path.isdir("{}/.git".format(repository_dir)) :
+      log.info("Clone repository: {} to {} ... ".format(repository_url, repository_dir), end='', flush=True)
+      cloneResult = helper.execCommand( u"git clone {} {}".format(repository_url, repository_dir), repository_dir )
       if cloneResult.returncode == 0:
           log.info( u"done", flush=True )
       else:
