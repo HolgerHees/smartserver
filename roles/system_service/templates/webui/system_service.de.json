@@ -1,9 +1,9 @@
 {
   "admin_system": {
-    "Network": "Netzwerk",
-    "Scanner": "Scanner",
+    "Networkstructure": "Netzwerkstruktur",
+    "Devices, Services & Structure": "Geräte, Services & Struktur",
     "WAN connection": "WAN Verbindung",
-    "Internet connection state and details": "Verbindungsstatus und Details",
+    "Speed & reachability": "Geschwindigkeit & Erreichbarkeit",
     "WAN traffic": "WAN Traffic",
     "Netflow": "Netflow Collector"
   }
