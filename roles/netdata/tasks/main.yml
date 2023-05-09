@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.38.1"
+    netdata_version: "1.39.0"
   tags: [ 'update_notifier_config' ]
 
 - name: add netdata repository => is_rhel or is_fedora
@@ -15,7 +15,7 @@
   yum:
     name: [
       "netdata"
-#      "netdata-{{netdata_version}}-1.{{'el' if is_rhel else 'fc'}}{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}"
+      "netdata-{{netdata_version}}-1.{{'el' if is_rhel else 'fc'}}{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}"
       , lm_sensors
     ]
     state: present
@@ -38,8 +38,8 @@
 - name: install required packages => is_ubuntu
   apt:
     name: [
-      "netdata"
-#      "netdata={{netdata_version}}"
+#      "netdata"
+      "netdata={{netdata_version}}"
       , lm-sensors
     ]
     state: present
@@ -63,8 +63,8 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-      "netdata"
-#      "netdata-{{netdata_version}}-1"
+#      "netdata"
+      "netdata-{{netdata_version}}-1"
       , sensors
       # needed to rebuild rpm package
       #, rpm-build
