@@ -14,7 +14,7 @@
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: [
-      "netdata"
+#      "netdata"
       "netdata-{{netdata_version}}-1.{{'el' if is_rhel else 'fc'}}{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}"
       , lm_sensors
     ]
