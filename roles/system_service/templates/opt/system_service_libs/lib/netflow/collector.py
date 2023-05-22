@@ -72,6 +72,9 @@ class ThreadedNetFlowListener(threading.Thread):
                         to_retry.append(pkt)
                         logging.debug("Failed to decode a v9 ExportPacket - will re-attempt when a new template is discovered")
                     continue
+                except Exception as e:
+                    logging.error("{}, Unknown exception".format(e))
+                    continue
 
                 if export.header.version == 10:
                     logging.debug("Processed an IPFIX ExportPacket with length {}.".format(export.header.length))
