@@ -171,6 +171,8 @@ Vagrant.configure(2) do |config|
         sudo pip install ansible==2.10.7
         SHELL
     elsif setup_os == 'alma' then
+        #setup.vm.box_version = "9.2.20230513" => has broken vboxadd.service
+        setup.vm.box_version = "9.1.20221117"
         setup.vm.provision "shell", inline: <<-SHELL
         sudo yum --assumeyes install python python3-netaddr python3-pip
         sudo pip install --prefix=/usr/ ansible==2.10.7
