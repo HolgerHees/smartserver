@@ -1,0 +1,21 @@
+ groups:
+  - name: openhab
+    interval: 60s
+    rules:
+      - alert: Openhab error states
+        expr: |
+              count by (item,state)
+                  (count_over_time(
+                        {group="openhab"}
+                        |~ "ErrorMessage.*STATE: .*"
+                        | pattern `<_>STATE: <item> - <state>"`
+                        [2m]
+                  ))
+              > 0
+        for: 0
+        labels:
+            notifyGroup: "openhab-critical"
+            severity: critical
+        annotations:
+            summary: "Openhab critical error"
+            url: "https://smartmarvin.de/?ref=admin|system|grafana_logs"

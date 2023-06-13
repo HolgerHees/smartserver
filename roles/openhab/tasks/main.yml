@@ -480,6 +480,12 @@
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/shared/add_config.yml
 
+- name: register loki rules
+  vars:
+    name: "openhab"
+    rules_file: "templates/etc/loki/rules.yaml"
+  import_tasks: roles/loki/shared/add_config.yml
+
 - name: register grafana configs
   vars:
     name: "openhab"
