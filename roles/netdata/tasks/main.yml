@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    netdata_version: "1.39.1"
+    netdata_version: "1.40.0"
   tags: [ 'update_notifier_config' ]
 
 - name: add netdata repository => is_rhel or is_fedora
