@@ -1,7 +1,7 @@
 # double check for new versions if "copy patch" is still needed
 - name: set version
   set_fact:
-    nextcloud_version: '27.0.0' # patches in "enable_apps" beim nächsten Update überprüfen
+    nextcloud_version: '26.0.2' # patches in "enable_apps" beim nächsten Update überprüfen
   tags: [ 'update_notifier_config', 'user' ]
 
 # ***** PREPARE FOLDER *****
@@ -285,7 +285,7 @@
     name: "nextcloud"
     js_file: "templates/webui/nextcloud.js"
     i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
-    icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg', 'templates/webui/icons/nextcloud_notes.svg', 'templates/webui/icons/nextcloud_photos.svg', 'templates/webui/icons/nextcloud_news.svg', 'templates/webui/icons/nextcloud_keeweb.svg', 'templates/webui/icons/nextcloud_deck.svg' ]
+    icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg', 'templates/webui/icons/nextcloud_notes.svg', 'templates/webui/icons/nextcloud_photos.svg', 'templates/webui/icons/nextcloud_news.svg', 'templates/webui/icons/nextcloud_passwords.svg', 'templates/webui/icons/nextcloud_deck.svg' ]
   import_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost

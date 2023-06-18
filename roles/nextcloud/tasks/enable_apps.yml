@@ -50,7 +50,9 @@
 #    - collectives
     - deck
     - tasks
-    
+    - passwords
+    - passman
+
 - name: install additional_apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:install {{item.app}}\""
   register: app_install_result
@@ -291,6 +293,8 @@
     - news
     - notes
     - tasks
+    - passwords
+    - passman
 
 - name: enable disabled additional_apps apps
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:enable {{item.app}} --force\""
@@ -345,14 +349,14 @@
     }
   import_tasks: roles/update_service/shared/add_software.yml
 
-#- name: apply patches
-#  copy:
-#    src: "templates/patches/{{item}}"
-#    dest: "{{htdocs_path}}nextcloud/{{item}}"
-#    owner: "{{system_users['www'].name}}"
-#    group: "{{system_groups['www'].name}}"
-#    mode: 0640
-#  with_items:
-#    - "lib/private/Authentication/Token/PublicKeyTokenProvider.php" # https://github.com/nextcloud/server/commit/6881d2f2f15976514cc52d6ea49ff09c5bb81d2b
-#    - "apps/notes/lib/Controller/SettingsController.php" # https://github.com/nextcloud/notes/commit/9246308612ab883d5e74c063acc13463216c4a3c
+- name: apply patches
+  copy:
+    src: "templates/patches/{{item}}"
+    dest: "{{htdocs_path}}nextcloud/{{item}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0640
+  with_items:
+    - "apps/passman/js/passman.min.js" # https://github.com/nextcloud/passman/pull/781
+    - "apps/passman/lib/Db/CredentialMapper.php" # https://github.com/nextcloud/passman/pull/781
 
