@@ -11,7 +11,7 @@ RUN groupadd -g {{system_groups['www'].id}} {{system_groups['www'].name}} \
   # - after, we just compile and overwrite the module
   #RUN apt-get install -y libapache2-mod-auth-openidc
 
-RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjansson-dev libcjose-dev libpcre++-dev pkg-config certbot \
+RUN  apt-get install -y git apache2-dev libssl-dev libcurl4-openssl-dev libjansson-dev libcjose-dev libpcre2-dev pkg-config certbot \
     && mkdir /usr/lib/apache2/ \
     && mkdir /usr/lib/apache2/modules \
     && git clone https://github.com/zmartzone/mod_auth_openidc.git \
