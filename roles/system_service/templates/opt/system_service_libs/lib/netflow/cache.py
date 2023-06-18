@@ -53,10 +53,10 @@ class Cache(threading.Thread):
         self.is_running = True
         schedule.every().day.at("01:00").do(self.dump)
         schedule.every().hour.at("00:00").do(self.cleanup)
-        self.restore()
+        self._restore()
         super().start()
 
-    def restore(self):
+    def _restore(self):
         try:
             if os.path.exists(self.dump_path):
                 with open(self.dump_path) as f:
@@ -80,9 +80,11 @@ class Cache(threading.Thread):
 
     def dump(self):
         if self.valid_cache_file and len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
-            with self.location_lock and self.hostname_lock and open(self.dump_path, 'w') as f:
-                json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
-                logging.info("Cache data saved ({} locations and {} hostnames)".format(len(self.ip2location_map),len(self.hostname_map)))
+            with self.location_lock:
+                with self.hostname_lock:
+                    with open(self.dump_path, 'w') as f:
+                        json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
+                        logging.info("Cache data saved ({} locations and {} hostnames)".format(len(self.ip2location_map),len(self.hostname_map)))
 
     def cleanup(self):
         _now = time.time()
