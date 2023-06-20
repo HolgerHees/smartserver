@@ -50,7 +50,6 @@
 #    - collectives
     - deck
     - tasks
-    - passwords
     - passman
 
 - name: install additional_apps
@@ -293,7 +292,6 @@
     - news
     - notes
     - tasks
-    - passwords
     - passman
 
 - name: enable disabled additional_apps apps
@@ -359,4 +357,5 @@
   with_items:
     - "apps/passman/js/passman.min.js" # https://github.com/nextcloud/passman/pull/781
     - "apps/passman/lib/Db/CredentialMapper.php" # https://github.com/nextcloud/passman/pull/781
+    - "apps/passman/lib/Service/IconService.php" # https://github.com/nextcloud/passman/pull/785
 
