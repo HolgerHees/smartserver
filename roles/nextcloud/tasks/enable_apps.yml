@@ -1,7 +1,7 @@
 - name: set version
   set_fact:
     nextcloud_news_version: '21.2.0'
-    nextcloud_keeweb_version: '0.6.12'
+    nextcloud_keeweb_version: '0.6.13'
   
 # ***** CHECK *****
 - name: check mysql service
@@ -302,15 +302,15 @@
     config: {}
   import_tasks: roles/update_service/shared/add_software.yml
 
-- name: apply patches
-  copy:
-    src: "templates/patches/{{item}}"
-    dest: "{{htdocs_path}}nextcloud/{{item}}"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0640
-  with_items:
-    - "apps/passman/js/passman.min.js" # https://github.com/nextcloud/passman/pull/781
-    - "apps/passman/lib/Db/CredentialMapper.php" # https://github.com/nextcloud/passman/pull/781
-    - "apps/passman/lib/Service/IconService.php" # https://github.com/nextcloud/passman/pull/785
+#- name: apply patches
+#  copy:
+#    src: "templates/patches/{{item}}"
+#    dest: "{{htdocs_path}}nextcloud/{{item}}"
+#    owner: "{{system_users['www'].name}}"
+#    group: "{{system_groups['www'].name}}"
+#    mode: 0640
+#  with_items:
+#    - "apps/passman/js/passman.min.js" # https://github.com/nextcloud/passman/pull/781
+#    - "apps/passman/lib/Db/CredentialMapper.php" # https://github.com/nextcloud/passman/pull/781
+#    - "apps/passman/lib/Service/IconService.php" # https://github.com/nextcloud/passman/pull/785
 
