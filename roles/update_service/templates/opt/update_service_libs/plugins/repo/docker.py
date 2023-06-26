@@ -26,13 +26,15 @@ class Application(App):
     def __init__(self,job_config,global_config):
         super().__init__(job_config)
 
-        plugin_config = job_config["config"]
+        self.plugin_config = job_config["config"]
 
-        self.repository = plugin_config['repository']
+    def checkForUpdates(self):
+
+        self.repository = self.plugin_config['repository']
         if self.repository.find("/") == -1:
             self.repository = "library/{}".format(self.repository)
 
-        self.pattern = plugin_config['pattern']
+        self.pattern = self.plugin_config['pattern']
         
         if Application.repositories is None:
             Application.repositories = {}
@@ -49,7 +51,7 @@ class Application(App):
                 Application.repositories[columns[0]].append({'tag': columns[1],'image': columns[2]})
                 
 
-        data_r = Application.repositories[plugin_config['repository']]
+        data_r = Application.repositories[self.plugin_config['repository']]
         version = None
         tag = None
         tag_r = []

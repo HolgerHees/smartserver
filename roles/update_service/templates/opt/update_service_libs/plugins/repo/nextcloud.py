@@ -45,6 +45,9 @@ class Application(App):
         self.current_version = current_version
         self.new_version = new_version
 
+    def checkForUpdates(self):
+        pass
+
     def getName(self):
         return "nextcloud_{}".format(self.name)
 

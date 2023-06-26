@@ -18,6 +18,18 @@ from config import config
 from smartserver.argsparser import ArgsParser
 from smartserver import command
 
+def checkParameter(name, args_values, last_states):
+    if args_values["limit"] != None and args_values["limit"] != app.getName():
+        return False
+
+    if args_values["confirm"]:
+        last_state = last_states.get(app.getName(), None)
+        if len(last_state["updates"]) == 0:
+            current_states['states'].append(last_state)
+            print("  - '{}' skipped".format(app.getName()))
+            return False
+        #print(last_state)
+    return True
 
 args_cfg = { "limit": None, "notification": not (sys.stdin and sys.stdin.isatty()), "confirm": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -42,17 +54,6 @@ for config_file in files:
     with open(config_file) as json_data:
         job_config = json.load(json_data)
         
-        if args_values["limit"] != None and args_values["limit"] != job_config['name']:
-            continue
-          
-        if args_values["confirm"]:
-            last_state = last_states.get(job_config['name'], None)
-            if len(last_state["updates"]) == 0:
-                current_states['states'].append(last_state)
-                print("  - '{}' skipped".format(job_config['name']))
-                continue
-            #print(last_state)
-
         try:
             plugin = importlib.import_module("plugins.repo.{}".format(job_config['type']))
         except ModuleNotFoundError:
@@ -63,10 +64,19 @@ for config_file in files:
         repo = plugin.Repository(job_config, config.global_config)
         applications = repo.getApplications()
         if len(applications) == 0:
+            if not checkParameter(app.getName(), args_values, last_states):
+                continue
+
             print("  - '{}'".format(job_config['name']), end='')
             print( " \033[0;32mis updatet\033[0m")
         else:
             for app in applications:
+
+                if not checkParameter(app.getName(), args_values, last_states):
+                    continue
+
+                app.checkForUpdates()
+
                 print("  - '{}'".format(app.getName()), end='')
 
                 last_state = last_states.get(app.getName(), None)

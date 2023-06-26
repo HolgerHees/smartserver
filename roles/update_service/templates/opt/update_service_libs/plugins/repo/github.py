@@ -20,23 +20,23 @@ class Application(App):
     def __init__(self,job_config,global_config):
         super().__init__(job_config)
 
+        self.plugin_config = job_config["config"]
         self.access_token = global_config['github_access_token']
-      
-        plugin_config = job_config["config"]
 
-        self.project = plugin_config['project']
-        self.pattern = plugin_config['pattern'] if 'pattern' in plugin_config else None
+    def checkForUpdates(self):
+        self.project = self.plugin_config['project']
+        self.pattern = self.plugin_config['pattern'] if 'pattern' in self.plugin_config else None
         
         if self.pattern != None:
-            version = Version.parseVersionString(plugin_config['version'],self.pattern)
+            version = Version.parseVersionString(self.plugin_config['version'],self.pattern)
             if version != None:
-                self.tag = plugin_config['version']
+                self.tag = self.plugin_config['version']
                 self.current_version = version.getVersionString()
             else:
-                raise Exception('Can\'t parse version \'{}\' with pattern \'{}\''.format(plugin_config['version'],self.pattern))
+                raise Exception('Can\'t parse version \'{}\' with pattern \'{}\''.format(self.plugin_config['version'],self.pattern))
         else:
             self.tag = None
-            self.current_version = plugin_config['version']
+            self.current_version = self.plugin_config['version']
             
     def _requestData(self,url):
         req = urllib.request.Request(url)
