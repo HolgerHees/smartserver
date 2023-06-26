@@ -5,8 +5,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
     var stateIcons = {
         "docker": "icon-inbox",
         "github": "icon-git",
-        "opensuse": "icon-desktop",
-        "fedora": "icon-desktop"
+        "nextcloud": "icon-cloud-1"
     }
     
     function formatVersion(version)

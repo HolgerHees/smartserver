@@ -173,6 +173,12 @@
       "css": "search-1",
       "code": 62733,
       "src": "mfglabs"
+    },
+    {
+      "uid": "f9efb0f1944c550cf8d38cdf4aba07c4",
+      "css": "cloud-1",
+      "code": 59413,
+      "src": "typicons"
     }
   ]
 }
