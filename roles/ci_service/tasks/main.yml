@@ -42,7 +42,7 @@
 
 - name: install vagrant binary
   unarchive:
-    src: "https://releases.hashicorp.com/vagrant/2.3.4/vagrant_2.3.4_linux_amd64.zip"
+    src: "https://releases.hashicorp.com/vagrant/2.3.7/vagrant_2.3.7_linux_amd64.zip"
     dest: "/opt/ci_service"
     remote_src: yes
     creates: "/opt/ci_service/vagrant"
