@@ -8,7 +8,6 @@
   with_items:
     - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/" }
     - { owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}", dir: "{{htdocs_path}}img/potd" }
-    - { owner: root, group: root, dir: "/opt/potd_fetcher/" }
 
 - name: synchronize htdocs
   synchronize:
@@ -69,7 +68,7 @@
 - name: copy fetchPOTD cmd
   template:
     src: "templates/fetchPOTD.sh"
-    dest: "/opt/potd_fetcher/fetchPOTD.sh"
+    dest: "/opt/scripts/apache_webui_fetchPOTD.sh"
     owner: root
     group: root
     mode: 0750
@@ -81,14 +80,14 @@
   changed_when: not potd_exists.stat.exists
   
 - name: fetch initial potd => initial image does not exist
-  shell: '/opt/potd_fetcher/fetchPOTD.sh'
+  shell: '/opt/scripts/apache_webui_fetchPOTD.sh'
   when: not potd_exists.stat.exists
   
 # Picture of the day fetcher
 - name: create cron job
   vars:
     name: "POTD Fetcher"
-    cmd: "/opt/potd_fetcher/fetchPOTD.sh"
+    cmd: "/opt/scripts/apache_webui_fetchPOTD.sh"
     file: "ansible_apache_webui"
     hour: "3"
     minute: "0"

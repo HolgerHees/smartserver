@@ -1,0 +1,176 @@
+#!/usr/bin/python3
+
+import subprocess
+import sys
+import glob
+from os import path
+import re
+from datetime import datetime
+import time
+
+from smartserver.alertmanager import Alertmanager
+from smartserver.argsparser import ArgsParser
+
+
+ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
+CONFIG_DIR = "/dataDisk/etc/systemd_watcher/services/"
+
+args_cfg = { "deployment": False }
+args_values = ArgsParser.parse(args_cfg,sys.argv)
+
+is_cli = sys.stdin and sys.stdin.isatty()
+
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def triggerAlertmanagerAlert(alerts):
+    try:
+        Alertmanager.triggerAlerts(ALERTMANAGER_BASE_URL, alerts)
+    except Exception as e:
+        error("An error happens when reporting alerts to alertmanager => {}. Maybe alertmanager is down.".format(e))
+
+def fetchAlertmanagerAlerts():
+    try:
+        alertmanager_alerts = Alertmanager.fetchAlerts(ALERTMANAGER_BASE_URL, "service-check")
+    except Exception as e:
+        error("An error happens when fetching alerts from alertmanager => {}. Maybe alertmanager is down.".format(e))
+        alertmanager_alerts = {}
+
+    return alertmanager_alerts
+
+def buildAlert(severity, name, service, summary = None):
+    return Alertmanager.buildAlert("service-check", severity, name, summary, datetime.utcnow(), {"service": service})
+
+alertmanager_alerts = fetchAlertmanagerAlerts()
+fired_alerts = []
+
+
+result = subprocess.run([ "hostnamectl status | grep -o \"Chassis: vm\"" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+isVirtualized = result.returncode == 0
+
+start = time.time()
+
+notified_service = []
+files = glob.glob("{}*.conf".format(CONFIG_DIR))
+services = {}
+for config_file in files:
+    with open(config_file) as f:
+
+        config = f.readline().strip().split(":")
+
+        systemd_service = config[0]
+        role_name = config[1]
+
+        services[systemd_service] = { "state": [], "role_name": role_name, "error": [] }
+
+warnings = []
+result = subprocess.run([ "/usr/bin/systemctl status {}".format(" ".join(services.keys())) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=None )
+
+active_service = None
+for line in result.stdout.decode("utf-8").split("\n"):
+    for systemd_service in services:
+        if " {}.service".format(systemd_service) in line:
+            active_service = systemd_service
+
+    if active_service is not None:
+        services[active_service]["state"].append(line)
+
+active_service = None
+for line in result.stderr.decode("utf-8").split("\n"):
+    for systemd_service in services:
+        if " {}.service".format(systemd_service) in line:
+            active_service = systemd_service
+
+    if active_service is not None:
+        services[active_service]["error"].append(line)
+
+for systemd_service in services:
+
+        role_name = services[systemd_service]["role_name"]
+        #print(state)
+
+        if len(services[systemd_service]["error"]) > 0:
+            msg = "\n".join(services[systemd_service]["error"]).strip()
+            if "Warning" in msg:
+                severity = Alertmanager.SEVERITY_WARN
+                subject = "warning"
+            else:
+                severity = Alertmanager.SEVERITY_ERROR
+                subject = "error"
+            fired_alerts.append(buildAlert(severity, "Service {}".format(subject), systemd_service, "{}. Used in role '{}'".format(msg, systemd_service,role_name)))
+            notified_service.append(systemd_service)
+            continue
+
+        if len(services[systemd_service]["state"]) == 0:
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_WARN, "Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
+            notified_service.append(systemd_service)
+            continue
+
+        state = "\n".join(services[systemd_service]["state"])
+
+        if services[systemd_service]["state"][0].startswith("Warning: "):
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_WARN, "Service warning", systemd_service, services[systemd_service]["state"][0]))
+            notified_service.append(systemd_service)
+            continue
+
+        #m = re.search("could not be found|Loaded: not-found",state)
+        #if m:
+        #    fired_alerts.append(buildAlert(Alertmanager.SEVERITY_WARN, "Service is unknown", systemd_service, "Used in role '{}'".format(systemd_service,role_name)))
+        #    notified_service.append(systemd_service)
+        #    continue
+
+        m = re.search("Loaded:[^;]+; (enabled|static).*",state)
+        is_enabled = m is not None
+
+        m = re.search("Active: ([^\s]+).*",state)
+        is_active = m.group(1) == "active"
+
+        state_flags = []
+        if not is_enabled or not is_active:
+            if not is_enabled:
+                state_flags.append("enabled")
+            if not is_active:
+                ignore = False
+                if isVirtualized:
+                    m = re.search("Loaded: loaded \((.+?);.*",state)
+                    if m is not None:
+                        service_file = m.group(1)
+                        with open(service_file) as f:
+                            content = f.read()
+                            m = re.search("ConditionVirtualization\s*=\s*(false|no)",content,re.IGNORECASE)
+                            if m != None:
+                                ignore = True
+                if not ignore:
+                    state_flags.append("active")
+
+        if len(state_flags) > 0:
+            fired_alerts.append(buildAlert(Alertmanager.SEVERITY_ERROR, "Service is not {}".format(" and ".join(state_flags)), systemd_service))
+            notified_service.append(systemd_service)
+
+
+result = subprocess.run([ "/usr/bin/systemctl list-units --type=service | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+lines = result.stdout.decode("utf-8").split("\n")
+for line in lines:
+    columns = line.split()
+    if len(columns) == 0:
+        continue
+    service = columns[1] if len(columns[0]) == 1 else columns[0]
+
+    _service, _ = service.split(".",1)
+    if _service in notified_service:
+        continue
+
+    fired_alerts.append(buildAlert(Alertmanager.SEVERITY_CRITICAL, "Service failed", service))
+
+if len(fired_alerts) > 0 and ( is_cli or args_values["deployment"]):
+    print(fired_alerts)
+
+if args_values["deployment"]:
+    exit(1 if len(fired_alerts) > 0 else 0)
+else:
+    if len(fired_alerts) > 0:
+        triggerAlertmanagerAlert(fired_alerts)
+
+    expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
+    if len(expired_alerts) > 0:
+        triggerAlertmanagerAlert(expired_alerts)

@@ -1,0 +1,113 @@
+#!/usr/bin/python3
+
+import socket
+import requests
+import time
+import json
+from datetime import datetime
+import os
+import sys
+
+from smartserver.alertmanager import Alertmanager
+
+
+NETDATA_URL = "http://localhost:19999/api/v1/alarms?active"
+ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
+
+GENERATOR_URL = "https://netdata.smartmarvin.de/"
+INTERVAL = 60
+
+IS_DAEMON = not os.isatty(sys.stdin.fileno())
+
+def _log(msg,level):
+    if IS_DAEMON:
+        os.system('echo "{}"  | systemd-cat -t netdata -p "{}"'.format(msg, level))
+    else:
+        print(msg)
+
+def logInfo(msg):
+    _log(msg, "info")
+
+def logWarning(msg):
+    _log(msg, "warning")
+
+def triggerAlertmanagerAlert(alerts):
+    try:
+        Alertmanager.triggerAlerts(ALERTMANAGER_BASE_URL, alerts)
+    except Exception as e:
+        logWarning("An error happens when reporting alerts to alertmanager => {}. Maybe alertmanager is down.".format(e))
+        exit(1)
+
+def fetchAlertmanagerAlerts():
+    try:
+        alertmanager_alerts = Alertmanager.fetchAlerts(ALERTMANAGER_BASE_URL, "netdata")
+    except Exception as e:
+        logWarning("An error happens when fetching alerts from alertmanager => {}. Maybe alertmanager is down.".format(e))
+        alertmanager_alerts = []
+
+    return alertmanager_alerts
+
+def fetchNetdataAlerts(ts):
+    try:
+        response = requests.get("{}&_={}".format(NETDATA_URL, ts), timeout=5.0)
+        response.raise_for_status()
+        _netdata_alerts = json.loads(response.content)
+        _netdata_alerts = _netdata_alerts['alarms']
+    except Exception as e:
+        logWarning("An error happens when fetching alerts from netdata => {}. Maybe netdata is down.".format(e))
+        _netdata_alerts = {}
+
+    netdata_alerts = []
+    for netdata_alert_key in _netdata_alerts:
+        netdata_alert = _netdata_alerts[netdata_alert_key]
+        status = netdata_alert["status"]
+
+        level = Alertmanager.SEVERITY_INFO
+        if status == "WARNING":
+            level = Alertmanager.SEVERITY_WARN
+        #elif status == "ERROR":
+        #    level = "error"
+        elif status == "CRITICAL":
+            level = Alertmanager.SEVERITY_CRITICAL
+        netdata_alert['status'] = level
+
+        netdata_alerts.append(netdata_alert)
+
+    return netdata_alerts
+
+ts = time.time()
+
+alertmanager_alerts = fetchAlertmanagerAlerts()
+netdata_alerts = fetchNetdataAlerts(ts)
+
+fired_alerts = []
+for alert in netdata_alerts:
+    delay_up_to_timestamp = alert['delay_up_to_timestamp']
+
+    if ts < delay_up_to_timestamp:
+        #echo "Openhab notification not possible"  | systemd-cat -t netdata -p "warning"
+        #logInfo("Delayed alarm {} by {} seconds".format(alert["name"], delay_up_to_timestamp-ts))
+        #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
+        continue
+
+
+    labels = {
+        "family": alert["family"]
+    }
+    summary = "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
+    startAt = datetime.utcfromtimestamp(alert["last_status_change"])
+    fired_alert = Alertmanager.buildAlert("netdata", alert['status'], alert["name"], summary, startAt, labels, GENERATOR_URL)
+    fired_alerts.append(fired_alert)
+
+    if not Alertmanager.findAlert(fired_alert, alertmanager_alerts):
+        logInfo("Trigger alarm {}".format(alert["name"]))
+
+
+if len(fired_alerts) > 0:
+    triggerAlertmanagerAlert(fired_alerts)
+
+expired_alerts = Alertmanager.buildAlertExpire(fired_alerts, alertmanager_alerts)
+
+if len(expired_alerts) > 0:
+    triggerAlertmanagerAlert(expired_alerts)
+

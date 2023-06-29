@@ -34,8 +34,16 @@
 #  notify: "restart apache2"
 #  when: "certificate_mode == 'create'"
 
+- name: copy letsencrypt check script
+  template:
+    src: "templates/scripts/check_letsencrypt.sh"
+    dest: "/opt/scripts/apache_check_letsencrypt.sh"
+    owner: root
+    group: root
+    mode: 0750
+
 - name: create certificates => certificate_mode = 'create'
-  shell: "/opt/letsencrypt/check.sh update"
+  shell: "/opt/scripts/apache_check_letsencrypt.sh update"
 #  notify: "restart apache2"
   when: "certificate_mode == 'create'"
 

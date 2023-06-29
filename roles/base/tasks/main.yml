@@ -22,6 +22,7 @@
     - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}" }
 
     - { mode: "u=rwx,g=rx,o=", path: "/opt/backup_restore" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/scripts" }
 
 - name: enable epel repository => is_rhel
   dnf:
@@ -212,7 +213,7 @@
     regexp: '^{{item.regex}}\s*='
     line: '{{item.line}}'
   with_items:
-    # IPV6 not needed yet
+    # enable IPV6
     - { regex: "net\\.ipv6\\.conf\\.all\\.disable_ipv6", line: "net.ipv6.conf.all.disable_ipv6 = 0" }
 
     # needed to fix "netdev budget ran outs" on a atom cpu
@@ -243,6 +244,13 @@
     - { regex: "net\\.ipv4\\.udp_wmem_min", line: "net.ipv4.udp_wmem_min = 4096" }
 
     - { regex: "net\\.ipv4\\.tcp_slow_start_after_idle", line: "net.ipv4.tcp_slow_start_after_idle = 0" }
+
+    # https://security.stackexchange.com/questions/43205/nf-conntrack-table-full-dropping-packet
+    # fix connection track table full, because of a denial of service
+    #- { regex: "net\\.netfilter\\.nf_conntrack_generic_timeout", line: "net.netfilter.nf_conntrack_generic_timeout = 120" }
+    #- { regex: "net\\.netfilter\\.nf_conntrack_sctp_timeout_established", line: "net.netfilter.nf_conntrack_sctp_timeout_established = 54000" }
+    #sysctl -w net.netfilter.nf_conntrack_generic_timeout=120   => old was 600
+    #sysctl -w net.netfilter.nf_conntrack_sctp_timeout_established=54000    => old was 432000
   register: sysctlchanged
 
 - name: refresh sysctl to activate sysctl changes => sysctl changed

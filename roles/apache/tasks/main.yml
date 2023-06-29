@@ -72,22 +72,6 @@
     mode: 0640
   when: not certificate_files.stat.exists
   
-- name: prepare needed folder
-  file:
-    path: "/opt/letsencrypt/"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-
-- name: copy letsencrypt check script
-  template:
-    src: "templates/letsencrypt/check.sh"
-    dest: "/opt/letsencrypt/check.sh"
-    owner: root
-    group: root
-    mode: 0750
-
 # APACHE
 - name: prepare needed folder
   file:

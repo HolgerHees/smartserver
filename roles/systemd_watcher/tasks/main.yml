@@ -1,17 +1,7 @@
-- name: prepare needed folder
-  file:
-    path: "{{item}}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0750
-  with_items:
-    - "/opt/systemd_watcher"
-
 - name: copy cmd
   template:
     src: "templates/service_check"
-    dest: "/opt/systemd_watcher/service_check"
+    dest: "/opt/scripts/systemd_watcher_service_check"
     owner: root
     group: root
     mode: 0750
@@ -19,7 +9,7 @@
 - name: create cron job
   vars:
     name: "Systemd watcher"
-    cmd: "/opt/systemd_watcher/service_check"
+    cmd: "/opt/scripts/systemd_watcher_service_check"
     file: "ansible_systemd_watcher"
     minute: "*/5"
   import_tasks: roles/cron/shared/add_cronjob.yml

@@ -93,7 +93,6 @@
     - "{{ global_lib }}netdata/cache"
     - "/etc/netdata/custom-plugins.d"
     - "/etc/netdata/health.d"
-    - "/opt/netdata_helper"
 
 - name: prepare missing folder => is_rhel or is_fedora
   file:
@@ -144,7 +143,7 @@
     group: root
     mode: 0750
   with_items:
-    - "/opt/netdata_helper/send_notification"
+    - "/opt/scripts/netdata_to_alertmanager"
 
 - name: change service config
   lineinfile:
@@ -200,7 +199,7 @@
 - name: create cron job
   vars:
     name: "Netdata error check"
-    cmd: "/opt/netdata_helper/send_notification"
+    cmd: "/opt/scripts/netdata_to_alertmanager"
     file: "ansible_netdata"
     minute: "*/5"
   import_tasks: roles/cron/shared/add_cronjob.yml

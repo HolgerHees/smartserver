@@ -25,21 +25,10 @@
   notify: "restart mdmonitor"
   when: mdraid.stat.exists and is_suse|bool
   
-- name: prepare needed folder
-  file:
-    path: "{{item.path}}"
-    state: directory
-    owner: root
-    group: root
-    mode: "{{item.mode}}"
-  with_items:
-    - { mode: "u=rwx,g=rx,o=", path: "/opt/mdadm" }
-  when: mdraid.stat.exists
-
 - name: copy event script
   template:
     src: "templates/mdevents.sh"
-    dest: "/opt/mdadm/mdevents.sh"
+    dest: "/opt/scripts/hardware_mdadm_mdevents.sh"
     owner: root
     group: root
     mode: 0750
@@ -62,7 +51,7 @@
     - { field: 'MDADM_SEND_MAIL_ON_START', value: 'yes' }
     - { field: 'MDADM_DEVICE_TIMEOUT', value: '60' }
     - { field: 'MDADM_CHECK_DURATION', value: '2 hours' }
-    - { field: 'MDADM_PROGRAM', value: '/opt/mdadm/mdevents.sh' }
+    - { field: 'MDADM_PROGRAM', value: '/opt/scripts/hardware_mdadm_mdevents.sh' }
   notify: "restart mdmonitor"
   when: mdraid.stat.exists
 
