@@ -18,15 +18,18 @@ from config import config
 from smartserver.argsparser import ArgsParser
 from smartserver import command
 
-def checkParameter(name, args_values, last_states):
-    if args_values["limit"] != None and args_values["limit"] != app.getName():
+def checkParameter(name, args_values, last_states, current_states):
+    if args_values["limit"] != None and args_values["limit"] != name:
         return False
 
     if args_values["confirm"]:
-        last_state = last_states.get(app.getName(), None)
-        if len(last_state["updates"]) == 0:
+        last_state = last_states.get(name, None)
+        if last_state is None:
+            print("  - '{}' skipped".format(name))
+            return False
+        elif len(last_state["updates"]) == 0:
             current_states['states'].append(last_state)
-            print("  - '{}' skipped".format(app.getName()))
+            print("  - '{}' skipped".format(name))
             return False
         #print(last_state)
     return True
@@ -64,15 +67,14 @@ for config_file in files:
         repo = plugin.Repository(job_config, config.global_config)
         applications = repo.getApplications()
         if len(applications) == 0:
-            if not checkParameter(app.getName(), args_values, last_states):
+            if not checkParameter(app.getName(), args_values, last_states, current_states):
                 continue
 
             print("  - '{}'".format(job_config['name']), end='')
             print( " \033[0;32mis updatet\033[0m")
         else:
             for app in applications:
-
-                if not checkParameter(app.getName(), args_values, last_states):
+                if not checkParameter(app.getName(), args_values, last_states, current_states):
                     continue
 
                 app.checkForUpdates()
