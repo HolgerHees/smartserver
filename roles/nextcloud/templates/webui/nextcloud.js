@@ -4,5 +4,5 @@ subGroup.addUrl('notes','//nextcloud.{host}/index.php/apps/notes/', ['user'], 11
 subGroup.addUrl('deck','//nextcloud.{host}/index.php/apps/deck/', ['user'], 110, '{i18n_Tasks}', '{i18n_Deck}', 'nextcloud_deck.svg', false);
 subGroup.addUrl('photos','//nextcloud.{host}/index.php/apps/photos/', ['user'], 111, '{i18n_Photos}', '{i18n_Gallery}', 'nextcloud_photos.svg', false);
 subGroup.addUrl('news','//nextcloud.{host}/index.php/apps/news/', ['user'], 120, '{i18n_News}', '{i18n_RSSFeeds}', 'nextcloud_news.svg', false);
-subGroup.addUrl('passman','//nextcloud.{host}/index.php/apps/passman/', ['user'], 130, '{i18n_Keys}', '{i18n_Passman}', 'nextcloud_passwords.svg', false);
+subGroup.addUrl('passman','//nextcloud.{host}/index.php/apps/passman/', ['user'], 130, '{i18n_Keys}', '{i18n_Passwords}', 'nextcloud_passwords.svg', false);
 
