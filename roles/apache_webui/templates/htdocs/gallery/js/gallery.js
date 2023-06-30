@@ -214,6 +214,7 @@ mx.Gallery = (function( ret ) {
         
         if( isFullscreen )
         {
+            galleryStartPlayButton.style.display = activeItem.dataset.index == 0 || isPlaying ? "none" : "";
             galleryPreviousButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
             galleryNextButton.style.display = activeItem.dataset.index == containers.length - 1 ? "none" : "";
         }
@@ -334,7 +335,7 @@ mx.Gallery = (function( ret ) {
             playTimer = null;
         }
         
-        galleryStartPlayButton.style.display = "";
+        galleryStartPlayButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
         galleryStopPlayButton.style.display = "";
         
         document.removeEventListener("tapstart",stopPlay);
