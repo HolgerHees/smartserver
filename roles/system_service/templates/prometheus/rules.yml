@@ -91,10 +91,29 @@ groups:
 - name: suspicious_traffic
   rules:
   - alert: Suspicious traffic detected
-    expr: 'system_service_malware{type="suspicious"} > 0'
+    expr: 'system_service_malware{type="detected"} > 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
       severity: critical
     annotations:
       summary: "Suspicious traffic detected"
+
+  - alert: Suspicious traffic list outdated
+    expr: 'system_service_malware{type="list_state"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "Suspicious traffic list outdated"
+
+  - alert: Suspicious traffic list is empty
+    expr: 'system_service_malware{type="list_entries"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "Suspicious traffic list is empty"
+

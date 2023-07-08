@@ -1336,6 +1336,14 @@
           "color": {
             "mode": "thresholds"
           },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "color-background"
+            },
+            "inspect": false,
+            "minWidth": 65
+          },
           "mappings": [],
           "noValue": "0",
           "thresholds": {
@@ -1344,42 +1352,92 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
               }
             ]
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "suspicious"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "index": 0,
+                        "text": "Norm."
+                      },
+                      "1": {
+                        "color": "yellow",
+                        "index": 1,
+                        "text": "Scan"
+                      },
+                      "2": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "Alert"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "filterable",
+                "value": true
+              },
+              {
+                "id": "custom.width",
+                "value": 65
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "transparent",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 3,
-        "w": 1,
+        "h": 5,
+        "w": 2,
         "x": 11,
         "y": 12
       },
       "hideTimeOverride": true,
-      "id": 7,
+      "id": 20,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "limit": 5000,
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "text": {
-          "titleSize": 1
-        },
-        "textMode": "auto"
+        "showHeader": true
       },
       "pluginVersion": "10.0.1",
       "targets": [
@@ -1391,22 +1449,16 @@
           "groupBy": [
             {
               "params": [
-                "$__interval"
+                "suspicious::tag"
               ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
+              "type": "tag"
             }
           ],
           "measurement": "netflow_size",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "default",
           "refId": "A",
-          "resultFormat": "time_series",
+          "resultFormat": "table",
           "select": [
             [
               {
@@ -1417,128 +1469,31 @@
               },
               {
                 "params": [],
-                "type": "sum"
+                "type": "count"
               }
             ]
           ],
-          "tags": [
-            {
-              "key": "suspicious::tag",
-              "operator": "=",
-              "value": "2"
-            }
-          ]
+          "tags": []
         }
       ],
       "timeShift": "2m",
-      "title": "Infects",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 1,
-        "x": 12,
-        "y": 12
-      },
-      "hideTimeOverride": true,
-      "id": 18,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "limit": 5000,
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.1",
-      "targets": [
+      "title": "Suspicious Traffic",
+      "transformations": [
         {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
             },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+            "indexByName": {},
+            "renameByName": {
+              "count": "Count",
+              "suspicious": "Type"
             }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "suspicious::tag",
-              "operator": "=",
-              "value": "1"
-            }
-          ]
+          }
         }
       ],
-      "timeShift": "2m",
-      "title": "Scanning",
-      "transformations": [],
-      "type": "stat"
+      "type": "table"
     },
     {
       "datasource": {
@@ -1867,7 +1822,7 @@
               }
             ]
           },
-          "unit": "locale"
+          "unit": "dateTimeAsLocalNoDateIfToday"
         },
         "overrides": []
       },
@@ -1875,10 +1830,9 @@
         "h": 3,
         "w": 2,
         "x": 11,
-        "y": 15
+        "y": 17
       },
-      "hideTimeOverride": true,
-      "id": 19,
+      "id": 21,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -1889,7 +1843,6 @@
             "lastNotNull"
           ],
           "fields": "",
-          "limit": 5000,
           "values": false
         },
         "textMode": "auto"
@@ -1903,15 +1856,37 @@
           },
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "system_service_malware{type=\"list\"}",
-          "instant": false,
-          "legendFormat": "{{type}}",
-          "range": true,
+          "expr": "system_service_malware{type=\"list_last_modified\"}",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "Malware DB",
+          "range": false,
           "refId": "A"
         }
       ],
-      "timeShift": "2m",
-      "transformations": [],
+      "title": "SP List updated",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Last Updated",
+            "binary": {
+              "left": "Malware DB",
+              "operator": "*",
+              "reducer": "sum",
+              "right": "1000"
+            },
+            "mode": "binary",
+            "reduce": {
+              "include": [
+                "Malware DB"
+              ],
+              "reducer": "sum"
+            },
+            "replaceFields": true
+          }
+        }
+      ],
       "type": "stat"
     },
     {
@@ -1951,10 +1926,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 5,
         "w": 2,
         "x": 11,
-        "y": 18
+        "y": 20
       },
       "hideTimeOverride": true,
       "id": 11,
@@ -2051,6 +2026,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 24,
+  "version": 27,
   "weekStart": ""
 }
