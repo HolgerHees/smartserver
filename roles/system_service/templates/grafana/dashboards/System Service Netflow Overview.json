@@ -111,6 +111,7 @@
       "hideTimeOverride": true,
       "id": 17,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -127,7 +128,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -257,6 +258,7 @@
       "hideTimeOverride": true,
       "id": 14,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -273,7 +275,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -532,6 +534,7 @@
       "hideTimeOverride": true,
       "id": 6,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -548,7 +551,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -687,6 +690,7 @@
       "hideTimeOverride": true,
       "id": 4,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -703,7 +707,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -828,6 +832,7 @@
       "hideTimeOverride": true,
       "id": 5,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -844,7 +849,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -1164,6 +1169,7 @@
       "hideTimeOverride": true,
       "id": 15,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -1180,7 +1186,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -1328,51 +1334,54 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
-          "unit": "bytes"
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 2,
+        "h": 3,
+        "w": 1,
         "x": 11,
         "y": 12
       },
       "hideTimeOverride": true,
       "id": 7,
       "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "pieType": "pie",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
         "reduceOptions": {
-          "calcs": [],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "limit": 5000,
-          "values": true
+          "values": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "text": {
+          "titleSize": 1
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -1382,16 +1391,22 @@
           "groupBy": [
             {
               "params": [
-                "protocol"
+                "$__interval"
               ],
-              "type": "tag"
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
             }
           ],
           "measurement": "netflow_size",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
-          "resultFormat": "table",
+          "resultFormat": "time_series",
           "select": [
             [
               {
@@ -1405,12 +1420,125 @@
                 "type": "sum"
               }
             ]
+          ],
+          "tags": [
+            {
+              "key": "suspicious::tag",
+              "operator": "=",
+              "value": "2"
+            }
           ]
         }
       ],
       "timeShift": "2m",
+      "title": "Infects",
       "transformations": [],
-      "type": "piechart"
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 1,
+        "x": 12,
+        "y": 12
+      },
+      "hideTimeOverride": true,
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "limit": 5000,
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "suspicious::tag",
+              "operator": "=",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Scanning",
+      "transformations": [],
+      "type": "stat"
     },
     {
       "datasource": {
@@ -1559,6 +1687,7 @@
       "hideTimeOverride": true,
       "id": 16,
       "options": {
+        "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
@@ -1575,7 +1704,7 @@
           }
         ]
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -1720,6 +1849,73 @@
     },
     {
       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 2,
+        "x": 11,
+        "y": 15
+      },
+      "hideTimeOverride": true,
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "limit": 5000,
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "builder",
+          "exemplar": false,
+          "expr": "system_service_malware{type=\"list\"}",
+          "instant": false,
+          "legendFormat": "{{type}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "timeShift": "2m",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
         "type": "influxdb",
         "uid": "system_info_influxdb"
       },
@@ -1755,10 +1951,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 2,
         "x": 11,
-        "y": 19
+        "y": 18
       },
       "hideTimeOverride": true,
       "id": 11,
@@ -1855,6 +2051,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 22,
+  "version": 24,
   "weekStart": ""
 }

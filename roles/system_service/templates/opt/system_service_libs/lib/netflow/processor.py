@@ -15,9 +15,9 @@ import cProfile, pstats, io
 from pstats import SortKey
 
 from .collector import ThreadedNetFlowListener
-from .cache import Cache
 
 from lib.influxdb import InfluxDB
+from lib.ipcache import IPCache
 
 IP_PROTOCOLS = {
     1: "icmp",
@@ -38,7 +38,6 @@ PROMETHEUS_INTERVAL = 60
 
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
-    public_networks = []
 
     @staticmethod
     def getService(dest_port, protocol):
@@ -61,20 +60,15 @@ class Helper():
         raise KeyError( "{} - {}".format(", ".join(keys), d.keys()))
 
     @staticmethod
-    def isExternal(address):
-        if address.is_global:
-            if not Helper.public_networks:
-                return True
-            for network in Helper.public_networks:
-                if address in network:
-                    return False
+    def isExpectedTraffic(ip, port, config):
+        if config.netflow_incoming_traffic and Helper.getServiceKey(ip, port) in config.netflow_incoming_traffic:
             return True
 
         return False
 
     @staticmethod
-    def shouldSwapDirection(connection, config):
-        srcIsExternal = Helper.isExternal(connection.src)
+    def shouldSwapDirection(connection, config, cache):
+        srcIsExternal = cache.isExternal(connection.src)
         if ( \
             ( connection.protocol in PING_PROTOCOLS and srcIsExternal ) \
             or \
@@ -152,7 +146,7 @@ class Connection:
         self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
 
         # swap direction
-        if Helper.shouldSwapDirection(self, config):
+        if Helper.shouldSwapDirection(self, config, cache):
            #or not self.src.is_private:
             _ = self.dest_port
             self.dest_port = self.src_port
@@ -240,7 +234,7 @@ class Connection:
         return self._location if self._location is not None else self.cache.getLocation(self.src if self.src.is_global else self.dest, False)
 
 class Processor(threading.Thread):
-    def __init__(self, config, handler, influxdb ):
+    def __init__(self, config, handler, influxdb, ipcache, malware ):
         threading.Thread.__init__(self)
 
         self.is_running = True
@@ -253,22 +247,16 @@ class Processor(threading.Thread):
         self.last_registry = {}
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
 
-        for network in config.public_networks:
-            network = ipaddress.ip_network(network)
-            #if network.is_private:
-            #    continue
-            Helper.public_networks.append(network)
+        self.cache = ipcache
 
-        self.cache = Cache(self.config, Helper)
+        self.malware = malware
 
         influxdb.register(self.getMessurements)
 
     def terminate(self):
-        self.cache.terminate()
         self.is_running = False
 
     def start(self):
-        self.cache.start()
         super().start()
 
     def run(self):
@@ -401,10 +389,11 @@ class Processor(threading.Thread):
     def getMessurements(self):
         messurements = []
 
-        #start = time.time()
-        #logging.info("PROCESSING")
-        #pr = cProfile.Profile()
-        #pr.enable()
+        # ******
+        start = time.time()
+        logging.info("PROCESSING")
+        pr = cProfile.Profile()
+        pr.enable()
 
         registry = {}
         for con in list(self.connections):
@@ -415,13 +404,10 @@ class Processor(threading.Thread):
 
             # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
             timestamp -= METRIC_TIMESHIFT
-
-            #if timestamp < self.last_metric_end:
-            #    #logging.info("fix {} by {}".format(con.answer_flow is not None, int(self.last_metric_end + 1) - timestamp))
-            #    timestamp = int(self.last_metric_end + 1)
+            timestamp = int(timestamp * 1000)
 
             _location = con.location
-            if _location["type"] == Cache.TYPE_LOCATION:
+            if _location["type"] == IPCache.TYPE_LOCATION:
                 location_country_name = _location["country_name"] if _location["country_name"] else "Unknown"
                 location_country_code = _location["country_code"] if _location["country_code"] else "xx"
                 location_zip = _location["zip"] if _location["zip"] else "0"
@@ -429,7 +415,7 @@ class Processor(threading.Thread):
                 #location_district = _location["district"] if _location["district"] else None
                 location_geohash = Helper.encodeGeohash(_location["lat"], _location["lon"], 5) if _location["lat"] and _location["lon"] else None
                 location_org = _location["org"] if _location["org"] else ( _location["isp"] if _location["isp"] else "Unknown" )
-            elif _location["type"] == Cache.TYPE_UNKNOWN:
+            elif _location["type"] == IPCache.TYPE_UNKNOWN:
                 location_country_name = "Unknown"
                 location_country_code = "xx"
                 location_zip = "0"
@@ -437,7 +423,7 @@ class Processor(threading.Thread):
                 #location_district = None
                 location_geohash = None
                 location_org = "Unknown"
-            elif _location["type"] == Cache.TYPE_PRIVATE:
+            elif _location["type"] == IPCache.TYPE_PRIVATE:
                 location_country_name = "Private"
                 location_country_code = "xx"
                 location_zip = "0"
@@ -448,11 +434,13 @@ class Processor(threading.Thread):
 
             label = []
 
-            _srcIsExternal = Helper.isExternal(con.src)
+            _srcIsExternal = self.cache.isExternal(con.src)
             extern_ip = con.src if _srcIsExternal else con.dest
             extern_hostname = con.src_hostname if _srcIsExternal else con.dest_hostname
             intern_ip = con.dest if _srcIsExternal else con.src
             intern_hostname = con.dest_hostname if _srcIsExternal else con.src_hostname
+
+            malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(con.dest, con.dest_port, self.config), timestamp)
 
             label.append("intern_ip={}".format(intern_ip))
             label.append("intern_host={}".format(intern_hostname))
@@ -470,6 +458,8 @@ class Processor(threading.Thread):
             label.append("extern_group={}".format(extern_group))
 
             label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
+
+            label.append("suspicious={}".format(malware_state))
 
             service = con.service
             if service == "unknown" and "speedtest" in extern_hostname:
@@ -500,8 +490,6 @@ class Processor(threading.Thread):
             #logging.info("DEST: {} {} {}".format(con.dest, con.dest_hostname,dest_location))
 
             label_str = ",".join(label)
-            timestamp = int(timestamp * 1000)
-
             key = "{}-{}".format(label_str, timestamp)
             if key not in registry:
                 #logging.info("new")
@@ -526,14 +514,15 @@ class Processor(threading.Thread):
         for data in sorted_registry:
             messurements.append("netflow_size,{} value={} {}".format(data[0], data[1], data[2]))
 
-        #end = time.time()
-        #logging.info("FINISHED in {} seconds".format(end-start))
-        #pr.disable()
-        #s = io.StringIO()
-        #sortby = SortKey.CUMULATIVE
-        #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        #ps.print_stats()
-        #logging.info(s.getvalue())
+        end = time.time()
+        logging.info("FINISHED in {} seconds".format(round(end-start,1)))
+        pr.disable()
+        if end-start > end-start > 0.5:
+            s = io.StringIO()
+            sortby = SortKey.CUMULATIVE
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+            logging.info(s.getvalue())
 
         counter_values = self.cache.getCountStats()
         logging.info("Cache statistic - LOCATION [fetch: {}, cache {}/{}], HOSTNAME [fetch: {}, cache {}/{}]".format(counter_values["location_fetch"], counter_values["location_cache"], self.cache.getLocationSize(), counter_values["hostname_fetch"], counter_values["hostname_cache"], self.cache.getHostnameSize()))
@@ -546,8 +535,5 @@ class Processor(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "system_service_process{{type=\"netflow_processor\",}} {}".format("1" if self.is_running else "0"),
-            "system_service_process{{type=\"netflow_cache\",}} {}".format("1" if self.cache.isRunning() else "0"),
-            "system_service_state{{type=\"netflow_ip2location\",}} {}".format("1" if self.cache.getLocationState() else "0"),
-            "system_service_state{{type=\"netflow_cache_file\",}} {}".format("1" if self.cache.getCacheFileState() else "0")
+            "system_service_process{{type=\"netflow_processor\",}} {}".format("1" if self.is_running else "0")
         ]

@@ -19,8 +19,6 @@ class InfluxDBPublisher(_handler.Handler):
     def getMessurements(self):
         messurements = []
 
-        devices = self.cache.getDevices()
-
         for stat in list(filter(lambda s: type(s) is ConnectionStat, self.cache.getStats() )):
             device = stat.getUnlockedDevice()
 

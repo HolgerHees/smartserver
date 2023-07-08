@@ -17,10 +17,13 @@ from lib.scanner.scanner import Scanner as NetworkScanner
 from lib.netflow.processor import Processor as NetflowProcessor
 from lib.speedtest.speedtest import Speedtest
 from lib.fping.fping import FPing
+from lib.info.info import Info
+from lib.malware import Malware
 
 from lib.mqtt import MQTTHandler
 from lib.influxdb import InfluxDB
 from lib.scheduler import Scheduler
+from lib.ipcache import IPCache
 
 
 app = Flask(__name__ )
@@ -37,15 +40,29 @@ class Handler(Server):
         
         self.mqtt = MQTTHandler(config)
         self.influxdb = InfluxDB(config)
+
+        self.ipcache = IPCache(config)
+
+        self.malware = Malware(config)
+
+        self.info = Info(config, self.ipcache)
+
         self.scanner = NetworkScanner(config, self, self.mqtt, self.influxdb )
-        self.netflow = NetflowProcessor(config, self, self.influxdb )
-        self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb )
+        self.netflow = NetflowProcessor(config, self, self.influxdb, self.ipcache, self.malware )
+        self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb, self.info )
         self.fping = FPing(config, self, self.influxdb )
         self.scheduler = Scheduler()
 
     def start(self, callback):
         self.mqtt.start()
         self.influxdb.start()
+
+        self.ipcache.start()
+
+        self.malware.start()
+
+        self.info.start()
+
         self.scanner.start()
         self.netflow.start()
         self.speedtest.start()
@@ -55,6 +72,8 @@ class Handler(Server):
         super().start(callback)
 
     def terminate(self):
+        if self.scheduler:
+            self.scheduler.terminate()
         if self.fping:
             self.fping.terminate()
         if self.speedtest:
@@ -63,12 +82,20 @@ class Handler(Server):
             self.netflow.terminate()
         if self.scanner:
             self.scanner.terminate()
+
+        if self.info:
+            self.info.terminate()
+
+        if self.malware:
+            self.malware.terminate()
+
+        if self.ipcache:
+            self.ipcache.terminate()
+
         if self.influxdb:
             self.influxdb.terminate()
         if self.mqtt:
             self.mqtt.terminate()
-        if self.scheduler:
-            self.scheduler.terminate()
 
         super().terminate()
         
@@ -113,6 +140,11 @@ class Handler(Server):
         metrics = metrics + self.speedtest.getStateMetrics()
         metrics = metrics + self.fping.getStateMetrics()
 
+        metrics = metrics + self.info.getStateMetrics()
+
+        metrics = metrics + self.malware.getStateMetrics()
+        metrics = metrics + self.ipcache.getStateMetrics()
+
         metrics = metrics + self.influxdb.getStateMetrics()
         metrics = metrics + self.mqtt.getStateMetrics()
 
@@ -120,11 +152,20 @@ class Handler(Server):
 
         return "{}\n".format( "\n".join(metrics) )
 
+    def isDefaultISPConnectionActive(self):
+        return self.info.isDefaultISPConnectionActive()
+
 #@app.route('/state/', methods = ['POST'])
 #def state():
 #    pass
 
 #https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
+
+@app.route('/default_isp_state/', methods = ['GET'])
+def default_isp_state():
+    #logging.info(request.headers.get('User-Agent'))
+    #return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
+    return "active" if handler.isDefaultISPConnectionActive() else "inactive"
 
 @app.route('/metrics/', methods = ['GET'])
 def metrics():

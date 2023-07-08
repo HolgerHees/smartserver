@@ -12,27 +12,39 @@ import json
 import schedule
 import os
 
-class Cache(threading.Thread):
+from lib.helper import Helper
+
+class IPCache(threading.Thread):
     TYPE_LOCATION = "Location"
     TYPE_UNKNOWN = "Unknown"
     TYPE_PRIVATE = "Private"
 
-    def __init__(self, config, helper):
+    public_networks = []
+
+    def __init__(self, config):
         threading.Thread.__init__(self)
+
+        for network in config.public_networks:
+            network = ipaddress.ip_network(network)
+            #if network.is_private:
+            #    continue
+            self.public_networks.append(network)
 
         self.max_location_cache_age = 60 * 60 * 24 * 7
         self.max_hostname_cache_age = 60 * 60 * 24 * 1
 
         self.is_running = False
 
-        self.helper = helper
-
         self.queue = queue.Queue()
 
         self.counter_lock = threading.Lock()
         self.counter_values = {"location_fetch": 0, "location_cache": 0, "hostname_fetch": 0, "hostname_cache": 0}
 
-        self.dump_path = "/var/lib/system_service/netflow_cache.json"
+        self.dump_path = "/var/lib/system_service/ip_cache.json"
+
+        self.version = 3
+
+        self.valid_cache_file = True
 
         self.ip2location_url = "http://ip-api.com/json/{}?fields=continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,org,isp,status,message"
         #self.ip2location_url = "https://api.hostip.info/get_json.php?ip={}"
@@ -45,48 +57,64 @@ class Cache(threading.Thread):
         self.ip2location_map = {}
         self.hostname_map = {}
 
-        self.version = 3
+    def isExternal(self, address):
+        if address.is_global:
+            if not self.public_networks:
+                return True
+            for network in self.public_networks:
+                if address in network:
+                    return False
+            return True
 
-        self.valid_cache_file = True
+        return False
 
     def start(self):
         self.is_running = True
-        schedule.every().day.at("01:00").do(self.dump)
-        schedule.every().hour.at("00:00").do(self.cleanup)
+        schedule.every().day.at("01:00").do(self._dump)
+        schedule.every().hour.at("00:00").do(self._cleanup)
         self._restore()
         super().start()
 
-    def _restore(self):
-        try:
-            if os.path.exists(self.dump_path):
-                with open(self.dump_path) as f:
-                    data = json.load(f)
-                    if "version" in data and data["version"] == self.version:
-                        self.ip2location_map = data["ip2location_map"]
-                        self.hostname_map = data["hostname_map"]
-                        logging.info("Cache data loaded ({} locations and {} hostnames)".format(len(self.ip2location_map),len(self.hostname_map)))
-                    else:
-                        logging.info("No cache data loaded (wrong version)")
-                #for ip in self.ip2location_map:
-                #    if self.ip2location_map[ip] is None:
-                #        logging.info(ip)
-                return
-            else:
-                logging.info("No cache data loaded (empty file)")
-            self.valid_cache_file = True
-        except Exception:
-            logging.info("No cache data loaded (invalid file)")
-            self.valid_cache_file = False
+    def terminate(self):
+        if self.is_running and os.path.exists(self.dump_path):
+            self._dump()
+        self.is_running = False
 
-    def dump(self):
+    def run(self):
+        logging.info("IP cache started")
+        try:
+            if not os.path.exists(self.dump_path):
+                self.dump()
+
+            while self.is_running:
+                try:
+                    type, ip = self.queue.get(timeout=0.5)
+                    if type == "location":
+                        self._resolveLocationData(ip)
+                    elif type == "hostname":
+                        self._resolveHostnameData(ip)
+                except queue.Empty:
+                    pass
+            logging.info("IP cache stopped")
+        except Exception:
+            logging.error(traceback.format_exc())
+            self.is_running = False
+
+    def _restore(self):
+        self.valid_cache_file, data = Helper.loadConfig(self.dump_path, self.version )
+        if data is not None:
+            self.ip2location_map = data["ip2location_map"]
+            self.hostname_map = data["hostname_map"]
+            logging.info("Loaded {} locations and {} hostnames".format(len(self.ip2location_map),len(self.hostname_map)))
+
+    def _dump(self):
         if self.valid_cache_file and len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
             with self.location_lock:
                 with self.hostname_lock:
-                    with open(self.dump_path, 'w') as f:
-                        json.dump( { "version": self.version, "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map }, f, ensure_ascii=False)
-                        logging.info("Cache data saved ({} locations and {} hostnames)".format(len(self.ip2location_map),len(self.hostname_map)))
+                    Helper.saveConfig(self.dump_path, self.version, { "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map } )
+                    logging.info("Saved {} locations and {} hostnames".format(len(self.ip2location_map),len(self.hostname_map)))
 
-    def cleanup(self):
+    def _cleanup(self):
         _now = time.time()
         location_count = 0
         with self.location_lock:
@@ -101,31 +129,9 @@ class Cache(threading.Thread):
                 if _now - self.hostname_map[_ip]["time"] > self.max_hostname_cache_age:
                     del self.hostname_map[_ip]
                     hostname_count += 1
-        logging.info("Cache data cleaned ({} locations and {} hostnames)".format(location_count, hostname_count))
+        logging.info("Cleaned {} locations and {} hostnames".format(location_count, hostname_count))
 
-    def terminate(self):
-        if self.is_running:
-            self.dump()
-        self.is_running = False
-
-    def run(self):
-        logging.info("Netflow cache started")
-        try:
-            while self.is_running:
-                try:
-                    type, ip = self.queue.get(timeout=0.5)
-                    if type == "location":
-                        self._resolveLocationData(ip)
-                    elif type == "hostname":
-                        self._resolveHostnameData(ip)
-                except queue.Empty:
-                    pass
-            logging.info("Netflow cache stopped")
-        except Exception:
-            logging.error(traceback.format_exc())
-            self.is_running = False
-
-    def increaseStats(self, type):
+    def _increaseStats(self, type):
         with self.counter_lock:
             self.counter_values[type] += 1
 
@@ -135,15 +141,6 @@ class Cache(threading.Thread):
             self.counter_values = {"location_fetch": 0, "location_cache": 0, "hostname_fetch": 0, "hostname_cache": 0}
         return counter_values
 
-    def isRunning(self):
-        return self.is_running
-
-    def getLocationState(self):
-        return self.ip2location_state
-
-    def getCacheFileState(self):
-        return self.valid_cache_file
-
     def getLocationSize(self):
         return len(self.ip2location_map)
 
@@ -152,7 +149,7 @@ class Cache(threading.Thread):
         location = self.ip2location_map.get(_ip, None)
         if location is not None:
             #print("cachedLocation {}".format(ip))
-            self.increaseStats("location_cache")
+            self._increaseStats("location_cache")
         elif threaded:
             self.queue.put(["location", ip])
             return None
@@ -164,10 +161,10 @@ class Cache(threading.Thread):
         return location["data"]
 
     def _getUnknownLocationData(self, _now):
-        return { "data": { "type": Cache.TYPE_UNKNOWN }, "time": _now }
+        return { "data": { "type": IPCache.TYPE_UNKNOWN }, "time": _now }
 
     def _getPrivateLocationData(self, _now):
-        return { "data": { "type": Cache.TYPE_PRIVATE }, "time": _now }
+        return { "data": { "type": IPCache.TYPE_PRIVATE }, "time": _now }
 
     def _checkField(self, key, data, fallback):
         if key not in data or data[key] == "":
@@ -189,7 +186,7 @@ class Cache(threading.Thread):
         location = self.ip2location_map.get(_ip, None)
         if location is None:
             if not ip.is_global:
-                self.increaseStats("location_cache")
+                self._increaseStats("location_cache")
                 location = self._getPrivateLocationData(_now)
                 with self.location_lock:
                     self.ip2location_map[_ip] = location
@@ -206,7 +203,7 @@ class Cache(threading.Thread):
                     self.ip2location_throttled_until = _now + 15
                     return None
                 elif response.status_code == 200:
-                    self.increaseStats("location_fetch")
+                    self._increaseStats("location_fetch")
                     if len(response.content) > 0:
                         try:
                             data = json.loads(response.content)
@@ -218,7 +215,7 @@ class Cache(threading.Thread):
 
                         if data["status"] == "success":
                             location = { "data": {
-                                "type": Cache.TYPE_LOCATION,
+                                "type": IPCache.TYPE_LOCATION,
                                 "continent_name": data["continent"],
                                 "continent_code": data["continentCode"].lower(),
                                 "country_name": data["country"],
@@ -260,7 +257,7 @@ class Cache(threading.Thread):
                     self.ip2location_state = False
                     return None
         else:
-            self.increaseStats("location_cache")
+            self._increaseStats("location_cache")
 
         return location
 
@@ -271,7 +268,7 @@ class Cache(threading.Thread):
         _ip = ip.compressed
         hostname = self.hostname_map.get(_ip, None)
         if hostname is not None:
-            self.increaseStats("hostname_cache")
+            self._increaseStats("hostname_cache")
         elif threaded:
             self.queue.put(["hostname", ip])
             return None
@@ -284,17 +281,24 @@ class Cache(threading.Thread):
         _ip = ip.compressed
         hostname = self.hostname_map.get(_ip, None)
         if hostname is None:
-            self.increaseStats("hostname_fetch")
+            self._increaseStats("hostname_fetch")
             _hostname = socket.getfqdn(_ip)
             if _hostname != _ip:
-                if not self.helper.isExternal(ip):
+                if not self.isExternal(ip):
                     _hostname = _hostname.split('.', 1)[0]
-            elif type(ip) is ipaddress.IPv6Address and not self.helper.isExternal(ip):
+            elif type(ip) is ipaddress.IPv6Address and not self.isExternal(ip):
                 # don't cache internal IPv6 Addresses, because they can get a dns name soon
                 return { "data": _hostname, "time": time.time() }
             hostname = { "data": _hostname, "time": time.time() }
             with self.hostname_lock:
                 self.hostname_map[_ip] = hostname
         else:
-            self.increaseStats("hostname_cache")
+            self._increaseStats("hostname_cache")
         return hostname
+
+    def getStateMetrics(self):
+        return [
+            "system_service_process{{type=\"ip_cache\",}} {}".format("1" if self.is_running else "0"),
+            "system_service_state{{type=\"ip_cache_ip2location\",}} {}".format("1" if self.ip2location_state else "0"),
+            "system_service_state{{type=\"ip_cache_dump\",}} {}".format("1" if self.valid_cache_file else "0")
+        ]

@@ -17,6 +17,7 @@ from config import config
 
 from smartserver.github import GitHub
 from smartserver import command
+from smartserver import info
 
 import pexpect 
 
@@ -52,6 +53,10 @@ elif cmd == "stop":
         GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")
     exit(0)
 elif cmd == "start" or cmd == "restart":
+    if not info.Info.isDefaultISPConnectionActive():
+        log.info("Skip job, because default isp connection is inactive")
+        exit(0)
+
     processed_git_hash = service.checkRunningJob(config.status_file)
 
     git.initRepository(config.repository_dir, config.repository_url, config.build_dir)

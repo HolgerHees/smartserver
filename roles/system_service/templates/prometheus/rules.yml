@@ -69,3 +69,32 @@ groups:
       severity: critical
     annotations:
       summary: "WAN connection ping latency is {{'{{'}}$value{{'}}'}} ms"
+
+  - alert: Default ISP not active
+    expr: 'system_service_info{type="default_isp"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "Default ISP route not active. Maybe fallback isp is active."
+
+  - alert: WAN not active
+    expr: 'system_service_info{type="wan_active"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "WAN not active. Maybe we are down."
+
+- name: suspicious_traffic
+  rules:
+  - alert: Suspicious traffic detected
+    expr: 'system_service_malware{type="suspicious"} > 0'
+    for: 0m
+    labels:
+      notifyGroup: "wan_connection"
+      severity: critical
+    annotations:
+      summary: "Suspicious traffic detected"
