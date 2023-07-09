@@ -477,7 +477,8 @@ class Processor(threading.Thread):
             service = con.service
             if service == "unknown" and "speedtest" in extern_hostname:
                 service = "speedtest"
-            label.append("destination_service={}".format(service))
+            label.append("service={}".format(service))
+
             label.append("destination_port={}".format(con.dest_port))
             label.append("source_port={}".format(con.src_port))
             #label.append("size={}".format(con.size))
