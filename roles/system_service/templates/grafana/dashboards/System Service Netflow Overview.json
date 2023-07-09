@@ -567,7 +567,7 @@
             },
             {
               "params": [
-                "port"
+                "destination_port::tag"
               ],
               "type": "tag"
             }
@@ -592,7 +592,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -606,11 +607,12 @@
             },
             "indexByName": {
               "Time": 0,
-              "port": 2,
+              "destination_port": 2,
               "service": 1,
               "sum": 3
             },
             "renameByName": {
+              "destination_port": "Port",
               "port": "Port",
               "service": "Name",
               "sum": "Traffic"
@@ -2064,6 +2066,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 29,
+  "version": 30,
   "weekStart": ""
 }
