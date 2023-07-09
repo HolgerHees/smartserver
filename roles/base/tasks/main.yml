@@ -247,8 +247,16 @@
 
     # https://security.stackexchange.com/questions/43205/nf-conntrack-table-full-dropping-packet
     # fix connection track table full, because of a denial of service
+
+    #https://discuss.aerospike.com/t/how-to-handle-net-netfilter-nf-conntrack-count-max-exceeded/5051
+
+    #net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60
+    #net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 60
+    #net.netfilter.nf_conntrack_tcp_timeout_time_wait = 60
+    #net.netfilter.nf_conntrack_max = 524288
     #- { regex: "net\\.netfilter\\.nf_conntrack_generic_timeout", line: "net.netfilter.nf_conntrack_generic_timeout = 120" }
     #- { regex: "net\\.netfilter\\.nf_conntrack_sctp_timeout_established", line: "net.netfilter.nf_conntrack_sctp_timeout_established = 54000" }
+
     #sysctl -w net.netfilter.nf_conntrack_generic_timeout=120   => old was 600
     #sysctl -w net.netfilter.nf_conntrack_sctp_timeout_established=54000    => old was 432000
   register: sysctlchanged

@@ -4,6 +4,7 @@ import re
 from collections import deque
 import logging
 import time
+import random
 
 from smartserver import command
 
@@ -45,11 +46,11 @@ class PortScanner(_handler.Handler):
                             if device is None or device.getIP() is None or device in self.waiting_queue or device in self.running_queue:
                                 continue
                             
-                            if self.monitored_devices[mac] == None or (now - self.monitored_devices[mac]).total_seconds() > self.config.port_rescan_interval:
+                            if now >= self.monitored_devices[mac]:
                                 self.waiting_queue.append(device)
                                 _timeout = self.config.port_rescan_interval
-                            elif self.monitored_devices[mac] != None:
-                                _timeout = (now - self.monitored_devices[mac]).total_seconds()
+                            else:
+                                _timeout = (self.monitored_devices[mac] - now).total_seconds()
                                 
                             if _timeout < timeout:
                                 timeout = _timeout
@@ -68,7 +69,8 @@ class PortScanner(_handler.Handler):
 
         if self._isRunning():
             with self.data_lock:
-                self.monitored_devices[device.getMAC()] = datetime.now()
+                # randomize next scan to avoid flooting connection track table of netfilter (iptables)
+                self.monitored_devices[device.getMAC()] = datetime.now() + timedelta(seconds=self.config.port_rescan_interval + random.randint(0,3600))
 
                 events = []
 
@@ -108,7 +110,7 @@ class PortScanner(_handler.Handler):
                     else:
                         logging.info("Change device {}".format(event.getObject()))
                         
-                    self.monitored_devices[mac] = None
+                    self.monitored_devices[mac] = datetime.now()
                     has_changed_devices = True
 
             if has_changed_devices:

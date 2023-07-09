@@ -71,7 +71,9 @@ class Helper():
         return arp_result
             
     def nmap(ip, isRunningCallback = None):
-        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
+        # using "--defeat-rst-ratelimit" will hit the limit of netfilter (iptables) conntrack table
+        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
+        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
         if returncode != 0:
             raise Exception("Cmd 'nmap' was not successful")
 
