@@ -59,7 +59,7 @@ silent_alerts:
   - name: "All logs except openhab"
     matchers:
       - notifyGroup=~"logs-.*"
-      - notifyGroup!~"logs-(openhab)"
+      - notifyGroup!~"logs-(openhab|system_service)"
   - name: "Skip internal openhab logs"
     matchers:
       - notifyGroup="logs-openhab"
