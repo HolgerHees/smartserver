@@ -461,9 +461,9 @@ class Processor(threading.Thread):
 
             if malware_state == 0:
                 traffic_group = "normal"
-            elif malwar_state == 1:
+            elif malware_state == 1:
                 traffic_group = "scanning"
-            elif malwar_state == 2:
+            elif malware_state == 2:
                 traffic_group = "intruded"
             elif self.allowed_isp_pattern is not None and ( not location_org or not self.allowed_isp_pattern.match(location_org) ):
                 traffic_group = "observed"
