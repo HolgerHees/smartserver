@@ -253,7 +253,7 @@ class Processor(threading.Thread):
 
         influxdb.register(self.getMessurements)
 
-        self.allowed_isp_pattern = re.compile(config.allowed_isp_pattern) if config.allowed_isp_pattern is not None else None
+        self.allowed_isp_pattern = re.compile(config.allowed_isp_pattern, re.IGNORECASE) if config.allowed_isp_pattern is not None else None
 
     def terminate(self):
         self.is_running = False

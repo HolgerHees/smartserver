@@ -1337,24 +1337,15 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "left",
-            "cellOptions": {
-              "type": "color-background"
-            },
-            "inspect": false,
-            "minWidth": 65
-          },
           "mappings": [],
-          "noValue": "normal",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1364,149 +1355,72 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "dateTimeAsLocalNoDateIfToday"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "group"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "intruded": {
-                        "color": "red",
-                        "index": 3,
-                        "text": "Intruded"
-                      },
-                      "normal": {
-                        "index": 0,
-                        "text": "Normal"
-                      },
-                      "observed": {
-                        "index": 1,
-                        "text": "Observed"
-                      },
-                      "scanning": {
-                        "color": "yellow",
-                        "index": 2,
-                        "text": "Scanning"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              },
-              {
-                "id": "filterable",
-                "value": true
-              },
-              {
-                "id": "custom.width",
-                "value": 100
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "count"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "right"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "transparent",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 3,
         "w": 3,
         "x": 10,
         "y": 12
       },
-      "hideTimeOverride": true,
-      "id": 20,
+      "id": 21,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true
+        "textMode": "auto"
       },
       "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "groupBy": [
-            {
-              "params": [
-                "group::tag"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow_size",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "count"
-              }
-            ]
-          ],
-          "tags": []
+          "editorMode": "builder",
+          "exemplar": false,
+          "expr": "system_service_malware{type=\"list_last_modified\"}",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "Malware DB",
+          "range": false,
+          "refId": "A"
         }
       ],
-      "timeShift": "2m",
-      "title": "Suspicious Traffic",
+      "title": "Suspicious IP list updated",
       "transformations": [
         {
-          "id": "organize",
+          "id": "calculateField",
           "options": {
-            "excludeByName": {
-              "Time": true
+            "alias": "",
+            "binary": {
+              "left": "Malware DB",
+              "operator": "*",
+              "reducer": "sum",
+              "right": "1000"
             },
-            "indexByName": {},
-            "renameByName": {
-              "count": "Count",
-              "suspicious": "Type"
-            }
+            "mode": "binary",
+            "reduce": {
+              "include": [
+                "Malware DB"
+              ],
+              "reducer": "sum"
+            },
+            "replaceFields": true
           }
         }
       ],
-      "type": "table"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -1814,15 +1728,24 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "color-background"
+            },
+            "inspect": false,
+            "minWidth": 65
+          },
           "mappings": [],
+          "noValue": "normal",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1832,72 +1755,149 @@
               }
             ]
           },
-          "unit": "dateTimeAsLocalNoDateIfToday"
+          "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "group"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "intruded": {
+                        "color": "red",
+                        "index": 3,
+                        "text": "Intruded"
+                      },
+                      "normal": {
+                        "index": 0,
+                        "text": "Normal"
+                      },
+                      "observed": {
+                        "index": 1,
+                        "text": "Observed"
+                      },
+                      "scanning": {
+                        "color": "yellow",
+                        "index": 2,
+                        "text": "Scanning"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "filterable",
+                "value": true
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "transparent",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 3,
+        "h": 6,
         "w": 3,
         "x": 10,
-        "y": 18
+        "y": 15
       },
-      "id": 21,
+      "hideTimeOverride": true,
+      "id": 20,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "textMode": "auto"
+        "showHeader": true
       },
       "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
           },
-          "editorMode": "builder",
-          "exemplar": false,
-          "expr": "system_service_malware{type=\"list_last_modified\"}",
-          "format": "time_series",
-          "instant": true,
-          "legendFormat": "Malware DB",
-          "range": false,
-          "refId": "A"
+          "groupBy": [
+            {
+              "params": [
+                "group::tag"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "count"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
-      "title": "Suspicious IP list updated",
+      "timeShift": "2m",
       "transformations": [
         {
-          "id": "calculateField",
+          "id": "organize",
           "options": {
-            "alias": "Last Updated",
-            "binary": {
-              "left": "Malware DB",
-              "operator": "*",
-              "reducer": "sum",
-              "right": "1000"
+            "excludeByName": {
+              "Time": true
             },
-            "mode": "binary",
-            "reduce": {
-              "include": [
-                "Malware DB"
-              ],
-              "reducer": "sum"
-            },
-            "replaceFields": true
+            "indexByName": {},
+            "renameByName": {
+              "count": "Count",
+              "group": "Traffic group",
+              "suspicious": "Type"
+            }
           }
         }
       ],
-      "type": "stat"
+      "type": "table"
     },
     {
       "datasource": {
@@ -2066,6 +2066,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 30,
+  "version": 31,
   "weekStart": ""
 }

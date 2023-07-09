@@ -4,6 +4,7 @@ import traceback
 import json
 import requests
 import ipaddress
+import re
 
 import logging
 
@@ -27,6 +28,8 @@ class Info(threading.Thread):
 
         self.default_isp_connection_active = False
         self.wan_active = False
+
+        self.default_isp_pattern = re.compile(config.default_isp_pattern, re.IGNORECASE) if config.default_isp_pattern is not None else None
 
     def start(self):
         self.is_running = True
@@ -79,11 +82,10 @@ class Info(threading.Thread):
                     active_ip = data["ip-address"]
 
                     result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
-                    for isp in self.config.default_isp_list:
-                        if result["org"] == isp:
-                            return True
-                        if result["isp"] == isp:
-                            return True
+                    if self.default_isp_pattern.match(result["org"]):
+                        return True
+                    if self.default_isp_pattern.match(result["isp"]):
+                        return True
                 except:
                     logging.error("Error parsing ip")
                     logging.error(":{}:".format(response.content))
