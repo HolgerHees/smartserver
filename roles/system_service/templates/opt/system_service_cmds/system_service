@@ -43,7 +43,7 @@ class Handler(Server):
 
         self.ipcache = IPCache(config)
 
-        self.malware = Malware(config)
+        self.malware = Malware(config, self.influxdb)
 
         self.info = Info(config, self.ipcache)
 

@@ -253,6 +253,8 @@ class Processor(threading.Thread):
 
         influxdb.register(self.getMessurements)
 
+        self.allowed_isp_pattern = re.compile(config.allowed_isp_pattern) if config.allowed_isp_pattern is not None else None
+
     def terminate(self):
         self.is_running = False
 
@@ -457,17 +459,27 @@ class Processor(threading.Thread):
             #        break
             label.append("extern_group={}".format(extern_group))
 
-            label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
+            if malware_state == 0:
+                traffic_group = "normal"
+            elif malwar_state == 1:
+                traffic_group = "scanning"
+            elif malwar_state == 2:
+                traffic_group = "intruded"
+            elif self.allowed_isp_pattern is not None and ( not location_org or not self.allowed_isp_pattern.match(location_org) ):
+                traffic_group = "observed"
 
-            label.append("suspicious={}".format(malware_state))
+            label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
+            label.append("group={}".format(traffic_group))
+            label.append("protocol={}".format(con.protocol_name))
+
+            label.append("ip_type={}".format(con.ip_type))
 
             service = con.service
             if service == "unknown" and "speedtest" in extern_hostname:
                 service = "speedtest"
-            label.append("service={}".format(service))
-            label.append("port={}".format(con.dest_port))
-            label.append("_port={}".format(con.src_port))
-            label.append("protocol={}".format(con.protocol_name))
+            label.append("destination_service={}".format(service))
+            label.append("destination_port={}".format(con.dest_port))
+            label.append("source_port={}".format(con.src_port))
             #label.append("size={}".format(con.size))
             #label.append("duration={}".format(con.duration))
             #label.append("packets={}".format(con.packages))
@@ -483,7 +495,6 @@ class Processor(threading.Thread):
             if location_org:
                 label.append("location_org={}".format(InfluxDB.escapeValue(location_org)))
 
-            label.append("ip_type={}".format(con.ip_type))
             #label.append("oneway={}".format(1 if con.is_one_direction else 0))
 
             #logging.info("SRC: {} {} {}".format(con.src, con.src_hostname,src_location))

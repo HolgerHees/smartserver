@@ -48,7 +48,8 @@ default_variables: {
     "authenticated_ip_addresses": { "default": [] },              # apache access always allowed for ipaddresses e.g. from wallmounted tablets
     
     "public_domain":                                              { "default": "public.{{server_domain}}" },
-    "default_isp_list":                                           { "default": [] },
+    "default_isp_list":                                           { "default": [] }, # is used to detect a fallback internet connection
+    "allowed_isp_list":                                           { "default": [] }, # is used to mark incomming traffic as observed, value term supports wildcard ".+"
 
     # used in generic optional role 'wireguard_mobile'
     "mobile_vpn_internal_port": { "default": "51828" },           # the port, used on your server

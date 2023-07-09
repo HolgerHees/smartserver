@@ -7,6 +7,7 @@ server_domain = "{{server_domain}}"
 server_ip = "{{default_server_ip}}"
 
 default_isp_list = [{% if default_isp_list|length > 0 %}"{{default_isp_list | join('","') }}"{% endif %}]
+allowed_isp_pattern = {% if allowed_isp_list|length > 0 %}r"{{allowed_isp_list | join('|') }}"{% else %}None{% endif %}
 
 netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
 netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}

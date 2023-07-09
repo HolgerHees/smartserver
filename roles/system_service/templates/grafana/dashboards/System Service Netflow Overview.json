@@ -1155,6 +1155,10 @@
               {
                 "id": "filterable",
                 "value": true
+              },
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -1162,12 +1166,12 @@
       },
       "gridPos": {
         "h": 13,
-        "w": 11,
+        "w": 10,
         "x": 0,
         "y": 12
       },
       "hideTimeOverride": true,
-      "id": 15,
+      "id": 16,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1222,7 +1226,7 @@
           "measurement": "netflow_size",
           "orderByTime": "DESC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"src_host\", \"dest_host\", \"service\", \"location_country_name\"",
+          "query": "SELECT last(\"value\") FROM \"netflow_size\" WHERE $timeFilter GROUP BY \"src_host\", \"dest_host\", \"service\", \"location_country_name\"",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "table",
@@ -1241,13 +1245,13 @@
               "condition": "AND",
               "key": "direction",
               "operator": "=",
-              "value": "outgoing"
+              "value": "incoming"
             }
           ]
         }
       ],
       "timeShift": "2m",
-      "title": "Outgoing Traffic ->",
+      "title": "Incoming Traffic <-",
       "transformations": [
         {
           "id": "groupBy",
@@ -1278,6 +1282,9 @@
               "service": {
                 "aggregations": [],
                 "operation": "groupby"
+              },
+              "sum": {
+                "aggregations": []
               },
               "value": {
                 "aggregations": [
@@ -1345,7 +1352,7 @@
             "minWidth": 65
           },
           "mappings": [],
-          "noValue": "0",
+          "noValue": "normal",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1361,7 +1368,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "suspicious"
+              "options": "group"
             },
             "properties": [
               {
@@ -1369,19 +1376,23 @@
                 "value": [
                   {
                     "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Norm."
-                      },
-                      "1": {
-                        "color": "yellow",
-                        "index": 1,
-                        "text": "Scan"
-                      },
-                      "2": {
+                      "intruded": {
                         "color": "red",
+                        "index": 3,
+                        "text": "Intruded"
+                      },
+                      "normal": {
+                        "index": 0,
+                        "text": "Normal"
+                      },
+                      "observed": {
+                        "index": 1,
+                        "text": "Observed"
+                      },
+                      "scanning": {
+                        "color": "yellow",
                         "index": 2,
-                        "text": "Alert"
+                        "text": "Scanning"
                       }
                     },
                     "type": "value"
@@ -1394,7 +1405,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 65
+                "value": 100
               }
             ]
           },
@@ -1420,9 +1431,9 @@
         ]
       },
       "gridPos": {
-        "h": 5,
-        "w": 2,
-        "x": 11,
+        "h": 6,
+        "w": 3,
+        "x": 10,
         "y": 12
       },
       "hideTimeOverride": true,
@@ -1449,7 +1460,7 @@
           "groupBy": [
             {
               "params": [
-                "suspicious::tag"
+                "group::tag"
               ],
               "type": "tag"
             }
@@ -1640,7 +1651,7 @@
         "y": 12
       },
       "hideTimeOverride": true,
-      "id": 16,
+      "id": 15,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1695,7 +1706,7 @@
           "measurement": "netflow_size",
           "orderByTime": "DESC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"netflow_size\" WHERE $timeFilter GROUP BY \"src_host\", \"dest_host\", \"service\", \"location_country_name\"",
+          "query": "SELECT last(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"src_host\", \"dest_host\", \"service\", \"location_country_name\"",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "table",
@@ -1714,13 +1725,13 @@
               "condition": "AND",
               "key": "direction",
               "operator": "=",
-              "value": "incoming"
+              "value": "outgoing"
             }
           ]
         }
       ],
       "timeShift": "2m",
-      "title": "Incoming Traffic <-",
+      "title": "Outgoing Traffic ->",
       "transformations": [
         {
           "id": "groupBy",
@@ -1751,9 +1762,6 @@
               "service": {
                 "aggregations": [],
                 "operation": "groupby"
-              },
-              "sum": {
-                "aggregations": []
               },
               "value": {
                 "aggregations": [
@@ -1828,9 +1836,9 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
-        "x": 11,
-        "y": 17
+        "w": 3,
+        "x": 10,
+        "y": 18
       },
       "id": 21,
       "options": {
@@ -1864,7 +1872,7 @@
           "refId": "A"
         }
       ],
-      "title": "SP List updated",
+      "title": "Suspicious IP list updated",
       "transformations": [
         {
           "id": "calculateField",
@@ -1897,14 +1905,14 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
           "mappings": [
             {
@@ -1921,41 +1929,57 @@
               "type": "value"
             }
           ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
           "unit": "bytes"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ip_type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 5,
-        "w": 2,
-        "x": 11,
-        "y": 20
+        "h": 4,
+        "w": 3,
+        "x": 10,
+        "y": 21
       },
       "hideTimeOverride": true,
       "id": 11,
       "options": {
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "limit": 5000,
-          "values": true
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showHeader": true
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.1",
       "targets": [
         {
           "datasource": {
@@ -1992,8 +2016,22 @@
         }
       ],
       "timeShift": "2m",
-      "transformations": [],
-      "type": "piechart"
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "ip_type": "Type",
+              "sum": "Traffic"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "1m",
@@ -2026,6 +2064,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 27,
+  "version": 29,
   "weekStart": ""
 }
