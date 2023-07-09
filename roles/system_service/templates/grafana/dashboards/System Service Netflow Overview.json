@@ -1775,15 +1775,17 @@
                         "text": "Intruded"
                       },
                       "normal": {
+                        "color": "#56A64B",
                         "index": 0,
                         "text": "Normal"
                       },
                       "observed": {
+                        "color": "#8ca000",
                         "index": 1,
                         "text": "Observed"
                       },
                       "scanning": {
-                        "color": "yellow",
+                        "color": "#F2CC0C",
                         "index": 2,
                         "text": "Scanning"
                       }
@@ -2066,6 +2068,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 31,
+  "version": 32,
   "weekStart": ""
 }
