@@ -459,14 +459,14 @@ class Processor(threading.Thread):
             #        break
             label.append("extern_group={}".format(extern_group))
 
-            if malware_state == 0:
-                traffic_group = "normal"
-            elif malware_state == 1:
+            if malware_state == 1:
                 traffic_group = "scanning"
             elif malware_state == 2:
                 traffic_group = "intruded"
-            elif self.allowed_isp_pattern is not None and ( not location_org or not self.allowed_isp_pattern.match(location_org) ):
+            elif _srcIsExternal and self.allowed_isp_pattern is not None and ( not location_org or not self.allowed_isp_pattern.match(location_org) ):
                 traffic_group = "observed"
+            else:
+                traffic_group = "normal"
 
             label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
             label.append("group={}".format(traffic_group))
