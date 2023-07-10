@@ -37,7 +37,6 @@ class Scanner(threading.Thread):
         
         self.event_queue = deque()
         
-        self.event = threading.Event()
         #self.thread = threading.Thread(target=self._worker, args=())
         
         self.cache = Cache(config)
@@ -74,11 +73,11 @@ class Scanner(threading.Thread):
             handler.terminate()
                
         self.is_running = False
-        self.event.set()
+        self.cache.getEventTrigger().set()
 
-    def dispatch(self, source_handler, events):
-        self.event_queue.append([source_handler,events])
-        self.event.set()
+    #def dispatch(self, source_handler, events):
+    #    self.event_queue.append([source_handler,events])
+    #    self.event.set()
             
     def run(self):
         logging.info("Scanner started")
@@ -88,11 +87,23 @@ class Scanner(threading.Thread):
 
         try:
             while self.is_running:
-                while len(self.event_queue) > 0:
-                    [source_handler,events] = self.event_queue.popleft()
-                    self._dispatch(source_handler, events)
-                self.event.wait()
-                self.event.clear()
+                _source_handler = None
+                _events = []
+                while self.is_running and len(self.cache.getEventQueue()) > 0:
+                    [source_handler, event] = self.cache.getEventQueue().popleft()
+                    if source_handler != _source_handler:
+                        if len(_events) > 0:
+                            self._dispatch(_source_handler, _events)
+                            _events = []
+                        _source_handler = source_handler
+                    _events.append(event)
+
+                if self.is_running:
+                    if len(_events) > 0:
+                        self._dispatch(_source_handler, _events)
+
+                    self.cache.getEventTrigger().wait()
+                    self.cache.getEventTrigger().clear()
 
             logging.info("Scanner stopped")
         except Exception:
@@ -131,7 +142,7 @@ class Scanner(threading.Thread):
                         events.remove(event)
                     
             self.cache.unlock(self)
-            
+
             if len(events) == 0:
                 #logging.info(">>>>>>>>>>>>>> SKIP")
                 return

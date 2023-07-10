@@ -3,6 +3,7 @@ import sys
 from datetime import datetime
 import time
 import logging
+from collections import deque
 
 from lib.scanner.dto._changeable import Changeable
 from lib.scanner.dto.group import Group
@@ -32,6 +33,9 @@ class Cache():
 
         self.gateway_mac = None
 
+        self.event_queue = deque()
+        self.event_trigger = threading.Event()
+
         while True:
             self.gateway_mac = self.ip2mac(self.config.default_gateway_ip)
             if self.gateway_mac is not None:
@@ -40,7 +44,16 @@ class Cache():
             time.sleep(1)
             
         logging.info("Gateway initialized")
+
+    def getEventQueue(self):
+        return self.event_queue
         
+    def getEventTrigger(self):
+        return self.event_trigger
+
+    def _dispatchEvent(self, source_handler, events):
+        self.event_queue.append([source_handler,events])
+
     def getGatewayMAC(self):
         return self.gateway_mac
     
@@ -60,28 +73,30 @@ class Cache():
     def unlock(self, owner):
         self._lock.release()
         self._lock_owner = None
-        
-    def cleanLocks(self, owner, events):
+
+        self.event_trigger.set()
+
+    def cleanLocks(self, owner):
         if self._lock_owner != owner:
             return
         
         for group in self.getGroups():
             if not group.isLocked():
                 continue
-            self.confirmGroup(group, lambda event: events.append(event), 2)
+            self.confirmGroup(owner, group, 2)
         
         for device in self.getDevices():
             if not device.isLocked():
                 continue
-            self.confirmDevice(device, lambda event: events.append(event), 2)
+            self.confirmDevice(owner, device, 2)
 
         for stat in self.getStats():
             if not stat.isLocked():
                 continue
-            self.confirmStat(stat, lambda event: events.append(event), 2)
+            self.confirmStat(owner, stat, 2)
 
         self.unlock(owner)
-    
+
     def _checkLock(self):
         if self._lock_owner is None:
             raise Exception("Cache not locked")
@@ -104,7 +119,7 @@ class Cache():
         group.lock(self._lock_owner)
         return group
             
-    def confirmGroup(self, group, event_callback, caller_frame = 1 ):
+    def confirmGroup(self, source_handler, group, caller_frame = 1 ):
         self._checkLock()
 
         group.unlock(self._lock_owner)
@@ -117,17 +132,19 @@ class Cache():
             event_action = Event.ACTION_MODIFY
             Helper.logInfo("Update group {} - [{}]".format(group, change_details), caller_frame + 1 )
         else:
-            return False
+            return None
         
-        event_callback(Event(group.getEventType(), event_action, group, change_raw))
-        return True
+        event = Event(group.getEventType(), event_action, group, change_raw)
+        self._dispatchEvent(source_handler,event)
+        return event
     
-    def removeGroup(self, gid, event_callback, caller_frame = 1):
+    def removeGroup(self, source_handler, gid, caller_frame = 1):
         self._checkLock()
 
         if gid in self.groups:
             Helper.logInfo("Remove group {}".format(self.groups[gid]), caller_frame + 1 )
-            event_callback(Event(self.groups[gid].getEventType(), Event.ACTION_DELETE, self.groups[gid]))
+
+            self._dispatchEvent(source_handler,Event(self.groups[gid].getEventType(), Event.ACTION_DELETE, self.groups[gid]))
             del self.groups[gid]
 
     def getDevices(self):
@@ -149,7 +166,7 @@ class Cache():
 
         return device
             
-    def confirmDevice(self, device, event_callback, caller_frame = 1 ):
+    def confirmDevice(self, source_handler, device, caller_frame = 1 ):
         self._checkLock()
 
         device.unlock(self._lock_owner)
@@ -162,17 +179,18 @@ class Cache():
             event_action = Event.ACTION_MODIFY
             Helper.logInfo("Update device {} - [{}]".format(device, change_details), caller_frame + 1)
         else:
-            return False
+            return None
         
-        event_callback(Event(device.getEventType(), event_action, device, change_raw ))
-        return True
+        event = Event(device.getEventType(), event_action, device, change_raw )
+        self._dispatchEvent(source_handler,event)
+        return event
     
-    def removeDevice(self, mac, event_callback, caller_frame = 1):
+    def removeDevice(self, source_handler, mac,  caller_frame = 1):
         self._checkLock()
 
         if mac in self.devices:
             Helper.logInfo("Remove device {}".format(self.devices[mac]), caller_frame + 1)
-            event_callback(Event(self.devices[mac].getEventType(), Event.ACTION_DELETE, self.devices[mac] ))
+            self._dispatchEvent(source_handler,Event(self.devices[mac].getEventType(), Event.ACTION_DELETE, self.devices[mac]))
             del self.devices[mac]
             
     def getStats(self):
@@ -201,7 +219,7 @@ class Cache():
         stat.lock(self._lock_owner)
         return stat
                        
-    def confirmStat(self, stat, event_callback, caller_frame = 1 ):
+    def confirmStat(self, source_handler, stat, caller_frame = 1 ):
         self._checkLock()
 
         stat.unlock(self._lock_owner)
@@ -214,36 +232,37 @@ class Cache():
             event_action = Event.ACTION_MODIFY
             Helper.logInfo("Update stat {} - [{}]".format(stat, change_details), caller_frame + 1)
         else:
-            return False
+            return None
 
-        event_callback(Event(stat.getEventType(), event_action, stat, change_raw))
-        return True
+        event = Event(stat.getEventType(), event_action, stat, change_raw)
+        self._dispatchEvent(source_handler,event)
+        return event
 
-    def removeDeviceStat(self, mac, event_callback, caller_frame = 1):
+    def removeDeviceStat(self, source_handler, mac, caller_frame = 1):
         self._checkLock()
 
-        self.removeConnectionStat(mac, None, event_callback, caller_frame + 1)
+        self.removeConnectionStat(source_handler, mac, None, caller_frame + 1)
         
-    def removeConnectionStat(self, mac, interface, event_callback, caller_frame = 1):
+    def removeConnectionStat(self, source_handler, mac, interface, caller_frame = 1):
         self._checkLock()
 
         id = "{}-{}".format(mac, interface)
         if id in self.stats:
             Helper.logInfo("Remove {} stat {}".format( "device" if interface is None else "connection", self.stats[id] ), caller_frame + 1 )
-            event_callback(Event(self.stats[id].getEventType(), Event.ACTION_DELETE, self.stats[id]))
+            self._dispatchEvent(source_handler,Event(self.stats[id].getEventType(), Event.ACTION_DELETE, self.stats[id]))
             del self.stats[id]
 
-    def removeConnectionStatDetails(self, mac, interface, connection_details, event_callback, caller_frame = 1):
+    def removeConnectionStatDetails(self, source_handler, mac, interface, connection_details, caller_frame = 1):
         self._checkLock()
 
         stat = self.getUnlockedConnectionStat(mac,interface)
         if stat is not None:
             if len(stat.getDataList()) == 1:
-                self.removeConnectionStat(mac,interface, event_callback, caller_frame + 1)
+                self.removeConnectionStat(source_handler, mac,interface, caller_frame + 1)
             else:
                 stat.lock(self._lock_owner)
                 stat.removeData(connection_details)
-                self.confirmStat( stat, event_callback, caller_frame + 1 )
+                self.confirmStat( source_handler, stat, caller_frame + 1 )
 
     def ip2mac(self,ip, isRunningCallback = None):
         now = datetime.now()

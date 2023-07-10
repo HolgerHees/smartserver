@@ -5,12 +5,24 @@ import logging
 
 class Info():
     @staticmethod
-    def isDefaultISPConnectionActive():
+    def _getConnectionState():
         try:
-            response = requests.get("http://127.0.0.1:8507/default_isp_state/")
-            return True if response.content == b"active" else False
+            response = requests.get("http://127.0.0.1:8507/wan_state/")
+            return response.content.decode("utf-8")
         except requests.exceptions.ConnectionError:
-            return False
+            return "unknown"
         except:
             logging.error(traceback.format_exc())
-            return False
+            return "unknown"
+
+    @staticmethod
+    def isDefaultConnectionActive():
+        return Info._getConnectionState() == "default"
+
+    @staticmethod
+    def isFallbackConnectionActive():
+        return Info._getConnectionState() == "fallback"
+
+    @staticmethod
+    def isConnectionOnline():
+        return Info._getConnectionState() != "unknown"

@@ -16,8 +16,6 @@ class Gateway(_handler.Handler):
         return [ { "types": [Event.TYPE_DEVICE], "actions": [Event.ACTION_CREATE], "details": None } ]
 
     def processEvents(self, events):
-        _events = []
-        
         try:
             self.cache.lock(self)
             for event in events:
@@ -32,12 +30,9 @@ class Gateway(_handler.Handler):
                 else:
                     device.addHopConnection(Connection.ETHERNET, gateway_mac, self.cache.getGatewayInterface(vlan), { "vlan": vlan } )
                 
-                self.cache.confirmDevice( device, lambda event: _events.append(event) )
+                self.cache.confirmDevice( self, device )
                 
             self.cache.unlock(self)
         except Exception as e:
-            self.cache.cleanLocks(self, _events)
+            self.cache.cleanLocks(self)
             self._handleUnexpectedException(e, None, -1)
-            
-        if len(_events) > 0:
-            self._getDispatcher().dispatch(self, _events)

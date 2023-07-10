@@ -84,7 +84,7 @@ class IPCache(threading.Thread):
         logging.info("IP cache started")
         try:
             if not os.path.exists(self.dump_path):
-                self.dump()
+                self._dump()
 
             while self.is_running:
                 try:
@@ -108,7 +108,7 @@ class IPCache(threading.Thread):
             logging.info("Loaded {} locations and {} hostnames".format(len(self.ip2location_map),len(self.hostname_map)))
 
     def _dump(self):
-        if self.valid_cache_file and len(self.ip2location_map) > 0 and len(self.hostname_map) > 0:
+        if self.valid_cache_file:
             with self.location_lock:
                 with self.hostname_lock:
                     Helper.saveConfig(self.dump_path, self.version, { "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map } )

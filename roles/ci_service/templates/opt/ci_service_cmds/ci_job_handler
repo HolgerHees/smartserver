@@ -53,7 +53,7 @@ elif cmd == "stop":
         GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")
     exit(0)
 elif cmd == "start" or cmd == "restart":
-    if not info.Info.isDefaultISPConnectionActive():
+    if not info.Info.isDefaultConnectionActive():
         log.info("Skip job, because default isp connection is inactive")
         exit(0)
 

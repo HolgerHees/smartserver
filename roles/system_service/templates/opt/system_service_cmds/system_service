@@ -152,8 +152,14 @@ class Handler(Server):
 
         return "{}\n".format( "\n".join(metrics) )
 
-    def isDefaultISPConnectionActive(self):
-        return self.info.isDefaultISPConnectionActive()
+    def getConnectionState(self):
+        if self.info.isConnectionOnline():
+            if self.info.isDefaultConnection():
+                return "default"
+            else:
+                return "fallback"
+        else:
+            return "unknown"
 
 #@app.route('/state/', methods = ['POST'])
 #def state():
@@ -161,11 +167,9 @@ class Handler(Server):
 
 #https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
 
-@app.route('/default_isp_state/', methods = ['GET'])
+@app.route('/wan_state/', methods = ['GET'])
 def default_isp_state():
-    #logging.info(request.headers.get('User-Agent'))
-    #return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
-    return "active" if handler.isDefaultISPConnectionActive() else "inactive"
+    return handler.getConnectionState()
 
 @app.route('/metrics/', methods = ['GET'])
 def metrics():

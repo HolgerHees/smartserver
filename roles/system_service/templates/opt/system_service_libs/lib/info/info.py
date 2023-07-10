@@ -97,8 +97,11 @@ class Info(threading.Thread):
 
         return False
 
-    def isDefaultISPConnectionActive(self):
+    def isDefaultConnection(self):
         return self.default_isp_connection_active
+
+    def isConnectionOnline(self):
+        return self.wan_active
 
     def getMessurements(self):
         return []

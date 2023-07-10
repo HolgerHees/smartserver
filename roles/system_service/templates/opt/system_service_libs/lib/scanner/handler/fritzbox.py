@@ -95,24 +95,21 @@ class Fritzbox(_handler.Handler):
                     if self._isSuspended(fritzbox_ip):
                         continue
                         
-                    self._processDevice(fritzbox_ip, events)
+                    self._processDevice(fritzbox_ip)
 
                     self._setDeviceMetricState(fritzbox_ip, 1)
                 except FritzConnectionException as e:
                     self._initNextRuns()
-                    self.cache.cleanLocks(self, events)
+                    self.cache.cleanLocks(self)
 
                     self._handleExpectedException("Fritzbox '{}' not accessible".format(fritzbox_ip), fritzbox_ip)
                     self._setDeviceMetricState(fritzbox_ip, 0)
                 except Exception as e:
                     self._initNextRuns()
-                    self.cache.cleanLocks(self, events)
+                    self.cache.cleanLocks(self)
 
                     self._handleUnexpectedException(e, fritzbox_ip)
                     self._setDeviceMetricState(fritzbox_ip, -1)
-
-            if len(events) > 0:
-                self._getDispatcher().dispatch(self,events)
 
             timeout = 9999999999
             now = datetime.now()
@@ -130,20 +127,20 @@ class Fritzbox(_handler.Handler):
             if timeout > 0:
                 self._wait(timeout)
          
-    def _processDevice(self, fritzbox_ip, events):
+    def _processDevice(self, fritzbox_ip):
         #https://fritzconnection.readthedocs.io/en/1.9.1/sources/library.html#fritzhosts
 
         # needs to run first to find fritzbox mac on startup
         if self.next_run[fritzbox_ip]["dhcp_clients"] <= datetime.now():
-            self._fetchDHCPClients(fritzbox_ip, events)
+            self._fetchDHCPClients(fritzbox_ip)
 
         if self.next_run[fritzbox_ip]["mesh_clients"] <= datetime.now():
-            self._fetchMeshClients(fritzbox_ip, events)
+            self._fetchMeshClients(fritzbox_ip)
                 
         if self.next_run[fritzbox_ip]["device"] <= datetime.now():
-            self._fetchDeviceInfo(fritzbox_ip, events)
+            self._fetchDeviceInfo(fritzbox_ip)
     
-    def _fetchMeshClients(self, fritzbox_ip, events):
+    def _fetchMeshClients(self, fritzbox_ip):
         self.next_run[fritzbox_ip]["mesh_clients"] = datetime.now() + timedelta(seconds=self.config.fritzbox_client_interval)
 
         mesh_hops = {}
@@ -195,11 +192,11 @@ class Fritzbox(_handler.Handler):
                 group.setDetail("band", network["band"], "string")
                 group.setDetail("channel", network["channel"], "string")
                 group.setDetail("priority", network["priority"], "hidden")
-                self.cache.confirmGroup(group, lambda event: events.append(event))
+                self.cache.confirmGroup(self, group)
                         
             for gid in list(self.wifi_networks[fritzbox_ip].keys()):
                 if gid not in _active_networks:
-                    self.cache.removeGroup(gid, lambda event: events.append(event))
+                    self.cache.removeGroup(self, gid)
                     del self.wifi_networks[fritzbox_ip][gid]
             
         has_wifi_networks = False
@@ -269,21 +266,21 @@ class Fritzbox(_handler.Handler):
 
                         device = self.cache.getDevice(mac)
                         device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
-                        self.cache.confirmDevice( device, lambda event: events.append(event) )
+                        self.cache.confirmDevice( self, device )
                         
                         # mark as online for new clients or if it is not a user device (is checked in arpscan)
                         if mac not in self.wifi_clients[fritzbox_ip] or device.getIP() is None or device.getIP() not in self.config.user_devices:
                             stat = self.cache.getDeviceStat(mac)
                             stat.setLastSeen(False) # because no IP validation
                             stat.setOnline(True)
-                            self.cache.confirmStat( stat, lambda event: events.append(event) )
+                            self.cache.confirmStat( self, stat )
 
                         stat = self.cache.getConnectionStat(target_mac,target_interface)
                         stat_data = stat.getData(connection_details)
                         stat_data.setInSpeed(node_link["cur_data_rate_rx"] * 1000)
                         stat_data.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
                         stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
-                        if self.cache.confirmStat( stat, lambda event: events.append(event) ):
+                        if self.cache.confirmStat( self, stat ):
                             if device.hasMultiConnections():
                                 device.generateMultiConnectionEvents(events[-1],events)
                         
@@ -299,9 +296,9 @@ class Fritzbox(_handler.Handler):
                 if device is not None:
                     device.lock(self)
                     device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    self.cache.confirmDevice( self, device )
 
-                self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
+                self.cache.removeConnectionStatDetails(self, target_mac,target_interface,connection_details)
                 
                 del self.wifi_associations[fritzbox_ip][uid]
                 
@@ -312,7 +309,7 @@ class Fritzbox(_handler.Handler):
 #                        if device is not None:
 #                            device.lock(self)
 #                            device.addHopConnection(Connection.WIFI, target_mac, target_interface, connection_details );
-#                            self.cache.confirmDevice( device, lambda event: events.append(event) )
+#                            self.cache.confirmDevice( self, device )
 
 #                            _active_client_macs.append(mac)
 #                            self.wifi_clients[fritzbox_ip][mac] = True
@@ -323,7 +320,7 @@ class Fritzbox(_handler.Handler):
 #                            stat_data.setOutSpeed(node_link["cur_data_rate_tx"] * 1000)
 #                            stat_data.setDetail("signal", node_link["rx_rcpi"], "attenuation")
 #                            #stat_data.setDetail("signal", node_link["rx_rcpi"] if node_link["rx_rcpi"] != "255" else node_link["tx_rcpi"], "attenuation")
-#                            self.cache.confirmStat( stat, lambda event: events.append(event) )
+#                            self.cache.confirmStat( self, stat )
 
 #                        _active_associations.append(uid)
 #                        self.wifi_associations[fritzbox_ip][uid] = [ uid, mac, gid, vlan, target_mac, target_interface, connection_details ]
@@ -334,9 +331,9 @@ class Fritzbox(_handler.Handler):
 #                if device is not None:
 #                    device.lock(self)
 #                    device.removeHopConnection(Connection.WIFI, target_mac, target_interface, connection_details, True)
-#                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+#                    self.cache.confirmDevice( self, device )
                     
-#                    self.cache.removeConnectionStatDetails(target_mac,target_interface,connection_details, lambda event: events.append(event))
+#                    self.cache.removeConnectionStatDetails(self, target_mac,target_interface,connection_details)
 
 #                del self.wifi_associations[fritzbox_ip][uid]
                 
@@ -345,7 +342,7 @@ class Fritzbox(_handler.Handler):
             
         self.cache.unlock(self)
                 
-    def _fetchDHCPClients(self, fritzbox_ip, events):
+    def _fetchDHCPClients(self, fritzbox_ip):
         self.next_run[fritzbox_ip]["dhcp_clients"] = datetime.now() + timedelta(seconds=self.config.fritzbox_client_interval)
 
         first_run = not self.known_clients[fritzbox_ip]
@@ -421,7 +418,7 @@ class Fritzbox(_handler.Handler):
                     device.setIP("fritzbox-dhcp", 100, host["NewIPAddress"])
                     device.setDNS("fritzbox-dhcp", 100, host["NewHostName"])
                     self.dhcp_clients[fritzbox_ip][mac] = now
-                    self.cache.confirmDevice( device, lambda event: events.append(event) )
+                    self.cache.confirmDevice( self, device )
 
             for device in obsolete_clients:
                 mac = device.getMAC()
@@ -429,10 +426,10 @@ class Fritzbox(_handler.Handler):
                 device.removeIP("fritzbox-dhcp")
                 device.removeDNS("fritzbox-dhcp")
                 del self.dhcp_clients[fritzbox_ip][device.getMAC()]
-                self.cache.confirmDevice( device, lambda event: events.append(event) )
+                self.cache.confirmDevice( self, device )
             self.cache.unlock(self)
                            
-    def _fetchDeviceInfo(self, fritzbox_ip, events):
+    def _fetchDeviceInfo(self, fritzbox_ip):
         self.next_run[fritzbox_ip]["device"] = datetime.now() + timedelta(seconds=self.config.fritzbox_client_interval)
 
         fritzbox_mac = self.fritzbox_macs[fritzbox_ip]
@@ -466,7 +463,7 @@ class Fritzbox(_handler.Handler):
             fritzbox_device.setIP("fritzbox", 100, fritzbox_ip)
             if fritzbox_mac == self.cache.getGatewayMAC():
                 fritzbox_device.addHopConnection(Connection.ETHERNET, self.cache.getWanMAC(), self.cache.getWanInterface() );
-            self.cache.confirmDevice( fritzbox_device, lambda event: events.append(event) )
+            self.cache.confirmDevice( self, fritzbox_device )
         
         stat = self.cache.getConnectionStat(fritzbox_mac, self.cache.getGatewayInterface(self.config.default_vlan) )
         stat_data = stat.getData() 
@@ -493,7 +490,7 @@ class Fritzbox(_handler.Handler):
         stat_data.setOutSpeed(1000000000)
         #stat_data.setDetail("duplex", "full" if _port["duplex"] == "fullDuplex" else "half", "string")
         #stat_data.setDetail("duplex", lan_link_state["duplex"], "string")
-        self.cache.confirmStat( stat, lambda event: events.append(event) )
+        self.cache.confirmStat( self, stat )
 
         if fritzbox_mac == self.cache.getGatewayMAC():
             stat = self.cache.getConnectionStat(self.cache.getWanMAC(), self.cache.getWanInterface() )
@@ -520,7 +517,7 @@ class Fritzbox(_handler.Handler):
             stat_data.setOutBytes(wan_traffic_state["sent"])
             stat_data.setInSpeed(wan_link_state["down"] * 1000)
             stat_data.setOutSpeed(wan_link_state["up"] * 1000)
-            self.cache.confirmStat( stat, lambda event: events.append(event) )
+            self.cache.confirmStat( self, stat )
                 
         self.cache.unlock(self)
         

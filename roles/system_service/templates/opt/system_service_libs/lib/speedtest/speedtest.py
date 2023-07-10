@@ -58,8 +58,7 @@ class Speedtest():
 
         messurements = []
         try:
-            is_actiive = self.info.isDefaultISPConnectionActive()
-            if not is_actiive:
+            if not self.info.isConnectionOnline() or not self.info.isDefaultConnection():
                 logging.info(u"Speedtest skipped")
 
                 self.resetMetrics()

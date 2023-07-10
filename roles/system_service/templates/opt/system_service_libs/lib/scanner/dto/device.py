@@ -319,6 +319,9 @@ class Device(Changeable):
         self._markAsChanged("services")
         self.services = services
 
+    def getServices(self):
+        return self.services
+
     def getSerializeable(self, devices ):
         connection = self.getConnection()
 

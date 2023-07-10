@@ -21,7 +21,7 @@ class Changeable():
         
         self.priorized_data = {}
         self.priorized_value = {}
-        
+
     def _initPriorizedData(self, data):
         for _data in data:
             key = _data["key"]
