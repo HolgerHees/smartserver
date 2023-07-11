@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    php_version: "8.2.7"
+    php_version: "8.2.8"
   tags: [ 'update_notifier_config' ]
   
 - name: build docker image
