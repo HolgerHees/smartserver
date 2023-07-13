@@ -443,29 +443,25 @@ mx.Actions = (function( ret ) {
         
         var isActive = ( mx.History.getActiveNavigation() === subGroup );
         
-        var datetime = new Date();
-        var h = datetime.getHours();
-        var m = datetime.getMinutes();
-        var s = datetime.getSeconds();
-        
-        if( demoMode ) h = 20;
-
-        var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2);
-
-        var prefix = '';
-        if(h >= 18) prefix = mx.I18N.get('Good Evening');
-        else if(h >=  11) prefix = mx.I18N.get('Good Afternoon');
-        else prefix = mx.I18N.get('Good Morning');
-
+        let widgets = mx.Widgets.get();
         content = '<div class="service home">';
-        content += '<div class="time">' + time + '</div>';
-        content += '<div class="slogan">' + prefix + ', ' + mx.User.name + '.</div>';
+        if( widgets.length > 0 )
+        {
+            content += '<div class="outer_widgets_box"><div class="widgets">';
+            widgets.forEach(function(widget){
+                content += widget;
+            });
+            content += '</div></div>';
+        }
+
+        content += '<div class="time"></div>';
+        content += '<div class="slogan"></div>';
         content += '<div class="bottom"><div class="image"><div class="imageCopyright">' + mx.MainImage.getCopyright() + '</div><div class="imageTitle">' + mx.MainImage.getTitle() + '</div></div></div>';
         content += '</div>';
 
         if( !isActive || isIFrameVisible() )
         {
-            showMenuContent( content, [], subGroup.getTitle());
+            showMenuContent( content, [ mx.Actions.refreshHome ], subGroup.getTitle());
             
             mx.History.addMenu(subGroup);
 
@@ -474,6 +470,7 @@ mx.Actions = (function( ret ) {
         else
         {
             mx.$('#content #submenu').innerHTML = content;
+            mx.Actions.refreshHome();
         }
 
         if( !isActive ) 
@@ -484,9 +481,31 @@ mx.Actions = (function( ret ) {
         {
             if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
         }
-
-        mx.Timer.register(mx.Actions.openHome,60000 - (s * 1000));
     };
+
+    ret.refreshHome = function(event)
+    {
+        var datetime = new Date();
+        var h = datetime.getHours();
+        var m = datetime.getMinutes();
+        var s = datetime.getSeconds();
+
+        if( demoMode ) h = 20;
+
+        var prefix = '';
+        if(h >= 18) prefix = mx.I18N.get('Good Evening');
+        else if(h >=  11) prefix = mx.I18N.get('Good Afternoon');
+        else prefix = mx.I18N.get('Good Morning');
+
+        var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2);
+
+        mx.$('#content #submenu .time').innerHTML = time;
+        mx.$('#content #submenu .slogan').innerHTML = prefix + ', ' + mx.User.name;
+
+        mx.Widgets.refresh();
+
+        mx.Timer.register(mx.Actions.refreshHome,60000 - (s * 1000));
+    }
     
     ret.setVisualisationType = function(_visualisationType)
     {

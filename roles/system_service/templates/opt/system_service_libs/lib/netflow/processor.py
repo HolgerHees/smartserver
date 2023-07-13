@@ -60,8 +60,8 @@ class Helper():
         raise KeyError( "{} - {}".format(", ".join(keys), d.keys()))
 
     @staticmethod
-    def isExpectedTraffic(ip, port, config):
-        if config.netflow_incoming_traffic and Helper.getServiceKey(ip, port) in config.netflow_incoming_traffic:
+    def isExpectedTraffic(service_key, config):
+        if config.netflow_incoming_traffic and service_key in config.netflow_incoming_traffic:
             return True
 
         return False
@@ -217,7 +217,7 @@ class Connection:
             else:
                 service_key = Helper.getServiceKey(self.dest, self.dest_port)
                 if service_key in self.config.netflow_incoming_traffic:
-                    return self.config.netflow_incoming_traffic[service_key].replace(" ","\\ ").replace(",","\\,")
+                    return self.config.netflow_incoming_traffic[service_key]["name"].replace(" ","\\ ").replace(",","\\,")
                 service = "unknown"
         return service
 
@@ -253,7 +253,13 @@ class Processor(threading.Thread):
 
         influxdb.register(self.getMessurements)
 
-        self.allowed_isp_pattern = re.compile(config.allowed_isp_pattern, re.IGNORECASE) if config.allowed_isp_pattern is not None else None
+        self.influxdb = influxdb
+
+        self.allowed_isp_pattern = {}
+        for target, data in config.netflow_incoming_traffic.items():
+            self.allowed_isp_pattern[target] = {}
+            for field, pattern in data["allowed"].items():
+                self.allowed_isp_pattern[target][field] = re.compile(pattern, re.IGNORECASE)
 
     def terminate(self):
         self.is_running = False
@@ -393,7 +399,6 @@ class Processor(threading.Thread):
 
         # ******
         start = time.time()
-        logging.info("PROCESSING")
         pr = cProfile.Profile()
         pr.enable()
 
@@ -442,8 +447,6 @@ class Processor(threading.Thread):
             intern_ip = con.dest if _srcIsExternal else con.src
             intern_hostname = con.dest_hostname if _srcIsExternal else con.src_hostname
 
-            malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(con.dest, con.dest_port, self.config), timestamp)
-
             label.append("intern_ip={}".format(intern_ip))
             label.append("intern_host={}".format(intern_hostname))
 
@@ -459,15 +462,29 @@ class Processor(threading.Thread):
             #        break
             label.append("extern_group={}".format(extern_group))
 
+            if _srcIsExternal:
+                service_key = Helper.getServiceKey(con.dest, con.dest_port)
+            else:
+                service_key = fallback_key = None
+
+            malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config), timestamp)
+
+            traffic_group = "normal"
             if malware_state == 1:
                 traffic_group = "scanning"
             elif malware_state == 2:
                 traffic_group = "intruded"
-            elif _srcIsExternal and self.allowed_isp_pattern is not None and ( not location_org or not self.allowed_isp_pattern.match(location_org) ):
-                traffic_group = "observed"
-            else:
-                traffic_group = "normal"
-
+            elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
+                allowed = False
+                if service_key in self.allowed_isp_pattern:
+                    if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
+                        allowed = True
+                    elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
+                        allowed = True
+                    elif extern_ip and "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+                        allowed = True
+                if not allowed:
+                    traffic_group = "observed"
             label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
             label.append("group={}".format(traffic_group))
             label.append("protocol={}".format(con.protocol_name))
@@ -527,7 +544,7 @@ class Processor(threading.Thread):
             messurements.append("netflow_size,{} value={} {}".format(data[0], data[1], data[2]))
 
         end = time.time()
-        logging.info("FINISHED in {} seconds".format(round(end-start,1)))
+        logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
         pr.disable()
         if end-start > end-start > 0.5:
             s = io.StringIO()
@@ -544,6 +561,14 @@ class Processor(threading.Thread):
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
 
         return messurements
+
+    def getTrafficState(self):
+        data = self.influxdb.query(['SELECT count("value") FROM "netflow_size" WHERE time > now() - 6h GROUP BY "group"::tag'])
+        count_values = {}
+        if data is not None:
+            for series in data["results"][0]["series"]:
+                count_values[series["tags"]["group"]] = series["values"][0][1]
+        return count_values
 
     def getStateMetrics(self):
         return [

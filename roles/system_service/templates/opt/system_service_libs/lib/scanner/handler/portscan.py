@@ -37,6 +37,8 @@ class PortScanner(_handler.Handler):
         self.valid_cache_file = True
         self.version = 1
 
+        self.started_at = time.time()
+
     def start(self):
         schedule.every().day.at("01:00").do(self._dump)
         schedule.every().hour.at("00:00").do(self._cleanup)
@@ -63,6 +65,10 @@ class PortScanner(_handler.Handler):
                 logging.info("Saved {} devices".format(len(self.monitored_devices)))
 
     def _cleanup(self):
+        # Skip cleanup during first hour. Need more time to detect devices.
+        if time.time() - self.started_at < 60 * 60:
+            return
+
         device_count = 0
         with self.data_lock:
             for _mac in list(self.monitored_devices.keys()):
@@ -70,13 +76,17 @@ class PortScanner(_handler.Handler):
                 if device is None:
                     del self.monitored_devices[_mac]
                     device_count += 1
-        logging.info("Cleaned {} devices".format(device_count))
+        if device_count > 0:
+            logging.info("Cleaned {} devices".format(device_count))
 
     def _run(self):
         if not os.path.exists(self.dump_path):
             self._dump()
 
+        _last_size = { "total": -1, "waiting": -1, "running": -1 }
         while self._isRunning():
+            _queues_changed = _last_size["total"] != len(self.monitored_devices) or _last_size["waiting"] != len(self.waiting_queue) or _last_size["running"] != len(self.running_queue)
+
             if not self._isSuspended():
                 try:
                     timeout = self.config.port_scan_interval
@@ -87,6 +97,7 @@ class PortScanner(_handler.Handler):
                             self.running_queue.append(device)
                             t = threading.Thread(target = self._checkPorts, args = [ device ] )
                             t.start()
+                            _queues_changed = True
 
                         now = time.time()
                         for mac in self.monitored_devices:
@@ -103,7 +114,7 @@ class PortScanner(_handler.Handler):
                             if _timeout < timeout:
                                 timeout = _timeout
 
-                        if len(self.running_queue) < self.max_running_queue_length and len(self.waiting_queue):
+                        if len(self.running_queue) < self.max_running_queue_length and len(self.waiting_queue) > 0:
                             timeout = 0
 
                 except Exception as e:
@@ -113,10 +124,22 @@ class PortScanner(_handler.Handler):
             if self._isRunning() and suspend_timeout > 0:
                 timeout = suspend_timeout
 
-            self._wait(timeout)
+            if timeout > 0:
+                if _queues_changed:
+                    _last_size["total"] = len(self.monitored_devices)
+                    _last_size["waiting"] = len(self.waiting_queue)
+                    _last_size["running"] = len(self.running_queue)
+                    logging.info("Queue statistic - TOTAL: {}, WAITING: {}, RUNNING: {}".format(len(self.monitored_devices), len(self.waiting_queue), len(self.running_queue)))
+                self._wait(timeout)
+            else:
+                if _queues_changed:
+                    _last_size = { "total": -1, "waiting": -1, "running": -1 }
 
     def _checkPorts(self, device):
+        _start = time.time()
         services = Helper.nmap(device.getIP(), self._isRunning)
+        _end = time.time()
+        logging.info("Scanning device {} done after {} seconds".format(device.getIP(), round(_end-_start,0)))
 
         if self._isRunning():
             with self.data_lock:

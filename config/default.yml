@@ -48,8 +48,13 @@ default_variables: {
     "authenticated_ip_addresses": { "default": [] },              # apache access always allowed for ipaddresses e.g. from wallmounted tablets
     
     "public_domain":                                              { "default": "public.{{server_domain}}" },
-    "default_isp_list":                                           { "default": [] }, # is used to detect a fallback internet connection
-    "allowed_isp_list":                                           { "default": [] }, # is used to mark incomming traffic as observed, value term supports wildcard ".+"
+    "default_isp":                                                { "default": {} }, # is used to detect a fallback internet connection in system_service
+    # *** EXAMPLE ***
+    # {
+    #     org: [ ".+ Sverige AB" ],                               # external ip must be registered to a organisation or isp named ".+ Sverige AB"
+    #     hostname: [ ".+d1-online\\\\.com" ],                    # external ip must be resolved to a spcific dns name
+    #     ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ]              # fixed external ip ranges
+    # }
 
     # used in generic optional role 'wireguard_mobile'
     "mobile_vpn_internal_port": { "default": "51828" },           # the port, used on your server
@@ -171,6 +176,8 @@ default_variables: {
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
     "vault_openhab_mysql_password": {},
 
+    "openhab_garden_temperature_item": { "default": no },         # used for openhab webui temperature widget
+
     "network_devices": { "default": [] },                         # used for librenms and system_service (network monitoring)
     # *** EXAMPLE ***
     # [
@@ -185,6 +192,12 @@ default_variables: {
 
     "netflow_collector": { "default": no },                       # enable netflow collector in system_service
     "netflow_incoming_traffic": { "default": [] },                # from internet allowed traffic, (used to validate netflow traffic direction)
+    # *** EXAMPLE ***
+    # {
+    #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] } }, # Letsencrypt, CLOUD PING Test
+    #   { target: "{{production_ip}}:10114", name: "alexa api", allowed: { org: [ "AWS EC2 .+" ] } }, # ALEXA
+    #   { target: "{{production_ip}}:456", name: "test", allowed: { ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ] } }, # Fixed IP range test
+    # }
 
     # *** EXAMPLE ***
     # [

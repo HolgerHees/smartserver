@@ -6,16 +6,13 @@ server_name = "{{server_name}}"
 server_domain = "{{server_domain}}"
 server_ip = "{{default_server_ip}}"
 
-default_isp_pattern = {% if default_isp_list|length > 0 %}"{{default_isp_list | join('|') }}"{% else %}None{% endif %}
-
-allowed_isp_pattern = {% if allowed_isp_list|length > 0 %}"{{allowed_isp_list | join('|') }}"{% else %}None{% endif %}
-
+default_isp = { {% for key in default_isp %}"{{key}}": "{{default_isp[key] | join('|')}}",{% endfor %} }
 
 netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
 netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}
 netflow_incoming_traffic = {
 {% for data in netflow_incoming_traffic %}
-  "{{data.target}}": "{{data.name}}",
+  "{{data.target}}": { "name": "{{data.name}}", "allowed": { {% for key in data.allowed %} "{{key}}": "{{data.allowed[key] | join('|')}}", {% endfor %} } },
 {% endfor %}
 }
 

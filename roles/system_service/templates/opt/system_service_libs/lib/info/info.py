@@ -12,6 +12,9 @@ from datetime import datetime
 
 from smartserver import command
 
+from lib.ipcache import IPCache
+
+
 class Info(threading.Thread):
     def __init__(self, config, ipcache ):
         threading.Thread.__init__(self)
@@ -29,7 +32,9 @@ class Info(threading.Thread):
         self.default_isp_connection_active = False
         self.wan_active = False
 
-        self.default_isp_pattern = re.compile(config.default_isp_pattern, re.IGNORECASE) if config.default_isp_pattern is not None else None
+        self.default_isp = {}
+        for field, pattern in config.default_isp.items():
+            self.default_isp[field] = re.compile(pattern, re.IGNORECASE)
 
     def start(self):
         self.is_running = True
@@ -81,11 +86,21 @@ class Info(threading.Thread):
                     data = json.loads(response.content)
                     active_ip = data["ip-address"]
 
-                    result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
-                    if self.default_isp_pattern.match(result["org"]):
-                        return True
-                    if self.default_isp_pattern.match(result["isp"]):
-                        return True
+                    if "org" in self.default_isp:
+                        result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
+                        if result["type"] == IPCache.TYPE_LOCATION:
+                            location_org = result["org"] if result["org"] else ( result["isp"] if result["isp"] else "" )
+                            if self.default_isp["org"].match(location_org):
+                                return True
+
+                    if "hostname" in self.default_isp:
+                        hostname = self.ipcache.getHostname(ipaddress.ip_address(active_ip), False)
+                        if self.default_isp["hostname"].match(hostname):
+                            return True
+
+                    if "ip" in self.default_isp:
+                        if self.default_isp["ip"].match(active_ip):
+                            return True
                 except:
                     logging.error("Error parsing ip")
                     logging.error(":{}:".format(response.content))

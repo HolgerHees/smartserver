@@ -70,21 +70,36 @@ class Helper():
 
         return arp_result
             
-    def nmap(ip, isRunningCallback = None):
-        # using "--defeat-rst-ratelimit" will hit the limit of netfilter (iptables) conntrack table
-        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
-        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
-        if returncode != 0:
-            raise Exception("Cmd 'nmap' was not successful")
-
-        services = {}
+    def _nmap_parser(result, services):
         for row in result.split("\n"):
-            match = re.match("([0-9]*)/([a-z]*)\s*([a-z]*)\s*(.*)",row)
+            match = re.match("([0-9]*)/([a-z]*)\s*([a-z|]*)\s*(.*)",row)
             if not match:
                 continue
 
-            services[match[1]] = match[4]
-            #ports.append({"port": match[1], "type": match[2], "state": match[3], "service": match[4] })
+            if "closed" in match[3]:
+                continue
+
+            services["{}/{}".format(match[1],match[2])] = match[4]
+
+    def nmap(ip, isRunningCallback = None):
+        services = {}
+
+        # using "--defeat-rst-ratelimit" will hit the limit of netfilter (iptables) conntrack table
+        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sSU", "-PN", "--defeat-rst-ratelimit", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
+
+        # TCP scan 2 retries
+        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p-", "-sS", "-PN", "--max-retries", "2", ip], isRunningCallback=isRunningCallback)
+        if returncode != 0:
+            raise Exception("Cmd 'nmap' (tcp) was not successful")
+        Helper._nmap_parser(result, services)
+
+        # UDP scan with 0 retries and only first 1023 ports
+        #returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p1-1023", "-sU", "-PN", "--max-retries", "0", ip], isRunningCallback=isRunningCallback)
+        returncode, result = command.exec2(["/usr/bin/nmap", "-n", "-p1-1023", "-sU", "-PN", "--max-retries", "0", ip], isRunningCallback=isRunningCallback)
+        if returncode != 0:
+            raise Exception("Cmd 'nmap' (udp) was not successful")
+        Helper._nmap_parser(result, services)
+
         return services
 
     def ip2mac(ip):

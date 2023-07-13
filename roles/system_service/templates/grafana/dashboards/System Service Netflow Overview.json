@@ -1958,6 +1958,10 @@
               {
                 "id": "custom.width",
                 "value": 60
+              },
+              {
+                "id": "filterable",
+                "value": true
               }
             ]
           }
@@ -2068,6 +2072,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 32,
+  "version": 33,
   "weekStart": ""
 }

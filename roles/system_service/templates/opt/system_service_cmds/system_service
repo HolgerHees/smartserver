@@ -6,6 +6,7 @@ from werkzeug.serving import WSGIRequestHandler
 
 import logging
 import sys
+import json
 
 from datetime import datetime
 
@@ -161,14 +162,25 @@ class Handler(Server):
         else:
             return "unknown"
 
+    def getWidgetState(self):
+        result = {}
+        result["wan_isp_state"] = "default" if self.info.isDefaultConnection() else "fallback"
+        result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
+        result["traffic_states"] = self.netflow.getTrafficState()
+        return json.dumps(result)
+
 #@app.route('/state/', methods = ['POST'])
 #def state():
 #    pass
 
 #https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
 
+@app.route('/widget_state/', methods = ['GET'])
+def widget_state():
+    return handler.getWidgetState()
+
 @app.route('/wan_state/', methods = ['GET'])
-def default_isp_state():
+def wan_state():
     return handler.getConnectionState()
 
 @app.route('/metrics/', methods = ['GET'])

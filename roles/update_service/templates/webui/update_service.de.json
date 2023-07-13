@@ -4,5 +4,8 @@
     "Software status": "Software Version Status",
     "Updates": "Aktualisierung",
     "System updates": "System Aktualisierungen"
+  },
+  "widget_system": {
+    "Updates": "Updates"
   }
 }

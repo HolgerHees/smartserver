@@ -122,6 +122,8 @@ class IPCache(threading.Thread):
                 if _now - self.ip2location_map[_ip]["time"] > self.max_location_cache_age:
                     del self.ip2location_map[_ip]
                     location_count += 1
+        if location_count > 0:
+            logging.info("Cleaned {} locations".format(location_count))
 
         hostname_count = 0
         with self.hostname_lock:
@@ -129,7 +131,8 @@ class IPCache(threading.Thread):
                 if _now - self.hostname_map[_ip]["time"] > self.max_hostname_cache_age:
                     del self.hostname_map[_ip]
                     hostname_count += 1
-        logging.info("Cleaned {} locations and {} hostnames".format(location_count, hostname_count))
+        if hostname_count > 0:
+            logging.info("Cleaned {} hostnames".format(hostname_count))
 
     def _increaseStats(self, type):
         with self.counter_lock:

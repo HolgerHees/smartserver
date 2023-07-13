@@ -61,6 +61,16 @@ class InfluxDB(threading.Thread):
         for messurement in messurements:
             queries.append("SELECT last(\"value\") FROM \"{}\"".format(messurement))
 
+        data = self.query(queries)
+        values = {}
+        for result in data["results"]:
+            if "series" not in result or len(result["series"]) < 1 or len(result["series"][0]["values"]) < 1:
+                continue
+
+            values[result["series"][0]["name"]] = result["series"][0]["values"][0][1]
+        return values
+
+    def query(self, queries):
         headers = {'Authorization': "Token {}".format(self.config.influxdb_token), "Content-Type": "application/vnd.influxql"}
         url = "{}/query?pretty=true&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join(queries)))
 
@@ -71,17 +81,9 @@ class InfluxDB(threading.Thread):
             return None
 
         try:
-            values = {}
             data = json.loads(r.text)
-
             #logging.info(data)
-
-            for result in data["results"]:
-                if "series" not in result or len(result["series"]) < 1 or len(result["series"][0]["values"]) < 1:
-                    continue
-
-                values[result["series"][0]["name"]] = result["series"][0]["values"][0][1]
-            return values
+            return data
 
         except Exception as e:
             logging.error("Got unexpected exception")

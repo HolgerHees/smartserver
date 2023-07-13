@@ -112,7 +112,11 @@ class Handler(Server):
         
         force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
         
-        if state_type == "software":
+        if state_type == "widget":
+            result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
+            result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
+            result["component_updates"] = self.software_versions_watcher.getVersionCount()
+        elif state_type == "software":
             last_data_modified["software"] = self.software_versions_watcher.getLastModifiedAsTimestamp()
             if force or self.checkLastDataModified("software",last_data_modified):
                 changed_data["software"] = self.software_versions_watcher.getSoftwareVersions()

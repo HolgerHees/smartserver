@@ -8,6 +8,7 @@ class SoftwareVersionWatcher(watcher.Watcher):
         super().__init__()
       
         self.software = {}
+        self.update_count = 0
         self.last_modified = self.getStartupTimestamp()
         
         self.initSoftwareState(False)
@@ -17,6 +18,10 @@ class SoftwareVersionWatcher(watcher.Watcher):
         
     def initSoftwareState(self, shouldRetry):
         self.software = self.readJsonFile(config.software_version_state_file,shouldRetry,{})
+        self.update_count = 0
+        for state in self.software["states"]:
+            if len(state["updates"]) > 0:
+                self.update_count += 1
         self.last_modified = self.getNowAsTimestamp()
         
     def getLastModifiedAsTimestamp(self):
@@ -24,3 +29,6 @@ class SoftwareVersionWatcher(watcher.Watcher):
       
     def getSoftwareVersions(self):
         return self.software
+
+    def getVersionCount(self):
+        return self.update_count

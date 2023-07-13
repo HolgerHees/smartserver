@@ -6,5 +6,9 @@
     "Speed & reachability": "Geschwindigkeit & Erreichbarkeit",
     "WAN traffic": "WAN Traffic",
     "Netflow": "Netflow Collector"
+  },
+  "widget_system": {
+    "WAN": "WAN",
+    "Traffic": "Traffic"
   }
 }

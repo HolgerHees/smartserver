@@ -539,6 +539,37 @@ body.dark #background {
 #submenu .service.home .image:hover .imageCopyright {
     opacity: 1;
 }
+#submenu .service.home .outer_widgets_box {
+    margin-top: -5vh;
+    overflow-x: hidden;
+    max-width: 100%;
+}
+#submenu .service.home .widgets {
+    display: flex;
+    justify-content: end;
+    gap: 5px;
+    padding: 10px;
+    margin-right: -15px;
+    flex-wrap: wrap;
+}
+#submenu .service.home .widgets .widget {
+    width: 0;
+    overflow: hidden;
+    transition: width 0.5s;
+    white-space: nowrap;
+}
+#submenu .service.home .widgets .widget.clickable {
+    cursor: pointer;
+}
+#submenu .service.home .widgets .widget.clickable:hover {
+    opacity: 0.8;
+}
+#submenu .service.home .widgets .widget:after {
+    padding-left: 5px;
+    width: 5px;
+    content: "•"
+}
+
 #submenu .service.home .time {
     cursor: default;
     font-size: 1050%;
