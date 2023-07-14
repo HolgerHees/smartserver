@@ -4,8 +4,9 @@ import threading
 import logging
 import traceback
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 import re
+import schedule
 
 import socket
 import ipaddress
@@ -243,6 +244,8 @@ class Processor(threading.Thread):
 
         self.is_enabled = True
 
+        self.traffic_stats = {}
+
         self.connections = []
         self.last_registry = {}
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
@@ -251,9 +254,11 @@ class Processor(threading.Thread):
 
         self.malware = malware
 
+        self.influxdb = influxdb
+
         influxdb.register(self.getMessurements)
 
-        self.influxdb = influxdb
+        self._initTrafficState()
 
         self.allowed_isp_pattern = {}
         for target, data in config.netflow_incoming_traffic.items():
@@ -265,6 +270,8 @@ class Processor(threading.Thread):
         self.is_running = False
 
     def start(self):
+        schedule.every().minute.at(":00").do(self._cleanTrafficState)
+
         super().start()
 
     def run(self):
@@ -411,7 +418,7 @@ class Processor(threading.Thread):
 
             # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
             timestamp -= METRIC_TIMESHIFT
-            timestamp = int(timestamp * 1000)
+            influx_timestamp = int(timestamp * 1000)
 
             _location = con.location
             if _location["type"] == IPCache.TYPE_LOCATION:
@@ -467,7 +474,7 @@ class Processor(threading.Thread):
             else:
                 service_key = fallback_key = None
 
-            malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config), timestamp)
+            malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config))
 
             traffic_group = "normal"
             if malware_state == 1:
@@ -519,16 +526,21 @@ class Processor(threading.Thread):
             #logging.info("DEST: {} {} {}".format(con.dest, con.dest_hostname,dest_location))
 
             label_str = ",".join(label)
-            key = "{}-{}".format(label_str, timestamp)
+            key = "{}-{}".format(label_str, influx_timestamp)
             if key not in registry:
                 #logging.info("new")
-                registry[key] = [label_str, 0, timestamp]
+                registry[key] = [label_str, 0, influx_timestamp]
             #else:
             #    logging.info("doublicate")
 
             registry[key][1] += con.size
 
             self.connections.remove(con)
+
+            #logging.info("INIT {}".format(datetime.fromtimestamp(timestamp)))
+            #logging.info("{} {}".format(timestamp, influx_timestamp))
+            if traffic_group != "normal":
+                self._addTrafficState(traffic_group, timestamp)
 
         # old values with same timestamp should be summerized
         for _key in self.last_registry:
@@ -562,12 +574,42 @@ class Processor(threading.Thread):
 
         return messurements
 
-    def getTrafficState(self):
-        data = self.influxdb.query(['SELECT count("value") FROM "netflow_size" WHERE time > now() - 6h GROUP BY "group"::tag'])
-        count_values = {}
+    def _cleanTrafficState(self):
+        min_time = datetime.now().timestamp() - 60 * 60 * 6
+        for group in list(self.traffic_stats.keys()):
+            values = [time for time in self.traffic_stats[group] if time > min_time]
+            if len(values) == 0:
+                del self.traffic_stats[group]
+            else:
+                self.traffic_stats[group] = values
+
+    def _initTrafficState(self):
+        #ref_time = datetime.utcnow().timestamp()
+        #logging.info("ref_time {}".format(datetime.fromtimestamp(ref_time)))
+        offset = datetime.now().timestamp() - datetime.utcnow().timestamp()
+        #logging.info(offset)
+        # 362 min => 6h - 2 min
+        data = self.influxdb.query(['SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\''])
+        #logging.info(data)
+        self.traffic_stats = {}
         if data is not None:
-            for series in data["results"][0]["series"]:
-                count_values[series["tags"]["group"]] = series["values"][0][1]
+            for value in data["results"][0]["series"][0]["values"]:
+                # 2023-07-13T23:45:29.511Z
+                # 2023-07-13T23:45:29.511000Z
+                #logging.info("{}000Z".format(value[0][:-1]))
+                value_time = datetime.strptime("{}000".format(value[0][:-1]), "%Y-%m-%dT%H:%M:%S.%f")
+                self._addTrafficState(value[1], value_time.timestamp() + offset)
+
+    def _addTrafficState(self, group, time):
+        #logging.info("ADD {}".format(datetime.fromtimestamp(time)))
+        if group not in self.traffic_stats:
+            self.traffic_stats[group] = []
+        self.traffic_stats[group].append(time)
+
+    def getTrafficState(self):
+        count_values = {}
+        for group in self.traffic_stats:
+            count_values[group] = len(self.traffic_stats[group])
         return count_values
 
     def getStateMetrics(self):

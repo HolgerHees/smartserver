@@ -61,8 +61,15 @@ class Handler(Server):
         }
 
         return json.dumps(result)
+
+    def getWidgetState(self):
+        return json.dumps({"is_running": self.job_watcher.isJobRunning(), "last_job_failed": self.job_watcher.lastJobFailed() })
       
 app = Flask(__name__)
+
+@app.route('/widget_state/', methods = ['GET'])
+def widget_state():
+    return handler.getWidgetState()
 
 @app.route('/state/', methods = ['POST'])
 def state():     

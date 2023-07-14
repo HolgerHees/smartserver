@@ -2,5 +2,8 @@
   "admin_system": {
     "CI Service": "CI Service",
     "Continues Integration": "Continues Integration"
+  },
+  "widget_system": {
+    "CI": "CI"
   }
 }

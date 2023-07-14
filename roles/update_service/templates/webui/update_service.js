@@ -9,23 +9,32 @@ mx.Widgets.AvailableUpdates = (function( ret ) {
         mx.Widgets.fetchContent("POST", url, function(data)
         {
             let json = JSON.parse(data);
+            let job_is_running = json["job_is_running"];
             let available_system_uddates = json["system_updates"];
             let available_smartserver_changes = json["smartserver_changes"];
 
-            if( available_system_uddates > 0 || available_smartserver_changes > 0 )
+            let msg = "";
+
+            if( job_is_running || available_system_uddates > 0 || available_smartserver_changes > 0 )
             {
-                //let available_component_updates = json["component_updates"];
-                ret.getElement(0).innerHTML = mx.I18N.get("Updates","widget_system") + ": <strong>" + available_system_uddates + "/" + available_smartserver_changes +"</strong>";
-                ret.show(0);
+                msg = mx.I18N.get("Updates","widget_system") + ": <strong>";
+
+                if( job_is_running )
+                {
+                    msg += "<font class=\"icon-spin2 animate-spin\"></font>"
+                }
+                if( available_system_uddates > 0 || available_smartserver_changes > 0 )
+                {
+                    msg += available_system_uddates + "/" + available_smartserver_changes;
+                }
+
+                msg +=  "</strong>";
             }
-            else
-            {
-                ret.hide(0);
-            }
+
+            ret.show(0,msg);
 
         }, mx.Core.encodeDict( { "type": "widget", "last_data_modified": null } ) );
     }
     return ret;
-})( mx.Widgets.Object( "admin", [ { id: "availableUpdates", order: 100, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-update_system') } } ] ) );
-
+})( mx.Widgets.Object( "admin", [ { id: "availableUpdates", order: 50, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-update_system') } } ] ) );
 {% endif %}

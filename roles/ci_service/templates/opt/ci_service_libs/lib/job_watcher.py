@@ -26,6 +26,8 @@ class JobWatcher():
         
         self.all_jobs = []
         self.running_jobs = {}
+        self.last_none_running_job = None
+
         self.last_mtime = 0
         self.initJobs()
         
@@ -72,12 +74,14 @@ class JobWatcher():
         jobs = glob.glob(u"{}*.log".format(config.log_dir))
         all_jobs = []
         running_jobs = {}
+        last_none_running_job = None
         for name in jobs:
             details = job.getLogFileDetails(name)
             subject = details["subject"]
             if subject[-1:] == "_":
                 subject = u"{}...".format(subject[:-1])
             subject = subject.replace("_", " ")
+            timestamp = datetime.strptime(details["date"],"%Y.%m.%d_%H.%M.%S").timestamp()
             all_jobs.append({
                 "author": details["author"].replace("_", " "),
                 "branch": details["branch"],
@@ -88,16 +92,23 @@ class JobWatcher():
                 "state": details["state"],
                 "subject": subject,
                 "date": details["date"],
-                "timestamp": datetime.strptime(details["date"],"%Y.%m.%d_%H.%M.%S").timestamp()
+                "timestamp": timestamp
             })
             if details["state"] == "running":
                 running_jobs[name] = details
+            elif details["state"] != "stopped" and ( last_none_running_job is None or last_none_running_job[0] < timestamp ):
+                last_none_running_job = [ timestamp, details ]
+
         self.all_jobs = all_jobs
         self.running_jobs = running_jobs
+        self.last_none_running_job = last_none_running_job
         self.last_mtime = round(datetime.now().timestamp(),3)
                         
     def isJobRunning(self):
         return self.state is not None and self.state["status"] == "running";
+
+    def lastJobFailed(self):
+        return self.last_none_running_job is not None and self.last_none_running_job[1]["state"] in ["failed", "crashed"]
 
     def _jobWatcher(self):
         self._cleanJobs()

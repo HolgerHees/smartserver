@@ -9,15 +9,14 @@ subGroup.addUrl('metrics', { "url": '//grafana.{host}/d/openhab_metrics/openhab_
 
 {% if openhab_garden_temperature_item %}
 mx.Widgets.CustomTemperature = (function( ret ) {
-    let url = "//" + mx.Host.getAuthPrefix() + "openhab." + mx.Host.getDomain() + "/rest/items/{{ openhab_garden_temperature_item }}"
+    let url = "//" + mx.Host.getAuthPrefix() + "openhab." + mx.Host.getDomain() + "/rest/items/pOutdoor_WeatherStation_Temperature"
     ret.refresh = function()
     {
         mx.Widgets.fetchContent("GET", url, function(data)
         {
             let json = JSON.parse(data);
 
-            ret.getElement(0).innerHTML = mx.I18N.get("Temperature","widget_openhab") + ": <strong>" + json["state"] + "°C</strong>";
-            ret.show(0);
+            ret.show(0, mx.I18N.get("Temperature","widget_openhab") + ": <strong>" + json["state"] + "°C</strong>");
         } );
     }
     return ret;

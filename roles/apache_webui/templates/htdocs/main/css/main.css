@@ -549,8 +549,12 @@ body.dark #background {
     justify-content: end;
     gap: 5px;
     padding: 10px;
+    margin-left: -15px;
     margin-right: -15px;
     flex-wrap: wrap;
+}
+#submenu .service.home .widgets .spacer {
+    flex-grow: 1;
 }
 #submenu .service.home .widgets .widget {
     width: 0;
@@ -564,12 +568,16 @@ body.dark #background {
 #submenu .service.home .widgets .widget.clickable:hover {
     opacity: 0.8;
 }
-#submenu .service.home .widgets .widget:after {
+#submenu .service.home .widgets .widget.right:after {
     padding-left: 5px;
     width: 5px;
     content: "•"
 }
-
+#submenu .service.home .widgets .widget.left:before {
+    padding-right: 5px;
+    width: 5px;
+    content: "•"
+}
 #submenu .service.home .time {
     cursor: default;
     font-size: 1050%;

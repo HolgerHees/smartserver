@@ -5,7 +5,7 @@ mx.Actions = (function( ret ) {
     var progressElement = null;
 
     var iframeLoadingTimer = null;
-    
+
     var errorElement = null;
     var activeErrorType = null;
 
@@ -437,6 +437,8 @@ mx.Actions = (function( ret ) {
 
     ret.openHome = function(event)
     {
+        mx.Timer.clean();
+
         inlineElement.classList.remove("content");
 
         var subGroup = mx.Menu.getMainGroup('home').getSubGroup('home');
@@ -445,6 +447,7 @@ mx.Actions = (function( ret ) {
         
         let widgets = mx.Widgets.get();
         content = '<div class="service home">';
+        position = null;
         if( widgets.length > 0 )
         {
             content += '<div class="outer_widgets_box"><div class="widgets">';
@@ -461,7 +464,7 @@ mx.Actions = (function( ret ) {
 
         if( !isActive || isIFrameVisible() )
         {
-            showMenuContent( content, [ mx.Actions.refreshHome ], subGroup.getTitle());
+            showMenuContent( content, [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], subGroup.getTitle());
             
             mx.History.addMenu(subGroup);
 
@@ -470,6 +473,7 @@ mx.Actions = (function( ret ) {
         else
         {
             mx.$('#content #submenu').innerHTML = content;
+            mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
             mx.Actions.refreshHome();
         }
 
@@ -504,7 +508,7 @@ mx.Actions = (function( ret ) {
 
         mx.Widgets.refresh();
 
-        mx.Timer.register(mx.Actions.refreshHome,60000 - (s * 1000));
+        mx.Timer.register(mx.Actions.refreshHome, 60000 - (s * 1000));
     }
     
     ret.setVisualisationType = function(_visualisationType)
