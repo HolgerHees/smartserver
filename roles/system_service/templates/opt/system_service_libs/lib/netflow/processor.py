@@ -589,11 +589,11 @@ class Processor(threading.Thread):
         offset = datetime.now().timestamp() - datetime.utcnow().timestamp()
         #logging.info(offset)
         # 362 min => 6h - 2 min
-        data = self.influxdb.query(['SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\''])
-        #logging.info(data)
+        results = self.influxdb.query(['SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\''])
+        #logging.info(results)
         self.traffic_stats = {}
-        if data is not None:
-            for value in data["results"][0]["series"][0]["values"]:
+        if results is not None and results[0] is not None:
+            for value in results[0]["values"]:
                 # 2023-07-13T23:45:29.511Z
                 # 2023-07-13T23:45:29.511000Z
                 #logging.info("{}000Z".format(value[0][:-1]))

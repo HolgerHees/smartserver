@@ -61,13 +61,13 @@ class InfluxDB(threading.Thread):
         for messurement in messurements:
             queries.append("SELECT last(\"value\") FROM \"{}\"".format(messurement))
 
-        data = self.query(queries)
+        results = self.query(queries)
         values = {}
-        for result in data["results"]:
-            if "series" not in result or len(result["series"]) < 1 or len(result["series"][0]["values"]) < 1:
-                continue
-
-            values[result["series"][0]["name"]] = result["series"][0]["values"][0][1]
+        if results is not None:
+            for result in results:
+                if result is None or len(result["values"]) < 1:
+                    continue
+                values[result["name"]] = result["values"][1]
         return values
 
     def query(self, queries):
@@ -83,7 +83,13 @@ class InfluxDB(threading.Thread):
         try:
             data = json.loads(r.text)
             #logging.info(data)
-            return data
+            results = []
+            for result in data["results"]:
+                if "series" not in result or len(result["series"]) == 0:
+                    results.append(None)
+                else:
+                    results.append(result["series"][0])
+            return results
 
         except Exception as e:
             logging.error("Got unexpected exception")
