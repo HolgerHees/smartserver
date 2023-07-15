@@ -497,7 +497,9 @@ class Processor(threading.Thread):
                         allowed = True
                 if not allowed:
                     traffic_group = "observed"
-            label.append("direction={}".format("incoming" if _srcIsExternal else "outgoing"))
+
+            direction = "incoming" if _srcIsExternal else "outgoing"
+            label.append("direction={}".format(direction))
             label.append("group={}".format(traffic_group))
             label.append("protocol={}".format(con.protocol_name))
 
@@ -549,11 +551,14 @@ class Processor(threading.Thread):
 
                 #if traffic_group == "intruded":
                 data = {
+                    "extern_ip": extern_ip,
+                    "intern_ip": intern_ip,
+                    "direction": direction,
                     "type": traffic_group,
                     "request": con.getRequestFlow(),
                     "response": con.getAnswerFlow()
                 }
-                logging.info("DEBUG TRAFFIC: {}".format(data))
+                logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
 
         # old values with same timestamp should be summerized
         for _key in self.last_registry:
@@ -619,13 +624,32 @@ class Processor(threading.Thread):
             self.traffic_stats[group] = []
         self.traffic_stats[group].append(time)
 
+    def _fillTrafficStates(self, states):
+        if "observed" not in states:
+            states["observed"] = 0
+        if "scanning" not in states:
+            states["scanning"] = 0
+        if "intruded" not in states:
+            states["intruded"] = 0
+
     def getTrafficState(self):
         count_values = {}
         for group in self.traffic_stats:
             count_values[group] = len(self.traffic_stats[group])
+        self._fillTrafficStates(count_values)
         return count_values
 
     def getStateMetrics(self):
-        return [
-            "system_service_process{{type=\"netflow_processor\",}} {}".format("1" if self.is_running else "0")
-        ]
+        metrics = [ "system_service_process{{type=\"netflow_processor\",}} {}".format("1" if self.is_running else "0") ]
+
+        min_time = datetime.now().timestamp() - 60
+        count_values = {}
+        for group in list(self.traffic_stats.keys()):
+            values = [time for time in self.traffic_stats[group] if time > min_time]
+            count_values[group] = len(values)
+        self._fillTrafficStates(count_values)
+
+        for group, count in count_values.items():
+            metrics.append( "system_service_netflow{{type=\"{}\",}} {}".format( group, count ) )
+
+        return metrics

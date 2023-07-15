@@ -12,9 +12,6 @@ mx.Widgets.TrafficAlerts = (function( ret ) {
             let json = JSON.parse(data);
             let wan_isp_state = json["wan_isp_state"];
             let wan_online_state = json["wan_online_state"];
-            if( json["traffic_states"]["observed"] == undefined ) json["traffic_states"]["observed"] = 0;
-            if( json["traffic_states"]["scanning"] == undefined ) json["traffic_states"]["scanning"] = 0;
-            if( json["traffic_states"]["intruded"] == undefined ) json["traffic_states"]["intruded"] = 0;
 
             let msg = wan_online_state == "online" ? "<font class=\"icon-globe\"></font>" : "<font class=\"icon-globe\" style=\"color:var(--color-red)\"></font>";
             if( wan_isp_state == "fallback" ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-yellow)\"></font>";

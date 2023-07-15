@@ -91,7 +91,7 @@ groups:
 - name: suspicious_traffic
   rules:
   - alert: Suspicious traffic detected
-    expr: 'system_service_malware{type="detected"} > 0'
+    expr: 'sum_over_time(system_service_netflow{type="intruded"}[60m]) > 0'
     for: 0m
     labels:
       notifyGroup: "wan_connection"
