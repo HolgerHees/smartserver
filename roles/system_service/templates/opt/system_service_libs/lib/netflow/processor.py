@@ -191,6 +191,11 @@ class Connection:
 #Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:122] - False
 
         #logging.info(self.duration)
+    def getRequestFlow(self):
+        return self.request_flow
+
+    def getAnswerFlow(self):
+        return self.answer_flow
 
     @property
     def protocol_name(self):
@@ -541,6 +546,14 @@ class Processor(threading.Thread):
             #logging.info("{} {}".format(timestamp, influx_timestamp))
             if traffic_group != "normal":
                 self._addTrafficState(traffic_group, timestamp)
+
+                #if traffic_group == "intruded":
+                data = {
+                    "type": traffic_group,
+                    "request": con.getRequestFlow(),
+                    "response": con.getAnswerFlow()
+                }
+                logging.info("DEBUG TRAFFIC: {}".format(data))
 
         # old values with same timestamp should be summerized
         for _key in self.last_registry:
