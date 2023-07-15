@@ -551,8 +551,8 @@ class Processor(threading.Thread):
 
                 #if traffic_group == "intruded":
                 data = {
-                    "extern_ip": extern_ip,
-                    "intern_ip": intern_ip,
+                    "extern_ip": str(extern_ip),
+                    "intern_ip": str(intern_ip),
                     "direction": direction,
                     "type": traffic_group,
                     "request": con.getRequestFlow(),
