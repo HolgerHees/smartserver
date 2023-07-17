@@ -197,6 +197,16 @@
               {
                 "id": "filterable",
                 "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "",
+                    "url": "/explore?left={\"datasource\":\"loki\",\"queries\":[{\"refId\":\"A\",\"expr\":\"{env%3D\\\"fluentd\\\",group!~\\\"loki|system_service\\\"} !%3D \\\"grafana.\\\" |%3D \\\"${__value.raw}\\\"\",\"editorMode\":\"code\",\"queryType\":\"range\"}],\"range\":{\"from\":\"now-24h\",\"to\":\"now\"}}&theme=light&orgId=1"
+                  }
+                ]
               }
             ]
           },
@@ -428,7 +438,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "datasource": {
@@ -755,6 +765,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 4,
+  "version": 7,
   "weekStart": ""
 }
