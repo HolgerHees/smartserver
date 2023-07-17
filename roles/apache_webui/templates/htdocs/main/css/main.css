@@ -564,6 +564,8 @@ body.phone #submenu .service.home .outer_widgets_box {
     overflow: hidden;
     transition: width 0.5s;
     white-space: nowrap;
+    text-shadow: var(--submenu-shadow-home-info);
+    font-size: 106.25%;
 }
 #submenu .service.home .widgets .widget.clickable {
     cursor: pointer;
