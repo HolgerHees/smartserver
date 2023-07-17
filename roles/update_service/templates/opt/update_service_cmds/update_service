@@ -111,11 +111,14 @@ class Handler(Server):
         changed_data = {}
         
         force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
-        
+
         if state_type == "widget":
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
             result["component_updates"] = self.software_versions_watcher.getVersionCount()
+            result["needs_attention"] = ( result["workflow_state"] is not None and CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
+            result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
+
         elif state_type == "software":
             last_data_modified["software"] = self.software_versions_watcher.getLastModifiedAsTimestamp()
             if force or self.checkLastDataModified("software",last_data_modified):
