@@ -427,8 +427,6 @@ class Processor(threading.Thread):
             self.listener.join()
 
     def getMessurements(self):
-        messurements = []
-
         # ******
         start = time.time()
         pr = cProfile.Profile()
@@ -436,6 +434,8 @@ class Processor(threading.Thread):
 
         registry = {}
         for con in list(self.connections):
+            self.connections.remove(con)
+
             if con.skipped:
                 continue
 
@@ -571,8 +571,6 @@ class Processor(threading.Thread):
 
             registry[key][1] += con.size
 
-            self.connections.remove(con)
-
             #logging.info("INIT {}".format(datetime.fromtimestamp(timestamp)))
             #logging.info("{} {}".format(timestamp, influx_timestamp))
             if traffic_group != "normal":
@@ -605,7 +603,7 @@ class Processor(threading.Thread):
         end = time.time()
         logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
         pr.disable()
-        if end-start > end-start > 0.5:
+        if (end-start) > 0.5:
             s = io.StringIO()
             sortby = SortKey.CUMULATIVE
             ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
