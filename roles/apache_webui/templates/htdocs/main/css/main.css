@@ -540,9 +540,12 @@ body.dark #background {
     opacity: 1;
 }
 #submenu .service.home .outer_widgets_box {
-    margin-top: -5vh;
+    margin-top: -4.4vh;
     overflow-x: hidden;
     max-width: 100%;
+}
+body.phone #submenu .service.home .outer_widgets_box {
+    margin-top: -5vh;
 }
 #submenu .service.home .widgets {
     display: flex;
