@@ -28,6 +28,17 @@ IP_PROTOCOLS = {
     58: "icmpv6"
 }
 
+TCP_FLAGS = {
+    1: "FIN",  # Finish
+    2: "SYN",  # Synchronization
+    4: "RST",  # Reset
+    8: "PSH",  # Push
+    16: "ACK", # Acknowledge
+    32: "URG", # Urgent
+    64: "ECN", # Echo
+    128: "CWR" # Congestion Window Reduced
+}
+
 PING_PROTOCOLS = [1,58]
 
 #MDNS_IP4 = ipaddress.IPv4Address("224.0.0.251")
@@ -146,15 +157,24 @@ class Connection:
         self.src_port = self.request_flow['L4_SRC_PORT'] if 'L4_SRC_PORT' in self.request_flow else None
         self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
 
+        self.request_flags = self.request_flow['TCP_FLAGS'] if 'TCP_FLAGS' in self.request_flow else 0
+        self.answer_flags = self.answer_flow['TCP_FLAGS'] if self.answer_flow is not None and 'TCP_FLAGS' in self.answer_flow else 0
+
         # swap direction
         if Helper.shouldSwapDirection(self, config, cache):
            #or not self.src.is_private:
             _ = self.dest_port
             self.dest_port = self.src_port
             self.src_port = _
+
             _ = self.dest
             self.dest = self.src
             self.src = _
+
+            _ = self.request_flags
+            self.request_flags = self.answer_flags
+            self.answer_flags = _
+
             self.is_swapped = True
         else:
             self.is_swapped = False
@@ -509,6 +529,15 @@ class Processor(threading.Thread):
             if service == "unknown" and "speedtest" in extern_hostname:
                 service = "speedtest"
             label.append("service={}".format(service))
+
+            flags = []
+            _flags = con.request_flags # | con.answer_flags
+            for flag,name in TCP_FLAGS.items():
+                if flag & _flags == flag:
+                    flags.append(name)
+            if len(flags) == 0:
+                flags.append("NONE")
+            label.append("tcp_flags={}".format("|".join(flags)))
 
             label.append("destination_port={}".format(con.dest_port))
             label.append("source_port={}".format(con.src_port))

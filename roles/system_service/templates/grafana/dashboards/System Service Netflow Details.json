@@ -176,7 +176,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 200
+                "value": 180
               },
               {
                 "id": "filterable",
@@ -192,7 +192,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 130
+                "value": 135
               },
               {
                 "id": "filterable",
@@ -409,6 +409,32 @@
                 "value": true
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Flags"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "NONE": {
+                        "index": 0,
+                        "text": "-"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -547,6 +573,12 @@
                 "source_port::tag"
               ],
               "type": "tag"
+            },
+            {
+              "params": [
+                "tcp_flags::tag"
+              ],
+              "type": "tag"
             }
           ],
           "measurement": "netflow_size",
@@ -565,7 +597,8 @@
                 "type": "field"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -660,6 +693,10 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "tcp_flags": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "value": {
                 "aggregations": [
                   "sum",
@@ -683,23 +720,24 @@
             },
             "indexByName": {
               "Time": 0,
-              "destination_port": 11,
+              "destination_port": 12,
               "direction": 2,
-              "extern_group": 8,
-              "extern_host": 10,
-              "extern_ip": 9,
+              "extern_group": 9,
+              "extern_host": 11,
+              "extern_ip": 10,
               "group": 1,
-              "intern_host": 7,
-              "intern_ip": 6,
+              "intern_host": 8,
+              "intern_ip": 7,
               "ip_type": 4,
-              "location_city": 16,
-              "location_country_code": 13,
-              "location_country_name": 14,
-              "location_org": 12,
-              "location_zip": 15,
+              "location_city": 17,
+              "location_country_code": 14,
+              "location_country_name": 15,
+              "location_org": 13,
+              "location_zip": 16,
               "protocol": 3,
-              "service": 5,
-              "source_port": 17
+              "service": 6,
+              "source_port": 18,
+              "tcp_flags": 5
             },
             "renameByName": {
               "Time": "Time",
@@ -725,6 +763,7 @@
               "service": "Service",
               "source_port": "",
               "sum": "Traffic",
+              "tcp_flags": "Flags",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -765,6 +804,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 7,
+  "version": 9,
   "weekStart": ""
 }
