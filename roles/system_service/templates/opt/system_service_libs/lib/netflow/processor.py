@@ -283,8 +283,6 @@ class Processor(threading.Thread):
 
         influxdb.register(self.getMessurements)
 
-        self._initTrafficState()
-
         self.allowed_isp_pattern = {}
         for target, data in config.netflow_incoming_traffic.items():
             self.allowed_isp_pattern[target] = {}
@@ -302,6 +300,15 @@ class Processor(threading.Thread):
     def run(self):
         if self.config.netflow_bind_ip is None:
             return
+
+        logging.info("Init traffic state")
+        while True:
+            try:
+                self._initTrafficState()
+                break
+            except Exception:
+                logging.info("InfluxDB not ready. Will retry in 15 seconds.")
+                time.sleep(15)
 
         logging.info("Netflow processor started")
 
