@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    fluentd_version: '1.16.1-debian-1.0'
+    fluentd_version: '1.16.2-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
 - name: copy config and service
