@@ -73,7 +73,7 @@ class Weather
         {
             $current_value['snowfallProbabilityInPercent'] = $hourlyData['snowfallProbabilityInPercent'];
         }
-        if( $current_value['precipitationProbabilityInPercent'] < $hourlyData['precipitationProbabilityInPercent'] )
+        if( $current_value['precipitationProbabilityInPercent'] < $hourlyData['precipitationProbabilityInPercent'] && $current_value['precipitationAmountInMillimeter'] > 0 )
         {
             $current_value['precipitationProbabilityInPercent'] = $hourlyData['precipitationProbabilityInPercent'];
         }
