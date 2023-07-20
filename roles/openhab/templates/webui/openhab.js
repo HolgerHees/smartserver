@@ -89,7 +89,7 @@ mx.Widgets.CustomWeather = (function( ret ) {
                 return;
             }
 
-            ret.show(0, "<span style='display:inline-block;vertical-align: middle; padding-bottom: 8px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + cloudData + "</span><strong>" + temperatureData["state"] + "°C</strong>" );
+            ret.show(0, "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + cloudData + "</span><strong>" + temperatureData["state"] + "°C</strong>" );
         }
 
         if( cloudData == null && mx.Widgets.CustomCloudUrl != null)
