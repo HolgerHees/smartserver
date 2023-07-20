@@ -48,6 +48,8 @@ mx.Widgets = (function( ret ) {
             _result.push(data[2]);
         });
 
+        if( _last_position == "left" ) _result.push("<div class=\"spacer\"></div>");
+
         return _result;
     }
 

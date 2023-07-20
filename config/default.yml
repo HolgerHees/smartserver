@@ -176,7 +176,12 @@ default_variables: {
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
     "vault_openhab_mysql_password": {},
 
-    "openhab_garden_temperature_item": { "default": no },         # used for openhab webui temperature widget
+    "weather_data": { "default": {} },                            # used for openhab webui weather widget
+    # *** EXAMPLE ***
+    # {
+    #   openhab_temperature_item_url: "/rest/items/pOutdoor_WeatherStation_Temperature",
+    #   cloud_icon_url: "/weather/weatherTodayIcon.php"
+    # }
 
     "network_devices": { "default": [] },                         # used for librenms and system_service (network monitoring)
     # *** EXAMPLE ***
