@@ -562,6 +562,8 @@ body.phone #submenu .service.home .outer_widgets_box {
 #submenu .service.home .widgets .widget {
     width: 0;
     overflow: hidden;
+    padding: 10px 0;
+    margin: -10px 0;
     transition: width 0.5s;
     white-space: nowrap;
     text-shadow: var(--submenu-shadow-home-info);

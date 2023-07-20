@@ -85,11 +85,11 @@ for( $i = 0; $i < count($list); $i++ )
 <?php foreach( $values as $blockData ){ ?>
 		<div class="cell <?php echo $blockData['class']; ?>">
             <div class="time"><div class="from"><?php echo Weather::formatHour($blockData['from']) . ' -</div><div class="to">' . Weather::formatHour($blockData['to']) ; ?></div></div>
-            <div class="sun"><?php echo Weather::convertOctaToSVG($blockData['from'],$blockData,1,"light");?>
+            <div class="sun"><?php echo Weather::convertOctaToSVG($blockData['from'],$blockData,5);?>
             </div>
             <div class="value temperature"><div class="main"><?php echo $blockData['airTemperatureInCelsius']; ?></div><div class="sub">°C</div></div>
             <div class="value precipitationProbability">
-                <?php echo Weather::getSVG('rain', 'self_rain_grayscaled') . "<div class=\"main\">" . $blockData['precipitationProbabilityInPercent']; ?></div><div class="sub">%</div>
+                <?php echo Weather::getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . $blockData['precipitationProbabilityInPercent']; ?></div><div class="sub">%</div>
             </div>
             <div class="value precipitationAmount">
                 <div class="main"><?php echo $blockData['precipitationAmountInMillimeterSum']; ?></div><div class="sub">mm</div>
@@ -98,14 +98,14 @@ for( $i = 0; $i < count($list); $i++ )
 <?php } ?>
 	</div>
 	<div class="summary">
-		<div class="cell"><div class="txt">Min.:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'self_temperature_grayscaled') . "</div><div class=\"value\">" . $minTemperature; ?> °C</div></div>
+		<div class="cell"><div class="txt">Min.:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">" . $minTemperature; ?> °C</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Max.:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'self_temperature_grayscaled') . "</div><div class=\"value\">" . $maxTemperature; ?> °C</div></div>
+		<div class="cell"><div class="txt">Max.:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">" . $maxTemperature; ?> °C</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo Weather::getSVG('wind', 'self_wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeed; ?> km/h</div></div>
+		<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo Weather::getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeed; ?> km/h</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Sum:</div><div class="icon rain"><?php echo Weather::getSVG('rain', 'self_rain_grayscaled') . "</div><div class=\"value\">" . $sumRain; ?> mm</div></div>
+		<div class="cell"><div class="txt">Sum:</div><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRain; ?> mm</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Dauer:</div><div class="icon sun"><?php echo Weather::getSVG('sun', 'self_sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshine ); ?></div></div>
+		<div class="cell"><div class="txt">Dauer:</div><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshine ); ?></div></div>
 	</div>
 </div>

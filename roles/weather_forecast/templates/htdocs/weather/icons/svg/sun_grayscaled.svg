@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf8'?>
+<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 64 64" version="1.1" viewBox="0 0 64 64" x="0px" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" y="0px"><g id="sun"><g transform="matrix(2.3052 0 0 2.3052 -41.765 -41.765)">
+  <g transform="translate(32,32)">
+   <g class="am-weather-sun am-weather-sun-shiny am-weather-easing-ease-in-out">
+    <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    <g transform="rotate(45)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+    <g transform="rotate(90)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+    <g transform="rotate(135)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+    <g transform="scale(-1)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+    <g transform="rotate(225)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+    <g transform="rotate(-90)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+    <g transform="rotate(-45)">
+     <line stroke-linecap="round" stroke-width="2" transform="translate(0,9)" x2="0" y2="3" />
+    </g>
+   </g>
+   <circle cx="0" cy="0" r="5" stroke-width="2" />
+  </g>
+ </g>
+</g></svg>

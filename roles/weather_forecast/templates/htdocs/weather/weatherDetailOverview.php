@@ -2,8 +2,8 @@
 <head>
 <title>Wetterbericht</title>
 <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0">
-<link rel="stylesheet" href="/static/shared/habpanel/css/theme.css">
-<link rel="stylesheet" href="/static/shared/habpanel/css/panelui.css">
+<link rel="stylesheet" href="./css/main.css">
+<link rel="stylesheet" href="./css/panelui.css">
 <style>
 .mxWidget * {
     box-sizing: border-box;
@@ -52,7 +52,8 @@
     catch(e){}
 
     document.querySelector("html").classList.add(theme);
-    
+    document.querySelector("html").classList.add(theme == "light" ? "lightTheme" : "darkTheme" );
+
     if( basicui )
     {
         document.body.classList.add("basicui");

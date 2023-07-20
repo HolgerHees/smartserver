@@ -10,6 +10,5 @@ db_password     = "{{vault_shared_mysql_password}}"
 mosquitto_host  = "cloud_mosquitto"
 publish_topic   = {% if publish_topic %}"{{publish_topic}}"{% else %}False{% endif %}
 
-
 location        = "{{location}}"
 timezone        = "{{timezone}}"

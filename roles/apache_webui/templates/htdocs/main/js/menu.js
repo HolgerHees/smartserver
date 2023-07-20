@@ -42,6 +42,11 @@ mx.Menu = (function( ret ) {
         return subGroup.isSingleEntryGroup() ? [] : subGroup.getEntries().filter(entry => entry.getTitle() );
     }
 
+    ret.checkMenu = function(mainGroupId, subGroupId, entryId)
+    {
+        return mainGroupId in menuGroups && subGroupId in menuGroups[mainGroupId]['subGroups'] && entryId in menuGroups[mainGroupId]['subGroups'][subGroupId]["menuEntries"];
+    };
+
     ret.getMainGroup = function(mainGroupId)
     {
         if(mainGroupId in menuGroups)

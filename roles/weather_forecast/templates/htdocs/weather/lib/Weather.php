@@ -6,30 +6,6 @@ class Weather
         // possible icons and typeIconOffsetLeft
         'day' => array( 'day', 'cloudy-day-0', 'cloudy-day-1', 'cloudy-day-2', 'cloudy' ),
         'night' => array( 'night', 'cloudy-night-0', 'cloudy-night-1', 'cloudy-night-2', 'cloudy'	),
-		
-		'typeIconOffsetLeft' => array( 
-			'day' => 25, 'cloudy-day-0' => 37, 'cloudy-day-1' => 28, 'day_default' => 20,
-			'night' => 25, 'cloudy-night-0' => 6, 'cloudy-night-1' => 8, 'night_default' => 22,
-			'cloudy' => 18,
-		),
-		'typeIconOffsetTop' => array(
-			'raindrop' => array( 'day' => 57, 'night' => 57, 'default' => 55 ),
-			'snowflake' => array( 'day' => 57, 'night' => 57, 'default' => 55 ),
-			'thunder' => array( 'day' => 36, 'night' => 36, 'default' => 36 ),
-		),
-        
-        //'snow' => array( 'snowy-1','snowy-2','snowy-3','snowy-4','snowy-5','snowy-6' ),
-        //'rain' => array( 'rainy-1','rainy-2','rainy-3','rainy-4','rainy-5','rainy-6','rainy-7' ),
-        //'other' => array( 'thunder' ),
-        
-        'scale' => array(
-			// size, top, left
-            array( array( "100", "0", "0" ), array( 'cloudy-day-0','cloudy-day-1','cloudy-day-2','cloudy-day-3' ) ),
-            array( array( "100", "0", "0" ), array( 'cloudy-night-0','cloudy-night-1','cloudy-night-2','cloudy-night-3' ) ),
-            array( array( "100", "0", "0" ), array( 'cloudy' ) ),
-            array( array( "80", "10", "-3" ), array( 'day' ) ),
-            array( array( "60", "20", "5" ), array( 'night' ) )
-        )
     );
     
     public static function initBlockData($from)
@@ -136,35 +112,36 @@ class Weather
 
 		return array( $minTemperature, $maxTemperature, $maxWindSpeed, $sumSunshine, $sumRain );
     }
-    
+
     // https://www.amcharts.com/free-animated-svg-weather-icons/
 
     // https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     // precipitationType
-    public static function convertOctaToSVG( $datetime, $data, $timerange, $theme = "colored" )
+    public static function convertOctaToSVG( $datetime, $data, $timerange )
     {
         global $GLOBAL_TIMEZONE;
-        
+
         $octa = $data['effectiveCloudCoverInOcta'];
         $precipitationType = $data['precipitationType'];
         $precipitationProbabilityInPercent = $data['precipitationProbabilityInPercent'];
         $precipitationAmountInMillimeter = $data['precipitationAmountInMillimeter'];
-        
+
         $thunderstormProbabilityInPercent = $data['thunderstormProbabilityInPercent'];
         $freezingRainProbabilityInPercent = $data['freezingRainProbabilityInPercent'];
         $hailProbabilityInPercent = $data['hailProbabilityInPercent'];
         $snowfallProbabilityInPercent = $data['snowfallProbabilityInPercent'];
-        
+
         $time = $datetime->format("U");
-        
-        $sunrise = DateTime::createFromFormat('U', date_sunrise($time, SUNFUNCS_RET_TIMESTAMP, 52.34772, 13.62140, 96, 1));
+
+        $sun_info = date_sun_info($time, explode(",",LOCATION)[0], explode(",",LOCATION)[1]);
+        $sunrise = DateTime::createFromFormat('U', $sun_info["sunrise"]);
         $sunrise->setTimezone($GLOBAL_TIMEZONE);
-        $sunset = DateTime::createFromFormat('U', date_sunset($time, SUNFUNCS_RET_TIMESTAMP, 52.34772, 13.62140, 96, 1));
+        $sunset = DateTime::createFromFormat('U', $sun_info["sunset"]);
         $sunset->setTimezone($GLOBAL_TIMEZONE);
-        
+
         //echo $datetime->format("H:i:s").":".$sunrise->format("H:i:s").":" . ($datetime < $sunrise) . ":<br>";
         //echo $datetime->format("H:i:s").":".$sunset->format("H:i:s").":" . ($datetime > $sunset) . ":<br>";
-    
+
 		// https://de.wikipedia.org/wiki/Bew%C3%B6lkung
 		// 0-8 + 9
         // Based on Cloudiness
@@ -173,21 +150,17 @@ class Weather
         else if( $octa > 3.0 ) $index = 2;
         else if( $octa > 1.5 ) $index = 1;
         else $index = 0;
-        
-        $hour = $datetime->format("H");
-        $isNight = ( $datetime < $sunrise || $datetime->format("H") <= 5 || $datetime > $sunset );
-        $icon = Weather::$sunConfig[ $isNight ? 'night' : 'day' ][$index];
-    
-        //$index = round( $octa / ( 9 / count($possible_icons) ) );
 
-        $svg = '';
-        
-        $typeLeftOffset = isset( Weather::$sunConfig['typeIconOffsetLeft'][$icon] ) ? Weather::$sunConfig['typeIconOffsetLeft'][$icon] : Weather::$sunConfig['typeIconOffsetLeft'][ ( $isNight ? 'night' : 'day' ) . '_default'];
-        
-        if( $precipitationProbabilityInPercent > 10 && $precipitationAmountInMillimeter > 0 )
+        $minutes_to_add = ( $timerange / 2 * 60);
+        $ref_datetime = $datetime->add(new DateInterval('PT' . $minutes_to_add . 'M'));
+        $isNight = ( $ref_datetime < $sunrise || $ref_datetime > $sunset );
+
+        $icon = Weather::$sunConfig[ $isNight ? 'night' : 'day' ][$index];
+
+        if( $precipitationProbabilityInPercent > 30 && $precipitationAmountInMillimeter > 0 )
         {
             //error_log( $timerange . " " . $precipitationAmountInMillimeter );
-            
+
             if( $timerange == 24 )
             {
                 if( $precipitationAmountInMillimeter > 4 ) $amount = 4;
@@ -209,55 +182,33 @@ class Weather
                 else if( $precipitationAmountInMillimeter > 0.5 ) $amount = 2;
                 else $amount = 1;
             }
-        
-            
-            $type = ( $freezingRainProbabilityInPercent > 10 || $hailProbabilityInPercent > 10 || $snowfallProbabilityInPercent > 10 ) ? 'snowflake' : 'raindrop';
 
-			$typeTopOffset = isset( Weather::$sunConfig['typeIconOffsetTop'][$type][$icon] ) ? Weather::$sunConfig['typeIconOffsetTop'][$type][$icon] : Weather::$sunConfig['typeIconOffsetTop'][$type]['default'];
-
-            $svg .= '<div class="'.$type.'_background_' . $amount . ' raindrop_snowflake_background" style="left:'.$typeLeftOffset.'%;top:'.$typeTopOffset.'%"></div>';
-			$svg .= '<svg style="left:'.$typeLeftOffset.'%;top:'.$typeTopOffset.'%" class="'.$type.'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                    <use href="/static/shared/habpanel/svg/icons.svg#self_'.$type.$amount.'_grayscaled" />
-                 </svg>';
+            $rain_type = ( $freezingRainProbabilityInPercent > 10 || $hailProbabilityInPercent > 10 || $snowfallProbabilityInPercent > 10 ) ? 'snowflake' : 'raindrop';
+            $rain_type .= $amount;
         }
-        
-        if( $thunderstormProbabilityInPercent > 2 )
+        else
         {
-			$type = "thunder";
-			$level = ( $thunderstormProbabilityInPercent > 5 ) ? " strong" : "";
-			
-			$typeTopOffset = isset( Weather::$sunConfig['typeIconOffsetTop'][$type][$icon] ) ? Weather::$sunConfig['typeIconOffsetTop'][$type][$icon] : Weather::$sunConfig['typeIconOffsetTop'][$type]['default'];
-
-			$svg .= '<svg style="left:'.$typeLeftOffset.'%;top:'.$typeTopOffset.'%" class="'.$type.$level.'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                    <use href="/static/shared/habpanel/svg/icons.svg#self_'.$type.'_grayscaled" />
-                 </svg>';
+            $rain_type = 'none';
         }
-        
-        $svg = Weather::getSunSVG($icon,$theme) . $svg;
-        
-        return $svg;
+
+        if( $thunderstormProbabilityInPercent > 5 )
+        {
+            $thunder_type = "thunder";
+        }
+        else
+        {
+            $thunder_type = 'none';
+        }
+
+        return file_get_contents('icons/svg/' . $icon  . '_' . $rain_type . '_' . $thunder_type . '_grayscaled.svg');
+        //return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="height:100%;width:100%">
+        //            <use href="/static/shared/icons/weather/svg/' . $icon  . '_' . $rain_type . '_' . $thunder_type . '_grayscaled.svg#' . $icon  . '_' . $rain_type . '_' . $thunder_type . '" />
+        //        </svg>';
     }
 
-    public static function getSunSVG( $icon, $theme = "light" )
+    public static function getSVG( $icon, $id)
     {
-        $style = "";
-        foreach( Weather::$sunConfig['scale'] as $_scale => $_data )
-        {
-            if( in_array( $icon, $_data[1] ) )
-            {
-                $style = " style=\"margin-top: ".($_data[0][1])."%;margin-left: ".$_data[0][2]."%;height: ".$_data[0][0]."%; width: ".$_data[0][0]."%;\"";
-                break;
-            }
-        }
-        
-        return Weather::getSVG( $icon, 'self_' . $icon . '_grayscaled' , $style );
-    }
-
-    public static function getSVG( $icon, $id, $style = "" )
-    {
-        return '<svg'.$style.' class="' . $icon . '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                    <use href="/static/shared/habpanel/svg/icons.svg#'.$id.'" />
-                </svg>';
+        return file_get_contents('icons/svg/' . $id . '.svg');
     }
 
     public static function formatDuration($duration)

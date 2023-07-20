@@ -11,8 +11,5 @@
     "Habot": "Habot",
     "Metrics": "Metrics",
     "Grafana": "Grafana"
-  },
-  "widget_openhab": {
-    "Temperature": "Temperatur"
   }
 }
