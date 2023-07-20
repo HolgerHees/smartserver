@@ -1,3 +1,8 @@
+body {
+    background-color: var(--body-bg);
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+}
 .mvWidget {
     padding: 0;
     height: 100%;
