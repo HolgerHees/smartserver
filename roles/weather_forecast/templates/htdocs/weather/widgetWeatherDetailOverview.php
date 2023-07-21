@@ -115,11 +115,12 @@ else
             <div class="cell"><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRain; ?> mm</div></div>
             <div class="cell"><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshine ); ?></div></div>
 		</div>
-<?php 
+        <div class="hours">
+<?php
     if( !$hourlyData )
     {
 ?>
-		<div class="hour">Keine Vorhersagedaten vorhanden</div>
+            <div class="hour">Keine Vorhersagedaten vorhanden</div>
 <?php 
     }
     else
@@ -135,8 +136,7 @@ else
 
             $isActive = $now >= $hourlyData["from"] && $now < $hourlyData["to"];
 ?>
-		<div class="hour<?php echo ( $isActive ? " active" : "" ); ?>">
-			<div>
+            <div class="hour<?php echo ( $isActive ? " active" : "" ); ?>">
                 <div class="time"><div class="from"><?php echo Weather::formatHour($hourlyData['from']) /*. ' -</div><div class="to">' . Weather::formatHour($hourlyData['to'])*/ ; ?></div></div>
                 <div class="cloud"><?php echo Weather::convertOctaToSVG($hourlyData['from'],$hourlyData,3);?>
                 </div>
@@ -151,16 +151,18 @@ else
                     <div class="precipitationAmount"><div></div><div><?php echo $hourlyData['precipitationAmountInMillimeterSum']; ?> mm</div></div>
                 </div>
                 <div class="wind">
-                    <div><?php echo $hourlyData['windSpeedInKilometerPerHour']; ?> km/h</div>
-                    <div class="compass">
-                        <div class="circle"><?php echo Weather::getSVG('compass_circle', 'compass_circle_grayscaled'); ?></div>
-                        <div class="needle" style="transform: rotate(<?php echo ( $hourlyData['windDirectionInDegree'] - 180 ); ?>deg)"><?php echo Weather::getSVG('compass_needle', 'compass_needle_grayscaled'); ?></div>
+                    <div>
+                        <div><?php echo $hourlyData['windSpeedInKilometerPerHour']; ?> km/h</div>
+                        <div class="compass">
+                            <div class="circle"><?php echo Weather::getSVG('compass_circle', 'compass_circle_grayscaled'); ?></div>
+                            <div class="needle" style="transform: rotate(<?php echo ( $hourlyData['windDirectionInDegree'] - 180 ); ?>deg)"><?php echo Weather::getSVG('compass_needle', 'compass_needle_grayscaled'); ?></div>
+                        </div>
                     </div>
                 </div>
             </div>
-		</div>
 <?php   }
     }?>
+        </div>
     </div>
 	<div class="week">
 		<div class="title">
@@ -172,11 +174,12 @@ else
             <div class="cell"><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRainWeekly; ?> mm</div></div>
             <div class="cell"><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshineWeekly ); ?></div></div>
 		</div>
+		<div class="hours">
 <?php 
     if( !$hourlyData )
     {
 ?>
-		<div class="hour">Keine Vorhersagedaten vorhanden</div>
+            <div class="hour">Keine Vorhersagedaten vorhanden</div>
 <?php 
     }
     else
@@ -186,9 +189,8 @@ else
             $clickUrl = $_SERVER['SCRIPT_URL'] . '?date=' . $hourlyData['from']->format("Y-m-d");
             //$hourlyData['effectiveCloudCoverInOcta'] = array_search($hourlyData,$weekValues) * 1.2;
 ?>
-		<div class="hour">
-			<div class="mvClickable<?php if( $activeDay->format("Y-m-d") == $hourlyData['from']->format("Y-m-d") ) echo " active"; ?>" mv-url="<?php echo $clickUrl;?>">
-                <div class="time"><div class="to"><?php echo Weather::formatWeekdayName($hourlyData['from']) . '</div><div class="from">' . Weather::formatWeekdayDate($hourlyData['to']) ; ?></div></div>
+            <div class="hour mvClickable<?php if( $activeDay->format("Y-m-d") == $hourlyData['from']->format("Y-m-d") ) echo " active"; ?>" mv-url="<?php echo $clickUrl;?>">
+                <div class="time"><div><?php echo Weather::formatWeekdayName($hourlyData['from']) . '</div><div>' . Weather::formatWeekdayDate($hourlyData['to']) ; ?></div></div>
                 <div class="cloud"><?php echo Weather::convertOctaToSVG($hourlyData['to'],$hourlyData,24);?>
                 </div>
                 <div class="temperature">
@@ -202,16 +204,18 @@ else
                     <div class="precipitationAmount"><div></div><div><?php echo $hourlyData['precipitationAmountInMillimeterSum']; ?> mm</div></div>
                 </div>
                 <div class="wind">
-                    <div><?php echo $hourlyData['windSpeedInKilometerPerHour']; ?> km/h</div>
-                    <div class="compass">
-                        <div class="circle"><?php echo Weather::getSVG('compass_circle', 'compass_circle_grayscaled'); ?></div>
-                        <div class="needle" style="transform: rotate(<?php echo ( $hourlyData['windDirectionInDegree'] - 180 ); ?>deg)"><?php echo Weather::getSVG('compass_needle', 'compass_needle_grayscaled'); ?></div>
+                    <div>
+                        <div><?php echo $hourlyData['windSpeedInKilometerPerHour']; ?> km/h</div>
+                        <div class="compass">
+                            <div class="circle"><?php echo Weather::getSVG('compass_circle', 'compass_circle_grayscaled'); ?></div>
+                            <div class="needle" style="transform: rotate(<?php echo ( $hourlyData['windDirectionInDegree'] - 180 ); ?>deg)"><?php echo Weather::getSVG('compass_needle', 'compass_needle_grayscaled'); ?></div>
+                        </div>
                     </div>
                 </div>
                 <div class="status"></div>
             </div>
-		</div>
 <?php   }
     }?>
+        </div>
 	</div>
 </div>

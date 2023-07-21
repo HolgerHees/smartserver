@@ -11,12 +11,12 @@ body {
     box-sizing: border-box;
 }
 
-@media only screen and (min-width: 640px) {
+@media only screen and (min-width: 800px) {
     #openButton {
         display: none;
     }
 }
-@media only screen and (max-width: 640px) {
+@media only screen and (max-width: 800px) {
     .mvWidget .weatherDetailForecast .today, .mvWidget .weatherDetailForecast .week {
         width: 100%;
     }
@@ -65,7 +65,7 @@ body {
   padding: 5px;
   color: var(--primary-color);
 }
-@media only screen and (max-width: 640px) {
+@media only screen and (max-width: 800px) {
   #rainButton {
       background-color: var(--body-bg);
       padding: 10px;
@@ -151,7 +151,7 @@ html.light, html.light body {
     --primary-icon-color: var(--primary-dark-color) !important;
 } 
 
-html.light body .mvWidget .weatherDetailForecast .week .hour > div.active .status {
+html.light body .mvWidget .weatherDetailForecast .week .hour.active .status {
     background-color: #1976D2;
     border: 1px solid #1976D2;
 }
