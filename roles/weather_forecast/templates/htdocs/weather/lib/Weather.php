@@ -214,7 +214,7 @@ class Weather
     public static function formatDuration($duration)
     {
         if( $duration < 180 ) return $duration . " min.";
-        return gmdate("H", $duration * 60 ) . " h";
+        return round( $duration / 60 ) . " h";
     }
     
     public static function formatHour($datetime)
