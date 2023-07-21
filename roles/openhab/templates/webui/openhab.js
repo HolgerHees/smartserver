@@ -25,8 +25,8 @@ mx.Widgets.CustomWeather = (function( ret ) {
     :root body.dark {
         --widget-value-color-weather-clouds: white;
         --widget-value-color-weather-raindrop: #4b86c8;
-        --widget-value-color-weather-thunder: rgba(255, 165, 0, 0.6);
-        --widget-value-color-weather-thunder-stroke: rgba(255, 165, 0, 0.6);
+        --widget-value-color-weather-thunder: rgba(255, 165, 0, 0.9);
+        --widget-value-color-weather-thunder-stroke: rgba(255, 165, 0, 0.9);
     }
 
     #customWeatcher svg {
@@ -62,9 +62,9 @@ mx.Widgets.CustomWeather = (function( ret ) {
     style.appendChild(document.createTextNode(css));
 
 
-    let temperatureData = null;
+    let temperatureData = mx.Widgets.CustomTemperatureUrl == null ? "unused" : null;
     let cloudLastHour = null;
-    let cloudData = null;
+    let cloudData = mx.Widgets.CustomCloudUrl == null ? "unused" : null;
 
     ret.click = function(event){
         if( mx.Menu.checkMenu("workspace", "weather", "weather") ) mx.Actions.openEntryById(event, 'workspace-weather-weather');
@@ -82,20 +82,34 @@ mx.Widgets.CustomWeather = (function( ret ) {
             cloudData = null;
         }
 
-        function setContent()
+        function setContent( asAlert )
         {
             if( !temperatureData || !cloudData )
             {
                 return;
             }
 
-            ret.show(0, "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + cloudData + "</span><strong>" + temperatureData["state"] + "°C</strong>" );
+            if( temperatureData == "error" || cloudData == "error" )
+            {
+                ret.alert(0, "Weather Service: N/A");
+            }
+            else
+            {
+                let content = "";
+                if( cloudData != "unused" ) content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + cloudData + "</span>";
+                if( temperatureData != "unused" ) content += "<strong>" + temperatureData["state"] + "°C</strong>";
+
+                ret.show(0, content );
+            }
         }
+
+        hasError = false;
 
         if( cloudData == null && mx.Widgets.CustomCloudUrl != null)
         {
             mx.Widgets.fetchContent("GET", mx.Widgets.CustomCloudUrl, function(data)
             {
+                if( data == null ) cloudData = "error";
                 cloudData = data;
                 setContent();
             } );
@@ -104,7 +118,8 @@ mx.Widgets.CustomWeather = (function( ret ) {
         {
             mx.Widgets.fetchContent("GET", mx.Widgets.CustomTemperatureUrl, function(data)
             {
-                temperatureData = JSON.parse(data);
+                if( data == null ) temperatureData = "error";
+                else temperatureData = JSON.parse(data);
                 setContent();
             } );
         }

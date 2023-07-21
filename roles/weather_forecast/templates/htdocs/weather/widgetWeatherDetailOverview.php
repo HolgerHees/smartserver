@@ -110,13 +110,10 @@ else
             <?php /*echo time();*/ echo Weather::formatDay($activeDay); ?>
 		</div>
 		<div class="summary">
-			<div class="cell"><div class="txt">Bereich:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">↑" . $maxTemperature . " ↓" . $minTemperature ; ?> °C</div></div>
-			<div class="bullet">•</div>
-			<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo Weather::getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeed; ?> km/h</div></div>
-			<div class="bullet">•</div>
-            <div class="cell"><div class="txt">Sum:</div><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRain; ?> mm</div></div>
-			<div class="bullet">•</div>
-            <div class="cell"><div class="txt">Dauer:</div><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshine ); ?></div></div>
+			<div class="cell"><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value temperature\"><span class=\"max\">" . $maxTemperature . "</span><span class=\"min\">" . $minTemperature ; ?></span> °C</div></div>
+			<div class="cell"><div class="icon wind"><?php echo Weather::getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeed; ?> km/h</div></div>
+            <div class="cell"><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRain; ?> mm</div></div>
+            <div class="cell"><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshine ); ?></div></div>
 		</div>
 <?php 
     if( !$hourlyData )
@@ -140,11 +137,14 @@ else
 ?>
 		<div class="hour<?php echo ( $isActive ? " active" : "" ); ?>">
 			<div>
-                <div class="time"><div class="from"><?php echo Weather::formatHour($hourlyData['from']) . ' -</div><div class="to">' . Weather::formatHour($hourlyData['to']) ; ?></div></div>
+                <div class="time"><div class="from"><?php echo Weather::formatHour($hourlyData['from']) /*. ' -</div><div class="to">' . Weather::formatHour($hourlyData['to'])*/ ; ?></div></div>
                 <div class="cloud"><?php echo Weather::convertOctaToSVG($hourlyData['from'],$hourlyData,3);?>
                 </div>
                 <div class="temperature">
-                    <div class="main"><?php echo $hourlyData['airTemperatureInCelsius']; ?></div><div class="sub">°C</div></div>
+                    <div>
+                        <div class="main"><span class="max"><?php echo $hourlyData['maxAirTemperatureInCelsius'] . '</span><span class="min">' . $hourlyData['minAirTemperatureInCelsius'] ; ?></span></div><div class="sub">°C</div>
+                    </div>
+                </div>
                 <div class="info">
                     <div class="sunshineDuration"><div class="sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div>" . Weather::formatDuration( $hourlyData['sunshineDurationInMinutesSum'] ); ?></div></div>
                     <div class="precipitationProbability"><div><?php echo Weather::getSVG('rain','rain_grayscaled') . "</div><div>" . $hourlyData['precipitationProbabilityInPercent']; ?> %</div></div>
@@ -167,13 +167,10 @@ else
             Woche
 		</div>
 		<div class="summary">
-			<div class="cell"><div class="txt">Bereich:</div><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">↑" . $maxTemperatureWeekly . " ↓" . $minTemperatureWeekly; ?> °C</div></div>
-			<div class="bullet">•</div>
-			<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo Weather::getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeedWeekly; ?> km/h</div></div>
-			<div class="bullet">•</div>
-            <div class="cell"><div class="txt">Sum:</div><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRainWeekly; ?> mm</div></div>
-			<div class="bullet">•</div>
-            <div class="cell"><div class="txt">Dauer:</div><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshineWeekly ); ?></div></div>
+			<div class="cell"><div class="icon temperature"><?php echo Weather::getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value temperature\"><span class=\"max\">" . $maxTemperatureWeekly . "</span><span class=\"min\">" . $minTemperatureWeekly ; ?></span> °C</div></div>
+			<div class="cell"><div class="icon wind"><?php echo Weather::getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . $maxWindSpeedWeekly; ?> km/h</div></div>
+            <div class="cell"><div class="icon rain"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . $sumRainWeekly; ?> mm</div></div>
+            <div class="cell"><div class="icon sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . Weather::formatDuration( $sumSunshineWeekly ); ?></div></div>
 		</div>
 <?php 
     if( !$hourlyData )
@@ -195,7 +192,9 @@ else
                 <div class="cloud"><?php echo Weather::convertOctaToSVG($hourlyData['to'],$hourlyData,24);?>
                 </div>
                 <div class="temperature">
-                    <div class="pre">↑<br>↓</div><div class="main"><?php echo $hourlyData['maxAirTemperatureInCelsius'] . "<br/>" . $hourlyData['minAirTemperatureInCelsius'] ; ?></div><div class="sub">°C</div>
+                    <div>
+                        <div class="main"><span class="max"><?php echo $hourlyData['maxAirTemperatureInCelsius'] . '</span><span class="min">' . $hourlyData['minAirTemperatureInCelsius'] ; ?></span></div><div class="sub">°C</div>
+                    </div>
                 </div>
                 <div class="info">
                     <div class="sunshineDuration"><div class="sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div>" . Weather::formatDuration( $hourlyData['sunshineDurationInMinutesSum'] ); ?></div></div>

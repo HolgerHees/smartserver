@@ -462,29 +462,31 @@ mx.Actions = (function( ret ) {
         content += '<div class="bottom"><div class="image"><div class="imageCopyright">' + mx.MainImage.getCopyright() + '</div><div class="imageTitle">' + mx.MainImage.getTitle() + '</div></div></div>';
         content += '</div>';
 
-        if( !isActive || isIFrameVisible() )
-        {
-            showMenuContent( content, [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], subGroup.getTitle());
-            
-            mx.History.addMenu(subGroup);
+        mx.Widgets.preload(function(){
+            if( !isActive || isIFrameVisible() )
+            {
+                showMenuContent( content, [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], subGroup.getTitle());
 
-            mx.Menu.activateMenu(null); // collapse open submenu
-        }
-        else
-        {
-            mx.$('#content #submenu').innerHTML = content;
-            mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
-            mx.Actions.refreshHome();
-        }
+                mx.History.addMenu(subGroup);
 
-        if( !isActive ) 
-        {           
-            if( visualisationType != "desktop" ) menuPanel.close();
-        }
-        else 
-        {
-            if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
-        }
+                mx.Menu.activateMenu(null); // collapse open submenu
+            }
+            else
+            {
+                mx.$('#content #submenu').innerHTML = content;
+                mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
+                mx.Actions.refreshHome();
+            }
+
+            if( !isActive )
+            {
+                if( visualisationType != "desktop" ) menuPanel.close();
+            }
+            else
+            {
+                if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
+            }
+        });
     };
 
     ret.refreshHome = function(event)

@@ -17,17 +17,17 @@ base_html_target_path = "../htdocs/weather/icons/"
 
 base_html_web_path = "/dataDisk/htdocs/weather/icons/"
 
-main_icons = [
-    "day",
-    "night",
-    "cloudy",
-    "cloudy-day-0",
-    "cloudy-day-1",
-    "cloudy-day-2",
-    "cloudy-night-0",
-    "cloudy-night-1",
-    "cloudy-night-2"
-]
+main_icons = {
+    "day": [],
+    "night": [ 0.85, 7, 7 ],
+    "cloudy": [],
+    "cloudy-day-0": [],
+    "cloudy-day-1": [],
+    "cloudy-day-2": [],
+    "cloudy-night-0": [],
+    "cloudy-night-1": [],
+    "cloudy-night-2": []
+}
 
 rain_icons = {
     "raindrop1": { "cloudy": [ 0.5, 30, 70 ], "cloudy-day-0": [ 0.4, 70, 100 ], "cloudy-day-1": [ 0.5, 40, 70 ], "cloudy-day-2": [ 0.5, 30, 70 ], "cloudy-night-0": [ 0.4, 20, 100 ], "cloudy-night-1": [ 0.5, 15, 70 ], "cloudy-night-2": [ 0.5, 30, 70 ] },
@@ -123,7 +123,7 @@ def save(data,base_path,filename):
     f.close()
 
 
-def processFile(top, main, rain, rain_settings, effect, effect_settings, all_files):
+def processFile(top, main, main_settings, rain, rain_settings, effect, effect_settings, all_files):
     for color_type in ["colored","grayscaled"]:
         top = ET.Element('svg', attrib = { 'version':'1.1', 'xmlns:xlink':'http://www.w3.org/1999/xlink', 'x':"0px", 'y':"0px", 'viewBox':"0 0 64 64", 'enable-background':"new 0 0 64 64", 'xml:space':"preserve"})
 
@@ -132,6 +132,8 @@ def processFile(top, main, rain, rain_settings, effect, effect_settings, all_fil
         top_group = ET.Element('g', attrib = { 'id': name, 'fill': "var({}-fill)".format(var_prefix), 'stroke': "var({}-stroke)".format(var_prefix), 'stroke-width': "var({}-stroke-width)".format(var_prefix) })
 
         main_group = ET.Element('g')
+        if len(main_settings) > 0:
+            applyTransform(main_group, main_settings)
         main_content = fileGetContents( "{}{}.svg".format(base_src_path, main))
         appendChild(main_group, main_content, color_type, main)
         top_group.append(main_group)
@@ -193,17 +195,17 @@ system('mkdir {}'.format(base_png_target_path))
 system('rm {}*.png'.format(base_png_target_path))
 
 all_files = []
-for main_icon in main_icons:
-    processFile(top, main_icon, None, None, None, None, all_files)
+for main_icon, main_settings in main_icons.items():
+    processFile(top, main_icon, main_settings, None, None, None, None, all_files)
 
     for rain_icon, rain_settings in rain_icons.items():
-        processFile(top, main_icon, rain_icon, rain_settings, None, None, all_files)
+        processFile(top, main_icon, main_settings, rain_icon, rain_settings, None, None, all_files)
 
         for effect_icon, effect_settings in effect_icons.items():
-            processFile(top, main_icon, rain_icon, rain_settings, effect_icon, effect_settings, all_files)
+            processFile(top, main_icon, main_settings, rain_icon, rain_settings, effect_icon, effect_settings, all_files)
 
     for effect_icon, effect_settings in effect_icons.items():
-        processFile(top, main_icon, None, None, effect_icon, effect_settings, all_files)
+        processFile(top, main_icon, main_settings, None, None, effect_icon, effect_settings, all_files)
 
 for name in additionals:
     for color_type in ["colored","grayscaled"]:
@@ -223,18 +225,24 @@ for name in additionals:
 
 system('mogrify -background "#00000000" -path {} -format png {}*colored.svg'.format(base_png_target_path, base_svg_target_path))
 
-html = "<html class='lightTheme'><head>"
-html = '{}<link rel="stylesheet" href="/static/shared/habpanel/css/theme.css">'.format(html)
-#html = '{}<link rel="stylesheet" href="/static/shared/habpanel/css/panelui.css">'.format(html)
-html = "{}</head><body><div class='mvWidget'><div class='weatherForecast'>".format(html)
+html = """
+<html class='lightTheme'><head>
+<link rel="stylesheet" href="/weather/css/main.css">
+<link rel="stylesheet" href="/weather/css/page.css">
+<style>
+svg {
+    border: 1px solid red;
+}
+</style>
+</head><body><div class='mvWidget'><div class='weatherForecast'><div class='cloud'>"""
 for filename in all_files:
     if "grayscaled" not in filename:
         continue
     html = '{}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="height:64px;width:65px;padding:10px;">'.format(html)
-    html = '{}<use ShadowRootMode="open" href="/static/shared/icons/weather/svg/{}">'.format(html,filename)
+    html = '{}<use ShadowRootMode="open" href="/weather/icons/svg/{}">'.format(html,filename)
     html = '{}</svg>'.format(html)
 
-html = "{}</div></div></body></html>".format(html)
+html = "{}</div></div></div></body></html>".format(html)
 
 save(html,base_html_target_path,"index.html")
 

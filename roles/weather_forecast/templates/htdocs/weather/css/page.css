@@ -10,82 +10,7 @@ body {
 * {
     box-sizing: border-box;
 }
-.mvWidget .weatherDetailForecast,
-.mvWidget .weatherDetailForecast .hour > div > .temperature > .sub,
-.mvWidget .weatherDetailForecast .hour > div > .info,
-.mvWidget .weatherDetailForecast .hour > div > .time .from,
-.mvWidget .weatherDetailForecast .hour > div > .time .to,
-.mvWidget .weatherForecast .summary .value,
-.mvWidget .weatherForecast .summary .txt,
-.mvWidget .weatherForecast .summary .cell, 
-.mvWidget .weatherForecast .summary .bullet {
-    font-size: 14px;
-    line-height: 14px;  
-}
-.mvWidget .weatherDetailForecast .week .hour .temperature .pre,
-.mvWidget .weatherDetailForecast .week .hour .temperature .main {
-    line-height: 20px;
-    font-size: 16px;
-}
-.mvWidget .weatherDetailForecast .hour > div > .temperature > .main,
-.mvWidget .weatherDetailForecast .hour > div > .temperature > .pre,
-.mvWidget .weatherDetailForecast .title {
-    font-size: 18px;
-    line-height: 18px;
-}
-.mvWidget .weatherDetailForecast .hour > div > .info {
-    line-height: 18px;  
-}
-.mvWidget .weatherDetailForecast .summary {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-}
-.mvWidget .weatherDetailForecast .summary .cell .txt {
-    display: none;
-}  
-.hour {
-    padding-top: 5px;
-    margin-top: 5px;
-    border-top: 1px solid #999;
-}
-.mvWidget .weatherDetailForecast .today .hour, .weatherDetailForecast .today .summary {
-    border-right: none;
-}
-.mvWidget .weatherDetailForecast .hour > div > .time {
-    width: 12%;
-}
-.mvWidget .weatherDetailForecast .hour > div > .info {
-    width: 20%;
-}
-.mvWidget .weatherDetailForecast .hour > div > .info {
-    width: 20%;
-}
-.mvWidget .weatherDetailForecast .hour > div > .wind {
-    width: 30%;
-}
 
-.mvWidget .weatherDetailForecast .hour > div > .info > div > div:nth-child(2) {
-    padding-left: 5px;
-}
-.mvWidget .weatherDetailForecast .week .hour .status {
-    margin-left: 2%;
-    width: 5px;
-}
-
-.mvWidget .weatherDetailForecast .mvClickable, .weatherDetailForecast .today .hour > div {
-    border: 1px solid transparent;
-}
-.mvWidget .weatherDetailForecast .today, .mvWidget .weatherDetailForecast .week{
-    box-sizing: border-box;
-}
-.mvWidget .weatherDetailForecast .mvClickable:hover {
-    background-color: var(--widget-button-background-marker);
-}
-.mvWidget .weatherDetailForecast .mvClickable:active .raindrop_snowflake_background,
-.mvWidget .weatherDetailForecast .mvClickable:active {
-    background-color: var(--primary-light-color);
-}
 @media only screen and (min-width: 640px) {
     #openButton {
         display: none;
@@ -256,12 +181,4 @@ body:not(.basicui) #rainButton
   {
     right: calc(100vw / 2 - 1024px / 2 + 5px);
   }
-}
-
-
-body:not(.basicui) .today, 
-body:not(.basicui) .week 
-{
-    padding-left: 5px !important;
-    padding-right: 5px !important;
 }

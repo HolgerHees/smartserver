@@ -133,7 +133,8 @@ mx.Widgets = (function( ret ) {
             {
                 let timeout = 15000;
 
-                mx.Page.handleRequestError(url,function(){ mx.Widgets.fetchContent(url, callback) }, timeout);
+                callback(null);
+                //mx.Page.handleRequestError(this.status, url,function(){ mx.Widgets.fetchContent(method, url, callback, data ) }, timeout);
             }
         };
 
@@ -145,11 +146,52 @@ mx.Widgets = (function( ret ) {
         widgets.push(widget);
     }
 
+    ret.preload = function( callback )
+    {
+        if( widgets.length == 0 )
+        {
+            callback();
+        }
+        else
+        {
+            widgets.forEach(function(widget, index)
+            {
+                widget._preload = [];
+                for( let i = 0; i < widget.getCount(); i++ )
+                {
+                    widget._preload[i] = null;
+                }
+            });
+            widgets.forEach(function(widget)
+            {
+                widget._show = widget.show;
+                widget.show = function(index, msg)
+                {
+                    widget._preload[index] = msg;
+
+                    let missing_preloads = widgets.filter( (widget) => widget._preload.filter( (preload) => preload == null ).length > 0  );
+                    if( missing_preloads.length == 0 ) callback();
+                };
+                widget.refresh();
+            });
+        }
+    }
+
     ret.refresh = function()
     {
         widgets.forEach(function(widget)
         {
-            widget.refresh();
+            if( widget._preload != undefined )
+            {
+                widget.show = widget._show;
+                widget._preload.forEach( (msg,index) => widget.show(index, msg) );
+                delete widget._show;
+                delete widget._preload;
+            }
+            else
+            {
+                widget.refresh();
+            }
         });
     }
 
@@ -165,7 +207,6 @@ mx.Widgets.Object = function(group, config)
 {
     return (function( ret ) {
         let last_msg = {};
-
         ret.getId = function(index) { return config[index]["id"]; }
         ret.getOrder = function(index) { return config[index]["order"]; }
         ret.getCount = function() { return config.length; }
@@ -173,9 +214,15 @@ mx.Widgets.Object = function(group, config)
         ret.hasAction = function(index) { return config[index]["click"] != undefined; }
         ret.click = function(event, index) { config[index]["click"](event); }
         ret.reset = function(){ last_msg = {}; }
+        ret.alert = function(index, msg)
+        {
+            ret.show(index, "<font style=\"color:red\">" + msg + "</font>");
+        }
         ret.show = function(index, msg)
         {
-            if( last_msg[index] == undefined || last_msg[index] != msg )
+            let isInitialLoad = last_msg[index] == undefined
+
+            if( isInitialLoad || last_msg[index] != msg )
             {
                 let div = mx.$("#" + config[index]["id"]);
                 let old_width = div.scrollWidth;
@@ -189,7 +236,10 @@ mx.Widgets.Object = function(group, config)
                 // restore layout (width & transtion)
                 div.style.width = old_width + "px";
                 div.scrollWidth; // force releayout
-                div.style.transition = "";
+                if( !isInitialLoad )
+                {
+                    div.style.transition = "";
+                }
 
                 if( msg )
                 {
@@ -200,6 +250,12 @@ mx.Widgets.Object = function(group, config)
                 {
                     div.style.width = "0";
                     div.style.marginRight = "-5px";
+                }
+
+                if( isInitialLoad )
+                {
+                    div.scrollWidth; // force releayout
+                    div.style.transition = "";
                 }
 
                 last_msg[index] = msg;

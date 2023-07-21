@@ -185,6 +185,9 @@ class DeploymentUpdate:
                 line = line.strip()
                 flag, path = line.split(" ", 1)
                 path = path.strip().strip("\"")
+                if flag == "R":
+                    src_path, dest_path = path.split(" -> ", 1)
+                    path = dest_path
 
                 if self.filterPath( flag, path, last_deployment.timestamp() ):
                     if path not in filtered_files or flag == "A":

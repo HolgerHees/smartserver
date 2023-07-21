@@ -5,18 +5,25 @@ mx.Widgets.CiState = (function( ret ) {
     {
         mx.Widgets.fetchContent("GET", url, function(data)
         {
-            let json = JSON.parse(data);
-            let msg = "";
-            if( json["is_running"] || json["last_job_failed"] )
+            if( data != null )
             {
-                msg = mx.I18N.get("CI","widget_system") + ": <strong>";
+                let msg = "";
+                let json = JSON.parse(data);
+                if( json["is_running"] || json["last_job_failed"] )
+                {
+                    msg = mx.I18N.get("CI","widget_system") + ": <strong>";
 
-                if( json["is_running"] ) msg += "<font class=\"icon-spin2 animate-spin\"></font>";
-                if( json["last_job_failed"] ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-red)\"></font>";
+                    if( json["is_running"] ) msg += "<font class=\"icon-spin2 animate-spin\"></font>";
+                    if( json["last_job_failed"] ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-red)\"></font>";
 
-                msg += "</strong>";
+                    msg += "</strong>";
+                }
+                ret.show(0, msg);
             }
-            ret.show(0, msg);
+            else
+            {
+                ret.alert(0, "CI Service: N/A");
+            }
         } );
     }
     return ret;

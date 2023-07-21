@@ -9,23 +9,30 @@ mx.Widgets.TrafficAlerts = (function( ret ) {
     {
         mx.Widgets.fetchContent("GET", url, function(data)
         {
-            let json = JSON.parse(data);
-            let wan_isp_state = json["wan_isp_state"];
-            let wan_online_state = json["wan_online_state"];
+            if( data != null )
+            {
+                let traffic = "";
+                let json = JSON.parse(data);
+                let wan_isp_state = json["wan_isp_state"];
+                let wan_online_state = json["wan_online_state"];
 
-            let msg = wan_online_state == "online" ? "<font class=\"icon-globe\"></font>" : "<font class=\"icon-globe\" style=\"color:var(--color-red)\"></font>";
-            if( wan_isp_state == "fallback" ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-yellow)\"></font>";
+                let msg = wan_online_state == "online" ? "<font class=\"icon-globe\"></font>" : "<font class=\"icon-globe\" style=\"color:var(--color-red)\"></font>";
+                if( wan_isp_state == "fallback" ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-yellow)\"></font>";
 
-            ret.show(0, mx.I18N.get("WAN","widget_system") + ": <strong>" + msg + "</strong>" );
+                ret.show(0, mx.I18N.get("WAN","widget_system") + ": <strong>" + msg + "</strong>" );
 
-            let traffic = "";
-            traffic += json["traffic_states"]["observed"] == 0 ? json["traffic_states"]["observed"] : "<font style=\"color:var(--color-green)\">" + json["traffic_states"]["observed"] + "</font>";
-            traffic += "/";
-            traffic += json["traffic_states"]["scanning"] == 0 ? json["traffic_states"]["scanning"] : "<font style=\"color:var(--color-yellow)\">" + json["traffic_states"]["scanning"] + "</font>";
-            traffic += "/";
-            traffic += json["traffic_states"]["intruded"] == 0 ? json["traffic_states"]["intruded"] : "<font style=\"color:var(--color-red)\">" + json["traffic_states"]["intruded"] + "</font>";
-
-            ret.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>");
+                traffic += json["traffic_states"]["observed"] == 0 ? json["traffic_states"]["observed"] : "<font style=\"color:var(--color-green)\">" + json["traffic_states"]["observed"] + "</font>";
+                traffic += "/";
+                traffic += json["traffic_states"]["scanning"] == 0 ? json["traffic_states"]["scanning"] : "<font style=\"color:var(--color-yellow)\">" + json["traffic_states"]["scanning"] + "</font>";
+                traffic += "/";
+                traffic += json["traffic_states"]["intruded"] == 0 ? json["traffic_states"]["intruded"] : "<font style=\"color:var(--color-red)\">" + json["traffic_states"]["intruded"] + "</font>";
+                ret.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>");
+            }
+            else
+            {
+                ret.alert(0, "System Service: N/A");
+                ret.alert(1, "");
+            }
         } );
     }
     return ret;
