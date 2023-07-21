@@ -569,6 +569,10 @@ body.phone #submenu .service.home .outer_widgets_box {
     text-shadow: var(--submenu-shadow-home-info);
     font-size: 106.25%;
 }
+#submenu .service.home .widgets .widget .error {
+    color: var(--color-red);
+    text-shadow: var(--color-red);
+}
 #submenu .service.home .widgets .widget.clickable {
     cursor: pointer;
 }

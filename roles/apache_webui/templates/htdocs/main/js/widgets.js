@@ -216,7 +216,7 @@ mx.Widgets.Object = function(group, config)
         ret.reset = function(){ last_msg = {}; }
         ret.alert = function(index, msg)
         {
-            ret.show(index, "<font style=\"color:red\">" + msg + "</font>");
+            ret.show(index, "<span class=\"error\">" + msg + "</span>");
         }
         ret.show = function(index, msg)
         {

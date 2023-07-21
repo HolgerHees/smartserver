@@ -148,7 +148,7 @@ else
                 <div class="info">
                     <div class="sunshineDuration"><div class="sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div>" . Weather::formatDuration( $hourlyData['sunshineDurationInMinutesSum'] ); ?></div></div>
                     <div class="precipitationProbability"><div><?php echo Weather::getSVG('rain','rain_grayscaled') . "</div><div>" . $hourlyData['precipitationProbabilityInPercent']; ?> %</div></div>
-                    <div class="precipitationAmount"><?php echo $hourlyData['precipitationAmountInMillimeterSum']; ?> mm</div>
+                    <div class="precipitationAmount"><div></div><div><?php echo $hourlyData['precipitationAmountInMillimeterSum']; ?> mm</div></div>
                 </div>
                 <div class="wind">
                     <div><?php echo $hourlyData['windSpeedInKilometerPerHour']; ?> km/h</div>
@@ -199,7 +199,7 @@ else
                 <div class="info">
                     <div class="sunshineDuration"><div class="sun"><?php echo Weather::getSVG('sun', 'sun_grayscaled') . "</div><div>" . Weather::formatDuration( $hourlyData['sunshineDurationInMinutesSum'] ); ?></div></div>
                     <div class="precipitationProbability"><?php echo Weather::getSVG('rain', 'rain_grayscaled') . " " . $hourlyData['precipitationProbabilityInPercent']; ?> %</div>
-                    <div class="precipitationAmount"><?php echo $hourlyData['precipitationAmountInMillimeterSum']; ?> mm</div>
+                    <div class="precipitationAmount"><div></div><div><?php echo $hourlyData['precipitationAmountInMillimeterSum']; ?> mm</div></div>
                 </div>
                 <div class="wind">
                     <div><?php echo $hourlyData['windSpeedInKilometerPerHour']; ?> km/h</div>

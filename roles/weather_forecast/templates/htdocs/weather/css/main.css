@@ -252,8 +252,9 @@
 .mvWidget .weatherDetailForecast .hour {
 	padding-top: 5px;
 }
-.mvWidget .weatherDetailForecast .hour.active > div > .temperature * {
-	font-weight: bold;
+.mvWidget .weatherDetailForecast .week .hour .active .time,
+.mvWidget .weatherDetailForecast .today .hour.active .time {
+	font-weight: bold !important;
 }
 .mvWidget .weatherDetailForecast .hour > div {
     display: flex;
@@ -267,8 +268,6 @@
     justify-content: center;
     text-align: left;
     padding-left: 1vw;
-}
-.mvWidget .weatherDetailForecast .hour > div > .time .from {
     margin-top: 0.1vw;
     font-weight: var(--widget-value-weight);
 }
@@ -287,6 +286,7 @@
 }
 .mvWidget .weatherDetailForecast .hour > div > .temperature .main {
     margin-right: 5px;
+    text-align: right;
 }
 .mvWidget .weatherDetailForecast .hour > div > .temperature .main .min {
     display: block;
@@ -304,7 +304,7 @@
 .mvWidget .weatherDetailForecast .hour > div > .info > div {
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
 }
 .mvWidget .weatherDetailForecast .hour > div > .info .sunshineDuration .sun {
@@ -325,6 +325,7 @@
     fill: none;
 }
 .mvWidget .weatherDetailForecast .hour > div > .wind,
+.mvWidget .weatherDetailForecast .hour > div > .info .precipitationProbability,
 .mvWidget .weatherDetailForecast .hour > div > .info .sunshineDuration,
 .mvWidget .weatherDetailForecast .hour > div > .info .precipitationAmount {
     font-weight: var(--widget-value-weight);
