@@ -1,0 +1,175 @@
+- name: prepare needed folder
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - "{{global_etc}}weather_service/"
+    - "{{global_lib}}weather_service/"
+
+- name: build docker image
+  vars:
+    name: "weather_service"
+    image_name: "custom_weather_service"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/weather_service/templates/container/Dockerfile
+      - roles/weather_service/templates/container/entrypoint.sh
+  import_tasks: roles/container/shared/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: weather_service
+    image: "custom_weather_service:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: weather_service
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_weather_service_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}weather_service/:/etc/weather_service:ro,z'
+      - "{{global_lib}}weather_service/:/var/lib/weather_service:rw,z"
+      - '/opt/shared/python:/opt/shared/python:ro,z'
+  notify: "restart weather_service"
+
+- name: allow weather_service service
+  vars:
+    name: "weather_service"
+    rules:
+      - "saddr {{docker_prometheus_ip}} daddr {{docker_weather_service_ip}}"
+      - "saddr {{docker_weather_service_ip}} daddr {{docker_mysql_ip}}"
+      - "saddr {{docker_weather_service_ip}} daddr {{docker_cloud_mosquitto_ip}}"
+      - "saddr {{docker_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+- name: check mysql service
+  import_tasks: roles/mysql/shared/wait_until_ready.yml
+
+- name: check mysql table
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'SHOW TABLES FROM shared;'\""
+  register: mysql_table_exists
+  changed_when: "'weather_forecast' not in mysql_table_exists.stdout"
+  
+- name: synchronize table config
+  synchronize:
+    src: "templates/weather_forecast.sql"
+    dest: "{{ global_build }}weather_service/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F600"
+  changed_when: no
+  when: "'weather_forecast' not in mysql_table_exists.stdout"
+  
+- name: create missing table 'weather_service' => does not exists in database
+  shell: "cat {{ global_build }}weather_service/weather_forecast.sql | docker exec -i mysql sh -c \"mysql -u root -h 127.0.0.1 shared\""
+  when: "'weather_forecast' not in mysql_table_exists.stdout"
+  
+- name: copy config
+  template:
+    src: "templates{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - { src: "/config.py", dest: "{{global_etc}}weather_service/config.py" }
+  notify: "restart weather_service"
+
+- name: synchronize daemon
+  synchronize:
+    src: "templates/etc/weather_service/{{item}}/"
+    dest: "{{global_etc}}weather_service/{{item}}/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F640"
+  with_items:
+      - "lib"
+      - "icons"
+  notify: "restart weather_service"
+
+- name: copy daemon
+  copy:
+    src: "templates/etc/weather_service/weather_service"
+    dest: "{{global_etc}}weather_service/weather_service"
+    owner: root
+    group: root
+    mode: 0750
+  notify: "restart weather_service"
+
+- name: synchronize htdocs
+  synchronize:
+    src: "templates/htdocs/weather"
+    dest: "{{htdocs_path}}"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
+  
+- name: copy htdocs (template)
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}weather/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: "u=rwX,g=rX,o="
+
+- name: register webui
+  vars:
+    name: "weather_service"
+    js_file: "templates/webui/weather_service.js"
+    i18n_files: [ { language: "de", file: "templates/webui/weather_service.de.json" } ]
+    icons: [ 'templates/webui/icons/weather_service.svg' ]
+  import_tasks: roles/apache_webui/shared/add_webui.yml
+  
+- name: copy apache api config
+  vars:
+    config_file: "templates/etc/apache2/_.ansible.conf.d/weather_service.conf"
+  import_tasks: roles/apache/shared/add_config.yml
+
+# ***** FINALIZE *****
+- name: register prometheus rules & metrics
+  vars:
+    name: "weatcher_service"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  import_tasks: roles/prometheus/shared/add_config.yml
+
+- name: create systemd service
+  vars:
+    container_name: "weather_service"
+    container_after: [ "cloud_mosquitto", "mysql" ]
+  import_tasks: roles/container/shared/add_docker_service.yml
+
+- name: trigger weather_service handler
+  vars:
+    notify: "restart weather_service"
+    service: "weather_service.service"
+  import_tasks: roles/_shared/service_check.yml

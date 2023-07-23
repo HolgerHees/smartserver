@@ -1,0 +1,74 @@
+groups:
+- name: weather_service
+  rules:
+  - alert: Weather forecast database availability
+    expr: 'weather_service_state{job="weather_service", type="mqtt"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather service mqtt"
+
+  - alert: Weather forecast database availability
+    expr: 'weather_service_state{job="weather_service", type="mysql"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather service database"
+
+  - alert: Weather forecast api availability
+    expr: 'weather_service_state{job="weather_service", type="provider_data_provider"} == 0'
+    for: 60m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather provider api"
+
+  - alert: Weather forecast data_current availability
+    expr: 'weather_service_state{job="weather_service", type="provider_data_current"} == 0'
+    for: 60m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather provider data_current"
+
+  - alert: Weather forecast data_forecast availability
+    expr: 'weather_service_state{job="weather_service", type="provider_data_forecast"} == 0'
+    for: 120m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather provider data_forecast"
+
+  - alert: Weather forecast publish data
+    expr: 'weather_service_state{job="weather_service", type="provider_publish"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather provider publish data"
+
+  - alert: Weather forecast consume data
+    expr: 'weather_service_state{job="weather_service", type="consumer_provider"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather provider consume data"
+
+  - alert: Weather forecast consume data
+    expr: 'weather_service_state{job="weather_service", type="consumer_station"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "weather_service"
+      severity: critical
+    annotations:
+      summary: "Weather station consume data"

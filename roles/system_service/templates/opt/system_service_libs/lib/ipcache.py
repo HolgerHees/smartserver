@@ -12,7 +12,7 @@ import json
 import schedule
 import os
 
-from lib.helper import Helper
+from smartserver.confighelper import ConfigHelper
 
 class IPCache(threading.Thread):
     TYPE_LOCATION = "Location"
@@ -101,7 +101,7 @@ class IPCache(threading.Thread):
             self.is_running = False
 
     def _restore(self):
-        self.valid_cache_file, data = Helper.loadConfig(self.dump_path, self.version )
+        self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
             self.ip2location_map = data["ip2location_map"]
             self.hostname_map = data["hostname_map"]
@@ -111,7 +111,7 @@ class IPCache(threading.Thread):
         if self.valid_cache_file:
             with self.location_lock:
                 with self.hostname_lock:
-                    Helper.saveConfig(self.dump_path, self.version, { "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map } )
+                    ConfigHelper.saveConfig(self.dump_path, self.version, { "ip2location_map": self.ip2location_map, "hostname_map": self.hostname_map } )
                     logging.info("Saved {} locations and {} hostnames".format(len(self.ip2location_map),len(self.hostname_map)))
 
     def _cleanup(self):

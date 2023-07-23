@@ -1,8 +1,0 @@
-- name: restart weather_forecast
-  systemd:
-    name: weather_forecast
-    state: restarted
-    daemon_reload: yes
-    enabled: yes
-    masked: no
-  listen: "restart weather_forecast"

@@ -51,7 +51,7 @@ docker_prometheus_ip:             "172.16.0.114"
 docker_grafana_ip:                "172.16.0.115"
 
 docker_cloud_mosquitto_ip:        "172.16.0.200"
-docker_weather_forecast_ip:       "172.16.0.201"
+docker_weather_service_ip:        "172.16.0.201"
 docker_cloud_check_ip:            "172.16.0.202"
 
 docker_vcontrold_ip:              "172.16.0.230"

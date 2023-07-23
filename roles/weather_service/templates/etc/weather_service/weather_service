@@ -1,0 +1,138 @@
+#!/usr/bin/python3
+
+import logging
+
+from flask import Flask, request, make_response
+from werkzeug.serving import WSGIRequestHandler
+import json
+import time
+from datetime import datetime
+
+from lib.provider.meteo import Meteo
+from lib.consumer.provider import ProviderConsumer
+from lib.consumer.station import StationConsumer
+from lib.mqtt import MQTT
+from lib.db import DB
+from lib.scheduler import Scheduler
+
+from smartserver.server import Server
+
+import config
+
+app = Flask(__name__)
+
+class Handler(Server):
+    '''Handler client'''
+    def __init__(self):
+        super().__init__("weatcher_service" )
+
+        self.db = DB(config)
+        self.scheduler = Scheduler()
+
+        self.mqtt = MQTT(config)
+        self.provider = Meteo(config, self.db, self.mqtt)
+
+        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db)
+        self.station_consumer = StationConsumer(config, self.mqtt)
+
+        self.startup_timestamp = round(datetime.now().timestamp(),3)
+
+        self.initWatchedFiles( [config.icon_path], self.iconChangeTriggered )
+
+    def iconChangeTriggered(self, event):
+        self.provider_consumer.resetIconCache()
+
+    def start(self, callback):
+        self.scheduler.start()
+        self.mqtt.start()
+        self.provider_consumer.start()
+        self.station_consumer.start()
+
+        if self.provider != None:
+            self.provider.start()
+
+        super().start(callback)
+
+    def terminate(self):
+        if self.provider != None:
+            self.provider.terminate()
+
+        self.provider_consumer.terminate()
+        self.station_consumer.terminate()
+        self.mqtt.terminate()
+        self.scheduler.terminate()
+
+        super().terminate()
+
+    def run(self):
+        while self.is_running:
+            self.event.wait(60)
+            self.event.clear()
+
+            #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
+
+    def checkLastDataModified(self,key, last_data_modified):
+        form_key = "last_data_modified[{}]".format(key)
+        return form_key not in request.form or float(request.form[form_key]) < last_data_modified[key]
+
+    def getLastDataModified(self,key):
+        form_key = "last_data_modified[{}]".format(key)
+        return float(request.form[form_key]) if form_key in request.form else 0
+
+    def getData(self, type):
+        result = {
+            "status": 0,
+            "changed_data": {}
+        }
+
+        last_data_modified = {}
+        last_data_modified["startup"] = self.startup_timestamp
+
+        force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
+
+        if type == "widget":
+            requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
+
+            _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station"), requested_fields)
+            last_data_modified["station"] = _last_modified
+            if force or self.checkLastDataModified("station", last_data_modified):
+                result["changed_data"] |= _values
+
+            _values, _last_modified = self.provider_consumer.getWidgetSVG(self.getLastDataModified("clouds"), requested_fields)
+            last_data_modified["clouds"] = _last_modified
+            if force or self.checkLastDataModified("clouds", last_data_modified):
+                result["changed_data"] |= _values
+
+        result["last_data_modified"] = last_data_modified
+
+        return json.dumps(result)
+        #pass
+
+    def getStateMetrics(self):
+        state_metrics = []
+        state_metrics += self.db.getStateMetrics()
+        state_metrics += self.mqtt.getStateMetrics()
+        state_metrics += self.provider.getStateMetrics()
+        state_metrics += self.provider_consumer.getStateMetrics()
+        state_metrics += self.station_consumer.getStateMetrics()
+
+        return "{}\n".format( "\n".join(state_metrics) )
+            
+@app.route('/data/', methods = ['POST'])
+def data():
+    return handler.getData(request.form['type'])
+
+@app.route('/metrics/', methods = ['GET'])
+def metrics():
+    return handler.getStateMetrics()
+
+if __name__ == '__main__':
+    Server.initLogger(logging.INFO)
+    handler = Handler()
+
+    def handleServer():
+        WSGIRequestHandler.protocol_version = "HTTP/1.1"
+        app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
+
+    handler.start(handleServer)
+
