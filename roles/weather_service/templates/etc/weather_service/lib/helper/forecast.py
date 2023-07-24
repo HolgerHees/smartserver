@@ -138,8 +138,9 @@ class WeatherHelper():
             index = 1
 
         minutes_to_add = ( timerange / 2 * 60)
+        now = datetime.now()
         ref_datetime = starttime + timedelta(minutes=minutes_to_add)
-
+        ref_datetime = ref_datetime.replace(year=now.year,month=now.month,day=now.day)
         isNight = ( ref_datetime < sunrise or ref_datetime > sunset )
 
         icon = WeatherHelper.sunConfig[ 'night' if isNight else 'day' ][index];
