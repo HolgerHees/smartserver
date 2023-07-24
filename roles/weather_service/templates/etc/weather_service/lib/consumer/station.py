@@ -72,7 +72,7 @@ class StationConsumer():
         has_missing_update = False
         now = time.time()
         for key, item in self.station_values.items():
-            if now - item["time"] < 300:
+            if now - item["time"] < 900:
                 has_any_update = True
 
             if now - item["time"] > 60 * 60 * 25:
@@ -80,6 +80,6 @@ class StationConsumer():
                 has_missing_update = True
 
         if not has_any_update:
-            logging.warn("Items not refreshed since more then 300 seconds")
+            logging.warn("Items not refreshed since more then 900 seconds")
 
         return ["weather_service_state{{type=\"consumer_station\"}} {}".format(0 if not has_any_update or has_missing_update else 1)]

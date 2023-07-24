@@ -16,11 +16,24 @@ body {
 }
 
 @media only screen and (max-width: 640px) {
-    .mvWidget .current .title {
+    .mvWidget > .current .summary .wind .gust,
+    .mvWidget > .current .summary .rain .daily,
+    .mvWidget > .current .title {
         display: none;
     }
-    .mvWidget .current {
-        max-width: 50%;
+    .mvWidget > .current {
+        padding-bottom: 15px;
+        margin-bottom: 0;
+    }
+    .mvWidget > .current .summary {
+        max-width: fit-content;
+    }
+    .mvWidget > .current .summary .cell {
+        padding-right: 10px;
+        margin-top: 10px;
+    }
+    .mvWidget > .current .summary .cell:last-child {
+        padding-right: 0;
     }
 }
 @media only screen and (min-width: 800px) {
@@ -178,13 +191,13 @@ body:not(.basicui) {
 
 body:not(.basicui) #openButton
 {
-    top: 5px;
+    top: 10px;
     right: 80px;
 }
 
 body:not(.basicui) #rainButton
 {
-    top: 5px;
+    top: 10px;
     right: 5px;
 }
 
