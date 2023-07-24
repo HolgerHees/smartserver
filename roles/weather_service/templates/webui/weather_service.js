@@ -74,7 +74,7 @@ mx.Widgets.CustomWeather = (function( ret ) {
 
                     content = "";
                     content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + values["currentCloudsAsSVG"] + "</span>";
-                    content += "<span>" + values["airTemperatureInCelsius"] + "°C</span>";
+                    content += "<span>" + values["airTemperatureInCelsius"].toFixed(1) + "°C</span>";
                 }
 
                 ret.show(0, content );

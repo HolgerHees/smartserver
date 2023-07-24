@@ -68,7 +68,7 @@ function formatNumber($number)
                 <?php echo getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . formatNumber($blockData->precipitationProbabilityInPercent); ?></div><div class="sub">%</div>
             </div>
             <div class="value precipitationAmount">
-                <div class="main"><?php echo formatNumber($blockData->precipitationAmountInMillimeterSum); ?></div><div class="sub">mm</div>
+                <div class="main"><?php echo formatNumber($blockData->precipitationAmountInMillimeter); ?></div><div class="sub">mm</div>
             </div>
 		</div>
 <?php } ?>

@@ -15,6 +15,14 @@ body {
     box-sizing: border-box;
 }
 
+@media only screen and (max-width: 640px) {
+    .mvWidget .current .title {
+        display: none;
+    }
+    .mvWidget .current {
+        max-width: 50%;
+    }
+}
 @media only screen and (min-width: 800px) {
     #openButton {
         display: none;

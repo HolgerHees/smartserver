@@ -108,7 +108,6 @@ class Handler(Server):
 
         if type == "widget":
             requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
-
             _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station") if not force else 0, requested_fields)
             last_data_modified["station"] = _last_modified
             result["changed_data"] |= _values
@@ -117,6 +116,11 @@ class Handler(Server):
             last_data_modified["clouds"] = _last_modified
             result["changed_data"] |= _values
         elif type == "week":
+            requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
+            _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station") if not force else 0, requested_fields)
+            last_data_modified["station"] = _last_modified
+            result["changed_data"] |= _values
+
             requested_day = request.form["day"] if "day" in request.form else None
             _values = self.provider_consumer.getDetailOverviewValues(requested_day)
             #last_data_modified["week"] = _last_modified

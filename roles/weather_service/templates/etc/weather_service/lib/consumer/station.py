@@ -50,7 +50,10 @@ class StationConsumer():
         #logging.info(topic)
 
         #logging.info("Station: {} => {}".format(topic[3], msg.payload.decode("utf-8")))
-        self.station_values[ topic[3] ] = { "time": time.time(), "value": msg.payload.decode("utf-8")  }
+
+        value = msg.payload.decode("utf-8")
+        value = float(value) if "." in value else int(value)
+        self.station_values[ topic[3] ] = { "time": time.time(), "value": value  }
 
     def getValues(self, last_modified, requested_fields = None ):
         result = {}

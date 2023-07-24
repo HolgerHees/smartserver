@@ -75,7 +75,7 @@ mx.WeatherHelper = (function( ret ) {
 
     ret.formatNumber = function(number)
     {
-        return number.toFixed(1);
+        return (typeof number == 'number') ? number.toFixed(1) : number;
     }
 
     return ret;
