@@ -79,4 +79,4 @@ class StationConsumer():
         if not has_any_update:
             logging.warn("Items not refreshed since more then 300 seconds")
 
-        return ["weather_service_state{{type=\"consumer_station\"}} {}".format(0 if has_any_update or has_missing_update else 1)]
+        return ["weather_service_state{{type=\"consumer_station\"}} {}".format(0 if not has_any_update or has_missing_update else 1)]

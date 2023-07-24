@@ -310,7 +310,7 @@ class ProviderConsumer():
 
         has_errors = False
         for state_name in self.consume_errors:
-            if self.consume_errors[state_name] is None or self.consume_refreshed[state_name] is None:
+            if self.consume_errors[state_name] == 0 or self.consume_refreshed[state_name] == 0:
                 continue
 
             if self.consume_refreshed[state_name] - self.consume_errors[state_name] < 300:
