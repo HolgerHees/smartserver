@@ -78,6 +78,26 @@ class DBConnection():
             self.db.state = 0
             raise(DBException(e))
 
+    def getRangeList(self, start, end):
+        try:
+            self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` <= '{}' ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
+            self.db.state = 1
+            return self.cursor.fetchall()
+        except MySQLdb._exceptions.OperationalError as e:
+            logging.warn("{}: {}".format(str(e.__class__),str(e)))
+            self.db.state = 0
+            raise(DBException(e))
+
+    def getWeekList(self, start):
+        try:
+            self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` < DATE_ADD(CURDATE(), INTERVAL 8 DAY) ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S')))
+            self.db.state = 1
+            return self.cursor.fetchall()
+        except MySQLdb._exceptions.OperationalError as e:
+            logging.warn("{}: {}".format(str(e.__class__),str(e)))
+            self.db.state = 0
+            raise(DBException(e))
+
 class DB():
     def __init__(self, config):
         self.config = config

@@ -1,5 +1,3 @@
-Alias /weather "{{htdocs_path}}weather"
-
 RewriteCond %{HTTP:Connection} Upgrade [NC]
 RewriteCond %{HTTP:Upgrade} websocket [NC]
 RewriteRule /rest/(.*) ws://openhab:8080/rest/$1 [P,L]
@@ -21,10 +19,6 @@ RemoteIPHeader X-Forwarded-For
 
 <Location /basicui/manifest.json>
   Require all granted
-</Location>
-
-<Location /weather>
-  ProxyPass !
 </Location>
 
 <Location /loki>

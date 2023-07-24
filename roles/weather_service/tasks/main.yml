@@ -121,7 +121,7 @@
 
 - name: synchronize htdocs
   synchronize:
-    src: "templates/htdocs/weather"
+    src: "templates/htdocs/weather_service"
     dest: "{{htdocs_path}}"
     archive: no
     checksum: yes
@@ -133,14 +133,6 @@
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"
   
-- name: copy htdocs (template)
-  template:
-    src: "templates/config.php"
-    dest: "{{htdocs_path}}weather/config.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: "u=rwX,g=rX,o="
-
 - name: register webui
   vars:
     name: "weather_service"

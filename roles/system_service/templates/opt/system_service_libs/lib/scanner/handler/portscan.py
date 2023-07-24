@@ -14,7 +14,7 @@ from lib.scanner.handler import _handler
 from lib.scanner.helper import Helper
 from lib.scanner.dto.event import Event
 
-from lib.helper import Helper as ConfigHelper
+from smartserver.confighelper import ConfigHelper
 
 class PortScanner(_handler.Handler): 
     def __init__(self, config, cache ):

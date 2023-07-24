@@ -24,6 +24,23 @@ class WeatherBlock():
         self.minAirTemperatureInCelsius = None
         self.maxAirTemperatureInCelsius = None
 
+        self.svg = None
+
+    def to_json(self):
+        return self.__dict__
+
+    def setStart(self, start):
+        self.start = start
+
+    def getStart(self):
+        return self.start
+
+    def setEnd(self, end):
+        self.end = end
+
+    def setSVG(self, svg):
+        self.svg = svg
+
     def apply( self, hourlyData ):
         self.sunshineDurationInMinutesSum += hourlyData['sunshineDurationInMinutes']
         self.precipitationAmountInMillimeterSum += hourlyData['precipitationAmountInMillimeter']
@@ -31,7 +48,7 @@ class WeatherBlock():
         if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
             self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
 
-        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
+        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
             self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
 
         if self.sunshineDurationInMinutes < hourlyData['sunshineDurationInMinutes']:
@@ -73,6 +90,27 @@ class WeatherHelper():
         'day': [ 'day', 'cloudy-day-0', 'cloudy-day-1', 'cloudy-day-2', 'cloudy' ],
         'night': [ 'night', 'cloudy-night-0', 'cloudy-night-1', 'cloudy-night-2', 'cloudy' ]
     }
+
+    @staticmethod
+    def calculateSummary( dataList ):
+        minTemperature = dataList[0]['airTemperatureInCelsius'];
+        maxTemperature = dataList[0]['airTemperatureInCelsius'];
+        maxWindSpeed = dataList[0]['windSpeedInKilometerPerHour'];
+        sumSunshine = 0;
+        sumRain = 0;
+
+        for entry in dataList:
+            if minTemperature > entry['airTemperatureInCelsius']:
+                minTemperature = entry['airTemperatureInCelsius']
+            if maxTemperature < entry['airTemperatureInCelsius']:
+                maxTemperature = entry['airTemperatureInCelsius']
+            if maxWindSpeed < entry['maxWindSpeedInKilometerPerHour']:
+                maxWindSpeed = entry['maxWindSpeedInKilometerPerHour']
+
+            sumSunshine += entry['sunshineDurationInMinutes']
+            sumRain += entry['precipitationAmountInMillimeter']
+
+        return [ minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain ]
 
     @staticmethod
     def convertOctaToSVG(latitude, longitude, block):

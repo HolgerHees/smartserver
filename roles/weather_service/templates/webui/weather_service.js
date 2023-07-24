@@ -1,5 +1,5 @@
 var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('weather', 100, '{i18n_Weatherforecast}', 'weather_service.svg');
-subGroup.addUrl('weather', '//openhab.{host}/weather/weatherDetailOverview.php', 'user', 1000, '{i18n_Weatherforecast}', '{i18n_Meteo Group}', 'weather_service.svg', false);
+subGroup.addUrl('weather', '/weather_service/detailOverview/', 'user', 1000, '{i18n_Weatherforecast}', '{i18n_Meteo Group}', 'weather_service.svg', false);
 
 mx.Widgets.CustomWeather = (function( ret ) {
     css = `:root {

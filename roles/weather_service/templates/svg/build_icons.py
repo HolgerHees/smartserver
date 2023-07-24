@@ -13,9 +13,11 @@ from smartserver.svg import fileGetContents, isForbiddenTag, cleanStyles, cleanG
 base_src_path = "./"
 base_svg_target_path = "../etc/weather_service/icons/svg/"
 base_png_target_path = "../etc/weather_service/icons/png/"
-base_html_target_path = "../etc/weather_service/icons/"
+base_service_target_path = "../etc/weather_service/icons/"
+base_htdocs_target_path = "../htdocs/weather_service/icons/"
 
-base_html_web_path = "/dataDisk/etc/weather_service/icons/"
+base_service_live_target_path = "/dataDisk/etc/weather_service/icons/"
+base_htdocs_live_target_path = "/dataDisk/htdocs/weather_service/icons/"
 
 main_icons = {
     "day": [],
@@ -244,8 +246,19 @@ for filename in all_files:
 
 html = "{}</div></div></div></body></html>".format(html)
 
-save(html,base_html_target_path,"index.html")
+save(html,base_service_target_path,"index.html")
 
-if os.path.exists(base_html_web_path):
-    system('rm -R {}/*'.format(base_html_web_path))
-    system('cp -r {}/* {}'.format(base_html_target_path, base_html_web_path))
+system('rm -R {}/*'.format(base_htdocs_target_path))
+system('mkdir {}/svg'.format(base_htdocs_target_path))
+for name in additionals:
+    system('cp {}/{}* {}svg/'.format(base_svg_target_path, name, base_htdocs_target_path))
+
+if os.path.exists(base_service_live_target_path):
+    system('rm -R {}/*'.format(base_service_live_target_path))
+    system('cp -r {}/* {}'.format(base_service_target_path, base_service_live_target_path))
+
+if os.path.exists(base_htdocs_live_target_path):
+    system('rm -R {}/*'.format(base_htdocs_live_target_path))
+    system('mkdir {}/svg'.format(base_htdocs_live_target_path))
+    for name in additionals:
+        system('cp {}/{}* {}svg/'.format(base_svg_target_path, name, base_htdocs_live_target_path))
