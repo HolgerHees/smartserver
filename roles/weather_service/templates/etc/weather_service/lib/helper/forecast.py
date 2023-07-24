@@ -150,7 +150,7 @@ class WeatherHelper():
                 else:
                     amount = 1
 
-            elif timerange == 3:
+            elif timerange >= 3:
                 if block.precipitationAmountInMillimeter >= 3:
                     amount = 4
                 elif block.precipitationAmountInMillimeter >= 2:
