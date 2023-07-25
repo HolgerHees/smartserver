@@ -67,6 +67,11 @@ mx.WeatherCore = (function( ret ) {
     //var serviceApiUrl = mx.Host.getBase() + '../api/';
     var serviceApiUrl = mx.Host.getBase() + '../../weather_service/api/';
 
+    var active_day = null;
+    var refreshTimer = 0;
+    var lastModified = [];
+    var currentValues = []
+
     function buildRow(id, time, cloud, maxTemperature, minTemperature, sunshineDuration, precipitationProbability, precipitationAmount, windSpeed, windDirection, clickDate)
     {
         let row = '<div id="' + id + '" class="hour';
@@ -77,8 +82,8 @@ mx.WeatherCore = (function( ret ) {
         row += '<div class="cloud">' + cloud + '</div>';
         row += '<div class="temperature"><div><div class="main"><span class="max">' + mx.WeatherHelper.formatNumber(maxTemperature) + '</span><span class="min">' + mx.WeatherHelper.formatNumber(minTemperature) + '</span></div><div class="sub">°C</div></div></div>';
         row += '<div class="info">';
-        row += '  <div class="sunshineDuration"><div class="sun"><?php echo str_replace("'", "\\'", getSVG('sun', 'sun_grayscaled') ); ?></div><div>' + mx.WeatherHelper.formatDuration( sunshineDuration ) + '</div></div>';
-        row += '  <div class="precipitationProbability"><div><?php echo str_replace("'", "\\'", getSVG('rain','rain_grayscaled') ); ?></div><div>' + precipitationProbability + ' %</div></div>';
+        row += '  <div class="sunshineDuration"><div class="sun icon"><?php echo str_replace("'", "\\'", getSVG('sun', 'sun_grayscaled') ); ?></div><div>' + mx.WeatherHelper.formatDuration( sunshineDuration ) + '</div></div>';
+        row += '  <div class="precipitationProbability"><div class=\"icon\"><?php echo str_replace("'", "\\'", getSVG('rain','rain_grayscaled') ); ?></div><div>' + precipitationProbability + ' %</div></div>';
         row += '  <div class="precipitationAmount"><div></div><div>' + mx.WeatherHelper.formatNumber( precipitationAmount ) + ' mm</div></div>';
         row += '</div>';
         row += '<div class="wind"><div>';
@@ -98,50 +103,59 @@ mx.WeatherCore = (function( ret ) {
     {
         //console.log(data);
 
-        let values = data["changed_data"];
+        let changedValues = data["changed_data"];
 
-        let dayActive = new Date();
-        dayActive.setTime(Date.parse(values["dayActive"]));
+        currentValues = Object.assign(currentValues, changedValues);
 
-        mx.$(".today .title").innerHTML = mx.WeatherHelper.formatDay(dayActive);
+        if( "dayActive" in changedValues )
+        {
+            active_day = new Date();
+            active_day.setTime(Date.parse(currentValues["dayActive"]));
+            mx.$(".today .title").innerHTML = mx.WeatherHelper.formatDay(active_day);
+        }
 
         let now = new Date();
 
-        mx.$(".current .summary .temperature .value span").innerHTML = mx.WeatherHelper.formatNumber(values["airTemperatureInCelsius"]);
+        if( "airTemperatureInCelsius" in changedValues) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["airTemperatureInCelsius"]) + ' °C';
+        if( "perceivedTemperatureInCelsius" in changedValues) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["perceivedTemperatureInCelsius"]) + ' °C';
 
-        mx.$(".current .summary .wind .value span.speed").innerHTML = mx.WeatherHelper.formatNumber(values["windSpeedInKilometerPerHour"]);
-        if( values["windSpeedInKilometerPerHour"] != values["windGustInKilometerPerHour"] && values["windGustInKilometerPerHour"] > 0 )
+        if( "windSpeedInKilometerPerHour" in changedValues || "windGustInKilometerPerHour" in changedValues )
         {
-            mx.$(".current .summary .wind .value span.gust").style.display = "";
-            mx.$(".current .summary .wind .value span.gust").innerHTML = "(" + mx.WeatherHelper.formatNumber(values["windGustInKilometerPerHour"]) + ")";
-        }
-        else
-        {
-            mx.$(".current .summary .wind .value span.gust").style.display = "none";
-        }
-
-        mx.$(".current .summary .rain .value span.current").innerHTML = mx.WeatherHelper.formatNumber(values["rainCurrentInMillimeter"]);
-        if( values["rainCurrentInMillimeter"] != values["rainDailyInMillimeter"] && values["rainDailyInMillimeter"] > 0 )
-        {
-            mx.$(".current .summary .rain .value span.daily").style.display = "";
-            mx.$(".current .summary .rain .value span.daily").innerHTML = "(" + mx.WeatherHelper.formatNumber(values["rainDailyInMillimeter"]) + ")";
-        }
-        else
-        {
-            mx.$(".current .summary .rain .value span.gust").style.display = "none";
+            let windSpeed = mx.WeatherHelper.formatNumber(currentValues["windSpeedInKilometerPerHour"]);
+            let windGust = mx.WeatherHelper.formatNumber(currentValues["windGustInKilometerPerHour"]);
+            let wind = windSpeed;
+            if( windSpeed != windGust && currentValues["windGustInKilometerPerHour"] > 0 )
+            {
+                wind += ' (' + windGust + ')';
+            }
+            mx.$(".current .summary .wind .value").innerHTML = wind + ' km/h';
         }
 
-        if( "dayList" in values)
+        if( "rainCurrentInMillimeter" in changedValues || "rainDailyInMillimeter" in changedValues )
         {
-            mx.$(".today .summary .temperature .value span.min").innerHTML = mx.WeatherHelper.formatNumber(values["dayMinTemperature"]);
-            mx.$(".today .summary .temperature .value span.max").innerHTML = mx.WeatherHelper.formatNumber(values["dayMaxTemperature"]);
-            mx.$(".today .summary .wind .value span").innerHTML = mx.WeatherHelper.formatNumber(values["dayMaxWindSpeed"]);
-            mx.$(".today .summary .rain .value span").innerHTML = mx.WeatherHelper.formatNumber(values["daySumRain"]);
-            mx.$(".today .summary .sun .value span").innerHTML = mx.WeatherHelper.formatDuration(values["daySumSunshine"]);
+            let rainValue = mx.WeatherHelper.formatNumber(currentValues["rainCurrentInMillimeter"]);
+            let rainDaily = mx.WeatherHelper.formatNumber(currentValues["rainDailyInMillimeter"]);
+            let rain = rainValue
+            if( rainValue != rainDaily && currentValues["rainDailyInMillimeter"] > 0 )
+            {
+                rain += ' (' + rainDaily + ')';
+            }
+            mx.$(".current .summary .rain .value").innerHTML = rain + ' mm';
+        }
+
+        if( "currentCloudsAsSVG" in changedValues) mx.$(".current .cloud").innerHTML = mx.WeatherHelper.formatNumber(currentValues["currentCloudsAsSVG"]);
+
+        if( "dayList" in changedValues)
+        {
+            mx.$(".today .summary .temperature .value span.min").innerHTML = mx.WeatherHelper.formatNumber(currentValues["dayMinTemperature"]);
+            mx.$(".today .summary .temperature .value span.max").innerHTML = mx.WeatherHelper.formatNumber(currentValues["dayMaxTemperature"]);
+            mx.$(".today .summary .wind .value span").innerHTML = mx.WeatherHelper.formatNumber(currentValues["dayMaxWindSpeed"]);
+            mx.$(".today .summary .rain .value span").innerHTML = mx.WeatherHelper.formatNumber(currentValues["daySumRain"]);
+            mx.$(".today .summary .sun .value span").innerHTML = mx.WeatherHelper.formatDuration(currentValues["daySumSunshine"]);
 
             let html_rows = [];
             let active_id = null;
-            values["dayList"].forEach(function(row)
+            currentValues["dayList"].forEach(function(row)
             {
                 let start = new Date();
                 start.setTime(Date.parse(row["start"]));
@@ -172,16 +186,16 @@ mx.WeatherCore = (function( ret ) {
             if( active_id ) mx.$("#" + active_id ).classList.add("active");
         }
 
-        if( "weekList" in values)
+        if( "weekList" in changedValues)
         {
-            mx.$(".week .summary .temperature .value span.min").innerHTML = mx.WeatherHelper.formatNumber(values["weekMinTemperature"]);
-            mx.$(".week .summary .temperature .value span.max").innerHTML = mx.WeatherHelper.formatNumber(values["weekMaxTemperature"]);
-            mx.$(".week .summary .wind .value span").innerHTML = mx.WeatherHelper.formatNumber(values["weekMaxWindSpeed"]);
-            mx.$(".week .summary .rain .value span").innerHTML = mx.WeatherHelper.formatNumber(values["weekSumRain"]);
-            mx.$(".week .summary .sun .value span").innerHTML = mx.WeatherHelper.formatDuration(values["weekSumSunshine"]);
+            mx.$(".week .summary .temperature .value span.min").innerHTML = mx.WeatherHelper.formatNumber(currentValues["weekMinTemperature"]);
+            mx.$(".week .summary .temperature .value span.max").innerHTML = mx.WeatherHelper.formatNumber(currentValues["weekMaxTemperature"]);
+            mx.$(".week .summary .wind .value span").innerHTML = mx.WeatherHelper.formatNumber(currentValues["weekMaxWindSpeed"]);
+            mx.$(".week .summary .rain .value span").innerHTML = mx.WeatherHelper.formatNumber(currentValues["weekSumRain"]);
+            mx.$(".week .summary .sun .value span").innerHTML = mx.WeatherHelper.formatDuration(currentValues["weekSumSunshine"]);
 
             let html_rows = [];
-            values["weekList"].forEach(function(row)
+            currentValues["weekList"].forEach(function(row)
             {
                 let start = new Date();
                 start.setTime(Date.parse(row["start"]));
@@ -212,7 +226,8 @@ mx.WeatherCore = (function( ret ) {
             function clickHandler()
             {
                 var day = this.getAttribute("mv-date");
-                refreshState(null, day);
+                delete lastModified["provider"];
+                refreshState(lastModified, day);
             }
 
             var elements = document.querySelectorAll('div[mv-date]');
@@ -227,9 +242,9 @@ mx.WeatherCore = (function( ret ) {
         {
             element.classList.remove("active");
         });
-        mx.$("#week_" + dayActive.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(dayActive.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(dayActive.getDate()) ).classList.add("active");
+        mx.$("#week_" + active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()) ).classList.add("active");
 
-        if( mx.$(".week").classList.contains("open") ) document.getElementById("openButton").click();
+        if( mx.$(".week").classList.contains("open") ) document.getElementById("weekButton").click();
     }
 
     function refreshState(last_data_modified, day)
@@ -239,6 +254,8 @@ mx.WeatherCore = (function( ret ) {
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
         //application/x-www-form-urlencoded
+
+        window.clearTimeout(refreshTimer);
 
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
@@ -252,10 +269,13 @@ mx.WeatherCore = (function( ret ) {
                     mx.Error.confirmSuccess();
 
                     handleState(response);
+
+                    lastModified = response["last_data_modified"]
+                    refreshTimer = window.setTimeout(function(){ refreshState(response["last_data_modified"], day) }, 60000);
                 }
                 else
                 {
-                    mx.Error.handleServerError(response["message"])
+                    mx.Error.handleServerError( mx.I18N.get( "Service is currently not available")  );
                 }
             }
             else
@@ -270,40 +290,40 @@ mx.WeatherCore = (function( ret ) {
                     if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
                 }
 
-                mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshState(last_data_modified, day) }, timeout);
+                mx.Page.handleRequestError(this.status, serviceApiUrl, function(){ refreshState(last_data_modified, day) }, timeout);
             }
         };
 
-        let params = { "type": "week", "last_data_modified": last_data_modified }
+        let params = { "type": "week", "fields": "dayList,weekList,airTemperatureInCelsius,perceivedTemperatureInCelsius,windSpeedInKilometerPerHour,windGustInKilometerPerHour,rainCurrentInMillimeter,rainDailyInMillimeter,currentCloudsAsSVG", "last_data_modified": last_data_modified }
         if( day ) params["day"] = day;
         xhr.send(mx.Core.encodeDict( params ));
     }
 
     function initButtons()
     {
-        var openButton = document.getElementById("openButton");
-        openButton.addEventListener("click",function(){
-            var weekList = document.querySelector(".mvWidget .weatherDetailForecast .week");
+        var weekButton = document.getElementById("weekButton");
+        weekButton.addEventListener("click",function(){
+            var weekList = document.querySelector(".forecast .week");
             if( weekList.classList.contains("open") )
             {
-              openButton.innerHTML = mx.I18N.get("Week");
-              openButton.classList.remove("open");
+              weekButton.innerHTML = mx.I18N.get("Week");
+              weekButton.classList.remove("open");
               weekList.classList.remove("open");
               window.setTimeout(function(){
-                if( !openButton.classList.contains("open") )
+                if( !weekButton.classList.contains("open") )
                 {
-                  openButton.style.zIndex = "";
-                  openButton.classList.remove("animated");
+                  weekButton.style.zIndex = "";
+                  weekButton.classList.remove("animated");
                 }
               },300);
             }
             else
             {
-              openButton.classList.add("animated");
+              weekButton.classList.add("animated");
               window.setTimeout(function(){
-                openButton.innerHTML = mx.I18N.get("Close");
-                openButton.style.zIndex = "101";
-                openButton.classList.add("open");
+                weekButton.innerHTML = mx.I18N.get("Close");
+                weekButton.style.zIndex = "101";
+                weekButton.classList.add("open");
                 weekList.classList.add("open");
               },0);
             }
@@ -325,7 +345,7 @@ mx.WeatherCore = (function( ret ) {
               rainFrame.parentNode.classList.remove("open");
               rainFrame.src="";
               window.setTimeout(function(){
-                if( !openButton.classList.contains("open") )
+                if( !weekButton.classList.contains("open") )
                 {
                   rainButton.style.zIndex = "";
                   rainButton.classList.remove("animated");
@@ -361,44 +381,58 @@ mx.OnDocReady.push( mx.WeatherCore.init );
 </script>
 </head>
 <body>
-<div id="openButton">Woche</div>
-<div id="rainButton">Radar</div>
-<div class="mvWidget">
-    <div class="current">
+<div class="current">
+    <div class="headline">
+        <div class="title" data-i18n="Current"></div>
+        <div id="rainButton">Radar</div>
+    </div>
+    <div class="content">
         <div class="summary">
-            <div class="cell title" data-i18n="Current"></div>
-            <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="value"><span></span> °C</div></div>
-            <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><span class="speed"></span> <span class="gust"></span> km/h</div></div>
-            <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="value"><span class="current"></span> <span class="daily"></span> mm</div></div>
+            <div class="column">
+                <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="name" data-i18n="Temperature"></div><div class="value"></div></div>
+                <div class="cell perceived"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="name" data-i18n="Perceived"></div><div class="value"></div></div>
+            </div>
+            <div class="column">
+                <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="name" data-i18n="Wind"></div><div class="value"></div></div>
+                <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="name" data-i18n="Rain"></div><div class="value"></div></div>
+            </div>
+        </div>
+        <div class="cloud"></div>
+    </div>
+</div>
+
+<div class="forecast">
+    <div class="today">
+        <div class="headline">
+            <div class="title" data-i18n="Day"></div>
+            <div id="weekButton" data-i18n="Week"></div>
+        </div>
+        <div class="summary">
+            <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="value"><span class="max"></span><span class="min"></span> °C</div></div>
+            <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><span></span> km/h</div></div>
+            <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="value"><span></span> mm</div></div>
+            <div class="cell sun"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="value"><span></span></div></div>
+        </div>
+        <div class="hours">
+            <div class="hour" data-i18n="No forecasts available"></div>
         </div>
     </div>
-    <div class="weatherForecast weatherDetailForecast">
-        <div class="today">
-            <div class="title" data-i18n="Day"></div>
-            <div class="summary">
-                <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="value"><span class="max"></span><span class="min"></span> °C</div></div>
-                <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><span></span> km/h</div></div>
-                <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="value"><span></span> mm</div></div>
-                <div class="cell sun"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="value"><span></span></div></div>
-            </div>
-            <div class="hours">
-                <div class="hour" data-i18n="No forecasts available"></div>
-            </div>
-        </div>
-        <div class="week">
+    <div class="week">
+        <div class="headline">
             <div class="title" data-i18n="Week"></div>
-            <div class="summary">
-                <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="value temperature"><span class="max"></span><span class="min"></span> °C</div></div>
-                <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><span></span> km/h</div></div>
-                <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="value"><span></span> mm</div></div>
-                <div class="cell sun"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="value"><span></span></div></div>
-            </div>
-            <div class="hours">
-                <div class="hour" data-i18n="No forecasts available"></div>
-            </div>
+        </div>
+        <div class="summary">
+            <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="value temperature"><span class="max"></span><span class="min"></span> °C</div></div>
+            <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="value"><span></span> km/h</div></div>
+            <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="value"><span></span> mm</div></div>
+            <div class="cell sun"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="value"><span></span></div></div>
+        </div>
+        <div class="hours">
+            <div class="hour" data-i18n="No forecasts available"></div>
         </div>
     </div>
 </div>
+
 <div id="rainFrame"><iframe src=""></iframe></div>
 <script>
 </script>

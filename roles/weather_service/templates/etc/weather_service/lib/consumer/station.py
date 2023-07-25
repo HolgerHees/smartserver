@@ -72,7 +72,7 @@ class StationConsumer():
         has_missing_update = False
         now = time.time()
         for key, item in self.station_values.items():
-            if now - item["time"] < 900:
+            if now - item["time"] < 60 * 60:
                 has_any_update = True
 
             if now - item["time"] > 60 * 60 * 25:
