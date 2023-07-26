@@ -5,14 +5,17 @@ from pytz import timezone
 import time
 import threading
 import logging
+import schedule
+import os
 
 import requests
 import urllib.parse
 import json
 import decimal
 
-from lib.db import DBException
+from smartserver.confighelper import ConfigHelper
 
+from lib.db import DBException
 
 token_url    = "https://auth.weather.mg/oauth/token"
 current_url  = 'https://point-observation.weather.mg/search?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
@@ -254,12 +257,11 @@ class Fetcher(object):
 
             logging.info("Summery data published")
 
-class Meteo(threading.Thread):
+class Meteo():
     '''Handler client'''
     def __init__(self, config, db, mqtt):
-        threading.Thread.__init__(self)
-
-        self.is_running = True
+        self.is_running = False
+        self.is_fetching = False
 
         self.config = config
         self.db = db
@@ -267,17 +269,56 @@ class Meteo(threading.Thread):
 
         self.event = threading.Event()
 
+        self.dump_path = "{}provider_meteo.json".format(config.lib_path)
+        self.version = 1
+        self.valid_cache_file = True
+
         self.service_metrics = { "data_provider": -1, "data_current": -1, "data_forecast": -1, "publish": -1 }
 
         self.last_consume_error = None
 
-    def run(self):
-        #status = os.fdopen(self.dhcpListenerProcess.stdout.fileno())
-        #status = os.fdopen(os.dup(self.dhcpListenerProcess.stdout.fileno()))
+        self.last_fetch = 0
+
+    def start(self):
+        self._restore()
+        if not os.path.exists(self.dump_path):
+            self._dump()
+        self.is_running = True
+
         if not self.config.publish_topic or not self.config.api_username or not self.config.api_password:
             logging.info("Publishing disabled")
+        else:
+            schedule.every().hour.at("05:00").do(self.fetch)
+            if time.time() - self.last_fetch > 60 * 60:
+                self.fetch()
+
+    def terminate(self):
+        if self.is_running and os.path.exists(self.dump_path):
+            self._dump()
+        self.is_running = False
+        self.event.set()
+
+    def _restore(self):
+        self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
+        if data is not None:
+            self.last_fetch = data["last_fetch"]
+            logging.info("Loaded provider state")
+
+    def _dump(self):
+        if self.valid_cache_file:
+            ConfigHelper.saveConfig(self.dump_path, self.version, { "last_fetch": self.last_fetch } )
+            logging.info("Saved provider state")
+
+    def fetch(self):
+        if self.is_fetching:
+            logging.warn("Skip fetching. Older job is still runing")
             return
-        
+
+        if not self.is_running:
+            return
+
+        self.is_fetching = True
+
         error_count = 0
         while self.is_running:
             try:
@@ -307,6 +348,11 @@ class Meteo(threading.Thread):
 
                 self.service_metrics["data_provider"] = 1
                 self.service_metrics["publish"] = 1
+
+                self.last_fetch = time.time()
+
+                self.is_fetching = False
+                return
             except ForecastDataException as e:
                 logging.info("{}: {}".format(str(e.__class__),str(e)))
                 self.service_metrics["data_forecast"] = 0
@@ -338,17 +384,11 @@ class Meteo(threading.Thread):
             self.event.wait(sleepTime)
             self.event.clear()
 
-            #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
-
     def getStateMetrics(self):
         state_metrics = []
 
         for name, value in self.service_metrics.items():
             state_metrics.append("weather_service_state{{type=\"provider_{}\"}} {}".format(name,value))
         return state_metrics
-            
-    def terminate(self):
-        self.is_running = False
-        self.event.set()
 
 

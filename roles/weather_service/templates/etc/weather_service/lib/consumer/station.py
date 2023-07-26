@@ -13,7 +13,7 @@ class StationConsumer():
 
         self.is_running = False
 
-        self.dump_path = "{}station_values.json".format(config.lib_path)
+        self.dump_path = "{}consumer_station.json".format(config.lib_path)
         self.version = 1
         self.valid_cache_file = True
 
@@ -37,12 +37,12 @@ class StationConsumer():
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
             self.station_values = data["station_values"]
-            logging.info("Loaded {} station values".format(len(self.station_values)))
+            logging.info("Loaded {} consumer (station) values".format(len(self.station_values)))
 
     def _dump(self):
         if self.valid_cache_file:
             ConfigHelper.saveConfig(self.dump_path, self.version, { "station_values": self.station_values } )
-            logging.info("Saved {} station values".format(len(self.station_values)))
+            logging.info("Saved {} consumer (station) values".format(len(self.station_values)))
 
     def on_message(self,client,userdata,msg):
         topic = msg.topic.split("/")

@@ -1,8 +1,11 @@
 import traceback
 import logging
 from datetime import datetime, timedelta
+import os
 
 import time
+
+from smartserver.confighelper import ConfigHelper
 
 from lib.db import DBException
 from lib.helper.forecast import WeatherBlock, WeatherHelper
@@ -15,8 +18,14 @@ class ProviderConsumer():
         self.latitude = float(location[0])
         self.longitude = float(location[1])
 
+        self.is_running = False
+
         self.mqtt = mqtt
         self.db = db
+
+        self.dump_path = "{}consumer_provider.json".format(config.lib_path)
+        self.version = 1
+        self.valid_cache_file = True
 
         self.current_values = None
         self.forecast_values = None
@@ -31,10 +40,29 @@ class ProviderConsumer():
         self.last_consume_error = None
 
     def start(self):
+        self._restore()
+        if not os.path.exists(self.dump_path):
+            self._dump()
+
         self.mqtt.subscribe('+/weather/provider/#', self.on_message)
 
+        self.is_running = True
+
     def terminate(self):
-        pass
+        if self.is_running and os.path.exists(self.dump_path):
+            self._dump()
+        self.is_running = False
+
+    def _restore(self):
+        self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
+        if data is not None:
+            self.consume_refreshed = data["consume_refreshed"]
+            logging.info("Loaded consumer (provider) values")
+
+    def _dump(self):
+        if self.valid_cache_file:
+            ConfigHelper.saveConfig(self.dump_path, self.version, { "consume_refreshed": self.consume_refreshed } )
+            logging.info("Saved consumer (provider) values")
 
     def on_message(self,client,userdata,msg):
         topic = msg.topic.split("/")
@@ -139,13 +167,11 @@ class ProviderConsumer():
 
     def getWidgetSVG(self, last_modified, requested_fields):
         # curl -d 'type=widget' -H "Content-Type: application/x-www-form-urlencoded" -X POST http://172.16.0.201/data/
-        _last_modified = datetime.now().replace(minute=0, second=0, microsecond=0).timestamp()
-        if self.consume_refreshed["forecast"] > _last_modified:
-            _last_modified = self.consume_refreshed["forecast"]
 
         result = {}
         if requested_fields is None or "currentCloudsAsSVG" in requested_fields:
-            if last_modified < _last_modified:
+            if last_modified < self.consume_refreshed["forecast"]:
+                last_modified = self.consume_refreshed["forecast"]
                 with self.db.open() as db:
                     data = db.getOffset(0)
                     #logging.info(data)
@@ -155,7 +181,7 @@ class ProviderConsumer():
                     icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
                     result["currentCloudsAsSVG"] = self.getCachedIcon(icon_name)
 
-        return [ result, _last_modified ]
+        return [ result, last_modified ]
 
     def getDetailOverviewValues(self, last_modified, requested_fields, requested_day = None):
         activeDay = datetime.now() if requested_day is None else datetime.strptime(requested_day, '%Y-%m-%d')
@@ -163,13 +189,10 @@ class ProviderConsumer():
 
         #isToday = activeDay.strftime('%Y-%m-%d') == datetime.now().strftime('%Y-%m-%d')
 
-        _last_modified = datetime.now().replace(minute=0, second=0, microsecond=0).timestamp()
-        if self.consume_refreshed["forecast"] > _last_modified:
-            _last_modified = self.consume_refreshed["forecast"]
-
         values = {}
 
-        if last_modified < _last_modified:
+        if last_modified < self.consume_refreshed["forecast"]:
+            last_modified = self.consume_refreshed["forecast"]
             with self.db.open() as db:
                 start = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
                 end = activeDay.replace(hour=23, minute=59, second=59, microsecond=0)
@@ -241,7 +264,7 @@ class ProviderConsumer():
                 #current_value.setEnd(weekList[-1]['datetime'] + timedelta(hours=24))
                 #todayValues.append(current_value)
 
-        return [ values, _last_modified ]
+        return [ values, last_modified ]
 
     def getTodayOverviewValues(self):
         with self.db.open() as db:
