@@ -6,7 +6,8 @@
 
 - name: set openhab version
   set_fact:
-    openhab_version: "3.4.4"
+    openhab_version: "4.0.0"
+    #openhab_version: "3.4.4"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"
     openhab_gid: "{{system_groups['openhab'].id}}"
@@ -103,6 +104,17 @@
   changed_when: no
   
 - name: link conf folder
+  file:
+    src: "{{projects_path}}openhab_config/conf/{{item}}"
+    dest: "{{global_etc}}openhab/conf/{{item}}"
+    state: link
+    follow: no
+    owner: "{{openhab_user}}"
+    group: "{{openhab_group}}"
+  with_items: "{{config_result.stdout_lines | difference(['html','icons'])}}"
+  notify: "restart openhab"
+
+- name: copy conf folder
   file:
     src: "{{projects_path}}openhab_config/conf/{{item}}"
     dest: "{{global_etc}}openhab/conf/{{item}}"
@@ -388,6 +400,30 @@
       - roles/openhab/templates/container/init.sh
   import_tasks: roles/container/shared/build_docker_image.yml
 
+- name: check conf volumens
+  shell: "ls -1 {{global_etc}}openhab/conf"
+  register: conf_folder_result
+
+- name: prepare volumes
+  set_fact:
+    openhab_volumes: |
+      [
+        '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z',
+        '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z',
+        '{{global_etc}}openhab/addons:/openhab/addons:z',
+        '{{global_etc}}openhab/python:/openhab/python:z',
+        '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z',
+        '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z',
+        '{{global_log}}openhab:/openhab/userdata/logs:z',
+        {% for name in conf_folder_result.stdout_lines %}
+            '{{global_etc}}openhab/conf/{{name}}:/openhab/conf/{{name}}:z',
+        {% endfor %}
+      ]
+
+#- name: test
+#  debug:
+#    msg: "{{openhab_volumes}}"
+
 - name: create docker container
   docker_container:
     name: openhab
@@ -413,16 +449,16 @@
     devices: "{{openhab_device_mounts | default([])}}"
     container_default_behavior: "compatibility"
     network_mode: "host"
-    volumes:
-      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
-      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
-      - '{{global_etc}}openhab/addons:/openhab/addons:z'
-      - '{{global_etc}}openhab/conf:/openhab/conf:z'
-      - '{{global_etc}}openhab/python:/openhab/python:z'
-#      - "{{global_etc}}openhab/userdata/jsondb:/openhab/userdata/jsondb/:z"
-      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
-      - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
-      - '{{global_log}}openhab:/openhab/userdata/logs:z'
+    volumes: "{{openhab_volumes}}"
+#      - '{{projects_path}}openhab_config:{{projects_path}}openhab_config:z'
+#      - '{{projects_path}}openhab_shared:{{projects_path}}openhab_shared:z'
+#      - '{{global_etc}}openhab/addons:/openhab/addons:z'
+#      - '{{global_etc}}openhab/conf:/openhab/conf:z'
+#      - '{{global_etc}}openhab/python:/openhab/python:z'
+#      - '{{global_lib}}openhab/jsondb:/openhab/userdata/jsondb:z'
+#      - '{{global_lib}}openhab/persistance:/openhab/userdata/persistence:z'
+#      - '{{global_log}}openhab:/openhab/userdata/logs:z'
+
 #    networks:
 #      - name: "openhab"
 #        ipv4_address: "{{docker_openhab_ip}}"
