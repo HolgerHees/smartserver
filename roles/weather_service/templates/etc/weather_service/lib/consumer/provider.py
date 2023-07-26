@@ -13,10 +13,12 @@ from lib.helper.forecast import WeatherBlock, WeatherHelper
 
 class ProviderConsumer():
     '''Handler client'''
-    def __init__(self, config, mqtt, db):
+    def __init__(self, config, mqtt, db, station_consumer ):
         location = config.location.split(",")
         self.latitude = float(location[0])
         self.longitude = float(location[1])
+
+        self.station_consumer = station_consumer
 
         self.is_running = False
 
@@ -177,6 +179,10 @@ class ProviderConsumer():
                     #logging.info(data)
                     block = WeatherBlock(data['datetime'])
                     block.apply(data)
+
+                    currentRain = self.station_consumer.getValue("rainCurrentInMillimeter")
+                    if currentRain > block.getPrecipitationAmountInMillimeter():
+                        block.setPrecipitationAmountInMillimeter(currentRain)
 
                     icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
                     result["currentCloudsAsSVG"] = self.getCachedIcon(icon_name)

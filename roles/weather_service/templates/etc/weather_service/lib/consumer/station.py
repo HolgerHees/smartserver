@@ -55,6 +55,9 @@ class StationConsumer():
         value = float(value) if "." in value else int(value)
         self.station_values[ topic[3] ] = { "time": time.time(), "value": value  }
 
+    def getValue(self, key ):
+        return self.station_values[key]["value"]
+
     def getValues(self, last_modified, requested_fields = None ):
         result = {}
         _last_modified = last_modified

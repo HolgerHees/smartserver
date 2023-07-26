@@ -34,8 +34,8 @@ class Handler(Server):
         self.mqtt = MQTT(config)
         self.provider = Meteo(config, self.db, self.mqtt)
 
-        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db)
         self.station_consumer = StationConsumer(config, self.mqtt)
+        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self.station_consumer)
 
         self.startup_timestamp = round(datetime.now().timestamp(),3)
 

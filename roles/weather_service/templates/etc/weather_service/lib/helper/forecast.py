@@ -41,6 +41,12 @@ class WeatherBlock():
     def setSVG(self, svg):
         self.svg = svg
 
+    def getPrecipitationAmountInMillimeter(self):
+        return self.precipitationAmountInMillimeter
+
+    def setPrecipitationAmountInMillimeter(self, value):
+        self.precipitationAmountInMillimeter = value
+
     def apply( self, hourlyData ):
         self.sunshineDurationInMinutes += hourlyData['sunshineDurationInMinutes']
         self.precipitationAmountInMillimeter += hourlyData['precipitationAmountInMillimeter']
