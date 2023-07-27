@@ -81,19 +81,21 @@ class Helper():
     @staticmethod
     def shouldSwapDirection(connection, config, cache):
         srcIsExternal = cache.isExternal(connection.src)
-        if ( \
-            ( connection.protocol in PING_PROTOCOLS and srcIsExternal ) \
-            or \
-            ( \
-                connection.src_port is not None and connection.dest_port is not None \
-                and \
-                connection.src_port < 1024 and connection.dest_port >= 1024 \
-            ) \
-        ):
+
+        if connection.protocol in PING_PROTOCOLS and srcIsExternal:
             return True
 
-        if srcIsExternal and config.netflow_incoming_traffic and Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
-            return True
+        if connection.src_port is not None and connection.dest_port is not None:
+            if config.netflow_incoming_traffic:
+                if srcIsExternal:
+                    if Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
+                        return True
+                else:
+                    if Helper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
+                        return True
+            else:
+                if connection.src_port < 1024 and connection.dest_port >= 1024:
+                    return True
 
         return False
 
