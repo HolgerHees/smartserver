@@ -72,17 +72,10 @@ class StationConsumer():
 
     def getStateMetrics(self):
         has_any_update = False
-        has_missing_update = False
         now = time.time()
         for key, item in self.station_values.items():
             if now - item["time"] < 60 * 60:
                 has_any_update = True
+                break
 
-            if now - item["time"] > 60 * 60 * 25:
-                logging.warn("Item {} not refreshed since {} seconds".format(key, now - item["time"] ))
-                has_missing_update = True
-
-        if not has_any_update:
-            logging.warn("Items not refreshed since more then 900 seconds")
-
-        return ["weather_service_state{{type=\"consumer_station\"}} {}".format(0 if not has_any_update or has_missing_update else 1)]
+        return ["weather_service_state{{type=\"consumer_station\"}} {}".format(1 if has_any_update else 0)]
