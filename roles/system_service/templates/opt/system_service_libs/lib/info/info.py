@@ -28,6 +28,7 @@ class Info(threading.Thread):
 
         self.ip_url = "https://natip.tuxnet24.de/index.php?mode=json"
         self.ip_check = "8.8.8.8"
+        self.ip_check_error_count = 0
 
         self.default_isp_connection_active = False
         self.wan_active = False
@@ -54,6 +55,7 @@ class Info(threading.Thread):
         try:
             while self._isRunning():
                 self.default_isp_connection_active = self.checkIP()
+
                 self.wan_active = self.checkConnection()
 
                 if self.default_isp_connection_active:
@@ -75,41 +77,51 @@ class Info(threading.Thread):
     def checkIP(self):
         try:
             response = requests.get(self.ip_url)
+
+            if response.status_code == 200:
+                if len(response.content) > 0:
+                    try:
+                        data = json.loads(response.content)
+                        active_ip = data["ip-address"]
+
+                        if "org" in self.default_isp:
+                            result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
+                            if result["type"] == IPCache.TYPE_LOCATION:
+                                location_org = result["org"] if result["org"] else ( result["isp"] if result["isp"] else "" )
+                                if self.default_isp["org"].match(location_org):
+                                    self.ip_check_error_count = 0
+                                    return True
+
+                        if "hostname" in self.default_isp:
+                            hostname = self.ipcache.getHostname(ipaddress.ip_address(active_ip), False)
+                            if self.default_isp["hostname"].match(hostname):
+                                self.ip_check_error_count = 0
+                                return True
+
+                        if "ip" in self.default_isp:
+                            if self.default_isp["ip"].match(active_ip):
+                                self.ip_check_error_count = 0
+                                return True
+
+                        self.ip_check_error_count = 0
+                        return False
+                    except:
+                        logging.error("Error parsing ip")
+                        logging.error(":{}:".format(response.content))
+                        logging.error(traceback.format_exc())
+                else:
+                    logging.error("Error fetching ip. Got empty response")
+            else:
+                logging.error("Error fetching ip. Got code: '{}' and repsonse: '{}'".format(response.status_code, response.content))
+        except requests.exceptions.ConnectionError as e:
+            logging.warn("Connection error during fetching ip.")
         except:
             logging.error("Error fetching ip")
             logging.error(traceback.format_exc())
-            return
 
-        if response.status_code == 200:
-            if len(response.content) > 0:
-                try:
-                    data = json.loads(response.content)
-                    active_ip = data["ip-address"]
-
-                    if "org" in self.default_isp:
-                        result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
-                        if result["type"] == IPCache.TYPE_LOCATION:
-                            location_org = result["org"] if result["org"] else ( result["isp"] if result["isp"] else "" )
-                            if self.default_isp["org"].match(location_org):
-                                return True
-
-                    if "hostname" in self.default_isp:
-                        hostname = self.ipcache.getHostname(ipaddress.ip_address(active_ip), False)
-                        if self.default_isp["hostname"].match(hostname):
-                            return True
-
-                    if "ip" in self.default_isp:
-                        if self.default_isp["ip"].match(active_ip):
-                            return True
-                except:
-                    logging.error("Error parsing ip")
-                    logging.error(":{}:".format(response.content))
-                    logging.error(traceback.format_exc())
-            else:
-                logging.error("Error fetching ip. Got empty response")
-        else:
-            logging.error("Error fetching ip. Got code: '{}' and repsonse: '{}'".format(response.status_code, response.content))
-
+        self.ip_check_error_count += 1
+        if self.ip_check_error_count <= 5:
+            return self.default_isp_connection_active
         return False
 
     def isDefaultConnection(self):
