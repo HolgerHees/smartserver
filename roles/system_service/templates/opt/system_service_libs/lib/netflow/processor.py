@@ -437,9 +437,9 @@ class Processor(threading.Thread):
 
     def getMessurements(self):
         # ******
-        start = time.time()
-        pr = cProfile.Profile()
-        pr.enable()
+        #start = time.time()
+        #pr = cProfile.Profile()
+        #pr.enable()
 
         registry = {}
         for con in list(self.connections):
@@ -609,15 +609,15 @@ class Processor(threading.Thread):
         for data in sorted_registry:
             messurements.append("netflow_size,{} value={} {}".format(data[0], data[1], data[2]))
 
-        end = time.time()
-        logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
-        pr.disable()
-        if (end-start) > 0.5:
-            s = io.StringIO()
-            sortby = SortKey.CUMULATIVE
-            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            ps.print_stats()
-            logging.info(s.getvalue())
+        #end = time.time()
+        #logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
+        #pr.disable()
+        #if (end-start) > 0.5:
+        #    s = io.StringIO()
+        #    sortby = SortKey.CUMULATIVE
+        #    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        #    ps.print_stats()
+        #    logging.info(s.getvalue())
 
         counter_values = self.cache.getCountStats()
         logging.info("Cache statistic - LOCATION [fetch: {}, cache {}/{}], HOSTNAME [fetch: {}, cache {}/{}]".format(counter_values["location_fetch"], counter_values["location_cache"], self.cache.getLocationSize(), counter_values["hostname_fetch"], counter_values["hostname_cache"], self.cache.getHostnameSize()))
