@@ -200,14 +200,14 @@ all_files = []
 for main_icon, main_settings in main_icons.items():
     processFile(top, main_icon, main_settings, None, None, None, None, all_files)
 
+    for effect_icon, effect_settings in effect_icons.items():
+        processFile(top, main_icon, main_settings, None, None, effect_icon, effect_settings, all_files)
+
     for rain_icon, rain_settings in rain_icons.items():
         processFile(top, main_icon, main_settings, rain_icon, rain_settings, None, None, all_files)
 
         for effect_icon, effect_settings in effect_icons.items():
             processFile(top, main_icon, main_settings, rain_icon, rain_settings, effect_icon, effect_settings, all_files)
-
-    for effect_icon, effect_settings in effect_icons.items():
-        processFile(top, main_icon, main_settings, None, None, effect_icon, effect_settings, all_files)
 
 for name in additionals:
     for color_type in ["colored","grayscaled"]:

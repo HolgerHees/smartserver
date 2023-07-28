@@ -6,6 +6,7 @@ class WeatherBlock():
     def __init__(self, start):
         self.start = start
         self.end = None
+
         self.sunshineDurationInMinutesSum = 0
         self.precipitationAmountInMillimeterSum= 0
         self.sunshineDurationInMinutes= 0
@@ -23,6 +24,7 @@ class WeatherBlock():
 
         self.minAirTemperatureInCelsius = None
         self.maxAirTemperatureInCelsius = None
+        self.maxPrecipitationAmountInMillimeter = None
 
         self.svg = None
 
@@ -51,12 +53,6 @@ class WeatherBlock():
         self.sunshineDurationInMinutes += hourlyData['sunshineDurationInMinutes']
         self.precipitationAmountInMillimeter += hourlyData['precipitationAmountInMillimeter']
 
-        if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
-            self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
-
-        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
-            self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
-
         if self.effectiveCloudCoverInOcta < hourlyData['effectiveCloudCoverInOcta']:
             self.effectiveCloudCoverInOcta = hourlyData['effectiveCloudCoverInOcta']
 
@@ -84,6 +80,15 @@ class WeatherBlock():
         if self.windSpeedInKilometerPerHour < hourlyData['windSpeedInKilometerPerHour']:
             self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']
             self.windDirectionInDegree = hourlyData['windDirectionInDegree']
+
+        if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter < hourlyData['precipitationAmountInMillimeter']:
+            self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
+
+        if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
+            self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+
+        if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
+            self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
 
 class WeatherHelper():
     sunConfig = {
@@ -127,15 +132,15 @@ class WeatherHelper():
         sunrise = sun.get_sunrise_time().astimezone().replace(tzinfo=None)
         sunset = sun.get_sunset_time().astimezone().replace(tzinfo=None)
 
-        index = 0
+        cloudIndex = 0
         if block.effectiveCloudCoverInOcta >= 6:
-            index = 4
+            cloudIndex = 4
         elif block.effectiveCloudCoverInOcta >= 4.5:
-            index = 3
+            cloudIndex = 3
         elif block.effectiveCloudCoverInOcta >= 3.0:
-            index = 2
+            cloudIndex = 2
         elif block.effectiveCloudCoverInOcta >= 1.5:
-            index = 1
+            cloudIndex = 1
 
         minutes_to_add = ( timerange / 2 * 60)
         now = datetime.now()
@@ -143,38 +148,15 @@ class WeatherHelper():
         ref_datetime = ref_datetime.replace(year=now.year,month=now.month,day=now.day)
         isNight = ( ref_datetime < sunrise or ref_datetime > sunset )
 
-        icon = WeatherHelper.sunConfig[ 'night' if isNight else 'day' ][index];
-
-        if block.precipitationProbabilityInPercent >= 30 and block.precipitationAmountInMillimeter > 0:
-            if timerange == 24:
-                if block.precipitationAmountInMillimeter >= 4:
-                    amount = 4
-                elif block.precipitationAmountInMillimeter >= 2:
-                    amount = 3
-                elif block.precipitationAmountInMillimeter >= 1:
-                    amount = 2
-                else:
-                    amount = 1
-
-            elif timerange >= 3:
-                if block.precipitationAmountInMillimeter >= 3:
-                    amount = 4
-                elif block.precipitationAmountInMillimeter >= 2:
-                    amount = 3
-                elif block.precipitationAmountInMillimeter >= 1:
-                    amount = 2
-                else:
-                    amount = 1
-
+        if block.precipitationProbabilityInPercent >= 30 and block.maxPrecipitationAmountInMillimeter > 0:
+            if block.maxPrecipitationAmountInMillimeter >= 1.3:
+                amount = 4
+            elif block.maxPrecipitationAmountInMillimeter >= 0.9:
+                amount = 3
+            elif block.maxPrecipitationAmountInMillimeter >= 0.5:
+                amount = 2
             else:
-                if block.precipitationAmountInMillimeter >= 1.3:
-                    amount = 4
-                elif block.precipitationAmountInMillimeter >= 0.9:
-                    amount = 3
-                elif block.precipitationAmountInMillimeter >= 0.5:
-                    amount = 2
-                else:
-                    amount = 1
+                amount = 1
 
             rain_type = 'snowflake' if ( block.freezingRainProbabilityInPercent >= 10 or block.hailProbabilityInPercent >= 10 or block.snowfallProbabilityInPercent >= 10 ) else 'raindrop'
             rain_type = "{}{}".format(rain_type, amount)
@@ -183,7 +165,11 @@ class WeatherHelper():
 
         if block.thunderstormProbabilityInPercent >= 5:
             thunder_type = "thunder"
+            if cloudIndex == 0:
+                cloudIndex = 1
         else:
             thunder_type = 'none'
+
+        icon = WeatherHelper.sunConfig[ 'night' if isNight else 'day' ][cloudIndex];
 
         return "{}_{}_{}_grayscaled.svg".format(icon, rain_type, thunder_type)

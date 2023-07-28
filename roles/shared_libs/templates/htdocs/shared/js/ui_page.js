@@ -94,13 +94,13 @@ mx.Page = (function( ret ) {
         initRipple(rootElement ? mx._$$(".form.button .buttonSelectionSelector",rootElement) : mx.$$(".form.button .buttonSelectionSelector"));
     }
     
-    ret.initFrame = function(spacer_cls, title)
+    ret.initFrame = function(spacer_cls, title, theme)
     {
         let body = mx.$('body');
         body.classList.add("inline");
         if( spacer_cls ) body.classList.add(spacer_cls);
         
-        theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
+        if( theme == undefined ) theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
         if( theme ) document.body.classList.add(theme);
 
         initDeviceListener();

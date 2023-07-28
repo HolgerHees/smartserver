@@ -1,32 +1,10 @@
-:root {
+:root body {
     --widget-value-weight: 300;
-    --widget-button-radius: 2px;
-    --widget-button-border: 1px solid var(--primary-light-color);
 
-    --sub-icon-color: white;
-
-    --widget-value-color: white;
-    --widget-text-color-nonimportant: #AAA;
-	--widget-button-background-marker: #1f1f1f;
-    --widget-button-border-marker: 1px solid rgba(38,191,117,.1);
-	--widget-value-color-weather-needle: white;
-	--widget-value-color-weather-circle: var(--primary-light-color);
-    --widget-value-color-weather-info-icon: var(--sub-icon-color);
-    --widget-value-color-weather-clouds: white;
-    --widget-value-color-weather-sun: rgba(255, 165, 0, 0.7);
-    --widget-value-color-weather-raindrop: white;
-    --widget-value-color-weather-snowflake: white;
-	--widget-value-color-weather-thunder: rgba(255, 165, 0, 0.6);
-	--widget-value-color-weather-thunder-stroke: rgba(255, 165, 0, 0.8);
-}
-
-:root.lightTheme {
     --sub-icon-color: rgba(124,175,215,0.9);
+    --active-week-day-bg: var(--menu-active-bg);
 
     --widget-value-color: black;
-    --widget-text-color-nonimportant: #6E6E6E;
-	--widget-button-background-marker: #FAFAFA;
-	--widget-button-border-marker: 1px solid #BBB;
     --widget-value-color-weather-needle: #555;
     --widget-value-color-weather-circle: rgba(99,143,179,0.5);
     --widget-value-color-weather-info-icon: rgba(99,143,179,1.0);
@@ -40,6 +18,27 @@
 	--widget-value-color-weather-thunder-stroke: rgba(255, 165, 0, 0.6);*/
 }
 
+:root body.dark {
+    --sub-icon-color: white;
+    --active-week-day-bg: var(--menu-active-bg);;
+
+    --widget-value-color: white;
+	--widget-value-color-weather-needle: white;
+	--widget-value-color-weather-circle: #AAA;
+    --widget-value-color-weather-info-icon: var(--sub-icon-color);
+    --widget-value-color-weather-clouds: white;
+    --widget-value-color-weather-sun: rgba(255, 165, 0, 0.7);
+    --widget-value-color-weather-raindrop: white;
+    --widget-value-color-weather-snowflake: white;
+	--widget-value-color-weather-thunder: rgba(255, 165, 0, 0.6);
+	--widget-value-color-weather-thunder-stroke: rgba(255, 165, 0, 0.8);
+}
+:root body.black {
+    --bg: #000;
+    --menu-active-bg: #555;
+    --button-active-bg: #55555570;
+    --button-hover-bg: #55555550;
+}
 .cloud svg {
     --svg-weather-mask-fill: black;
     --svg-weather-clouds-stroke: var(--widget-value-color-weather-clouds);
@@ -67,39 +66,10 @@
     width: 58px;
 	height: 58px;
 }
-html.black, html.black body
-html.dark, html.dark body
-{
-    background-color: var(--bg);
-
-    --bg: black;
-
-    --primary-color: white !important;
-    --primary-light-color: #808080 !important;
-    --primary-dark-color: rgba(255,255,255,0.2) !important;
-    --primary-icon-color: var(--primary-dark-color) !important;
-}
-html.dark, html.dark body {
-    background-color: var(--bg);
-
-    --bg: #202124;
-}
-html.light, html.light body {
-    background-color: var(--bg);
-
-    --bg: white;
-
-    --primary-color: #333 !important;
-    --primary-light-color: rgba(51,122,183,.22) !important;
-    --primary-dark-color: rgba(85,118,210,0.3) !important;
-    --primary-icon-color: var(--primary-dark-color) !important;
-}
-
-html.light body .mvWidget .week .hour.active .status {
+html body.light .mvWidget .week .hour.active .status {
     background-color: #1976D2;
     border: 1px solid #1976D2;
 }
-
 body{
     overflow-x: hidden;
     max-width: 1024px;
@@ -112,10 +82,17 @@ body{
     box-sizing: border-box;
 }
 #rainButton, #weekButton {
-  border: 1px solid var(--primary-light-color);
+  border: var(--button-border);
   padding: 5px;
-  color: var(--primary-color);
-  background-color: var(--bg);
+  color: var(--button-text);
+  background-color: var(--button-bg);
+}
+#weekButton:active, #rainButton:active {
+    background-color: var(--button-active-bg) !important;
+}
+#rainButton.animated, #weekButton.animated {
+    transition: all 300ms ease;
+    transition-property: height, top, right;
 }
 #rainButton.open {
     position: absolute;
@@ -133,10 +110,10 @@ body{
     height: 1.5em;
     line-height: 1.2em;
 }
+#rainButton.open:active {
+    background-color: rgba(68,65,65,0.44) !important;
+}
 #weekButton.open {
-/*    position: absolute;
-    top: 7px !important;
-    right: 5px;*/
     z-index: 100;
 }
 @media only screen and (min-width: 800px) {
@@ -145,9 +122,15 @@ body{
     }
 }
 @media not (hover: none) {
-  #weekButton, #rainButton, .mvClickable {
-      cursor: pointer;
-  }
+    #weekButton:hover, #rainButton:hover {
+        background-color: var(--button-hover-bg);
+    }
+    #weekButton, #rainButton, .mvClickable {
+        cursor: pointer;
+    }
+    #rainButton.open:hover {
+        background-color: rgba(68,65,65,0.64);
+    }
 }
 @media only screen and (max-width: 800px) {
     .forecast .today, .forecast .week {
@@ -197,14 +180,6 @@ body{
     height: 100%;
     width: 100%;
     border: 0;
-}
-#weekButton:active, #rainButton:active {
-    background-color: var(--primary-light-color);
-    border: 1px solid var(--primary-color);
-}
-#rainButton.animated, #weekButton.animated {
-    transition: all 300ms ease;
-    transition-property: height, top, right;
 }
 .title {
     font-size: 18px;
@@ -283,7 +258,7 @@ body{
     padding-right: 5px;
 }
 .forecast .today {
-    border-right: 1px dashed var(--primary-color);
+    border-right: var(--widget-border);
 }
 .forecast .week {
 	padding-left: 0.5vw;
@@ -298,12 +273,16 @@ body{
 .forecast .mvClickable {
     padding: 0.2vw;
 }
-.forecast .mvClickable:hover,
+@media not (hover: none) {
+    .forecast .mvClickable:hover {
+        background-color: var(--button-hover-bg);
+    }
+}
 .forecast .mvClickable.active {
-    background-color: var(--widget-button-background-marker);
+    background-color: var(--button-hover-bg);
 }
 .forecast .mvClickable:active {
-    background-color: var(--primary-dark-color);
+    background-color: var(--button-active-bg);
 }
 
 
@@ -487,7 +466,7 @@ body{
     padding: 0;
 }
 .forecast .week .hour.active .status {
-    background-color: var(--primary-light-color);
+    background-color: var(--active-week-day-bg);
 }
 .forecast .week .hour > div {
     justify-content: space-between;

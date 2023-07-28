@@ -17,52 +17,6 @@ function getSVG( $icon, $id)
 <script src="<?php echo Ressources::getJSPath('/weather_service/'); ?>"></script>
 <script src="<?php echo Ressources::getComponentPath('/weather_service/'); ?>"></script>
 <script>
-var theme = "";
-if( document.cookie.indexOf("theme=") != -1 )
-{
-    var cookies = document.cookie.split(";");
-    for(var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].split("=");
-        if( cookie[0].trim() == "theme" )
-        {
-            theme = cookie[1].trim();
-            break;
-        }
-    }
-}
-else
-{
-    var isPhone = ( navigator.userAgent.indexOf("Android") != -1 && navigator.userAgent.indexOf("Mobile") != -1 );
-    theme = isPhone ? 'black' : 'light';
-}
-
-var basicui = false;
-try{
-    var current = window;
-    while( current )
-    {
-        if( current.location.pathname.includes("habpanel") )
-        {
-            theme = 'black';
-            break;
-        }
-        current = current != current.parent ? current.parent : null;
-    }
-    if( parent.location.pathname.indexOf("basicui")!==-1 )
-    {
-        basicui = true;
-    }
-}
-catch(e){}
-
-document.querySelector("html").classList.add(theme);
-document.querySelector("html").classList.add(theme == "light" ? "lightTheme" : "darkTheme" );
-
-if( basicui )
-{
-    document.body.classList.add("basicui");
-}
-
 mx.WeatherCore = (function( ret ) {
     //var serviceApiUrl = mx.Host.getBase() + '../api/';
     var serviceApiUrl = mx.Host.getBase() + '../../weather_service/api/';
@@ -290,7 +244,9 @@ mx.WeatherCore = (function( ret ) {
                     if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
                 }
 
-                mx.Page.handleRequestError(this.status, serviceApiUrl, function(){ refreshState(last_data_modified, day) }, timeout);
+                refreshTimer = window.setTimeout(function(){ refreshState(last_data_modified, day) }, 60000);
+
+                //mx.Page.handleRequestError(this.status, serviceApiUrl, function(){ refreshState(last_data_modified, day) }, timeout);
             }
         };
 
@@ -372,6 +328,8 @@ mx.WeatherCore = (function( ret ) {
 
         refreshState();
         initButtons();
+
+        mx.Page.refreshUI();
     }
     return ret;
 })( mx.WeatherCore || {} );
@@ -381,10 +339,28 @@ mx.OnDocReady.push( mx.WeatherCore.init );
 </script>
 </head>
 <body>
+<script>
+try{
+    var theme = null;
+    var current = window;
+    while( current )
+    {
+        if( current.location.pathname.includes("habpanel") )
+        {
+            theme = 'dark';
+            document.querySelector("body").classList.add("black");
+            break;
+        }
+        current = current != current.parent ? current.parent : null;
+    }
+}
+catch(e){}
+</script>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Weather"), theme); } );</script>
 <div class="current">
     <div class="headline">
         <div class="title" data-i18n="Current"></div>
-        <div id="rainButton">Radar</div>
+        <div id="rainButton" class="form button">Radar</div>
     </div>
     <div class="content">
         <div class="summary">
@@ -405,7 +381,7 @@ mx.OnDocReady.push( mx.WeatherCore.init );
     <div class="today">
         <div class="headline">
             <div class="title" data-i18n="Day"></div>
-            <div id="weekButton" data-i18n="Week"></div>
+            <div id="weekButton" data-i18n="Week" class="form button"></div>
         </div>
         <div class="summary">
             <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="value"><span class="max"></span><span class="min"></span> °C</div></div>
