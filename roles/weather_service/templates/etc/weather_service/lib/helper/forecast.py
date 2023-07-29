@@ -49,6 +49,7 @@ class WeatherBlock():
     def setPrecipitationAmountInMillimeter(self, value):
         self.precipitationAmountInMillimeter = value
         self.maxPrecipitationAmountInMillimeter = value
+        self.precipitationProbabilityInPercent = 100 if value > 0 else 0
 
     def apply( self, hourlyData ):
         self.sunshineDurationInMinutes += hourlyData['sunshineDurationInMinutes']
