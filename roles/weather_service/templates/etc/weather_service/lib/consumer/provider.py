@@ -182,7 +182,7 @@ class ProviderConsumer():
                     #logging.info("{}".format(block.getPrecipitationAmountInMillimeter()))
 
                     currentRainLevel = self.station_consumer.getValue("rainCurrentLevel")
-                    currentRain = 0.1 if currentRainLevel > 0 else 0
+                    currentRain = 0.1 if currentRainLevel > 2 else 0
 
                     currentRain15Min = self.station_consumer.getValue("rainCurrent15MinInMillimeter")
                     if currentRain15Min * 4 > currentRain:
