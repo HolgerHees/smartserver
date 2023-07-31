@@ -42,10 +42,10 @@ rain_icons = {
     "snowflake4": { "cloudy": [ 0.5, 30, 65 ], "cloudy-day-0": [ 0.4, 72, 90 ], "cloudy-day-1": [ 0.5, 40, 65 ], "cloudy-day-2": [ 0.5, 30, 65 ], "cloudy-night-0": [ 0.4, 22, 90 ], "cloudy-night-1": [ 0.5, 15, 70 ], "cloudy-night-2": [ 0.5, 30, 65 ] },
 }
 rain_clipping = {
-    "raindrop1": { "cloudy": [ 22, 16 ], "cloudy-day-0": [ 34, 14 ], "cloudy-day-1": [ 27, 16 ], "cloudy-day-2": [ 22, 16 ], "cloudy-night-0": [ 14, 16 ], "cloudy-night-1": [ 15, 16 ], "cloudy-night-2": [ 23, 16 ] },
-    "raindrop2": { "cloudy": [ 20, 20 ], "cloudy-day-0": [ 31, 19 ], "cloudy-day-1": [ 25, 21 ], "cloudy-day-2": [ 19, 22 ], "cloudy-night-0": [ 11, 20 ], "cloudy-night-1": [ 12, 21 ], "cloudy-night-2": [ 19, 22 ] },
-    "raindrop3": { "cloudy": [ 17, 31 ], "cloudy-day-0": [ 30, 25 ], "cloudy-day-1": [ 22, 30 ], "cloudy-day-2": [ 17, 30 ], "cloudy-night-0": [ 10, 25 ], "cloudy-night-1": [ 10, 30 ], "cloudy-night-2": [ 17, 30 ] },
-    "raindrop4": { "cloudy": [ 16, 30 ], "cloudy-day-0": [ 30, 24 ], "cloudy-day-1": [ 22, 29 ], "cloudy-day-2": [ 16, 29 ], "cloudy-night-0": [ 10, 24 ], "cloudy-night-1": [ 9, 29 ], "cloudy-night-2": [ 16, 29 ] },
+    "raindrop1": { "cloudy": [ 24, 16 ], "cloudy-day-0": [ 34, 14 ], "cloudy-day-1": [ 27, 16 ], "cloudy-day-2": [ 22, 16 ], "cloudy-night-0": [ 14, 16 ], "cloudy-night-1": [ 15, 16 ], "cloudy-night-2": [ 23, 16 ] },
+    "raindrop2": { "cloudy": [ 21, 20 ], "cloudy-day-0": [ 31, 19 ], "cloudy-day-1": [ 25, 21 ], "cloudy-day-2": [ 19, 22 ], "cloudy-night-0": [ 11, 20 ], "cloudy-night-1": [ 12, 21 ], "cloudy-night-2": [ 19, 22 ] },
+    "raindrop3": { "cloudy": [ 18, 31 ], "cloudy-day-0": [ 30, 25 ], "cloudy-day-1": [ 22, 30 ], "cloudy-day-2": [ 17, 30 ], "cloudy-night-0": [ 10, 25 ], "cloudy-night-1": [ 10, 30 ], "cloudy-night-2": [ 17, 30 ] },
+    "raindrop4": { "cloudy": [ 17, 30 ], "cloudy-day-0": [ 30, 24 ], "cloudy-day-1": [ 22, 29 ], "cloudy-day-2": [ 16, 29 ], "cloudy-night-0": [ 10, 24 ], "cloudy-night-1": [ 9, 29 ], "cloudy-night-2": [ 16, 29 ] },
     "snowflake1": { "cloudy": [ 22, 17 ], "cloudy-day-0": [ 34, 14 ], "cloudy-day-1": [ 27, 17 ], "cloudy-day-2": [ 22, 17 ], "cloudy-night-0": [ 14, 14 ], "cloudy-night-1": [ 16, 17 ], "cloudy-night-2": [ 23, 17 ] },
     "snowflake2": { "cloudy": [ 19, 24 ], "cloudy-day-0": [ 31, 20 ], "cloudy-day-1": [ 24, 24 ], "cloudy-day-2": [ 19, 24 ], "cloudy-night-0": [ 12, 20 ], "cloudy-night-1": [ 12, 24 ], "cloudy-night-2": [ 19, 24 ] },
     "snowflake3": { "cloudy": [ 15, 31 ], "cloudy-day-0": [ 30, 26 ], "cloudy-day-1": [ 21, 31 ], "cloudy-day-2": [ 16, 31 ], "cloudy-night-0": [ 10, 26 ], "cloudy-night-1": [ 9, 31 ], "cloudy-night-2": [ 16, 31 ] },
@@ -162,7 +162,7 @@ def processFile(top, main, main_settings, rain, rain_settings, effect, effect_se
             #rain_group.append(rect)
 
             clipping = rain_clipping[rain][main]
-            rect = ET.Element('rect', attrib = { "x": str(clipping[0] ), "y": "50", "width": str(clipping[1]), "height": "5", "fill": "var(--svg-weather-mask-fill)" })
+            rect = ET.Element('rect', attrib = { "x": str(clipping[0] ), "y": "48", "width": str(clipping[1]), "height": "9", "fill": "var(--svg-weather-mask-fill)" })
             #applyTransform(mask_rect, settings)
             mask.append(rect)
 

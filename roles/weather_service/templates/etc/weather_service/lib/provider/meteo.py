@@ -386,9 +386,9 @@ class Meteo():
 
     def getStateMetrics(self):
         state_metrics = []
-
         for name, value in self.service_metrics.items():
-            state_metrics.append("weather_service_state{{type=\"provider_{}\"}} {}".format(name,value))
+            state_metrics.append("weather_service_state{{type=\"provider\", group=\"{}\"}} {}".format(name,value))
+        state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(1 if time.time() - self.last_fetch < 60 * 60 * 2 else 0))
         return state_metrics
 
 

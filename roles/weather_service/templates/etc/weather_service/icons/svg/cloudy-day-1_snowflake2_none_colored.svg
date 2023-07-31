@@ -29,4 +29,4 @@
       <rect height="35.796612" id="rect4144-2-1" ry="3.7966101" style="opacity:0.54500002;fill:#91c0f8;fill-opacity:1;stroke:none;stroke-width:5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" width="6.5" x="24.644066" y="70.084747" />
     </g>
   </g>
-</g></g><mask id="mask_cloudy-day-1_snowflake2_none"><rect fill="white" height="64" width="64" x="0" y="0" /><rect fill="var(--svg-weather-mask-fill)" height="5" width="24" x="24" y="50" /></mask></svg>
+</g></g><mask id="mask_cloudy-day-1_snowflake2_none"><rect fill="white" height="64" width="64" x="0" y="0" /><rect fill="var(--svg-weather-mask-fill)" height="9" width="24" x="24" y="48" /></mask></svg>

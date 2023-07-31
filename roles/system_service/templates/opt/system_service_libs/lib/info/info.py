@@ -26,7 +26,12 @@ class Info(threading.Thread):
 
         self.ipcache = ipcache
 
-        self.ip_url = "https://natip.tuxnet24.de/index.php?mode=json"
+        self.ip_urls = [
+            {"url": "https://natip.tuxnet24.de/index.php?mode=json", "field": "ip-address"},
+            {"url": "https://api.ipify.org/?format=json", "field": "ip"}
+        ]
+        self.active_url = 1
+
         self.ip_check = "8.8.8.8"
         self.ip_check_error_count = 0
 
@@ -76,13 +81,13 @@ class Info(threading.Thread):
 
     def checkIP(self):
         try:
-            response = requests.get(self.ip_url)
+            response = requests.get(self.ip_urls[self.active_url]["url"])
 
             if response.status_code == 200:
                 if len(response.content) > 0:
                     try:
                         data = json.loads(response.content)
-                        active_ip = data["ip-address"]
+                        active_ip = data[self.ip_urls[self.active_url]["field"]]
 
                         if "org" in self.default_isp:
                             result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
