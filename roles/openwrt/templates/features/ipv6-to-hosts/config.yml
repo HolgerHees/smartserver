@@ -1,2 +1,3 @@
+exec: [ "/etc/init.d/ipv6-to-host", "/etc/ipv6-to-hosts/ipv6-to-host.sh" ]
 install_packages: [ "tcpdump", "dnsmasq" ]
 initd: yes

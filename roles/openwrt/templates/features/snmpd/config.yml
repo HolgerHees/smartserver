@@ -1,2 +1,3 @@
+exec: [ "/etc/librenms/distro", "/etc/librenms/sensor" ]
 install_packages: [ "snmpd" ]
 initd: yes

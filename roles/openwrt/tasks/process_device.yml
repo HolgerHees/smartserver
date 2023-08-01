@@ -7,13 +7,13 @@
         {% endif %}{% endfor %}
         '{{device['host']}}': {
           {% if device['host'] in device_files %}{% for file in device_files[device['host']].values() %}
-            '{{file["filename"]}}': { 'host': '{{file['host']}}', 'name': '{{file['name']}}', 'src': '{{file["src"]}}', 'filename': '{{file["filename"]}}' },
+            '{{file["filename"]}}': { 'host': '{{file['host']}}', 'name': '{{file['name']}}', 'src': '{{file["src"]}}', 'filename': '{{file["filename"]}}', 'cfg': '{{file["cfg"]}}' },
           {% endfor %}{% endif %}
           {% for feature in ( device['features'] if item['type'] == 'features' else [ { 'name': device['host'] } ] ) %}
             {% for filepath in lookup('vars', item['files'] ) %}
               {% if not 'config.yml' in filepath and (not device['host'] in device_files or not (filepath | regex_replace( item['path'] + feature['name'] + '/','')) in device_files[device['host']]) %}
                 {% if item['path'] + feature['name'] + '/' in filepath %}
-                  '{{ filepath | regex_replace( item['path'] + feature['name'] + '/','') }}': { 'host': '{{device['host']}}', 'name': '{{device['name']}}', 'src': '{{filepath}}', 'filename': '{{ filepath | regex_replace( item['path'] + feature['name'] + '/','') }}' },
+                  '{{ filepath | regex_replace( item['path'] + feature['name'] + '/','') }}': { 'host': '{{device['host']}}', 'name': '{{device['name']}}', 'src': '{{filepath}}', 'filename': '{{ filepath | regex_replace( item['path'] + feature['name'] + '/','') }}', 'cfg': '{{ feature['cfg'] if 'cfg' in feature and feature['cfg'] in vars else '' }}' },
                 {% endif %}
               {% endif %}
             {% endfor %}

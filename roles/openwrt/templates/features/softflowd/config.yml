@@ -1,2 +1,3 @@
+exec: [ "/etc/init.d/softflowd" ]
 install_packages: [ "softflowd" ]
 initd: yes

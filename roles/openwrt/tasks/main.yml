@@ -174,7 +174,7 @@
     dest: "{{global_etc}}openwrt/ap/{{item.host}}/{{item.filename}}"
     owner: "root"
     group: "root"
-    mode: "u=rwX,g=rX,o="
+    mode: "{{ 'u=rwx,g=rx,o=' if item.cfg != '' and 'exec' in vars[item.cfg] and '/' + item.filename in vars[item.cfg]['exec'] else 'u=rwX,g=rX,o=' }}"
 #  changed_when: no
   with_items: |
     [

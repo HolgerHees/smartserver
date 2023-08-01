@@ -87,7 +87,7 @@ fi
 
 if [[ "$REMOVE_PACKAGES" != "" ]]; then
   echo "Uninstall packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg uninstall" $REMOVE_PACKAGES " > /dev/null"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove" $REMOVE_PACKAGES " > /dev/null"
 fi
 
 if [[ "$IS_AP" == 1 ]]; then
