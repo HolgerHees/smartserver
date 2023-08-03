@@ -17,6 +17,10 @@ from smartserver.confighelper import ConfigHelper
 
 from lib.db import DBException
 
+# possible alternative => https://open-meteo.com/
+
+# https://api.weather.mg/
+
 token_url    = "https://auth.weather.mg/oauth/token"
 current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
 current_fields = [
@@ -272,6 +276,8 @@ class Meteo():
         self.db = db
         self.mqtt = mqtt
 
+        self.is_enabled = self.config.publish_topic and self.config.api_username and self.config.api_password
+
         self.event = threading.Event()
 
         self.dump_path = "{}provider_meteo.json".format(config.lib_path)
@@ -290,7 +296,7 @@ class Meteo():
             self._dump()
         self.is_running = True
 
-        if not self.config.publish_topic or not self.config.api_username or not self.config.api_password:
+        if not self.is_enabled:
             logging.info("Publishing disabled")
         else:
             schedule.every().hour.at("05:00").do(self.fetch)
@@ -393,7 +399,7 @@ class Meteo():
         state_metrics = []
         for name, value in self.service_metrics.items():
             state_metrics.append("weather_service_state{{type=\"provider\", group=\"{}\"}} {}".format(name,value))
-        state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(1 if time.time() - self.last_fetch < 60 * 60 * 2 else 0))
+        state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(-1 if not self.is_enabled else ( 1 if time.time() - self.last_fetch < 60 * 60 * 2 else 0 )))
         return state_metrics
 
 
