@@ -18,7 +18,7 @@ from smartserver.confighelper import ConfigHelper
 from lib.db import DBException
 
 token_url    = "https://auth.weather.mg/oauth/token"
-current_url  = 'https://point-observation.weather.mg/search?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
+current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
 current_fields = [
     "airTemperatureInCelsius", 
     "feelsLikeTemperatureInCelsius",
@@ -28,7 +28,7 @@ current_fields = [
     "effectiveCloudCoverInOcta"
 ]
 
-forecast_url = 'https://point-forecast.weather.mg/search?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
+forecast_url = 'https://point-forecast.weather.mg/forecast/hourly?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
 forecast_config = {
 	'PT0S': [
 		"airTemperatureInCelsius", 
@@ -155,20 +155,28 @@ class Fetcher(object):
             
     def fetchForecast(self, token, mqtt ):
         date = datetime.now(timezone(self.config.timezone))
+        date = date + timedelta(hours=1)
+        date = date.replace(minute=0, second=0)
         start_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
         start_date = u"{0}:{1}".format(start_date[:-2],start_date[-2:])
         
-        date = date + timedelta(hours=169) # 7 days + 1 hour
-        end_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
-        end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
-
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
         
         currentFallbacks = None
-        entries = {}
+        _entries = {}
         for period in forecast_config:
             fields = forecast_config[period]
+
+            if period in ["PT0S", "PT1H"]:
+                end_date = (date + timedelta(hours=167)).strftime("%Y-%m-%dT%H:%M:%S%z") # 7 days => 168 hours - 1 hour (because last one is excluded)
+                end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
+            elif period in ["PT3H"]:
+                end_date = (date + timedelta(hours=170)).strftime("%Y-%m-%dT%H:%M:%S%z") # 7 days => 167 hours + 3 hours, because of 3 hours timerange
+                end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
+            else:
+                raise RequestDataException("Unhandled period")
+
             url = forecast_url.format(location=location, period=period, fields=",".join(fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
                    
             data = self.get(url,token)
@@ -176,49 +184,46 @@ class Fetcher(object):
                 raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
               
             for forecast in data["forecasts"]:
-                key = forecast["validFrom"]
-                if key not in entries:
-                    values = {} 
-                    values["validFrom"] = forecast["validFrom"]
-                    entries[key] = values
-                else:
-                    values = entries[key];
-                    
-                for field in fields:
-                    values[field] = forecast[field]
+                if period == "PT0S":
+                    values = {}
+                    values["validFromAsString"] = forecast["validFrom"]
+                    values["validUntilAsString"] = forecast["validUntil"]
+                    values["validFromAsDatetime"] = datetime.strptime(u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+                    values["validUntilAsDatetime"] = datetime.strptime(u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+                    _entries[values["validFromAsString"]] = values
 
-            if period == "PT0S":
-                currentFallbacks = values
-                
-        sets = []
-        for key in sorted(entries.keys()):
-            sets.append(entries[key])
-            
-        for field in forecast_config["PT3H"]:
-            value = None
-            for values in sets:
-                if field in values:
-                    value = values[field]
-                elif value != None:
-                    values[field] = value
-                else:
-                    raise ForecastDataException("Missing PT3H value")
-          
-        sets = list(filter(lambda d: len(d) == 16, sets))
-        
-        if len(sets) < 168:
-            raise ForecastDataException("Not enough forecast data. Count: {}".format(len(sets)))
+                    for field in fields:
+                        values[field] = forecast[field]
 
-        for forecast in sets:
-            date = forecast["validFrom"]
-            forecast.pop("validFrom") 
+                    currentFallbacks = values
+                else:
+                    validFrom = datetime.strptime(u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+                    validUntil = datetime.strptime(u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+
+                    #logging.info("{}: {} {}".format(period, forecast["validFrom"], forecast["validUntil"]))
+                    for entry in _entries.values():
+                        if entry["validFromAsDatetime"] >= validFrom and entry["validUntilAsDatetime"] <= validUntil:
+                            for field in fields:
+                                entry[field] = forecast[field]
+
+        _forecast_values = list(_entries.values())
+        forecast_values = list(filter(lambda d: len(d) == 19, _forecast_values)) # 15 values + 4 datetime related fields
+
+        if len(forecast_values) < 168:
+            #logging.info("{}".format(_entries.keys()))
+            raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}, Range: {}-{}".format(len(_forecast_values), len(forecast_values), start_date, end_date))
+
+        for forecast in forecast_values:
+            date = forecast["validFromAsString"]
             date = date.replace("+","plus")
             for field in forecast:
+                if field.startswith("valid"):
+                    continue
                 mqtt.publish("{}/weather/provider/forecast/{}/{}".format(self.config.publish_topic,field,date), payload=forecast[field], qos=0, retain=False)
             #mqtt.publish("{}/weather/forecast/refreshed/{}".format(self.config.publish_topic,date), payload="1", qos=0, retain=False)
         mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_topic), payload="1", qos=0, retain=False)
 
-        logging.info("Forecast data published • Total: {}".format(len(sets)))
+        logging.info("Forecast data published • Total: {}".format(len(forecast_values)))
 
         return currentFallbacks
 
