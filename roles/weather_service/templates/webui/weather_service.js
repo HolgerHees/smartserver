@@ -74,7 +74,7 @@ mx.Widgets.CustomWeather = (function( ret ) {
 
                     content = "";
                     content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + values["currentCloudsAsSVG"] + "</span>";
-                    content += "<span>" + values["airTemperatureInCelsius"].toFixed(1) + "°C</span>";
+                    content += "<span>" + values["currentAirTemperatureInCelsius"].toFixed(1) + "°C</span>";
                 }
 
                 ret.show(0, content );
@@ -83,7 +83,7 @@ mx.Widgets.CustomWeather = (function( ret ) {
             {
                 ret.alert(0, "Weather N/A");
             }
-        }, mx.Core.encodeDict( {"type": "widget", "fields": ["airTemperatureInCelsius","currentCloudsAsSVG"].join(","), "last_data_modified": last_data_modified } ) );
+        }, mx.Core.encodeDict( {"type": "widget", "fields": ["currentAirTemperatureInCelsius","currentCloudsAsSVG"].join(","), "last_data_modified": last_data_modified } ) );
     }
     return ret;
 })( mx.Widgets.Object( "user", [ { id: "customWeatcher", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );

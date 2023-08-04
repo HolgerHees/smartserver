@@ -70,27 +70,27 @@ mx.WeatherCore = (function( ret ) {
 
         let now = new Date();
 
-        if( "airTemperatureInCelsius" in changedValues) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["airTemperatureInCelsius"]) + ' °C';
-        if( "perceivedTemperatureInCelsius" in changedValues) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["perceivedTemperatureInCelsius"]) + ' °C';
+        if( "currentAirTemperatureInCelsius" in changedValues) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["currentAirTemperatureInCelsius"]) + ' °C';
+        if( "currentPerceivedTemperatureInCelsius" in changedValues) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["currentPerceivedTemperatureInCelsius"]) + ' °C';
 
-        if( "windSpeedInKilometerPerHour" in changedValues || "windGustInKilometerPerHour" in changedValues )
+        if( "currentWindSpeedInKilometerPerHour" in changedValues || "currentWindSpeedInKilometerPerHour" in changedValues )
         {
-            let windSpeed = mx.WeatherHelper.formatNumber(currentValues["windSpeedInKilometerPerHour"]);
-            let windGust = mx.WeatherHelper.formatNumber(currentValues["windGustInKilometerPerHour"]);
+            let windSpeed = mx.WeatherHelper.formatNumber(currentValues["currentWindSpeedInKilometerPerHour"]);
+            let windGust = mx.WeatherHelper.formatNumber(currentValues["currentWindGustInKilometerPerHour"]);
             let wind = windSpeed;
-            if( windSpeed != windGust && currentValues["windGustInKilometerPerHour"] > 0 )
+            if( windSpeed != windGust && currentValues["currentWindGustInKilometerPerHour"] > 0 )
             {
                 wind += ' (' + windGust + ')';
             }
             mx.$(".current .summary .wind .value").innerHTML = wind + ' km/h';
         }
 
-        if( "rainCurrentInMillimeter" in changedValues || "rainDailyInMillimeter" in changedValues )
+        if( "currentRainLastHourInMillimeter" in changedValues || "currentRainDailyInMillimeter" in changedValues )
         {
-            let rainValue = mx.WeatherHelper.formatNumber(currentValues["rainCurrentInMillimeter"]);
-            let rainDaily = mx.WeatherHelper.formatNumber(currentValues["rainDailyInMillimeter"]);
+            let rainValue = mx.WeatherHelper.formatNumber(currentValues["currentRainLastHourInMillimeter"]);
+            let rainDaily = mx.WeatherHelper.formatNumber(currentValues["currentRainDailyInMillimeter"]);
             let rain = rainValue
-            if( rainValue != rainDaily && currentValues["rainDailyInMillimeter"] > 0 )
+            if( rainValue != rainDaily && currentValues["currentRainDailyInMillimeter"] > 0 )
             {
                 rain += ' (' + rainDaily + ')';
             }
@@ -98,6 +98,21 @@ mx.WeatherCore = (function( ret ) {
         }
 
         if( "currentCloudsAsSVG" in changedValues) mx.$(".current .cloud").innerHTML = mx.WeatherHelper.formatNumber(currentValues["currentCloudsAsSVG"]);
+
+        if( "currentUvIndex" in changedValues) mx.$(".current .uv .value").innerHTML = mx.WeatherHelper.formatNumber(currentValues["currentUvIndex"]);
+
+        if( "astroSunrise" in changedValues)
+        {
+            let sunrise = new Date();
+            sunrise.setTime(Date.parse(currentValues["astroSunrise"]));
+            mx.$(".current .sunrise .value").innerHTML = mx.WeatherHelper.formatHour(sunrise);
+        }
+        if( "astroSunset" in changedValues)
+        {
+            let sunset = new Date();
+            sunset.setTime(Date.parse(currentValues["astroSunset"]));
+            mx.$(".current .sunset .value").innerHTML = mx.WeatherHelper.formatHour(sunset);
+        }
 
         if( "dayList" in changedValues)
         {
@@ -250,7 +265,7 @@ mx.WeatherCore = (function( ret ) {
             }
         };
 
-        let params = { "type": "week", "fields": "dayList,weekList,airTemperatureInCelsius,perceivedTemperatureInCelsius,windSpeedInKilometerPerHour,windGustInKilometerPerHour,rainCurrentInMillimeter,rainDailyInMillimeter,currentCloudsAsSVG", "last_data_modified": last_data_modified }
+        let params = { "type": "week", "fields": "dayList,weekList,currentAirTemperatureInCelsius,currentPerceivedTemperatureInCelsius,currentWindSpeedInKilometerPerHour,currentWindGustInKilometerPerHour,currentRainLastHourInMillimeter,currentRainDailyInMillimeter,currentCloudsAsSVG,currentUvIndex,astroSunrise,astroSunset", "last_data_modified": last_data_modified }
         if( day ) params["day"] = day;
         xhr.send(mx.Core.encodeDict( params ));
     }
@@ -259,7 +274,11 @@ mx.WeatherCore = (function( ret ) {
     {
         var weekButton = document.getElementById("weekButton");
         weekButton.addEventListener("click",function(){
+            var todayHeadline = document.querySelector(".forecast .today .headline");
+
             var weekList = document.querySelector(".forecast .week");
+            weekList.style.top = mx.Core.getOffsets(todayHeadline)["top"] + "px";
+
             if( weekList.classList.contains("open") )
             {
               weekButton.innerHTML = mx.I18N.get("Week");
@@ -363,17 +382,32 @@ catch(e){}
         <div id="rainButton" class="form button">Radar</div>
     </div>
     <div class="content">
-        <div class="summary">
-            <div class="column">
-                <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="name" data-i18n="Temperature"></div><div class="value"></div></div>
-                <div class="cell perceived"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="name" data-i18n="Perceived"></div><div class="value"></div></div>
+        <div class="left">
+            <div class="summary">
+                <div class="column">
+                    <div class="cell temperature"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="name" data-i18n="Temperature"></div><div class="value"></div></div>
+                    <div class="cell perceived"><div class="icon"><?php echo getSVG('temperature', 'temperature_grayscaled'); ?></div><div class="name" data-i18n="Perceived"></div><div class="value"></div></div>
+                </div>
+                <div class="column">
+                    <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="name" data-i18n="Wind"></div><div class="value"></div></div>
+                    <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="name" data-i18n="Rain"></div><div class="value"></div></div>
+                </div>
             </div>
-            <div class="column">
-                <div class="cell wind"><div class="icon"><?php echo getSVG('wind', 'wind_grayscaled'); ?></div><div class="name" data-i18n="Wind"></div><div class="value"></div></div>
-                <div class="cell rain"><div class="icon"><?php echo getSVG('rain', 'rain_grayscaled'); ?></div><div class="name" data-i18n="Rain"></div><div class="value"></div></div>
-            </div>
+            <div class="cloud"></div>
         </div>
-        <div class="cloud"></div>
+        <div class="right">
+            <div class="summary">
+                <div class="column">
+                    <div class="cell sunrise"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="name" data-i18n="Sunrise"></div><div class="value"></div></div>
+                    <div class="cell sunset"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="name" data-i18n="Sunset"></div><div class="value"></div></div>
+                </div>
+                <div class="column">
+                    <div class="cell uv"><div class="icon"><?php echo getSVG('sun', 'sun_grayscaled'); ?></div><div class="name" data-i18n="UV Index"></div><div class="value"></div></div>
+                    <div class="cell"></div>
+                </div>
+            </div>
+            <div class="dummy"></div>
+        </div>
     </div>
 </div>
 

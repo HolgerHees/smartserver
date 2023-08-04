@@ -12,6 +12,9 @@
     "Temperature": "Temperatur",
     "Perceived": "Gefühlt",
     "Wind": "Wind",
-    "Rain": "Regen"
+    "Rain": "Regen",
+    "Sunrise": "Sonnenaufgang",
+    "Sunset": "Sonnenuntergang",
+    "UV Index": "UV Index"
   }
 }

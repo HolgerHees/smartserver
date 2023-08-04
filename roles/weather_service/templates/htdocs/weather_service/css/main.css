@@ -144,14 +144,18 @@ body{
         background-color: var(--bg);
         padding-left: 0;
         margin-top: 10px;
-        top: 120px;
         transform: translate3d(-100%, 0, 0);
         transition: transform 300ms ease;
         bottom: 0;
+        margin-top: 0;
     }
     .forecast .week.open {
         transform: translate3d(0%, 0, 0);
         padding: 0 5px;
+    }
+
+    .forecast .headline {
+        height: 34px;
     }
 }
 /*@media (hover: none) {
@@ -205,8 +209,19 @@ body{
 }
 .current,
 .current .headline,
-.current .content {
+.current .content,
+.current .left,
+.current .right {
     display: flex;
+}
+.content .left,
+.content .right {
+    min-width: 50%;
+}
+@media only screen and (max-width: 800px) {
+    .current .content {
+        flex-direction: column;
+    }
 }
 .current .title {
     flex-grow: 1;
@@ -229,15 +244,19 @@ body{
 .current .summary .cell > div {
     display: table-cell;
     vertical-align: middle;
-    padding-right: 5px;
+    padding: 5px 5px 5px 0;
 }
 .current .summary .cell .name {
     width: 1%;
     font-weight: var(--widget-value-weight);
+    white-space: nowrap;
 }
 .current .summary .cell .value {
     padding-left: 10px;
     width: 99%;
+    white-space: nowrap;
+    text-align: right;
+    padding-right: 10%;
 }
 .today .headline, .week .headline {
     display: flex;
