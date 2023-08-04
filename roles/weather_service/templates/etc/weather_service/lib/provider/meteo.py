@@ -169,6 +169,7 @@ class Fetcher(object):
         
         currentFallbacks = None
         _entries = {}
+        _periods = {}
         for period in forecast_config:
             fields = forecast_config[period]
 
@@ -187,7 +188,10 @@ class Fetcher(object):
             if data == None or "forecasts" not in data:
                 raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
               
+            _periods[period] = {"start": start_date, "end": end_date, "values": []}
             for forecast in data["forecasts"]:
+                _periods[period]["values"].append({"from": forecast["validFrom"], "until": forecast["validUntil"]})
+
                 if period == "PT0S":
                     values = {}
                     values["validFromAsString"] = forecast["validFrom"]
@@ -214,8 +218,11 @@ class Fetcher(object):
         forecast_values = list(filter(lambda d: len(d) == 19, _forecast_values)) # 15 values + 4 datetime related fields
 
         if len(forecast_values) < 168:
-            #logging.info("{}".format(_entries.keys()))
-            raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}, Range: {}-{}".format(len(_forecast_values), len(forecast_values), start_date, end_date))
+            #logging.error("{}".format(_entries.keys()))
+            for period, data in _periods.items():
+                logging.error("PERIOD {}: {} => {}, COUNT: {}".format(period, data["start"], data["end"], len(data["values"])))
+                logging.error("DATA: {}".format(data["values"]))
+            raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_values), len(forecast_values)))
 
         for forecast in forecast_values:
             date = forecast["validFromAsString"]
