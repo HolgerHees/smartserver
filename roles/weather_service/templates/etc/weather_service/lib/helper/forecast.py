@@ -173,10 +173,11 @@ class WeatherHelper():
 
         if block.thunderstormProbabilityInPercent >= 5:
             thunder_type = "thunder"
-            if cloudIndex == 0:
-                cloudIndex = 1
         else:
             thunder_type = 'none'
+
+        if cloudIndex == 0 and ( rain_type != "none" or thunder_type != "none" ):
+            cloudIndex = 1
 
         icon = WeatherHelper.sunConfig[ 'night' if isNight else 'day' ][cloudIndex];
 
