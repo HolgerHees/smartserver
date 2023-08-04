@@ -218,10 +218,9 @@ class Fetcher(object):
         forecast_values = list(filter(lambda d: len(d) == 19, _forecast_values)) # 15 values + 4 datetime related fields
 
         if len(forecast_values) < 168:
-            #logging.error("{}".format(_entries.keys()))
             for period, data in _periods.items():
-                logging.error("PERIOD {}: {} => {}, COUNT: {}".format(period, data["start"], data["end"], len(data["values"])))
-                logging.error("DATA: {}".format(data["values"]))
+                logging.info("PERIOD {}: {} => {}, COUNT: {}".format(period, data["start"], data["end"], len(data["values"])))
+                logging.info("DATA: {}".format(data["values"]))
             raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_values), len(forecast_values)))
 
         for forecast in forecast_values:
@@ -406,7 +405,16 @@ class Meteo():
         state_metrics = []
         for name, value in self.service_metrics.items():
             state_metrics.append("weather_service_state{{type=\"provider\", group=\"{}\"}} {}".format(name,value))
-        state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(-1 if not self.is_enabled else ( 1 if time.time() - self.last_fetch < 60 * 60 * 2 else 0 )))
+
+        if not self.is_enabled:
+            state = -1
+        else:
+            if self.is_fetching:
+                state = 1 if time.time() - self.last_fetch < 60 * 60 * 3 else 0
+            else:
+                state = 1 if time.time() - self.last_fetch < 60 * 60 + 5 * 60 else 0
+
+        state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(state))
         return state_metrics
 
 
