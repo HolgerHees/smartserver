@@ -12,6 +12,7 @@ from decimal import Decimal
 from lib.provider.meteo import Meteo
 from lib.consumer.provider import ProviderConsumer
 from lib.consumer.station import StationConsumer
+from lib.consumer.astro import AstroConsumer
 from lib.mqtt import MQTT
 from lib.db import DB
 from lib.scheduler import Scheduler
@@ -34,6 +35,7 @@ class Handler(Server):
         self.mqtt = MQTT(config)
         self.provider = Meteo(config, self.db, self.mqtt)
 
+        self.astro_consumer = AstroConsumer(config)
         self.station_consumer = StationConsumer(config, self.mqtt)
         self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self.station_consumer)
 
@@ -49,6 +51,7 @@ class Handler(Server):
         self.mqtt.start()
         self.provider_consumer.start()
         self.station_consumer.start()
+        self.astro_consumer.start()
 
         if self.provider != None:
             self.provider.start()
@@ -59,8 +62,9 @@ class Handler(Server):
         if self.provider != None:
             self.provider.terminate()
 
-        self.provider_consumer.terminate()
+        self.astro_consumer.terminate()
         self.station_consumer.terminate()
+        self.provider_consumer.terminate()
         self.mqtt.terminate()
         self.scheduler.terminate()
 
@@ -108,6 +112,7 @@ class Handler(Server):
 
         if type == "widget":
             requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
+
             _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station") if not force else -1, requested_fields)
             last_data_modified["station"] = _last_modified
             result["changed_data"] |= _values
@@ -117,6 +122,11 @@ class Handler(Server):
             result["changed_data"] |= _values
         elif type == "week":
             requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
+
+            _values, _last_modified = self.astro_consumer.getValues(self.getLastDataModified("astro") if not force else -1, requested_fields)
+            last_data_modified["astro"] = _last_modified
+            result["changed_data"] |= _values
+
             _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station") if not force else -1, requested_fields)
             last_data_modified["station"] = _last_modified
             result["changed_data"] |= _values

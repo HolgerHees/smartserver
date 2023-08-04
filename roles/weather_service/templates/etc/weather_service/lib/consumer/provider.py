@@ -174,7 +174,7 @@ class ProviderConsumer():
 
         result = {}
         if requested_fields is None or "currentCloudsAsSVG" in requested_fields:
-            _station_last_modified = self.station_consumer.getLastModified(last_modified, ["rainCurrentLevel", "rainCurrent15MinInMillimeter", "rainCurrentInMillimeter", "cloudCoverInOcta"])
+            _station_last_modified = self.station_consumer.getLastModified(last_modified, ["rainLevel", "rainLast15MinInMillimeter", "rainLastHourInMillimeter", "cloudCoverInOcta"])
 
             if last_modified < self.consume_refreshed["forecast"] or last_modified < _station_last_modified:
                 if _station_last_modified > last_modified:
@@ -190,16 +190,16 @@ class ProviderConsumer():
                     #logging.info("{}".format(block.getPrecipitationAmountInMillimeter()))
 
                     currentRain = 0
-                    currentRainLevel = self.station_consumer.getValue("rainCurrentLevel")
+                    currentRainLevel = self.station_consumer.getValue("rainLevel")
                     if currentRainLevel > 0:
                         if self.current_is_raining or currentRainLevel > 2:
                             currentRain = 0.1
 
-                            currentRain15Min = self.station_consumer.getValue("rainCurrent15MinInMillimeter")
+                            currentRain15Min = self.station_consumer.getValue("rainLast15MinInMillimeter")
                             if currentRain15Min * 4 > currentRain:
                                 currentRain = currentRain15Min * 4
 
-                            currentRain1Hour = self.station_consumer.getValue("rainCurrentInMillimeter")
+                            currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
                             if currentRain1Hour > currentRain:
                                 currentRain = currentRain1Hour
 
@@ -353,8 +353,6 @@ class ProviderConsumer():
             return values
 
     def getStateMetrics(self):
-        state_metrics = []
-
         now = time.time()
         has_any_update = False
         has_errors = False
@@ -366,6 +364,7 @@ class ProviderConsumer():
                 if self.consume_refreshed[state_name] - self.consume_errors[state_name] < 300:
                     has_errors = True
 
+        state_metrics = []
         state_metrics.append("weather_service_state{{type=\"consumer_provider\",group=\"data\"}} {}".format(1 if has_any_update else 0))
-        state_metrics.append("weather_service_state{{type=\"consumer_provider\",group=\"running\"}} {}".format(0 if has_errors else 1))
+        state_metrics.append("weather_service_state{{type=\"consumer_provider\",group=\"running\"}} {}".format(1 if self.is_running and not has_errors else 0))
         return state_metrics

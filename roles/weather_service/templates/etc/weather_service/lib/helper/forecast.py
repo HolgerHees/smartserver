@@ -99,6 +99,14 @@ class WeatherHelper():
     }
 
     @staticmethod
+    def getSunriseAndSunset(latitude, longitude):
+        sun = Sun(latitude, longitude)
+        sunrise = sun.get_sunrise_time().astimezone().replace(tzinfo=None)
+        sunset = sun.get_sunset_time().astimezone().replace(tzinfo=None)
+
+        return [sunrise, sunset]
+
+    @staticmethod
     def calculateSummary( dataList ):
         minTemperature = dataList[0]['airTemperatureInCelsius'];
         maxTemperature = dataList[0]['airTemperatureInCelsius'];
@@ -130,9 +138,7 @@ class WeatherHelper():
         else:
             timerange = int( ( block.end - block.start ).total_seconds() / 60 / 60 )
 
-        sun = Sun(latitude, longitude)
-        sunrise = sun.get_sunrise_time().astimezone().replace(tzinfo=None)
-        sunset = sun.get_sunset_time().astimezone().replace(tzinfo=None)
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(latitude, longitude)
 
         cloudIndex = 0
         if block.effectiveCloudCoverInOcta >= 6:
