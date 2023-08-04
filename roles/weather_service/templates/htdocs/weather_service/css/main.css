@@ -158,6 +158,24 @@ body{
         height: 34px;
     }
 }
+@media only screen and (max-width: 400px) {
+    .cloud svg {
+        height: 48px;
+        width: 48px;
+    }
+    .forecast .hour .temperature .main {
+        font-size: 14px !important;
+    }
+    .forecast .hours .hour > div {
+        padding-left: 5px !important;
+    }
+    .current {
+        font-size: 95%;
+    }
+    .current .summary .cell .value {
+        padding-left: 3px !important;
+    }
+}
 /*@media (hover: none) {
   #weekButton, #rainButton {
       padding: 10px;
