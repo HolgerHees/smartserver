@@ -156,13 +156,19 @@ class Fetcher(object):
                 mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_topic), payload=observedFrom, qos=0, retain=False)
 
             logging.info("Current data published")
-            
+
+    def _prepareDate(self, date):
+        date_str = date.strftime("%Y-%m-%dT%H:%M:%S%z")
+        date_str = u"{0}:{1}".format(date_str[:-2],date_str[-2:])
+        return date_str
+
     def fetchForecast(self, token, mqtt ):
         date = datetime.now(timezone(self.config.timezone))
-        date = date + timedelta(hours=1)
-        date = date.replace(minute=0, second=0)
-        start_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
-        start_date = u"{0}:{1}".format(start_date[:-2],start_date[-2:])
+        date = date.replace(minute=0, second=0,microsecond=0)
+
+        start_date = date + timedelta(hours=1)
+        start_date_str = self._prepareDate(start_date)
+        fetch_start_date_str = self._prepareDate(start_date - timedelta(hours=1)) # fetch on more hour
         
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
@@ -174,30 +180,39 @@ class Fetcher(object):
             fields = forecast_config[period]
 
             if period in ["PT0S", "PT1H"]:
-                end_date = (date + timedelta(hours=167)).strftime("%Y-%m-%dT%H:%M:%S%z") # 7 days => 168 hours - 1 hour (because last one is excluded)
-                end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
+                end_date = start_date + timedelta(hours=167)  # 7 days => 168 hours - 1 hour (because last one is excluded)
             elif period in ["PT3H"]:
-                end_date = (date + timedelta(hours=170)).strftime("%Y-%m-%dT%H:%M:%S%z") # 7 days => 167 hours + 3 hours, because of 3 hours timerange
-                end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
+                end_date = start_date + timedelta(hours=170) # 7 days => 167 hours + 3 hours, because of 3 hours timerange
             else:
                 raise RequestDataException("Unhandled period")
 
-            url = forecast_url.format(location=location, period=period, fields=",".join(fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
+            end_date_str = self._prepareDate(end_date)
+            fetch_end_date_str = self._prepareDate(end_date + timedelta(hours=1)) # fetch on more hour
+
+            url = forecast_url.format(location=location, period=period, fields=",".join(fields), start=urllib.parse.quote(fetch_start_date_str), end=urllib.parse.quote(fetch_end_date_str))
                    
             data = self.get(url,token)
             if data == None or "forecasts" not in data:
                 raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
               
-            _periods[period] = {"start": start_date, "end": end_date, "values": []}
+            _periods[period] = {"start": start_date_str, "fetch_start":  fetch_start_date_str, "end": end_date_str, "fetch_end": fetch_end_date_str, "values": []}
             for forecast in data["forecasts"]:
+                validFrom = datetime.strptime(u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+                validUntil = datetime.strptime(u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+
                 _periods[period]["values"].append({"from": forecast["validFrom"], "until": forecast["validUntil"]})
 
                 if period == "PT0S":
+                    # skip additional fetched hours
+                    if validFrom < start_date or validUntil > end_date:
+                        #logging.info("skip")
+                        continue
+
                     values = {}
                     values["validFromAsString"] = forecast["validFrom"]
                     values["validUntilAsString"] = forecast["validUntil"]
-                    values["validFromAsDatetime"] = datetime.strptime(u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
-                    values["validUntilAsDatetime"] = datetime.strptime(u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
+                    values["validFromAsDatetime"] = validFrom
+                    values["validUntilAsDatetime"] = validUntil
                     _entries[values["validFromAsString"]] = values
 
                     for field in fields:
@@ -205,12 +220,9 @@ class Fetcher(object):
 
                     currentFallbacks = values
                 else:
-                    validFrom = datetime.strptime(u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
-                    validUntil = datetime.strptime(u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
-
                     #logging.info("{}: {} {}".format(period, forecast["validFrom"], forecast["validUntil"]))
                     for entry in _entries.values():
-                        if entry["validFromAsDatetime"] >= validFrom and entry["validUntilAsDatetime"] <= validUntil:
+                        if entry["validFromAsDatetime"] >= validFrom and entry["validUntilAsDatetime"] < validUntil:
                             for field in fields:
                                 entry[field] = forecast[field]
 
@@ -219,7 +231,7 @@ class Fetcher(object):
 
         if len(forecast_values) < 168:
             for period, data in _periods.items():
-                logging.info("PERIOD {}: {} => {}, COUNT: {}".format(period, data["start"], data["end"], len(data["values"])))
+                logging.info("PERIOD {}: {} => {}, FETCHED: {} => {}, COUNT: {}".format(period, data["start"], data["end"], data["fetch_start"], data["fetch_end"], len(data["values"])))
                 logging.info("DATA: {}".format(data["values"]))
             raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_values), len(forecast_values)))
 
@@ -308,6 +320,7 @@ class Meteo():
             schedule.every().hour.at("05:00").do(self.fetch)
             if time.time() - self.last_fetch > 60 * 60:
                 self.fetch()
+            self.fetch()
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
