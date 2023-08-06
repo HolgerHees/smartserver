@@ -1,6 +1,7 @@
 import urllib.request
 import json
 import subprocess
+from datetime import datetime, timezone
 
 from helper.version import Version
 
@@ -81,31 +82,57 @@ class Application(App):
         else:
             return "{}r/{}/tags".format(Application.WEB_BASE,self.repository)
           
-    def _requestData(self,url,token=None,count=0):
+    def _requestData(self,url,token=None,count=0,headers={}):
         req = urllib.request.Request(url)
         if token != None:
             req.add_header('Authorization', "Bearer {}".format(token))
 
+        for key, value in headers.items():
+            #print("{}: {}".format(key,value))
+            req.add_header(key, value)
         raw = self._requestUrl(req)
         data = json.loads(raw)
         return data
       
     def _getCreationDate(self,tag):
         url = "{}{}/manifests/{}".format(Application.API_BASE,self.repository,tag)
-        image_data_r = self._requestData(url,self.token)
-        for image_raw_data in image_data_r['history']:
-            image_data = json.loads(image_raw_data['v1Compatibility'])
-            date = re.sub("\.[0-9]+Z","Z",image_data['created'])
-            return date
+        accept = [
+            "application/vnd.docker.distribution.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v1+prettyjws",
+            "application/vnd.docker.distribution.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json",
+            "application/vnd.docker.distribution.manifest.list.v2+json",
+            "application/vnd.docker.container.image.v1+json",
+            "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "application/vnd.docker.image.rootfs.foreign.diff.tar.gzip",
+            "application/vnd.docker.plugin.v1+json",
+            "application/vnd.oci.image.index.v1+json",
+            "application/vnd.oci.image.manifest.v1+json"
+        ]
+
+        image_data_r = self._requestData(url,self.token,headers={"Accept": ",".join(accept)})
+        if  image_data_r["mediaType"].startswith("application/vnd.oci"):
+
+            #url = "{}{}/manifests/{}".format(Application.API_BASE,self.repository,image_data_r["manifests"][0]["digest"])
+            #image_data_r = self._requestData(url,self.token,headers={"Accept": ",".join(accept)})
+            #print(image_data_r)
+
+            #2022-05-05T17:12:17Z
+            return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            for image_raw_data in image_data_r['history']:
+                image_data = json.loads(image_raw_data['v1Compatibility'])
+                date = re.sub("\.[0-9]+Z","Z",image_data['created'])
+                return date
         raise Exception('No able to fetch creation date from docker repository {} and tag {}'.format(self.repository,tag))
           
     def getCurrentVersion(self):
         branch = Version(self.current_version).getBranchString()
         
-        try:
-          creationDate = self._getCreationDate(self.current_tag)
-        except SkipableVersionError as e:
-          creationDate = "1970-01-01 00:00:00"
+        #try:
+        creationDate = self._getCreationDate(self.current_tag)
+        #except SkipableVersionError as e:
+        #  creationDate = "1970-01-01 00:00:00"
 
         return self._createUpdate( version = self.current_version, branch = branch, date = creationDate, url = self._getUpdateUrl(self.current_tag) )
 
@@ -118,7 +145,7 @@ class Application(App):
         
         url = "{}{}/tags/list".format(Application.API_BASE,self.repository)
         data = self._requestData(url,self.token)
-        
+
         for tag in data['tags']:
             version = Version.parseVersionString(tag,self.pattern)
             if version is None:

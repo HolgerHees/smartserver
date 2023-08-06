@@ -53,7 +53,7 @@ class App:
     
     def _registerNewUpdate(self,current_updates_r, version, date, tag):
         current_updates_r[version.getBranchString()] = [ version, date, tag ]
-        
+
     def _convertUpdates(self,current_updates_r,project):
         new_updates_r = {}
         for branch in current_updates_r:
@@ -80,6 +80,9 @@ class App:
                     exception = e
         except (urllib.error.URLError) as e:
             if isinstance(e,urllib.error.HTTPError) and e.code == 404:
+                body = e.read().decode()
+                if "errors" in body:
+                    raise Exception(body)
                 raise SkipableVersionError()
             raw = None
             exception = e
