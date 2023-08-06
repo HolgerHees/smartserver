@@ -10,8 +10,8 @@ import time
 
 from helper.version import Version
 
-class SkipableVersionError(Exception):
-    pass
+#class SkipableVersionError(Exception):
+#    pass
   
 class App:
     def __init__(self,job_config):
@@ -81,9 +81,9 @@ class App:
         except (urllib.error.URLError) as e:
             if isinstance(e,urllib.error.HTTPError) and e.code == 404:
                 body = e.read().decode()
-                if "errors" in body:
-                    raise Exception(body)
-                raise SkipableVersionError()
+                #if "errors" in body:
+                raise Exception(body)
+                #raise SkipableVersionError()
             raw = None
             exception = e
 

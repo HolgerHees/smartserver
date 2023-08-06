@@ -9,7 +9,8 @@ from smartserver import command
 
 import re
 
-from plugins.repo.app import App, SkipableVersionError
+from plugins.repo.app import App
+#, SkipableVersionError
 
 class Repository(object):
     def __init__(self,job_config,global_config):
@@ -129,11 +130,7 @@ class Application(App):
     def getCurrentVersion(self):
         branch = Version(self.current_version).getBranchString()
         
-        #try:
         creationDate = self._getCreationDate(self.current_tag)
-        #except SkipableVersionError as e:
-        #  creationDate = "1970-01-01 00:00:00"
-
         return self._createUpdate( version = self.current_version, branch = branch, date = creationDate, url = self._getUpdateUrl(self.current_tag) )
 
     def getCurrentVersionString(self):
@@ -154,11 +151,8 @@ class Application(App):
             self._updateCurrentUpdates(version=version,current_updates_r=current_updates_r,tag=tag)
             
             if self._isNewUpdate(version=version,current_updates_r=current_updates_r,current_version=current_version):
-                try:
-                    update_time = self._getCreationDate(tag)
-                    self._registerNewUpdate(current_updates_r=current_updates_r, version=version, date=update_time, tag=tag )
-                except SkipableVersionError as e:
-                    pass
+                update_time = self._getCreationDate(tag)
+                self._registerNewUpdate(current_updates_r=current_updates_r, version=version, date=update_time, tag=tag )
 
         new_updates_r = self._convertUpdates(current_updates_r=current_updates_r,project=self.repository)
         return new_updates_r
