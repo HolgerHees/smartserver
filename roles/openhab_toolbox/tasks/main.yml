@@ -12,8 +12,8 @@
   template:
     src: "templates/system.php"
     dest: "{{projects_path}}toolbox/_lib/config/system.php"
-#    owner: "{{system_users['www'].name}}"
-#    group: "{{system_groups['www'].name}}"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
     mode: 0640
 
 - name: check environment config
