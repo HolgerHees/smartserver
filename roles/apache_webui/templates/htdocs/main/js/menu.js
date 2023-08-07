@@ -300,6 +300,25 @@ mx.Menu = (function( ret ) {
             element.appendChild(submenuButton);
         }
     }
+
+    function pushEntry(entries, callbacks, currentIndex, entry, html, callback)
+    {
+        let index = Math.floor(entry.getOrder()/100);
+
+        if( currentIndex != index )
+        {
+            if( currentIndex != -1 )
+            {
+                entries.push('</div><div class="group">');
+            }
+            currentIndex = index;
+        }
+
+        entries.push(html);
+        if( callback ) callbacks.push(callback);
+
+        return currentIndex
+    }
         
     ret.buildContentSubMenu = function(subGroup)
     {
@@ -319,17 +338,6 @@ mx.Menu = (function( ret ) {
         {
             let entry = menuEntries[i];
 
-            let index = Math.floor(entry.getOrder()/100);
-            
-            if( currentIndex != index && ( entry.getTitle() || entry.getContentType() == 'html' ))
-            {
-                if( currentIndex != -1 )
-                {
-                    entries.push('</div><div class="group">');
-                }
-                currentIndex = index;
-            }
-
             if(entry.getTitle())
             {
                 let html = '<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + entry.getUId() + '\')">';
@@ -338,13 +346,12 @@ mx.Menu = (function( ret ) {
                 //if( entry.getIconUrl() ) html += '<img src="/main/icons/' + entry.getIconUrl() + '"/>';
                 html += '<div>' + entry.getTitle() + '</div>';
                 html += '</div><div>' + entry.getInfo() + '</div></div>';
-                
-                entries.push(html);
+
+                currentIndex = pushEntry(entries, callbacks, currentIndex, entry, html, null);
             }
             else if( entry.getContentType() == 'html' )
             {
-                entries.push(entry.getHtml());
-                callbacks.push(entry.getCallback());
+                currentIndex = pushEntry(entries, callbacks, currentIndex, entry, entry.getHtml(), entry.getCallback());
             }
         }
         
