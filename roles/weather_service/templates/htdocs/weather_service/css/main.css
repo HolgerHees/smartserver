@@ -132,50 +132,6 @@ body{
         background-color: rgba(68,65,65,0.64);
     }
 }
-@media only screen and (max-width: 800px) {
-    .forecast .today, .forecast .week {
-        width: 100% !important;
-    }
-    .forecast .today {
-        padding-top: 20px;
-    }
-    .forecast .week {
-        position: absolute;
-        background-color: var(--bg);
-        padding-left: 0;
-        margin-top: 10px;
-        transform: translate3d(-100%, 0, 0);
-        transition: transform 300ms ease;
-        bottom: 0;
-        margin-top: 0;
-    }
-    .forecast .week.open {
-        transform: translate3d(0%, 0, 0);
-        padding: 0 5px;
-    }
-
-    .forecast .headline {
-        height: 34px;
-    }
-}
-@media only screen and (max-width: 400px) {
-    .cloud svg {
-        height: 48px;
-        width: 48px;
-    }
-    .forecast .hour .temperature .main {
-        font-size: 14px !important;
-    }
-    .forecast .hours .hour > div {
-        padding-left: 5px !important;
-    }
-    .current {
-        font-size: 95%;
-    }
-    .current .summary .cell .value {
-        padding-left: 3px !important;
-    }
-}
 /*@media (hover: none) {
   #weekButton, #rainButton {
       padding: 10px;
@@ -236,11 +192,6 @@ body{
 .content .right {
     min-width: 50%;
 }
-@media only screen and (max-width: 800px) {
-    .current .content {
-        flex-direction: column;
-    }
-}
 .current .title {
     flex-grow: 1;
     gap: 15px;
@@ -250,11 +201,19 @@ body{
     display: flex;
     margin-left: 0.3vw;
     margin-right: 0.3vw;
-    max-width: 400px;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
-.current .summary .column{
-    width: 50%;
+.current .summary .column.wrap,
+.current .summary .column.dummy {
+    display: none;
+}
+.current .summary .column {
     display: table;
+}
+.current .summary .separator {
+    /*border-left: var(--widget-border);*/
+    margin: 0 5%;
 }
 .current .summary .cell {
     display: table-row;
@@ -274,8 +233,57 @@ body{
     width: 99%;
     white-space: nowrap;
     text-align: right;
-    padding-right: 10%;
 }
+@media only screen and (max-width: 800px) {
+    .current {
+        font-size: 95%;
+        margin-bottom: 0px;
+    }
+    .current .summary .column {
+        flex-basis: 40%;
+    }
+    .current .summary .column.dummy,
+    .current .summary .column.cloud {
+        flex-basis: auto;
+    }
+    .current .summary .column.wrap {
+        display: block;
+        flex-grow: 1;
+        flex-basis: 100%;
+    }
+    .current .summary .column.dummy {
+        display: block;
+        width: 58px;
+        height: 58px;
+    }
+}
+@media only screen and (max-width: 450px) {
+    .current .summary .cell > div {
+        padding: 3px 3px 3px 0 !important;
+    }
+    .current .summary .cloud svg {
+        height: 48px;
+        width: 48px;
+    }
+    .current .summary .dummy {
+        height: 48px;
+        width: 48px;
+    }
+}
+@media only screen and (max-width: 400px) {
+    .current .summary .dummy {
+        height: 0;
+        width: 0;
+        flex-basis: 100%;
+    }
+}
+
+
+
+
+
+
+
 .today .headline, .week .headline {
     display: flex;
 }
@@ -321,17 +329,6 @@ body{
 .forecast .mvClickable:active {
     background-color: var(--button-active-bg);
 }
-
-
-
-
-
-
-
-
-
-
-
 .forecast .today .hour, .forecast .today .summary {
     border-right: none;
 }
@@ -513,4 +510,38 @@ body{
 }
 .forecast .hour.active .time {
 	font-weight: bold !important;
+}
+@media only screen and (max-width: 800px) {
+    .forecast .today, .forecast .week {
+        width: 100% !important;
+    }
+    .forecast .today {
+        padding-top: 20px;
+    }
+    .forecast .week {
+        position: absolute;
+        background-color: var(--bg);
+        padding-left: 0;
+        margin-top: 10px;
+        transform: translate3d(-100%, 0, 0);
+        transition: transform 300ms ease;
+        bottom: 0;
+        margin-top: 0;
+    }
+    .forecast .week.open {
+        transform: translate3d(0%, 0, 0);
+        padding: 0 5px;
+    }
+
+    .forecast .headline {
+        height: 34px;
+    }
+}
+@media only screen and (max-width: 400px) {
+    .forecast .hour .temperature .main {
+        font-size: 14px !important;
+    }
+    .forecast .hours .hour > div {
+        padding-left: 5px !important;
+    }
 }
