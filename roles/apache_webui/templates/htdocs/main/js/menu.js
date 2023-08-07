@@ -321,7 +321,7 @@ mx.Menu = (function( ret ) {
 
             let index = Math.floor(entry.getOrder()/100);
             
-            if( currentIndex != index )
+            if( currentIndex != index && ( entry.getTitle() || entry.getContentType() == 'html' ))
             {
                 if( currentIndex != -1 )
                 {
@@ -329,7 +329,7 @@ mx.Menu = (function( ret ) {
                 }
                 currentIndex = index;
             }
-            
+
             if(entry.getTitle())
             {
                 let html = '<div class="service button ' + i + '" onClick="mx.Actions.openEntryById(event,\'' + entry.getUId() + '\')">';
