@@ -102,7 +102,7 @@ class Fetcher(object):
       
     def fetchCurrent(self, token, mqtt, currentFallbacks ):
         
-        date = datetime.now(timezone(self.config.timezone))
+        date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
         end_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
         end_date = u"{0}:{1}".format(end_date[:-2],end_date[-2:])
         
@@ -163,8 +163,10 @@ class Fetcher(object):
         return date_str
 
     def fetchForecast(self, token, mqtt ):
-        date = datetime.now(timezone(self.config.timezone))
+        date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
         date = date.replace(minute=0, second=0,microsecond=0)
+
+        #date = date.replace(hour=1, minute=0, second=0,microsecond=0)
 
         start_date = date + timedelta(hours=1)
         start_date_str = self._prepareDate(start_date)
@@ -190,7 +192,8 @@ class Fetcher(object):
             fetch_end_date_str = self._prepareDate(end_date + timedelta(hours=1)) # fetch on more hour
 
             url = forecast_url.format(location=location, period=period, fields=",".join(fields), start=urllib.parse.quote(fetch_start_date_str), end=urllib.parse.quote(fetch_end_date_str))
-                   
+            #logging.info(url)
+
             data = self.get(url,token)
             if data == None or "forecasts" not in data:
                 raise ForecastDataException("Failed getting forecast data. Content: {}".format(data))
@@ -230,10 +233,22 @@ class Fetcher(object):
         forecast_values = list(filter(lambda d: len(d) == 19, _forecast_values)) # 15 values + 4 datetime related fields
 
         if len(forecast_values) < 168:
-            for period, data in _periods.items():
-                logging.info("PERIOD {}: {} => {}, FETCHED: {} => {}, COUNT: {}".format(period, data["start"], data["end"], data["fetch_start"], data["fetch_end"], len(data["values"])))
-                logging.info("DATA: {}".format(data["values"]))
-            raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_values), len(forecast_values)))
+            now = datetime.now()
+            offset_in_seconds = abs(now.astimezone().utcoffset().total_seconds())
+            midnight = now.replace(hour=0,minute=0,second=0,microsecond=0)
+            from_time = midnight.time()
+            to_time = (midnight + timedelta(seconds=offset_in_seconds)).time()
+
+            # during midnight, there is a problem with missing values in the beginning
+            if not ( now.time() >= from_time or now.time() <= to_time ):
+                for period, data in _periods.items():
+                    logging.info("PERIOD {}: {} => {}, FETCHED: {} => {}, COUNT: {}".format(period, data["start"], data["end"], data["fetch_start"], data["fetch_end"], len(data["values"])))
+                    logging.info("DATA: {}".format(data["values"]))
+                raise ForecastDataException("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_values), len(forecast_values)))
+            else:
+                logging.warn("Not enough forecast data. Unvalidated: {}, Validated: {}".format(len(_forecast_values), len(forecast_values)))
+        else:
+            self.missing_data_count = 0
 
         for forecast in forecast_values:
             date = forecast["validFromAsString"]
@@ -320,7 +335,7 @@ class Meteo():
             schedule.every().hour.at("05:00").do(self.fetch)
             if time.time() - self.last_fetch > 60 * 60:
                 self.fetch()
-            self.fetch()
+            #self.fetch()
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
@@ -364,12 +379,10 @@ class Meteo():
 
                 fetcher.triggerSummerizedItems(self.db, self.mqtt)
                 
-                date = datetime.now(timezone(self.config.timezone))
+                date = datetime.now()
                 target = date.replace(minute=5,second=0)
-                
                 if target <= date:
                     target = target + timedelta(hours=1)
-
                 diff = target - date
                 
                 sleepTime = diff.total_seconds()  
