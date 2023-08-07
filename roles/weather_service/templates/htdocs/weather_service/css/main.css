@@ -177,7 +177,7 @@ body{
     fill: none;
 }
 .current {
-    margin: 0 5px 10px 5px;
+    margin: 0 5px 20px 5px;
     color: var(--widget-value-color);
     flex-direction: column;
 }
@@ -310,7 +310,7 @@ body{
     color: var(--widget-value-color);
 }
 .forecast .summary {
-    margin: 5px 0 10px 0;
+    margin: 0 0 10px 0;
     display: flex;
     justify-content: space-between;
 }
@@ -356,7 +356,7 @@ body{
     white-space: nowrap;
 }
 .forecast .summary .cell {
-    margin-top: 1.1vw;
+    margin-top: 5px;
     width: auto;
 }
 .forecast > .current {
