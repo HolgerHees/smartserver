@@ -100,7 +100,7 @@ class Fetcher(object):
         else:
             return json.loads(r.text)
       
-    def fetchCurrent(self, token, mqtt, currentFallbacks ):
+    def fetchCurrent(self, token, db, mqtt ):
         
         date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
         end_date = date.strftime("%Y-%m-%dT%H:%M:%S%z")
@@ -114,7 +114,9 @@ class Fetcher(object):
         location = u"{},{}".format(longitude,latitude)
         
         url = current_url.format(location=location, period="PT0S", fields=",".join(current_fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
-        
+
+        currentFallbacks = None
+
         data = self.get(url,token)
         if "observations" not in data:
             raise CurrentDataException("Failed getting current data. Content: {}".format(data))
@@ -135,10 +137,14 @@ class Fetcher(object):
                     break
 
             for missing_field in list(_data["missing_fields"]):
+                if currentFallbacks is None:
+                    with db.open() as db:
+                        currentFallbacks = db.getOffset(0)
+
                 if missing_field not in currentFallbacks:
                     continue
 
-                logging.info("Use fallback data for field {}".format(missing_field))
+                logging.warn("Use fallback data for field {}".format(missing_field))
 
                 _data["observation"][missing_field] = currentFallbacks[missing_field]
                 _data["missing_fields"].remove(missing_field)
@@ -175,7 +181,6 @@ class Fetcher(object):
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
         
-        currentFallbacks = None
         _entries = {}
         _periods = {}
         for period in forecast_config:
@@ -220,8 +225,6 @@ class Fetcher(object):
 
                     for field in fields:
                         values[field] = forecast[field]
-
-                    currentFallbacks = values
                 else:
                     #logging.info("{}: {} {}".format(period, forecast["validFrom"], forecast["validUntil"]))
                     for entry in _entries.values():
@@ -261,8 +264,6 @@ class Fetcher(object):
         mqtt.publish("{}/weather/provider/forecast/refreshed".format(self.config.publish_topic), payload="1", qos=0, retain=False)
 
         logging.info("Forecast data published • Total: {}".format(len(forecast_values)))
-
-        return currentFallbacks
 
     def triggerSummerizedItems(self, db, mqtt):
         with db.open() as db:
@@ -371,10 +372,10 @@ class Meteo():
 
                 authToken = fetcher.getAuth()
 
-                currentFallbacks = fetcher.fetchForecast(authToken,self.mqtt)
+                fetcher.fetchForecast(authToken, self.mqtt)
                 self.service_metrics["data_forecast"] = 1
 
-                fetcher.fetchCurrent(authToken,self.mqtt, currentFallbacks)
+                fetcher.fetchCurrent(authToken, self.db, self.mqtt)
                 self.service_metrics["data_current"] = 1
 
                 fetcher.triggerSummerizedItems(self.db, self.mqtt)
