@@ -36,7 +36,7 @@ default_variables: {
     "pihole_ip":      { "optional": yes },                        # pihole ip address from same network as your server ip
     "pihole_ipv6":    { "optional": yes },                        # pihole ipv6 address from same network as your server ip
     "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] }, # domains are needed to use google search results
-    "pihole_addlist_urls": { "default": [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts" ] },
+    "pihole_addlist_urls": { "default": [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ] },
 
 
     "dlna_ip":        { "optional": yes },                        # dlna ip address from same network as your server ip
