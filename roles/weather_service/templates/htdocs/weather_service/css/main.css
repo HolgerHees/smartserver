@@ -210,6 +210,10 @@ body{
 }
 .current .summary .column {
     display: table;
+    width: 20%;
+}
+.current .summary .column.cloud {
+    width: 5%;
 }
 .current .summary .separator {
     /*border-left: var(--widget-border);*/
