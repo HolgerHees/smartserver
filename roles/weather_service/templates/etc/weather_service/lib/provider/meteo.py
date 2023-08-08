@@ -149,7 +149,6 @@ class Fetcher(object):
                 _data["observation"][missing_field] = currentFallbacks[missing_field]
                 _data["missing_fields"].remove(missing_field)
 
-
             #time.sleep(60000)
 
             if len(_data["missing_fields"]) > 0:
@@ -271,20 +270,20 @@ class Fetcher(object):
 
             tmp = {}
             for field in summeryFields:
-                tmp[field] = [ None, None, decimal.Decimal(0.0) ]
+                tmp[field] = [ None, None, 0.0 ]
             for row in result:
                 for field in tmp:
                     value = row[field]
                     if tmp[field][0] == None:
-                        tmp[field][0] = decimal.Decimal(0.0) + value
-                        tmp[field][1] = decimal.Decimal(0.0) + value
+                        tmp[field][0] = value
+                        tmp[field][1] = value
                     else:
                         if tmp[field][0] > value:
                             tmp[field][0] = value
                         if tmp[field][1] < value:
                             tmp[field][1] = value
-
                     tmp[field][2] = tmp[field][2] + value
+
             for field in summeryFields:
                 tmp[field][2] = tmp[field][2] / len(result)
 

@@ -1,6 +1,7 @@
 import MySQLdb
 import logging
 import datetime
+from decimal import Decimal
 
 #class DBHelper():
 #    @staticmethod
@@ -62,7 +63,7 @@ class DBConnection():
         try:
             self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= NOW() AND `datetime` <= DATE_ADD(NOW(), INTERVAL 24 HOUR) ORDER BY `datetime` ASC".format(self.config.db_table))
             self.db.state = 1
-            return self.cursor.fetchall()
+            return self._convertRows(self.cursor.fetchall())
         except MySQLdb._exceptions.OperationalError as e:
             logging.warn("{}: {}".format(str(e.__class__),str(e)))
             self.db.state = 0
@@ -72,7 +73,7 @@ class DBConnection():
         try:
             self.cursor.execute("SELECT * FROM {} WHERE `datetime` > DATE_ADD(NOW(), INTERVAL {} HOUR) ORDER BY `datetime` ASC LIMIT 1".format(self.config.db_table,offset-1))
             self.db.state = 1
-            return self.cursor.fetchone()
+            return self._convertRow(self.cursor.fetchone())
         except MySQLdb._exceptions.OperationalError as e:
             logging.warn("{}: {}".format(str(e.__class__),str(e)))
             self.db.state = 0
@@ -82,7 +83,7 @@ class DBConnection():
         try:
             self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` <= '{}' ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
             self.db.state = 1
-            return self.cursor.fetchall()
+            return self._convertRows(self.cursor.fetchall())
         except MySQLdb._exceptions.OperationalError as e:
             logging.warn("{}: {}".format(str(e.__class__),str(e)))
             self.db.state = 0
@@ -92,11 +93,22 @@ class DBConnection():
         try:
             self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` < DATE_ADD(CURDATE(), INTERVAL 8 DAY) ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S')))
             self.db.state = 1
-            return self.cursor.fetchall()
+            return self._convertRows(self.cursor.fetchall())
         except MySQLdb._exceptions.OperationalError as e:
             logging.warn("{}: {}".format(str(e.__class__),str(e)))
             self.db.state = 0
             raise(DBException(e))
+
+    def _convertRows(self, rows):
+        for row in rows:
+            self._convertRow(row)
+        return rows
+
+    def _convertRow(self, row):
+        for name, value in row.items():
+            if isinstance(value, Decimal):
+                row[name] = float(value)
+        return row
 
 class DB():
     def __init__(self, config):

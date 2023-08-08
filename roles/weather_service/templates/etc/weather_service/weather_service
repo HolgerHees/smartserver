@@ -7,7 +7,7 @@ from werkzeug.serving import WSGIRequestHandler
 import json
 import time
 from datetime import datetime
-from decimal import Decimal
+#from decimal import Decimal
 
 from lib.provider.meteo import Meteo
 from lib.consumer.provider import ProviderConsumer
@@ -94,8 +94,8 @@ class Handler(Server):
         if isinstance(obj, datetime):
             return obj.isoformat()
 
-        if isinstance(obj, Decimal):
-            return float(obj)
+        #if isinstance(obj, Decimal):
+        #    return float(obj)
 
         return obj.__dict__
 
