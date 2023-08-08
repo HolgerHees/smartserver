@@ -112,20 +112,13 @@ class Application(App):
         ]
 
         image_data_r = self._requestData(url,self.token,headers={"Accept": ",".join(accept)})
-        if  image_data_r["mediaType"].startswith("application/vnd.oci"):
-
-            #url = "{}{}/manifests/{}".format(Application.API_BASE,self.repository,image_data_r["manifests"][0]["digest"])
-            #image_data_r = self._requestData(url,self.token,headers={"Accept": ",".join(accept)})
-            #print(image_data_r)
-
-            #2022-05-05T17:12:17Z
-            return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        else:
+        if  image_data_r["mediaType"].startswith("application/vnd.docker") and 'history' in image_data_r:
             for image_raw_data in image_data_r['history']:
                 image_data = json.loads(image_raw_data['v1Compatibility'])
                 date = re.sub("\.[0-9]+Z","Z",image_data['created'])
                 return date
-        raise Exception('No able to fetch creation date from docker repository {} and tag {}'.format(self.repository,tag))
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        #raise Exception('No able to fetch creation date from docker repository {} and tag {}'.format(self.repository,tag))
           
     def getCurrentVersion(self):
         branch = Version(self.current_version).getBranchString()
