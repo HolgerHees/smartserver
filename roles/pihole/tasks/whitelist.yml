@@ -1,5 +1,0 @@
-- name: add whitelist domains
-  shell: "docker exec pihole sh -c \"pihole {{ '--white-wild ' + item[2:] if item.startswith('*.') else '-w ' + item }}\" && sleep 1"
-  register: whitelist_result
-  changed_when: "'Adding' in whitelist_result.stdout"
-  with_items: "{{pihole_whitelist_domains}}"

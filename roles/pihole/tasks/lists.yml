@@ -1,0 +1,28 @@
+- name: add whitelist domains
+  shell: "docker exec pihole sh -c \"pihole {{ '--white-wild ' + item[2:] if item.startswith('*.') else '-w ' + item }}\" && sleep 1"
+  register: whitelist_result
+  changed_when: "'Adding' in whitelist_result.stdout"
+  with_items: "{{pihole_whitelist_domains}}"
+
+- name: select addlists
+  shell: "echo 'SELECT address FROM adlist' | docker exec -i pihole sh -c \"sqlite3 /etc/pihole/gravity.db\" && sleep 1"
+  register: adlist_result
+  changed_when: no
+
+- name: clean addlists
+  shell: "echo 'DELETE FROM adlist WHERE address = \"{{item}}\"' | docker exec -i pihole sh -c \"sqlite3 /etc/pihole/gravity.db\" && sleep 1"
+  register: adlist_clean_result
+  when: "item not in pihole_addlist_urls"
+  with_items: "{{adlist_result.stdout_lines}}"
+
+- name: add addlists
+  shell: "echo 'INSERT INTO adlist (address, enabled, comment) VALUES (\"{{item}}\", 1, \"from ansible deployment\")' | docker exec -i pihole sh -c \"sqlite3 /etc/pihole/gravity.db\" && sleep 1"
+  register: adlist_add_result
+  when: "item not in adlist_result.stdout_lines"
+  with_items: "{{pihole_addlist_urls}}"
+
+- name: refresh adlists
+  shell: "docker exec pihole sh -c \"pihole -g\" && sleep 1"
+  when: "adlist_clean_result.changed or adlist_add_result.changed"
+
+

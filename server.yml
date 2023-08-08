@@ -175,7 +175,7 @@
 
     #- { import_role: { name: dns, tasks_from: enable, handlers_from: empty }, tags: [ 'dns' ] }   # activate local named
 
-    - { import_role: { name: pihole, tasks_from: whitelist, handlers_from: empty }, tags: [ 'pihole' ] }   # add whitelist entries
+    - { import_role: { name: pihole, tasks_from: lists, handlers_from: empty }, tags: [ 'pihole', 'pihole_lists' ] }   # add whitelist and adlist entries
 
     - { import_role: { name: librenms, tasks_from: apply_config, handlers_from: empty }, tags: [ 'librenms', 'librenms_config' ], when: "librenms_devices | length > 0" }   # apply librenms configs
 
