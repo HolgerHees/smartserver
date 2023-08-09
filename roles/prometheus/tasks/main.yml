@@ -101,7 +101,7 @@
     name: "prometheus"
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_alertmanager_ip}}"
-      - "saddr {{docker_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab endpoint
+      - "saddr {{docker_prometheus_ip}} daddr {{default_server_ip}} proto tcp dport 443" # needed to pull from openhab, netdata or system_service endpoint, because they are bound to 127.0.0.1:xxxx
   import_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
