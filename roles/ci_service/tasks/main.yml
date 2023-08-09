@@ -133,10 +133,10 @@
   import_tasks: roles/cron/shared/add_cronjob.yml
 
 # ***** FINALIZE *****
-- name: copy fluentd config
+- name: copy service fluentd config
   vars:
-    config_file: "templates/etc/fluent/_.ansible.d/ci_service.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+    service_name: "ci_service"
+  import_tasks: roles/shared_libs/shared/add_fluentd_config.yml
 
 - name: "create systemd service"
   template:

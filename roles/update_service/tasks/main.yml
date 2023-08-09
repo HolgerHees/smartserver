@@ -111,10 +111,10 @@
     minute: "40"
   import_tasks: roles/cron/shared/add_cronjob.yml
 
-- name: copy fluentd config
+- name: copy service fluentd config
   vars:
-    config_file: "templates/etc/fluent/_.ansible.d/update_service.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+    service_name: "update_service"
+  import_tasks: roles/shared_libs/shared/add_fluentd_config.yml
 
 - name: "create systemd service"
   template:

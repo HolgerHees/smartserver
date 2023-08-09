@@ -1,0 +1,6 @@
+- name: copy fluentd config
+  vars:
+    config_name: "{{service_name}}"
+    config_file: "roles/shared_libs/templates/etc/fluent/_.ansible.d/service.conf"
+  import_tasks: roles/fluentd/shared/add_config.yml
+  tags: [ 'service_fluentd_config' ]

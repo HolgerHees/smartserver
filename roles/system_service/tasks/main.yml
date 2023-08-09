@@ -142,10 +142,10 @@
     config_file: "templates/etc/apache2/_.ansible.conf.d/system_service.conf"
   import_tasks: roles/apache/shared/add_config.yml
 
-- name: copy fluentd config
+- name: copy service fluentd config
   vars:
-    config_file: "templates/etc/fluent/_.ansible.d/system_service.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+    service_name: "system_service"
+  import_tasks: roles/shared_libs/shared/add_fluentd_config.yml
 
 - name: register systemd service watcher
   vars:

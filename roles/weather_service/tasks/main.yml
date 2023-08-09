@@ -154,6 +154,11 @@
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/shared/add_config.yml
 
+- name: copy service fluentd config
+  vars:
+    service_name: "weather_service"
+  import_tasks: roles/shared_libs/shared/add_fluentd_config.yml
+
 - name: create systemd service
   vars:
     container_name: "weather_service"
