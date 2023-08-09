@@ -213,7 +213,7 @@ body{
     width: 20%;
 }
 .current .summary .column.cloud {
-    width: 5%;
+    width: min-content;
 }
 .current .summary .separator {
     /*border-left: var(--widget-border);*/
@@ -265,17 +265,17 @@ body{
     .current .summary .cell > div {
         padding: 3px 3px 3px 0 !important;
     }
+}
+@media only screen and (max-width: 400px) {
     .current .summary .cloud svg {
         height: 48px;
         width: 48px;
     }
-    .current .summary .dummy {
+    .current .summary .column.dummy {
         height: 48px;
         width: 48px;
     }
-}
-@media only screen and (max-width: 400px) {
-    .current .summary .dummy {
+    .current .summary .column.dummy {
         height: 0;
         width: 0;
         flex-basis: 100%;
