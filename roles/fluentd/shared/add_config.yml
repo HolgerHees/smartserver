@@ -1,4 +1,4 @@
-- name: "fluentd : copy config '{{ config_name | default(config_file | basename) }}'"
+- name: "fluentd : copy config '{{ config_name + '.conf' | default(config_file | basename) }}'"
   template:
     src: "{{config_file}}"
     dest: "{{global_etc}}fluentd/_.ansible.d/{{ config_name + '.conf' | default(config_file | basename) }}"

@@ -77,11 +77,6 @@
     icons: [ 'templates/webui/icons/update_software_logo.svg', 'templates/webui/icons/update_system_logo.svg' ]
   import_tasks: roles/apache_webui/shared/add_webui.yml
   
-- name: copy apache api config
-  vars:
-    config_file: "templates/etc/apache2/_.ansible.conf.d/update_service.conf"
-  import_tasks: roles/apache/shared/add_config.yml
-
 - name: create version check cron job
   vars:
     name: "Software Version check"
@@ -111,10 +106,16 @@
     minute: "40"
   import_tasks: roles/cron/shared/add_cronjob.yml
 
+- name: copy service apache config
+  vars:
+    service_host: "127.0.0.1:8505"
+    service_name: "update_service"
+  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+
 - name: copy service fluentd config
   vars:
     service_name: "update_service"
-  import_tasks: roles/shared_libs/shared/add_fluentd_config.yml
+  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
 
 - name: "create systemd service"
   template:

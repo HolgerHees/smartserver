@@ -137,15 +137,21 @@
     icons: [ 'templates/webui/icons/system_service_logo.svg' ]
   import_tasks: roles/apache_webui/shared/add_webui.yml
   
-- name: copy apache api config
+- name: copy service apache config
   vars:
-    config_file: "templates/etc/apache2/_.ansible.conf.d/system_service.conf"
-  import_tasks: roles/apache/shared/add_config.yml
+    service_host: "127.0.0.1:8507"
+    service_name: "system_service"
+    service_additional_config: |
+        <Location /system_service/metrics/>
+          ProxyPass http://127.0.0.1:8507/metrics/
+          ProxyPassReverse http://127.0.0.1:8507/metrics/
+        </Location>
+  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
 
 - name: copy service fluentd config
   vars:
     service_name: "system_service"
-  import_tasks: roles/shared_libs/shared/add_fluentd_config.yml
+  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
 
 - name: register systemd service watcher
   vars:
