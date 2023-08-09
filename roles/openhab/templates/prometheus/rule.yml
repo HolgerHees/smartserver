@@ -1,0 +1,11 @@
+groups:
+- name: openhab
+  rules:
+  - alert: High CPU usage
+    expr: 'sum(sum_over_time(process_cpu_usage[1h])) / sum(count_over_time(process_cpu_usage[1h])) > 0.25'
+    for: 0m
+    labels:
+      notifyGroup: "openhab"
+      severity: critical
+    annotations:
+      summary: "https://community.openhab.org/t/consistent-100-cpu-use-of-safecall-queue-thread/143792"

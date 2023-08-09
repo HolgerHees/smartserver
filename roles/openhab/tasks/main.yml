@@ -403,6 +403,7 @@
 - name: check conf volumens
   shell: "ls -1 {{global_etc}}openhab/conf"
   register: conf_folder_result
+  changed_when: no
 
 - name: prepare volumes
   set_fact:
@@ -513,6 +514,7 @@
 - name: register prometheus rules & metrics
   vars:
     name: "openhab"
+    rule_file: "templates/prometheus/rule.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/shared/add_config.yml
 
