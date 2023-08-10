@@ -139,8 +139,8 @@
   
 - name: copy service apache config
   vars:
-    service_host: "127.0.0.1:8507"
     service_name: "system_service"
+    service_host: "127.0.0.1:8507"
     service_additional_config: |
         <Location /system_service/metrics/>
           ProxyPass http://127.0.0.1:8507/metrics/
@@ -151,6 +151,7 @@
 - name: copy service fluentd config
   vars:
     service_name: "system_service"
+    service_is_container: yes
   import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
 
 - name: register systemd service watcher

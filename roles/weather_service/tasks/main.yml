@@ -151,13 +151,14 @@
 
 - name: copy service apache config
   vars:
-    service_host: "{{docker_weather_service_ip}}"
     service_name: "weather_service"
+    service_host: "{{docker_weather_service_ip}}"
   import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
 
 - name: copy service fluentd config
   vars:
     service_name: "weather_service"
+    service_is_container: yes
   import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
 
 - name: create systemd service
