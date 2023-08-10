@@ -19,9 +19,6 @@ from smartserver.argsparser import ArgsParser
 from smartserver import command
 
 def checkParameter(name, args_values, last_states, current_states):
-    if args_values["limit"] != None and args_values["limit"] != name:
-        return False
-
     if args_values["confirm"]:
         last_state = last_states.get(name, None)
         if last_state is None:
@@ -68,10 +65,11 @@ for config_file in files:
             continue
         
         repo = plugin.Repository(job_config, config.global_config, operating_system)
-        applications = repo.getApplications()
+        applications = repo.getApplications(args_values["limit"])
+        if applications is None:
+            continue
+
         if len(applications) == 0:
-            if not checkParameter(job_config['name'], args_values, last_states, current_states):
-                continue
             print("  - '{}'".format(job_config['name']), end='')
             print( " \033[0;32mis updatet\033[0m")
         else:

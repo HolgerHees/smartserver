@@ -7,11 +7,15 @@ from plugins.repo.app import App
 
 class Repository(object):
     def __init__(self, job_config, global_config, operating_system):
-        self.apps = [ Application(job_config, global_config, operating_system) ]
+        self.job_config = job_config
+        self.global_config = global_config
+        self.operating_system = operating_system
 
-    def getApplications(self):
-        return self.apps
-
+    def getApplications(self, limit):
+        app = Application(self.job_config, self.global_config, self.operating_system)
+        if limit is None or limit == app.getName():
+            return [app]
+        return None
 
 class Application(App):
     API_BASE = "https://api.github.com/repos/"

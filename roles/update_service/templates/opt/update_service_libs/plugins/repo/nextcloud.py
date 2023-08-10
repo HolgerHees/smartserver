@@ -10,29 +10,34 @@ from plugins.repo.app import App
 
 class Repository(object):
     def __init__(self,job_config, global_config, operating_system):
-        #self.apps = [ Application(job_config,global_config) ]
-        result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:list" ] )
-        lines = result.stdout.decode("utf-8").split("\n")
-        current_versions = {}
-        for line in lines:
-            columns = line.split()
-            if len(columns) == 0 or columns[0] != "-":
-                continue
-            current_versions[columns[1][:-1]] = columns[-1]
+        self.job_config = job_config
 
-        #print(current_versions)
+    def getApplications(self, limit):
+        apps = []
 
-        self.apps = []
-        result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:update --showonly" ] )
-        lines = result.stdout.decode("utf-8").split("\n")
-        for line in lines:
-            columns = line.split()
-            if len(columns) == 0:
-                continue
-            self.apps.append(Application(columns[0], columns[-1], current_versions[columns[0]], job_config['url']))
+        if limit is None or "nextcloud" in limit:
+            #self.apps = [ Application(job_config,global_config) ]
+            result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:list" ] )
+            lines = result.stdout.decode("utf-8").split("\n")
+            current_versions = {}
+            for line in lines:
+                columns = line.split()
+                if len(columns) == 0 or columns[0] != "-":
+                    continue
+                current_versions[columns[1][:-1]] = columns[-1]
 
-    def getApplications(self):
-        return self.apps
+            #print(current_versions)
+
+            result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:update --showonly" ] )
+            lines = result.stdout.decode("utf-8").split("\n")
+            for line in lines:
+                columns = line.split()
+                if len(columns) == 0:
+                    continue
+                apps.append(Application(columns[0], columns[-1], current_versions[columns[0]], self.job_config['url']))
+            return apps
+        else:
+            return None
 
 
 class Application(App):
