@@ -1,8 +1,3 @@
-- name: set version
-  set_fact:
-    netdata_version: "1.42.0"
-  tags: [ 'update_notifier_config' ]
-
 - name: add netdata repository => is_rhel or is_fedora
   yum_repository:
     name: netdata
@@ -14,8 +9,7 @@
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: [
-#      "netdata"
-      "netdata-{{netdata_version}}-1.{{'el' if is_rhel else 'fc'}}{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}"
+      "netdata"
       , lm_sensors
     ]
     state: present
@@ -38,8 +32,7 @@
 - name: install required packages => is_ubuntu
   apt:
     name: [
-#      "netdata"
-      "netdata={{netdata_version}}"
+      "netdata"
       , lm-sensors
     ]
     state: present
@@ -63,8 +56,7 @@
 - name: install required packages => is_suse
   zypper:
     name: [
-#      "netdata"
-      "netdata-{{netdata_version}}-1"
+      "netdata"
       , sensors
       # needed to rebuild rpm package
       #, rpm-build
@@ -230,7 +222,8 @@
     config: {
       project: "netdata/netdata",
       pattern: "^v([0-9\\.]+)$",
-      version: "v{{netdata_version}}"
+      #version: "v{{netdata_version}}"
+      version: "package:netdata"
     }
   import_tasks: roles/update_service/shared/add_software.yml
 

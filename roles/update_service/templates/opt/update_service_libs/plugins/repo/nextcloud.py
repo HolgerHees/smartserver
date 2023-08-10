@@ -9,7 +9,7 @@ from helper.version import Version
 from plugins.repo.app import App
 
 class Repository(object):
-    def __init__(self,job_config,global_config):
+    def __init__(self,job_config, global_config, operating_system):
         #self.apps = [ Application(job_config,global_config) ]
         result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:list" ] )
         lines = result.stdout.decode("utf-8").split("\n")

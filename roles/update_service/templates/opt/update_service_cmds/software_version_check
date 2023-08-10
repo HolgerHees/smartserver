@@ -48,6 +48,9 @@ update_time = "{}".format(datetime.now().astimezone().isoformat())
             
 current_states = { 'last_update': update_time, 'states': [] }
 
+os_plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
+operating_system = os_plugin.OperatingSystem()
+
 print("Processing projects")
 
 update_message_r = []
@@ -64,7 +67,7 @@ for config_file in files:
             print("")
             continue
         
-        repo = plugin.Repository(job_config, config.global_config)
+        repo = plugin.Repository(job_config, config.global_config, operating_system)
         applications = repo.getApplications()
         if len(applications) == 0:
             if not checkParameter(job_config['name'], args_values, last_states, current_states):

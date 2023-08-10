@@ -33,3 +33,12 @@ class OperatingSystem(Os):
     def getRebootState(self):
         result = command.exec([ "/usr/bin/zypper", "needs-rebooting" ], exitstatus_check = False)
         return result.returncode != 0
+
+    def getInstalledVersion(self, packagename ):
+        result = command.exec([ "rpm -qi {} | grep -P \"Version\s*: \" | cut -d':' -f2- | xargs".format(packagename) ], shell=True, exitstatus_check = False )
+        if result.returncode == 0:
+            return result.stdout.decode("utf-8").strip()
+        else:
+            return 0
+
+

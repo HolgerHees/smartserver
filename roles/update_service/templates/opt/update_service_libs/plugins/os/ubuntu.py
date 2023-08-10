@@ -42,3 +42,9 @@ class OperatingSystem(Os):
     def getRebootState(self):
         return os.path.exists("/var/run/reboot-required")
             
+    def getInstalledVersion(self, packagename ):
+        result = command.exec([ "apt show {} | grep -P \"Version\s*: \" | cut -d':' -f2- | xargs".format(packagename) ], shell=True, exitstatus_check = False )
+        if result.returncode == 0:
+            return result.stdout.decode("utf-8").strip()
+        else:
+            return 0

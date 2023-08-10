@@ -13,7 +13,7 @@ from plugins.repo.app import App
 #, SkipableVersionError
 
 class Repository(object):
-    def __init__(self,job_config,global_config):
+    def __init__(self,job_config,global_config, operating_system):
         self.apps = [ Application(job_config,global_config) ]
 
     def getApplications(self):
