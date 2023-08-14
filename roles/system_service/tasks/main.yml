@@ -111,6 +111,7 @@
       - "templates/grafana/dashboards/System Service Netflow Details.json"
       - "templates/grafana/dashboards/System Service Netflow GeoMap.json"
       - "templates/grafana/dashboards/System Service Netflow Overview.json"
+      - "templates/grafana/dashboards/System Service Netflow Summary.json"
   import_tasks: roles/grafana/shared/add_datasource.yml
   when: "netflow_collector"
 

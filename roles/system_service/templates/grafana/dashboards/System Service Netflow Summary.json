@@ -1,0 +1,851 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "netflow"
+      ],
+      "targetBlank": false,
+      "title": "GeopMap",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "transparent",
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "minWidth": 50
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "string"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Direction"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "incoming": {
+                        "color": "light-green",
+                        "index": 0,
+                        "text": "<-"
+                      },
+                      "outgoing": {
+                        "color": "semi-dark-green",
+                        "index": 1,
+                        "text": "->"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 30
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "D"
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Intern IP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Intern Hosts"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Extern IP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 135
+              },
+              {
+                "id": "filterable",
+                "value": true
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "",
+                    "url": "/explore?left={\"datasource\":\"loki\",\"queries\":[{\"refId\":\"A\",\"expr\":\"{env%3D\\\"fluentd\\\",group!~\\\"loki|system_service\\\"} !%3D \\\"grafana.\\\" |%3D \\\"${__value.raw}\\\"\",\"editorMode\":\"code\",\"queryType\":\"range\"}],\"range\":{\"from\":\"now-24h\",\"to\":\"now\"}}&theme=light&orgId=1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Service"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Group"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "intruded": {
+                        "color": "red",
+                        "index": 3,
+                        "text": "Intruded"
+                      },
+                      "normal": {
+                        "color": "transparent",
+                        "index": 0,
+                        "text": "Normal"
+                      },
+                      "observed": {
+                        "color": "#8ca000",
+                        "index": 1,
+                        "text": "Observed"
+                      },
+                      "scanning": {
+                        "color": "yellow",
+                        "index": 2,
+                        "text": "Scanning"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "filterable",
+                "value": true
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 20
+              },
+              {
+                "id": "filterable",
+                "value": true
+              },
+              {
+                "id": "displayName",
+                "value": "T"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "City"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 250
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ISP"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Protocol"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 40
+              },
+              {
+                "id": "displayName",
+                "value": "P"
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Extern Host"
+            },
+            "properties": [
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Zip"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country Code"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 40
+              },
+              {
+                "id": "displayName",
+                "value": "CC"
+              },
+              {
+                "id": "filterable",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Flags"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "NONE": {
+                        "index": 0,
+                        "text": "-"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Start"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocalNoDateIfToday"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "End"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocalNoDateIfToday"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "index": 0,
+                        "text": "1 sec"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 25,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "hideTimeOverride": true,
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Events"
+          }
+        ]
+      },
+      "pluginVersion": "10.0.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "destination_port::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "direction::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "extern_group::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "extern_host::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "extern_ip::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "group::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "intern_host::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "intern_ip::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_city::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_country_code::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_country_name::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_org::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "location_zip::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "service::tag"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "netflow_size",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT \"value\" FROM \"default\".\"netflow_size\" WHERE (\"direction\" = 'incoming') AND $timeFilter GROUP BY \"destination_port\"::tag, \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"ip_type\"::tag, \"location_city\"::tag, \"location_country_code\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"location_zip\"::tag, \"protocol\"::tag, \"service\"::tag, \"suspicious\"::tag, \"source_port\"::tag ORDER BY time DESC",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeShift": "2m",
+      "title": "Traffic",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Time": {
+                "aggregations": [
+                  "count",
+                  "firstNotNull",
+                  "lastNotNull",
+                  "range"
+                ],
+                "operation": "aggregate"
+              },
+              "count": {
+                "aggregations": []
+              },
+              "destination_port": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "destination_service": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "direction": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "extern_group": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "extern_host": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "extern_ip": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "group": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "intern_host": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "intern_ip": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "ip_type": {
+                "aggregations": []
+              },
+              "location_city": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "location_country_code": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "location_country_name": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "location_org": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "location_zip": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "protocol": {
+                "aggregations": []
+              },
+              "service": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "source_port": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "sum": {
+                "aggregations": []
+              },
+              "suspicious": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "tcp_flags": {
+                "aggregations": []
+              },
+              "value": {
+                "aggregations": [
+                  "sum",
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": false,
+              "Time (lastNotNull)": false,
+              "destination_port": true,
+              "extern_group": true,
+              "location_country_code": false,
+              "location_zip": false,
+              "source_port": true
+            },
+            "indexByName": {
+              "Time (count)": 0,
+              "Time (firstNotNull)": 2,
+              "Time (lastNotNull)": 1,
+              "Time (range)": 3,
+              "destination_port": 12,
+              "direction": 5,
+              "extern_group": 9,
+              "extern_host": 11,
+              "extern_ip": 10,
+              "group": 4,
+              "intern_host": 8,
+              "intern_ip": 7,
+              "location_city": 17,
+              "location_country_code": 14,
+              "location_country_name": 15,
+              "location_org": 13,
+              "location_zip": 16,
+              "service": 6
+            },
+            "renameByName": {
+              "Time": "Time",
+              "Time (count)": "Events",
+              "Time (firstNotNull)": "End",
+              "Time (lastNotNull)": "Start",
+              "Time (range)": "Duration",
+              "count": "Events",
+              "destination_port": "Port",
+              "direction": "Direction",
+              "extern_group": "Extern Group",
+              "extern_host": "Extern Host",
+              "extern_ip": "Extern IP",
+              "group": "Group",
+              "intern_host": "Intern Hosts",
+              "intern_ip": "Intern IP",
+              "ip_type": "Type",
+              "last": "Traffic",
+              "location_city": "City",
+              "location_country_code": "Country Code",
+              "location_country_name": "Country",
+              "location_org": "ISP",
+              "location_zip": "Zip",
+              "protocol": "Protocol",
+              "service": "Service",
+              "source_port": "",
+              "sum": "Traffic",
+              "tcp_flags": "Flags",
+              "value": "",
+              "value (count)": "Req",
+              "value (sum)": "Traffic"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "1m",
+  "revision": 1,
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "netflow"
+  ],
+  "templating": {
+    "list": [
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "system_info_influxdb"
+        },
+        "filters": [],
+        "hide": 0,
+        "name": "Filters",
+        "skipUrlSync": false,
+        "type": "adhoc"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "System Service Netflow Summary",
+  "uid": "system-service-netflow-summary",
+  "version": 1,
+  "weekStart": ""
+}
