@@ -308,7 +308,7 @@ class Processor(threading.Thread):
             try:
                 self._initTrafficState()
                 break
-            except Exception:
+            except Exception as e:
                 logging.info("InfluxDB not ready. Will retry in 15 seconds.")
                 time.sleep(15)
 
@@ -628,6 +628,18 @@ class Processor(threading.Thread):
 
         return messurements
 
+    def getAttackers(self):
+        results = self.influxdb.query('SELECT COUNT("value") AS "cnt" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
+        attackers = []
+        if results is not None and results[0] is not None:
+            for result in results:
+                #logging.info("{}".format(result))
+                attackers.append({"ip": result["tags"]["extern_ip"], "group": result["tags"]["group"], "count": result["values"][0][1] })
+            #for value in results[0]["values"]:
+            #    logging.info("{}".format(value))
+            #    attackers.append({"ip": value})
+        return attackers
+
     def _cleanTrafficState(self):
         min_time = datetime.now().timestamp() - 60 * 60 * 6
         for group in list(self.traffic_stats.keys()):
@@ -643,7 +655,7 @@ class Processor(threading.Thread):
         offset = datetime.now().timestamp() - datetime.utcnow().timestamp()
         #logging.info(offset)
         # 362 min => 6h - 2 min
-        results = self.influxdb.query(['SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\''])
+        results = self.influxdb.query('SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
         #logging.info(results)
         self.traffic_stats = {}
         if results is not None and results[0] is not None:
@@ -651,7 +663,19 @@ class Processor(threading.Thread):
                 # 2023-07-13T23:45:29.511Z
                 # 2023-07-13T23:45:29.511000Z
                 #logging.info("{}000Z".format(value[0][:-1]))
-                value_time = datetime.strptime("{}000".format(value[0][:-1]), "%Y-%m-%dT%H:%M:%S.%f")
+
+                value[0] = value[0][:-1] # remove "Z" timezone
+
+                pos = value[0].find(".")
+                if pos == -1:
+                    value[0] = "{}.000000".format(value[0])
+                else:
+                    # 2023-08-16T00:26:26.915000
+                    needed_characters = 26 - len(value[0])
+                    value[0] = "{}{}".format(value[0], "0" * needed_characters)
+                    #logging.info("{}".format(needed_characters))
+
+                value_time = datetime.strptime(value[0], "%Y-%m-%dT%H:%M:%S.%f")
                 self._addTrafficState(value[1], value_time.timestamp() + offset)
 
     def _addTrafficState(self, group, time):

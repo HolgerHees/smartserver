@@ -26,7 +26,10 @@ mx.Widgets.TrafficAlerts = (function( ret ) {
                 traffic += json["traffic_states"]["scanning"] == 0 ? json["traffic_states"]["scanning"] : "<font style=\"color:var(--color-yellow)\">" + json["traffic_states"]["scanning"] + "</font>";
                 traffic += "/";
                 traffic += json["traffic_states"]["intruded"] == 0 ? json["traffic_states"]["intruded"] : "<font style=\"color:var(--color-red)\">" + json["traffic_states"]["intruded"] + "</font>";
-                ret.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>");
+
+                blocked = json["traffic_states"]["blocked"] > 0 ? " <font class=\"icon-block\"></font><strong>" + json["traffic_states"]["blocked"] + "</strong>" : "";
+
+                ret.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>" + blocked);
             }
             else
             {

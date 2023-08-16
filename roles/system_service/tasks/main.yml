@@ -58,6 +58,9 @@
     image: "custom_system_service:{{alpine_version}}"
     state: present
 #    recreate: true
+    capabilities:
+      - NET_ADMIN
+      - NET_RAW
     env:
       TZ: "{{timezone}}"
     log_driver: journald

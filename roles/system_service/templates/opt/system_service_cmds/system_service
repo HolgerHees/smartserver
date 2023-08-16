@@ -19,8 +19,9 @@ from lib.netflow.processor import Processor as NetflowProcessor
 from lib.speedtest.speedtest import Speedtest
 from lib.fping.fping import FPing
 from lib.info.info import Info
-from lib.malware import Malware
+from lib.trafficblocker.trafficblocker import TrafficBlocker
 
+from lib.malware import Malware
 from lib.mqtt import MQTTHandler
 from lib.influxdb import InfluxDB
 from lib.scheduler import Scheduler
@@ -52,6 +53,9 @@ class Handler(Server):
         self.netflow = NetflowProcessor(config, self, self.influxdb, self.ipcache, self.malware )
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb, self.info )
         self.fping = FPing(config, self, self.influxdb )
+
+        self.trafficblocker = TrafficBlocker(config, self, self.netflow)
+
         self.scheduler = Scheduler()
 
     def start(self, callback):
@@ -68,6 +72,9 @@ class Handler(Server):
         self.netflow.start()
         self.speedtest.start()
         self.fping.start()
+
+        self.trafficblocker.start()
+
         self.scheduler.start()
 
         super().start(callback)
@@ -75,6 +82,10 @@ class Handler(Server):
     def terminate(self):
         if self.scheduler:
             self.scheduler.terminate()
+
+        if self.trafficblocker:
+            self.trafficblocker.terminate()
+
         if self.fping:
             self.fping.terminate()
         if self.speedtest:
@@ -167,6 +178,7 @@ class Handler(Server):
         result["wan_isp_state"] = "default" if self.info.isDefaultConnection() else "fallback"
         result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
         result["traffic_states"] = self.netflow.getTrafficState()
+        result["traffic_states"]["blocked"] = len(self.trafficblocker.getBlockedIPs())
         return json.dumps(result)
 
 #@app.route('/state/', methods = ['POST'])

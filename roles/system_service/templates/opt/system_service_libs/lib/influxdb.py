@@ -54,25 +54,25 @@ class InfluxDB(threading.Thread):
     def register(self, callback):
         self.callbacks.append(callback)
 
-    def get(self, messurements):
-        #curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT \"value\" FROM \"cpu_load_short\" WHERE \"region\"='us-west';SELECT count(\"value\") FROM \"cpu_load_short\" WHERE \"region\"='us-west'"
+    #def get(self, messurements):
+    #    #curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT \"value\" FROM \"cpu_load_short\" WHERE \"region\"='us-west';SELECT count(\"value\") FROM \"cpu_load_short\" WHERE \"region\"='us-west'"
 
-        queries = []
-        for messurement in messurements:
-            queries.append("SELECT last(\"value\") FROM \"{}\"".format(messurement))
+    #    queries = []
+    #    for messurement in messurements:
+    #        queries.append("SELECT last(\"value\") FROM \"{}\"".format(messurement))
 
-        results = self.query(queries)
-        values = {}
-        if results is not None:
-            for result in results:
-                if result is None or len(result["values"]) < 1:
-                    continue
-                values[result["name"]] = result["values"][1]
-        return values
+    #    results = self.query(queries)
+    #    values = {}
+    #    if results is not None:
+    #        for result in results:
+    #            if result is None or len(result["values"]) < 1:
+    #                continue
+    #            values[result["name"]] = result["values"][1]
+    #    return values
 
-    def query(self, queries):
+    def query(self, query):
         headers = {'Authorization': "Token {}".format(self.config.influxdb_token), "Content-Type": "application/vnd.influxql"}
-        url = "{}/query?pretty=true&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join(queries)))
+        url = "{}/query?pretty=true&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join([query])))
 
         r = requests.get( url, headers=headers)
 
@@ -83,13 +83,10 @@ class InfluxDB(threading.Thread):
         try:
             data = json.loads(r.text)
             #logging.info(data)
-            results = []
-            for result in data["results"]:
-                if "series" not in result or len(result["series"]) == 0:
-                    results.append(None)
-                else:
-                    results.append(result["series"][0])
-            return results
+            if len(data["results"]) == 1:
+                if "series" in data["results"][0] and len(data["results"][0]["series"]) > 0:
+                    return data["results"][0]["series"]
+            return []
 
         except Exception as e:
             logging.error("Got unexpected exception")
