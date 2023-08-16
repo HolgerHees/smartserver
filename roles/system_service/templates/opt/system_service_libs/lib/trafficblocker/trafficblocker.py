@@ -67,7 +67,7 @@ class TrafficBlocker(threading.Thread):
 
                         treshold = self.config.traffic_blocker_treshold[attacker["group"]]
                         if ip in self.config_map["observed_ips"]:
-                            if self.config_map["observed_ips"][ip]["status"] == "blocked": # restore state
+                            if self.config_map["observed_ips"][ip]["state"] == "blocked": # restore state
                                 if ip not in blocked_ips:
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
@@ -80,10 +80,10 @@ class TrafficBlocker(threading.Thread):
                                 Helper.blockIp(ip)
                                 blocked_ips.append(ip)
                             if ip not in self.config_map["observed_ips"]:
-                                self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "status": "blocked" }
+                                self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "state": "blocked" }
                             else:
                                 self.config_map["observed_ips"][ip]["updated"] = now
-                                self.config_map["observed_ips"][ip]["status"] = "blocked"
+                                self.config_map["observed_ips"][ip]["state"] = "blocked"
                                 self.config_map["observed_ips"][ip]["count"] += 1
 
                     for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
@@ -92,7 +92,7 @@ class TrafficBlocker(threading.Thread):
                             if now < data["updated"] + ( self.config.traffic_blocker_unblock_timeout * data["count"] ):
                                 continue
                             data["updated"] = now
-                            data["status"] = "unblocked"
+                            data["state"] = "unblocked"
                             logging.info("UNBLOCK IP {} after {} seconds".format(ip, now - data["updated"]))
                         else:
                             logging.info("UNBLOCK IP {}".format(ip))
