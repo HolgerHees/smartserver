@@ -6,7 +6,7 @@
 
 - name: set openhab version
   set_fact:
-    openhab_version: "4.0.1"
+    openhab_version: "4.0.2"
     #openhab_version: "3.4.4"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"
@@ -514,7 +514,7 @@
 - name: register prometheus rules & metrics
   vars:
     name: "openhab"
-    rule_file: "templates/prometheus/rule.yml"
+    #rule_file: "templates/prometheus/rule.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   import_tasks: roles/prometheus/shared/add_config.yml
 
