@@ -67,8 +67,9 @@ class TrafficBlocker(threading.Thread):
 
                         treshold = self.config.traffic_blocker_treshold[attacker["group"]]
                         if ip in self.config_map["observed_ips"]:
+                            self.config_map["observed_ips"][ip]["updated"] = now
+
                             if self.config_map["observed_ips"][ip]["state"] == "blocked": # restore state
-                                self.config_map["observed_ips"][ip]["updated"] = now
                                 if ip not in blocked_ips:
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
@@ -76,16 +77,16 @@ class TrafficBlocker(threading.Thread):
                             treshold = math.ceil( treshold / self.config_map["observed_ips"][ip]["count"] ) # calculate treshhold based on number of blocked periods
 
                         if attacker["count"] > treshold or ip in blocked_ips:
+                            if ip in self.config_map["observed_ips"]:
+                                self.config_map["observed_ips"][ip]["state"] = "blocked"
+                                self.config_map["observed_ips"][ip]["count"] += 1
+                            else:
+                                self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "state": "blocked" }
+
                             if ip not in blocked_ips:
                                 logging.info("BLOCK IP {} after {} requests".format(ip, treshold))
                                 Helper.blockIp(ip)
                                 blocked_ips.append(ip)
-                            if ip not in self.config_map["observed_ips"]:
-                                self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "state": "blocked" }
-                            else:
-                                self.config_map["observed_ips"][ip]["updated"] = now
-                                self.config_map["observed_ips"][ip]["state"] = "blocked"
-                                self.config_map["observed_ips"][ip]["count"] += 1
 
                     for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
                         if ip in self.config_map["observed_ips"]:
