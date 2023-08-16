@@ -42,6 +42,8 @@ traffic_blocker_treshold = {
   "scanning": 20,
   "intruded": 5
 }
+traffic_blocker_unblock_timeout = 60 * 60 * 6
+traffic_blocker_clean_known_ips_timeout = 60 * 60 * 24 * 7
 
 default_vlan = 1
 

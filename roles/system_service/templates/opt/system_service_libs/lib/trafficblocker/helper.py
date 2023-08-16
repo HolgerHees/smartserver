@@ -26,16 +26,12 @@ class Helper():
 
     @staticmethod
     def blockIp(ip):
-        logging.info("BLOCK IP: {}".format(ip))
-
         returncode, cmd_result = command.exec2(["/sbin/iptables", "-A", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
         if returncode != 0:
             raise Exception("Cmd 'iptables -A' was not successful")
 
     @staticmethod
     def unblockIp(ip):
-        logging.info("UNBLOCK IP: {}".format(ip))
-
         returncode, cmd_result = command.exec2(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
         if returncode != 0:
             raise Exception("Cmd 'iptables -D' was not successful")
