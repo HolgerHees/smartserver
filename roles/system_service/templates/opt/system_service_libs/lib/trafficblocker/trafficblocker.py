@@ -45,7 +45,7 @@ class TrafficBlocker(threading.Thread):
         self.event.set()
 
     def run(self):
-        logging.info("IP attack blocker started")
+        logging.info("IP traffic blocker started")
         try:
             if self.config_map is None:
                 self.config_map = {"observed_ips": {}}
@@ -103,7 +103,7 @@ class TrafficBlocker(threading.Thread):
 
                 self.event.wait(60)
 
-            logging.info("IP attack blocker stopped")
+            logging.info("IP traffic blocker stopped")
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
