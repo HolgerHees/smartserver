@@ -68,6 +68,7 @@ class TrafficBlocker(threading.Thread):
                         treshold = self.config.traffic_blocker_treshold[attacker["group"]]
                         if ip in self.config_map["observed_ips"]:
                             if self.config_map["observed_ips"][ip]["state"] == "blocked": # restore state
+                                self.config_map["observed_ips"][ip]["updated"] = now
                                 if ip not in blocked_ips:
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
@@ -89,11 +90,12 @@ class TrafficBlocker(threading.Thread):
                     for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
-                            if now < data["updated"] + ( self.config.traffic_blocker_unblock_timeout * data["count"] ):
+                            time_offset = data["updated"] + ( self.config.traffic_blocker_unblock_timeout * ( data["count"] - 1 ) )
+                            if now < time_offset:
                                 continue
+                            logging.info("UNBLOCK IP {} after {} seconds".format(ip, now - time_offset))
                             data["updated"] = now
                             data["state"] = "unblocked"
-                            logging.info("UNBLOCK IP {} after {} seconds".format(ip, now - data["updated"]))
                         else:
                             logging.info("UNBLOCK IP {}".format(ip))
                         Helper.unblockIp(ip)
