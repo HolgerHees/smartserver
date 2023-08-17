@@ -47,6 +47,9 @@ class MQTT(threading.Thread):
 
     def on_connect(self,client,userdata,flags,rc):
         logging.info("Connected to mqtt with result code:"+str(rc))
+        if self.state == 0:
+            for topic in self.subscriber:
+                self.mqtt_client.subscribe(topic)
         #for topic in self.subscriber.keys():
         self.state = 1
 
