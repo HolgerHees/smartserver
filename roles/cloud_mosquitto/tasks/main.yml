@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    mosquitto_version: "2.0.15"
+    mosquitto_version: "2.0.16"
   tags: [ 'update_notifier_config' ]
   
 - name: prepare config folder
