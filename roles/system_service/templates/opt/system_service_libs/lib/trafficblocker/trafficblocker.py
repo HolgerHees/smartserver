@@ -5,6 +5,7 @@ import time
 import schedule
 import os
 import math
+import datetime
 
 from smartserver.confighelper import ConfigHelper
 
@@ -12,7 +13,7 @@ from lib.trafficblocker.helper import Helper
 
 
 class TrafficBlocker(threading.Thread):
-    def __init__(self, config, handler, netflow):
+    def __init__(self, config, handler, influxdb, netflow):
         threading.Thread.__init__(self)
 
         self.config = config
@@ -30,6 +31,10 @@ class TrafficBlocker(threading.Thread):
         self.config_map = None
 
         self.blocked_ips = []
+
+        self.influxdb = influxdb
+
+        influxdb.register(self.getMessurements)
 
     def start(self):
         self.is_running = True
@@ -91,10 +96,11 @@ class TrafficBlocker(threading.Thread):
                     for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
-                            time_offset = data["updated"] + ( self.config.traffic_blocker_unblock_timeout * ( data["count"] - 1 ) )
-                            if now < time_offset:
+                            factor = 0 if data["count"] <= 1 else pow(2,data["count"] - 2)
+                            time_offset = data["updated"] + ( self.config.traffic_blocker_unblock_timeout * factor )
+                            if now <= time_offset:
                                 continue
-                            logging.info("UNBLOCK IP {} after {} seconds".format(ip, now - time_offset))
+                            logging.info("UNBLOCK IP {} after {}".format(ip, datetime.timedelta(seconds=(now - time_offset))))
                             data["updated"] = now
                             data["state"] = "unblocked"
                         else:
@@ -136,6 +142,14 @@ class TrafficBlocker(threading.Thread):
 
     def getBlockedIPs(self):
         return list(self.blocked_ips)
+
+    def getMessurements(self):
+        messurements = []
+        if self.config_map is not None:
+            with self.config_lock:
+                for ip, data in self.config_map["observed_ips"].items():
+                    messurements.append("trafficblocker,extern_ip={},blocked_state={}  value=\"{}\"".format(ip, data["state"], data["count"]))
+        return messurements
 
     def getStateMetrics(self):
         return [

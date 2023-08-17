@@ -26,12 +26,20 @@ class Helper():
 
     @staticmethod
     def blockIp(ip):
-        returncode, cmd_result = command.exec2(["/sbin/iptables", "-A", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
+        returncode, cmd_result = command.exec2(["/sbin/iptables", "-I", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
         if returncode != 0:
             raise Exception("Cmd 'iptables -A' was not successful")
+
+        #returncode, cmd_result = command.exec2(["/sbin/iptables", "-I", "INPUT", "-s", "{}/32".format(ip), "-j", "LOG", "--log-prefix", "INPUT:DROP: ", "--log-level", "6" ])
+        #if returncode != 0:
+        #    raise Exception("Cmd 'iptables -A' was not successful")
 
     @staticmethod
     def unblockIp(ip):
         returncode, cmd_result = command.exec2(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
         if returncode != 0:
             raise Exception("Cmd 'iptables -D' was not successful")
+
+        #returncode, cmd_result = command.exec2(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-j", "LOG", "--log-prefix", "INPUT:DROP: ", "--log-level", "6" ])
+        #if returncode != 0:
+        #    raise Exception("Cmd 'iptables -D' was not successful")

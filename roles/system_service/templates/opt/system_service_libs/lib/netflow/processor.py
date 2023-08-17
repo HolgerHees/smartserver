@@ -20,6 +20,9 @@ from .collector import ThreadedNetFlowListener
 from lib.influxdb import InfluxDB
 from lib.ipcache import IPCache
 
+from smartserver import command
+
+
 IP_PROTOCOLS = {
     1: "icmp",
     2: "igmp",
@@ -131,6 +134,22 @@ class Helper():
                 ch = 0
         return ''.join(geohash)
 
+    @staticmethod
+    def getWireguardPeers():
+        returncode, cmd_result = command.exec2(["/usr/bin/wg", "show"])
+        if returncode != 0:
+            raise Exception("Cmd '/usr/bin/wg show' was not successful")
+
+        result = []
+        for row in cmd_result.split("\n"):
+            if "endpoint" not in row:
+                continue
+            match = re.match("^\s*endpoint: ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}):.*",row)
+            if match:
+                result.append(match[1])
+
+        #logging.info(str(result))
+        return result
 
 class Connection:
     def __init__(self, request_ts, request_flow, answer_flow, config, cache):
@@ -441,6 +460,8 @@ class Processor(threading.Thread):
         #pr = cProfile.Profile()
         #pr.enable()
 
+        wireguard_peers = None
+
         registry = {}
         for con in list(self.connections):
             self.connections.remove(con)
@@ -522,8 +543,12 @@ class Processor(threading.Thread):
                         allowed = True
                     elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
                         allowed = True
-                    elif extern_ip and "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
-                        allowed = True
+                    elif extern_ip:
+                        if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+                            allowed = True
+                        elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := Helper.getWireguardPeers() ) ) and str(extern_ip) in wireguard_peers:
+                            allowed = True
+                            #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
                 if not allowed:
                     traffic_group = "observed"
 

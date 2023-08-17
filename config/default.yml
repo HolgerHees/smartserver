@@ -196,6 +196,7 @@ default_variables: {
     # {
     #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] } }, # Letsencrypt, CLOUD PING Test
     #   { target: "{{production_ip}}:10114", name: "alexa api", allowed: { org: [ "AWS EC2 .+" ] } }, # ALEXA
+    #   { target: "{{production_ip}}:51820", name: "wireguard", allowed: { wireguard_peers: [ "check" ] } }, # system check for connected wireguard peers
     #   { target: "{{production_ip}}:456", name: "test", allowed: { ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ] } }, # Fixed IP range test
     # }
 
