@@ -1,5 +1,6 @@
 import urllib.request
 import json
+from datetime import datetime, timezone
 
 from helper.version import Version
 
@@ -27,6 +28,7 @@ class Application(App):
         self.plugin_config = job_config["config"]
         self.access_token = global_config['github_access_token']
         self.operating_system = operating_system
+        self.current_version = None
 
     def checkForUpdates(self):
         self.project = self.plugin_config['project']
@@ -34,14 +36,15 @@ class Application(App):
         
         if self.pattern != None:
             if self.plugin_config['version'].startswith("package"):
-                version = self.operating_system.getInstalledVersion(self.plugin_config['version'].split(":")[1])
-                version = Version(version)
+                _version = self.operating_system.getInstalledVersion(self.plugin_config['version'].split(":")[1])
+                self.tag = _version
+                self.current_version = _version
             else:
-                version = Version.parseVersionString(self.plugin_config['version'],self.pattern)
-            if version != None:
                 self.tag = self.plugin_config['version']
+                version = Version.parseVersionString(self.plugin_config['version'],self.pattern)
                 self.current_version = version.getVersionString()
-            else:
+
+            if self.current_version is None:
                 raise Exception('Can\'t parse version \'{}\' with pattern \'{}\''.format(self.plugin_config['version'],self.pattern))
         else:
             self.tag = None
@@ -63,10 +66,14 @@ class Application(App):
 
     def getCurrentVersion(self):
         branch = Version(self.current_version).getBranchString() if self.tag != None else 'master'
-    
-        commit_url = "{}{}/commits/{}".format(Application.API_BASE,self.project,self.current_version if self.tag is None else self.tag)
-        commit_data = self._requestData(commit_url)
-        return self._createUpdate( version = self.current_version, branch = branch, date = commit_data['commit']['author']['date'], url = self._getUpdateUrl(self.tag) )
+
+        if self.plugin_config['version'].startswith("package"):
+            commit_date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            commit_url = "{}{}/commits/{}".format(Application.API_BASE,self.project,self.current_version if self.tag is None else self.tag)
+            commit_data = self._requestData(commit_url)
+            commit_date = commit_data['commit']['author']['date']
+        return self._createUpdate( version = self.current_version, branch = branch, date = commit_date, url = self._getUpdateUrl(self.tag) )
 
     def getCurrentVersionString(self):
         return self.current_version
