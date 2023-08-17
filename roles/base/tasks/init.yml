@@ -94,26 +94,25 @@
   tags: always
   
 - name: apply default vars
-  set_fact: 
-    "{{item.name}}": "{{ default_variables[item.name]['default'] }}"
-#    "{{item.name}}": "{{ vars['default_variables'][item.name]['default'] }}"
+  set_fact:
+    "{{item.name}}": "{{ item.default }}"
   when: "item.state in ['missing','default']"
   failed_when: "item.state  == 'missing'"
   ignore_errors: True
   register: check_result
   with_items:  |
     [
-      {% for item in default_variables %}
-        { 'name': '{{item}}',
+      {% for name, config in default_variables.items() %}
+        { 'name': '{{name}}',
           'state':
-          {% if item in vars %}
+          {% if name in vars %}
               'custom'
           {% else %}
-              {% if ('optional' not in default_variables[item] or not default_variables[item]['optional']) %}
-                  {% if 'default' not in default_variables[item] %}
-                      'missing'
+              {% if ('optional' not in config or not config['optional']) %}
+                  {% if 'default' in config %}
+                      'default', 'default': {{config['default'] | to_json}}
                   {% else %}
-                      'default'
+                      'missing'
                   {% endif %}
               {% else %}
                   'not needed'
@@ -122,6 +121,36 @@
         },
       {% endfor %}
     ]
+
+#- name: apply default vars
+#  set_fact:
+#    "{{item.name}}": "{{ default_variables[item.name]['default'] }}"
+##    "{{item.name}}": "{{ vars['default_variables'][item.name]['default'] }}"
+#  when: "item.state in ['missing','default']"
+#  failed_when: "item.state  == 'missing'"
+#  ignore_errors: True
+#  register: check_result
+#  with_items:  |
+#    [
+#      {% for item in default_variables %}
+#        { 'name': '{{item}}',
+#          'state':
+#          {% if item in vars %}
+#              'custom'
+#          {% else %}
+#              {% if ('optional' not in default_variables[item] or not default_variables[item]['optional']) %}
+#                  {% if 'default' not in default_variables[item] %}
+#                      'missing'
+#                  {% else %}
+#                      'default'
+#                  {% endif %}
+#              {% else %}
+#                  'not needed'
+#              {% endif %}
+#          {% endif %}
+#        },
+#      {% endfor %}
+#    ]
 
 - name: set ipv6 env state vars
   set_fact:
