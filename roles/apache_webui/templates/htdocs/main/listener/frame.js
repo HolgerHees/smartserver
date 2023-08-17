@@ -16,7 +16,7 @@ frameHandler = (function() {
         {
             //console.log("post");
             //title = document.title;
-            window.top.postMessage({ type: type, url: window.location.href, title: document.title },'https://' + window.top.location.host); 
+            window.top.postMessage({ type: type, url: window.location.href, title: document.title }, "*");
         }
         
         function init()

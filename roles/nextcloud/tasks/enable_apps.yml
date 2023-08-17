@@ -124,7 +124,7 @@
 #      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
 #      - { app: "onlyoffice", name: "versionHistory", value: "true" }
 
-      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top && ['','fa.','ba.'].indexOf(window.top.location.host.replace('{{server_domain}}','')) != -1){ var script = document.createElement('script'); script.src = 'https://' + window.top.location.host + '/main/listener/frame.js'; document.head.appendChild(script); }" }
+      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var script = document.createElement('script'); script.src = 'https://{{server_domain}}/main/listener/frame.js'; document.head.appendChild(script); }" }
 
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
