@@ -5,11 +5,16 @@ import time
 import schedule
 import os
 import math
-import datetime
+from datetime import datetime, timedelta
+import urllib.parse
+import urllib.request
+import json
+import re
 
 from smartserver.confighelper import ConfigHelper
 
 from lib.trafficblocker.helper import Helper
+from lib.netflow.processor import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
@@ -60,11 +65,60 @@ class TrafficBlocker(threading.Thread):
 
             self.blocked_ips = []
 
+            HIERARCHY = {
+                TrafficGroup.SCANNING: [TrafficGroup.INTRUDED],
+                TrafficGroup.OBSERVED: [TrafficGroup.SCANNING, TrafficGroup.INTRUDED],
+            }
+
             while self.is_running:
                 now = time.time()
                 blocked_ips = Helper.getBlockedIps()
                 attackers = self.netflow.getAttackers()
                 attacking_ips = []
+
+                #http_requests = {}
+                #try:
+                #    start = datetime.now() - timedelta(seconds=self.config.traffic_blocker_unblock_timeout)
+                #    url = "http://loki:3100/loki/api/v1/query_range?start={}&query={}".format(start.timestamp(), urllib.parse.quote( '{group=~\"apache\"} |= \"- 410 -\"'))
+                #    contents = urllib.request.urlopen(url).read()
+                #    result = json.loads(contents)
+                #    if "status" in result and result["status"] == "success":
+                #        for row in result["data"]["result"][0]["values"]:
+                #            #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
+                #            match = re.match("^message=\"([^\s]+).*",row[1])
+                #            if match:
+                #                ip = match[1]
+                #                if ip not in http_requests:
+                #                    http_requests[ip] = {TrafficGroup.SCANNING:0}
+                #                http_requests[ip][TrafficGroup.SCANNING] += 1
+                #except urllib.error.HTTPError as e:
+                #    logging.info(e)
+                #    logging.info("Loki not reachable")
+
+                #for ip, group_data in http_requests.items():
+                #    if ip not in attackers:
+                #        logging.error("HTTP client ip not found in attackers. Should never happen.")
+                #        attackers[ip] = group_data
+                #    else:
+                #        for group, count in group_data.items():
+                #            if group in attackers[ip]:
+                #                if count > attackers[ip][group]:
+                #                    attackers[ip][group] = count
+                #            else:
+                #                attackers[ip][group] = count
+                #        logging.info(ip)
+                #        logging.info(attackers[ip])
+
+                # post processing data
+                for ip, group_data in attackers.items():
+                    if len(group_data) == 1:
+                        continue
+                    for group in group_data.keys():
+                        if group not in HIERARCHY:
+                            continue
+                        for sub_group in HIERARCHY[group]:
+                            if sub_group in group_data:
+                                group_data[group] += group_data[sub_group]
 
                 with self.config_lock:
                     for ip, group_data in attackers.items():
@@ -107,7 +161,7 @@ class TrafficBlocker(threading.Thread):
                             time_offset = data["updated"] + ( self.config.traffic_blocker_unblock_timeout * factor )
                             if now <= time_offset:
                                 continue
-                            logging.info("UNBLOCK IP {} after {}".format(ip, datetime.timedelta(seconds=(now - time_offset))))
+                            logging.info("UNBLOCK IP {} after {}".format(ip, timedelta(seconds=(now - time_offset))))
                             data["updated"] = now
                             data["state"] = "unblocked"
                         else:

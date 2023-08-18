@@ -76,12 +76,6 @@ class TrafficGroup():
     SCANNING = 'scanning'
     INTRUDED = 'intruded'
 
-    HIERARCHY = {
-        SCANNING: [INTRUDED],
-        OBSERVED: [SCANNING, INTRUDED],
-    }
-
-
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
 
@@ -760,24 +754,12 @@ class Processor(threading.Thread):
     def getAttackers(self):
         results = self.influxdb.query('SELECT COUNT("value") AS "cnt" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
         attackers = {}
-        post_processing_data = {}
         if results is not None and results[0] is not None:
             for result in results:
                 ip = result["tags"]["extern_ip"]
                 if ip not in attackers:
                     attackers[ip] = {}
-                else:
-                    post_processing_data[ip] = attackers[ip]
                 attackers[ip][result["tags"]["group"]] = result["values"][0][1]
-
-        for ip, group_data in post_processing_data.keys():
-            for group in group_data.key():
-                if group not in TrafficGroup.HIERARCHY:
-                    continue
-                for sub_group in TrafficGroup.HIERARCHY[group]:
-                    if sub_group in group_data:
-                        group_data[group] += group_data[sub_group]
-
         return attackers
 
     def _cleanTrafficState(self):
