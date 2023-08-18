@@ -70,6 +70,18 @@ PROMETHEUS_INTERVAL = 60
 
 WIREGUARD_PEER_TIMEOUT = 60 * 5 # 5 minutes
 
+class TrafficGroup():
+    NORMAL = 'normal'
+    OBSERVED = 'observed'
+    SCANNING = 'scanning'
+    INTRUDED = 'intruded'
+
+    HIERARCHY = {
+        SCANNING: [INTRUDED],
+        OBSERVED: [SCANNING, INTRUDED],
+    }
+
+
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
 
@@ -93,12 +105,11 @@ class Helper():
             return None
         raise KeyError( "{} - {}".format(", ".join(keys), d.keys()))
 
-    @staticmethod
-    def isExpectedTraffic(service_key, config):
-        if config.netflow_incoming_traffic and service_key in config.netflow_incoming_traffic:
-            return True
-
-        return False
+    #@staticmethod
+    #def isExpectedTraffic(service_key, config):
+    #    if config.netflow_incoming_traffic and service_key in config.netflow_incoming_traffic:
+    #        return True
+    #    return False
 
     def checkFlag(flags, flag):
         if flag == 0:
@@ -110,20 +121,19 @@ class Helper():
         srcIsExternal = cache.isExternal(connection.src)
 
         if connection.protocol in IP_PING_PROTOCOLS:
-            if srcIsExternal:
-                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REPLY"]): # is an answer flow
-                    return True
-                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["TIME_REPLY"]): # is an answer flow
-                    return True
-                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["EXTENDED_ECHO_REPLY"]): # is an answer flow
-                    return True
-                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]): # can only happen from inside, because gateway firewall is blocking/nat traffic
-                    return True
+            return srcIsExternal
+            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REPLY"]): # is an answer flow
+            #    return True
+            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["TIME_REPLY"]): # is an answer flow
+            #    return True
+            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["EXTENDED_ECHO_REPLY"]): # is an answer flow
+            #    return True
+            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]): # can only happen from inside, because gateway firewall is blocking/nat traffic
+            #    return True
         elif connection.protocol in IP_DATA_PROTOCOLS:
             #if connection.answer_tcp_flags is not None:
             #    if Helper.checkFlag(connection.request_tcp_flags, TCP_FLAG_TYPES["ACK"]): # is an answer flow
             #        return True
-
             if connection.src_port is not None and connection.dest_port is not None:
                 if config.netflow_incoming_traffic:
                     if srcIsExternal:
@@ -135,8 +145,9 @@ class Helper():
                 else:
                     if connection.src_port < 1024 and connection.dest_port >= 1024:
                         return True
-
-        return False
+            return False
+        else:
+            return srcIsExternal
 
     @staticmethod
     def encodeGeohash(latitude, longitude, precision=12):
@@ -310,6 +321,8 @@ class Connection:
                 service_key = Helper.getServiceKey(self.dest, self.dest_port)
                 if service_key in self.config.netflow_incoming_traffic:
                     service = self.config.netflow_incoming_traffic[service_key]["name"].replace(" ","\\ ").replace(",","\\,")
+                elif "speedtest" in self.dest_hostname:
+                    service = "speedtest"
                 else:
                     service = "unknown"
         return service
@@ -337,10 +350,13 @@ class Processor(threading.Thread):
         self.is_enabled = True
 
         self.traffic_stats = {}
+        self.last_traffic_stats = 0
+        self.last_processed_traffic_stats = 0
 
         self.connections = []
         self.last_registry = {}
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
+        #self.suspicious_ips = {}
 
         self.cache = ipcache
 
@@ -592,34 +608,47 @@ class Processor(threading.Thread):
             #        break
             label.append("extern_group={}".format(extern_group))
 
-            if _srcIsExternal:
-                service_key = Helper.getServiceKey(con.dest, con.dest_port)
-            else:
-                service_key = fallback_key = None
+            service = con.service
+            label.append("service={}".format(service))
 
-            malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config))
-
-            traffic_group = "normal"
+            traffic_group = None
             if extern_ip not in approved_ips:
-                if malware_state == 1:
-                    traffic_group = "scanning"
-                elif malware_state == 2:
-                    traffic_group = "intruded"
-                elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
-                    allowed = False
-                    if service_key in self.allowed_isp_pattern:
-                        if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
-                            allowed = True
-                        elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
-                            allowed = True
-                        elif extern_ip:
-                            if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
-                                allowed = True
-                            elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and str(extern_ip) in wireguard_peers:
-                                allowed = True
-                                #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
-                    if not allowed:
-                        traffic_group = "observed"
+                #if extern_ip in self.suspicious_ips:
+                #    self.suspicious_ips[extern_ip]["update"] = now
+                #    traffic_group = self.suspicious_ips[extern_ip]["group"]
+                #else:
+                service_key = Helper.getServiceKey(con.dest, con.dest_port) if _srcIsExternal else None
+                malware_blacklist_count = self.malware.check(extern_ip)
+                #if _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config)
+
+                if malware_blacklist_count > 0:
+                    if _srcIsExternal:
+                        traffic_group = TrafficGroup.SCANNING
+                    elif malware_blacklist_count > 1:
+                        traffic_group = TrafficGroup.OBSERVED if service == "icmp" else TrafficGroup.INTRUDED
+
+                if traffic_group is None:
+                    if _srcIsExternal:
+                        if len(self.allowed_isp_pattern) > 0:
+                            allowed = False
+                            if service_key in self.allowed_isp_pattern:
+                                if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
+                                    allowed = True
+                                elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
+                                    allowed = True
+                                elif extern_ip:
+                                    if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+                                        allowed = True
+                                    elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and str(extern_ip) in wireguard_peers:
+                                        allowed = True
+                                        #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
+                            if not allowed:
+                                traffic_group = TrafficGroup.OBSERVED
+
+                #if traffic_group is not None:
+                #    self.suspicious_ips[extern_ip] = { "update": now, "group": traffic_group]
+            if traffic_group is None:
+                traffic_group = TrafficGroup.NORMAL
 
             direction = "incoming" if _srcIsExternal else "outgoing"
             label.append("direction={}".format(direction))
@@ -627,11 +656,6 @@ class Processor(threading.Thread):
             label.append("protocol={}".format(con.protocol_name))
 
             label.append("ip_type={}".format(con.ip_type))
-
-            service = con.service
-            if service == "unknown" and "speedtest" in extern_hostname:
-                service = "speedtest"
-            label.append("service={}".format(service))
 
             flags = []
             if con.request_tcp_flags is not None:
@@ -735,14 +759,25 @@ class Processor(threading.Thread):
 
     def getAttackers(self):
         results = self.influxdb.query('SELECT COUNT("value") AS "cnt" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
-        attackers = []
+        attackers = {}
+        post_processing_data = {}
         if results is not None and results[0] is not None:
             for result in results:
-                #logging.info("{}".format(result))
-                attackers.append({"ip": result["tags"]["extern_ip"], "group": result["tags"]["group"], "count": result["values"][0][1] })
-            #for value in results[0]["values"]:
-            #    logging.info("{}".format(value))
-            #    attackers.append({"ip": value})
+                ip = result["tags"]["extern_ip"]
+                if ip not in attackers:
+                    attackers[ip] = {}
+                else:
+                    post_processing_data[ip] = attackers[ip]
+                attackers[ip][result["tags"]["group"]] = result["values"][0][1]
+
+        for ip, group_data in post_processing_data.keys():
+            for group in group_data.key():
+                if group not in TrafficGroup.HIERARCHY:
+                    continue
+                for sub_group in TrafficGroup.HIERARCHY[group]:
+                    if sub_group in group_data:
+                        group_data[group] += group_data[sub_group]
+
         return attackers
 
     def _cleanTrafficState(self):
@@ -782,12 +817,15 @@ class Processor(threading.Thread):
 
                 value_time = datetime.strptime(value[0], "%Y-%m-%dT%H:%M:%S.%f")
                 self._addTrafficState(value[1], value_time.timestamp() + offset)
+        self.last_processed_traffic_stats = self.last_traffic_stats
 
     def _addTrafficState(self, group, time):
         #logging.info("ADD {}".format(datetime.fromtimestamp(time)))
         if group not in self.traffic_stats:
             self.traffic_stats[group] = []
         self.traffic_stats[group].append(time)
+        if time > self.last_traffic_stats:
+            self.last_traffic_stats = time
 
     def _fillTrafficStates(self, states):
         if "observed" not in states:
@@ -807,7 +845,8 @@ class Processor(threading.Thread):
     def getStateMetrics(self):
         metrics = [ "system_service_process{{type=\"netflow_processor\",}} {}".format("1" if self.is_running else "0") ]
 
-        min_time = datetime.now().timestamp() - 60
+        min_time = self.last_processed_traffic_stats
+        self.last_processed_traffic_stats = self.last_traffic_stats
         count_values = {}
         for group in list(self.traffic_stats.keys()):
             values = [time for time in self.traffic_stats[group] if time > min_time]

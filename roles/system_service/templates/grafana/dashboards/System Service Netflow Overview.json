@@ -748,12 +748,83 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "blocked_state"
+              "options": "State"
             },
             "properties": [
               {
                 "id": "custom.align",
                 "value": "right"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "approved": {
+                        "color": "green",
+                        "index": 2,
+                        "text": "A"
+                      },
+                      "blocked": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "B"
+                      },
+                      "unblocked": {
+                        "color": "yellow",
+                        "index": 1,
+                        "text": "U"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocalNoDateIfToday"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 55
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Req"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
               }
             ]
           }
@@ -875,7 +946,8 @@
               "names": [
                 "extern_ip",
                 "blocked_state",
-                "count"
+                "count",
+                "last"
               ]
             }
           }
@@ -897,14 +969,44 @@
           }
         },
         {
+          "id": "calculateField",
+          "options": {
+            "alias": "last_in_millies",
+            "binary": {
+              "left": "last",
+              "operator": "*",
+              "reducer": "sum",
+              "right": "1000"
+            },
+            "mode": "binary",
+            "reduce": {
+              "include": [
+                "Since"
+              ],
+              "reducer": "lastNotNull"
+            }
+          }
+        },
+        {
           "id": "organize",
           "options": {
-            "excludeByName": {},
-            "indexByName": {},
+            "excludeByName": {
+              "last": true
+            },
+            "indexByName": {
+              "blocked_state": 1,
+              "count": 4,
+              "extern_ip": 3,
+              "last": 0,
+              "last_in_millies": 2
+            },
             "renameByName": {
+              "Since": "Since",
               "blocked_state": "State",
               "count": "Req",
-              "extern_ip": "Extern IP"
+              "extern_ip": "Extern IP",
+              "last": "",
+              "last_in_millies": "Last"
             }
           }
         }
@@ -2508,6 +2610,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 43,
+  "version": 45,
   "weekStart": ""
 }
