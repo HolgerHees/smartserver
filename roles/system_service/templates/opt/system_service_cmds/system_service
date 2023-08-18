@@ -58,6 +58,9 @@ class Handler(Server):
 
         self.scheduler = Scheduler()
 
+    def getTrafficBlocker(self): # used by netflow
+        return self.trafficblocker
+
     def start(self, callback):
         self.mqtt.start()
         self.influxdb.start()

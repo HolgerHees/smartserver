@@ -522,7 +522,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Events"
+            "displayName": "End"
           }
         ]
       },
@@ -534,12 +534,6 @@
             "uid": "system_info_influxdb"
           },
           "groupBy": [
-            {
-              "params": [
-                "destination_port::tag"
-              ],
-              "type": "tag"
-            },
             {
               "params": [
                 "direction::tag"
@@ -830,7 +824,14 @@
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [],
+        "filters": [
+          {
+            "condition": "",
+            "key": "group",
+            "operator": "!=",
+            "value": "normal"
+          }
+        ],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -846,6 +847,6 @@
   "timezone": "",
   "title": "System Service Netflow Summary",
   "uid": "system-service-netflow-summary",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

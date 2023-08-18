@@ -18,13 +18,15 @@ class FPing(threading.Thread):
         self.event = threading.Event()
 
         self.config = config
+        self.influxdb = influxdb
 
         self.messurements = []
 
-        influxdb.register(self.getMessurements)
-
     def start(self):
         self.is_running = True
+
+        self.influxdb.register(self.getMessurements)
+
         super().start()
 
     def terminate(self):

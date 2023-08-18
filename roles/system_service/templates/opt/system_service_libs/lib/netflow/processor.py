@@ -31,6 +31,9 @@ IP_PROTOCOLS = {
     58: "icmpv6"
 }
 
+IP_PING_PROTOCOLS = [1,58]
+IP_DATA_PROTOCOLS = [6,17]
+
 TCP_FLAGS = {
     1: "FIN",  # Finish
     2: "SYN",  # Synchronization
@@ -42,7 +45,21 @@ TCP_FLAGS = {
     128: "CWR" # Congestion Window Reduced
 }
 
-PING_PROTOCOLS = [1,58]
+#TCP_FLAG_TYPES = {
+#    "ACK": 16
+#}
+
+# ICMP RFC
+# - https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+# NETFLOW SPEC
+# - Internet Control Message Protocol (ICMP) packet type; reported as ((ICMP Type*256) + ICMP code)
+# - https://www.cisco.com/en/US/technologies/tk648/tk362/technologies_white_paper09186a00800a3db9.html
+ICMP_TYPES = {
+    "ECHO_REPLY": 0 * 256,
+    "ECHO_REQUEST": 8 * 256,
+    "TIME_REPLY": 14 * 256,
+    "EXTENDED_ECHO_REPLY": 43 * 256
+}
 
 #MDNS_IP4 = ipaddress.IPv4Address("224.0.0.251")
 #SSDP_IP4 = ipaddress.IPv4Address("239.255.255.250")
@@ -51,14 +68,16 @@ PING_PROTOCOLS = [1,58]
 METRIC_TIMESHIFT = 60
 PROMETHEUS_INTERVAL = 60
 
+WIREGUARD_PEER_TIMEOUT = 60 * 5 # 5 minutes
+
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
 
     @staticmethod
-    def getService(dest_port, protocol):
-        if ( protocol == 6 or protocol == 17 ) and dest_port is not None and dest_port < 1024:
+    def getService(port, protocol):
+        if protocol in IP_DATA_PROTOCOLS and port is not None and port < 1024:
             with contextlib.suppress(OSError):
-                return socket.getservbyport(dest_port, IP_PROTOCOLS[protocol])
+                return socket.getservbyport(port, IP_PROTOCOLS[protocol])
         return None
 
     @staticmethod
@@ -81,24 +100,41 @@ class Helper():
 
         return False
 
+    def checkFlag(flags, flag):
+        if flag == 0:
+            return flags == 0
+        return flags & flag == flag
+
     @staticmethod
     def shouldSwapDirection(connection, config, cache):
         srcIsExternal = cache.isExternal(connection.src)
 
-        if connection.protocol in PING_PROTOCOLS and srcIsExternal:
-            return True
-
-        if connection.src_port is not None and connection.dest_port is not None:
-            if config.netflow_incoming_traffic:
-                if srcIsExternal:
-                    if Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
-                        return True
-                else:
-                    if Helper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
-                        return True
-            else:
-                if connection.src_port < 1024 and connection.dest_port >= 1024:
+        if connection.protocol in IP_PING_PROTOCOLS:
+            if srcIsExternal:
+                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REPLY"]): # is an answer flow
                     return True
+                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["TIME_REPLY"]): # is an answer flow
+                    return True
+                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["EXTENDED_ECHO_REPLY"]): # is an answer flow
+                    return True
+                if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]): # can only happen from inside, because gateway firewall is blocking/nat traffic
+                    return True
+        elif connection.protocol in IP_DATA_PROTOCOLS:
+            #if connection.answer_tcp_flags is not None:
+            #    if Helper.checkFlag(connection.request_tcp_flags, TCP_FLAG_TYPES["ACK"]): # is an answer flow
+            #        return True
+
+            if connection.src_port is not None and connection.dest_port is not None:
+                if config.netflow_incoming_traffic:
+                    if srcIsExternal:
+                        if Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
+                            return True
+                    else:
+                        if Helper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
+                            return True
+                else:
+                    if connection.src_port < 1024 and connection.dest_port >= 1024:
+                        return True
 
         return False
 
@@ -178,8 +214,11 @@ class Connection:
         self.src_port = self.request_flow['L4_SRC_PORT'] if 'L4_SRC_PORT' in self.request_flow else None
         self.dest_port = self.request_flow['L4_DST_PORT'] if 'L4_DST_PORT' in self.request_flow else None
 
-        self.request_flags = self.request_flow['TCP_FLAGS'] if 'TCP_FLAGS' in self.request_flow else 0
-        self.answer_flags = self.answer_flow['TCP_FLAGS'] if self.answer_flow is not None and 'TCP_FLAGS' in self.answer_flow else 0
+        self.request_icmp_flags = self.request_flow['ICMP_TYPE'] if 'ICMP_TYPE' in self.request_flow else None
+        self.request_tcp_flags = self.request_flow['TCP_FLAGS'] if 'TCP_FLAGS' in self.request_flow else None
+
+        self.answer_icmp_flags = self.answer_flow['ICMP_TYPE'] if self.answer_flow is not None and 'ICMP_TYPE' in self.answer_flow else None
+        self.answer_tcp_flags = self.answer_flow['TCP_FLAGS'] if self.answer_flow is not None and 'TCP_FLAGS' in self.answer_flow else None
 
         # swap direction
         if Helper.shouldSwapDirection(self, config, cache):
@@ -192,9 +231,19 @@ class Connection:
             self.dest = self.src
             self.src = _
 
-            _ = self.request_flags
-            self.request_flags = self.answer_flags
-            self.answer_flags = _
+            _ = self.dest_raw
+            self.dest_raw = self.src_raw
+            self.src_raw = _
+
+            if self.answer_tcp_flags is not None:
+                _ = self.request_tcp_flags
+                self.request_tcp_flags = self.answer_tcp_flags
+                self.answer_tcp_flags = _
+
+            if self.answer_icmp_flags is not None:
+                _ = self.request_icmp_flags
+                self.request_icmp_flags = self.answer_icmp_flags
+                self.answer_icmp_flags = _
 
             self.is_swapped = True
         else:
@@ -248,24 +297,21 @@ class Connection:
 
     @property
     def service(self):
-        service = Helper.getService(self.dest_port, self.protocol)
-        #logging.info("{} {} {}".format(service, self.dest_port, self.protocol))
-        if service is None:
-            #if self.dest == MDNS_IP4 or self.dest_raw == "ff02:fb":
-            #    service = "mdns"
-            #elif self.dest == SSDP_IP4 or self.dest_raw == "ff02:fb":
-            #    service = "ssdp"
-            #elif self.dest == BROADCAST_IP4:
-            #    service = "broadcast"
-            if self.is_multicast:
-                service = "multicast"
-            elif self.protocol in PING_PROTOCOLS:
+        if self.is_multicast:
+            service = "multicast"
+        elif self.protocol in IP_PING_PROTOCOLS:
+            if Helper.checkFlag(self.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]):
                 service = "ping"
             else:
+                service = "icmp"
+        else:
+            service = Helper.getService(self.dest_port, self.protocol)
+            if service is None:
                 service_key = Helper.getServiceKey(self.dest, self.dest_port)
                 if service_key in self.config.netflow_incoming_traffic:
-                    return self.config.netflow_incoming_traffic[service_key]["name"].replace(" ","\\ ").replace(",","\\,")
-                service = "unknown"
+                    service = self.config.netflow_incoming_traffic[service_key]["name"].replace(" ","\\ ").replace(",","\\,")
+                else:
+                    service = "unknown"
         return service
 
     @property
@@ -299,11 +345,11 @@ class Processor(threading.Thread):
         self.cache = ipcache
 
         self.malware = malware
+        self.handler = handler
 
         self.influxdb = influxdb
 
-        influxdb.register(self.getMessurements)
-
+        self.wireguard_peers = {}
         self.allowed_isp_pattern = {}
         for target, data in config.netflow_incoming_traffic.items():
             self.allowed_isp_pattern[target] = {}
@@ -315,6 +361,7 @@ class Processor(threading.Thread):
 
     def start(self):
         schedule.every().minute.at(":00").do(self._cleanTrafficState)
+        self.influxdb.register(self.getMessurements)
 
         super().start()
 
@@ -454,6 +501,27 @@ class Processor(threading.Thread):
             self.listener.stop()
             self.listener.join()
 
+    def getWireguardPeers(self):
+        now = time.time()
+
+        _wireguard_peers = {}
+        for wireguard_peer in Helper.getWireguardPeers():
+            _wireguard_peers[wireguard_peer] = now
+
+        for wireguard_peer in list(self.wireguard_peers.keys()):
+            if wireguard_peer in _wireguard_peers:
+                continue
+            age = self.wireguard_peers[wireguard_peer]
+            if age + WIREGUARD_PEER_TIMEOUT < now: # invalidate wireguard peer after 5 Minutes
+                continue
+            _wireguard_peers[wireguard_peer] = age
+
+        #logging.info(str(self.wireguard_peers))
+        #logging.info(str(_wireguard_peers))
+
+        self.wireguard_peers = _wireguard_peers
+        return self.wireguard_peers
+
     def getMessurements(self):
         # ******
         #start = time.time()
@@ -461,7 +529,7 @@ class Processor(threading.Thread):
         #pr.enable()
 
         wireguard_peers = None
-
+        approved_ips = self.handler.getTrafficBlocker().getApprovedIPs()
         registry = {}
         for con in list(self.connections):
             self.connections.remove(con)
@@ -532,25 +600,26 @@ class Processor(threading.Thread):
             malware_state = self.malware.check(extern_ip, _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config))
 
             traffic_group = "normal"
-            if malware_state == 1:
-                traffic_group = "scanning"
-            elif malware_state == 2:
-                traffic_group = "intruded"
-            elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
-                allowed = False
-                if service_key in self.allowed_isp_pattern:
-                    if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
-                        allowed = True
-                    elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
-                        allowed = True
-                    elif extern_ip:
-                        if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+            if extern_ip not in approved_ips:
+                if malware_state == 1:
+                    traffic_group = "scanning"
+                elif malware_state == 2:
+                    traffic_group = "intruded"
+                elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
+                    allowed = False
+                    if service_key in self.allowed_isp_pattern:
+                        if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
                             allowed = True
-                        elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := Helper.getWireguardPeers() ) ) and str(extern_ip) in wireguard_peers:
+                        elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
                             allowed = True
-                            #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
-                if not allowed:
-                    traffic_group = "observed"
+                        elif extern_ip:
+                            if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+                                allowed = True
+                            elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and str(extern_ip) in wireguard_peers:
+                                allowed = True
+                                #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
+                    if not allowed:
+                        traffic_group = "observed"
 
             direction = "incoming" if _srcIsExternal else "outgoing"
             label.append("direction={}".format(direction))
@@ -565,10 +634,10 @@ class Processor(threading.Thread):
             label.append("service={}".format(service))
 
             flags = []
-            _flags = con.request_flags # | con.answer_flags
-            for flag,name in TCP_FLAGS.items():
-                if flag & _flags == flag:
-                    flags.append(name)
+            if con.request_tcp_flags is not None:
+                for flag, name in TCP_FLAGS.items():
+                    if flag & con.request_tcp_flags == flag:
+                        flags.append(name)
             if len(flags) == 0:
                 flags.append("NONE")
             label.append("tcp_flags={}".format("|".join(flags)))
@@ -620,6 +689,17 @@ class Processor(threading.Thread):
                     "response": con.getAnswerFlow()
                 }
                 logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
+
+            #if con.protocol in IP_PING_PROTOCOLS:
+            #    data = {
+            #        "extern_ip": str(extern_ip),
+            #        "intern_ip": str(intern_ip),
+            #        "direction": direction,
+            #        "type": traffic_group,
+            #        "request": con.getRequestFlow(),
+            #        "response": con.getAnswerFlow()
+            #    }
+            #    logging.info(data)
 
         # old values with same timestamp should be summerized
         for _key in self.last_registry:

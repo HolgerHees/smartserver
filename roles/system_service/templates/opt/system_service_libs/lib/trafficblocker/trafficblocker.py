@@ -34,13 +34,14 @@ class TrafficBlocker(threading.Thread):
 
         self.influxdb = influxdb
 
-        influxdb.register(self.getMessurements)
-
     def start(self):
         self.is_running = True
+        self._restore()
+
         schedule.every().day.at("01:00").do(self._dump)
         schedule.every().hour.at("00:00").do(self._cleanup)
-        self._restore()
+        self.influxdb.register(self.getMessurements)
+
         super().start()
 
     def terminate(self):
@@ -72,14 +73,21 @@ class TrafficBlocker(threading.Thread):
 
                         treshold = self.config.traffic_blocker_treshold[attacker["group"]]
                         if ip in self.config_map["observed_ips"]:
-                            self.config_map["observed_ips"][ip]["updated"] = now
+                            if self.config_map["observed_ips"][ip]["state"] == "approved": # unblock validated ip
+                                if ip in blocked_ips:
+                                    Helper.unblockIp(ip)
+                                    blocked_ips.remove(ip)
+                                    logging.info("UNBLOCK IP {} forced".format(ip))
+                                continue
 
+                            self.config_map["observed_ips"][ip]["updated"] = now
                             if self.config_map["observed_ips"][ip]["state"] == "blocked": # restore state
                                 if ip not in blocked_ips:
+                                    logging.info("BLOCK IP {} restored".format(ip))
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
                                 continue
-                            treshold = math.ceil( treshold / self.config_map["observed_ips"][ip]["count"] ) # calculate treshhold based on number of blocked periods
+                            treshold = math.ceil( treshold / ( self.config_map["observed_ips"][ip]["count"] + 1 ) ) # calculate treshhold based on number of blocked periods
 
                         if attacker["count"] > treshold or ip in blocked_ips:
                             if ip in self.config_map["observed_ips"]:
@@ -133,12 +141,15 @@ class TrafficBlocker(threading.Thread):
         cleaned = 0
         for ip in list(self.config_map["observed_ips"].keys()):
             data = self.config_map["observed_ips"][ip]
-            if data["state"] == "blocked" or now < data["updated"] + self.config.traffic_blocker_clean_known_ips_timeout:
+            if data["state"] != "unblocked" or now < data["updated"] + self.config.traffic_blocker_clean_known_ips_timeout:
                 continue
             del self.config_map["observed_ips"][ip]
             cleaned = cleaned + 1
         if cleaned > 0:
             logging.info("Cleaned {} ip(s)".format(cleaned))
+
+    def getApprovedIPs(self):
+        return [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
 
     def getBlockedIPs(self):
         return list(self.blocked_ips)
