@@ -862,7 +862,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Last"
+          }
+        ]
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -2636,6 +2641,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 48,
+  "version": 49,
   "weekStart": ""
 }
