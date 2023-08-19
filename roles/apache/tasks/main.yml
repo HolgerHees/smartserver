@@ -177,13 +177,16 @@
     - domain/index.html
     - domain/style.css
 
-- name: copy state file
+- name: copy public files
   copy:
-    src: "templates/htdocs/_public/state"
-    dest: "{{htdocs_path}}_public/state"
+    src: "templates/htdocs/_public/{{item}}"
+    dest: "{{htdocs_path}}_public/{{item}}"
     owner: "{{system_users['www'].name}}"
     group: "{{system_groups['www'].name}}"
     mode: 0644
+  with_items:
+   - state
+   - robots.txt
 
 - name: build docker image
   vars:

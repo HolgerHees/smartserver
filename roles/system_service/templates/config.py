@@ -35,12 +35,15 @@ influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
 influxdb_token = "{{vault_influxdb_admin_token}}"
 
+loki_rest = "http://loki:3100"
+
 mqtt_host = "mosquitto"
 
 traffic_blocker_treshold = {
   "observed": 20,
   "scanning": 10,
-  "intruded": 3
+  "apache": 5,
+  "intruded": 2
 }
 traffic_blocker_unblock_timeout = 60 * 60 * 6
 traffic_blocker_clean_known_ips_timeout = 60 * 60 * 24 * 7

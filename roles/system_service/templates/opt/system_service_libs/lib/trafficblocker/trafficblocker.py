@@ -71,43 +71,14 @@ class TrafficBlocker(threading.Thread):
             }
 
             while self.is_running:
+                runtime_start = time.time()
+
                 now = time.time()
                 blocked_ips = Helper.getBlockedIps()
                 attackers = self.netflow.getAttackers()
                 attacking_ips = []
 
-                #http_requests = {}
-                #try:
-                #    start = datetime.now() - timedelta(seconds=self.config.traffic_blocker_unblock_timeout)
-                #    url = "http://loki:3100/loki/api/v1/query_range?start={}&query={}".format(start.timestamp(), urllib.parse.quote( '{group=~\"apache\"} |= \"- 410 -\"'))
-                #    contents = urllib.request.urlopen(url).read()
-                #    result = json.loads(contents)
-                #    if "status" in result and result["status"] == "success":
-                #        for row in result["data"]["result"][0]["values"]:
-                #            #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
-                #            match = re.match("^message=\"([^\s]+).*",row[1])
-                #            if match:
-                #                ip = match[1]
-                #                if ip not in http_requests:
-                #                    http_requests[ip] = {TrafficGroup.SCANNING:0}
-                #                http_requests[ip][TrafficGroup.SCANNING] += 1
-                #except urllib.error.HTTPError as e:
-                #    logging.info(e)
-                #    logging.info("Loki not reachable")
-
-                #for ip, group_data in http_requests.items():
-                #    if ip not in attackers:
-                #        logging.error("HTTP client ip not found in attackers. Should never happen.")
-                #        attackers[ip] = group_data
-                #    else:
-                #        for group, count in group_data.items():
-                #            if group in attackers[ip]:
-                #                if count > attackers[ip][group]:
-                #                    attackers[ip][group] = count
-                #            else:
-                #                attackers[ip][group] = count
-                #        logging.info(ip)
-                #        logging.info(attackers[ip])
+                http_requests = self._getHttpRequests()
 
                 # post processing data
                 for ip, group_data in attackers.items():
@@ -119,6 +90,14 @@ class TrafficBlocker(threading.Thread):
                         for sub_group in HIERARCHY[group]:
                             if sub_group in group_data:
                                 group_data[group] += group_data[sub_group]
+
+                # merge http requests
+                for ip, data in http_requests.items():
+                    if not data["suspicious"]:
+                        continue
+                    if ip not in attackers:
+                        attackers[ip] = {}
+                    attackers[ip]["apache"] = data["count"]
 
                 with self.config_lock:
                     for ip, group_data in attackers.items():
@@ -142,17 +121,25 @@ class TrafficBlocker(threading.Thread):
                                     continue
                                 treshold = math.ceil( treshold / ( self.config_map["observed_ips"][ip]["count"] + 1 ) ) # calculate treshhold based on number of blocked periods
 
-                            if count > treshold or ip in blocked_ips:
+                            if count > treshold:
+                                reason = "apache" if group == "apache" else "netflow"
+
                                 if ip in self.config_map["observed_ips"]:
+                                    self.config_map["observed_ips"][ip]["reason"] = reason
                                     self.config_map["observed_ips"][ip]["state"] = "blocked"
-                                    self.config_map["observed_ips"][ip]["count"] += 1
+                                    if ip not in blocked_ips:
+                                        self.config_map["observed_ips"][ip]["count"] += 1
                                 else:
-                                    self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "state": "blocked" }
+                                    self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "state": "blocked", "reason": reason }
 
                                 if ip not in blocked_ips:
-                                    logging.info("BLOCK IP {} after {} requests".format(ip, treshold))
+                                    logging.info("BLOCK IP {} after {} samples ({})".format(ip, count, group))
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
+                            elif ip in blocked_ips:
+                                Helper.unblockIp(ip)
+                                blocked_ips.remove(ip)
+                                logging.info("UNBLOCK IP {}".format(ip))
 
                     for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
                         if ip in self.config_map["observed_ips"]:
@@ -171,12 +158,47 @@ class TrafficBlocker(threading.Thread):
 
                     self.blocked_ips = blocked_ips
 
+                runtime_end = time.time()
+
+                logging.info("RUNTIME: {}".format(runtime_end-runtime_start))
+
                 self.event.wait(60)
 
             logging.info("IP traffic blocker stopped")
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
+
+    def _getHttpRequests(self):
+        http_requests = {}
+        try:
+            start = datetime.now() - timedelta(seconds=self.config.traffic_blocker_unblock_timeout)
+            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start.timestamp(), urllib.parse.quote( '{group=~\"apache\"} |= \"- 410 -\"'))
+            contents = urllib.request.urlopen(url).read()
+            result = json.loads(contents)
+            if "status" in result and result["status"] == "success":
+                for row in result["data"]["result"][0]["values"]:
+                    #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
+                    match = re.match("^message=\"([^\s]+).* ([^\s]+) ([^\s]+) HTTP",row[1])
+                    if not match:
+                        logging.error("Invalid regex for message: '{}'".format(row[1]))
+                        continue
+
+                    ip = match[1]
+                    method = match[2]
+                    url = match[3]
+
+                    is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt)$", url)
+                    if ip not in http_requests:
+                        http_requests[ip] = { "count": 0, "suspicious": False }
+                    http_requests[ip]["count"] += 1
+                    if not http_requests[ip]["suspicious"] and is_suspicious:
+                        http_requests[ip]["suspicious"] = True
+        except urllib.error.HTTPError as e:
+            logging.info(e)
+            logging.info("Loki not reachable")
+
+        return http_requests
 
     def _restore(self):
         self.valid_list_file, data = ConfigHelper.loadConfig(self.dump_config_path, self.config_version )
@@ -212,7 +234,7 @@ class TrafficBlocker(threading.Thread):
         if self.config_map is not None:
             with self.config_lock:
                 for ip, data in self.config_map["observed_ips"].items():
-                    messurements.append("trafficblocker,extern_ip={},state={},count={} value=\"{}\"".format(ip, data["state"], data["count"], data["updated"]))
+                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["updated"]))
         return messurements
 
     def getStateMetrics(self):

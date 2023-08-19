@@ -295,7 +295,8 @@
             "cellOptions": {
               "type": "auto"
             },
-            "inspect": false
+            "inspect": false,
+            "minWidth": 50
           },
           "mappings": [
             {
@@ -348,7 +349,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
+        "w": 2,
         "x": 8,
         "y": 1
       },
@@ -533,7 +534,7 @@
       "gridPos": {
         "h": 9,
         "w": 4,
-        "x": 11,
+        "x": 10,
         "y": 1
       },
       "hideTimeOverride": true,
@@ -639,7 +640,7 @@
       "gridPos": {
         "h": 3,
         "w": 4,
-        "x": 15,
+        "x": 14,
         "y": 1
       },
       "id": 21,
@@ -827,13 +828,25 @@
                 "value": 100
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
           }
         ]
       },
       "gridPos": {
         "h": 9,
-        "w": 5,
-        "x": 19,
+        "w": 6,
+        "x": 18,
         "y": 1
       },
       "hideTimeOverride": true,
@@ -867,7 +880,13 @@
             },
             {
               "params": [
-                "blocked_state::tag"
+                "blocking_state::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "blocking_reason::tag"
               ],
               "type": "tag"
             }
@@ -945,9 +964,10 @@
             "include": {
               "names": [
                 "extern_ip",
-                "blocked_state",
+                "blocking_state",
+                "last",
                 "count",
-                "last"
+                "blocking_reason"
               ]
             }
           }
@@ -961,7 +981,7 @@
                   "id": "isNotNull",
                   "options": {}
                 },
-                "fieldName": "blocked_state"
+                "fieldName": "blocking_state"
               }
             ],
             "match": "all",
@@ -984,18 +1004,21 @@
                 "Since"
               ],
               "reducer": "lastNotNull"
-            }
+            },
+            "replaceFields": false
           }
         },
         {
           "id": "organize",
           "options": {
             "excludeByName": {
+              "blocked_state": false,
               "last": true
             },
             "indexByName": {
-              "blocked_state": 1,
-              "count": 4,
+              "blocking_reason": 4,
+              "blocking_state": 1,
+              "count": 5,
               "extern_ip": 3,
               "last": 0,
               "last_in_millies": 2
@@ -1003,10 +1026,13 @@
             "renameByName": {
               "Since": "Since",
               "blocked_state": "State",
+              "blocking_reason": "Reason",
+              "blocking_state": "State",
               "count": "Req",
               "extern_ip": "Extern IP",
               "last": "",
-              "last_in_millies": "Last"
+              "last_in_millies": "Last",
+              "state": "State"
             }
           }
         }
@@ -1115,7 +1141,7 @@
       "gridPos": {
         "h": 6,
         "w": 4,
-        "x": 15,
+        "x": 14,
         "y": 4
       },
       "hideTimeOverride": true,
@@ -2610,6 +2636,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 45,
+  "version": 47,
   "weekStart": ""
 }
