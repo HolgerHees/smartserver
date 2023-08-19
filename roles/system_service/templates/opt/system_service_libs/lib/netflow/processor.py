@@ -337,15 +337,17 @@ class Processor(threading.Thread):
     def __init__(self, config, handler, influxdb, ipcache, malware ):
         threading.Thread.__init__(self)
 
-        self.is_running = True
+        self.is_running = False
 
         self.config = config
 
         self.is_enabled = True
 
+        self.ip_stats = []
         self.traffic_stats = {}
         self.last_traffic_stats = 0
         self.last_processed_traffic_stats = 0
+        self.stats_lock = threading.Lock()
 
         self.connections = []
         self.last_registry = {}
@@ -370,6 +372,8 @@ class Processor(threading.Thread):
         self.is_running = False
 
     def start(self):
+        self.is_running = True
+
         schedule.every().minute.at(":00").do(self._cleanTrafficState)
         self.influxdb.register(self.getMessurements)
 
@@ -695,7 +699,8 @@ class Processor(threading.Thread):
             #logging.info("INIT {}".format(datetime.fromtimestamp(timestamp)))
             #logging.info("{} {}".format(timestamp, influx_timestamp))
             if traffic_group != "normal":
-                self._addTrafficState(traffic_group, timestamp)
+                with self.stats_lock:
+                    self._addTrafficState(extern_ip, traffic_group, timestamp)
 
                 #if traffic_group == "intruded":
                 data = {
@@ -751,51 +756,42 @@ class Processor(threading.Thread):
 
         return messurements
 
-    def getAttackers(self):
-        attackers = {}
-        results = self.influxdb.query('SELECT COUNT("value") AS "cnt" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
-        if results is not None and results is not None:
-            for result in results:
-                ip = result["tags"]["extern_ip"]
-                if ip not in attackers:
-                    attackers[ip] = {}
-                attackers[ip][result["tags"]["group"]] = { "count": result["values"][0][1], "last": None }
-
-            results = self.influxdb.query('SELECT LAST("value") FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
-            for result in results:
-                ip = result["tags"]["extern_ip"]
-                value_time = InfluxDB.parseDatetime(result["values"][0][0])
-                attackers[ip][result["tags"]["group"]]["last"] = value_time.timestamp()
-
-        return attackers
-
     def _cleanTrafficState(self):
-        min_time = datetime.now().timestamp() - 60 * 60 * 6
-        for group in list(self.traffic_stats.keys()):
-            values = [time for time in self.traffic_stats[group] if time > min_time]
-            if len(values) == 0:
-                del self.traffic_stats[group]
-            else:
-                self.traffic_stats[group] = values
+        with self.stats_lock:
+            min_time = datetime.now().timestamp() - 60 * 60 * 6
+
+            for group in list(self.traffic_stats.keys()):
+                values = [time for time in self.traffic_stats[group] if time > min_time]
+                if len(values) == 0:
+                    del self.traffic_stats[group]
+                else:
+                    self.traffic_stats[group] = values
+
+            self.ip_stats = [data for data in self.ip_stats if data["time"] > min_time]
 
     def _initTrafficState(self):
-        # 362 min => 6h - 2 min
-        results = self.influxdb.query('SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
-        self.traffic_stats = {}
-        if results is not None and results is not None:
-            for result in results:
-                for value in result["values"]:
-                    value_time = InfluxDB.parseDatetime(value[0])
-                    self._addTrafficState(value[1], value_time.timestamp())
-        self.last_processed_traffic_stats = self.last_traffic_stats
+        with self.stats_lock:
+            # 362 min => 6h - 2 min
+            results = self.influxdb.query('SELECT "extern_ip","group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
+            self.traffic_stats = {}
+            if results is not None:
+                for result in results:
+                    for value in result["values"]:
+                        value_time = InfluxDB.parseDatetime(value[0])
+                        self._addTrafficState(value[1], value[2], value_time.timestamp())
+            self.last_processed_traffic_stats = self.last_traffic_stats
 
-    def _addTrafficState(self, group, time):
+    def _addTrafficState(self, ip, group, time):
+        # lock is called in place where this function is called
+
         #logging.info("ADD {}".format(datetime.fromtimestamp(time)))
         if group not in self.traffic_stats:
             self.traffic_stats[group] = []
         self.traffic_stats[group].append(time)
         if time > self.last_traffic_stats:
             self.last_traffic_stats = time
+
+        self.ip_stats.append({"ip": ip, "group": group, "time": time})
 
     def _fillTrafficStates(self, states):
         if "observed" not in states:
@@ -805,10 +801,28 @@ class Processor(threading.Thread):
         if "intruded" not in states:
             states["intruded"] = 0
 
+    def getIPTrafficState(self):
+        ipstate = {}
+        with self.stats_lock:
+            for data in self.ip_stats:
+                ip = data["ip"]
+                group = data["group"]
+
+                if ip not in ipstate:
+                    ipstate[ip] = {}
+                if group not in ipstate[ip]:
+                    ipstate[ip][group] = {"count": 0, "last": 0}
+                ipstate[ip][group]["count"] += 1
+                if data["time"] > ipstate[ip][group]["last"]:
+                    ipstate[ip][group]["last"] = data["time"]
+
+        return ipstate
+
     def getTrafficState(self):
         count_values = {}
-        for group in self.traffic_stats:
-            count_values[group] = len(self.traffic_stats[group])
+        with self.stats_lock:
+            for group in self.traffic_stats:
+                count_values[group] = len(self.traffic_stats[group])
         self._fillTrafficStates(count_values)
         return count_values
 
@@ -818,10 +832,11 @@ class Processor(threading.Thread):
         min_time = self.last_processed_traffic_stats
         self.last_processed_traffic_stats = self.last_traffic_stats
         count_values = {}
-        for group in list(self.traffic_stats.keys()):
-            values = [time for time in self.traffic_stats[group] if time > min_time]
-            count_values[group] = len(values)
-        self._fillTrafficStates(count_values)
+        with self.stats_lock:
+            for group in list(self.traffic_stats.keys()):
+                values = [time for time in self.traffic_stats[group] if time > min_time]
+                count_values[group] = len(values)
+            self._fillTrafficStates(count_values)
 
         for group, count in count_values.items():
             metrics.append( "system_service_netflow{{type=\"{}\",}} {}".format( group, count ) )

@@ -75,13 +75,10 @@ class TrafficBlocker(threading.Thread):
 
                 now = time.time()
                 blocked_ips = Helper.getBlockedIps()
-                attackers = self.netflow.getAttackers()
-                attacking_ips = []
-
-                http_requests = self._getHttpRequests()
+                ip_traffic_state = self.netflow.getIPTrafficState()
 
                 # post processing data
-                for ip, group_data in attackers.items():
+                for ip, group_data in ip_traffic_state.items():
                     if len(group_data) == 1:
                         continue
                     for group in group_data.keys():
@@ -92,17 +89,17 @@ class TrafficBlocker(threading.Thread):
                                 group_data[group] += group_data[sub_group]
 
                 # merge http requests
+                http_requests = self._getHttpRequests()
                 for ip, data in http_requests.items():
                     if not data["suspicious"]:
                         continue
-                    if ip not in attackers:
-                        attackers[ip] = {}
-                    attackers[ip]["apache"] = { "count": data["count"], "last": data["last"] }
+                    if ip not in ip_traffic_state:
+                        ip_traffic_state[ip] = {}
+                    ip_traffic_state[ip]["apache"] = { "count": data["count"], "last": data["last"] }
 
                 with self.config_lock:
-                    for ip, group_data in attackers.items():
+                    for ip, group_data in ip_traffic_state.items():
 
-                        attacking_ips.append(ip)
                         for group, group_data in group_data.items():
                             #logging.info("{} {} {} {}".format(ip, group, group_data["count"], datetime.fromtimestamp(group_data["last"])))
 
@@ -145,7 +142,7 @@ class TrafficBlocker(threading.Thread):
                                 blocked_ips.remove(ip)
                                 logging.info("UNBLOCK IP {}".format(ip))
 
-                    for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
+                    for ip in blocked_ips:
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
                             factor = pow(2,data["count"] - 1)
@@ -164,7 +161,7 @@ class TrafficBlocker(threading.Thread):
 
                 runtime_end = time.time()
 
-                logging.info("RUNTIME: {}".format(runtime_end-runtime_start))
+                #logging.info("RUNTIME: {} - {} IPs".format(runtime_end-runtime_start, len(ip_traffic_state)))
 
                 self.event.wait(60)
 

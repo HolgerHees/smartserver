@@ -90,8 +90,12 @@ class InfluxDB(threading.Thread):
     #    return values
 
     def query(self, query):
+        is_array = type(query) is list
+        if not is_array:
+            query = [query]
+
         headers = {'Authorization': "Token {}".format(self.config.influxdb_token), "Content-Type": "application/vnd.influxql"}
-        url = "{}/query?pretty=true&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join([query])))
+        url = "{}/query?pretty=true&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join(query)))
 
         r = requests.get( url, headers=headers)
 
@@ -101,11 +105,19 @@ class InfluxDB(threading.Thread):
 
         try:
             data = json.loads(r.text)
-            #logging.info(data)
-            if len(data["results"]) == 1:
-                if "series" in data["results"][0] and len(data["results"][0]["series"]) > 0:
-                    return data["results"][0]["series"]
-            return []
+            if is_array:
+                results = []
+                for result in data["results"]:
+                    if "series" in result and len(result["series"]) > 0:
+                        results.append(result["series"])
+                    else:
+                        results.append([])
+                return results
+            else:
+                if len(data["results"]) == 1:
+                    if "series" in data["results"][0] and len(data["results"][0]["series"]) > 0:
+                        return data["results"][0]["series"]
+                return []
 
         except Exception as e:
             logging.error("Got unexpected exception")
