@@ -31,7 +31,7 @@ class TrafficBlocker(threading.Thread):
         self.config_lock = threading.Lock()
 
         self.dump_config_path = "/var/lib/system_service/trafficblocker.json"
-        self.config_version = 1
+        self.config_version = 2
         self.valid_config_file = True
         self.config_map = None
 
