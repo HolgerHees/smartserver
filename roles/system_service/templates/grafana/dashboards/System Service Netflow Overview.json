@@ -754,7 +754,7 @@
             "properties": [
               {
                 "id": "custom.align",
-                "value": "right"
+                "value": "left"
               },
               {
                 "id": "mappings",
@@ -764,17 +764,17 @@
                       "approved": {
                         "color": "green",
                         "index": 2,
-                        "text": "A"
+                        "text": "✔"
                       },
                       "blocked": {
                         "color": "red",
                         "index": 0,
-                        "text": "B"
+                        "text": "✕"
                       },
                       "unblocked": {
-                        "color": "yellow",
+                        "color": "text",
                         "index": 1,
-                        "text": "U"
+                        "text": "✔"
                       }
                     },
                     "type": "value"
@@ -784,7 +784,7 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-background"
+                  "type": "color-text"
                 }
               }
             ]
@@ -2636,6 +2636,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 47,
+  "version": 48,
   "weekStart": ""
 }

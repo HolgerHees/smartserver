@@ -752,14 +752,21 @@ class Processor(threading.Thread):
         return messurements
 
     def getAttackers(self):
-        results = self.influxdb.query('SELECT COUNT("value") AS "cnt" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
         attackers = {}
+        results = self.influxdb.query('SELECT COUNT("value") AS "cnt" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
         if results is not None and results is not None:
             for result in results:
                 ip = result["tags"]["extern_ip"]
                 if ip not in attackers:
                     attackers[ip] = {}
-                attackers[ip][result["tags"]["group"]] = result["values"][0][1]
+                attackers[ip][result["tags"]["group"]] = { "count": result["values"][0][1], "last": None }
+
+            results = self.influxdb.query('SELECT LAST("value") FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\' GROUP BY "group","extern_ip"')
+            for result in results:
+                ip = result["tags"]["extern_ip"]
+                value_time = InfluxDB.parseDatetime(result["values"][0][0])
+                attackers[ip][result["tags"]["group"]]["last"] = value_time.timestamp()
+
         return attackers
 
     def _cleanTrafficState(self):
@@ -772,34 +779,14 @@ class Processor(threading.Thread):
                 self.traffic_stats[group] = values
 
     def _initTrafficState(self):
-        #ref_time = datetime.utcnow().timestamp()
-        #logging.info("ref_time {}".format(datetime.fromtimestamp(ref_time)))
-        offset = datetime.now().timestamp() - datetime.utcnow().timestamp()
-        #logging.info(offset)
         # 362 min => 6h - 2 min
         results = self.influxdb.query('SELECT "group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
-        #logging.info(results)
         self.traffic_stats = {}
         if results is not None and results is not None:
             for result in results:
                 for value in result["values"]:
-                    # 2023-07-13T23:45:29.511Z
-                    # 2023-07-13T23:45:29.511000Z
-                    #logging.info("{}000Z".format(value[0][:-1]))
-
-                    value[0] = value[0][:-1] # remove "Z" timezone
-
-                    pos = value[0].find(".")
-                    if pos == -1:
-                        value[0] = "{}.000000".format(value[0])
-                    else:
-                        # 2023-08-16T00:26:26.915000
-                        needed_characters = 26 - len(value[0])
-                        value[0] = "{}{}".format(value[0], "0" * needed_characters)
-                        #logging.info("{}".format(needed_characters))
-
-                    value_time = datetime.strptime(value[0], "%Y-%m-%dT%H:%M:%S.%f")
-                    self._addTrafficState(value[1], value_time.timestamp() + offset)
+                    value_time = InfluxDB.parseDatetime(value[0])
+                    self._addTrafficState(value[1], value_time.timestamp())
         self.last_processed_traffic_stats = self.last_traffic_stats
 
     def _addTrafficState(self, group, time):

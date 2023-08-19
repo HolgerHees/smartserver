@@ -97,12 +97,15 @@ class TrafficBlocker(threading.Thread):
                         continue
                     if ip not in attackers:
                         attackers[ip] = {}
-                    attackers[ip]["apache"] = data["count"]
+                    attackers[ip]["apache"] = { "count": data["count"], "last": data["last"] }
 
                 with self.config_lock:
                     for ip, group_data in attackers.items():
+
                         attacking_ips.append(ip)
-                        for group, count in group_data.items():
+                        for group, group_data in group_data.items():
+                            #logging.info("{} {} {} {}".format(ip, group, group_data["count"], datetime.fromtimestamp(group_data["last"])))
+
                             treshold = self.config.traffic_blocker_treshold[group]
                             if ip in self.config_map["observed_ips"]:
                                 if self.config_map["observed_ips"][ip]["state"] == "approved": # unblock validated ip
@@ -112,7 +115,7 @@ class TrafficBlocker(threading.Thread):
                                         logging.info("UNBLOCK IP {} forced".format(ip))
                                     continue
 
-                                self.config_map["observed_ips"][ip]["updated"] = now
+                                self.config_map["observed_ips"][ip]["last"] = group_data["last"]
                                 if self.config_map["observed_ips"][ip]["state"] == "blocked": # restore state
                                     if ip not in blocked_ips:
                                         logging.info("BLOCK IP {} restored".format(ip))
@@ -121,19 +124,20 @@ class TrafficBlocker(threading.Thread):
                                     continue
                                 treshold = math.ceil( treshold / ( self.config_map["observed_ips"][ip]["count"] + 1 ) ) # calculate treshhold based on number of blocked periods
 
-                            if count > treshold:
+                            if group_data["count"] > treshold:
                                 reason = "apache" if group == "apache" else "netflow"
 
                                 if ip in self.config_map["observed_ips"]:
-                                    self.config_map["observed_ips"][ip]["reason"] = reason
+                                    self.config_map["observed_ips"][ip]["updated"] = now
                                     self.config_map["observed_ips"][ip]["state"] = "blocked"
+                                    self.config_map["observed_ips"][ip]["reason"] = reason
                                     if ip not in blocked_ips:
                                         self.config_map["observed_ips"][ip]["count"] += 1
                                 else:
-                                    self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "count": 1, "state": "blocked", "reason": reason }
+                                    self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "last": group_data["last"], "count": 1, "state": "blocked", "reason": reason }
 
                                 if ip not in blocked_ips:
-                                    logging.info("BLOCK IP {} after {} samples ({})".format(ip, count, group))
+                                    logging.info("BLOCK IP {} after {} samples ({})".format(ip, group_data["count"], group))
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
                             elif ip in blocked_ips:
@@ -144,8 +148,8 @@ class TrafficBlocker(threading.Thread):
                     for ip in [ip for ip in blocked_ips if ip not in attacking_ips]:
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
-                            factor = 0 if data["count"] <= 1 else pow(2,data["count"] - 2)
-                            time_offset = data["updated"] + ( self.config.traffic_blocker_unblock_timeout * factor )
+                            factor = pow(2,data["count"] - 1)
+                            time_offset = data["last"] + ( self.config.traffic_blocker_unblock_timeout * factor )
                             if now <= time_offset:
                                 continue
                             logging.info("UNBLOCK IP {} after {}".format(ip, timedelta(seconds=(now - time_offset))))
@@ -187,11 +191,14 @@ class TrafficBlocker(threading.Thread):
                     ip = match[1]
                     method = match[2]
                     url = match[3]
+                    time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
 
                     is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt)$", url)
                     if ip not in http_requests:
-                        http_requests[ip] = { "count": 0, "suspicious": False }
+                        http_requests[ip] = { "count": 0, "last": 0, "suspicious": False }
                     http_requests[ip]["count"] += 1
+                    if time > http_requests[ip]["last"]:
+                        http_requests[ip]["last"] = time
                     if not http_requests[ip]["suspicious"] and is_suspicious:
                         http_requests[ip]["suspicious"] = True
         except urllib.error.HTTPError as e:
@@ -234,7 +241,7 @@ class TrafficBlocker(threading.Thread):
         if self.config_map is not None:
             with self.config_lock:
                 for ip, data in self.config_map["observed_ips"].items():
-                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["updated"]))
+                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["last"]))
         return messurements
 
     def getStateMetrics(self):
