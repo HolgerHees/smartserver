@@ -36,6 +36,7 @@ class Helper():
 
     @staticmethod
     def unblockIp(ip):
+        logging.info(" ".join(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]))
         returncode, cmd_result = command.exec2(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
         if returncode != 0:
             raise Exception("Cmd 'iptables -D' was not successful")

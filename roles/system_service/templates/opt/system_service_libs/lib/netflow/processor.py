@@ -791,7 +791,7 @@ class Processor(threading.Thread):
         if time > self.last_traffic_stats:
             self.last_traffic_stats = time
 
-        self.ip_stats.append({"ip": ip, "group": group, "time": time})
+        self.ip_stats.append({"ip": str(ip), "group": group, "time": time})
 
     def _fillTrafficStates(self, states):
         if "observed" not in states:

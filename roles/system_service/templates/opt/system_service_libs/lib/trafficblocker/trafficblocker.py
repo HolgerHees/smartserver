@@ -77,6 +77,18 @@ class TrafficBlocker(threading.Thread):
                 blocked_ips = Helper.getBlockedIps()
                 ip_traffic_state = self.netflow.getIPTrafficState()
 
+                #checked_ips = []
+                #for ip in blocked_ips:
+                #    if ip in checked_ips:
+                #        logging.info("unblock")
+                #        Helper.unblockIp(ip)
+                #        #blocked_ips.remove(ip)
+                #    else:
+                #        checked_ips.append(ip)
+                #blocked_ips = checked_ips
+
+                #logging.info(blocked_ips)
+
                 # post processing data
                 for ip, group_data in ip_traffic_state.items():
                     if len(group_data) == 1:
@@ -239,6 +251,8 @@ class TrafficBlocker(threading.Thread):
             with self.config_lock:
                 for ip, data in self.config_map["observed_ips"].items():
                     messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["last"]))
+
+                    logging.info("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["last"]))
         return messurements
 
     def getStateMetrics(self):

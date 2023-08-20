@@ -897,7 +897,7 @@
             }
           ],
           "measurement": "trafficblocker",
-          "orderByTime": "ASC",
+          "orderByTime": "DESC",
           "policy": "default",
           "refId": "A",
           "resultFormat": "table",
@@ -2641,6 +2641,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 49,
+  "version": 50,
   "weekStart": ""
 }
