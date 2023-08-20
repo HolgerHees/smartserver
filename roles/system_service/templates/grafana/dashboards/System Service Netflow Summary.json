@@ -441,18 +441,6 @@
                 ]
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Malware"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 100
-              }
-            ]
           }
         ]
       },
@@ -553,12 +541,6 @@
             {
               "params": [
                 "service::tag"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "malware::tag"
               ],
               "type": "tag"
             }
@@ -800,6 +782,6 @@
   "timezone": "",
   "title": "System Service Netflow Summary",
   "uid": "system-service-netflow-summary",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }

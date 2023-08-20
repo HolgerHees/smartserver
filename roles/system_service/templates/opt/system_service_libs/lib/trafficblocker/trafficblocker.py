@@ -39,9 +39,10 @@ class TrafficBlocker(threading.Thread):
 
         self.influxdb = influxdb
 
+        self._restore()
+
     def start(self):
         self.is_running = True
-        self._restore()
 
         schedule.every().day.at("01:00").do(self._dump)
         schedule.every().hour.at("00:00").do(self._cleanup)
@@ -58,11 +59,6 @@ class TrafficBlocker(threading.Thread):
     def run(self):
         logging.info("IP traffic blocker started")
         try:
-            if self.config_map is None:
-                self.config_map = {"observed_ips": {}}
-                if self.valid_config_file:
-                    self._dump()
-
             self.blocked_ips = []
 
             HIERARCHY = {
@@ -107,7 +103,7 @@ class TrafficBlocker(threading.Thread):
                         continue
                     if ip not in ip_traffic_state:
                         ip_traffic_state[ip] = {}
-                    ip_traffic_state[ip]["apache"] = { "count": data["count"], "last": data["last"]}
+                    ip_traffic_state[ip]["apache"] = { "count": data["count"], "type": "logs", "last": data["last"]}
 
                 with self.config_lock:
                     for ip, group_data in ip_traffic_state.items():
@@ -146,7 +142,7 @@ class TrafficBlocker(threading.Thread):
                                     self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "last": group_data["last"], "count": 1, "state": "blocked", "reason": reason }
 
                                 if ip not in blocked_ips:
-                                    logging.info("BLOCK IP {} after {} samples ({})".format(ip, group_data["count"], group))
+                                    logging.info("BLOCK IP {} after {} samples ({} - {})".format(ip, group_data["count"], group, group_data["type"]))
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
                             elif ip in blocked_ips:
@@ -228,6 +224,10 @@ class TrafficBlocker(threading.Thread):
         if data is not None:
             self.config_map = data["map"]
             logging.info("Loaded config")
+        else:
+            self.config_map = {"observed_ips": {}}
+            if self.valid_config_file:
+                self._dump()
 
     def _dump(self):
         with self.config_lock:

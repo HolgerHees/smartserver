@@ -377,28 +377,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Malware"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 100
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "Flags"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 100
+                "value": 150
               },
               {
                 "id": "mappings",
@@ -545,12 +529,6 @@
             {
               "params": [
                 "tcp_flags::tag"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "malware::tag"
               ],
               "type": "tag"
             }
@@ -789,6 +767,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 10,
+  "version": 11,
   "weekStart": ""
 }

@@ -389,6 +389,7 @@ class Processor(threading.Thread):
                 self._initTrafficState()
                 break
             except Exception as e:
+                #logging.info(e)
                 logging.info("InfluxDB not ready. Will retry in 15 seconds.")
                 time.sleep(15)
 
@@ -619,7 +620,6 @@ class Processor(threading.Thread):
                         traffic_group = TrafficGroup.SCANNING
                     else:
                         traffic_group = TrafficGroup.OBSERVED if service == "icmp" else TrafficGroup.INTRUDED
-                    label.append("malware={}".format(malware_type))
                 elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
                     allowed = False
                     service_key = Helper.getServiceKey(con.dest, con.dest_port) if _srcIsExternal else None
@@ -636,6 +636,9 @@ class Processor(threading.Thread):
                                 #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
                     if not allowed:
                         traffic_group = TrafficGroup.OBSERVED
+                        malware_type = "custom"
+            else:
+                malware_type = None
             label.append("group={}".format(traffic_group))
 
             direction = "incoming" if _srcIsExternal else "outgoing"
@@ -689,7 +692,7 @@ class Processor(threading.Thread):
             #logging.info("{} {}".format(timestamp, influx_timestamp))
             if traffic_group != "normal":
                 with self.stats_lock:
-                    self._addTrafficState(extern_ip, traffic_group, timestamp)
+                    self._addTrafficState(extern_ip, traffic_group, malware_type, timestamp)
 
                 if extern_ip not in blocked_ips:
                     #if traffic_group == "intruded":
@@ -768,20 +771,22 @@ class Processor(threading.Thread):
                 for result in results:
                     for value in result["values"]:
                         value_time = InfluxDB.parseDatetime(value[0])
-                        self._addTrafficState(value[1], value[2], value_time.timestamp())
+                        malware_type = self.malware.check(value[1])
+                        #logging.info(malware_type)
+                        self._addTrafficState(value[1], value[2], malware_type, value_time.timestamp())
             self.last_processed_traffic_stats = self.last_traffic_stats
 
-    def _addTrafficState(self, ip, group, time):
+    def _addTrafficState(self, ip, traffic_group, malware_type, time):
         # lock is called in place where this function is called
 
         #logging.info("ADD {}".format(datetime.fromtimestamp(time)))
-        if group not in self.traffic_stats:
-            self.traffic_stats[group] = []
-        self.traffic_stats[group].append(time)
+        if traffic_group not in self.traffic_stats:
+            self.traffic_stats[traffic_group] = []
+        self.traffic_stats[traffic_group].append(time)
         if time > self.last_traffic_stats:
             self.last_traffic_stats = time
 
-        self.ip_stats.append({"ip": ip, "group": group, "time": time})
+        self.ip_stats.append({"ip": ip, "traffic_group": traffic_group, "malware_type": malware_type, "time": time})
 
     def _fillTrafficStates(self, states):
         if "observed" not in states:
@@ -796,15 +801,15 @@ class Processor(threading.Thread):
         with self.stats_lock:
             for data in self.ip_stats:
                 ip = data["ip"]
-                group = data["group"]
+                traffic_group = data["traffic_group"]
 
                 if ip not in ipstate:
                     ipstate[ip] = {}
-                if group not in ipstate[ip]:
-                    ipstate[ip][group] = {"count": 0, "last": 0}
-                ipstate[ip][group]["count"] += 1
-                if data["time"] > ipstate[ip][group]["last"]:
-                    ipstate[ip][group]["last"] = data["time"]
+                if traffic_group not in ipstate[ip]:
+                    ipstate[ip][traffic_group] = {"count": 0, "type": data["malware_type"], "last": 0}
+                ipstate[ip][traffic_group]["count"] += 1
+                if data["time"] > ipstate[ip][traffic_group]["last"]:
+                    ipstate[ip][traffic_group]["last"] = data["time"]
 
         return ipstate
 
