@@ -899,6 +899,8 @@
           "measurement": "trafficblocker",
           "orderByTime": "DESC",
           "policy": "default",
+          "query": "SELECT last(\"value\") FROM \"autogen\".\"trafficblocker\" WHERE time > now() - 5m GROUP BY \"extern_ip\"::tag, \"blocking_state\"::tag, \"blocking_reason\"::tag ORDER BY time DESC",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
           "select": [
@@ -2641,6 +2643,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 50,
+  "version": 51,
   "weekStart": ""
 }
