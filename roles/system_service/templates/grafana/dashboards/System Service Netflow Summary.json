@@ -281,26 +281,6 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Type"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 20
-              },
-              {
-                "id": "filterable",
-                "value": true
-              },
-              {
-                "id": "displayName",
-                "value": "T"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "City"
             },
             "properties": [
@@ -345,45 +325,9 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Protocol"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 40
-              },
-              {
-                "id": "displayName",
-                "value": "P"
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "Extern Host"
             },
             "properties": [
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Zip"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 80
-              },
               {
                 "id": "filterable",
                 "value": true
@@ -497,6 +441,18 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Malware"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
           }
         ]
       },
@@ -584,12 +540,6 @@
             },
             {
               "params": [
-                "location_country_code::tag"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
                 "location_country_name::tag"
               ],
               "type": "tag"
@@ -602,13 +552,13 @@
             },
             {
               "params": [
-                "location_zip::tag"
+                "service::tag"
               ],
               "type": "tag"
             },
             {
               "params": [
-                "service::tag"
+                "malware::tag"
               ],
               "type": "tag"
             }
@@ -711,6 +661,10 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "malware": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "protocol": {
                 "aggregations": []
               },
@@ -758,20 +712,18 @@
               "Time (firstNotNull)": 2,
               "Time (lastNotNull)": 1,
               "Time (range)": 3,
-              "destination_port": 12,
-              "direction": 5,
-              "extern_group": 9,
-              "extern_host": 11,
-              "extern_ip": 10,
-              "group": 4,
-              "intern_host": 8,
-              "intern_ip": 7,
-              "location_city": 17,
-              "location_country_code": 14,
-              "location_country_name": 15,
+              "direction": 4,
+              "extern_group": 10,
+              "extern_host": 12,
+              "extern_ip": 11,
+              "group": 5,
+              "intern_host": 9,
+              "intern_ip": 8,
+              "location_city": 15,
+              "location_country_name": 14,
               "location_org": 13,
-              "location_zip": 16,
-              "service": 6
+              "malware": 6,
+              "service": 7
             },
             "renameByName": {
               "Time": "Time",
@@ -795,6 +747,7 @@
               "location_country_name": "Country",
               "location_org": "ISP",
               "location_zip": "Zip",
+              "malware": "Malware",
               "protocol": "Protocol",
               "service": "Service",
               "source_port": "",
@@ -847,6 +800,6 @@
   "timezone": "",
   "title": "System Service Netflow Summary",
   "uid": "system-service-netflow-summary",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

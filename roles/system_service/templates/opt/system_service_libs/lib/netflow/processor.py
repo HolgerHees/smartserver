@@ -613,12 +613,13 @@ class Processor(threading.Thread):
 
             traffic_group = TrafficGroup.NORMAL
             if extern_ip not in approved_ips:
-                is_malware = self.malware.check(extern_ip)
-                if is_malware:
+                malware_type = self.malware.check(extern_ip)
+                if malware_type:
                     if _srcIsExternal:
                         traffic_group = TrafficGroup.SCANNING
                     else:
                         traffic_group = TrafficGroup.OBSERVED if service == "icmp" else TrafficGroup.INTRUDED
+                    label.append("malware={}".format(malware_type))
                 elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
                     allowed = False
                     service_key = Helper.getServiceKey(con.dest, con.dest_port) if _srcIsExternal else None
@@ -635,10 +636,10 @@ class Processor(threading.Thread):
                                 #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
                     if not allowed:
                         traffic_group = TrafficGroup.OBSERVED
+            label.append("group={}".format(traffic_group))
 
             direction = "incoming" if _srcIsExternal else "outgoing"
             label.append("direction={}".format(direction))
-            label.append("group={}".format(traffic_group))
             label.append("protocol={}".format(con.protocol_name))
 
             label.append("ip_type={}".format(con.ip_type))

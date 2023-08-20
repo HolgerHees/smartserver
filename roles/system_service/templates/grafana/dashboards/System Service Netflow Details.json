@@ -377,32 +377,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Zip"
+              "options": "Malware"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 80
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Country Code"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 40
-              },
-              {
-                "id": "displayName",
-                "value": "CC"
+                "value": 100
               },
               {
                 "id": "filterable",
@@ -464,7 +444,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.2",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -534,12 +514,6 @@
             },
             {
               "params": [
-                "location_country_code::tag"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
                 "location_country_name::tag"
               ],
               "type": "tag"
@@ -547,12 +521,6 @@
             {
               "params": [
                 "location_org::tag"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "location_zip::tag"
               ],
               "type": "tag"
             },
@@ -577,6 +545,12 @@
             {
               "params": [
                 "tcp_flags::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "malware::tag"
               ],
               "type": "tag"
             }
@@ -674,6 +648,10 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "malware": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "protocol": {
                 "aggregations": [],
                 "operation": "groupby"
@@ -720,24 +698,23 @@
             },
             "indexByName": {
               "Time": 0,
-              "destination_port": 12,
-              "direction": 2,
-              "extern_group": 9,
-              "extern_host": 11,
-              "extern_ip": 10,
-              "group": 1,
-              "intern_host": 8,
-              "intern_ip": 7,
-              "ip_type": 4,
-              "location_city": 17,
-              "location_country_code": 14,
+              "destination_port": 13,
+              "direction": 1,
+              "extern_group": 10,
+              "extern_host": 12,
+              "extern_ip": 11,
+              "group": 2,
+              "intern_host": 9,
+              "intern_ip": 8,
+              "ip_type": 5,
+              "location_city": 16,
               "location_country_name": 15,
-              "location_org": 13,
-              "location_zip": 16,
-              "protocol": 3,
-              "service": 6,
-              "source_port": 18,
-              "tcp_flags": 5
+              "location_org": 14,
+              "malware": 3,
+              "protocol": 4,
+              "service": 7,
+              "source_port": 17,
+              "tcp_flags": 6
             },
             "renameByName": {
               "Time": "Time",
@@ -759,6 +736,7 @@
               "location_country_name": "Country",
               "location_org": "ISP",
               "location_zip": "Zip",
+              "malware": "Malware",
               "protocol": "Protocol",
               "service": "Service",
               "source_port": "",
@@ -788,7 +766,14 @@
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [],
+        "filters": [
+          {
+            "condition": "",
+            "key": "group",
+            "operator": "!=",
+            "value": "normal"
+          }
+        ],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -804,6 +789,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 9,
+  "version": 10,
   "weekStart": ""
 }
