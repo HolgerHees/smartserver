@@ -157,6 +157,8 @@ class TrafficBlocker(threading.Thread):
                     for ip in blocked_ips:
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
+                            if data["state"] != "blocked":
+                                continue
                             factor = pow(2,data["count"] - 1)
                             time_offset = data["last"] + ( self.config.traffic_blocker_unblock_timeout * factor )
                             if now <= time_offset:
@@ -251,8 +253,6 @@ class TrafficBlocker(threading.Thread):
             with self.config_lock:
                 for ip, data in self.config_map["observed_ips"].items():
                     messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["last"]))
-
-                    logging.info("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["last"]))
         return messurements
 
     def getStateMetrics(self):

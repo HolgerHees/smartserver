@@ -544,6 +544,8 @@ class Processor(threading.Thread):
 
         wireguard_peers = None
         approved_ips = self.handler.getTrafficBlocker().getApprovedIPs()
+        blocked_ips = self.handler.getTrafficBlocker().getBlockedIPs()
+
         registry = {}
         for con in list(self.connections):
             self.connections.remove(con)
@@ -586,9 +588,10 @@ class Processor(threading.Thread):
             label = []
 
             _srcIsExternal = self.cache.isExternal(con.src)
-            extern_ip = con.src if _srcIsExternal else con.dest
+            extern_ip_obj = con.src if _srcIsExternal else con.dest
+            extern_ip = str(extern_ip_obj)
             extern_hostname = con.src_hostname if _srcIsExternal else con.dest_hostname
-            intern_ip = con.dest if _srcIsExternal else con.src
+            intern_ip = str(con.dest if _srcIsExternal else con.src)
             intern_hostname = con.dest_hostname if _srcIsExternal else con.src_hostname
 
             label.append("intern_ip={}".format(intern_ip))
@@ -616,7 +619,7 @@ class Processor(threading.Thread):
                 #    traffic_group = self.suspicious_ips[extern_ip]["group"]
                 #else:
                 service_key = Helper.getServiceKey(con.dest, con.dest_port) if _srcIsExternal else None
-                malware_blacklist_count = self.malware.check(extern_ip)
+                malware_blacklist_count = self.malware.check(extern_ip_obj)
                 #if _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config)
 
                 if malware_blacklist_count > 0:
@@ -637,7 +640,7 @@ class Processor(threading.Thread):
                                 elif extern_ip:
                                     if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
                                         allowed = True
-                                    elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and str(extern_ip) in wireguard_peers:
+                                    elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and extern_ip in wireguard_peers:
                                         allowed = True
                                         #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
                             if not allowed:
@@ -702,16 +705,17 @@ class Processor(threading.Thread):
                 with self.stats_lock:
                     self._addTrafficState(extern_ip, traffic_group, timestamp)
 
-                #if traffic_group == "intruded":
-                data = {
-                    "extern_ip": str(extern_ip),
-                    "intern_ip": str(intern_ip),
-                    "direction": direction,
-                    "type": traffic_group,
-                    "request": con.getRequestFlow(),
-                    "response": con.getAnswerFlow()
-                }
-                logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
+                if extern_ip not in blocked_ips:
+                    #if traffic_group == "intruded":
+                    data = {
+                        "extern_ip": extern_ip,
+                        "intern_ip": intern_ip,
+                        "direction": direction,
+                        "type": traffic_group,
+                        "request": con.getRequestFlow(),
+                        "response": con.getAnswerFlow()
+                    }
+                    logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
 
             #if con.protocol in IP_PING_PROTOCOLS:
             #    data = {
@@ -791,7 +795,7 @@ class Processor(threading.Thread):
         if time > self.last_traffic_stats:
             self.last_traffic_stats = time
 
-        self.ip_stats.append({"ip": str(ip), "group": group, "time": time})
+        self.ip_stats.append({"ip": ip, "group": group, "time": time})
 
     def _fillTrafficStates(self, states):
         if "observed" not in states:
