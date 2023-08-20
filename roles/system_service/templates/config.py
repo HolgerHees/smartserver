@@ -40,10 +40,10 @@ loki_rest = "http://loki:3100"
 mqtt_host = "mosquitto"
 
 traffic_blocker_treshold = {
-  "observed": 20,
-  "scanning": 10,
-  "apache": 5,
-  "intruded": 2
+  "netflow_observed": 20,
+  "netflow_scanning": 10,
+  "netflow_intruded": 2,
+  "logs_apache": 5
 }
 traffic_blocker_unblock_timeout = 60 * 60 * 6
 traffic_blocker_clean_known_ips_timeout = 60 * 60 * 24 * 7

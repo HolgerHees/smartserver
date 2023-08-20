@@ -98,7 +98,7 @@ class TrafficBlocker(threading.Thread):
                             continue
                         for sub_group in HIERARCHY[group]:
                             if sub_group in group_data:
-                                group_data[group] += group_data[sub_group]
+                                group_data[group]["count"] += group_data[sub_group]["count"]
 
                 # merge http requests
                 http_requests = self._getHttpRequests()
@@ -107,7 +107,7 @@ class TrafficBlocker(threading.Thread):
                         continue
                     if ip not in ip_traffic_state:
                         ip_traffic_state[ip] = {}
-                    ip_traffic_state[ip]["apache"] = { "count": data["count"], "last": data["last"] }
+                    ip_traffic_state[ip]["apache"] = { "count": data["count"], "last": data["last"]}
 
                 with self.config_lock:
                     for ip, group_data in ip_traffic_state.items():
@@ -115,7 +115,9 @@ class TrafficBlocker(threading.Thread):
                         for group, group_data in group_data.items():
                             #logging.info("{} {} {} {}".format(ip, group, group_data["count"], datetime.fromtimestamp(group_data["last"])))
 
-                            treshold = self.config.traffic_blocker_treshold[group]
+                            threshold_group, reason = self._getGroupMetadata(group)
+
+                            treshold = self.config.traffic_blocker_treshold[threshold_group]
                             if ip in self.config_map["observed_ips"]:
                                 if self.config_map["observed_ips"][ip]["state"] == "approved": # unblock validated ip
                                     if ip in blocked_ips:
@@ -134,8 +136,6 @@ class TrafficBlocker(threading.Thread):
                                 treshold = math.ceil( treshold / ( self.config_map["observed_ips"][ip]["count"] + 1 ) ) # calculate treshhold based on number of blocked periods
 
                             if group_data["count"] > treshold:
-                                reason = "apache" if group == "apache" else "netflow"
-
                                 if ip in self.config_map["observed_ips"]:
                                     self.config_map["observed_ips"][ip]["updated"] = now
                                     self.config_map["observed_ips"][ip]["state"] = "blocked"
@@ -183,6 +183,11 @@ class TrafficBlocker(threading.Thread):
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
+
+    def _getGroupMetadata(self,group):
+        if group == "apache":
+            return ["logs_apache","apache"]
+        return ["netflow_{}".format(group),"netflow"]
 
     def _getHttpRequests(self):
         http_requests = {}
