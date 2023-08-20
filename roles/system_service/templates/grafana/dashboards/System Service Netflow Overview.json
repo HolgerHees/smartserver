@@ -623,7 +623,17 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "index": 0,
+                  "text": "Never updated"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -633,9 +643,22 @@
               }
             ]
           },
-          "unit": "dateTimeAsLocalNoDateIfToday"
+          "unit": "string"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value * 1000"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocalNoDateIfToday"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 3,
@@ -654,7 +677,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "textMode": "auto"
       },
@@ -668,21 +691,22 @@
           "editorMode": "builder",
           "exemplar": false,
           "expr": "system_service_malware{type=\"list_last_modified\"}",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
-          "legendFormat": "Malware DB",
+          "interval": "",
+          "legendFormat": "{{listname}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Bot & Malware IP list updated",
+      "title": "Bot & Malwarelists",
       "transformations": [
         {
           "id": "calculateField",
           "options": {
             "alias": "",
             "binary": {
-              "left": "Malware DB",
+              "left": "Value",
               "operator": "*",
               "reducer": "sum",
               "right": "1000"
@@ -694,7 +718,29 @@
               ],
               "reducer": "sum"
             },
-            "replaceFields": true
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "Value * 1000": false,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "listname": false,
+              "type": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "",
+              "Value * 1000": "",
+              "listname": "Name",
+              "type": ""
+            }
           }
         }
       ],
@@ -2643,6 +2689,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 51,
+  "version": 52,
   "weekStart": ""
 }

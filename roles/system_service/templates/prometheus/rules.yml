@@ -94,7 +94,7 @@ groups:
     expr: 'sum_over_time(system_service_netflow{type="intruded"}[60m]) > 0'
     for: 0m
     labels:
-      notifyGroup: "wan_connection"
+      notifyGroup: "suspicious_traffic"
       severity: critical
     annotations:
       summary: "Suspicious traffic detected"
@@ -103,7 +103,7 @@ groups:
     expr: 'system_service_malware{type="list_state"} == 0'
     for: 0m
     labels:
-      notifyGroup: "wan_connection"
+      notifyGroup: "suspicious_traffic"
       severity: critical
     annotations:
       summary: "Suspicious traffic list outdated"
@@ -112,7 +112,7 @@ groups:
     expr: 'system_service_malware{type="list_entries"} == 0'
     for: 0m
     labels:
-      notifyGroup: "wan_connection"
+      notifyGroup: "suspicious_traffic"
       severity: critical
     annotations:
       summary: "Suspicious traffic list is empty"

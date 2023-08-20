@@ -588,10 +588,9 @@ class Processor(threading.Thread):
             label = []
 
             _srcIsExternal = self.cache.isExternal(con.src)
-            extern_ip_obj = con.src if _srcIsExternal else con.dest
-            extern_ip = str(extern_ip_obj)
+            extern_ip = str((con.src if _srcIsExternal else con.dest).compressed)
             extern_hostname = con.src_hostname if _srcIsExternal else con.dest_hostname
-            intern_ip = str(con.dest if _srcIsExternal else con.src)
+            intern_ip = str((con.dest if _srcIsExternal else con.src).compressed)
             intern_hostname = con.dest_hostname if _srcIsExternal else con.src_hostname
 
             label.append("intern_ip={}".format(intern_ip))
@@ -612,44 +611,30 @@ class Processor(threading.Thread):
             service = con.service
             label.append("service={}".format(service))
 
-            traffic_group = None
+            traffic_group = TrafficGroup.NORMAL
             if extern_ip not in approved_ips:
-                #if extern_ip in self.suspicious_ips:
-                #    self.suspicious_ips[extern_ip]["update"] = now
-                #    traffic_group = self.suspicious_ips[extern_ip]["group"]
-                #else:
-                service_key = Helper.getServiceKey(con.dest, con.dest_port) if _srcIsExternal else None
-                malware_blacklist_count = self.malware.check(extern_ip_obj)
-                #if _srcIsExternal and Helper.isExpectedTraffic(service_key, self.config)
-
-                if malware_blacklist_count > 0:
+                is_malware = self.malware.check(extern_ip)
+                if is_malware:
                     if _srcIsExternal:
                         traffic_group = TrafficGroup.SCANNING
-                    elif malware_blacklist_count > 1:
+                    else:
                         traffic_group = TrafficGroup.OBSERVED if service == "icmp" else TrafficGroup.INTRUDED
-
-                if traffic_group is None:
-                    if _srcIsExternal:
-                        if len(self.allowed_isp_pattern) > 0:
-                            allowed = False
-                            if service_key in self.allowed_isp_pattern:
-                                if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
-                                    allowed = True
-                                elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
-                                    allowed = True
-                                elif extern_ip:
-                                    if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
-                                        allowed = True
-                                    elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and extern_ip in wireguard_peers:
-                                        allowed = True
-                                        #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
-                            if not allowed:
-                                traffic_group = TrafficGroup.OBSERVED
-
-                #if traffic_group is not None:
-                #    self.suspicious_ips[extern_ip] = { "update": now, "group": traffic_group]
-            if traffic_group is None:
-                traffic_group = TrafficGroup.NORMAL
+                elif _srcIsExternal and len(self.allowed_isp_pattern) > 0:
+                    allowed = False
+                    service_key = Helper.getServiceKey(con.dest, con.dest_port) if _srcIsExternal else None
+                    if service_key in self.allowed_isp_pattern:
+                        if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
+                            allowed = True
+                        elif extern_hostname and "hostname" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["hostname"].match(extern_hostname):
+                            allowed = True
+                        elif extern_ip:
+                            if "ip" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["ip"].match(extern_ip):
+                                allowed = True
+                            elif "wireguard_peers" in self.allowed_isp_pattern[service_key] and ( wireguard_peers is not None or ( wireguard_peers := self.getWireguardPeers() ) ) and extern_ip in wireguard_peers:
+                                allowed = True
+                                #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
+                    if not allowed:
+                        traffic_group = TrafficGroup.OBSERVED
 
             direction = "incoming" if _srcIsExternal else "outgoing"
             label.append("direction={}".format(direction))
