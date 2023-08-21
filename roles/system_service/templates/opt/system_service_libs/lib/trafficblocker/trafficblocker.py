@@ -18,11 +18,12 @@ from lib.netflow.processor import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
-    def __init__(self, config, handler, influxdb, netflow):
+    def __init__(self, config, handler, influxdb, netflow, malware):
         threading.Thread.__init__(self)
 
         self.config = config
         self.netflow = netflow
+        self.malware = malware
 
         self.is_running = False
 
@@ -36,6 +37,7 @@ class TrafficBlocker(threading.Thread):
         self.config_map = None
 
         self.blocked_ips = []
+        self.approved_ips = []
 
         self.influxdb = influxdb
 
@@ -62,8 +64,8 @@ class TrafficBlocker(threading.Thread):
             self.blocked_ips = []
 
             HIERARCHY = {
-                TrafficGroup.SCANNING: [TrafficGroup.INTRUDED],
-                TrafficGroup.OBSERVED: [TrafficGroup.SCANNING, TrafficGroup.INTRUDED],
+                "netflow_{}".format(TrafficGroup.SCANNING): ["netflow_{}".format(TrafficGroup.INTRUDED)],
+                "netflow_{}".format(TrafficGroup.OBSERVED): ["netflow_{}".format(TrafficGroup.SCANNING), "netflow_{}".format(TrafficGroup.INTRUDED)],
             }
 
             while self.is_running:
@@ -110,11 +112,9 @@ class TrafficBlocker(threading.Thread):
                 # merge http requests
                 http_requests = self._getHttpRequests()
                 for ip, data in http_requests.items():
-                    if not data["suspicious"]:
-                        continue
                     if ip not in ip_traffic_state:
                         ip_traffic_state[ip] = {}
-                    ip_traffic_state[ip]["logs_apache"] = { "count": data["count"], "reason": "logs", "type": "apache", "details": "", "last": data["last"]}
+                    ip_traffic_state[ip]["apache_{}".format(data["details"])] = { "count": data["count"], "reason": "apache", "type": data["type"], "details": data["details"], "last": data["last"]}
 
                 with self.config_lock:
                     for ip, group_data in ip_traffic_state.items():
@@ -181,6 +181,7 @@ class TrafficBlocker(threading.Thread):
                         blocked_ips.remove(ip)
 
                     self.blocked_ips = blocked_ips
+                    self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
 
                 runtime_end = time.time()
 
@@ -209,18 +210,24 @@ class TrafficBlocker(threading.Thread):
                         continue
 
                     ip = match[1]
+
+                    if ip in self.approved_ips:
+                        continue
+
                     method = match[2]
                     url = match[3]
                     time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
 
                     is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt)$", url)
                     if ip not in http_requests:
-                        http_requests[ip] = { "count": 0, "last": 0, "suspicious": False }
-                    http_requests[ip]["count"] += 1
-                    if time > http_requests[ip]["last"]:
-                        http_requests[ip]["last"] = time
+                        malware_type = self.malware.check(ip)
+                        http_requests[ip] = { "count": 0, "type": malware_type if malware_type else "unknown", "details": TrafficGroup.SCANNING if malware_type else TrafficGroup.OBSERVED , "last": 0, "suspicious": False }
                     if not http_requests[ip]["suspicious"] and is_suspicious:
                         http_requests[ip]["suspicious"] = True
+                        http_requests[ip]["details"] = TrafficGroup.SCANNING
+                    if time > http_requests[ip]["last"]:
+                        http_requests[ip]["last"] = time
+                    http_requests[ip]["count"] += 1
         except urllib.error.HTTPError as e:
             logging.info(e)
             logging.info("Loki not reachable")
@@ -245,17 +252,18 @@ class TrafficBlocker(threading.Thread):
     def _cleanup(self):
         now = time.time()
         cleaned = 0
-        for ip in list(self.config_map["observed_ips"].keys()):
-            data = self.config_map["observed_ips"][ip]
-            if data["state"] != "unblocked" or now < data["updated"] + self.config.traffic_blocker_clean_known_ips_timeout:
-                continue
-            del self.config_map["observed_ips"][ip]
-            cleaned = cleaned + 1
+        with self.config_lock:
+            for ip in list(self.config_map["observed_ips"].keys()):
+                data = self.config_map["observed_ips"][ip]
+                if data["state"] != "unblocked" or now < data["updated"] + self.config.traffic_blocker_clean_known_ips_timeout:
+                    continue
+                del self.config_map["observed_ips"][ip]
+                cleaned = cleaned + 1
         if cleaned > 0:
             logging.info("Cleaned {} ip(s)".format(cleaned))
 
     def getApprovedIPs(self):
-        return [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
+        return list(self.approved_ips)
 
     def getBlockedIPs(self):
         return list(self.blocked_ips)

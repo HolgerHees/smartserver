@@ -636,7 +636,7 @@ class Processor(threading.Thread):
                                 #logging.info("wireguard >>>>>>>>>>> {}".format(extern_ip))
                     if not allowed:
                         traffic_group = TrafficGroup.OBSERVED
-                        malware_type = "custom"
+                        malware_type = "unknown"
             else:
                 malware_type = None
             label.append("group={}".format(traffic_group))
@@ -682,11 +682,13 @@ class Processor(threading.Thread):
             key = "{}-{}".format(label_str, influx_timestamp)
             if key not in registry:
                 #logging.info("new")
-                registry[key] = [label_str, 0, influx_timestamp]
-            #else:
-            #    logging.info("doublicate")
+                registry[key] = [label_str, con.size, influx_timestamp]
 
-            registry[key][1] += con.size
+                # old values with same timestamp should be summerized
+                if key in self.last_registry:
+                    registry[key][1] += self.last_registry[key][1]
+            else:
+                registry[key][1] += con.size
 
             #logging.info("INIT {}".format(datetime.fromtimestamp(timestamp)))
             #logging.info("{} {}".format(timestamp, influx_timestamp))
@@ -716,12 +718,6 @@ class Processor(threading.Thread):
             #        "response": con.getAnswerFlow()
             #    }
             #    logging.info(data)
-
-        # old values with same timestamp should be summerized
-        for _key in self.last_registry:
-            if _key in registry:
-                registry[_key][1] += self.last_registry[_key][1]
-                #logging.info("last value")
 
         self.last_registry = registry
 
@@ -772,10 +768,7 @@ class Processor(threading.Thread):
                     for value in result["values"]:
                         value_time = InfluxDB.parseDatetime(value[0])
                         malware_type = self.malware.check(value[1])
-                        if not malware_type:
-                            malware_type = "custom"
-                        #logging.info(malware_type)
-                        self._addTrafficState(value[1], value[2], malware_type, value_time.timestamp())
+                        self._addTrafficState(value[1], value[2], malware_type if malware_type else "unknown", value_time.timestamp())
             self.last_processed_traffic_stats = self.last_traffic_stats
 
     def _addTrafficState(self, ip, traffic_group, malware_type, time):
