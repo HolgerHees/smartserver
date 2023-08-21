@@ -23,6 +23,6 @@
 
 - name: refresh adlists
   shell: "docker exec pihole sh -c \"pihole -g\" && sleep 1"
-  when: "adlist_clean_result.changed or adlist_add_result.changed"
+  when: "is_production|bool and (adlist_clean_result.changed or adlist_add_result.changed)"
 
 

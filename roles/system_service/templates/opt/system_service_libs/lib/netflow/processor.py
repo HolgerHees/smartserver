@@ -772,6 +772,8 @@ class Processor(threading.Thread):
                     for value in result["values"]:
                         value_time = InfluxDB.parseDatetime(value[0])
                         malware_type = self.malware.check(value[1])
+                        if not malware_type:
+                            malware_type = "custom"
                         #logging.info(malware_type)
                         self._addTrafficState(value[1], value[2], malware_type, value_time.timestamp())
             self.last_processed_traffic_stats = self.last_traffic_stats
@@ -803,13 +805,15 @@ class Processor(threading.Thread):
                 ip = data["ip"]
                 traffic_group = data["traffic_group"]
 
+                key = "netflow_{}".format(traffic_group)
+
                 if ip not in ipstate:
                     ipstate[ip] = {}
-                if traffic_group not in ipstate[ip]:
-                    ipstate[ip][traffic_group] = {"count": 0, "type": data["malware_type"], "last": 0}
-                ipstate[ip][traffic_group]["count"] += 1
-                if data["time"] > ipstate[ip][traffic_group]["last"]:
-                    ipstate[ip][traffic_group]["last"] = data["time"]
+                if key not in ipstate[ip]:
+                    ipstate[ip][key] = {"count": 0, "reason": "netflow", "type": data["malware_type"], "details": data["traffic_group"], "last": 0}
+                ipstate[ip][key]["count"] += 1
+                if data["time"] > ipstate[ip][key]["last"]:
+                    ipstate[ip][key]["last"] = data["time"]
 
         return ipstate
 

@@ -39,6 +39,11 @@ class PortScanner(_handler.Handler):
 
         self.started_at = time.time()
 
+    def getStateMetrics(self):
+        metrics = super().getStateMetrics()
+        metrics.append("system_service_state{{type=\"portscan\",details=\"cache_file\",}} {}".format("1" if self.valid_cache_file else "0"))
+        return metrics
+
     def start(self):
         schedule.every().day.at("01:00").do(self._dump)
         schedule.every().hour.at("00:00").do(self._cleanup)
@@ -57,6 +62,9 @@ class PortScanner(_handler.Handler):
         if data is not None:
             self.monitored_devices = data["monitored_devices"]
             logging.info("Loaded {} devices".format(len(self.monitored_devices)))
+        else:
+            self.monitored_devices = {}
+            self._dump()
 
     def _dump(self):
         if self.valid_cache_file:

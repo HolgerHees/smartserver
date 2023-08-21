@@ -78,7 +78,7 @@ class IPCache(threading.Thread):
         super().start()
 
     def terminate(self):
-        if self.is_running and os.path.exists(self.dump_path):
+        if self.is_running and self.valid_cache_file and os.path.exists(self.dump_path):
             self._dump()
         self.is_running = False
 
@@ -306,6 +306,6 @@ class IPCache(threading.Thread):
     def getStateMetrics(self):
         return [
             "system_service_process{{type=\"ip_cache\",}} {}".format("1" if self.is_running else "0"),
-            "system_service_state{{type=\"ip_cache_ip2location\",}} {}".format("1" if self.ip2location_state else "0"),
-            "system_service_state{{type=\"ip_cache_dump\",}} {}".format("1" if self.valid_cache_file else "0")
+            "system_service_state{{type=\"ip_cache\",details=\"ip2location_service\"}} {}".format("1" if self.ip2location_state else "0"),
+            "system_service_state{{type=\"ip_cache\",details=\"cache_file\",}} {}".format("1" if self.valid_cache_file else "0")
         ]

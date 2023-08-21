@@ -31,7 +31,7 @@ class TrafficBlocker(threading.Thread):
         self.config_lock = threading.Lock()
 
         self.dump_config_path = "/var/lib/system_service/trafficblocker.json"
-        self.config_version = 2
+        self.config_version = 3
         self.valid_config_file = True
         self.config_map = None
 
@@ -85,6 +85,17 @@ class TrafficBlocker(threading.Thread):
 
                 #logging.info(blocked_ips)
 
+                #for ip, data in self.config_map["observed_ips"].items():
+                #    if data["type"] == "apache":
+                #        del data["group"]
+                #        data["reason"] = "logs"
+                #        data["type"] = "apache"
+                #        data["details"] = ""
+                #    elif data["reason"] == "netflow":
+                #        #data["type"] = "apache"
+                #        data["details"] = data["group"]
+                #        del data["group"]
+
                 # post processing data
                 for ip, group_data in ip_traffic_state.items():
                     if len(group_data) == 1:
@@ -103,17 +114,17 @@ class TrafficBlocker(threading.Thread):
                         continue
                     if ip not in ip_traffic_state:
                         ip_traffic_state[ip] = {}
-                    ip_traffic_state[ip]["apache"] = { "count": data["count"], "type": "logs", "last": data["last"]}
+                    ip_traffic_state[ip]["logs_apache"] = { "count": data["count"], "reason": "logs", "type": "apache", "details": "", "last": data["last"]}
 
                 with self.config_lock:
                     for ip, group_data in ip_traffic_state.items():
 
-                        for group, group_data in group_data.items():
+                        for group_key, group_data in group_data.items():
                             #logging.info("{} {} {} {}".format(ip, group, group_data["count"], datetime.fromtimestamp(group_data["last"])))
 
-                            threshold_group, reason = self._getGroupMetadata(group)
+                            #logging.info("{} {} {} {}".format(group_key, group_data["reason"], group_data["type"], group_data["details"]))
 
-                            treshold = self.config.traffic_blocker_treshold[threshold_group]
+                            treshold = self.config.traffic_blocker_treshold[group_key]
                             if ip in self.config_map["observed_ips"]:
                                 if self.config_map["observed_ips"][ip]["state"] == "approved": # unblock validated ip
                                     if ip in blocked_ips:
@@ -135,14 +146,16 @@ class TrafficBlocker(threading.Thread):
                                 if ip in self.config_map["observed_ips"]:
                                     self.config_map["observed_ips"][ip]["updated"] = now
                                     self.config_map["observed_ips"][ip]["state"] = "blocked"
-                                    self.config_map["observed_ips"][ip]["reason"] = reason
+                                    self.config_map["observed_ips"][ip]["reason"] = group_data["reason"]
+                                    self.config_map["observed_ips"][ip]["type"] = group_data["type"]
+                                    self.config_map["observed_ips"][ip]["details"] = group_data["details"]
                                     if ip not in blocked_ips:
                                         self.config_map["observed_ips"][ip]["count"] += 1
                                 else:
-                                    self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "last": group_data["last"], "count": 1, "state": "blocked", "reason": reason }
+                                    self.config_map["observed_ips"][ip] = { "created": now, "updated": now, "last": group_data["last"], "count": 1, "state": "blocked", "reason": group_data["reason"], "type": group_data["type"], "details": group_data["details"] }
 
                                 if ip not in blocked_ips:
-                                    logging.info("BLOCK IP {} after {} samples ({} - {})".format(ip, group_data["count"], group, group_data["type"]))
+                                    logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["reason"], group_data["type"], group_data["details"]))
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
                             elif ip in blocked_ips:
@@ -179,11 +192,6 @@ class TrafficBlocker(threading.Thread):
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
-
-    def _getGroupMetadata(self,group):
-        if group == "apache":
-            return ["logs_apache","apache"]
-        return ["netflow_{}".format(group),"netflow"]
 
     def _getHttpRequests(self):
         http_requests = {}
@@ -226,13 +234,13 @@ class TrafficBlocker(threading.Thread):
             logging.info("Loaded config")
         else:
             self.config_map = {"observed_ips": {}}
-            if self.valid_config_file:
-                self._dump()
+            self._dump()
 
     def _dump(self):
-        with self.config_lock:
-            ConfigHelper.saveConfig(self.dump_config_path, self.config_version, { "map": self.config_map } )
-            logging.info("Saved config")
+        if self.valid_config_file:
+            with self.config_lock:
+                ConfigHelper.saveConfig(self.dump_config_path, self.config_version, { "map": self.config_map } )
+                logging.info("Saved config")
 
     def _cleanup(self):
         now = time.time()
@@ -257,10 +265,13 @@ class TrafficBlocker(threading.Thread):
         if self.config_map is not None:
             with self.config_lock:
                 for ip, data in self.config_map["observed_ips"].items():
-                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["count"], data["last"]))
+                    if data["state"] != "blocked":
+                        continue
+                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_type={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["type"], data["count"], data["last"]))
         return messurements
 
     def getStateMetrics(self):
         return [
-            "system_service_process{{type=\"trafficblocker\",}} {}".format("1" if self.is_running else "0"),
+            "system_service_process{{type=\"trafficblocker\"}} {}".format("1" if self.is_running else "0"),
+            "system_service_state{{type=\"trafficblocker\",details=\"cache_file\"}} {}".format("1" if self.valid_config_file else "0")
         ]
