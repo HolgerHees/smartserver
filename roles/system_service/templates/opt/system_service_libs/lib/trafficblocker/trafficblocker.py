@@ -174,7 +174,7 @@ class TrafficBlocker(threading.Thread):
                             time_offset = data["last"] + ( self.config.traffic_blocker_unblock_timeout * factor )
                             if now <= time_offset:
                                 continue
-                            logging.info("UNBLOCK IP {} after {}".format(ip, timedelta(seconds=(now - time_offset))))
+                            logging.info("UNBLOCK IP {} after {}".format(ip, timedelta(seconds=(now - data["last"]))))
                             data["updated"] = now
                             data["state"] = "unblocked"
                         else:
