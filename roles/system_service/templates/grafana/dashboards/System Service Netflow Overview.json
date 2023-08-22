@@ -467,7 +467,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 140
+                "value": 110
               }
             ]
           },
@@ -2524,6 +2524,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 60,
+  "version": 61,
   "weekStart": ""
 }
