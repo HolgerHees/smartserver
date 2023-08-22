@@ -10,6 +10,7 @@ import urllib.parse
 import urllib.request
 import json
 import re
+import ipaddress
 
 from smartserver.confighelper import ConfigHelper
 
@@ -18,7 +19,7 @@ from lib.netflow.processor import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
-    def __init__(self, config, handler, influxdb, netflow, malware):
+    def __init__(self, config, handler, influxdb, ipcache, netflow, malware):
         threading.Thread.__init__(self)
 
         self.config = config
@@ -39,6 +40,7 @@ class TrafficBlocker(threading.Thread):
         self.blocked_ips = []
         self.approved_ips = []
 
+        self.ipcache = ipcache
         self.influxdb = influxdb
 
         self._restore()
@@ -201,6 +203,7 @@ class TrafficBlocker(threading.Thread):
             url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start.timestamp(), urllib.parse.quote( '{group=~\"apache\"} |= \"- 410 -\"'))
             contents = urllib.request.urlopen(url).read()
             result = json.loads(contents)
+            external_state = {}
             if "status" in result and result["status"] == "success":
                 for row in result["data"]["result"][0]["values"]:
                     #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
@@ -212,6 +215,11 @@ class TrafficBlocker(threading.Thread):
                     ip = match[1]
 
                     if ip in self.approved_ips:
+                        continue
+
+                    if ip not in external_state:
+                        external_state[ip] = self.ipcache.isExternal(ipaddress.ip_address(ip))
+                    if not external_state[ip]:
                         continue
 
                     method = match[2]

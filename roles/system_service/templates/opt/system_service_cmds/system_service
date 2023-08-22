@@ -54,7 +54,7 @@ class Handler(Server):
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb, self.info )
         self.fping = FPing(config, self, self.influxdb )
 
-        self.trafficblocker = TrafficBlocker(config, self, self.influxdb, self.netflow, self.malware)
+        self.trafficblocker = TrafficBlocker(config, self, self.influxdb, self.ipcache, self.netflow, self.malware)
 
         self.scheduler = Scheduler()
 
