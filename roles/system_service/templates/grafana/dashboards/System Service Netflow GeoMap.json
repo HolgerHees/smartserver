@@ -136,18 +136,6 @@
                 "value": "Provider"
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "location_district"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "District"
-              }
-            ]
           }
         ]
       },
@@ -218,7 +206,7 @@
               "options": "A"
             },
             "location": {
-              "geohash": "location_geohash",
+              "geohash": "geohash",
               "latitude": "location_lat",
               "longitude": "location_lon",
               "mode": "geohash"
@@ -265,7 +253,7 @@
               "options": "B"
             },
             "location": {
-              "geohash": "location_geohash",
+              "geohash": "geohash",
               "mode": "geohash"
             },
             "name": "Incoming Traffic",
@@ -286,7 +274,7 @@
           "zoom": 3
         }
       },
-      "pluginVersion": "9.4.7",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -294,12 +282,6 @@
             "uid": "system_info_influxdb"
           },
           "groupBy": [
-            {
-              "params": [
-                "location_geohash"
-              ],
-              "type": "tag"
-            },
             {
               "params": [
                 "location_city"
@@ -311,24 +293,28 @@
                 "location_org"
               ],
               "type": "tag"
+            },
+            {
+              "params": [
+                "location_zip::tag"
+              ],
+              "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
+          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"count\") as \"count\" FROM \"autogen\".\"netflow\" WHERE (\"direction\" = 'outgoing' AND \"location_geohash\" != '\"\"') AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "location_geohash"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "count"
               }
             ]
           ],
@@ -375,6 +361,8 @@
           "measurement": "netflow_size",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"count\") as \"count\" FROM \"autogen\".\"netflow\" WHERE (\"direction\" = 'incoming' AND \"location_geohash\" != '\"\"') AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
+          "rawQuery": true,
           "refId": "B",
           "resultFormat": "table",
           "select": [
@@ -442,6 +430,6 @@
   "timezone": "",
   "title": "System Service Netflow GeoMap",
   "uid": "system-service-netflow-geopmap",
-  "version": 12,
+  "version": 13,
   "weekStart": ""
 }

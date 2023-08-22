@@ -153,7 +153,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -248,7 +248,7 @@
         },
         "textMode": "value_and_name"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "alias": "WAN TYPE",
@@ -256,37 +256,20 @@
             "type": "influxdb",
             "uid": "system_info_influxdb"
           },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
+          "groupBy": [],
           "hide": false,
-          "measurement": "network_wan_type",
+          "measurement": "network_wan",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "type"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
               }
             ]
           ],
@@ -298,37 +281,20 @@
             "type": "influxdb",
             "uid": "system_info_influxdb"
           },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
+          "groupBy": [],
           "hide": false,
-          "measurement": "network_wan_state",
+          "measurement": "network_wan",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "state"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
               }
             ]
           ],
@@ -377,7 +343,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "PING"
+              "options": "Ping"
             },
             "properties": [
               {
@@ -413,10 +379,9 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
-          "alias": "DOWN",
           "datasource": {
             "type": "influxdb",
             "uid": "system_info_influxdb"
@@ -435,148 +400,20 @@
               "type": "fill"
             }
           ],
-          "measurement": "speedtest_downstream_rate",
+          "measurement": "speedtest",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
+          "query": "SELECT last(\"downstream_rate\") as \"downstream\",last(\"upstream_rate\") as \"upstream\",last(\"ping\") as \"ping\",last(\"lastrun\") as \"lastrun\" FROM \"autogen\".\"speedtest\"",
+          "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
+          "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "downstream_rate"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "UP",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "speedtest_upstream_rate",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "PING",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "speedtest_ping",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "LAST RUN",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "speedtest_time",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
               }
             ]
           ],
@@ -586,15 +423,17 @@
       "title": "Speedtest Result",
       "transformations": [
         {
-          "id": "filterFieldsByName",
+          "id": "organize",
           "options": {
-            "include": {
-              "names": [
-                "DOWN",
-                "UP",
-                "PING",
-                "LAST RUN"
-              ]
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "downstream": "Downstream",
+              "lastrun": "Last",
+              "ping": "Ping",
+              "upstream": "Upstream"
             }
           }
         }
@@ -663,7 +502,7 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "alias": "LOCATION",
@@ -671,37 +510,20 @@
             "type": "influxdb",
             "uid": "system_info_influxdb"
           },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
+          "groupBy": [],
           "hide": false,
-          "measurement": "speedtest_location",
+          "measurement": "speedtest",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "location"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
               }
             ]
           ],
@@ -744,7 +566,7 @@
         "content": "<iframe \nallowtransparency=\"true\" width=\"100%\" height=\"90%\" frameBorder=\"0\" id=\"buttonFrame\"\nsrc=\"about:blank\"></iframe>\n<script>\ndomain = document.location.hostname.substr(document.location.hostname.indexOf(\".\")+1); \ndocument.getElementById('buttonFrame').setAttribute(\"src\",\"https://\" + domain + \"/system_service/speedtest.php\");\n</script>\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "transparent": true,
       "type": "text"
     },
@@ -866,9 +688,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "speedtest_downstream_rate",
+          "measurement": "speedtest",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "query": "SELECT max(\"value\")*1024 FROM \"pGF_Corridor_Speedtest_DownstreamRate\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
           "rawQuery": false,
           "refId": "C",
@@ -877,7 +699,7 @@
             [
               {
                 "params": [
-                  "value"
+                  "downstream_rate"
                 ],
                 "type": "field"
               },
@@ -909,9 +731,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "speedtest_upstream_rate",
+          "measurement": "speedtest",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "query": "SELECT max(\"value\")*1024 FROM \"pGF_Corridor_Speedtest_UpstreamRate\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
           "rawQuery": false,
           "refId": "D",
@@ -920,7 +742,7 @@
             [
               {
                 "params": [
-                  "value"
+                  "upstream_rate"
                 ],
                 "type": "field"
               },
@@ -1166,7 +988,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -1262,7 +1084,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -1358,7 +1180,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -1459,7 +1281,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.1",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
@@ -1497,6 +1319,6 @@
   "timezone": "",
   "title": "System Service WAN",
   "uid": "system-service-wan",
-  "version": 9,
+  "version": 12,
   "weekStart": ""
 }

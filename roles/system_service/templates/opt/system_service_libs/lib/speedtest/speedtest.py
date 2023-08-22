@@ -56,7 +56,7 @@ class Speedtest():
         self.is_testing = True
         self.handler.notifySpeedtestData()
 
-        messurements = []
+        messurement_values = []
         try:
             if not self.info.isConnectionOnline() or not self.info.isDefaultConnection():
                 logging.info(u"Speedtest skipped")
@@ -113,9 +113,10 @@ class Speedtest():
                     self.mqtt.publish("speedtest/downstream_rate", resultDown)
                     self.mqtt.publish("speedtest/ping", resultPing)
 
-                    messurements.append("speedtest_upstream_rate value={}".format(resultUp))
-                    messurements.append("speedtest_downstream_rate value={}".format(resultDown))
-                    messurements.append("speedtest_ping value={}".format(resultPing))
+
+                    messurement_values.append("upstream_rate={}".format(resultUp))
+                    messurement_values.append("downstream_rate={}".format(resultDown))
+                    messurement_values.append("ping={}".format(resultPing))
                 except json.decoder.JSONDecodeError:
                     self.resetMetrics()
 
@@ -138,12 +139,12 @@ class Speedtest():
             self.mqtt.publish("speedtest/time", "{:02d}:{:02d}".format(datetime.now().hour,datetime.now().minute))
             self.mqtt.publish("speedtest/location", location)
 
-            messurements.append("speedtest_time value=\"{}\"".format("{:02d}:{:02d}".format(datetime.now().hour,datetime.now().minute)))
-            messurements.append("speedtest_location value=\"{}\"".format(location))
+            messurement_values.append("lastrun=\"{}\"".format("{:02d}:{:02d}".format(datetime.now().hour,datetime.now().minute)))
+            messurement_values.append("location=\"{}\"".format(location))
 
             retry_count = 5
             while not self.event.is_set() and retry_count > 0:
-                state = self.influxdb.submit(messurements)
+                state = self.influxdb.submit(["speedtest {}".format(",".join(messurement_values))])
                 if state == 1:
                     break
                 self.event.wait(self.config.influxdb_publish_interval)

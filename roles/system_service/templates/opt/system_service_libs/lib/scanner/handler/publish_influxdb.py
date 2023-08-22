@@ -42,16 +42,23 @@ class InfluxDBPublisher(_handler.Handler):
                     outAvg += data.getOutAvg()
 
                 if device.getIP() == self.config.default_gateway_ip:
+                    wan_values = []
                     for wan_stats in ["wan_type","wan_state"]:
                         wan_stats_value = data.getDetail(wan_stats)
                         if wan_stats_value is not None:
-                            messurements.append("network_{} value=\"{}\"".format(wan_stats,wan_stats_value))
+                            wan_values.append("{}=\"{}\"".format(wan_stats[4:],wan_stats_value))
+                    messurements.append("network_wan {}".format(",".join(wan_values)))
 
             if inAvg is not None or outAvg is not None:
+                wan_values = []
                 if inAvg is not None:
-                    messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),inAvg))
+                    wan_values.append("in_avg={}".format(inAvg))
+                    #messurements.append("network_in_avg,ip={} value={}".format(device.getIP(),inAvg))
                 if outAvg is not None:
-                    messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),outAvg))
-                messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),inAvg + outAvg))
+                    wan_values.append("out_avg={}".format(outAvg))
+                    #messurements.append("network_out_avg,ip={} value={}".format(device.getIP(),outAvg))
+                #wan_values.append("total_avg={}".format(outAvg))
+                #messurements.append("network_total_avg,ip={} value={}".format(device.getIP(),inAvg + outAvg))
+                messurements.append("network_traffic,ip={} {}".format(device.getIP(),",".join(wan_values)))
 
         return messurements

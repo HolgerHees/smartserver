@@ -399,6 +399,18 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 65
+              }
+            ]
           }
         ]
       },
@@ -519,32 +531,20 @@
                 "service::tag"
               ],
               "type": "tag"
-            },
-            {
-              "params": [
-                "source_port::tag"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "tcp_flags::tag"
-              ],
-              "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT \"value\" FROM \"default\".\"netflow_size\" WHERE (\"direction\" = 'incoming') AND $timeFilter GROUP BY \"destination_port\"::tag, \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"ip_type\"::tag, \"location_city\"::tag, \"location_country_code\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"location_zip\"::tag, \"protocol\"::tag, \"service\"::tag, \"suspicious\"::tag, \"source_port\"::tag ORDER BY time DESC",
-          "rawQuery": false,
+          "policy": "autogen",
+          "query": "SELECT \"tcp_flags\",\"count\" FROM \"autogen\".\"netflow\" WHERE $timeFilter GROUP BY \"destination_port\"::tag, \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"ip_type\"::tag, \"location_city\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"protocol\"::tag, \"service\"::tag ORDER BY time DESC",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "tcp_flags"
                 ],
                 "type": "field"
               }
@@ -565,6 +565,12 @@
                   "firstNotNull"
                 ],
                 "operation": "groupby"
+              },
+              "count": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
               },
               "destination_port": {
                 "aggregations": [],
@@ -675,20 +681,20 @@
               "source_port": true
             },
             "indexByName": {
-              "Time": 0,
+              "Time": 1,
+              "count (sum)": 0,
               "destination_port": 13,
-              "direction": 1,
+              "direction": 2,
               "extern_group": 10,
               "extern_host": 12,
               "extern_ip": 11,
-              "group": 2,
+              "group": 3,
               "intern_host": 9,
               "intern_ip": 8,
               "ip_type": 5,
               "location_city": 16,
               "location_country_name": 15,
               "location_org": 14,
-              "malware": 3,
               "protocol": 4,
               "service": 7,
               "source_port": 17,
@@ -699,6 +705,7 @@
               "Time (firstNotNull)": "Time",
               "Time (lastNotNull)": "Time",
               "Time (range)": "Since",
+              "count (sum)": "Events",
               "destination_port": "Port",
               "direction": "Direction",
               "extern_group": "Extern Group",
@@ -744,14 +751,7 @@
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [
-          {
-            "condition": "",
-            "key": "group",
-            "operator": "!=",
-            "value": "normal"
-          }
-        ],
+        "filters": [],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -767,6 +767,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 11,
+  "version": 17,
   "weekStart": ""
 }

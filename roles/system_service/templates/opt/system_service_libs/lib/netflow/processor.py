@@ -389,7 +389,7 @@ class Processor(threading.Thread):
                 self._initTrafficState()
                 break
             except Exception as e:
-                #logging.info(e)
+                logging.info(e)
                 logging.info("InfluxDB not ready. Will retry in 15 seconds.")
                 time.sleep(15)
 
@@ -558,7 +558,7 @@ class Processor(threading.Thread):
 
             # most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
             timestamp -= METRIC_TIMESHIFT
-            influx_timestamp = int(timestamp * 1000)
+            influx_timestamp = int(int(timestamp) * 1000)
 
             _location = con.location
             if _location["type"] == IPCache.TYPE_LOCATION:
@@ -587,6 +587,7 @@ class Processor(threading.Thread):
                 location_org = "Unknown"
 
             label = []
+            values = {}
 
             _srcIsExternal = self.cache.isExternal(con.src)
             extern_ip = str((con.src if _srcIsExternal else con.dest).compressed)
@@ -647,17 +648,8 @@ class Processor(threading.Thread):
 
             label.append("ip_type={}".format(con.ip_type))
 
-            flags = []
-            if con.request_tcp_flags is not None:
-                for flag, name in TCP_FLAGS.items():
-                    if flag & con.request_tcp_flags == flag:
-                        flags.append(name)
-            if len(flags) == 0:
-                flags.append("NONE")
-            label.append("tcp_flags={}".format("|".join(flags)))
-
             label.append("destination_port={}".format(con.dest_port))
-            label.append("source_port={}".format(con.src_port))
+            #label.append("source_port={}".format(con.src_port)) # => should be a field, because it is changing every time
             #label.append("size={}".format(con.size))
             #label.append("duration={}".format(con.duration))
             #label.append("packets={}".format(con.packages))
@@ -666,10 +658,6 @@ class Processor(threading.Thread):
             label.append("location_country_code={}".format(location_country_code))
             label.append("location_zip={}".format(InfluxDB.escapeValue(location_zip)))
             label.append("location_city={}".format(InfluxDB.escapeValue(location_city)))
-            #if location_district:
-            #    label.append("location_district={}".format(InfluxDB.escapeValue(location_district)))
-            if location_geohash:
-                label.append("location_geohash={}".format(location_geohash))
             if location_org:
                 label.append("location_org={}".format(InfluxDB.escapeValue(location_org)))
 
@@ -678,17 +666,31 @@ class Processor(threading.Thread):
             #logging.info("SRC: {} {} {}".format(con.src, con.src_hostname,src_location))
             #logging.info("DEST: {} {} {}".format(con.dest, con.dest_hostname,dest_location))
 
+            if location_geohash:
+                values["location_geohash"] = location_geohash
+                label.append("location_geohash=1")
+
+            values["tcp_flags"] = con.request_tcp_flags if con.request_tcp_flags is not None else 0
+            values["size"] = con.size
+            values["count"] = 1
+
             label_str = ",".join(label)
             key = "{}-{}".format(label_str, influx_timestamp)
             if key not in registry:
                 #logging.info("new")
-                registry[key] = [label_str, con.size, influx_timestamp]
+                registry[key] = [label_str, values, influx_timestamp]
+
+                #logging.info("timestamp: {}, influx_timestamp: {}".format(timestamp, influx_timestamp))
 
                 # old values with same timestamp should be summerized
                 if key in self.last_registry:
-                    registry[key][1] += self.last_registry[key][1]
+                    registry[key][1]["tcp_flags"] |= self.last_registry[key][1]["tcp_flags"]
+                    registry[key][1]["size"] += self.last_registry[key][1]["size"]
+                    registry[key][1]["count"] += self.last_registry[key][1]["count"]
             else:
-                registry[key][1] += con.size
+                registry[key][1]["tcp_flags"] |= values["tcp_flags"]
+                registry[key][1]["size"] += values["size"]
+                registry[key][1]["count"] += 1
 
             #logging.info("INIT {}".format(datetime.fromtimestamp(timestamp)))
             #logging.info("{} {}".format(timestamp, influx_timestamp))
@@ -724,7 +726,31 @@ class Processor(threading.Thread):
         messurements = []
         sorted_registry = sorted(registry.values(), key=lambda x: x[2])
         for data in sorted_registry:
-            messurements.append("netflow_size,{} value={} {}".format(data[0], data[1], data[2]))
+
+            label_str, values, timestamp = data
+
+            flags = []
+            if values["tcp_flags"] > 0:
+                for flag, name in TCP_FLAGS.items():
+                    if flag & values["tcp_flags"] == flag:
+                        flags.append(name)
+            if len(flags) == 0:
+                flags.append("NONE")
+
+            values_str = []
+            values_str.append("tcp_flags=\"{}\"".format("|".join(flags)))
+            for name,value in values.items():
+                if name == "tcp_flags":
+                    continue
+                elif isinstance(value, str):
+                    values_str.append("{}=\"{}\"".format(name,InfluxDB.escapeValue(value)))
+                else:
+                    values_str.append("{}={}".format(name,value))
+            values_str = ",".join(values_str)
+
+            #logging.info("netflow,{} {} {}".format(label_str, values_str, timestamp))
+
+            messurements.append("netflow,{} {} {}".format(label_str, values_str, timestamp))
 
         #end = time.time()
         #logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
@@ -761,14 +787,17 @@ class Processor(threading.Thread):
     def _initTrafficState(self):
         with self.stats_lock:
             # 362 min => 6h - 2 min
-            results = self.influxdb.query('SELECT "extern_ip","group","value" FROM "netflow_size" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
+            results = self.influxdb.query('SELECT "extern_ip","group","count" FROM "netflow" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
             self.traffic_stats = {}
             if results is not None:
                 for result in results:
                     for value in result["values"]:
+                        #if value[3] > 1:
+                        #    logging.info("{} {} {}".format(value[1], value[2], value[3]))
                         value_time = InfluxDB.parseDatetime(value[0])
                         malware_type = self.malware.check(value[1])
-                        self._addTrafficState(value[1], value[2], malware_type if malware_type else "unknown", value_time.timestamp())
+                        for n in range(value[3]):
+                            self._addTrafficState(value[1], value[2], malware_type if malware_type else "unknown", value_time.timestamp())
             self.last_processed_traffic_stats = self.last_traffic_stats
 
     def _addTrafficState(self, ip, traffic_group, malware_type, time):

@@ -218,7 +218,8 @@ class TrafficBlocker(threading.Thread):
                     url = match[3]
                     time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
 
-                    is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt)$", url)
+                    #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
+                    is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
                     if ip not in http_requests:
                         malware_type = self.malware.check(ip)
                         http_requests[ip] = { "count": 0, "type": malware_type if malware_type else "unknown", "details": TrafficGroup.SCANNING if malware_type else TrafficGroup.OBSERVED , "last": 0, "suspicious": False }

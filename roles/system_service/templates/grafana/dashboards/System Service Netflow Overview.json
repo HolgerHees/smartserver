@@ -126,9 +126,9 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/ AND \"location_country_code\" != 'xx' AND \"service\" != 'speedtest') AND $timeFilter GROUP BY \"location_country_name\"",
           "rawQuery": false,
           "refId": "A",
@@ -137,7 +137,7 @@
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -246,16 +246,16 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -474,7 +474,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "count"
+              "options": "Count"
             },
             "properties": [
               {
@@ -527,22 +527,22 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "count"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "count"
+                "type": "sum"
               }
             ]
           ],
@@ -562,6 +562,7 @@
             "renameByName": {
               "count": "Count",
               "group": "Name",
+              "sum": "Count",
               "suspicious": "Type"
             }
           }
@@ -618,49 +619,6 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "State"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "left"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "approved": {
-                        "color": "green",
-                        "index": 2,
-                        "text": "✔"
-                      },
-                      "blocked": {
-                        "color": "red",
-                        "index": 0,
-                        "text": "✕"
-                      },
-                      "unblocked": {
-                        "color": "text",
-                        "index": 1,
-                        "text": "✔"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "Last"
             },
             "properties": [
@@ -675,18 +633,6 @@
               {
                 "id": "custom.width",
                 "value": 100
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "State"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 55
               }
             ]
           },
@@ -830,22 +776,22 @@
             }
           ],
           "hide": false,
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "B",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "count"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "count"
+                "type": "sum"
               }
             ]
           ],
@@ -870,10 +816,10 @@
                 "extern_ip",
                 "blocking_count",
                 "blocking_reason",
+                "blocking_state",
                 "blocking_type",
                 "last",
-                "count",
-                "blocking_state"
+                "sum"
               ]
             }
           }
@@ -945,7 +891,8 @@
               "extern_ip": "Extern IP",
               "last": "",
               "last_in_millies": "Last",
-              "state": "State"
+              "state": "State",
+              "sum": "Count"
             }
           }
         }
@@ -1054,16 +1001,16 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -1072,7 +1019,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1194,9 +1142,9 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"location_org\"",
           "rawQuery": false,
           "refId": "A",
@@ -1205,7 +1153,7 @@
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -1214,7 +1162,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1341,9 +1290,9 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"location_country_name\"",
           "rawQuery": false,
           "refId": "A",
@@ -1352,7 +1301,7 @@
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -1361,7 +1310,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1517,9 +1467,9 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/ AND \"location_country_name\" =~ /^$Country$/) AND $timeFilter GROUP BY \"service\", \"port\"",
           "rawQuery": false,
           "refId": "A",
@@ -1528,7 +1478,7 @@
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -1669,16 +1619,16 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -1687,7 +1637,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1811,16 +1762,16 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "autogen",
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
               },
@@ -1829,7 +1780,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -2066,20 +2018,24 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"netflow_size\" WHERE $timeFilter GROUP BY \"src_host\", \"dest_host\", \"service\", \"location_country_name\"",
-          "rawQuery": false,
+          "policy": "autogen",
+          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"netflow\" WHERE (\"direction\" = 'incoming') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
               }
             ]
           ],
@@ -2106,6 +2062,12 @@
                 ],
                 "operation": "aggregate"
               },
+              "count": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
               "direction": {
                 "aggregations": [],
                 "operation": "groupby"
@@ -2118,6 +2080,12 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "last_time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
               "location_country_name": {
                 "aggregations": [],
                 "operation": "groupby"
@@ -2126,8 +2094,19 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "size": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
               "sum": {
-                "aggregations": []
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "sum_1": {
+                "aggregations": [],
+                "operation": "groupby"
               },
               "value": {
                 "aggregations": [
@@ -2148,25 +2127,28 @@
             },
             "indexByName": {
               "Time (firstNotNull)": 0,
+              "count (sum)": 6,
               "extern_group": 2,
               "intern_host": 1,
               "location_country_name": 3,
               "service": 4,
-              "value (count)": 5,
-              "value (sum)": 6
+              "size (sum)": 5
             },
             "renameByName": {
               "Time": "Time",
               "Time (firstNotNull)": "Time",
               "Time (lastNotNull)": "Time",
               "Time (range)": "Since",
+              "count (sum)": "Req",
               "direction": "Direction",
               "extern_group": "Extern Group",
               "intern_host": "Intern Hosts",
               "last": "Traffic",
               "location_country_name": "Country",
               "service": "Service",
+              "size (sum)": "Traffic",
               "sum": "Traffic",
+              "sum_1": "Req",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -2377,20 +2359,24 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow_size",
+          "measurement": "netflow",
           "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"src_host\", \"dest_host\", \"service\", \"location_country_name\"",
-          "rawQuery": false,
+          "policy": "autogen",
+          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"netflow\" WHERE (\"direction\" = 'outgoing') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "size"
                 ],
                 "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
               }
             ]
           ],
@@ -2417,6 +2403,12 @@
                 ],
                 "operation": "aggregate"
               },
+              "count": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
               "direction": {
                 "aggregations": [],
                 "operation": "groupby"
@@ -2434,6 +2426,20 @@
                 "operation": "groupby"
               },
               "service": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "size": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
+              "sum": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "sum_1": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -2468,13 +2474,16 @@
               "Time (firstNotNull)": "Time",
               "Time (lastNotNull)": "Time",
               "Time (range)": "Since",
+              "count (sum)": "Req",
               "direction": "Direction",
               "extern_group": "Extern Group",
               "intern_host": "Intern Hosts",
               "last": "Traffic",
               "location_country_name": "Country",
               "service": "Service",
+              "size (sum)": "Traffic",
               "sum": "Traffic",
+              "sum_1": "Req",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -2515,6 +2524,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 57,
+  "version": 60,
   "weekStart": ""
 }
