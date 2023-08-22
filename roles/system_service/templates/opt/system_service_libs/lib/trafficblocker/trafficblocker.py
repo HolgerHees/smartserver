@@ -200,46 +200,61 @@ class TrafficBlocker(threading.Thread):
         http_requests = {}
         try:
             start = datetime.now() - timedelta(seconds=self.config.traffic_blocker_unblock_timeout)
-            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start.timestamp(), urllib.parse.quote( '{group=~\"apache\"} |= \"- 410 -\"'))
+            query = "{{group=~\"apache\"}} |= \"{}:80 -\" !~ \"- 200 -\"".format(self.config.server_domain)
+            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start.timestamp(), urllib.parse.quote(query))
             contents = urllib.request.urlopen(url).read()
             result = json.loads(contents)
             external_state = {}
             if "status" in result and result["status"] == "success":
-                for row in result["data"]["result"][0]["values"]:
-                    #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
-                    match = re.match("^message=\"([^\s]+).* ([^\s]+) ([^\s]+) HTTP",row[1])
-                    if not match:
-                        logging.error("Invalid regex for message: '{}'".format(row[1]))
-                        continue
+                for result in result["data"]["result"]:
+                    for row in result["values"]:
+                        #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
+                        # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
+                        #                            IP         USER     DOMAIN   REQUEST
+                        match = re.match("^message=\"([^\s]+) - [^\s]+ - [^\s]+ - (.+?) - [0-9]+ -",row[1])
+                        if not match:
+                            logging.error("Invalid regex for message: '{}'".format(row[1]))
+                            continue
 
-                    ip = match[1]
+                        ip = match[1]
 
-                    if ip in self.approved_ips:
-                        continue
+                        if ip in self.approved_ips:
+                            continue
 
-                    if ip not in external_state:
-                        external_state[ip] = self.ipcache.isExternal(ipaddress.ip_address(ip))
-                    if not external_state[ip]:
-                        continue
+                        if ip not in external_state:
+                            external_state[ip] = self.ipcache.isExternal(ipaddress.ip_address(ip))
+                        if not external_state[ip]:
+                            continue
 
-                    method = match[2]
-                    url = match[3]
-                    time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
+                        request = match[2]
+                        #logging.info("===============> {}".format(request))
 
-                    #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
-                    is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
-                    if ip not in http_requests:
-                        malware_type = self.malware.check(ip)
-                        http_requests[ip] = { "count": 0, "type": malware_type if malware_type else "unknown", "details": TrafficGroup.SCANNING if malware_type else TrafficGroup.OBSERVED , "last": 0, "suspicious": False }
-                    if not http_requests[ip]["suspicious"] and is_suspicious:
-                        http_requests[ip]["suspicious"] = True
-                        http_requests[ip]["details"] = TrafficGroup.SCANNING
-                    if time > http_requests[ip]["last"]:
-                        http_requests[ip]["last"] = time
-                    http_requests[ip]["count"] += 1
+                        match = re.match("^([A-Z]+) ([^\s]+) HTTP",request)
+                        if not match:
+                            #logging.info("Invalid")
+                            is_suspicious = True
+                        else:
+                            #logging.info("VALID {} {}".format(method, url))
+                            method = match[1]
+                            url = match[2]
+                            #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
+                            is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
+
+                        time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
+                        if ip not in http_requests:
+                            malware_type = self.malware.check(ip)
+                            http_requests[ip] = { "count": 0, "type": malware_type if malware_type else "unknown", "details": TrafficGroup.SCANNING if malware_type else TrafficGroup.OBSERVED , "last": 0, "suspicious": False }
+                        if not http_requests[ip]["suspicious"] and is_suspicious:
+                            http_requests[ip]["suspicious"] = True
+                            http_requests[ip]["details"] = TrafficGroup.SCANNING
+                        if time > http_requests[ip]["last"]:
+                            http_requests[ip]["last"] = time
+                        http_requests[ip]["count"] += 1
         except urllib.error.HTTPError as e:
             logging.info(e)
             logging.info("Loki not reachable")
+
+        #logging.info(str(http_requests))
 
         return http_requests
 
