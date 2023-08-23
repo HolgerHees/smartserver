@@ -211,7 +211,7 @@ class TrafficBlocker(threading.Thread):
                         #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
                         # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
                         #                            IP         USER     DOMAIN   REQUEST
-                        match = re.match("^host=([^\s]+).*?request=\"([^\"]+)\"",row[1])
+                        match = re.match("^host=([^\s]+).*?request=(\"[^\"]+\"|[^\s]+)",row[1])
                         if not match:
                             logging.error("Invalid regex for message: '{}'".format(row[1]))
                             continue
@@ -226,7 +226,8 @@ class TrafficBlocker(threading.Thread):
                         if not external_state[ip]:
                             continue
 
-                        request = match[2]
+                        request = match[2].strip('"')
+                        #logging.info(request)
 
                         match = re.match("^([A-Z]+) ([^\s]+) HTTP",request)
                         if not match:
