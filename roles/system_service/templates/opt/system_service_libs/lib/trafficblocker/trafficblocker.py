@@ -200,7 +200,7 @@ class TrafficBlocker(threading.Thread):
         http_requests = {}
         try:
             start = datetime.now() - timedelta(seconds=self.config.traffic_blocker_unblock_timeout)
-            query = "{{group=~\"apache\"}} |= \"{}:80 -\" !~ \"- 200 -\"".format(self.config.server_domain)
+            query = "{{group=\"apache\"}} |= \"domain={}:80\" != \"code=200\"".format(self.config.server_domain)
             url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start.timestamp(), urllib.parse.quote(query))
             contents = urllib.request.urlopen(url).read()
             result = json.loads(contents)
@@ -211,7 +211,7 @@ class TrafficBlocker(threading.Thread):
                         #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
                         # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
                         #                            IP         USER     DOMAIN   REQUEST
-                        match = re.match("^message=\"([^\s]+) - [^\s]+ - [^\s]+ - (.+?) - [0-9]+ -",row[1])
+                        match = re.match("^host=([^\s]+).*?request=\"([^\"]+)\"",row[1])
                         if not match:
                             logging.error("Invalid regex for message: '{}'".format(row[1]))
                             continue
@@ -227,18 +227,19 @@ class TrafficBlocker(threading.Thread):
                             continue
 
                         request = match[2]
-                        #logging.info("===============> {}".format(request))
 
                         match = re.match("^([A-Z]+) ([^\s]+) HTTP",request)
                         if not match:
-                            #logging.info("Invalid")
                             is_suspicious = True
+                            #logging.info("Invalid")
                         else:
-                            #logging.info("VALID {} {}".format(method, url))
                             method = match[1]
                             url = match[2]
                             #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
                             is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
+                            #logging.info("VALID {} {}".format(method, url))
+
+                        #logging.info("===============> {} {}".format(ip, request))
 
                         time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
                         if ip not in http_requests:
