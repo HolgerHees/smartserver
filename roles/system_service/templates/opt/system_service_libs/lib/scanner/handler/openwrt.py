@@ -370,6 +370,8 @@ class OpenWRT(_handler.Handler):
                 for mac in client_result["clients"]:
                     if mac == self.cache.getGatewayMAC():
                         continue
+
+
                                 
                     vlan = wlan_network["vlan"]
                     gid = wlan_network["gid"]
@@ -388,17 +390,18 @@ class OpenWRT(_handler.Handler):
                     if event:
                         events.append(event)
 
+                    details = client_result["clients"][mac]
+
                     # mark as online for new clients or if it is not a user device (is checked in arpscan)
                     if mac not in self.wifi_clients[openwrt_ip] or device.getIP() is None or device.getIP() not in self.config.user_devices:
                         stat = self.cache.getDeviceStat(mac)
                         stat.setLastSeen(False) # because no IP validation
-                        stat.setOnline(True)
+                        if details["auth"] and details["assoc"] and details["authorized"]:
+                            stat.setOnline(True)
                         event = self.cache.confirmStat( self, stat )
                         if event:
                             events.append(event)
 
-                    details = client_result["clients"][mac]
-                
                     stat = self.cache.getConnectionStat(target_mac,target_interface)
                     stat_data = stat.getData(connection_details)
                     if not details["assoc"]: 

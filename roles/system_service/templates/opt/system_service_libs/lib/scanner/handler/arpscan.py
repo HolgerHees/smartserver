@@ -472,7 +472,8 @@ class ArpScanner(_handler.Handler):
         
         stat = self.cache.getDeviceStat(mac)
         stat.setLastSeen(validated)
-        stat.setOnline(True)
+        if validated:
+            stat.setOnline(True)
         self.cache.confirmStat( self, stat )
         
         if mac not in self.registered_devices:
@@ -515,14 +516,14 @@ class ArpScanner(_handler.Handler):
                 unregistered_devices.append(device)
                 
         if len(disabled_devices) > 0:
-            for device in disabled_devices:
+            for device in set(disabled_devices):
                 logging.info("Recheck device {}".format(device))
                 self._checkDevice(device, True)
         
         if len(unregistered_devices) > 0:
             self.cache.lock(self)
-            for device in unregistered_devices:
+            for device in set(unregistered_devices):
                 logging.info("Register lazy device {}".format(device))
-                self._refreshDevice(device, True)
+                self._refreshDevice(device, False)
             self.cache.unlock(self)
             
