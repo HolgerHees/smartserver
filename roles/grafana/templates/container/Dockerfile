@@ -1,7 +1,7 @@
 FROM grafana/grafana:{{image_version}}
 
 USER root
-RUN sed -i '/\[auth.proxy\].*/a enabled = true' /etc/grafana/grafana.ini && \
+RUN sed -i '/\[auth.proxy\].*/a enabled = true\nheader_name = X-WEBAUTH-USER' /etc/grafana/grafana.ini && \
     sed -i 's/;allowed_origins.*/allowed_origins = */' /etc/grafana/grafana.ini && \
     sed -i 's/;execute_alerts.*/execute_alerts = false/' /etc/grafana/grafana.ini && \
     sed -i 's/;reporting_enabled.*/reporting_enabled = false/' /etc/grafana/grafana.ini && \
