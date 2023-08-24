@@ -125,24 +125,30 @@ class TrafficBlocker(threading.Thread):
 
                 with self.config_lock:
                     for ip, group_data in ip_traffic_state.items():
+                        #logging.info("===> {}".format(ip))
+
+                        if ip in self.config_map["observed_ips"]:
+                            data = self.config_map["observed_ips"][ip]
+                            if data["state"] == "approved": # unblock validated ip
+                                continue
+
+                            for group_key, group_data in group_data.items():
+                                if group_data["last"] > data["last"]:
+                                    data["last"] = group_data["last"]
+
+                            if data["state"] == "blocked": # restore state
+                                if ip not in blocked_ips:
+                                    Helper.blockIp(ip)
+                                    blocked_ips.append(ip)
+                                    logging.info("BLOCK IP {}, state: blocked".format(ip))
+                                continue
 
                         for group_key, group_data in group_data.items():
-                            #logging.info("{} {} {} {}".format(ip, group, group_data["count"], datetime.fromtimestamp(group_data["last"])))
+                            #logging.info("{} {} {} {}".format(ip, group_key, group_data["count"], datetime.fromtimestamp(group_data["last"])))
                             #logging.info("{} {} {} {}".format(group_key, group_data["reason"], group_data["type"], group_data["details"]))
 
                             treshold = self.config.traffic_blocker_treshold[group_key]
                             if ip in self.config_map["observed_ips"]:
-                                data = self.config_map["observed_ips"][ip]
-                                if data["state"] == "approved": # unblock validated ip
-                                    continue
-
-                                data["last"] = group_data["last"]
-                                if data["state"] == "blocked": # restore state
-                                    if ip not in blocked_ips:
-                                        Helper.blockIp(ip)
-                                        blocked_ips.append(ip)
-                                        logging.info("BLOCK IP {}, state: blocked".format(ip))
-                                    continue
                                 treshold = math.ceil( treshold / ( data["count"] + 1 ) ) # calculate treshhold based on number of blocked periods
 
                             if group_data["count"] > treshold:
@@ -171,6 +177,8 @@ class TrafficBlocker(threading.Thread):
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
                                     logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["reason"], group_data["type"], group_data["details"]))
+
+                                break
 
                     for ip in blocked_ips:
                         if ip in self.config_map["observed_ips"]:
