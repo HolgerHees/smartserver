@@ -15,18 +15,16 @@ from smartserver.server import Server
 from config import config
 
 from lib.scanner.scanner import Scanner as NetworkScanner
-from lib.netflow.processor import Processor as NetflowProcessor
 from lib.speedtest.speedtest import Speedtest
 from lib.fping.fping import FPing
 from lib.info.info import Info
-from lib.trafficblocker.trafficblocker import TrafficBlocker
 
-from lib.malware import Malware
 from lib.mqtt import MQTTHandler
 from lib.influxdb import InfluxDB
 from lib.scheduler import Scheduler
 from lib.ipcache import IPCache
 
+from lib.trafficwatcher.trafficwatcher import TrafficWatcher
 
 app = Flask(__name__ )
 app.logger = logging.getLogger()
@@ -45,21 +43,15 @@ class Handler(Server):
 
         self.ipcache = IPCache(config)
 
-        self.malware = Malware(config, self.influxdb)
-
         self.info = Info(config, self.ipcache)
 
         self.scanner = NetworkScanner(config, self, self.mqtt, self.influxdb )
-        self.netflow = NetflowProcessor(config, self, self.influxdb, self.ipcache, self.malware )
         self.speedtest = Speedtest(config, self, self.mqtt, self.influxdb, self.info )
         self.fping = FPing(config, self, self.influxdb )
 
-        self.trafficblocker = TrafficBlocker(config, self, self.influxdb, self.ipcache, self.netflow, self.malware)
+        self.trafficwatcher = TrafficWatcher(config, self, self.influxdb, self.ipcache)
 
         self.scheduler = Scheduler()
-
-    def getTrafficBlocker(self): # used by netflow
-        return self.trafficblocker
 
     def start(self, callback):
         self.mqtt.start()
@@ -67,50 +59,33 @@ class Handler(Server):
 
         self.ipcache.start()
 
-        self.malware.start()
-
         self.info.start()
 
         self.scanner.start()
-        self.netflow.start()
         self.speedtest.start()
         self.fping.start()
 
-        self.trafficblocker.start()
+        self.trafficwatcher.start()
 
         self.scheduler.start()
 
         super().start(callback)
 
     def terminate(self):
-        if self.scheduler:
-            self.scheduler.terminate()
+        self.scheduler.terminate()
 
-        if self.trafficblocker:
-            self.trafficblocker.terminate()
+        self.trafficwatcher.terminate()
 
-        if self.fping:
-            self.fping.terminate()
-        if self.speedtest:
-            self.speedtest.terminate()
-        if self.netflow:
-            self.netflow.terminate()
-        if self.scanner:
-            self.scanner.terminate()
+        self.fping.terminate()
+        self.speedtest.terminate()
+        self.scanner.terminate()
 
-        if self.info:
-            self.info.terminate()
+        self.info.terminate()
 
-        if self.malware:
-            self.malware.terminate()
+        self.ipcache.terminate()
 
-        if self.ipcache:
-            self.ipcache.terminate()
-
-        if self.influxdb:
-            self.influxdb.terminate()
-        if self.mqtt:
-            self.mqtt.terminate()
+        self.influxdb.terminate()
+        self.mqtt.terminate()
 
         super().terminate()
         
@@ -150,22 +125,20 @@ class Handler(Server):
 
     def getStateMetrics(self):
         metrics = []
+        metrics = metrics + self.trafficwatcher.getStateMetrics()
+
         metrics = metrics + self.scanner.getStateMetrics()
-        metrics = metrics + self.netflow.getStateMetrics()
         metrics = metrics + self.speedtest.getStateMetrics()
         metrics = metrics + self.fping.getStateMetrics()
 
         metrics = metrics + self.info.getStateMetrics()
 
-        metrics = metrics + self.malware.getStateMetrics()
         metrics = metrics + self.ipcache.getStateMetrics()
 
         metrics = metrics + self.influxdb.getStateMetrics()
         metrics = metrics + self.mqtt.getStateMetrics()
 
         metrics = metrics + self.scheduler.getStateMetrics()
-
-        metrics = metrics + self.trafficblocker.getStateMetrics()
 
         return "{}\n".format( "\n".join(metrics) )
 
@@ -182,8 +155,8 @@ class Handler(Server):
         result = {}
         result["wan_isp_state"] = "default" if self.info.isDefaultConnection() else "fallback"
         result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
-        result["traffic_states"] = self.netflow.getTrafficState()
-        result["traffic_states"]["blocked"] = len(self.trafficblocker.getBlockedIPs())
+        result["traffic_states"] = self.trafficwatcher.getTrafficState()
+        result["traffic_states"]["blocked"] = len(self.trafficwatcher.getBlockedIPs())
         return json.dumps(result)
 
 #@app.route('/state/', methods = ['POST'])

@@ -160,7 +160,7 @@ class DeploymentUpdate:
                 for file in commits[commit]["files"]:
                     flag = file[0][0]
                     path = file[-1]
-                    if flag == "D":
+                    if "D" in flag:
                         deleted_files.append(path)
                     else:
                         files.append( {"flag": flag, "path": path} )
@@ -185,12 +185,14 @@ class DeploymentUpdate:
                 line = line.strip()
                 flag, path = line.split(" ", 1)
                 path = path.strip().strip("\"")
-                if flag == "R":
+                if "R" in flag:
                     src_path, dest_path = path.split(" -> ", 1)
                     path = dest_path
 
+                #print("{} {}".format(flag,path))
+
                 if self.filterPath( flag, path, last_deployment.timestamp() ):
-                    if path not in filtered_files or flag == "A":
+                    if path not in filtered_files or "A" in flag:
                         filtered_files[path] = {"flag": flag, "path": path}
                             
             files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)

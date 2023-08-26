@@ -91,29 +91,29 @@ groups:
 - name: suspicious_traffic
   rules:
   - alert: Suspicious traffic detected
-    expr: 'sum_over_time(system_service_netflow{type="intruded"}[60m]) > 0'
+    expr: 'sum_over_time(system_service_trafficwatcher{type="intruded"}[60m]) > 0'
     for: 0m
     labels:
-      notifyGroup: "suspicious_traffic"
+      notifyGroup: "wan_connection"
       severity: critical
     annotations:
       summary: "Suspicious traffic detected"
 
-  - alert: Suspicious traffic list outdated
-    expr: 'system_service_malware{type="list_state"} == 0'
+  - alert: Suspicious traffic blocklist outdated
+    expr: 'system_service_blocklists{type="list_state"} == 0'
     for: 0m
     labels:
-      notifyGroup: "suspicious_traffic"
+      notifyGroup: "wan_connection"
       severity: critical
     annotations:
-      summary: "Suspicious traffic list outdated"
+      summary: "Suspicious traffic blocklist outdated"
 
-  - alert: Suspicious traffic list is empty
-    expr: 'system_service_malware{type="list_entries"} == 0'
+  - alert: Suspicious traffic blocklist is empty
+    expr: 'system_service_blocklists{type="list_entries"} == 0'
     for: 0m
     labels:
-      notifyGroup: "suspicious_traffic"
+      notifyGroup: "wan_connection"
       severity: critical
     annotations:
-      summary: "Suspicious traffic list is empty"
+      summary: "Suspicious traffic blocklist is empty"
 

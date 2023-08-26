@@ -6,28 +6,22 @@ import schedule
 import os
 import math
 from datetime import datetime, timedelta
-import urllib.parse
-import urllib.request
-import json
-import re
-import ipaddress
 #import cProfile as profile
 #import pstats
 #import io
 
 from smartserver.confighelper import ConfigHelper
 
-from lib.trafficblocker.helper import Helper
-from lib.netflow.processor import TrafficGroup
+from lib.trafficwatcher.trafficblocker.helper import Helper
+from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
-    def __init__(self, config, handler, influxdb, ipcache, netflow, malware):
+    def __init__(self, config, watcher, influxdb):
         threading.Thread.__init__(self)
 
         self.config = config
-        self.netflow = netflow
-        self.malware = malware
+        self.watcher = watcher
 
         self.is_running = False
 
@@ -43,7 +37,6 @@ class TrafficBlocker(threading.Thread):
         self.blocked_ips = []
         self.approved_ips = []
 
-        self.ipcache = ipcache
         self.influxdb = influxdb
 
         self._restore()
@@ -66,11 +59,11 @@ class TrafficBlocker(threading.Thread):
     def run(self):
         logging.info("IP traffic blocker started")
         try:
-            self.blocked_ips = []
+            self.blocked_ips = Helper.getBlockedIps()
 
             HIERARCHY = {
-                "netflow_{}".format(TrafficGroup.SCANNING): ["netflow_{}".format(TrafficGroup.INTRUDED)],
-                "netflow_{}".format(TrafficGroup.OBSERVED): ["netflow_{}".format(TrafficGroup.SCANNING), "netflow_{}".format(TrafficGroup.INTRUDED)],
+                TrafficGroup.SCANNING: [TrafficGroup.INTRUDED],
+                TrafficGroup.OBSERVED: [TrafficGroup.SCANNING, TrafficGroup.INTRUDED]
             }
 
             while self.is_running:
@@ -78,9 +71,14 @@ class TrafficBlocker(threading.Thread):
                 #prof = profile.Profile()
                 #prof.enable()
 
+                self.event.wait()
+                self.event.clear()
+                if not self.is_running:
+                    break
+
                 now = time.time()
                 blocked_ips = Helper.getBlockedIps()
-                ip_traffic_state = self.netflow.getIPTrafficState()
+                ip_traffic_state = self.watcher.getIPTrafficState()
 
                 #checked_ips = []
                 #for ip in blocked_ips:
@@ -106,46 +104,43 @@ class TrafficBlocker(threading.Thread):
                 #        del data["group"]
 
                 # post processing data
-                for ip, group_data in ip_traffic_state.items():
-                    if len(group_data) == 1:
+                for ip, groups in ip_traffic_state.items():
+                    if len(groups) == 1:
                         continue
-                    for group in group_data.keys():
-                        if group not in HIERARCHY:
+                    for group_key, group_data in groups.items():
+                        if group_data["traffic_group"] not in HIERARCHY:
                             continue
-                        for sub_group in HIERARCHY[group]:
-                            if sub_group in group_data:
-                                group_data[group]["count"] += group_data[sub_group]["count"]
+                        for sub_group in HIERARCHY[group_data["traffic_group"]]:
+                            for _group_data in groups.values():
+                                if group_data["connection_type"] == _group_data["connection_type"] and sub_group == _group_data["traffic_group"]:
+                                    group_data["count"] += _group_data["count"]
+                                    break
 
-                # merge http requests
-                http_requests = self._getHttpRequests()
-                for ip, data in http_requests.items():
-                    if ip not in ip_traffic_state:
-                        ip_traffic_state[ip] = {}
-                    ip_traffic_state[ip]["apache_{}".format(data["details"])] = { "count": data["count"], "reason": "apache", "type": data["type"], "details": data["details"], "last": data["last"]}
+                # restore state
+                for ip in [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "blocked" and ip not in blocked_ips]:
+                    Helper.blockIp(ip)
+                    blocked_ips.append(ip)
+                    logging.info("BLOCK IP {} restored for state: blocked".format(ip))
 
                 with self.config_lock:
-                    for ip, group_data in ip_traffic_state.items():
-                        #logging.info("===> {}".format(ip))
+                    for ip, groups in ip_traffic_state.items():
+                        #logging.info("===> {} {}".format(ip, groups))
 
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
                             if data["state"] == "approved": # unblock validated ip
                                 continue
 
-                            for group_key, group_data in group_data.items():
+                            for group_key, group_data in groups.items():
                                 if group_data["last"] > data["last"]:
                                     data["last"] = group_data["last"]
 
-                            if data["state"] == "blocked": # restore state
-                                if ip not in blocked_ips:
-                                    Helper.blockIp(ip)
-                                    blocked_ips.append(ip)
-                                    logging.info("BLOCK IP {}, state: blocked".format(ip))
+                            if data["state"] == "blocked":
                                 continue
 
-                        for group_key, group_data in group_data.items():
+                        for group_key, group_data in groups.items():
                             #logging.info("{} {} {} {}".format(ip, group_key, group_data["count"], datetime.fromtimestamp(group_data["last"])))
-                            #logging.info("{} {} {} {}".format(group_key, group_data["reason"], group_data["type"], group_data["details"]))
+                            #logging.info("{} {} {} {}".format(group_key, group_data["connection_type"], group_data["type"], group_data["details"]))
 
                             treshold = self.config.traffic_blocker_treshold[group_key]
                             if ip in self.config_map["observed_ips"]:
@@ -156,9 +151,9 @@ class TrafficBlocker(threading.Thread):
                                     data = self.config_map["observed_ips"][ip]
                                     data["updated"] = now
                                     data["state"] = "blocked"
-                                    data["reason"] = group_data["reason"]
-                                    data["type"] = group_data["type"]
-                                    data["details"] = group_data["details"]
+                                    data["reason"] = group_data["connection_type"]
+                                    data["blocklist"] = group_data["blocklist_name"]
+                                    data["group"] = group_data["traffic_group"]
                                     if ip not in blocked_ips:
                                         data["count"] += 1
                                 else:
@@ -168,15 +163,15 @@ class TrafficBlocker(threading.Thread):
                                         "last": group_data["last"],
                                         "count": 1,
                                         "state": "blocked",
-                                        "reason": group_data["reason"],
-                                        "type": group_data["type"],
-                                        "details": group_data["details"]
+                                        "reason": group_data["connection_type"],
+                                        "blocklist": group_data["blocklist_name"],
+                                        "group": group_data["traffic_group"]
                                     }
 
                                 if ip not in blocked_ips:
                                     Helper.blockIp(ip)
                                     blocked_ips.append(ip)
-                                    logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["reason"], group_data["type"], group_data["details"]))
+                                    logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["connection_type"], group_data["blocklist_name"], group_data["traffic_group"]))
 
                                 break
 
@@ -194,12 +189,13 @@ class TrafficBlocker(threading.Thread):
                                 data["state"] = "unblocked"
                                 logging.info("UNBLOCK IP {} after {}".format(ip, timedelta(seconds=(now - data["last"]))))
                             else:
-                                logging.info("UNBLOCK IP {}, state: ".format(ip, data["state"]))
+                                logging.info("UNBLOCK IP {} restored for state: {}".format(ip, data["state"]))
                         else:
-                            logging.info("UNBLOCK IP {}, state: unexpected".format(ip))
+                            logging.info("UNBLOCK IP {} restored for missing state".format(ip))
 
                         Helper.unblockIp(ip)
                         blocked_ips.remove(ip)
+
 
                     self.blocked_ips = blocked_ips
                     self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
@@ -213,76 +209,10 @@ class TrafficBlocker(threading.Thread):
                 #logging.info("RUNTIME: {} - {} IPs".format(runtime_end-runtime_start, len(ip_traffic_state)))
                 #logging.info(s.getvalue())
 
-                self.event.wait(60)
-
             logging.info("IP traffic blocker stopped")
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
-
-    def _getHttpRequests(self):
-        http_requests = {}
-        try:
-            start = datetime.now() - timedelta(seconds=self.config.traffic_blocker_unblock_timeout)
-            query = "{{group=\"apache\"}} |= \" vhost={}:80 \" != \" status=200 \"".format(self.config.server_domain)
-            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start.timestamp(), urllib.parse.quote(query))
-            contents = urllib.request.urlopen(url).read()
-            result = json.loads(contents)
-            external_state = {}
-            if "status" in result and result["status"] == "success":
-                for result in result["data"]["result"]:
-                    for row in result["values"]:
-                        #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
-                        # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
-                        #                            IP         USER     DOMAIN   REQUEST
-                        match = re.match("^remoteIP=([^\s]+).*?request=(.*?) status=",row[1])
-                        if not match:
-                            logging.error("Invalid regex for message: '{}'".format(row[1]))
-                            continue
-
-                        ip = match[1]
-
-                        if ip in self.approved_ips:
-                            continue
-
-                        if ip not in external_state:
-                            external_state[ip] = self.ipcache.isExternal(ipaddress.ip_address(ip))
-                        if not external_state[ip]:
-                            continue
-
-                        request = match[2].strip('"')
-
-                        match = re.match("^([A-Z]+) (.+) HTTP",request)
-                        if not match:
-                            is_suspicious = True
-                            #logging.info("===============> Invalid IP: {}, REQUEST: {}".format(ip, request))
-                        else:
-                            method = match[1]
-                            url = match[2]
-                            #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
-                            is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
-                            #logging.info("===============> VALID IP: {}, METHOD: {}, URL: {}".format(ip, method, url))
-
-                        #logging.info("===============> {} {}".format(ip, request))
-
-                        time = datetime.fromtimestamp(int(row[0]) / 1000000000).timestamp()
-                        if ip not in http_requests:
-                            malware_type = self.malware.check(ip)
-                            http_requests[ip] = { "count": 0, "type": malware_type if malware_type else "unknown", "details": TrafficGroup.SCANNING if malware_type else TrafficGroup.OBSERVED , "last": 0, "suspicious": False }
-                        if not http_requests[ip]["suspicious"] and is_suspicious:
-                            http_requests[ip]["suspicious"] = True
-                            http_requests[ip]["details"] = TrafficGroup.SCANNING
-                        if time > http_requests[ip]["last"]:
-                            http_requests[ip]["last"] = time
-                        http_requests[ip]["count"] += 1
-        except urllib.error.HTTPError as e:
-            logging.info(e)
-            logging.info("Loki not reachable")
-
-        #logging.info(str(http_requests))
-        #return {}
-
-        return http_requests
 
     def _restore(self):
         self.valid_list_file, data = ConfigHelper.loadConfig(self.dump_config_path, self.config_version )
@@ -312,8 +242,14 @@ class TrafficBlocker(threading.Thread):
         if cleaned > 0:
             logging.info("Cleaned {} ip(s)".format(cleaned))
 
-    def getApprovedIPs(self):
-        return list(self.approved_ips)
+    def triggerCheck(self):
+        self.event.set()
+
+    def isApprovedIPs(self, ip):
+        return ip in self.approved_ips
+
+    def isBlockedIP(self, ip):
+        return ip in self.blocked_ips
 
     def getBlockedIPs(self):
         return list(self.blocked_ips)
@@ -325,11 +261,11 @@ class TrafficBlocker(threading.Thread):
                 for ip, data in self.config_map["observed_ips"].items():
                     if data["state"] != "blocked":
                         continue
-                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_type={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["type"], data["count"], data["last"]))
+                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_list={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["blocklist"], data["count"], data["last"]))
         return messurements
 
     def getStateMetrics(self):
         return [
-            "system_service_process{{type=\"trafficblocker\"}} {}".format("1" if self.is_running else "0"),
-            "system_service_state{{type=\"trafficblocker\",details=\"cache_file\"}} {}".format("1" if self.valid_config_file else "0")
+            "system_service_process{{type=\"trafficwatcher.trafficblocker\"}} {}".format("1" if self.is_running else "0"),
+            "system_service_state{{type=\"trafficwatcher.trafficblocker\",details=\"cache_file\"}} {}".format("1" if self.valid_config_file else "0")
         ]

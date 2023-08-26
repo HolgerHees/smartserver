@@ -86,12 +86,12 @@
                   {
                     "options": {
                       "incoming": {
-                        "color": "light-green",
+                        "color": "text",
                         "index": 0,
                         "text": "<-"
                       },
                       "outgoing": {
-                        "color": "semi-dark-green",
+                        "color": "#8ca000",
                         "index": 1,
                         "text": "->"
                       }
@@ -107,7 +107,7 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-background"
+                  "type": "color-text"
                 }
               },
               {
@@ -247,7 +247,7 @@
                         "text": "Intruded"
                       },
                       "normal": {
-                        "color": "transparent",
+                        "color": "text",
                         "index": 0,
                         "text": "Normal"
                       },
@@ -273,7 +273,7 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-background"
+                  "type": "color-text"
                 }
               }
             ]
@@ -281,7 +281,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Type"
+              "options": "IP Type"
             },
             "properties": [
               {
@@ -383,20 +383,6 @@
               {
                 "id": "custom.width",
                 "value": 150
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "NONE": {
-                        "index": 0,
-                        "text": "-"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
               }
             ]
           },
@@ -409,6 +395,42 @@
               {
                 "id": "custom.width",
                 "value": 65
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "apache": {
+                        "color": "#8ca000",
+                        "index": 1
+                      },
+                      "netflow": {
+                        "color": "text",
+                        "index": 0
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
               }
             ]
           }
@@ -440,7 +462,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -536,7 +558,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"tcp_flags\",\"count\" FROM \"autogen\".\"netflow\" WHERE $timeFilter GROUP BY \"destination_port\"::tag, \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"ip_type\"::tag, \"location_city\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"protocol\"::tag, \"service\"::tag ORDER BY time DESC",
+          "query": "SELECT \"tcp_flags\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE $timeFilter GROUP BY \"type\"::tag, \"destination_port\"::tag, \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"ip_type\"::tag, \"location_city\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"protocol\"::tag, \"service\"::tag ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -659,6 +681,10 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "type": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "value": {
                 "aggregations": [
                   "sum",
@@ -683,22 +709,22 @@
             "indexByName": {
               "Time": 1,
               "count (sum)": 0,
-              "destination_port": 13,
+              "destination_port": 14,
               "direction": 2,
-              "extern_group": 10,
-              "extern_host": 12,
-              "extern_ip": 11,
-              "group": 3,
-              "intern_host": 9,
-              "intern_ip": 8,
-              "ip_type": 5,
-              "location_city": 16,
-              "location_country_name": 15,
-              "location_org": 14,
-              "protocol": 4,
-              "service": 7,
-              "source_port": 17,
-              "tcp_flags": 6
+              "extern_group": 11,
+              "extern_host": 13,
+              "extern_ip": 12,
+              "group": 4,
+              "intern_host": 10,
+              "intern_ip": 9,
+              "ip_type": 6,
+              "location_city": 17,
+              "location_country_name": 16,
+              "location_org": 15,
+              "protocol": 5,
+              "service": 8,
+              "tcp_flags": 7,
+              "type": 3
             },
             "renameByName": {
               "Time": "Time",
@@ -714,7 +740,7 @@
               "group": "Group",
               "intern_host": "Intern Hosts",
               "intern_ip": "Intern IP",
-              "ip_type": "Type",
+              "ip_type": "IP Type",
               "last": "Traffic",
               "location_city": "City",
               "location_country_code": "Country Code",
@@ -727,6 +753,7 @@
               "source_port": "",
               "sum": "Traffic",
               "tcp_flags": "Flags",
+              "type": "Type",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -767,6 +794,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 17,
+  "version": 27,
   "weekStart": ""
 }

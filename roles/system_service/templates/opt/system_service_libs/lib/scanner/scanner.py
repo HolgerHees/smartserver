@@ -307,5 +307,5 @@ class Scanner(threading.Thread):
         metrics = []
         for handler in self.registered_handler:
             metrics += handler.getStateMetrics()
-        metrics.append("system_service_process{{type=\"scanner_broker\",}} {}".format("1" if self.is_running else "0"))
+        metrics.append("system_service_process{{type=\"scanner.broker\",}} {}".format("1" if self.is_running else "0"))
         return metrics

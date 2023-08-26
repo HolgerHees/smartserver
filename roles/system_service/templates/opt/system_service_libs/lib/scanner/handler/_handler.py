@@ -40,7 +40,7 @@ class Handler:
             metrics.append("system_service_state{{type=\"{}\"}} {}".format(service, self.service_metric_states[service]))
 
         if self.thread is not None:
-            metrics.append("system_service_process{{type=\"scanner_{}\",}} {}".format(self.__class__.__name__.lower(), "1" if self.is_running else "0"))
+            metrics.append("system_service_process{{type=\"scanner.{}\",}} {}".format(self.__class__.__name__.lower(), "1" if self.is_running else "0"))
         return metrics
 
     def _setDeviceMetricState(self, hostname, value):

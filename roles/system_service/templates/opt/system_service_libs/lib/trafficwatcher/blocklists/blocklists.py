@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 
 from smartserver.confighelper import ConfigHelper
 
-class Malware(threading.Thread):
+class Blocklists(threading.Thread):
     def __init__(self, config, influxdb):
         threading.Thread.__init__(self)
 
@@ -28,7 +28,7 @@ class Malware(threading.Thread):
             "ipsum": { "do": schedule.every().day.at("04:00"), "version": 1, "url": "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", "process": self._processIPSum } # list is normally updated at 3am
         }
 
-        self.dump_path_template = "/var/lib/system_service/malware_{}.json"
+        self.dump_path_template = "/var/lib/system_service/blocklists_{}.json"
         self.valid_dump_file = {}
 
         self.map_modified = {}
@@ -61,12 +61,12 @@ class Malware(threading.Thread):
         self.event.set()
 
     def run(self):
-        logging.info("IP attack check started")
+        logging.info("IP blocklist handler started")
         try:
             while self.is_running:
                 self.event.wait(60)
 
-            logging.info("IP attack check  stopped")
+            logging.info("IP blocklist handler  stopped")
         except Exception:
             logging.error(traceback.format_exc())
             self.is_running = False
@@ -77,7 +77,7 @@ class Malware(threading.Thread):
             if data is not None:
                 self.map_data[name] = data["map"]
                 self.map_modified[name] = data["map_modified"]
-                logging.info("Loaded {} malware {} ip's".format(len(self.map_data[name]), name))
+                logging.info("Loaded {} blocklist {} ip's".format(len(self.map_data[name]), name))
             else:
                 self.map_data[name] = {}
                 self._fetch(name)
@@ -93,7 +93,7 @@ class Malware(threading.Thread):
     def _dump(self, name):
         if self.valid_dump_file[name]:
             ConfigHelper.saveConfig(self.dump_path_template.format(name), self.configs[name]["version"], { "map_modified": self.map_modified[name], "map": self.map_data[name] } )
-            logging.info("Saved {} malware {} ip's".format(name, len(self.map_data[name])))
+            logging.info("Saved {} blocklist {} ip's".format(name, len(self.map_data[name])))
 
     def _fetch(self, name):
         try:
@@ -204,13 +204,13 @@ class Malware(threading.Thread):
 
     def getStateMetrics(self):
         metrics = [
-            "system_service_process{{type=\"malware\",}} {}".format("1" if self.is_running else "0")
+            "system_service_process{{type=\"trafficwatcher.malware\",}} {}".format("1" if self.is_running else "0")
         ]
 
         for name, config in self.configs.items():
-            metrics.append("system_service_malware{{listname=\"{}\",type=\"state\"}} {}".format(name, 1 if ( name in self.map_modified and self.map_modified[name] > time.time() - self.max_list_age ) else 0))
-            metrics.append("system_service_malware{{listname=\"{}\",type=\"last_modified\"}} {}".format(name, self.map_modified[name] if name in self.map_modified else 0))
-            metrics.append("system_service_malware{{listname=\"{}\",type=\"entries\"}} {}".format(name, len(self.map_data[name].keys())))
-            metrics.append("system_service_state{{type=\"malware\",details=\"{}_file\"}} {}".format(name, "1" if self.valid_dump_file[name] else "0"))
+            metrics.append("system_service_blocklists{{listname=\"{}\",type=\"state\"}} {}".format(name, 1 if ( name in self.map_modified and self.map_modified[name] > time.time() - self.max_list_age ) else 0))
+            metrics.append("system_service_blocklists{{listname=\"{}\",type=\"last_modified\"}} {}".format(name, self.map_modified[name] if name in self.map_modified else 0))
+            metrics.append("system_service_blocklists{{listname=\"{}\",type=\"entries\"}} {}".format(name, len(self.map_data[name].keys())))
+            metrics.append("system_service_state{{type=\"trafficwatcher.malware\",details=\"{}_file\"}} {}".format(name, "1" if self.valid_dump_file[name] else "0"))
 
         return metrics

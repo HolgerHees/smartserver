@@ -86,12 +86,12 @@
                   {
                     "options": {
                       "incoming": {
-                        "color": "light-green",
+                        "color": "text",
                         "index": 0,
                         "text": "<-"
                       },
                       "outgoing": {
-                        "color": "semi-dark-green",
+                        "color": "#8ca000",
                         "index": 1,
                         "text": "->"
                       }
@@ -107,7 +107,7 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-background"
+                  "type": "color-text"
                 }
               },
               {
@@ -247,7 +247,7 @@
                         "text": "Intruded"
                       },
                       "normal": {
-                        "color": "transparent",
+                        "color": "text",
                         "index": 0,
                         "text": "Normal"
                       },
@@ -273,7 +273,7 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-background"
+                  "type": "color-text"
                 }
               }
             ]
@@ -441,6 +441,42 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "apache": {
+                        "color": "#8ca000",
+                        "index": 1
+                      },
+                      "netflow": {
+                        "color": "text",
+                        "index": 0
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -470,7 +506,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -543,9 +579,15 @@
                 "service::tag"
               ],
               "type": "tag"
+            },
+            {
+              "params": [
+                "type::tag"
+              ],
+              "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "DESC",
           "policy": "autogen",
           "query": "SELECT \"value\" FROM \"default\".\"netflow_size\" WHERE (\"direction\" = 'incoming') AND $timeFilter GROUP BY \"destination_port\"::tag, \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"ip_type\"::tag, \"location_city\"::tag, \"location_country_code\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"location_zip\"::tag, \"protocol\"::tag, \"service\"::tag, \"suspicious\"::tag, \"source_port\"::tag ORDER BY time DESC",
@@ -673,6 +715,10 @@
               "tcp_flags": {
                 "aggregations": []
               },
+              "type": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "value": {
                 "aggregations": [
                   "sum",
@@ -700,16 +746,17 @@
               "Time (range)": 3,
               "count (sum)": 0,
               "direction": 4,
-              "extern_group": 9,
-              "extern_host": 11,
-              "extern_ip": 10,
-              "group": 5,
-              "intern_host": 8,
-              "intern_ip": 7,
-              "location_city": 14,
-              "location_country_name": 13,
-              "location_org": 12,
-              "service": 6
+              "extern_group": 10,
+              "extern_host": 12,
+              "extern_ip": 11,
+              "group": 6,
+              "intern_host": 9,
+              "intern_ip": 8,
+              "location_city": 15,
+              "location_country_name": 14,
+              "location_org": 13,
+              "service": 7,
+              "type": 5
             },
             "renameByName": {
               "Time": "Time",
@@ -741,6 +788,7 @@
               "sum": "Traffic",
               "sum (sum)": "Events",
               "tcp_flags": "Flags",
+              "type": "Type",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -781,6 +829,6 @@
   "timezone": "",
   "title": "System Service Netflow Summary",
   "uid": "system-service-netflow-summary",
-  "version": 7,
+  "version": 13,
   "weekStart": ""
 }

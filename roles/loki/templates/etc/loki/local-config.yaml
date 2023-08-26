@@ -72,6 +72,11 @@ limits_config:
   max_query_series: 100000
   query_timeout: 5m
 #  max_query_parallelism: 64
+  ingestion_rate_strategy: global
+  ingestion_rate_mb: 512
+  ingestion_burst_size_mb: 1024
+  per_stream_rate_limit: 512M
+  per_stream_rate_limit_burst: 1024M
 
 compactor:
   working_directory: /loki/compactor

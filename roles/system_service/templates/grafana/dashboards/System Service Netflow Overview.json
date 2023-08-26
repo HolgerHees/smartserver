@@ -126,7 +126,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/ AND \"location_country_code\" != 'xx' AND \"service\" != 'speedtest') AND $timeFilter GROUP BY \"location_country_name\"",
@@ -153,6 +153,12 @@
               "key": "service",
               "operator": "!=",
               "value": "speedtest"
+            },
+            {
+              "condition": "AND",
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
             }
           ]
         }
@@ -246,7 +252,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "refId": "A",
@@ -271,6 +277,12 @@
               "key": "service",
               "operator": "!=",
               "value": "speedtest"
+            },
+            {
+              "condition": "AND",
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
             }
           ]
         }
@@ -348,7 +360,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -357,7 +369,7 @@
           },
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "system_service_malware{type=\"entries\"}",
+          "expr": "system_service_blocklists{type=\"entries\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -512,7 +524,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -527,7 +539,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "refId": "A",
@@ -546,7 +558,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -675,7 +693,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Type"
+              "options": "Blocklist"
             },
             "properties": [
               {
@@ -712,7 +730,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -742,7 +760,7 @@
           "measurement": "trafficblocker",
           "orderByTime": "DESC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"autogen\".\"trafficblocker\" WHERE time > now() - 5m GROUP BY \"extern_ip\"::tag, \"blocking_state\"::tag, \"blocking_reason\"::tag, \"blocking_type\"::tag, \"blocking_count\"::tag ORDER BY time DESC",
+          "query": "SELECT last(\"value\") FROM \"autogen\".\"trafficblocker\" WHERE time > now() - 5m GROUP BY \"extern_ip\"::tag, \"blocking_state\"::tag, \"blocking_reason\"::tag, \"blocking_list\"::tag, \"blocking_count\"::tag ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -776,7 +794,7 @@
             }
           ],
           "hide": false,
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "refId": "B",
@@ -795,7 +813,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -817,9 +841,9 @@
                 "blocking_count",
                 "blocking_reason",
                 "blocking_state",
-                "blocking_type",
                 "last",
-                "sum"
+                "sum",
+                "blocking_list"
               ]
             }
           }
@@ -884,6 +908,7 @@
               "Since": "Since",
               "blocked_state": "State",
               "blocking_count": "Ret.",
+              "blocking_list": "Blocklist",
               "blocking_reason": "Reason",
               "blocking_state": "State",
               "blocking_type": "Type",
@@ -986,7 +1011,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -1001,7 +1026,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "refId": "A",
@@ -1020,7 +1045,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -1127,7 +1158,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -1142,7 +1173,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"location_org\"",
@@ -1163,7 +1194,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -1275,7 +1312,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -1290,7 +1327,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"location_country_name\" =~ /^$Country$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/) AND $timeFilter GROUP BY \"location_country_name\"",
@@ -1311,7 +1348,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -1446,7 +1489,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -1467,7 +1510,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "query": "SELECT sum(\"value\") FROM \"netflow_size\" WHERE (\"location_org\" =~ /^$Organisation$/ AND \"service\" =~ /^$Service$/ AND \"intern_host\" =~ /^$InternHost$/ AND \"intern_ip\" =~ /^$InternIP$/ AND \"extern_group\" =~ /^$ExternGroup$/ AND \"extern_host\" =~ /^$ExternHost$/ AND \"extern_ip\" =~ /^$ExternIP$/ AND \"location_country_name\" =~ /^$Country$/) AND $timeFilter GROUP BY \"service\", \"port\"",
@@ -1488,7 +1531,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -1604,7 +1653,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -1619,7 +1668,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "refId": "A",
@@ -1638,7 +1687,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -1747,7 +1802,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -1762,7 +1817,7 @@
               "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "refId": "A",
@@ -1781,7 +1836,13 @@
               }
             ]
           ],
-          "tags": []
+          "tags": [
+            {
+              "key": "type::tag",
+              "operator": "=",
+              "value": "netflow"
+            }
+          ]
         }
       ],
       "timeShift": "2m",
@@ -1985,7 +2046,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -2021,7 +2082,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"netflow\" WHERE (\"direction\" = 'incoming') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'incoming' and \"type\"='netflow') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -2326,7 +2387,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.0.4",
       "targets": [
         {
           "datasource": {
@@ -2362,7 +2423,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"netflow\" WHERE (\"direction\" = 'outgoing') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'outgoing' and \"type\"='netflow') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -2524,6 +2585,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 61,
+  "version": 66,
   "weekStart": ""
 }
