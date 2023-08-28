@@ -135,7 +135,8 @@ class Connection:
 
         if gateway_base_time > 0:
             #_diff = ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000
-            self.timestamp = ( gateway_base_time + request_flow["flowStartSysUpTime"] ) / 1000
+            #self.timestamp = ( gateway_base_time + request_flow["flowStartSysUpTime"] ) / 1000
+            self.timestamp = ( gateway_base_time + request_flow["flowEndSysUpTime"] ) / 1000
             if request_ts - self.timestamp > 600:
                 # can happen after 2982 days uptime
                 logging.error("FALLBACK happens {} {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.timestamp), datetime.fromtimestamp(request_ts)))
@@ -378,7 +379,7 @@ class Processor(threading.Thread):
 
         try:
             pending = {}
-            last_cleanup = datetime.now().timestamp()
+            last_cleanup = time.time()
 
             while self.is_running:
                 try:
@@ -495,7 +496,7 @@ class Processor(threading.Thread):
                 except Exception:
                     logging.error(traceback.format_exc())
 
-                now = datetime.now().timestamp()
+                now = time.time()
                 if now - last_cleanup >= 1:
                     for request_key in list(pending.keys()):
                         request_flow, request_ts = pending[request_key]
