@@ -100,6 +100,7 @@ class LogCollector(threading.Thread):
         self.ipcache = ipcache
 
         self.last_fetch = None
+        self.processed_lines = {}
 
     def start(self):
         self.is_running = True
@@ -127,14 +128,17 @@ class LogCollector(threading.Thread):
         try:
             now = time.time()
             if self.last_fetch == None:
-                self.last_fetch = self.watcher.getLastTrafficStatsTime("apache")
-                if self.last_fetch == 0:
-                    self.last_fetch = now - self.config.traffic_blocker_unblock_timeout
+                start = self.watcher.getLastTrafficStatsTime("apache")
+                if start == 0:
+                    start = now - self.config.traffic_blocker_unblock_timeout
                 else:
-                    self.last_fetch += 1
-                #logging.info(datetime.fromtimestamp(self.last_fetch))
+                    start += 0.001
+            else:
+                start = self.last_fetch - 60 # grep last minute again, to collect also late occuring log lines
+
+            #logging.info("FETCH {}".format(datetime.fromtimestamp(start)))
             query = "{{group=\"apache\"}} |= \" vhost={}:80 \" != \" status=200 \"".format(self.config.server_domain)
-            url = "{}/loki/api/v1/query_range?start={}&end={}&query={}".format(self.config.loki_rest, self.last_fetch, now - 1, urllib.parse.quote(query))
+            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start, urllib.parse.quote(query))
             #logging.info(url)
             contents = urllib.request.urlopen(url).read()
             result = json.loads(contents)
@@ -143,6 +147,14 @@ class LogCollector(threading.Thread):
             if "status" in result and result["status"] == "success":
                 for result in result["data"]["result"]:
                     for row in result["values"]:
+                        timestamp = int(row[0]) / 1000000000
+
+                        key = "{}-{}".format(timestamp, row[1])
+                        if key in self.processed_lines:
+                            #logging.info("SKIP log line {}".format(row[1]))
+                            continue
+                        self.processed_lines[key] = timestamp
+
                         #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
                         # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
                         #                            IP         USER     DOMAIN   REQUEST
@@ -161,7 +173,6 @@ class LogCollector(threading.Thread):
                         #if not external_state[ip]:
                         #    continue
 
-                        timestamp = int(row[0]) / 1000000000
 
                         request = match[2].strip('"')
 
@@ -180,6 +191,12 @@ class LogCollector(threading.Thread):
 
                         self.watcher.addConnection(Connection(timestamp, self.config.server_ip, 80, ip, is_suspicious, self.ipcache))
             self.last_fetch = now
+
+            # cleanup processed logs
+            for key in list(self.processed_lines.keys()):
+                if now - self.processed_lines[key] > 120:
+                    del self.processed_lines[key]
+
         except urllib.error.HTTPError as e:
             logging.info(e)
             #logging.info(traceback.format_exc())

@@ -198,6 +198,7 @@ class TrafficWatcher(threading.Thread):
 
             #logging.info(self.traffic_stats)
             #logging.info(self.last_traffic_stats)
+            #logging.info("======================>")
             #logging.info(self.last_processed_traffic_stats)
 
     def _addTrafficState(self, connection_type, ip, traffic_group, blocklist_name, time):
