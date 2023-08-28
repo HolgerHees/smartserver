@@ -35,21 +35,39 @@ class Connection:
         self.service = "http"
         self.protocol_name = "tcp"
         self.ip_type = "v4"
-        self.size = 0
+        #self.size = 0
 
         self.connection_type = "apache"
-
-    def formatCustomValues(self, values_str, custom_values):
-        pass
 
     def applyDebugFields(self, data):
         pass
 
-    def applyAdditionalFields(self, currentFields):
+    def formatCustomValues(self, values_str, custom_values):
         pass
 
-    def mergeAdditionalField(self, currentFields, previousFields):
-        pass
+    def formatTCPFlags(self, tcp_flags):
+        return ""
+
+    def applyData(self, data, traffic_group):
+        if "tcp_flags" not in data["values"]:
+            data["values"]["tcp_flags"] = [ 0, self.formatTCPFlags ]
+        if "size" not in data["values"]:
+            data["values"]["size"] = 0
+        if "count" not in data["values"]:
+            data["values"]["count"] = 0
+
+        data["state_tags"]["log_type"] = "apache"
+
+        if "log_group" in data["state_tags"]:
+            if TrafficGroup.PRIORITY[data["state_tags"]["log_group"]] < TrafficGroup.PRIORITY[traffic_group]:
+                data["state_tags"]["log_group"] = traffic_group
+        else:
+            data["state_tags"]["log_group"] = traffic_group
+
+        if "log_count" in data["values"]:
+            data["values"]["log_count"] += 1
+        else:
+            data["values"]["log_count"] = 1
 
     def getTrafficGroup(self, blocklist_name):
         if blocklist_name:

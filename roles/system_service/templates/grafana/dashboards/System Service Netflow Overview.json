@@ -153,12 +153,6 @@
               "key": "service",
               "operator": "!=",
               "value": "speedtest"
-            },
-            {
-              "condition": "AND",
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
             }
           ]
         }
@@ -277,12 +271,6 @@
               "key": "service",
               "operator": "!=",
               "value": "speedtest"
-            },
-            {
-              "condition": "AND",
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
             }
           ]
         }
@@ -557,13 +545,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -812,13 +793,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -1044,13 +1018,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -1193,13 +1160,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -1347,13 +1307,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -1530,13 +1483,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -1686,13 +1632,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -1835,13 +1774,6 @@
                 "type": "sum"
               }
             ]
-          ],
-          "tags": [
-            {
-              "key": "type::tag",
-              "operator": "=",
-              "value": "netflow"
-            }
           ]
         }
       ],
@@ -2082,7 +2014,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'incoming' and \"type\"='netflow') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'incoming' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -2423,7 +2355,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'outgoing' and \"type\"='netflow') AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'outgoing' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -2585,6 +2517,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 66,
+  "version": 67,
   "weekStart": ""
 }

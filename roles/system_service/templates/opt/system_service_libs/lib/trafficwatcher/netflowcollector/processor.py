@@ -274,24 +274,40 @@ class Connection:
 #Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:121] - {'sourceIPv4Address': '34.158.0.131', 'destinationIPv4Address': '192.168.0.108', 'flowStartSysUpTime': 24968747, 'flowEndSysUpTime': 25030465, 'IN_BYTES': 441, 'IN_PKTS': 7, 'INPUT_SNMP': 0, 'OUTPUT_SNMP': 0, 'sourceTransportPort': 4070, 'destinationTransportPort': 48096, 'protocolIdentifier': 6, 'TCP_FLAGS': 24, 'ipVersion': 4, 'SRC_TOS': 0}
 #Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:122] - False
 
-    def formatCustomValues(self, values_str, custom_values):
-        flags = []
-        if custom_values["tcp_flags"] > 0:
-            for flag, name in TCP_FLAGS.items():
-                if flag & custom_values["tcp_flags"] == flag:
-                    flags.append(name)
-        if len(flags) > 0:
-            values_str.append("tcp_flags=\"{}\"".format("|".join(flags)))
-
     def applyDebugFields(self, data):
         data["request"] = self.request_flow
         data["response"] = self.answer_flow
 
-    def applyAdditionalFields(self, currentFields):
-        currentFields["tcp_flags"] = self.tcp_flags
+    def formatTCPFlags(self, tcp_flags):
+        flags = []
+        if tcp_flags > 0:
+            for flag, name in TCP_FLAGS.items():
+                if flag & tcp_flags == flag:
+                    flags.append(name)
+        return "|".join(flags) if len(flags) > 0 else ""
 
-    def mergeAdditionalField(self, currentFields, previousFields):
-        currentFields["tcp_flags"] |= previousFields["tcp_flags"]
+    def applyData(self, data, traffic_group):
+        if "traffic_group" in data["state_tags"]:
+            if TrafficGroup.PRIORITY[data["state_tags"]["traffic_group"]] < TrafficGroup.PRIORITY[traffic_group]:
+                data["state_tags"]["traffic_group"] = traffic_group
+        else:
+            data["state_tags"]["traffic_group"] = traffic_group
+
+        if "size" in data["values"]:
+            data["values"]["size"] += self.size
+        else:
+            data["values"]["size"] = self.size
+
+        if "count" in data["values"]:
+            data["values"]["count"] += 1
+        else:
+            data["values"]["count"] = 1
+
+        if "tcp_flags" in data["values"]:
+            data["values"]["tcp_flags"][0] |= self.tcp_flags
+            data["values"]["tcp_flags"][1] = self.formatTCPFlags
+        else:
+            data["values"]["tcp_flags"] = [ self.tcp_flags, self.formatTCPFlags ]
 
     def getTrafficGroup(self, blocklist_name):
         if blocklist_name:

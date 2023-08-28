@@ -121,7 +121,7 @@ class Speedtest():
                     self.resetMetrics()
 
                     location = "Error"
-                    logging.error(u"Data error: {}".format(result))
+                    logging.error(u"Data error: {}".format(json_string))
         except Exception as e:
             self.resetMetrics()
 

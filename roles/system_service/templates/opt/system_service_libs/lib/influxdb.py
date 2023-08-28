@@ -89,13 +89,36 @@ class InfluxDB(threading.Thread):
     #            values[result["name"]] = result["values"][1]
     #    return values
 
+    def delete(self, query):
+        is_array = type(query) is list
+        if not is_array:
+            query = [query]
+
+        headers = {'Authorization': "Token {}".format(self.config.influxdb_token), "Content-Type": "application/x-www-form-urlencoded"}
+        url = "{}/query".format(self.config.influxdb_rest)
+
+        data = {
+            "pretty": "false",
+            "db": self.config.influxdb_database,
+            "rp": "autogen",
+            "q": ";".join(query)
+        }
+
+        r = requests.post( url, data=data, headers=headers)
+
+        if r.status_code != 200:
+            logging.info("Wrong status code {} for query {}".format(r.status_code, url))
+            logging.info("{}".format(r.text))
+            return False
+        return True
+
     def query(self, query):
         is_array = type(query) is list
         if not is_array:
             query = [query]
 
         headers = {'Authorization': "Token {}".format(self.config.influxdb_token), "Content-Type": "application/vnd.influxql"}
-        url = "{}/query?pretty=true&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join(query)))
+        url = "{}/query?pretty=false&db={}&rp=autogen&q={}".format(self.config.influxdb_rest,self.config.influxdb_database, urllib.parse.quote(";".join(query)))
 
         r = requests.get( url, headers=headers)
 
@@ -152,6 +175,15 @@ class InfluxDB(threading.Thread):
             logging.error(traceback.format_exc())
             return -1
 
+
     @staticmethod
-    def escapeValue(value):
-        return value.replace(" ","\\ ").replace(",","\\,")
+    def escapeTagValue(value):
+        return value.replace(" ","\\ ").replace(",","\\,").replace("=","\\=")
+
+    @staticmethod
+    def escapeFieldValue(value):
+        return value.replace('"','\\"').replace("\\","\\\\")
+
+    #@staticmethod
+    #def escapeValue(value):
+    #    return value.replace(" ","\\ ").replace(",","\\,")

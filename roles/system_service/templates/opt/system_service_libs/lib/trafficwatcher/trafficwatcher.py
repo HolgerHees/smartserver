@@ -4,12 +4,13 @@ import logging
 import re
 import schedule
 import time
+from datetime import datetime
 
 from smartserver import command
 
 from lib.trafficwatcher.trafficblocker.trafficblocker import TrafficBlocker
-from lib.trafficwatcher.netflowcollector.processor import Processor as NetflowProcessor
-from lib.trafficwatcher.logcollector.logcollector import LogCollector
+from lib.trafficwatcher.netflowcollector.processor import Processor as NetflowProcessor, Connection as NetflowConnection
+from lib.trafficwatcher.logcollector.logcollector import LogCollector, Connection as LogConnection
 from lib.trafficwatcher.blocklists.blocklists import Blocklists
 
 from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
@@ -182,8 +183,9 @@ class TrafficWatcher(threading.Thread):
         #logging.info("_initTrafficState")
         with self.stats_lock:
             # 362 min => 6h - 2 min
-            results = self.influxdb.query('SELECT "type","extern_ip","group","count" FROM "trafficflow" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
-            #logging.info(results)
+            # trafficevents,connection_type={},extern_ip={},traffic_group={}.blocklist_name={}
+            results = self.influxdb.query('SELECT "connection_type","extern_ip","traffic_group","blocklist_name","value" FROM "trafficevents" WHERE time >= now() - 358m')
+            #results = self.influxdb.query('SELECT "type","extern_ip","group","count" FROM "trafficflow" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
             self.traffic_stats = {}
             if results is not None:
                 for result in results:
@@ -191,10 +193,12 @@ class TrafficWatcher(threading.Thread):
                         #if value[3] > 1:
                         #    logging.info("{} {} {}".format(value[1], value[2], value[3]))
                         value_time = InfluxDB.parseDatetime(value[0])
-                        blocklist_name = self.blocklists.check(value[2])
-                        for n in range(value[4]):
-                            self._addTrafficState(value[1], value[2], value[3], blocklist_name if blocklist_name else "unknown", value_time.timestamp())
-            self.last_processed_traffic_stats = max(self.last_traffic_stats.values())
+                        self._addTrafficState(value[1], value[2], value[3], value[4], value_time.timestamp())
+            self.last_processed_traffic_stats = max(self.last_traffic_stats.values()) if len(self.last_traffic_stats) > 0 else 0
+
+            #logging.info(self.traffic_stats)
+            #logging.info(self.last_traffic_stats)
+            #logging.info(self.last_processed_traffic_stats)
 
     def _addTrafficState(self, connection_type, ip, traffic_group, blocklist_name, time):
         # lock is called in place where this function is called
@@ -285,7 +289,6 @@ class TrafficWatcher(threading.Thread):
                 continue
 
             timestamp = con.timestamp
-            influx_timestamp = int(int(timestamp) * 1000)
 
             _location = con.location
             if _location["type"] == IPCache.TYPE_LOCATION:
@@ -313,9 +316,9 @@ class TrafficWatcher(threading.Thread):
                 location_geohash = None
                 location_org = "Unknown"
 
-            label = []
-            common_values = {}
-            custom_values = {}
+            base_tags = {}
+            state_tags = {}
+            values = {}
 
             src_is_external = con.src_is_external
             extern_ip = str((con.src if src_is_external else con.dest).compressed)
@@ -348,23 +351,24 @@ class TrafficWatcher(threading.Thread):
                 blocklist_name = None
                 traffic_group = TrafficGroup.NORMAL
 
-            #logging.info("{} {} {}".format(extern_ip, con.connection_type, traffic_group))
-
             if con.isFilteredTrafficGroup(traffic_group):
                 #logging.info("{} {}".format(extern_ip, "filtered"))
                 continue
 
-            #logging.info("{} {}".format(extern_ip, "continue"))
-
             direction = "incoming" if src_is_external else "outgoing"
+
+            is_blocked = self.trafficblocker.isBlockedIP(extern_ip)
 
             if traffic_group != "normal":
                 with self.stats_lock:
                     self._addTrafficState(con.connection_type, extern_ip, traffic_group, blocklist_name, timestamp)
 
-                if not self.trafficblocker.isBlockedIP(extern_ip):
+                messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(timestamp * 1000)))
+
+                if not is_blocked:
                     data = {
                         "type": con.connection_type,
+                        "time": str(datetime.fromtimestamp(timestamp)),
                         "extern_ip": extern_ip,
                         "intern_ip": intern_ip,
                         "direction": direction,
@@ -373,91 +377,120 @@ class TrafficWatcher(threading.Thread):
                     con.applyDebugFields(data)
                     logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
 
-            label.append("type={}".format(con.connection_type))
+            base_tags["intern_ip"] = intern_ip
+            base_tags["intern_host"] = intern_hostname
 
-            label.append("intern_ip={}".format(intern_ip))
-            label.append("intern_host={}".format(intern_hostname))
-
-            label.append("extern_ip={}".format(extern_ip))
-            label.append("extern_host={}".format(extern_hostname))
+            base_tags["extern_ip"] = extern_ip
+            base_tags["extern_host"] = extern_hostname
             extern_group = extern_hostname
             m = re.search('^.*?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|[a-z0-9-]+\.[a-z0-9]+)$', extern_group)
             if m and m.group(1) != extern_group:
                 extern_group = "*.{}".format(m.group(1))
-            label.append("extern_group={}".format(extern_group))
+            base_tags["extern_group"] = extern_group
 
-            label.append("service={}".format(service))
+            base_tags["service"] = service
 
-            label.append("group={}".format(traffic_group))
+            base_tags["direction"] = direction
+            base_tags["protocol"] = con.protocol_name
 
-            label.append("direction={}".format(direction))
-            label.append("protocol={}".format(con.protocol_name))
+            base_tags["ip_type"] = con.ip_type
 
-            label.append("ip_type={}".format(con.ip_type))
+            base_tags["destination_port"] = con.dest_port
 
-            label.append("destination_port={}".format(con.dest_port))
-            #label.append("source_port={}".format(con.src_port)) # => should be a field, because it is changing every time
-            #label.append("size={}".format(con.size))
-            #label.append("duration={}".format(con.duration))
-            #label.append("packets={}".format(con.packages))
-
-            label.append("location_country_name={}".format(InfluxDB.escapeValue(location_country_name)))
-            label.append("location_country_code={}".format(location_country_code))
-            label.append("location_zip={}".format(InfluxDB.escapeValue(location_zip)))
-            label.append("location_city={}".format(InfluxDB.escapeValue(location_city)))
+            base_tags["location_country_name"] = location_country_name
+            base_tags["location_country_code"] = location_country_code
+            base_tags["location_zip"] = location_zip
+            base_tags["location_city"] = location_city
             if location_org:
-                label.append("location_org={}".format(InfluxDB.escapeValue(location_org)))
+                base_tags["location_org"] = location_org
 
-            #label.append("oneway={}".format(1 if con.is_one_direction else 0))
+            #base_tags["oneway={}".format(1 if con.is_one_direction else 0))
 
             #logging.info("SRC: {} {} {}".format(con.src, con.src_hostname,src_location))
             #logging.info("DEST: {} {} {}".format(con.dest, con.dest_hostname,dest_location))
 
             if location_geohash:
-                common_values["location_geohash"] = location_geohash
-                label.append("location_geohash=1")
+                values["location_geohash"] = location_geohash
+                base_tags["location_has_geohash"] = 1
 
-            con.applyAdditionalFields(custom_values)
-            common_values["size"] = con.size
-            common_values["count"] = 1
+            values["blocked"] = 1 if is_blocked else 0
 
-            label_str = ",".join(label)
-            key = "{}-{}".format(label_str, influx_timestamp)
-            if key not in registry:
-                #logging.info("new")
-                registry[key] = [label_str, common_values, custom_values, influx_timestamp, con]
+            base_tags_r = []
+            for name, value in base_tags.items():
+                base_tags_r.append(str(value))
+            key = ",".join(base_tags_r)
+            #logging.info(base_tags_str)
 
-                #logging.info("timestamp: {}, influx_timestamp: {}".format(timestamp, influx_timestamp))
+            #if traffic_group != "normal":
+            #    logging.info("KEY: {}".format(key))
 
-                # old values with same timestamp should be summerized
-                if key in self.last_registry:
-                    registry[key][1]["size"] += self.last_registry[key][1]["size"]
-                    registry[key][1]["count"] += self.last_registry[key][1]["count"]
-                    con.mergeAdditionalField(registry[key][2], self.last_registry[key][2])
+            data = None
+            if key in registry:
+                for _data in registry[key]:
+                    if abs(_data["timestamp"] - timestamp) <= 1:
+                        if traffic_group != "normal":
+                            logging.info("FOUND REGISTRY {} {} {}".format(con.connection_type, str(datetime.fromtimestamp(timestamp)), extern_ip))
+                        data = _data
+                        break
             else:
-                registry[key][1]["size"] += common_values["size"]
-                registry[key][1]["count"] += 1
-                con.mergeAdditionalField(registry[key][2], custom_values)
+                registry[key] = []
+            if data is None:
+                if key in self.last_registry:
+                    for _data in self.last_registry[key]:
+                        if abs(_data["timestamp"] - timestamp) <= 1:
+                            if traffic_group != "normal":
+                                logging.info("FOUND LAST REGISTRY {} {} {}".format(con.connection_type, str(datetime.fromtimestamp(timestamp)), extern_ip))
+                            data = _data
+                            break
+                if data is None:
+                    data = {"base_tags": base_tags, "state_tags": state_tags, "values": values, "timestamp": timestamp, "influxdb_timestamp": int(timestamp) * 1000, "query": None}
+                registry[key].append(data)
+
+            if "group" in data["state_tags"]:
+                if TrafficGroup.PRIORITY[data["state_tags"]["group"]] < TrafficGroup.PRIORITY[traffic_group]:
+                    data["state_tags"]["group"] = traffic_group
+            else:
+                data["state_tags"]["group"] = traffic_group
+
+            con.applyData(data, traffic_group)
 
         self.last_registry = registry
 
-        messurements = []
-        sorted_registry = sorted(registry.values(), key=lambda x: x[3])
-        for data in sorted_registry:
+        data_r = []
+        for _data_r in registry.values():
+            data_r += _data_r
 
-            label_str, common_values, custom_values, timestamp, con = data
+        cleanup_messurements = []
+        sorted_data_r = sorted(data_r, key=lambda x: ["influxdb_timestamp"])
+        for data in sorted_data_r:
+            tags = data["base_tags"] | data["state_tags"]
 
-            values_str = []
-            for name,value in common_values.items():
+            tag_str_r = []
+            for name, value in tags.items():
                 if isinstance(value, str):
-                    values_str.append("{}=\"{}\"".format(name,InfluxDB.escapeValue(value)))
+                    tag_str_r.append("{}={}".format(name,InfluxDB.escapeTagValue(value)))
                 else:
-                    values_str.append("{}={}".format(name,value))
+                    tag_str_r.append("{}={}".format(name,value))
+            tag_str = ",".join(tag_str_r)
 
-            con.formatCustomValues(values_str, custom_values)
+            values_r = []
+            for name,value in data["values"].items():
+                if isinstance(value, list):
+                    values_r.append("{}=\"{}\"".format(name,value[1](value[0])))
+                elif isinstance(value, str):
+                    values_r.append("{}=\"{}\"".format(name,InfluxDB.escapeFieldValue(value)))
+                else:
+                    values_r.append("{}={}".format(name,value))
+            value_str = ",".join(values_r)
 
-            values_str = ",".join(values_str)
-            messurements.append("trafficflow,{} {} {}".format(label_str, values_str, timestamp))
+            if data["query"] is not None and data["query"][1] != tag_str:
+                #logging.info("CLEANUP => OLD TAGS: {}".format(data["query"][1]))
+                #logging.info("CLEANUP => NEW TAGS: {}".format(tag_str))
+                cleanup_messurements.append(["trafficflow", data["query"][0], data["influxdb_timestamp"]])
+
+            data["query"] = [ tags, tag_str ]
+            messurements.append("trafficflow,{} {} {}".format(tag_str, value_str, data["influxdb_timestamp"]))
+
 
         #end = time.time()
         #logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
@@ -474,13 +507,33 @@ class TrafficWatcher(threading.Thread):
 
         self.trafficblocker.triggerCheck()
 
+        if len(cleanup_messurements) > 0:
+            start_cleanup = time.time()
+
+            queries = []
+            for messurement, tags, timestamp in cleanup_messurements:
+                tag_r = []
+                for name, value in tags.items():
+                    if isinstance(value, str):
+                        tag_r.append("\"{}\"='{}'".format(name,value.replace("'","\\'")))
+                    else:
+                        tag_r.append("\"{}\"='{}'".format(name,value))
+                tag_str = " AND ".join(tag_r)
+                queries.append("DELETE FROM \"{}\" WHERE {} AND \"time\" = {}".format(messurement, tag_str, (timestamp * 1000000) ))
+
+            logging.info(queries)
+            result = self.influxdb.delete(queries)
+
+            end_cleanup = time.time()
+            logging.info("CLEANUP => done after {} seconds".format(end_cleanup-start_cleanup))
+
         return messurements
 
     def getStateMetrics(self):
         metrics = ["system_service_process{{type=\"trafficwatcher\"}} {}".format("1" if self.is_running else "0")]
 
         min_time = self.last_processed_traffic_stats
-        self.last_processed_traffic_stats = max(self.last_traffic_stats.values())
+        self.last_processed_traffic_stats = max(self.last_traffic_stats.values()) if len(self.last_traffic_stats) > 0 else 0
 
         count_values = {}
         with self.stats_lock:
