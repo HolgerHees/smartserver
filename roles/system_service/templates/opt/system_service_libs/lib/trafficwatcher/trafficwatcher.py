@@ -366,18 +366,6 @@ class TrafficWatcher(threading.Thread):
 
                 messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(con.start_timestamp * 1000)))
 
-                if True or not is_blocked:
-                    data = {
-                        "type": con.connection_type,
-                        "time": str(datetime.fromtimestamp(con.start_timestamp)),
-                        "extern_ip": extern_ip,
-                        "intern_ip": intern_ip,
-                        "direction": direction,
-                        "traffic_group": traffic_group
-                    }
-                    con.applyDebugFields(data)
-                    logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
-
             base_tags["intern_ip"] = intern_ip
             base_tags["intern_host"] = intern_hostname
 
@@ -428,6 +416,20 @@ class TrafficWatcher(threading.Thread):
 
             #values["log_count"] = 0
 
+            is_debug = traffic_group != "normal"
+            if is_debug:#True or not is_blocked:
+                data = {
+                    "type": con.connection_type,
+                    "start_timestamp": str(datetime.fromtimestamp(con.start_timestamp)),
+                    "end_timestamp": str(datetime.fromtimestamp(con.end_timestamp)),
+                    "extern_ip": extern_ip,
+                    "intern_ip": intern_ip,
+                    "direction": direction,
+                    "traffic_group": traffic_group
+                }
+                #con.applyDebugFields(data)
+                logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
+
             # **** COLLECT MERGABLE FLOWS ****
             related_flows = []
             if key in flows:
@@ -435,7 +437,7 @@ class TrafficWatcher(threading.Thread):
                     start = flow["start_timestamp"] - 1
                     end = flow["end_timestamp"] + 1
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
-                        if flow["state_tags"]["group"] != "normal":
+                        if is_debug:
                             logging.info("FOUND REGISTRY {} {}".format(str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
                         related_flows.append(flow)
                         flows[key].remove(flow)
@@ -448,7 +450,7 @@ class TrafficWatcher(threading.Thread):
                     start = flow["start_timestamp"] - 1
                     end = flow["end_timestamp"] + 1
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
-                        if flow["state_tags"]["group"] != "normal":
+                        if is_debug:
                             logging.info("FOUND LAST REGISTRY {} {}".format(str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
                         processed_related_flows.append(flow)
                         self.processed_flows[key].remove(flow)
