@@ -93,6 +93,8 @@ class LogCollector(threading.Thread):
     def __init__(self, config, watcher, ipcache):
         threading.Thread.__init__(self)
 
+        self.is_running = False
+
         self.event = threading.Event()
 
         self.config = config
