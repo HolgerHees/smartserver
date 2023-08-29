@@ -10,6 +10,7 @@
     image_version: "v{{speedtest_version}}"
     files:
       - roles/speedtest/templates/container/Dockerfile
+      - roles/speedtest/templates/container/entrypoint.sh
       - roles/speedtest/templates/container/patches/ipInfo.js
       - roles/speedtest/templates/container/patches/gzip.js
   import_tasks: roles/container/shared/build_docker_image.yml
@@ -32,7 +33,10 @@
         ipv4_address: "{{docker_speedtest_ip}}"
     networks_cli_compatible: yes
     exposed_ports:
-     - "8086"
+     - "80"
+    published_ports:
+     - "5201:5201/tcp"
+     - "5201:5201/udp"
   notify: "restart speedtest"
 
 - name: add container name
