@@ -137,7 +137,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -255,7 +255,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -536,7 +536,7 @@
             [
               {
                 "params": [
-                  "count"
+                  "traffic_count"
                 ],
                 "type": "field"
               },
@@ -545,7 +545,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -784,7 +785,7 @@
             [
               {
                 "params": [
-                  "count"
+                  "traffic_count"
                 ],
                 "type": "field"
               },
@@ -793,7 +794,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1009,7 +1011,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -1018,7 +1020,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1151,7 +1154,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -1160,7 +1163,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1298,7 +1302,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -1307,7 +1311,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1474,7 +1479,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -1483,7 +1488,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1623,7 +1629,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -1632,7 +1638,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -1765,7 +1772,7 @@
             [
               {
                 "params": [
-                  "size"
+                  "traffic_size"
                 ],
                 "type": "field"
               },
@@ -1774,7 +1781,8 @@
                 "type": "sum"
               }
             ]
-          ]
+          ],
+          "tags": []
         }
       ],
       "timeShift": "2m",
@@ -2014,7 +2022,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'incoming' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "query": "SELECT \"traffic_size\",\"traffic_count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'incoming' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -2101,6 +2109,14 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "traffic_count": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "traffic_size": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "value": {
                 "aggregations": [
                   "sum",
@@ -2142,6 +2158,8 @@
               "size (sum)": "Traffic",
               "sum": "Traffic",
               "sum_1": "Req",
+              "traffic_count": "Req",
+              "traffic_size": "Traffic",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -2355,7 +2373,7 @@
           "measurement": "netflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"size\",\"count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'outgoing' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
+          "query": "SELECT \"traffic_size\",\"traffic_count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'outgoing' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -2436,6 +2454,14 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
+              "traffic_count": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "traffic_size": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "value": {
                 "aggregations": [
                   "sum",
@@ -2477,6 +2503,8 @@
               "size (sum)": "Traffic",
               "sum": "Traffic",
               "sum_1": "Req",
+              "traffic_count": "Req",
+              "traffic_size": "Traffic",
               "value": "",
               "value (count)": "Req",
               "value (sum)": "Traffic"
@@ -2517,6 +2545,6 @@
   "timezone": "",
   "title": "System Service Netflow Overview",
   "uid": "system-service-netflow-overview",
-  "version": 67,
+  "version": 68,
   "weekStart": ""
 }

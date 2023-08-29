@@ -304,7 +304,7 @@
           "measurement": "netflow",
           "orderByTime": "ASC",
           "policy": "autogen",
-          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'outgoing' AND \"location_has_geohash\" = '1') AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
+          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"traffic_count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'outgoing' AND \"location_has_geohash\" = '1') AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -361,7 +361,7 @@
           "measurement": "netflow_size",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'incoming' AND \"location_has_geohash\" = '1' ) AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
+          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"traffic_count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'incoming' AND \"location_has_geohash\" = '1' ) AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "table",
@@ -430,6 +430,6 @@
   "timezone": "",
   "title": "System Service Netflow GeoMap",
   "uid": "system-service-netflow-geopmap",
-  "version": 19,
+  "version": 20,
   "weekStart": ""
 }

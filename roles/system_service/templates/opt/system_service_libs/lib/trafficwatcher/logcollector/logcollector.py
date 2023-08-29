@@ -15,7 +15,7 @@ from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
 
 class Connection:
     def __init__(self, timestamp, target_ip, target_port, source_ip, is_suspicious, ipcache):
-        self.timestamp = timestamp
+        self.start_timestamp = self.end_timestamp = timestamp
 
         self.dest = ipaddress.ip_address(target_ip)
         self.dest_port = target_port
@@ -42,32 +42,28 @@ class Connection:
     def applyDebugFields(self, data):
         pass
 
-    def formatCustomValues(self, values_str, custom_values):
-        pass
+    @staticmethod
+    def mergeData(data, flow):
+        if TrafficGroup.PRIORITY[data["state_tags"]["group"]] < TrafficGroup.PRIORITY[flow["state_tags"]["log_group"]]:
+            data["state_tags"]["group"] = flow["state_tags"]["log_group"]
 
-    def formatTCPFlags(self, tcp_flags):
-        return ""
+        if TrafficGroup.PRIORITY[data["state_tags"]["log_group"]] < TrafficGroup.PRIORITY[flow["state_tags"]["log_group"]]:
+            data["state_tags"]["log_group"] = flow["state_tags"]["log_group"]
+
+        if "log_type" in flow["state_tags"]:
+            data["state_tags"]["log_type"] = flow["state_tags"]["log_type"]
+
+        if "log_count" in flow["values"]:
+            if "log_count" in data["values"]:
+                data["values"]["log_count"] += flow["values"]["log_count"]
+            else:
+                data["values"]["log_count"] = flow["values"]["log_count"]
 
     def applyData(self, data, traffic_group):
-        if "tcp_flags" not in data["values"]:
-            data["values"]["tcp_flags"] = [ 0, self.formatTCPFlags ]
-        if "size" not in data["values"]:
-            data["values"]["size"] = 0
-        if "count" not in data["values"]:
-            data["values"]["count"] = 0
-
+        data["state_tags"]["group"] = traffic_group
+        data["state_tags"]["log_group"] = traffic_group
         data["state_tags"]["log_type"] = "apache"
-
-        if "log_group" in data["state_tags"]:
-            if TrafficGroup.PRIORITY[data["state_tags"]["log_group"]] < TrafficGroup.PRIORITY[traffic_group]:
-                data["state_tags"]["log_group"] = traffic_group
-        else:
-            data["state_tags"]["log_group"] = traffic_group
-
-        if "log_count" in data["values"]:
-            data["values"]["log_count"] += 1
-        else:
-            data["values"]["log_count"] = 1
+        data["values"]["log_count"] = 1
 
     def getTrafficGroup(self, blocklist_name):
         if blocklist_name:
@@ -118,7 +114,6 @@ class LogCollector(threading.Thread):
             while self.is_running:
                 # merge http requests
                 self._processHttpRequests()
-
                 self.event.wait(60)
 
             logging.info("IP log collector stopped")
@@ -174,7 +169,6 @@ class LogCollector(threading.Thread):
                         #    external_state[ip] = self.ipcache.isExternal(ipaddress.ip_address(ip))
                         #if not external_state[ip]:
                         #    continue
-
 
                         request = match[2].strip('"')
 

@@ -724,7 +724,7 @@
           "measurement": "trafficflow",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT \"count\",\"log_count\",\"blocked\" FROM \"autogen\".\"trafficflow\" WHERE $timeFilter GROUP BY \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"location_city\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"service\"::tag, \"log_type\"::tag, \"log_group\"::tag, \"traffic_group\"::tag ORDER BY time DESC",
+          "query": "SELECT \"traffic_count\",\"log_count\",\"blocked\" FROM \"autogen\".\"trafficflow\" WHERE $timeFilter GROUP BY \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"location_city\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"service\"::tag, \"log_type\"::tag, \"log_group\"::tag, \"traffic_group\"::tag ORDER BY time DESC",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "table",
@@ -871,6 +871,12 @@
               "tcp_flags": {
                 "aggregations": []
               },
+              "traffic_count": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              },
               "traffic_group": {
                 "aggregations": [],
                 "operation": "groupby"
@@ -905,7 +911,6 @@
               "Time (lastNotNull)": 0,
               "Time (range)": 2,
               "blocked": 5,
-              "count (sum)": 6,
               "direction": 3,
               "extern_group": 14,
               "extern_host": 16,
@@ -920,6 +925,7 @@
               "log_group": 9,
               "log_type": 10,
               "service": 11,
+              "traffic_count (sum)": 6,
               "traffic_group": 7
             },
             "renameByName": {
@@ -957,6 +963,7 @@
               "sum": "Traffic",
               "sum (sum)": "Events",
               "tcp_flags": "Flags",
+              "traffic_count (sum)": "TE",
               "traffic_group": "TG",
               "type": "Type",
               "value": "",
@@ -999,6 +1006,6 @@
   "timezone": "",
   "title": "System Service Netflow Summary",
   "uid": "system-service-netflow-summary",
-  "version": 23,
+  "version": 24,
   "weekStart": ""
 }

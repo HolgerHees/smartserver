@@ -5,8 +5,9 @@ class TrafficGroup():
     INTRUDED = 'intruded'
 
     PRIORITY = {
-        NORMAL: 0,
-        OBSERVED: 1,
-        SCANNING: 2,
-        INTRUDED: 3
+        "-": 0,
+        NORMAL: 1,
+        OBSERVED: 2,
+        SCANNING: 3,
+        INTRUDED: 4
     }

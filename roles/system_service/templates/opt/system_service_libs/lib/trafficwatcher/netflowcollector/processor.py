@@ -135,19 +135,20 @@ class Connection:
 
         if gateway_base_time > 0:
             #_diff = ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000
-            #self.timestamp = ( gateway_base_time + request_flow["flowStartSysUpTime"] ) / 1000
-            self.timestamp = ( gateway_base_time + request_flow["flowEndSysUpTime"] ) / 1000
-            if request_ts - self.timestamp > 600:
+            self.start_timestamp = ( gateway_base_time + request_flow["flowStartSysUpTime"] ) / 1000
+            self.end_timestamp = ( gateway_base_time + request_flow["flowEndSysUpTime"] ) / 1000
+            if request_ts - self.start_timestamp > 600:
                 # can happen after 2982 days uptime
-                logging.error("FALLBACK happens {} {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.timestamp), datetime.fromtimestamp(request_ts)))
-                self.timestamp = 0
-            #logging.info("{} => {}".format(datetime.fromtimestamp(self.timestamp), datetime.fromtimestamp(_timestamp)))
+                logging.error("FALLBACK happens {} {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(request_ts)))
+                self.start_timestamp = self.end_timestamp = 0
+            #logging.info("{} => {}".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(_timestamp)))
         else:
-            self.timestamp = 0
+            self.start_timestamp = self.end_timestamp = 0
 
-        if self.timestamp == 0:
+        if self.start_timestamp == 0:
             # METRIC_TIMESHIFT => most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
-            self.timestamp = request_ts - ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000  - METRIC_TIMESHIFT
+            self.start_timestamp = request_ts - ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000  - METRIC_TIMESHIFT
+            self.end_timestamp = request_ts
         #self.timestamp = request_ts - METRIC_TIMESHIFT
         #logging.info("{} => {} : {}".format(datetime.fromtimestamp(request_ts - METRIC_TIMESHIFT), datetime.fromtimestamp(self.timestamp),_diff))
 
@@ -287,28 +288,38 @@ class Connection:
                     flags.append(name)
         return "|".join(flags) if len(flags) > 0 else ""
 
+    @staticmethod
+    def mergeData(data, flow):
+        if TrafficGroup.PRIORITY[data["state_tags"]["group"]] < TrafficGroup.PRIORITY[flow["state_tags"]["traffic_group"]]:
+            data["state_tags"]["group"] = flow["state_tags"]["traffic_group"]
+
+        if TrafficGroup.PRIORITY[data["state_tags"]["traffic_group"]] < TrafficGroup.PRIORITY[flow["state_tags"]["traffic_group"]]:
+            data["state_tags"]["traffic_group"] = flow["state_tags"]["traffic_group"]
+
+        if "traffic_size" in flow["values"]:
+            if "traffic_size" in data["values"]:
+                data["values"]["traffic_size"] += flow["values"]["traffic_size"]
+            else:
+                data["values"]["traffic_size"] = flow["values"]["traffic_size"]
+
+        if "traffic_count" in flow["values"]:
+            if "traffic_count" in data["values"]:
+                data["values"]["traffic_count"] += flow["values"]["traffic_count"]
+            else:
+                data["values"]["traffic_count"] = flow["values"]["traffic_count"]
+
+        if "tcp_flags" in flow["values"]:
+            if "tcp_flags" in data["values"]:
+                data["values"]["tcp_flags"][0] |= flow["values"]["tcp_flags"][0]
+            else:
+                data["values"]["tcp_flags"] = flow["values"]["tcp_flags"]
+
     def applyData(self, data, traffic_group):
-        if "traffic_group" in data["state_tags"]:
-            if TrafficGroup.PRIORITY[data["state_tags"]["traffic_group"]] < TrafficGroup.PRIORITY[traffic_group]:
-                data["state_tags"]["traffic_group"] = traffic_group
-        else:
-            data["state_tags"]["traffic_group"] = traffic_group
-
-        if "size" in data["values"]:
-            data["values"]["size"] += self.size
-        else:
-            data["values"]["size"] = self.size
-
-        if "count" in data["values"]:
-            data["values"]["count"] += 1
-        else:
-            data["values"]["count"] = 1
-
-        if "tcp_flags" in data["values"]:
-            data["values"]["tcp_flags"][0] |= self.tcp_flags
-            data["values"]["tcp_flags"][1] = self.formatTCPFlags
-        else:
-            data["values"]["tcp_flags"] = [ self.tcp_flags, self.formatTCPFlags ]
+        data["state_tags"]["group"] = traffic_group
+        data["state_tags"]["traffic_group"] = traffic_group
+        data["values"]["traffic_size"] = self.size
+        data["values"]["traffic_count"] = 1
+        data["values"]["tcp_flags"] = [ self.tcp_flags, self.formatTCPFlags ]
 
     def getTrafficGroup(self, blocklist_name):
         if blocklist_name:

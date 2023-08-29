@@ -30,7 +30,7 @@ class Info(threading.Thread):
             {"url": "https://natip.tuxnet24.de/index.php?mode=json", "field": "ip-address"},
             {"url": "https://api.ipify.org/?format=json", "field": "ip"}
         ]
-        self.active_url = 1
+        self.active_url = 0
 
         self.ip_check = "8.8.8.8"
         self.ip_check_error_count = 0
@@ -61,7 +61,8 @@ class Info(threading.Thread):
             while self._isRunning():
                 self.default_isp_connection_active = self.checkIP()
 
-                self.wan_active = self.checkConnection()
+                if not self._isRunning():
+                    break
 
                 if self.default_isp_connection_active:
                     self.wan_active = True
@@ -83,6 +84,9 @@ class Info(threading.Thread):
         try:
             response = requests.get(self.ip_urls[self.active_url]["url"])
 
+            if not self._isRunning():
+                return False
+
             if response.status_code == 200:
                 if len(response.content) > 0:
                     try:
@@ -91,6 +95,10 @@ class Info(threading.Thread):
 
                         if "org" in self.default_isp:
                             result = self.ipcache.getLocation(ipaddress.ip_address(active_ip), False)
+
+                            if not self._isRunning():
+                                return False
+
                             if result["type"] == IPCache.TYPE_LOCATION:
                                 location_org = result["org"] if result["org"] else ( result["isp"] if result["isp"] else "" )
                                 if self.default_isp["org"].match(location_org):

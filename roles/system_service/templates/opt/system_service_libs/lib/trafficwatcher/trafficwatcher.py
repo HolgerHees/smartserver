@@ -95,7 +95,7 @@ class TrafficWatcher(threading.Thread):
         self.config = config
 
         self.connections = []
-        self.last_registry = {}
+        self.processed_flows = {}
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
         #self.suspicious_ips = {}
 
@@ -139,7 +139,7 @@ class TrafficWatcher(threading.Thread):
 
     def run(self):
         logging.info("Init traffic state")
-        while True:
+        while self.is_running:
             try:
                 self._initTrafficState()
                 break
@@ -147,10 +147,11 @@ class TrafficWatcher(threading.Thread):
                 logging.info(e)
                 #logging.info(traceback.format_exc())
                 logging.info("InfluxDB not ready. Will retry in 15 seconds.")
-                time.sleep(15)
+                self.event.wait(15)
 
-        # must stay here, because it depends from initialized traffic state
-        self.logcollector.start()
+        if self.is_running:
+            # must stay here, because it depends from initialized traffic state
+            self.logcollector.start()
 
         logging.info("IP traffic watcher started")
         try:
@@ -282,14 +283,13 @@ class TrafficWatcher(threading.Thread):
 
         wireguard_peers = None
 
-        registry = {}
+        start_processing = time.time()
+        flows = {}
         for con in list(self.connections):
             self.connections.remove(con)
 
             if con.skipped:
                 continue
-
-            timestamp = con.timestamp
 
             _location = con.location
             if _location["type"] == IPCache.TYPE_LOCATION:
@@ -362,14 +362,14 @@ class TrafficWatcher(threading.Thread):
 
             if traffic_group != "normal":
                 with self.stats_lock:
-                    self._addTrafficState(con.connection_type, extern_ip, traffic_group, blocklist_name, timestamp)
+                    self._addTrafficState(con.connection_type, extern_ip, traffic_group, blocklist_name, con.start_timestamp)
 
-                messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(timestamp * 1000)))
+                messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(con.start_timestamp * 1000)))
 
-                if not is_blocked:
+                if True or not is_blocked:
                     data = {
                         "type": con.connection_type,
-                        "time": str(datetime.fromtimestamp(timestamp)),
+                        "time": str(datetime.fromtimestamp(con.start_timestamp)),
                         "extern_ip": extern_ip,
                         "intern_ip": intern_ip,
                         "direction": direction,
@@ -405,11 +405,6 @@ class TrafficWatcher(threading.Thread):
             if location_org:
                 base_tags["location_org"] = location_org
 
-            #base_tags["oneway={}".format(1 if con.is_one_direction else 0))
-
-            #logging.info("SRC: {} {} {}".format(con.src, con.src_hostname,src_location))
-            #logging.info("DEST: {} {} {}".format(con.dest, con.dest_hostname,dest_location))
-
             if location_geohash:
                 values["location_geohash"] = location_geohash
                 base_tags["location_has_geohash"] = 1
@@ -420,51 +415,78 @@ class TrafficWatcher(threading.Thread):
             for name, value in base_tags.items():
                 base_tags_r.append(str(value))
             key = ",".join(base_tags_r)
-            #logging.info(base_tags_str)
 
-            #if traffic_group != "normal":
-            #    logging.info("KEY: {}".format(key))
+            # dummy values needed for a propper delete query
+            state_tags["group"] = "-"
+            state_tags["traffic_group"] = "-"
+            state_tags["log_group"] = "-"
+            state_tags["log_type"] = "-"
 
-            data = None
-            if key in registry:
-                for _data in registry[key]:
-                    if abs(_data["timestamp"] - timestamp) <= 1:
-                        if traffic_group != "normal":
-                            logging.info("FOUND REGISTRY {} {} {}".format(con.connection_type, str(datetime.fromtimestamp(timestamp)), extern_ip))
-                        data = _data
-                        break
+            #values["traffic_size"] = 0
+            #values["traffic_count"] = 0
+            #values["tcp_flags"] = 0
+
+            #values["log_count"] = 0
+
+            # **** COLLECT MERGABLE FLOWS ****
+            related_flows = []
+            if key in flows:
+                for flow in list(flows[key]):
+                    start = flow["start_timestamp"] - 1
+                    end = flow["end_timestamp"] + 1
+                    if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
+                        if flow["state_tags"]["group"] != "normal":
+                            logging.info("FOUND REGISTRY {} {}".format(str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
+                        related_flows.append(flow)
+                        flows[key].remove(flow)
             else:
-                registry[key] = []
-            if data is None:
-                if key in self.last_registry:
-                    for _data in self.last_registry[key]:
-                        if abs(_data["timestamp"] - timestamp) <= 1:
-                            if traffic_group != "normal":
-                                logging.info("FOUND LAST REGISTRY {} {} {}".format(con.connection_type, str(datetime.fromtimestamp(timestamp)), extern_ip))
-                            data = _data
-                            break
-                if data is None:
-                    data = {"base_tags": base_tags, "state_tags": state_tags, "values": values, "timestamp": timestamp, "influxdb_timestamp": int(timestamp) * 1000, "query": None}
-                registry[key].append(data)
+                flows[key] = []
 
-            if "group" in data["state_tags"]:
-                if TrafficGroup.PRIORITY[data["state_tags"]["group"]] < TrafficGroup.PRIORITY[traffic_group]:
-                    data["state_tags"]["group"] = traffic_group
+            processed_related_flows = []
+            if key in self.processed_flows:
+                for flow in list(self.processed_flows[key]):
+                    start = flow["start_timestamp"] - 1
+                    end = flow["end_timestamp"] + 1
+                    if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
+                        if flow["state_tags"]["group"] != "normal":
+                            logging.info("FOUND LAST REGISTRY {} {}".format(str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
+                        processed_related_flows.append(flow)
+                        self.processed_flows[key].remove(flow)
             else:
-                data["state_tags"]["group"] = traffic_group
+                self.processed_flows[key] = []
+            # *********************************
 
+            # **** MERGE FLOWS ****
+            data = { "key": key, "base_tags": base_tags, "state_tags": state_tags, "values": values, "start_timestamp": con.start_timestamp, "end_timestamp": con.end_timestamp, "influxdb_timestamp": 0, "processed_related_flows": processed_related_flows, "query": None}
             con.applyData(data, traffic_group)
+            flows[key].append(data)
 
-        self.last_registry = registry
+            related_flows += processed_related_flows
+            for flow in related_flows:
+                NetflowConnection.mergeData(data, flow)
+                LogConnection.mergeData(data, flow)
 
-        data_r = []
-        for _data_r in registry.values():
-            data_r += _data_r
+                if flow["start_timestamp"] < data["start_timestamp"]:
+                    data["start_timestamp"] = flow["start_timestamp"]
 
+                if flow["end_timestamp"] > data["end_timestamp"]:
+                    data["end_timestamp"] = flow["end_timestamp"]
+
+                data["processed_related_flows"] += flow["processed_related_flows"]
+
+            data["influxdb_timestamp"] = int(data["start_timestamp"]) * 1000
+            data["values"]["duration"] = data["end_timestamp"] - data["start_timestamp"]
+            # ********************
+
+        flow_values = []
+        for _flow_values in flows.values():
+            flow_values += _flow_values
+
+        # **** CREATE MESSUREMENTS ****
         cleanup_messurements = []
-        sorted_data_r = sorted(data_r, key=lambda x: ["influxdb_timestamp"])
-        for data in sorted_data_r:
-            tags = data["base_tags"] | data["state_tags"]
+        sorted_flow_values = sorted(flow_values, key=lambda x: ["influxdb_timestamp"])
+        for flow in sorted_flow_values:
+            tags = flow["base_tags"] | flow["state_tags"]
 
             tag_str_r = []
             for name, value in tags.items():
@@ -475,7 +497,7 @@ class TrafficWatcher(threading.Thread):
             tag_str = ",".join(tag_str_r)
 
             values_r = []
-            for name,value in data["values"].items():
+            for name,value in flow["values"].items():
                 if isinstance(value, list):
                     values_r.append("{}=\"{}\"".format(name,value[1](value[0])))
                 elif isinstance(value, str):
@@ -484,14 +506,31 @@ class TrafficWatcher(threading.Thread):
                     values_r.append("{}={}".format(name,value))
             value_str = ",".join(values_r)
 
-            if data["query"] is not None and data["query"][1] != tag_str:
-                #logging.info("CLEANUP => OLD TAGS: {}".format(data["query"][1]))
+            # **** PREPARE CLEANUP RELATED FLOWS => DELETE if tags or timestamp has changed ****
+            for processed_related_flow in flow["processed_related_flows"]:
+                # skip messurements with equal tags and timestamp, they will be replaced with the following update
+                if processed_related_flow["query"][1] == tag_str and processed_related_flow["influxdb_timestamp"] == flow["influxdb_timestamp"]:
+                    #if flow["state_tags"]["group"] != "normal":
+                    #    logging.info("==========================")
+                    #    logging.info(processed_related_flow["query"][1])
+                    #    logging.info(tag_str)
+                    #    logging.info(processed_related_flow["influxdb_timestamp"])
+                    #    logging.info(flow["influxdb_timestamp"])
+                    continue
+                #logging.info("CLEANUP => OLD TAGS: {}".format(flow["query"][1]))
                 #logging.info("CLEANUP => NEW TAGS: {}".format(tag_str))
-                cleanup_messurements.append(["trafficflow", data["query"][0], data["influxdb_timestamp"]])
+                cleanup_messurements.append(["trafficflow", processed_related_flow["query"][0], processed_related_flow["influxdb_timestamp"]])
+            # **********************************************************************************
 
-            data["query"] = [ tags, tag_str ]
-            messurements.append("trafficflow,{} {} {}".format(tag_str, value_str, data["influxdb_timestamp"]))
+            messurements.append("trafficflow,{} {} {}".format(tag_str, value_str, flow["influxdb_timestamp"]))
 
+            flow["processed_related_flows"] = []
+            flow["query"] = [ tags, tag_str ]
+            self.processed_flows[flow["key"]].append(flow)
+        # ******************************
+
+        end_processing = time.time()
+        logging.info("Processing of {} flows in {} seconds".format(len(messurements), round(end_processing - start_processing,3)))
 
         #end = time.time()
         #logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
@@ -503,11 +542,9 @@ class TrafficWatcher(threading.Thread):
         #    ps.print_stats()
         #    logging.info(s.getvalue())
 
-        counter_values = self.ipcache.getCountStats()
-        logging.info("Cache statistic - LOCATION [fetch: {}, cache {}/{}], HOSTNAME [fetch: {}, cache {}/{}]".format(counter_values["location_fetch"], counter_values["location_cache"], self.ipcache.getLocationSize(), counter_values["hostname_fetch"], counter_values["hostname_cache"], self.ipcache.getHostnameSize()))
-
         self.trafficblocker.triggerCheck()
 
+        # **** DELETE OBSOLETE RELATED FLOWS ****
         if len(cleanup_messurements) > 0:
             start_cleanup = time.time()
 
@@ -526,7 +563,28 @@ class TrafficWatcher(threading.Thread):
             result = self.influxdb.delete(queries)
 
             end_cleanup = time.time()
-            logging.info("CLEANUP => done after {} seconds".format(end_cleanup-start_cleanup))
+            logging.info("Delete of {} messurements in {} seconds".format( len(cleanup_messurements), round(end_cleanup-start_cleanup,3)))
+        # *******************************
+
+        start_cleanup = time.time()
+        max_time = time.time() - 60 * 5
+        flow_count = 0
+        flow_cleanup_count = 0
+        for key in list(self.processed_flows.keys()):
+            for _data in list(self.processed_flows[key]):
+                flow_count += 1
+                if _data["end_timestamp"] >= max_time:
+                    continue
+                self.processed_flows[key].remove(_data)
+                flow_cleanup_count += 1
+            if len(self.processed_flows[key]) == 0:
+                del self.processed_flows[key]
+
+        end_cleanup = time.time()
+        logging.info("Cleanup of {}/{} flows in {} seconds".format(flow_cleanup_count, flow_count, round(end_cleanup - start_cleanup,3)))
+
+        counter_values = self.ipcache.getCountStats()
+        logging.info("Cache statistic - LOCATION [fetch: {}, cache {}/{}], HOSTNAME [fetch: {}, cache {}/{}]".format(counter_values["location_fetch"], counter_values["location_cache"], self.ipcache.getLocationSize(), counter_values["hostname_fetch"], counter_values["hostname_cache"], self.ipcache.getHostnameSize()))
 
         return messurements
 
