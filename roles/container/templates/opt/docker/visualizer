@@ -39,7 +39,7 @@ class Container:
         
     def addExposedPort(self,exposedPort,protocol):
         key = exposedPort + ':' + protocol
-        
+
         self.exposedPorts[key] = {"port": exposedPort, 'protocol': protocol}
 
     def addPublishedPort(self,hostIp,hostPort,exposedPort,protocol):
@@ -404,10 +404,16 @@ for network in sorted_network_r:
                             access = listen_port['access']
                             break
                             
-                openPorts[port["port"]] = {
-                  "port": port["port"]+"/"+port["protocol"],
-                  "access": access
-                }
+                if port["port"] in openPorts:
+                    openPorts[port["port"]] = {
+                      "port": port["port"]+"/*",
+                      "access": access
+                    }
+                else:
+                    openPorts[port["port"]] = {
+                      "port": port["port"]+"/"+port["protocol"],
+                      "access": access
+                    }
         else:
             for key in container.exposedPorts:
                 access = "local"
@@ -424,10 +430,16 @@ for network in sorted_network_r:
                                     access = listen_port['access']
                                     break
                         
-                openPorts[port["port"]] = {
-                  "port": port["port"]+"/"+port["protocol"],
-                  "access": access
-                }
+                if port["port"] in openPorts:
+                    openPorts[port["port"]] = {
+                      "port": port["port"]+"/*",
+                      "access": access
+                    }
+                else:
+                    openPorts[port["port"]] = {
+                      "port": port["port"]+"/"+port["protocol"],
+                      "access": access
+                    }
 
         outgoingValue = []
         if network.driver == "host" and connection.veth == "macvlan":
