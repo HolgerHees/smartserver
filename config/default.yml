@@ -194,17 +194,18 @@ default_variables: {
     "netflow_incoming_traffic": { "default": [] },                # from internet allowed traffic, (used to validate netflow traffic direction)
     # *** EXAMPLE ***
     # {
-    #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] } }, # Letsencrypt, CLOUD PING Test
-    #   { target: "{{production_ip}}:10114", name: "alexa api", allowed: { org: [ "AWS EC2 .+" ] } }, # ALEXA
+    #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] }, log="apache" }, # Letsencrypt, CLOUD PING Test
+    #   { target: "{{production_ip}}:10114", name: "alexa api", allowed: { org: [ "AWS EC2 .+" ] }, log="apache" }, # ALEXA
     #   { target: "{{production_ip}}:51820", name: "wireguard", allowed: { wireguard_peers: [ "check" ] } }, # system check for connected wireguard peers
     #   { target: "{{production_ip}}:456", name: "test", allowed: { ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ] } }, # Fixed IP range test
     # }
+    #
+    # *** Attibute Explanation ***
+    # 'logs' => "apache" means, traffic to this 'target' is additionally collected and analysed from apache logs
+    # 'allowed' => various regexes agains hostnames, org (ISP) or ip to mark traffic as normal. Type 'wireguard_peers' means the traffic ip is compared with active wireguard endpoints
+    # 'name' is just used as an identifier
+    # 'target' is a combination of the target ip and port number
 
-    # *** EXAMPLE ***
-    # [
-    #     { target: "{{production_ip}}:80", name: "http" },
-    #     { target: "{{production_ip}}:51829", name: "wireguard" }
-    # ]
     "speedtest_server_id": { "default": "auto" },                 # used for system_service speedtest
 
     "librenms_poller_interval": { "default": 5 },                 # interval in minutes

@@ -182,7 +182,7 @@ class InfluxDB(threading.Thread):
 
     @staticmethod
     def escapeFieldValue(value):
-        return value.replace('"','\\"').replace("\\","\\\\")
+        return value.replace("\\","\\\\").replace('"','\\"')
 
     #@staticmethod
     #def escapeValue(value):

@@ -13,20 +13,19 @@ from lib.trafficwatcher.netflowcollector.processor import Processor as NetflowPr
 from lib.trafficwatcher.logcollector.logcollector import LogCollector, Connection as LogConnection
 from lib.trafficwatcher.blocklists.blocklists import Blocklists
 
-from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
+from lib.trafficwatcher.helper.helper import TrafficGroup, Helper as TrafficHelper
 
 from lib.influxdb import InfluxDB
 from lib.ipcache import IPCache
 
+import cProfile as profile
+import pstats
+import io
 
 WIREGUARD_PEER_TIMEOUT = 60 * 5 # 5 minutes
 
 class Helper():
     __base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
-
-    @staticmethod
-    def getServiceKey(ip, port):
-        return "{}:{}".format(ip.compressed, port)
 
     @staticmethod
     def encodeGeohash(latitude, longitude, precision=12):
@@ -81,6 +80,9 @@ class TrafficWatcher(threading.Thread):
     def __init__(self, config, handler, influxdb, ipcache):
         threading.Thread.__init__(self)
 
+        self.debugging_ips = []#["141.34.2.17"]
+        self.profiling_enabled = False
+
         self.influxdb = influxdb
         self.ipcache = ipcache
 
@@ -90,7 +92,7 @@ class TrafficWatcher(threading.Thread):
         self.netflow = NetflowProcessor(config, self, self.ipcache )
         self.logcollector = LogCollector(config, self, self.ipcache )
 
-        self.trafficblocker = TrafficBlocker(config, self, self.influxdb)
+        self.trafficblocker = TrafficBlocker(config, self, self.influxdb, self.debugging_ips)
 
         self.config = config
 
@@ -283,6 +285,10 @@ class TrafficWatcher(threading.Thread):
 
         wireguard_peers = None
 
+        if self.profiling_enabled:
+            prof = profile.Profile()
+            prof.enable()
+
         start_processing = time.time()
         flows = {}
         for con in list(self.connections):
@@ -333,7 +339,7 @@ class TrafficWatcher(threading.Thread):
                 blocklist_name = self.blocklists.check(extern_ip)
                 if not blocklist_name and src_is_external and len(self.allowed_isp_pattern) > 0:
                     allowed = False
-                    service_key = Helper.getServiceKey(con.dest, con.dest_port) if src_is_external else None
+                    service_key = TrafficHelper.getServiceKey(con.dest, con.dest_port) if src_is_external else None
                     if service_key in self.allowed_isp_pattern:
                         if location_org and "org" in self.allowed_isp_pattern[service_key] and self.allowed_isp_pattern[service_key]["org"].match(location_org):
                             allowed = True
@@ -352,7 +358,7 @@ class TrafficWatcher(threading.Thread):
                 blocklist_name = None
                 traffic_group = TrafficGroup.NORMAL
 
-            if con.isFilteredTrafficGroup(traffic_group):
+            if con.isFilteredTrafficGroup(traffic_group) and extern_ip not in self.debugging_ips:
                 #logging.info("{} {}".format(extern_ip, "filtered"))
                 continue
 
@@ -416,8 +422,13 @@ class TrafficWatcher(threading.Thread):
 
             #values["log_count"] = 0
 
-            is_debug = traffic_group != "normal"
-            if is_debug:#True or not is_blocked:
+            if extern_ip in self.debugging_ips:
+                is_debug = True
+                logging.info(key)
+            else:
+                is_debug = traffic_group != "normal"
+
+            if ( traffic_group != "normal" and not is_blocked ) or extern_ip in self.debugging_ips:
                 data = {
                     "type": con.connection_type,
                     "start_timestamp": str(datetime.fromtimestamp(con.start_timestamp)),
@@ -534,15 +545,12 @@ class TrafficWatcher(threading.Thread):
         end_processing = time.time()
         logging.info("Processing of {} flows in {} seconds".format(len(messurements), round(end_processing - start_processing,3)))
 
-        #end = time.time()
-        #logging.info("METRIC PROCESSING FINISHED in {} seconds".format(round(end-start,1)))
-        #pr.disable()
-        #if (end-start) > 0.5:
-        #    s = io.StringIO()
-        #    sortby = SortKey.CUMULATIVE
-        #    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        #    ps.print_stats()
-        #    logging.info(s.getvalue())
+        if self.profiling_enabled:
+            prof.disable()
+            s = io.StringIO()
+            ps = pstats.Stats(prof, stream=s).strip_dirs().sort_stats("cumtime")
+            ps.print_stats()
+            logging.info(s.getvalue())
 
         self.trafficblocker.triggerCheck()
 

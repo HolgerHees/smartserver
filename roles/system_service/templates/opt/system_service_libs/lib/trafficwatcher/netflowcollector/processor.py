@@ -6,9 +6,7 @@ import traceback
 import time
 from datetime import datetime, timezone
 
-import socket
 import ipaddress
-import contextlib
 
 import cProfile, pstats, io
 from pstats import SortKey
@@ -17,8 +15,7 @@ from .collector import ThreadedNetFlowListener
 
 from netflow.v9 import V9OptionsTemplateRecord, V9TemplateRecord
 
-from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
-
+from lib.trafficwatcher.helper.helper import TrafficGroup, Helper as TrafficHelper
 
 IP_protocolIdentifierS = {
     1: "icmp",
@@ -66,17 +63,6 @@ METRIC_TIMESHIFT = 60
 
 class Helper():
     @staticmethod
-    def getService(port, protocol):
-        if protocol in IP_DATA_protocolIdentifierS and port is not None and port < 1024:
-            with contextlib.suppress(OSError):
-                return socket.getservbyport(port, IP_protocolIdentifierS[protocol])
-        return None
-
-    @staticmethod
-    def getServiceKey(ip, port):
-        return "{}:{}".format(ip.compressed, port)
-
-    @staticmethod
     def fallback(d, keys, can_none = False ):
         for k in keys:
             if k in d:
@@ -117,10 +103,10 @@ class Helper():
             if connection.src_port is not None and connection.dest_port is not None:
                 if config.netflow_incoming_traffic:
                     if srcIsExternal:
-                        if Helper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
+                        if TrafficHelper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
                             return True
                     else:
-                        if Helper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
+                        if TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
                             return True
                 else:
                     if connection.src_port < 1024 and connection.dest_port >= 1024:
@@ -249,15 +235,14 @@ class Connection:
                 else:
                     self.service = "icmp"
             else:
-                self.service = Helper.getService(self.dest_port, self.protocol)
+                self.service = TrafficHelper.getService(self.dest_port, IP_protocolIdentifierS[self.protocol]) if self.protocol in IP_DATA_protocolIdentifierS else None
                 if self.service is None:
-                    service_key = Helper.getServiceKey(self.dest, self.dest_port)
-                    if service_key in self.config.netflow_incoming_traffic:
-                        self.service = self.config.netflow_incoming_traffic[service_key]["name"].replace(" ","\\ ").replace(",","\\,")
-                    elif "speedtest" in self.dest_hostname:
-                        self.service = "speedtest"
-                    else:
-                        self.service = "unknown"
+                    self.service = TrafficHelper.getIncommingService(self.dest, self.dest_port, self.config.netflow_incoming_traffic)
+                    if self.service is None:
+                        if "speedtest" in self.dest_hostname:
+                            self.service = "speedtest"
+                        else:
+                            self.service = "unknown"
 
             #if self.dest_port is None or self.service == "unknown":
             #    logging.info("{} {} {}".format(self.src_port,self.dest_port,self.service))

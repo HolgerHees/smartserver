@@ -13,11 +13,11 @@ from datetime import datetime, timedelta
 from smartserver.confighelper import ConfigHelper
 
 from lib.trafficwatcher.trafficblocker.helper import Helper
-from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
+from lib.trafficwatcher.helper.helper import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
-    def __init__(self, config, watcher, influxdb):
+    def __init__(self, config, watcher, influxdb, debugging_ips):
         threading.Thread.__init__(self)
 
         self.config = config
@@ -36,6 +36,7 @@ class TrafficBlocker(threading.Thread):
 
         self.blocked_ips = []
         self.approved_ips = []
+        self.debugging_ips = debugging_ips
 
         self.influxdb = influxdb
 
@@ -246,6 +247,8 @@ class TrafficBlocker(threading.Thread):
         self.event.set()
 
     def isApprovedIPs(self, ip):
+        if ip in self.debugging_ips:
+            return True
         return ip in self.approved_ips
 
     def isBlockedIP(self, ip):

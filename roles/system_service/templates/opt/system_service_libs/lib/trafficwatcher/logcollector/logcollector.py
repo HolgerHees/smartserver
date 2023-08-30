@@ -10,11 +10,15 @@ import ipaddress
 import math
 from datetime import datetime
 
-from lib.trafficwatcher.helper.trafficgroup import TrafficGroup
+from lib.trafficwatcher.helper.helper import TrafficGroup, Helper as TrafficHelper
 
+class Helper():
+    @staticmethod
+    def getServiceKey(ip, port):
+        return "{}:{}".format(ip.compressed, port)
 
 class Connection:
-    def __init__(self, timestamp, target_ip, target_port, source_ip, is_suspicious, ipcache):
+    def __init__(self, timestamp, target_ip, target_port, source_ip, is_suspicious, config, ipcache):
         self.start_timestamp = self.end_timestamp = timestamp
 
         self.dest = ipaddress.ip_address(target_ip)
@@ -32,7 +36,10 @@ class Connection:
         self.src_is_external = self.ipcache.isExternal(self.src)
         self.skipped = not self.src_is_external
 
-        self.service = "http"
+        self.service = TrafficHelper.getIncommingService(self.dest, self.dest_port, config.netflow_incoming_traffic)
+        if self.service is None:
+            self.service = "http"
+
         self.protocol_name = "tcp"
         self.ip_type = "v4"
         #self.size = 0
@@ -50,7 +57,7 @@ class Connection:
         if TrafficGroup.PRIORITY[data["state_tags"]["log_group"]] < TrafficGroup.PRIORITY[flow["state_tags"]["log_group"]]:
             data["state_tags"]["log_group"] = flow["state_tags"]["log_group"]
 
-        if "log_type" in flow["state_tags"]:
+        if flow["state_tags"]["log_type"] != "-":
             data["state_tags"]["log_type"] = flow["state_tags"]["log_type"]
 
         if "log_count" in flow["values"]:
@@ -100,6 +107,15 @@ class LogCollector(threading.Thread):
         self.last_fetch = None
         self.processed_lines = {}
 
+        self.server_ports = []
+        for service in self.config.netflow_incoming_traffic:
+            if self.config.netflow_incoming_traffic[service]["logs"] != "apache":
+                continue
+            ip, port = service.split(":")
+            if ip != self.config.server_ip:
+                continue
+            self.server_ports.append(port)
+
     def start(self):
         self.is_running = True
         super().start()
@@ -126,6 +142,7 @@ class LogCollector(threading.Thread):
             now = time.time()
             if self.last_fetch == None:
                 start = self.watcher.getLastTrafficStatsTime("apache")
+                #logging.info(start)
                 if start == 0:
                     start = now - self.config.traffic_blocker_unblock_timeout
                 else:
@@ -134,8 +151,9 @@ class LogCollector(threading.Thread):
                 start = self.last_fetch - 60 # grep last minute again, to collect also late occuring log lines
 
             #logging.info("FETCH {}".format(datetime.fromtimestamp(start)))
-            query = "{{group=\"apache\"}} |= \" vhost={}:80 \" != \" status=200 \"".format(self.config.server_domain)
+            query = "{{group=\"apache\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(self.server_ports))
             url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start, urllib.parse.quote(query))
+            #logging.info(query)
             #logging.info(url)
             contents = urllib.request.urlopen(url).read()
             result = json.loads(contents)
@@ -155,7 +173,7 @@ class LogCollector(threading.Thread):
                         #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
                         # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
                         #                            IP         USER     DOMAIN   REQUEST
-                        match = re.match("^remoteIP=([^\s]+).*?request=(.*?) status=",row[1])
+                        match = re.match("^remoteIP=([^\s]+).*?vhost=(.*?) request=(.*?) status=",row[1])
                         if not match:
                             logging.error("Invalid regex for message: '{}'".format(row[1]))
                             continue
@@ -170,22 +188,24 @@ class LogCollector(threading.Thread):
                         #if not external_state[ip]:
                         #    continue
 
-                        request = match[2].strip('"')
+                        vhost = match[2].strip('"')
+                        domain, port = vhost.split(":")
+                        request = match[3].strip('"')
 
                         match = re.match("^([A-Z]+) (.+) HTTP",request)
                         if not match:
                             is_suspicious = True
-                            #logging.info("===============> INVALID TIME: {}, IP: {}, REQUEST: {}".format(datetime.fromtimestamp(timestamp), ip, request))
+                            #logging.info("===============> INVALID TIME: {}/{}, IP: {}, PORT: {}, REQUEST: {}".format(datetime.fromtimestamp(timestamp), timestamp, ip, port, request))
                         else:
                             method = match[1]
                             url = match[2]
                             #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
                             is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
-                            #logging.info("===============> VALID TIME: {}, IP: {}, METHOD: {}, URL: {}".format(datetime.fromtimestamp(timestamp), ip, method, url))
+                            #logging.info("===============> VALID TIME: {}/{}, IP: {}, PORT: {}, METHOD: {}, URL: {}".format(datetime.fromtimestamp(timestamp), timestamp, ip, port, method, url))
 
                         #logging.info("===============> {} {}".format(ip, request))
 
-                        self.watcher.addConnection(Connection(timestamp, self.config.server_ip, 80, ip, is_suspicious, self.ipcache))
+                        self.watcher.addConnection(Connection(timestamp, self.config.server_ip, port, ip, is_suspicious, self.config, self.ipcache))
             self.last_fetch = now
 
             # cleanup processed logs

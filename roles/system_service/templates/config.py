@@ -12,7 +12,7 @@ netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
 netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}
 netflow_incoming_traffic = {
 {% for data in netflow_incoming_traffic %}
-  "{{data.target}}": { "name": "{{data.name}}", "allowed": { {% for key in data.allowed %} "{{key}}": "{{data.allowed[key] | join('|')}}", {% endfor %} } },
+  "{{data.target}}": { "name": "{{data.name}}", "allowed": { {% for key in data.allowed %} "{{key}}": "{{data.allowed[key] | join('|')}}", {% endfor %} }, "logs": "{{data.logs | default('')}}" },
 {% endfor %}
 }
 

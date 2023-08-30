@@ -66,7 +66,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
               }
             ]
@@ -981,14 +981,7 @@
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [
-          {
-            "condition": "",
-            "key": "group",
-            "operator": "!=",
-            "value": "normal"
-          }
-        ],
+        "filters": [],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -1004,6 +997,6 @@
   "timezone": "",
   "title": "System Service Netflow Details",
   "uid": "system-service-netflow-details",
-  "version": 39,
+  "version": 40,
   "weekStart": ""
 }
