@@ -43,19 +43,23 @@ class TrafficBlocker(threading.Thread):
         self._restore()
 
     def start(self):
-        self.is_running = True
+        if self.config.traffic_blocker_enabled:
+            self.is_running = True
 
-        schedule.every().day.at("01:00").do(self._dump)
-        schedule.every().hour.at("00:00").do(self._cleanup)
-        self.influxdb.register(self.getMessurements)
+            schedule.every().day.at("01:00").do(self._dump)
+            schedule.every().hour.at("00:00").do(self._cleanup)
+            self.influxdb.register(self.getMessurements)
 
-        super().start()
+            super().start()
+        else:
+            logging.info("IP traffic blocker disabled. Either it is completely deactivated by the variable 'traffic blocker' or no 'netflow_incoming_traffic' is configured.")
 
     def terminate(self):
-        if self.is_running and os.path.exists(self.dump_config_path):
-            self._dump()
-        self.is_running = False
-        self.event.set()
+        if self.config.traffic_blocker_enabled:
+            if self.is_running and os.path.exists(self.dump_config_path):
+                self._dump()
+            self.is_running = False
+            self.event.set()
 
     def run(self):
         logging.info("IP traffic blocker started")

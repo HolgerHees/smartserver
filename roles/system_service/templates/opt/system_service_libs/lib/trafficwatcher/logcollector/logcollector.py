@@ -117,12 +117,16 @@ class LogCollector(threading.Thread):
             self.server_ports.append(port)
 
     def start(self):
-        self.is_running = True
-        super().start()
+        if len(self.server_ports) > 0:
+            self.is_running = True
+            super().start()
+        else:
+            logging.info("IP log collector disabled. There are is no 'netflow_incoming_traffic' with a 'log' attribute configured.")
 
     def terminate(self):
-        self.is_running = False
-        self.event.set()
+        if len(self.server_ports) > 0:
+            self.is_running = False
+            self.event.set()
 
     def run(self):
         logging.info("IP log collector started")

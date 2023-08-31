@@ -122,8 +122,7 @@ class TrafficWatcher(threading.Thread):
         self.blocklists.start()
         self.netflow.start()
 
-        if self.config.traffic_blocker_enabled:
-            self.trafficblocker.start()
+        self.trafficblocker.start()
 
         schedule.every().minute.at(":00").do(self._cleanTrafficState)
         self.influxdb.register(self.getMessurements)
@@ -135,8 +134,7 @@ class TrafficWatcher(threading.Thread):
 
         self.logcollector.terminate()
 
-        if self.config.traffic_blocker_enabled:
-            self.trafficblocker.terminate()
+        self.trafficblocker.terminate()
 
         self.netflow.terminate()
         self.blocklists.terminate()
