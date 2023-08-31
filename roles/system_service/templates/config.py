@@ -39,6 +39,7 @@ loki_rest = "http://loki:3100"
 
 mqtt_host = "mosquitto"
 
+traffic_blocker_enabled = {{ 'True' if traffic_blocker and netflow_incoming_traffic | length > 0 else 'False' }}
 traffic_blocker_treshold = {
   "netflow_observed": 20,
   "netflow_scanning": 10,

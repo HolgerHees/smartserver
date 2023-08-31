@@ -190,8 +190,11 @@ default_variables: {
     #     }
     # ]
 
+    "traffic_blocker": { "default": yes },                        # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
+    # 1. if suspicious traffic arrives the apache webserver => which traffic, can be configured in the variable 'netflow_incoming_traffic' and the attribute 'log'
+    # 2. if unexcpected traffic arrives the network  => which traffic, can be configured  in the variable 'netflow_incoming_traffic' and the attribute 'allowed'
     "netflow_collector": { "default": no },                       # enable netflow collector in system_service
-    "netflow_incoming_traffic": { "default": [] },                # from internet allowed traffic, (used to validate netflow traffic direction)
+    "netflow_incoming_traffic": { "default": [] },                # from internet expected and allowed traffic, (used to detect netflow traffic direction and for traffic blocker to decide which traffic is suspicious)
     # *** EXAMPLE ***
     # {
     #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] }, log="apache" }, # Letsencrypt, CLOUD PING Test
