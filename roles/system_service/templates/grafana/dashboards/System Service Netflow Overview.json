@@ -34,7 +34,7 @@
         "netflow"
       ],
       "targetBlank": false,
-      "title": "GeopMap",
+      "title": "Netflows",
       "tooltip": "",
       "type": "dashboards",
       "url": ""
@@ -2543,8 +2543,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "System Service Netflow Overview",
+  "title": "Overview",
   "uid": "system-service-netflow-overview",
-  "version": 68,
+  "version": 69,
   "weekStart": ""
 }

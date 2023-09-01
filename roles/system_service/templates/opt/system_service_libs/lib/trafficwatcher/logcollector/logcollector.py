@@ -145,7 +145,7 @@ class LogCollector(threading.Thread):
         try:
             now = time.time()
             if self.last_fetch == None:
-                start = self.watcher.getLastTrafficStatsTime("apache")
+                start = self.watcher.getLastTrafficEventTime("apache")
                 #logging.info(start)
                 if start == 0:
                     start = now - self.config.traffic_blocker_unblock_timeout

@@ -34,7 +34,7 @@
         "netflow"
       ],
       "targetBlank": false,
-      "title": "GeopMap",
+      "title": "Netflows",
       "tooltip": "",
       "type": "dashboards",
       "url": ""
@@ -1004,8 +1004,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "System Service Netflow Summary",
+  "title": "Grouped Traffic Events",
   "uid": "system-service-netflow-summary",
-  "version": 25,
+  "version": 26,
   "weekStart": ""
 }

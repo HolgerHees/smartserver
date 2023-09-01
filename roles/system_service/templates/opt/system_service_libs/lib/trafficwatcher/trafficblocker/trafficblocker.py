@@ -6,9 +6,10 @@ import schedule
 import os
 import math
 from datetime import datetime, timedelta
-#import cProfile as profile
-#import pstats
-#import io
+
+import cProfile as profile
+import pstats
+import io
 
 from smartserver.confighelper import ConfigHelper
 
@@ -19,6 +20,8 @@ from lib.trafficwatcher.helper.helper import TrafficGroup
 class TrafficBlocker(threading.Thread):
     def __init__(self, config, watcher, influxdb, debugging_ips):
         threading.Thread.__init__(self)
+
+        self.profiling_enabled = False
 
         self.config = config
         self.watcher = watcher
@@ -81,9 +84,18 @@ class TrafficBlocker(threading.Thread):
                 if not self.is_running:
                     break
 
+                start_processing = time.time()
+
+                if self.profiling_enabled:
+                    prof = profile.Profile()
+                    prof.enable()
+
+                observed_ip_states = {ip: data["last"] for ip, data in self.config_map["observed_ips"].items()}
+
                 now = time.time()
                 blocked_ips = Helper.getBlockedIps()
-                ip_traffic_state = self.watcher.getIPTrafficState()
+                ip_traffic_state, total_events = self.watcher.getIPTrafficStates(observed_ip_states)
+                #logging.info(ip_traffic_state)
 
                 #checked_ips = []
                 #for ip in blocked_ips:
@@ -186,8 +198,11 @@ class TrafficBlocker(threading.Thread):
                             if data["state"] == "blocked":
                                 if ip in ip_traffic_state:
                                     continue
-                                factor = pow(2,data["count"] - 1)
-                                time_offset = data["last"] + ( self.config.traffic_blocker_unblock_timeout * factor )
+                                factor = pow(3,data["count"] - 1)
+                                if factor > 168: # => 24h * 7d
+                                    factor = 168
+                                # 3 ^ 0 => 1, 1 => 3, 2 => 9, 3 => 27
+                                time_offset = data["last"] + ( 3600 * factor ) # 60sec * 60min => 3600
                                 if now <= time_offset:
                                     continue
                                 data["updated"] = now
@@ -205,14 +220,15 @@ class TrafficBlocker(threading.Thread):
                     self.blocked_ips = blocked_ips
                     self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
 
-                #prof.disable()
-                #s = io.StringIO()
-                #stats = pstats.Stats(prof, stream=s).strip_dirs().sort_stats("cumtime")
-                #stats.print_stats(100) # top 10 rows
+                end_processing = time.time()
+                logging.info("Processing of {} ip's from {} traffic events in {} seconds".format(len(ip_traffic_state), total_events, round(end_processing - start_processing,3)))
 
-                #runtime_end = time.time()
-                #logging.info("RUNTIME: {} - {} IPs".format(runtime_end-runtime_start, len(ip_traffic_state)))
-                #logging.info(s.getvalue())
+                if self.profiling_enabled:
+                    prof.disable()
+                    s = io.StringIO()
+                    ps = pstats.Stats(prof, stream=s).strip_dirs().sort_stats("cumtime")
+                    ps.print_stats()
+                    logging.info(s.getvalue())
 
             logging.info("IP traffic blocker stopped")
         except Exception:
@@ -236,11 +252,12 @@ class TrafficBlocker(threading.Thread):
 
     def _cleanup(self):
         now = time.time()
+        max_age = 60 * 60 * 24 * 14
         cleaned = 0
         with self.config_lock:
             for ip in list(self.config_map["observed_ips"].keys()):
                 data = self.config_map["observed_ips"][ip]
-                if data["state"] != "unblocked" or now < data["updated"] + self.config.traffic_blocker_clean_known_ips_timeout:
+                if data["state"] != "unblocked" or now < data["updated"] + max_age:
                     continue
                 del self.config_map["observed_ips"][ip]
                 cleaned = cleaned + 1
@@ -260,6 +277,15 @@ class TrafficBlocker(threading.Thread):
 
     def getBlockedIPs(self):
         return list(self.blocked_ips)
+
+    def getObservedIPData(self):
+        observed_ips = []
+        with self.config_lock:
+            for ip, data in self.config_map["observed_ips"].items():
+                data = data.copy()
+                data["ip"] = ip
+                observed_ips.append(data)
+        return observed_ips
 
     def getMessurements(self):
         messurements = []

@@ -34,7 +34,7 @@
         "netflow"
       ],
       "targetBlank": false,
-      "title": "WAN Traffic",
+      "title": "Netflows",
       "tooltip": "",
       "type": "dashboards",
       "url": ""
@@ -428,8 +428,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "System Service Netflow GeoMap",
+  "title": "World Map",
   "uid": "system-service-netflow-geopmap",
-  "version": 20,
+  "version": 21,
   "weekStart": ""
 }

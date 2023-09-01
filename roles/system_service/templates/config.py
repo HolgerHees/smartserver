@@ -47,8 +47,6 @@ traffic_blocker_treshold = {
   "apache_observed": 10,
   "apache_scanning": 5
 }
-traffic_blocker_unblock_timeout = 60 * 60 * 6
-traffic_blocker_clean_known_ips_timeout = 60 * 60 * 24 * 7
 
 default_vlan = 1
 

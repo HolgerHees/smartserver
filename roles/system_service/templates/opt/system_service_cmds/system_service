@@ -53,6 +53,8 @@ class Handler(Server):
 
         self.scheduler = Scheduler()
 
+        self.startup_timestamp = round(datetime.now().timestamp(),3)
+
     def start(self, callback):
         self.mqtt.start()
         self.influxdb.start()
@@ -155,8 +157,24 @@ class Handler(Server):
         result = {}
         result["wan_isp_state"] = "default" if self.info.isDefaultConnection() else "fallback"
         result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
-        result["traffic_states"] = self.trafficwatcher.getTrafficState()
+        result["traffic_states"] = self.trafficwatcher.getTrafficStateSummery()
         result["traffic_states"]["blocked"] = len(self.trafficwatcher.getBlockedIPs())
+        return json.dumps(result)
+
+    def getObservedIPData(self):
+        result = {
+            "status": 0,
+        }
+
+        last_data_modified = {}
+        last_data_modified["startup"] = self.startup_timestamp
+
+        changed_data = {}
+        changed_data["observed_ips"] = self.trafficwatcher.getObservedIPData()
+
+        result["last_data_modified"] = last_data_modified
+        result["changed_data"] = changed_data
+
         return json.dumps(result)
 
 #@app.route('/state/', methods = ['POST'])
@@ -164,6 +182,10 @@ class Handler(Server):
 #    pass
 
 #https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
+
+@app.route('/observed_ips/', methods = ['POST'])
+def observed_ips():
+    return handler.getObservedIPData()
 
 @app.route('/widget_state/', methods = ['GET'])
 def widget_state():

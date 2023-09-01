@@ -14,6 +14,10 @@
 
     "Network speedtest": "Netzwerk Speedtest",
     "Start speedtest": "Starte Speedtest",
-    "Speedtest active": "Speedtest aktiv"
+    "Speedtest active": "Speedtest aktiv",
+
+    "Observed IP's": "Überwachte IP's",
+    "Today, {}": "Heute, {}",
+    "Yesterday, {}": "Gestern, {}"
   }
 }

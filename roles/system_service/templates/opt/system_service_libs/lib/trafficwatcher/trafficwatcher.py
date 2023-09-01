@@ -101,13 +101,12 @@ class TrafficWatcher(threading.Thread):
         #self.last_metric_end = time.time() - METRIC_TIMESHIFT
         #self.suspicious_ips = {}
 
-        self.ip_stats = []
-        self.traffic_stats = {}
-        self.last_traffic_stats = {}
+        self.traffic_metrics = {}
+        self.ip_events = []
+        self.last_traffic_event = {}
+        self.last_traffic_summery = None
 
         self.stats_lock = threading.Lock()
-
-        self.last_processed_traffic_stats = 0
 
         self.wireguard_peers = {}
         self.allowed_isp_pattern = {}
@@ -145,7 +144,7 @@ class TrafficWatcher(threading.Thread):
         logging.info("Init traffic state")
         while self.is_running:
             try:
-                self._initTrafficState()
+                self._initTrafficEvents()
                 break
             except Exception as e:
                 logging.info(e)
@@ -171,54 +170,58 @@ class TrafficWatcher(threading.Thread):
         #logging.info("add {} {}".format(connection.connection_type, connection.src))
         self.connections.append(connection)
 
+    def getTrafficStateSummery(self):
+        now = time.strftime("%Y-%m-%d %H:%M")
+        if self.last_traffic_summery is None or self.last_traffic_summery[1] != now:
+            #start_time = time.time()
+            count_values = {}
+            results = self.influxdb.query('SELECT SUM("traffic_count") FROM "autogen"."trafficflow" WHERE time >= now() - 362m AND time <= now() - 2m AND "group"::tag != \'normal\' GROUP BY "group"::tag')
+            if results is not None:
+                for result in results:
+                    count_values[result["tags"]["group"]] = result["values"][0][1]
+            end_time = time.time()
+            #logging.info(round(end_time-start_time, 3))
+            #logging.info(results)
+            self._fillTrafficGroups(count_values)
+            self.last_traffic_summery = [ count_values, now ]
+
+        return self.last_traffic_summery[0]
+
     def _cleanTrafficState(self):
         with self.stats_lock:
-            min_time = time.time() - 60 * 60 * 6
+            min_time = time.time() - 60 * 60 * 24
+            self.ip_events = [data for data in self.ip_events if data["time"] > min_time]
 
-            for group in list(self.traffic_stats.keys()):
-                values = [time for time in self.traffic_stats[group] if time > min_time]
-                if len(values) == 0:
-                    del self.traffic_stats[group]
-                else:
-                    self.traffic_stats[group] = values
-
-            self.ip_stats = [data for data in self.ip_stats if data["time"] > min_time]
-
-    def _initTrafficState(self):
-        #logging.info("_initTrafficState")
+    def _initTrafficEvents(self):
+        #logging.info("_initTrafficEvents")
         with self.stats_lock:
-            # 362 min => 6h - 2 min
             # trafficevents,connection_type={},extern_ip={},traffic_group={}.blocklist_name={}
-            results = self.influxdb.query('SELECT "connection_type","extern_ip","traffic_group","blocklist_name","value" FROM "trafficevents" WHERE time >= now() - 358m')
+            results = self.influxdb.query('SELECT "connection_type","extern_ip","traffic_group","blocklist_name","value" FROM "trafficevents" WHERE time >= now() - 1440m') # => 24h
             #results = self.influxdb.query('SELECT "type","extern_ip","group","count" FROM "trafficflow" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
-            self.traffic_stats = {}
             if results is not None:
                 for result in results:
                     for value in result["values"]:
                         #if value[3] > 1:
                         #    logging.info("{} {} {}".format(value[1], value[2], value[3]))
                         value_time = InfluxDB.parseDatetime(value[0])
-                        self._addTrafficState(value[1], value[2], value[3], value[4], value_time.timestamp())
-            self.last_processed_traffic_stats = max(self.last_traffic_stats.values()) if len(self.last_traffic_stats) > 0 else 0
+                        self._addTrafficEvent(value[1], value[2], value[3], value[4], value_time.timestamp())
 
-            #logging.info(self.traffic_stats)
-            #logging.info(self.last_traffic_stats)
-            #logging.info("======================>")
-            #logging.info(self.last_processed_traffic_stats)
+            self.traffic_metrics = {} # reset, will be used by prometheus metrics
 
-    def _addTrafficState(self, connection_type, ip, traffic_group, blocklist_name, time):
+    def _addTrafficEvent(self, connection_type, ip, traffic_group, blocklist_name, time):
         # lock is called in place where this function is called
 
         #logging.info("ADD {}".format(datetime.fromtimestamp(time)))
-        if traffic_group not in self.traffic_stats:
-            self.traffic_stats[traffic_group] = []
-        self.traffic_stats[traffic_group].append(time)
-        if connection_type not in self.last_traffic_stats or time > self.last_traffic_stats[connection_type]:
-            self.last_traffic_stats[connection_type] = time
+        if traffic_group not in self.traffic_metrics:
+            self.traffic_metrics[traffic_group] = 0
+        self.traffic_metrics[traffic_group] += 1
 
-        self.ip_stats.append({"ip": ip, "connection_type": connection_type, "traffic_group": traffic_group, "blocklist_name": blocklist_name, "time": time})
+        if connection_type not in self.last_traffic_event or time > self.last_traffic_event[connection_type]:
+            self.last_traffic_event[connection_type] = time
 
-    def _fillTrafficStates(self, states):
+        self.ip_events.append({"ip": ip, "connection_type": connection_type, "traffic_group": traffic_group, "blocklist_name": blocklist_name, "time": time})
+
+    def _fillTrafficGroups(self, states):
         if "observed" not in states:
             states["observed"] = 0
         if "scanning" not in states:
@@ -226,40 +229,40 @@ class TrafficWatcher(threading.Thread):
         if "intruded" not in states:
             states["intruded"] = 0
 
-    def getIPTrafficState(self):
-        ipstate = {}
+    def getIPTrafficStates(self, ip_states):
+        ipstates = {}
+
         with self.stats_lock:
-            for data in self.ip_stats:
+            for data in self.ip_events:
                 ip = data["ip"]
+
+                if ip in ip_states and ip_states[ip] > data["time"]:
+                    continue
+
                 traffic_group = data["traffic_group"]
                 connection_type = data["connection_type"]
 
                 key = "{}_{}".format(connection_type, traffic_group)
 
-                if ip not in ipstate:
-                    ipstate[ip] = {}
-                if key not in ipstate[ip]:
-                    ipstate[ip][key] = {"count": 0, "connection_type": connection_type, "blocklist_name": data["blocklist_name"], "traffic_group": data["traffic_group"], "last": 0}
-                ipstate[ip][key]["count"] += 1
-                if data["time"] > ipstate[ip][key]["last"]:
-                    ipstate[ip][key]["last"] = data["time"]
-        #logging.info("getIPTrafficState: {}".format(ipstate))
-        return ipstate
+                if ip not in ipstates:
+                    ipstates[ip] = {}
+                if key not in ipstates[ip]:
+                    ipstates[ip][key] = {"count": 0, "connection_type": connection_type, "blocklist_name": data["blocklist_name"], "traffic_group": data["traffic_group"], "last": 0}
+                ipstates[ip][key]["count"] += 1
+                if data["time"] > ipstates[ip][key]["last"]:
+                    ipstates[ip][key]["last"] = data["time"]
+        #logging.info("getIPTrafficState: {}".format(ipstates))
+        return ipstates, len(self.ip_events)
 
-    def getLastTrafficStatsTime(self, connection_type):
+    def getLastTrafficEventTime(self, connection_type):
         with self.stats_lock:
-            return self.last_traffic_stats[connection_type] if connection_type in self.last_traffic_stats else 0
-
-    def getTrafficState(self):
-        count_values = {}
-        with self.stats_lock:
-            for group in self.traffic_stats:
-                count_values[group] = len(self.traffic_stats[group])
-        self._fillTrafficStates(count_values)
-        return count_values
+            return self.last_traffic_event[connection_type] if connection_type in self.last_traffic_event else 0
 
     def getBlockedIPs(self):
         return self.trafficblocker.getBlockedIPs()
+
+    def getObservedIPData(self):
+        return self.trafficblocker.getObservedIPData()
 
     def _getWireguardPeers(self):
         now = time.time()
@@ -370,7 +373,7 @@ class TrafficWatcher(threading.Thread):
 
             if traffic_group != "normal":
                 with self.stats_lock:
-                    self._addTrafficState(con.connection_type, extern_ip, traffic_group, blocklist_name, con.start_timestamp)
+                    self._addTrafficEvent(con.connection_type, extern_ip, traffic_group, blocklist_name, con.start_timestamp)
 
                 messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(con.start_timestamp * 1000)))
 
@@ -440,7 +443,7 @@ class TrafficWatcher(threading.Thread):
                     "direction": direction,
                     "traffic_group": traffic_group
                 }
-                #con.applyDebugFields(data)
+                con.applyDebugFields(data)
                 logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
 
             # **** COLLECT MERGABLE FLOWS ****
@@ -603,16 +606,11 @@ class TrafficWatcher(threading.Thread):
     def getStateMetrics(self):
         metrics = ["system_service_process{{type=\"trafficwatcher\"}} {}".format("1" if self.is_running else "0")]
 
-        min_time = self.last_processed_traffic_stats
-        self.last_processed_traffic_stats = max(self.last_traffic_stats.values()) if len(self.last_traffic_stats) > 0 else 0
-
-        count_values = {}
         with self.stats_lock:
-            for group in list(self.traffic_stats.keys()):
-                values = [time for time in self.traffic_stats[group] if time > min_time]
-                count_values[group] = len(values)
-            self._fillTrafficStates(count_values)
+            count_values = self.traffic_metrics.copy()
+            self.traffic_metrics = {}
 
+        self._fillTrafficGroups(count_values)
         for group, count in count_values.items():
             metrics.append( "system_service_trafficwatcher{{type=\"{}\",}} {}".format( group, count ) )
 
