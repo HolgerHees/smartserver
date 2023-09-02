@@ -192,11 +192,12 @@ class TrafficBlocker(threading.Thread):
 
                                 break
 
-                    for ip in blocked_ips:
+                    for ip in list(blocked_ips):
                         if ip in self.config_map["observed_ips"]:
                             data = self.config_map["observed_ips"][ip]
                             if data["state"] == "blocked":
                                 if ip in ip_traffic_state:
+                                    #logging.info(ip_traffic_state[ip])
                                     continue
                                 factor = pow(3,data["count"] - 1)
                                 if factor > 168: # => 24h * 7d
@@ -204,6 +205,7 @@ class TrafficBlocker(threading.Thread):
                                 # 3 ^ 0 => 1, 1 => 3, 2 => 9, 3 => 27
                                 time_offset = data["last"] + ( 3600 * factor ) # 60sec * 60min => 3600
                                 if now <= time_offset:
+                                    #logging.info("CONTINUE {}".format(ip))
                                     continue
                                 data["updated"] = now
                                 data["state"] = "unblocked"

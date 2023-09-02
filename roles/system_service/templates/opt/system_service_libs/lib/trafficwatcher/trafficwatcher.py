@@ -236,7 +236,7 @@ class TrafficWatcher(threading.Thread):
             for data in self.ip_events:
                 ip = data["ip"]
 
-                if ip in ip_states and ip_states[ip] > data["time"]:
+                if ip in ip_states and ip_states[ip] >= data["time"]:
                     continue
 
                 traffic_group = data["traffic_group"]
