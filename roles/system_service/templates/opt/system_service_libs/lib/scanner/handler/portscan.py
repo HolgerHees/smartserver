@@ -102,6 +102,8 @@ class PortScanner(_handler.Handler):
                     with self.queue_lock:
                         while self._isRunning() and len(self.waiting_queue) > 0 and len(self.running_queue) < self.max_running_queue_length:
                             device = self.waiting_queue.popleft()
+                            if device.getMAC() not in self.monitored_devices:
+                                continue
                             self.running_queue.append(device)
                             t = threading.Thread(target = self._checkPorts, args = [ device ] )
                             t.start()
@@ -149,7 +151,7 @@ class PortScanner(_handler.Handler):
         _end = time.time()
         logging.info("Scanning device {} done after {} seconds".format(device.getIP(), round(_end-_start,0)))
 
-        if self._isRunning():
+        if self._isRunning() and device.getMAC() in self.monitored_devices:
             with self.data_lock:
                 # randomize next scan to avoid flooting connection track table of netfilter (iptables)
                 self.monitored_devices[device.getMAC()]["time"] = time.time() + self.config.port_rescan_interval + random.randint(0,3600)
