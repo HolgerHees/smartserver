@@ -94,7 +94,7 @@ mx.UNCore = (function( ret ) {
             if( searchTerm && !isSearchMatch(searchTerm, data) )
                 return;
 
-            console.log(data);
+            //console.log(data);
 
             rows.push({
                 "events": {

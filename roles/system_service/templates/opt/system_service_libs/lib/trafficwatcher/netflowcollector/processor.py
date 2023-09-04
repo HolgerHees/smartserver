@@ -101,6 +101,13 @@ class Helper():
             #    if Helper.checkFlag(connection.request_tcp_flags, TCP_FLAG_TYPES["ACK"]): # is an answer flow
             #        return True
             if connection.src_port is not None and connection.dest_port is not None:
+                if connection.src_port < 1024:
+                    if connection.dest_port >= 1024:
+                        return True
+                else:
+                    if connection.dest_port < 1024:
+                        return False
+
                 if config.netflow_incoming_traffic:
                     if srcIsExternal:
                         if TrafficHelper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
@@ -108,9 +115,6 @@ class Helper():
                     else:
                         if TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
                             return True
-                else:
-                    if connection.src_port < 1024 and connection.dest_port >= 1024:
-                        return True
             return False
         else:
             return srcIsExternal
