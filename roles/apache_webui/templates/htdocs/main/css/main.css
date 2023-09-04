@@ -550,10 +550,10 @@ body.phone #submenu .service.home .outer_widgets_box {
 #submenu .service.home .widgets {
     display: flex;
     justify-content: end;
-    gap: 5px;
-    padding: 10px;
-    margin-left: -15px;
-    margin-right: -15px;
+    /*gap: 5px;*/
+    padding: 10px 0;
+    margin-left: -5px;
+    margin-right: -5px;
     flex-wrap: wrap;
 }
 #submenu .service.home .widgets .spacer {
@@ -562,12 +562,20 @@ body.phone #submenu .service.home .outer_widgets_box {
 #submenu .service.home .widgets .widget {
     width: 0;
     overflow: hidden;
-    padding: 12px 0;
-    margin: -10px 0;
+    padding: 0px 0px;
+    margin: 2px 0;
     transition: width 0.5s;
     white-space: nowrap;
     text-shadow: var(--submenu-shadow-home-info);
     font-size: 106.25%;
+    /*backdrop-filter: blur(1px);*/
+    /*background-color: rgba(255, 255, 255, 0.2);*/
+}
+#submenu .service.home .widgets .widget > div {
+    display: inline-block;
+    padding: 0 3px;
+    border-radius: 5px;
+    backdrop-filter: blur(1px);
 }
 #submenu .service.home .widgets .widget .error {
     color: var(--color-red);
@@ -576,18 +584,28 @@ body.phone #submenu .service.home .outer_widgets_box {
 #submenu .service.home .widgets .widget.clickable {
     cursor: pointer;
 }
-#submenu .service.home .widgets .widget.clickable:hover {
-    opacity: 0.8;
+#submenu .service.home .widgets .widget.clickable > div:hover {
+    background-color: var(--content-hover-bg);
+}
+#submenu .service.home .widgets .widget.right:before {
+    margin-right: 2px;
+    width: 0;
+    content: "";
 }
 #submenu .service.home .widgets .widget.right:after {
-    padding-left: 5px;
+    margin-left: 2px;
     width: 5px;
-    content: "•"
+    content: "•";
 }
 #submenu .service.home .widgets .widget.left:before {
-    padding-right: 5px;
+    margin-right: 2px;
     width: 5px;
-    content: "•"
+    content: "•";
+}
+#submenu .service.home .widgets .widget.left:after {
+    margin-left: 2px;
+    width: 0;
+    content: "";
 }
 #submenu .service.home .time {
     cursor: default;

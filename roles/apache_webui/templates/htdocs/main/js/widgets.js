@@ -25,7 +25,7 @@ mx.Widgets = (function( ret ) {
                 let css = widget.hasAction(i) ? " clickable" : ""
                 let position = widget.getOrder(i) <= 500 ? "left": "right";
                 css += " " + ( position == "left" ? "possibleLeft left" : "right" );
-                result.push([ widget.getOrder(i), position, "<div" + onclick + " class=\"widget" + css + "\" id=\"" + widget.getId(i) + "\"></div>" ]);
+                result.push([ widget.getOrder(i), position, "<div" + onclick + " class=\"widget" + css + "\" id=\"" + widget.getId(i) + "\"><div></div></div>" ]);
             }
         });
 
@@ -230,7 +230,7 @@ mx.Widgets.Object = function(group, config)
                 // calculate new width to calculate scrollWidth
                 div.style.transition = "none";
                 div.style.width = "";
-                div.innerHTML = msg;
+                mx._$("div", div).innerHTML = msg;
                 let new_width = div.scrollWidth;
 
                 // restore layout (width & transtion)
@@ -244,12 +244,12 @@ mx.Widgets.Object = function(group, config)
                 if( msg )
                 {
                     div.style.width = new_width + "px";
-                    div.style.marginRight = "";
+                    //div.style.marginRight = "";
                 }
                 else
                 {
                     div.style.width = "0";
-                    div.style.marginRight = "-5px";
+                    //div.style.marginRight = "-5px";
                 }
 
                 if( isInitialLoad )
