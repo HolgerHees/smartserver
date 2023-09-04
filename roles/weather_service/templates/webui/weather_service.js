@@ -19,7 +19,7 @@ mx.Widgets.CustomWeather = (function( ret ) {
         --widget-value-color-weather-thunder-stroke: rgba(255, 165, 0, 0.9);
     }
 
-    #customWeatcher svg {
+    #customWeather svg {
         --svg-weather-clouds-stroke: var(--widget-value-color-weather-clouds);
         --svg-weather-clouds-stroke-width: 3px;
         --svg-weather-clouds-fill: transparent;
@@ -44,6 +44,9 @@ mx.Widgets.CustomWeather = (function( ret ) {
         /*--svg-weather-mask-fill: white;*/
 
         margin: -10px;
+    }
+    #customWeather {
+        overflow: visible !important;
     }`;
 
     let style = document.createElement('style');
@@ -86,5 +89,5 @@ mx.Widgets.CustomWeather = (function( ret ) {
         }, mx.Core.encodeDict( {"type": "widget", "fields": ["currentAirTemperatureInCelsius","currentCloudsAsSVG"].join(","), "last_data_modified": last_data_modified } ) );
     }
     return ret;
-})( mx.Widgets.Object( "user", [ { id: "customWeatcher", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );
+})( mx.Widgets.Object( "user", [ { id: "customWeather", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );
 
