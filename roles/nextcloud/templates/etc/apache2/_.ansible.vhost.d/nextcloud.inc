@@ -51,7 +51,9 @@ RewriteRule ^/(?:\.|autotest|occ|issue|indie|db_|console).* - [R=404,L]
 
 Header always unset X-Frame-Options
 Header always edit Content-Security-Policy "frame-ancestors" "frame-ancestors {{server_domain}} *.{{server_domain}}"
-Header always edit Content-Security-Policy "script-src" "script-src {{server_domain}} fa.{{server_domain}} ba.{{server_domain}}"
+Header always edit Content-Security-Policy "default-src 'none'" "default-src {{server_domain}} fa.{{server_domain}} ba.{{server_domain}} nextcloud.{{server_domain}} fa-nextcloud.{{server_domain}} ba-nextcloud.{{server_domain}}"
+Header always edit Content-Security-Policy "script-src" "script-src 'self' {{server_domain}} fa.{{server_domain}} ba.{{server_domain}}"
+#Header always edit Content-Security-Policy "script-src" "script-src 'self' 'unsafe-eval' 'unsafe-inline'  {{server_domain}} fa.{{server_domain}} ba.{{server_domain}}"
 
 # fix for not submitted strict same site cookies during redirects
 SetEnvIf Cookie "(.*nc_sameSiteCookielax=.*)" SAME_SITE_COOKIE=$1
