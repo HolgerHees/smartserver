@@ -80,7 +80,7 @@ class TrafficWatcher(threading.Thread):
     def __init__(self, config, handler, influxdb, ipcache):
         threading.Thread.__init__(self)
 
-        self.debugging_ips = []#["141.34.2.17"]
+        self.debugging_ips = []
         self.profiling_enabled = False
 
         self.influxdb = influxdb
@@ -395,7 +395,10 @@ class TrafficWatcher(threading.Thread):
 
             base_tags["ip_type"] = con.ip_type
 
-            base_tags["destination_port"] = con.dest_port
+            # group unsuccessful syn requests
+            base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags == 2 and con.answer_flow is None else con.dest_port
+            #base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags & 2 == 2 and con.answer_flow is None else con.dest_port
+            #base_tags["destination_port"] = con.dest_port
 
             base_tags["location_country_name"] = location_country_name
             base_tags["location_country_code"] = location_country_code
