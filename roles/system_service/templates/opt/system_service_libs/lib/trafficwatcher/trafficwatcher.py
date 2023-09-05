@@ -457,7 +457,7 @@ class TrafficWatcher(threading.Thread):
                     end = flow["end_timestamp"] + 1
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
-                            logging.info("FOUND REGISTRY {} {}".format(str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
+                            logging.info("APPLY {} TO REGISTRY {} {}".format(con.connection_type, str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
                         related_flows.append(flow)
                         flows[key].remove(flow)
             else:
@@ -470,7 +470,7 @@ class TrafficWatcher(threading.Thread):
                     end = flow["end_timestamp"] + 1
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
-                            logging.info("FOUND LAST REGISTRY {} {}".format(str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
+                            logging.info("APPLY {} TO LAST REGISTRY {} {}".format(con.connection_type, str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
                         processed_related_flows.append(flow)
                         self.processed_flows[key].remove(flow)
             else:

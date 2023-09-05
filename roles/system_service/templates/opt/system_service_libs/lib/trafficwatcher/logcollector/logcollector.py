@@ -107,24 +107,26 @@ class LogCollector(threading.Thread):
         self.last_fetch = None
         self.processed_lines = {}
 
-        self.server_ports = []
+        server_ports = []
         for service in self.config.netflow_incoming_traffic:
             if self.config.netflow_incoming_traffic[service]["logs"] != "apache":
                 continue
             ip, port = service.split(":")
             if ip != self.config.server_ip:
                 continue
-            self.server_ports.append(port)
+            server_ports.append(port)
+
+        self.query = "{{group=\"apache\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(server_ports)) if len(server_ports) > 0 else None
 
     def start(self):
-        if len(self.server_ports) > 0:
+        if self.query is not None:
             self.is_running = True
             super().start()
         else:
             logging.info("IP log collector disabled. There are is no 'netflow_incoming_traffic' with a 'log' attribute configured.")
 
     def terminate(self):
-        if len(self.server_ports) > 0:
+        if self.query is not None:
             self.is_running = False
             self.event.set()
 
@@ -155,24 +157,28 @@ class LogCollector(threading.Thread):
                 start = self.last_fetch - 60 # grep last minute again, to collect also late occuring log lines
 
             #logging.info("FETCH {}".format(datetime.fromtimestamp(start)))
-            query = "{{group=\"apache\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(self.server_ports))
-            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start, urllib.parse.quote(query))
-            #logging.info(query)
+            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start, urllib.parse.quote(self.query))
+            #logging.info(self.query)
             #logging.info(url)
             contents = urllib.request.urlopen(url).read()
             result = json.loads(contents)
             external_state = {}
             last_processed_timestamp = 0
             if "status" in result and result["status"] == "success":
+                new_events = 0
+                all_events = 0
+                processed_lines = {}
                 for result in result["data"]["result"]:
                     for row in result["values"]:
-                        timestamp = int(row[0]) / 1000000000
+                        all_events += 1
 
-                        key = "{}-{}".format(timestamp, row[1])
+                        key = "{}-{}".format(row[0], row[1])
                         if key in self.processed_lines:
                             #logging.info("SKIP log line {}".format(row[1]))
                             continue
-                        self.processed_lines[key] = timestamp
+
+                        timestamp = int(row[0]) / 1000000000
+                        processed_lines[key] = timestamp
 
                         #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
                         # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
@@ -210,12 +216,19 @@ class LogCollector(threading.Thread):
                         #logging.info("===============> {} {}".format(ip, request))
 
                         self.watcher.addConnection(Connection(timestamp, self.config.server_ip, port, ip, is_suspicious, self.config, self.ipcache))
-            self.last_fetch = now
+                        new_events += 1
+
+                logging.info("Processing of {}/{} log lines newer then {} ({})".format(new_events, all_events, datetime.fromtimestamp(start), start))
+            else:
+                logging.info("Loki request '{}' not successful".format(url))
 
             # cleanup processed logs
             for key in list(self.processed_lines.keys()):
                 if now - self.processed_lines[key] > 120:
                     del self.processed_lines[key]
+
+            self.processed_lines |= processed_lines
+            self.last_fetch = now
 
         except urllib.error.HTTPError as e:
             logging.info(e)
