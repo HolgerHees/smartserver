@@ -377,6 +377,19 @@ class TrafficWatcher(threading.Thread):
 
                 messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(con.start_timestamp * 1000)))
 
+            # group unsuccessful syn requests
+            if con.connection_type == "netflow" and ( con.protocol_name == "udp" or con.tcp_flags == 2 ) and con.answer_flow is None:# and service == "unknown":
+                base_tags["destination_port"] = 0
+                service = "scanning"
+                time_offset = 5
+                is_scanning = True
+            else:
+                base_tags["destination_port"] = con.dest_port
+                time_offset = 1
+                is_scanning = False
+            #base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags & 2 == 2 and con.answer_flow is None else con.dest_port
+            #base_tags["destination_port"] = con.dest_port
+
             base_tags["intern_ip"] = intern_ip
             base_tags["intern_host"] = intern_hostname
 
@@ -394,11 +407,6 @@ class TrafficWatcher(threading.Thread):
             base_tags["protocol"] = con.protocol_name
 
             base_tags["ip_type"] = con.ip_type
-
-            # group unsuccessful syn requests
-            base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags == 2 and con.answer_flow is None and service == "unknown" else con.dest_port
-            #base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags & 2 == 2 and con.answer_flow is None else con.dest_port
-            #base_tags["destination_port"] = con.dest_port
 
             base_tags["location_country_name"] = location_country_name
             base_tags["location_country_code"] = location_country_code
@@ -436,7 +444,7 @@ class TrafficWatcher(threading.Thread):
             else:
                 is_debug = traffic_group != "normal"
 
-            if ( traffic_group != "normal" and not is_blocked ) or extern_ip in self.debugging_ips:
+            if ( traffic_group != "normal" and not is_blocked and not is_scanning ) or extern_ip in self.debugging_ips:
                 data = {
                     "type": con.connection_type,
                     "start_timestamp": str(datetime.fromtimestamp(con.start_timestamp)),
@@ -453,8 +461,8 @@ class TrafficWatcher(threading.Thread):
             related_flows = []
             if key in flows:
                 for flow in list(flows[key]):
-                    start = flow["start_timestamp"] - 1
-                    end = flow["end_timestamp"] + 1
+                    start = flow["start_timestamp"] - time_offset
+                    end = flow["end_timestamp"] + time_offset
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
                             logging.info("APPLY {} TO REGISTRY {} {}".format(con.connection_type, str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
@@ -466,8 +474,8 @@ class TrafficWatcher(threading.Thread):
             processed_related_flows = []
             if key in self.processed_flows:
                 for flow in list(self.processed_flows[key]):
-                    start = flow["start_timestamp"] - 1
-                    end = flow["end_timestamp"] + 1
+                    start = flow["start_timestamp"] - time_offset
+                    end = flow["end_timestamp"] + time_offset
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
                             logging.info("APPLY {} TO LAST REGISTRY {} {}".format(con.connection_type, str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
@@ -478,7 +486,7 @@ class TrafficWatcher(threading.Thread):
             # *********************************
 
             # **** MERGE FLOWS ****
-            data = { "key": key, "base_tags": base_tags, "state_tags": state_tags, "values": values, "start_timestamp": con.start_timestamp, "end_timestamp": con.end_timestamp, "influxdb_timestamp": 0, "processed_related_flows": processed_related_flows, "query": None}
+            data = { "key": key, "is_scanning": is_scanning, "base_tags": base_tags, "state_tags": state_tags, "values": values, "start_timestamp": con.start_timestamp, "end_timestamp": con.end_timestamp, "influxdb_timestamp": 0, "processed_related_flows": processed_related_flows, "query": None}
             con.applyData(data, traffic_group)
             flows[key].append(data)
 
@@ -585,13 +593,14 @@ class TrafficWatcher(threading.Thread):
         # *******************************
 
         start_cleanup = time.time()
-        max_time = time.time() - 60 * 5
+        max_default_time = time.time() - 60 * 5
+        max_scanning_time = time.time() - 60 * 8
         flow_count = 0
         flow_cleanup_count = 0
         for key in list(self.processed_flows.keys()):
             for _data in list(self.processed_flows[key]):
                 flow_count += 1
-                if _data["end_timestamp"] >= max_time:
+                if _data["end_timestamp"] >= ( max_scanning_time if _data["is_scanning"] else max_default_time ):
                     continue
                 self.processed_flows[key].remove(_data)
                 flow_cleanup_count += 1
