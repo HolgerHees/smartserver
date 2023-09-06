@@ -218,10 +218,11 @@ class Connection:
             # TODO: Should be handled in the collection phase
             self.duration = (2 ** 32 - self.request_flow['flowStartSysUpTime']) + self.request_flow['flowEndSysUpTime']
 
-        self.is_multicast = True if self.dest.is_multicast or self.src.is_multicast else False
-        self.is_broadcast = True if self.dest.compressed.endswith(".255") or self.src.compressed.endswith(".255") else False
+        is_multicast = True if self.dest.is_multicast or self.src.is_multicast else False
+        is_broadcast = True if self.dest.compressed.endswith(".255") or self.src.compressed.endswith(".255") else False
+        is_other_special = True if self.dest.is_unspecified or self.src.is_unspecified else False
 
-        self.skipped = self.is_multicast or self.is_broadcast
+        self.skipped = is_multicast or is_broadcast or is_other_special
 
         if not self.skipped:
             self._location = self.ipcache.getLocation(self.src if self.src.is_global else self.dest, True)
@@ -231,9 +232,7 @@ class Connection:
 
             self.src_is_external = self.ipcache.isExternal(self.src)
 
-            if self.is_multicast:
-                self.service = "multicast"
-            elif self.protocol in IP_PING_protocolIdentifierS:
+            if self.protocol in IP_PING_protocolIdentifierS:
                 if Helper.checkFlag(self.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]):
                     self.service = "ping"
                 else:
@@ -355,6 +354,22 @@ class Processor(threading.Thread):
 
         self.watcher = watcher
         self.ipcache = ipcache
+
+        #_ip = "192.168.0.1"
+        #ip = ipaddress.IPv4Address(_ip)
+        #logging.info("IP: {}, is_multicast: {}, is_private: {}, is_global: {}, is_unspecified: {}, is_reserved: {}, is_loopback: {}, is_link_local: {}".format(_ip, ip.is_multicast, ip.is_private, ip.is_global, ip.is_unspecified, ip.is_reserved, ip.is_loopback, ip.is_link_local))
+        #_ip = "8.8.8.8"
+        #ip = ipaddress.IPv4Address(_ip)
+        #logging.info("IP: {}, is_multicast: {}, is_private: {}, is_global: {}, is_unspecified: {}, is_reserved: {}, is_loopback: {}, is_link_local: {}".format(_ip, ip.is_multicast, ip.is_private, ip.is_global, ip.is_unspecified, ip.is_reserved, ip.is_loopback, ip.is_link_local))
+        #_ip = "127.0.0.1"
+        #ip = ipaddress.IPv4Address(_ip)
+        #logging.info("IP: {}, is_multicast: {}, is_private: {}, is_global: {}, is_unspecified: {}, is_reserved: {}, is_loopback: {}, is_link_local: {}".format(_ip, ip.is_multicast, ip.is_private, ip.is_global, ip.is_unspecified, ip.is_reserved, ip.is_loopback, ip.is_link_local))
+        #_ip = "0.0.0.0"
+        #ip = ipaddress.IPv4Address(_ip)
+        #logging.info("IP: {}, is_multicast: {}, is_private: {}, is_global: {}, is_unspecified: {}, is_reserved: {}, is_loopback: {}, is_link_local: {}".format(_ip, ip.is_multicast, ip.is_private, ip.is_global, ip.is_unspecified, ip.is_reserved, ip.is_loopback, ip.is_link_local))
+        #_ip = "8.8.8.255"
+        #ip = ipaddress.IPv4Address(_ip)
+        #logging.info("IP: {}, is_multicast: {}, is_private: {}, is_global: {}, is_unspecified: {}, is_reserved: {}, is_loopback: {}, is_link_local: {}".format(_ip, ip.is_multicast, ip.is_private, ip.is_global, ip.is_unspecified, ip.is_reserved, ip.is_loopback, ip.is_link_local))
 
     def terminate(self):
         self.is_running = False

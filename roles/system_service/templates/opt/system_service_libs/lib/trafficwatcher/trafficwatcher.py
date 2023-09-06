@@ -396,7 +396,7 @@ class TrafficWatcher(threading.Thread):
             base_tags["ip_type"] = con.ip_type
 
             # group unsuccessful syn requests
-            base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags == 2 and con.answer_flow is None else con.dest_port
+            base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags == 2 and con.answer_flow is None and service == "unknown" else con.dest_port
             #base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags & 2 == 2 and con.answer_flow is None else con.dest_port
             #base_tags["destination_port"] = con.dest_port
 
