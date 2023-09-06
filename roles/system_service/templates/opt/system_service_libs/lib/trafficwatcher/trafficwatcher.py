@@ -370,15 +370,16 @@ class TrafficWatcher(threading.Thread):
             direction = "incoming" if src_is_external else "outgoing"
 
             is_blocked = self.trafficblocker.isBlockedIP(extern_ip)
+            is_suspicious_traffic = traffic_group != "normal"
 
-            if traffic_group != "normal":
+            if is_suspicious_traffic:
                 with self.stats_lock:
                     self._addTrafficEvent(con.connection_type, extern_ip, traffic_group, blocklist_name, con.start_timestamp)
 
                 messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(con.start_timestamp * 1000)))
 
             # group unsuccessful syn requests
-            if con.answer_flow is None and con.connection_type == "netflow" and ( con.protocol_name == "udp" or con.tcp_flags == 2 ):# and service == "unknown":
+            if con.connection_type == "netflow" and con.answer_flow is None and ( con.protocol_name == "udp" or con.tcp_flags == 2 ):# and service == "unknown":
                 base_tags["destination_port"] = 0
                 service = "scanning"
                 time_offset = 5
@@ -442,9 +443,9 @@ class TrafficWatcher(threading.Thread):
                 is_debug = True
                 logging.info(key)
             else:
-                is_debug = traffic_group != "normal"
+                is_debug = is_suspicious_traffic
 
-            if ( traffic_group != "normal" and not is_blocked and not is_scanning ) or extern_ip in self.debugging_ips:
+            if ( not is_blocked and not is_scanning and is_suspicious_traffic ) or extern_ip in self.debugging_ips:
                 data = {
                     "type": con.connection_type,
                     "start_timestamp": str(datetime.fromtimestamp(con.start_timestamp)),
