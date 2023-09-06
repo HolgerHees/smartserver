@@ -157,7 +157,7 @@ class LogCollector(threading.Thread):
                 start = self.last_fetch - 60 # grep last minute again, to collect also late occuring log lines
 
             #logging.info("FETCH {}".format(datetime.fromtimestamp(start)))
-            url = "{}/loki/api/v1/query_range?start={}&query={}".format(self.config.loki_rest, start, urllib.parse.quote(self.query))
+            url = "{}/loki/api/v1/query_range?start={}&limit=1000&query={}".format(self.config.loki_rest, start, urllib.parse.quote(self.query))
             #logging.info(self.query)
             #logging.info(url)
             contents = urllib.request.urlopen(url).read()
