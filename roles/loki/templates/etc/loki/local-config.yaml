@@ -69,6 +69,7 @@ limits_config:
   enforce_metric_name: false
   reject_old_samples: true
   reject_old_samples_max_age: 168h # 7 days
+  max_entries_limit_per_query: 10000
   max_query_series: 100000
   query_timeout: 5m
 #  max_query_parallelism: 64

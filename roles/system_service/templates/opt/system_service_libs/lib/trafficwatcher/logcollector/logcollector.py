@@ -117,6 +117,7 @@ class LogCollector(threading.Thread):
             server_ports.append(port)
 
         self.query = "{{group=\"apache\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(server_ports)) if len(server_ports) > 0 else None
+        self.limit = 10000
 
     def start(self):
         if self.query is not None:
@@ -157,7 +158,7 @@ class LogCollector(threading.Thread):
                 start = self.last_fetch - 60 # grep last minute again, to collect also late occuring log lines
 
             #logging.info("FETCH {}".format(datetime.fromtimestamp(start)))
-            url = "{}/loki/api/v1/query_range?start={}&limit=1000&query={}".format(self.config.loki_rest, start, urllib.parse.quote(self.query))
+            url = "{}/loki/api/v1/query_range?start={}&limit={}&query={}".format(self.config.loki_rest, start, self.limit, urllib.parse.quote(self.query))
             #logging.info(self.query)
             #logging.info(url)
             contents = urllib.request.urlopen(url).read()
@@ -219,6 +220,8 @@ class LogCollector(threading.Thread):
                         new_events += 1
 
                 logging.info("Processing of {}/{} log lines newer then {} ({})".format(new_events, all_events, datetime.fromtimestamp(start), start))
+                if all_events == self.limit:
+                    logging.error("Loki query limit of {} reached".format(self.limit))
             else:
                 logging.info("Loki request '{}' not successful".format(url))
 
