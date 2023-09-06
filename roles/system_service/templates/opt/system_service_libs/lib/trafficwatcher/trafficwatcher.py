@@ -378,7 +378,7 @@ class TrafficWatcher(threading.Thread):
                 messurements.append("trafficevents,connection_type={},extern_ip={},traffic_group={},blocklist_name={} value=1 {}".format(con.connection_type, extern_ip, traffic_group, blocklist_name, int(con.start_timestamp * 1000)))
 
             # group unsuccessful syn requests
-            if con.connection_type == "netflow" and ( con.protocol_name == "udp" or con.tcp_flags == 2 ) and con.answer_flow is None:# and service == "unknown":
+            if con.answer_flow is None and con.connection_type == "netflow" and ( con.protocol_name == "udp" or con.tcp_flags == 2 ):# and service == "unknown":
                 base_tags["destination_port"] = 0
                 service = "scanning"
                 time_offset = 5
