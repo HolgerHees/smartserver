@@ -466,7 +466,7 @@ class TrafficWatcher(threading.Thread):
                     end = flow["end_timestamp"] + time_offset
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
-                            logging.info("APPLY {} TO REGISTRY {} {}".format(con.connection_type, str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
+                            logging.info("Apply to registry - Type: {}, IP: {}, Time: {}".format(con.connection_type, extern_ip, str(datetime.fromtimestamp(flow["start_timestamp"]))))
                         related_flows.append(flow)
                         flows[key].remove(flow)
             else:
@@ -479,7 +479,7 @@ class TrafficWatcher(threading.Thread):
                     end = flow["end_timestamp"] + time_offset
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
-                            logging.info("APPLY {} TO LAST REGISTRY {} {}".format(con.connection_type, str(datetime.fromtimestamp(flow["start_timestamp"])), extern_ip))
+                            logging.info("Apply to last registry - Type: {}, IP: {}, Time: {}".format(con.connection_type, extern_ip, str(datetime.fromtimestamp(flow["start_timestamp"]))))
                         processed_related_flows.append(flow)
                         self.processed_flows[key].remove(flow)
             else:
@@ -487,7 +487,7 @@ class TrafficWatcher(threading.Thread):
             # *********************************
 
             # **** MERGE FLOWS ****
-            data = { "key": key, "is_scanning": is_scanning, "base_tags": base_tags, "state_tags": state_tags, "values": values, "start_timestamp": con.start_timestamp, "end_timestamp": con.end_timestamp, "influxdb_timestamp": 0, "processed_related_flows": processed_related_flows, "query": None}
+            data = { "key": key, "base_tags": base_tags, "state_tags": state_tags, "values": values, "start_timestamp": con.start_timestamp, "end_timestamp": con.end_timestamp, "influxdb_timestamp": 0, "processed_related_flows": processed_related_flows, "query": None}
             con.applyData(data, traffic_group)
             flows[key].append(data)
 
@@ -559,9 +559,6 @@ class TrafficWatcher(threading.Thread):
             self.processed_flows[flow["key"]].append(flow)
         # ******************************
 
-        end_processing = time.time()
-        logging.info("Processing of {} flows in {} seconds".format(len(messurements), round(end_processing - start_processing,3)))
-
         if self.profiling_enabled:
             prof.disable()
             s = io.StringIO()
@@ -573,7 +570,7 @@ class TrafficWatcher(threading.Thread):
 
         # **** DELETE OBSOLETE RELATED FLOWS ****
         if len(cleanup_messurements) > 0:
-            start_cleanup = time.time()
+            #start_cleanup = time.time()
 
             queries = []
             for messurement, tags, timestamp in cleanup_messurements:
@@ -586,30 +583,32 @@ class TrafficWatcher(threading.Thread):
                 tag_str = " AND ".join(tag_r)
                 queries.append("DELETE FROM \"{}\" WHERE {} AND \"time\" = {}".format(messurement, tag_str, (timestamp * 1000000) ))
 
-            logging.info(queries)
             result = self.influxdb.delete(queries)
 
-            end_cleanup = time.time()
-            logging.info("Delete of {} messurements in {} seconds".format( len(cleanup_messurements), round(end_cleanup-start_cleanup,3)))
+            #end_cleanup = time.time()
+            #logging.info(queries)
+            #logging.info("Delete of {} messurements in {} seconds".format( len(cleanup_messurements), round(end_cleanup-start_cleanup,3)))
         # *******************************
 
-        start_cleanup = time.time()
-        max_default_time = time.time() - 60 * 5
-        max_scanning_time = time.time() - 60 * 8
+        #start_cleanup = time.time()
+        max_time = time.time() - 60 * 5
         flow_count = 0
         flow_cleanup_count = 0
         for key in list(self.processed_flows.keys()):
             for _data in list(self.processed_flows[key]):
                 flow_count += 1
-                if _data["end_timestamp"] >= ( max_scanning_time if _data["is_scanning"] else max_default_time ):
+                if _data["end_timestamp"] >= max_time:
                     continue
                 self.processed_flows[key].remove(_data)
                 flow_cleanup_count += 1
             if len(self.processed_flows[key]) == 0:
                 del self.processed_flows[key]
 
-        end_cleanup = time.time()
-        logging.info("Cleanup of {}/{} flows in {} seconds".format(flow_cleanup_count, flow_count, round(end_cleanup - start_cleanup,3)))
+        #end_cleanup = time.time()
+        #logging.info("Cleanup of {}/{} flows in {} seconds".format(flow_cleanup_count, flow_count, round(end_cleanup - start_cleanup,3)))
+
+        end_processing = time.time()
+        logging.info("Processing of {} flows in {} seconds".format(len(messurements), round(end_processing - start_processing,3)))
 
         counter_values = self.ipcache.getCountStats()
         logging.info("Cache statistic - LOCATION [fetch: {}, cache {}/{}], HOSTNAME [fetch: {}, cache {}/{}]".format(counter_values["location_fetch"], counter_values["location_cache"], self.ipcache.getLocationSize(), counter_values["hostname_fetch"], counter_values["hostname_cache"], self.ipcache.getHostnameSize()))
