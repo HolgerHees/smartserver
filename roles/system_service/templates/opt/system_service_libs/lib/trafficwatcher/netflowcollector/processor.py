@@ -271,11 +271,22 @@ class Connection:
     def applyDebugFields(self, data):
         data["has_answer"] = self.answer_flow is not None
         data["request"] = self.request_flow.copy()
-        data["request"]["sourceIPv4Address"] = ipaddress.ip_address(data["request"]["sourceIPv4Address"]).compressed
-        data["request"]["destinationIPv4Address"] = ipaddress.ip_address(data["request"]["destinationIPv4Address"]).compressed
+        data["request"]["src"] = ipaddress.ip_address(data["request"]["sourceIPv4Address"]).compressed
+        del data["request"]['sourceIPv4Address']
+        port = data["request"]['sourceTransportPort'] if 'sourceTransportPort' in data["request"] else None
+        if port:
+            data["request"]["src"] = "{}:{}".format(data["request"]["src"], port)
+            del data["request"]['sourceTransportPort']
+
+        data["request"]["dest"] = ipaddress.ip_address(data["request"]["destinationIPv4Address"]).compressed
+        del data["request"]['destinationIPv4Address']
+        port = data["request"]['destinationTransportPort'] if 'destinationTransportPort' in data["request"] else None
+        if port:
+            data["request"]["dest"] = "{}:{}".format(data["request"]["dest"], port)
+            del data["request"]['destinationTransportPort']
+
         for key in ["flowStartSysUpTime", "flowEndSysUpTime", "ingressInterface", "egressInterface", "octetDeltaCount", "packetDeltaCount", "ipClassOfService", "ipVersion"]:
             del data["request"][key]
-
             #if data["response"] is not None:
             #    del data["response"][key]
 

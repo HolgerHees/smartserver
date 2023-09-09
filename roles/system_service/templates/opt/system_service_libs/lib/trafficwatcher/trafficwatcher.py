@@ -288,15 +288,15 @@ class TrafficWatcher(threading.Thread):
             if ( is_suspicious_traffic and not is_scanning and not self.trafficblocker.isBlockedIP(extern_ip) ) or extern_ip in self.debugging_ips:
                 data = {
                     "type": con.connection_type,
-                    "start_timestamp": str(datetime.fromtimestamp(con.start_timestamp)),
-                    "end_timestamp": str(datetime.fromtimestamp(con.end_timestamp)),
+                    "start": str(datetime.fromtimestamp(con.start_timestamp)),
+                    "end": str(datetime.fromtimestamp(con.end_timestamp)),
                     "extern_ip": extern_ip,
                     "intern_ip": intern_ip,
                     "direction": direction,
-                    "traffic_group": traffic_group
+                    "group": traffic_group
                 }
                 con.applyDebugFields(data)
-                logging.info("SUSPICIOUS TRAFFIC: {}".format(data))
+                logging.info("Suspicious: {}".format(data))
 
             self.processed_connections.append({
                 "location_country_name": location_country_name,
