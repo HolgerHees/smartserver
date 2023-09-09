@@ -269,8 +269,15 @@ class Connection:
 #Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:122] - False
 
     def applyDebugFields(self, data):
-        data["request"] = self.request_flow
-        data["response"] = self.answer_flow
+        data["has_answer"] = self.answer_flow is not None
+        data["request"] = self.request_flow.copy()
+        data["request"]["sourceIPv4Address"] = ipaddress.ip_address(data["request"]["sourceIPv4Address"]).compressed
+        data["request"]["destinationIPv4Address"] = ipaddress.ip_address(data["request"]["destinationIPv4Address"]).compressed
+        for key in ["flowStartSysUpTime", "flowEndSysUpTime", "ingressInterface", "egressInterface", "octetDeltaCount", "packetDeltaCount", "ipClassOfService", "ipVersion"]:
+            del data["request"][key]
+
+            #if data["response"] is not None:
+            #    del data["response"][key]
 
     def formatTCPFlags(self, tcp_flags):
         flags = []

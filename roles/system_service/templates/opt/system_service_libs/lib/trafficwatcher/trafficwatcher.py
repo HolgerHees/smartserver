@@ -682,7 +682,7 @@ class TrafficWatcher(threading.Thread):
         counter_values = self.ipcache.getCountStats()
         cache_stats = "LOCATION [fetch: {}, cache {}/{}], HOSTNAME [fetch: {}, cache {}/{}]".format(counter_values["location_fetch"], counter_values["location_cache"], self.ipcache.getLocationSize(), counter_values["hostname_fetch"], counter_values["hostname_cache"], self.ipcache.getHostnameSize())
         processing_values = self._getProcessingStats()
-        processing_stats = "Processing of {} connections ({} suspicious) in {} seconds.".format(processing_values["connections"], processing_values["suspicious"], round(processing_values["processing_time"],3))
+        processing_stats = "Processing of {}/{} connections in {} seconds.".format(processing_values["suspicious"], processing_values["connections"], round(processing_values["processing_time"],3))
         logging.info("{} {}".format(processing_stats, cache_stats))
 
         return messurements
