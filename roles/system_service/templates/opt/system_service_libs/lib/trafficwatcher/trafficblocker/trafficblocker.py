@@ -231,7 +231,7 @@ class TrafficBlocker(threading.Thread):
 
     def _cleanup(self):
         now = time.time()
-        max_age = 60 * 60 * 24 * 14
+        max_age = 60 * 60 * 24 * 30 # 30 days
         cleaned = 0
         with self.config_lock:
             for ip in list(self.config_map["observed_ips"].keys()):
