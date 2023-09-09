@@ -8,6 +8,8 @@ import json
 import re
 import ipaddress
 import math
+import websocket
+
 from datetime import datetime
 
 from lib.trafficwatcher.helper.helper import TrafficGroup, Helper as TrafficHelper
@@ -104,9 +106,6 @@ class LogCollector(threading.Thread):
         self.watcher = watcher
         self.ipcache = ipcache
 
-        self.last_fetch = None
-        self.processed_lines = {}
-
         server_ports = []
         for service in self.config.netflow_incoming_traffic:
             if self.config.netflow_incoming_traffic[service]["logs"] != "apache":
@@ -116,8 +115,13 @@ class LogCollector(threading.Thread):
                 continue
             server_ports.append(port)
 
+        #self.query_test = "{group=\"apache\"}"
         self.query = "{{group=\"apache\"}} |~ \" vhost={}:({}) \" != \" status=200 \"".format(self.config.server_domain, "|".join(server_ports)) if len(server_ports) > 0 else None
         self.limit = 10000
+
+        self.starttime = None
+
+        self.ws = None
 
     def start(self):
         if self.query is not None:
@@ -129,158 +133,103 @@ class LogCollector(threading.Thread):
     def terminate(self):
         if self.query is not None:
             self.is_running = False
+            if self.ws is not None:
+                self.ws.close()
             self.event.set()
 
     def run(self):
-        logging.info("IP log collector started")
+        logging.info("Log collector started")
         try:
+            self._connect()
             while self.is_running:
-                # merge http requests
-                self._processHttpRequests()
                 self.event.wait(60)
-
-            logging.info("IP log collector stopped")
-        except Exception:
+        except Exception as e:
+            #logging.error(e)
             logging.error(traceback.format_exc())
             self.is_running = False
 
-    def _processHttpRequests(self):
-        try:
-            now = time.time()
-            if self.last_fetch == None:
-                start = self.watcher.getLastTrafficEventTime("apache")
-                #logging.info(start)
-                if start == 0:
-                    start = now - self.config.traffic_blocker_unblock_timeout
-                else:
-                    start += 0.001
-            else:
-                start = self.last_fetch - 60 # grep last minute again, to collect also late occuring log lines
+        logging.info("Log collector stopped")
 
-            #logging.info("FETCH {}".format(datetime.fromtimestamp(start)))
-            url = "{}/loki/api/v1/query_range?start={}&limit={}&direction=forward&query={}".format(self.config.loki_rest, start, self.limit, urllib.parse.quote(self.query))
-            #logging.info(self.query)
-            #logging.info(url)
-            contents = urllib.request.urlopen(url).read()
-            result = json.loads(contents)
-            external_state = {}
-            last_processed_timestamp = 0
-            if "status" in result and result["status"] == "success":
-                new_events = 0
-                all_events = 0
-                processed_lines = {}
-                for result in result["data"]["result"]:
-                    for row in result["values"]:
-                        all_events += 1
-
-                        key = "{}-{}".format(row[0], row[1])
-                        if key in self.processed_lines:
-                            #logging.info("SKIP log line {}".format(row[1]))
-                            continue
-
-                        timestamp = int(row[0]) / 1000000000
-                        processed_lines[key] = timestamp
-
-                        #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
-                        # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
-                        #                            IP         USER     DOMAIN   REQUEST
-                        match = re.match("^remoteIP=([^\s]+).*?vhost=(.*?) request=(.*?) status=",row[1])
-                        if not match:
-                            logging.error("Invalid regex for message: '{}'".format(row[1]))
-                            continue
-
-                        ip = match[1]
-
-                        #if ip in self.approved_ips:
-                        #    continue
-
-                        #if ip not in external_state:
-                        #    external_state[ip] = self.ipcache.isExternal(ipaddress.ip_address(ip))
-                        #if not external_state[ip]:
-                        #    continue
-
-                        vhost = match[2].strip('"')
-                        domain, port = vhost.split(":")
-                        request = match[3].strip('"')
-
-                        match = re.match("^([A-Z]+) (.+) HTTP",request)
-                        if not match:
-                            is_suspicious = True
-                            #logging.info("===============> INVALID TIME: {}/{}, IP: {}, PORT: {}, REQUEST: {}".format(datetime.fromtimestamp(timestamp), timestamp, ip, port, request))
-                        else:
-                            method = match[1]
-                            url = match[2]
-                            #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
-                            is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
-                            #logging.info("===============> VALID TIME: {}/{}, IP: {}, PORT: {}, METHOD: {}, URL: {}".format(datetime.fromtimestamp(timestamp), timestamp, ip, port, method, url))
-
-                        #logging.info("===============> {} {}".format(ip, request))
-
-                        self.watcher.addConnection(Connection(timestamp, self.config.server_ip, port, ip, is_suspicious, self.config, self.ipcache))
-                        new_events += 1
-
-                logging.info("Processing of {}/{} log lines newer then {} ({})".format(new_events, all_events, datetime.fromtimestamp(start), start))
-                if all_events == self.limit:
-                    logging.error("Loki query limit of {} reached".format(self.limit))
-            else:
-                logging.info("Loki request '{}' not successful".format(url))
-
-            # cleanup processed logs
-            for key in list(self.processed_lines.keys()):
-                if now - self.processed_lines[key] > 120:
-                    del self.processed_lines[key]
-
-            self.processed_lines |= processed_lines
-            self.last_fetch = now
-
-        except urllib.error.HTTPError as e:
-            logging.info(e)
-            #logging.info(traceback.format_exc())
-            logging.info("Loki not reachable")
-
-    def _restore(self):
-        self.valid_list_file, data = ConfigHelper.loadConfig(self.dump_config_path, self.config_version )
-        if data is not None:
-            self.config_map = data["map"]
-            logging.info("Loaded config")
-        else:
-            self.config_map = {"observed_ips": {}}
-            self._dump()
-
-    def _dump(self):
-        if self.valid_config_file:
-            with self.config_lock:
-                ConfigHelper.saveConfig(self.dump_config_path, self.config_version, { "map": self.config_map } )
-                logging.info("Saved config")
-
-    def _cleanup(self):
+    def _connect(self):
         now = time.time()
-        cleaned = 0
-        with self.config_lock:
-            for ip in list(self.config_map["observed_ips"].keys()):
-                data = self.config_map["observed_ips"][ip]
-                if data["state"] != "unblocked" or now < data["updated"] + self.config.traffic_blocker_clean_known_ips_timeout:
-                    continue
-                del self.config_map["observed_ips"][ip]
-                cleaned = cleaned + 1
-        if cleaned > 0:
-            logging.info("Cleaned {} ip(s)".format(cleaned))
+        self.starttime = self.watcher.getLastTrafficEventTime("apache")
+        #logging.info(start)
+        if self.starttime == 0:
+            self.starttime = now - self.config.traffic_blocker_unblock_timeout
+        else:
+            self.starttime += 0.001
 
-    def getApprovedIPs(self):
-        return list(self.approved_ips)
+        #url = "{}/loki/api/v1/tail?query={}".format(self.config.loki_websocket, urllib.parse.quote(self.query_test))
+        url = "{}/loki/api/v1/tail?start={}&limit={}&query={}".format(self.config.loki_websocket, self.starttime, self.limit, urllib.parse.quote(self.query))
+        #logging.info(url)
+        #handler = logging.getLogger('logcollector')
+        #websocket.enableTrace(True, handler = handler )
 
-    def getBlockedIPs(self):
-        return list(self.blocked_ips)
+        self.ws = websocket.WebSocketApp(url, on_open=self._on_open, on_close=self._on_close, on_error=self._on_error, on_message=self._on_message)
+        self.ws.run_forever(ping_interval=5, ping_timeout=1, reconnect=5)
 
-    def getMessurements(self):
-        messurements = []
-        if self.config_map is not None:
-            with self.config_lock:
-                for ip, data in self.config_map["observed_ips"].items():
-                    if data["state"] != "blocked":
+    def _on_open(self, ws):
+        logging.info("Log stream started at {}".format(datetime.fromtimestamp(self.starttime)))
+
+    def _on_close(self, ws, close_status_code, close_message):
+        logging.info("Log stream closed with status: {}, message: {}".format(close_status_code, close_message))
+
+        if self.is_running:
+            self.event.wait(5)
+            self._connect()
+
+    def _on_error(self, ws, error):
+        logging.error("Log stream got error {}".format(error))
+
+    def _on_message(self, ws, message):
+        #logging.info("on message {}".format(message))
+
+        try:
+            message = json.loads(message)
+
+            all_events = 0
+            connections = []
+            for result in message["streams"]:
+                for row in result["values"]:
+                    all_events += 1
+
+                    timestamp = int(row[0]) / 1000000000
+
+                    #logging.info("{} {}".format(datetime.fromtimestamp(int(row[0]) / 1000000000), row[1]))
+                    # message ${record["host"] + " - " + record["user"] + " - " + record["domain"] + " - " + record["request"] + " - " + record["code"] + " - " + record["message"]}
+                    #                            IP         USER     DOMAIN   REQUEST
+                    match = re.match("^remoteIP=([^\s]+).*?vhost=(.*?) request=(.*?) status=",row[1])
+                    if not match:
+                        logging.error("Invalid regex for message: '{}'".format(row[1]))
                         continue
-                    messurements.append("trafficblocker,extern_ip={},blocking_state={},blocking_reason={},blocking_type={},blocking_count={} value=\"{}\"".format(ip, data["state"], data["reason"], data["type"], data["count"], data["last"]))
-        return messurements
+
+                    ip = match[1]
+
+                    vhost = match[2].strip('"')
+                    domain, port = vhost.split(":")
+                    request = match[3].strip('"')
+
+                    match = re.match("^([A-Z]+) (.+) HTTP",request)
+                    if not match:
+                        is_suspicious = True
+                        #logging.info("===============> INVALID TIME: {}/{}, IP: {}, PORT: {}, REQUEST: {}".format(datetime.fromtimestamp(timestamp), timestamp, ip, port, request))
+                    else:
+                        method = match[1]
+                        url = match[2]
+                        #is_suspicious = method != "GET" or not re.match("^/(|.well-known|state|robots.txt|favicon.ico)$", url)
+                        is_suspicious = method != "GET" or not re.match("^/(|favicon.ico)$", url)
+                        #logging.info("===============> VALID TIME: {}/{}, IP: {}, PORT: {}, METHOD: {}, URL: {}".format(datetime.fromtimestamp(timestamp), timestamp, ip, port, method, url))
+
+                    #logging.info("===============> {} {}".format(ip, request))
+
+                    connections.append(Connection(timestamp, self.config.server_ip, port, ip, is_suspicious, self.config, self.ipcache))
+            self.watcher.addConnections(connections)
+
+            if all_events == self.limit:
+                logging.error("Loki query limit of {} reached".format(self.limit))
+        except Exception as e:
+            #logging.error(e)
+            logging.error(traceback.format_exc())
 
     def getStateMetrics(self):
         return [ "system_service_process{{type=\"trafficwatcher.logcollector\"}} {}".format("1" if self.is_running else "0") ]

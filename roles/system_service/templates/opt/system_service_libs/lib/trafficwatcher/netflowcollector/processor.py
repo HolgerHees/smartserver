@@ -101,11 +101,15 @@ class Helper():
             #    if Helper.checkFlag(connection.request_tcp_flags, TCP_FLAG_TYPES["ACK"]): # is an answer flow
             #        return True
             if connection.src_port is not None and connection.dest_port is not None:
-                if connection.src_port < 1024:
+                # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
+                if connection.src_port < 1024: # System ports
                     if connection.dest_port >= 1024:
                         return True
+                elif connection.src_port < 49152: # Registered ports
+                    if connection.dest_port >= 49152:
+                        return True
                 else:
-                    if connection.dest_port < 1024:
+                    if connection.dest_port < 49152:
                         return False
 
                 if config.netflow_incoming_traffic:
@@ -397,6 +401,7 @@ class Processor(threading.Thread):
             last_cleanup = time.time()
 
             while self.is_running:
+                connections = []
                 try:
                     ts, client, export = self.listener.get(timeout=0.5)
 
@@ -491,7 +496,7 @@ class Processor(threading.Thread):
                                 if request_key in pending:
                                     request_flow, request_ts = pending.pop(request_key)
                                     con = Connection(self.gateway_base_time, request_ts, request_flow, None, self.config, self.ipcache)
-                                    self.watcher.addConnection(con)
+                                    connections.append(con)
                                 pending[request_key] = [ flow, ts ]
                                 continue
 
@@ -502,7 +507,7 @@ class Processor(threading.Thread):
                         #raise Exception
 
                         con = Connection(self.gateway_base_time, request_ts, request_flow, answer_flow, self.config, self.ipcache)
-                        self.watcher.addConnection(con)
+                        connections.append(con)
 
                     #self.getMetrics()
 
@@ -517,9 +522,11 @@ class Processor(threading.Thread):
                         request_flow, request_ts = pending[request_key]
                         if ts - request_ts > 15:
                             con = Connection(self.gateway_base_time, request_ts, request_flow, None, self.config, self.ipcache)
-                            self.watcher.addConnection(con)
+                            connections.append(con)
                             del pending[request_key]
                     last_cleanup = now
+
+                self.watcher.addConnections(connections)
 
             logging.info("Netflow processor stopped")
         except Exception:

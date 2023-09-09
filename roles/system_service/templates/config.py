@@ -35,7 +35,7 @@ influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
 influxdb_token = "{{vault_influxdb_admin_token}}"
 
-loki_rest = "http://loki:3100"
+loki_websocket = "ws://loki:3100"
 
 mqtt_host = "mosquitto"
 
