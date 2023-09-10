@@ -28,6 +28,11 @@ In addition to well known services, some custom additions are deployed too.
 
 ![welcome](./doc/welcome.jpg)
 
+![welcome](./doc/menu_1.jpg)
+![welcome](./doc/menu_2.jpg)
+![welcome](./doc/menu_3.jpg)
+![welcome](./doc/menu_4.jpg)
+
 2. "Private cloud" is a complete isolated network spanned through wireguard between several smartserver deployments to share backup folder, sensor messurements or other data with friends.
 
 3. "Update service" gives you a webui to handle and manage your os updates and smartserver changes and getting notified if there are new updates available
