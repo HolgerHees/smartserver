@@ -30,21 +30,28 @@ In addition to well known services, some custom additions are deployed too.
 2. "Private cloud" is a complete isolated network spanned through wireguard between several smartserver deployments to share backup folder, sensor messurements or other data with friends.
 
 3. "Update service" gives you a webui to handle and manage your os updates and smartserver changes and getting notified if there are new updates available
+
 ![update service](./doc/update_service.jpg)
 
 4. "CI service" is running your smartserver deployment on suse, alma and ubuntu virtual boxes after every commit to vertify that your changes works fine
+
 ![ci service](./doc/ci_service_1.jpg)
+
 ![ci service](./doc/ci_service_2.jpg)
 
 5. "Weather service" is fetching weather data from a public provider and make it available for my smarthome logic
+
 ![weather service](./doc/weather_service.jpg)
 
 6. "System Service" is the most complex service. It provides
     - A network scanner which builds and visualizes a network/cable structure of your home network. Data are comming from snmp aware router/switches, fritzbox devices and openwrt powered devices.
+
     ![system service](./doc/system_service_network_structure.jpg)
 
     - A network state checker, who is permanently monitoring your wan connection state and speed. The reachability of your cloud peers. The reachability of your backup folder etc.
+
     ![system service](./doc/system_service_network_state.jpg)
 
     - A netflow and log analyser, who is able to block IP's automatically if they contact your server in a bad way. This includes also traffic like SYN requests which are normally not visible in log files.
+
     ![system service](./doc/system_service_network_traffic.jpg)
