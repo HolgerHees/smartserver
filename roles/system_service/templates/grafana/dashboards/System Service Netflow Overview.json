@@ -43,17 +43,155 @@
   "liveNow": false,
   "panels": [
     {
-      "collapsed": false,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "system_info_influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "trafficflow.sum {direction: incoming}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Incoming"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "trafficflow.sum {direction: outgoing}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Outgoing"
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
-        "h": 1,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 25,
-      "panels": [],
-      "title": "Overview",
-      "type": "row"
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "system_info_influxdb"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "direction::tag"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "trafficflow",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "query": "SELECT sum(\"traffic_count\") FROM \"autogen\".\"trafficflow\" WHERE $timeFilter GROUP BY time($__interval), \"direction\"::tag fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "traffic_count"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Traffic",
+      "transformations": [],
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -82,7 +220,7 @@
         "h": 9,
         "w": 4,
         "x": 0,
-        "y": 1
+        "y": 5
       },
       "hideTimeOverride": true,
       "id": 9,
@@ -202,7 +340,7 @@
         "h": 9,
         "w": 4,
         "x": 4,
-        "y": 1
+        "y": 5
       },
       "hideTimeOverride": true,
       "id": 8,
@@ -331,7 +469,7 @@
         "h": 5,
         "w": 4,
         "x": 8,
-        "y": 1
+        "y": 5
       },
       "id": 21,
       "options": {
@@ -348,7 +486,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -496,7 +634,7 @@
         "h": 9,
         "w": 4,
         "x": 12,
-        "y": 1
+        "y": 5
       },
       "hideTimeOverride": true,
       "id": 20,
@@ -512,7 +650,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -690,7 +828,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 1
+        "y": 5
       },
       "hideTimeOverride": true,
       "id": 22,
@@ -712,7 +850,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -971,7 +1109,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 6
+        "y": 10
       },
       "hideTimeOverride": true,
       "id": 11,
@@ -987,7 +1125,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -1106,7 +1244,7 @@
         "h": 12,
         "w": 6,
         "x": 0,
-        "y": 10
+        "y": 14
       },
       "hideTimeOverride": true,
       "id": 17,
@@ -1128,7 +1266,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -1254,7 +1392,7 @@
         "h": 12,
         "w": 4,
         "x": 6,
-        "y": 10
+        "y": 14
       },
       "hideTimeOverride": true,
       "id": 14,
@@ -1276,7 +1414,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -1425,7 +1563,7 @@
         "h": 12,
         "w": 4,
         "x": 10,
-        "y": 10
+        "y": 14
       },
       "hideTimeOverride": true,
       "id": 6,
@@ -1447,7 +1585,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -1583,7 +1721,7 @@
         "h": 12,
         "w": 5,
         "x": 14,
-        "y": 10
+        "y": 14
       },
       "hideTimeOverride": true,
       "id": 4,
@@ -1605,7 +1743,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -1726,7 +1864,7 @@
         "h": 12,
         "w": 5,
         "x": 19,
-        "y": 10
+        "y": 14
       },
       "hideTimeOverride": true,
       "id": 5,
@@ -1748,7 +1886,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -1804,715 +1942,6 @@
         }
       ],
       "type": "table"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 22
-      },
-      "id": 23,
-      "panels": [],
-      "title": "Incoming & Outgoing",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "transparent",
-            "mode": "fixed"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false,
-            "minWidth": 50
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "string"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Traffic"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 90
-              },
-              {
-                "id": "unit",
-                "value": "bytes"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Service"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 90
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Country"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 130
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocalNoDateIfToday"
-              },
-              {
-                "id": "custom.width",
-                "value": 80
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Extern Group"
-            },
-            "properties": [
-              {
-                "id": "custom.minWidth",
-                "value": 200
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Req"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 50
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Intern Hosts"
-            },
-            "properties": [
-              {
-                "id": "filterable",
-                "value": true
-              },
-              {
-                "id": "custom.minWidth",
-                "value": 150
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 12,
-        "x": 0,
-        "y": 23
-      },
-      "hideTimeOverride": true,
-      "id": 16,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Time"
-          }
-        ]
-      },
-      "pluginVersion": "10.0.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "intern_host"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "extern_group"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "service"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "location_country_name"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT \"traffic_size\",\"traffic_count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'incoming' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "size"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "condition": "AND",
-              "key": "direction",
-              "operator": "=",
-              "value": "incoming"
-            }
-          ]
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Incoming Traffic <-",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "Time": {
-                "aggregations": [
-                  "firstNotNull"
-                ],
-                "operation": "aggregate"
-              },
-              "count": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "direction": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "extern_group": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "intern_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "last_time": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "location_country_name": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "service": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "size": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "sum": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "sum_1": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "traffic_count": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "traffic_size": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "value": {
-                "aggregations": [
-                  "sum",
-                  "count"
-                ],
-                "operation": "aggregate"
-              }
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": false,
-              "Time (lastNotNull)": false
-            },
-            "indexByName": {
-              "Time (firstNotNull)": 0,
-              "count (sum)": 6,
-              "extern_group": 2,
-              "intern_host": 1,
-              "location_country_name": 3,
-              "service": 4,
-              "size (sum)": 5
-            },
-            "renameByName": {
-              "Time": "Time",
-              "Time (firstNotNull)": "Time",
-              "Time (lastNotNull)": "Time",
-              "Time (range)": "Since",
-              "count (sum)": "Req",
-              "direction": "Direction",
-              "extern_group": "Extern Group",
-              "intern_host": "Intern Hosts",
-              "last": "Traffic",
-              "location_country_name": "Country",
-              "service": "Service",
-              "size (sum)": "Traffic",
-              "sum": "Traffic",
-              "sum_1": "Req",
-              "traffic_count": "Req",
-              "traffic_size": "Traffic",
-              "value": "",
-              "value (count)": "Req",
-              "value (sum)": "Traffic"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "system_info_influxdb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "transparent",
-            "mode": "fixed"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false,
-            "minWidth": 50
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "string"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Traffic"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 90
-              },
-              {
-                "id": "unit",
-                "value": "bytes"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Service"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 90
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Country"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 130
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeAsLocalNoDateIfToday"
-              },
-              {
-                "id": "custom.width",
-                "value": 80
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Extern Group"
-            },
-            "properties": [
-              {
-                "id": "custom.minWidth",
-                "value": 200
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Req"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 50
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Intern Hosts"
-            },
-            "properties": [
-              {
-                "id": "filterable",
-                "value": true
-              },
-              {
-                "id": "custom.minWidth",
-                "value": 150
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 12,
-        "x": 12,
-        "y": 23
-      },
-      "hideTimeOverride": true,
-      "id": 15,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Time"
-          }
-        ]
-      },
-      "pluginVersion": "10.0.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "system_info_influxdb"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "intern_host"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "extern_group"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "service"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "location_country_name"
-              ],
-              "type": "tag"
-            }
-          ],
-          "measurement": "netflow",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT \"traffic_size\",\"traffic_count\" FROM \"autogen\".\"trafficflow\" WHERE \"direction\" = 'outgoing' AND $timeFilter GROUP BY \"intern_host\", \"extern_group\", \"service\", \"location_country_name\" ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "size"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "sum"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "condition": "AND",
-              "key": "direction",
-              "operator": "=",
-              "value": "outgoing"
-            }
-          ]
-        }
-      ],
-      "timeShift": "2m",
-      "title": "Outgoing Traffic ->",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "Time": {
-                "aggregations": [
-                  "firstNotNull"
-                ],
-                "operation": "aggregate"
-              },
-              "count": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "direction": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "extern_group": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "intern_host": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "location_country_name": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "service": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "size": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "sum": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "sum_1": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "traffic_count": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "traffic_size": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "value": {
-                "aggregations": [
-                  "sum",
-                  "count"
-                ],
-                "operation": "aggregate"
-              }
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": false,
-              "Time (lastNotNull)": false
-            },
-            "indexByName": {
-              "Time (firstNotNull)": 0,
-              "extern_group": 2,
-              "intern_host": 1,
-              "location_country_name": 3,
-              "service": 4,
-              "value (count)": 5,
-              "value (sum)": 6
-            },
-            "renameByName": {
-              "Time": "Time",
-              "Time (firstNotNull)": "Time",
-              "Time (lastNotNull)": "Time",
-              "Time (range)": "Since",
-              "count (sum)": "Req",
-              "direction": "Direction",
-              "extern_group": "Extern Group",
-              "intern_host": "Intern Hosts",
-              "last": "Traffic",
-              "location_country_name": "Country",
-              "service": "Service",
-              "size (sum)": "Traffic",
-              "sum": "Traffic",
-              "sum_1": "Req",
-              "traffic_count": "Req",
-              "traffic_size": "Traffic",
-              "value": "",
-              "value (count)": "Req",
-              "value (sum)": "Traffic"
-            }
-          }
-        }
-      ],
-      "type": "table"
     }
   ],
   "refresh": "1m",
@@ -2529,7 +1958,14 @@
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [],
+        "filters": [
+          {
+            "condition": "",
+            "key": "group",
+            "operator": "!=",
+            "value": "normal"
+          }
+        ],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -2545,6 +1981,6 @@
   "timezone": "",
   "title": "Overview",
   "uid": "system-service-netflow-overview",
-  "version": 69,
+  "version": 3,
   "weekStart": ""
 }

@@ -286,17 +286,8 @@ class TrafficWatcher(threading.Thread):
                 suspicious_ips.append(extern_ip)
 
             if ( is_suspicious_traffic and not is_scanning and not self.trafficblocker.isBlockedIP(extern_ip) ) or extern_ip in self.debugging_ips:
-                data = {
-                    "type": con.connection_type,
-                    "start": str(datetime.fromtimestamp(con.start_timestamp)),
-                    "end": str(datetime.fromtimestamp(con.end_timestamp)),
-                    "extern_ip": extern_ip,
-                    "intern_ip": intern_ip,
-                    "direction": direction,
-                    "group": traffic_group
-                }
-                con.applyDebugFields(data)
-                logging.info("Suspicious: {}".format(data))
+                debug_data = con.getDebugData()
+                logging.info("Suspicious {} ({}) - {} {} {} - from {} to {}{}".format(con.connection_type, traffic_group, intern_ip, "<-" if direction == "incoming" else "->", extern_ip, str(datetime.fromtimestamp(con.start_timestamp)), str(datetime.fromtimestamp(con.end_timestamp)), debug_data))
 
             self.processed_connections.append({
                 "location_country_name": location_country_name,
@@ -480,7 +471,7 @@ class TrafficWatcher(threading.Thread):
                 service = "scanning"
                 time_offset = 5
             else:
-                base_tags["destination_port"] = con.dest_port
+                base_tags["destination_port"] = 0 if con.dest_port is None else con.dest_port
                 time_offset = 1
             #base_tags["destination_port"] = 0 if con.connection_type == "netflow" and con.tcp_flags & 2 == 2 and con.answer_flow is None else con.dest_port
             #base_tags["destination_port"] = con.dest_port
@@ -547,7 +538,7 @@ class TrafficWatcher(threading.Thread):
                     end = flow["end_timestamp"] + time_offset
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
-                            logging.info("Apply to registry - Type: {}, IP: {}, Time: {}".format(con.connection_type, extern_ip, str(datetime.fromtimestamp(flow["start_timestamp"]))))
+                            logging.info("Merge {} with current connection - IP: {}, Time: {}".format(con.connection_type, extern_ip, str(datetime.fromtimestamp(flow["start_timestamp"]))))
                         related_flows.append(flow)
                         flows[key].remove(flow)
             else:
@@ -560,7 +551,7 @@ class TrafficWatcher(threading.Thread):
                     end = flow["end_timestamp"] + time_offset
                     if ( con.start_timestamp > start and con.start_timestamp < end ) or ( con.end_timestamp > start and con.end_timestamp < end ) or ( con.start_timestamp < start and con.end_timestamp > end ):
                         if is_debug:
-                            logging.info("Apply to last registry - Type: {}, IP: {}, Time: {}".format(con.connection_type, extern_ip, str(datetime.fromtimestamp(flow["start_timestamp"]))))
+                            logging.info("Merge {} with processed connection - IP: {}, Time: {}".format(con.connection_type, extern_ip, str(datetime.fromtimestamp(flow["start_timestamp"]))))
                         processed_related_flows.append(flow)
                         self.processed_flows[key].remove(flow)
             else:

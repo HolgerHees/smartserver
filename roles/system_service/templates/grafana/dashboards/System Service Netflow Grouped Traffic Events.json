@@ -640,7 +640,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.5",
       "targets": [
         {
           "datasource": {
@@ -910,23 +910,23 @@
               "Time (firstNotNull)": 1,
               "Time (lastNotNull)": 0,
               "Time (range)": 2,
-              "blocked": 5,
-              "direction": 3,
+              "blocked": 4,
+              "direction": 13,
               "extern_group": 14,
               "extern_host": 16,
               "extern_ip": 15,
-              "group": 4,
-              "intern_host": 13,
-              "intern_ip": 12,
+              "group": 3,
+              "intern_host": 12,
+              "intern_ip": 11,
               "location_city": 19,
               "location_country_name": 18,
               "location_org": 17,
-              "log_count (sum)": 8,
-              "log_group": 9,
-              "log_type": 10,
-              "service": 11,
-              "traffic_count (sum)": 6,
-              "traffic_group": 7
+              "log_count (sum)": 7,
+              "log_group": 8,
+              "log_type": 9,
+              "service": 10,
+              "traffic_count (sum)": 5,
+              "traffic_group": 6
             },
             "renameByName": {
               "Time": "Time",
@@ -1006,6 +1006,6 @@
   "timezone": "",
   "title": "Grouped Traffic Events",
   "uid": "system-service-netflow-summary",
-  "version": 26,
+  "version": 1,
   "weekStart": ""
 }

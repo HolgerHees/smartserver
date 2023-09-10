@@ -48,8 +48,8 @@ class Connection:
 
         self.connection_type = "apache"
 
-    def applyDebugFields(self, data):
-        pass
+    def getDebugData(self):
+        return ""
 
     @staticmethod
     def mergeData(data, flow):
