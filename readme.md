@@ -25,6 +25,7 @@ In addition to well known services, some custom additions are deployed too.
 
 
 1. a responsive Web UI, written in pure HTML, CSS and Javascript is deployed too. It is used to embedd webUI's from other services in a central place. It supports "user" and "admin" roles to show only nessecarry menu points to your family members.
+
 ![welcome](./doc/welcome.jpg)
 
 2. "Private cloud" is a complete isolated network spanned through wireguard between several smartserver deployments to share backup folder, sensor messurements or other data with friends.
