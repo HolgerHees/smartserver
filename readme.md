@@ -18,6 +18,6 @@ A detailed explaination can be found in the [How to start](https://github.com/Ho
 
 ## Teck stack
 
-After running ansible the folowwing techstack will be deployed.
+After running ansible the following techstack will be deployed.
 
 ![techstack](./doc/techstack.jpg)
