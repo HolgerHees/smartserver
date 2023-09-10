@@ -16,8 +16,8 @@ To try this smartserver deployment, just 3 steps are needed. Install [Vagrant](h
 
 A detailed explaination can be found in the [How to start](https://github.com/HolgerHees/smartserver/wiki/Setup) wiki section
 
-## Teck stack
+## Technology & Service stack
 
-After running ansible the following techstack will be deployed.
+After running ansible the following technology & service stack will be deployed.
 
 ![techstack](./doc/techstack.jpg)
