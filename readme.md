@@ -15,3 +15,9 @@ For a detailed description about the main features and a lot more, check [the wi
 To try this smartserver deployment, just 3 steps are needed. Install [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/) and run the deployment script.
 
 A detailed explaination can be found in the [How to start](https://github.com/HolgerHees/smartserver/wiki/Setup) wiki section
+
+## Teck stack
+
+After running ansible the folowwing techstack will be deployed.
+
+![techstack](./doc/techstack.jpg)
