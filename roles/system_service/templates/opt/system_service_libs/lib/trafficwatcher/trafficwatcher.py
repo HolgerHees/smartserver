@@ -155,6 +155,7 @@ class TrafficWatcher(threading.Thread):
                 #logging.info(traceback.format_exc())
                 logging.info("InfluxDB not ready. Will retry in 15 seconds.")
                 self.event.wait(15)
+                self.event.clear()
 
         if self.is_running:
             # must stay here, because it depends from initialized traffic state
