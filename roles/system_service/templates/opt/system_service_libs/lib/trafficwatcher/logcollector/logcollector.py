@@ -140,9 +140,9 @@ class LogCollector(threading.Thread):
     def run(self):
         logging.info("Log collector started")
         try:
-            self._connect()
             while self.is_running:
-                self.event.wait(60)
+                self._connect()
+                self.event.wait(5)
         except Exception as e:
             #logging.error(e)
             logging.error(traceback.format_exc())
@@ -155,7 +155,7 @@ class LogCollector(threading.Thread):
         self.starttime = self.watcher.getLastTrafficEventTime("apache")
         #logging.info(start)
         if self.starttime == 0:
-            self.starttime = now - self.config.traffic_blocker_unblock_timeout
+            self.starttime = now - self.watcher.getTrafficEventTimeslot()
         else:
             self.starttime += 0.001
 
@@ -173,10 +173,6 @@ class LogCollector(threading.Thread):
 
     def _on_close(self, ws, close_status_code, close_message):
         logging.info("Log stream closed with status: {}, message: {}".format(close_status_code, close_message))
-
-        if self.is_running:
-            self.event.wait(5)
-            self._connect()
 
     def _on_error(self, ws, error):
         logging.error("Log stream got error {}".format(error))

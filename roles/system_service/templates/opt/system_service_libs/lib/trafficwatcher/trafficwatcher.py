@@ -431,6 +431,9 @@ class TrafficWatcher(threading.Thread):
         with self.stats_lock:
             return self.last_traffic_event[connection_type] if connection_type in self.last_traffic_event else 0
 
+    def getTrafficEventTimeslot(self):
+        return 60 * 60 * 24 # => 24h
+
     def getBlockedIPs(self):
         return self.trafficblocker.getBlockedIPs()
 
