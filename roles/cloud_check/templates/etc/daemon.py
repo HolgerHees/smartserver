@@ -203,6 +203,9 @@ class PeerJob(threading.Thread):
     def isOnline(self):
         return self.last_running_state == PEER_STATE_ONLINE
 
+    def getRunningState(self):
+        return self.last_running_state
+
     def getMountState(self):
         return self.last_mount_state
 
@@ -324,15 +327,14 @@ class Handler(threading.Thread):
 
             # **** CHECK IF ALL PEERS ARE ONLINE ****
             for peer in config.cloud_peers:
-                state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,self.getWatchedState(peer)))
-
                 peer_job = self.peer_jobs[peer]
+                state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(peer,peer_job.getRunningState()))
                 state_metrics.append("cloud_check_peer_mount_state{{peer=\"{}\"}} {}".format(peer,peer_job.getMountState()))
 
             if not self.isOnline():
                 state = "0"
             else:
-                state = self.getWatchedState(config.peer_name)
+                state = self.getSelfState(config.peer_name)
 
             state_metrics.append("cloud_check_peer_online_state{{peer=\"{}\"}} {}".format(config.peer_name, state ))
         else:
@@ -340,7 +342,7 @@ class Handler(threading.Thread):
 
         return "{}\n".format( "\n".join(state_metrics) )
 
-    def getWatchedState(self, peer):
+    def getSelfState(self, peer):
         max_state = PEER_STATE_UNKNOWN
         state_count = 0
         for watched_topic in self.watched_topics:
