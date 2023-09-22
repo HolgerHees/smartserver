@@ -95,12 +95,12 @@ mx.NetworkTooltip = (function( ret )
             
             html += "<div><div>IP:</div><div";
             if( has_traffic || has_wifi ) html += ' class="link" onclick="mx.NetworkTooltip.openChart(\'' + device.ip + '\', ' + ( has_traffic ? 'true' : 'false' ) + ', ' + ( has_wifi ? 'true' : 'false' ) + ')"';
-            html += ">" + device.ip;
+            html += ">" + ( device._demo_ip ? device._demo_ip : device.ip );
             if( has_traffic || has_wifi ) html += ' <span class="icon-chart-area"></span>';
             html += "</div></div>";
         }
         if( device.dns ) html += "<div><div>DNS:</div><div>" + device.dns + "</div></div>";
-        html += "<div><div>MAC:</div><div>" + device.mac + "</div></div>";
+        html += "<div><div>MAC:</div><div>" + ( device._demo_mac ? device._demo_mac : device.mac ) + "</div></div>";
         
         let device_stat = device.deviceStat;
         if( device_stat )
@@ -632,8 +632,8 @@ mx.NetworkTable = (function( ret )
                     }
                 },
                 "columns": [
-                    { "value": device["ip"] },
-                    { "value": device["mac"] },
+                    { "value": device["_demo_ip"] ? device["_demo_ip"] : device["ip"] },
+                    { "value": device["_demo_mac"] ? device["_demo_mac"] : device["mac"] },
                     { "value": device["dns"], "class": "network_dns" },
                     { "value": Object.keys(device.services).join(", "), "class": "network_ports" },
                     { "value": device["wifi_ssid"] },
@@ -1000,7 +1000,7 @@ mx.NetworkStructure = (function( ret )
             
         let html = "<div>";
         
-        let name = d.data["device"]["ip"] ? d.data["device"]["ip"] : d.data["device"]["mac"];
+        let name = d.data["device"]["ip"] ? d.data["device"]["_demo_ip"] ? d.data["device"]["_demo_ip"] : d.data["device"]["ip"] : d.data["device"]["_demo_mac"] ? d.data["device"]["_demo_mac"] : d.data["device"]["mac"];
         html += "<div class='name'>" + name + '</div>';
         
         let info = d.data["device"]["dns"] ? d.data["device"]["dns"] : d.data["device"]["type"];

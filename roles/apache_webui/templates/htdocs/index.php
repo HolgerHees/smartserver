@@ -24,8 +24,6 @@ require "./shared/libs/ressources.php";
     <script src="<?php echo Ressources::getComponentPath('/main/'); ?>"></script>
 
     <script>
-        var demoMode = document.location.search.indexOf("demo=") !== -1;
-        
         var pageTheme = null;
 
         var pageReady = false;
@@ -120,7 +118,7 @@ require "./shared/libs/ressources.php";
 
             mx.$('#logo').addEventListener("click",mx.Actions.openHome);
 
-            mx.Actions.init(menuPanel, demoMode);
+            mx.Actions.init(menuPanel, mx.Page.isDemoMode());
 
             var ref = mx.Host.getParameter("ref");
 
@@ -219,7 +217,7 @@ require "./shared/libs/ressources.php";
         
         mx.OnScriptReady.push( function(){
             var imageUrl = "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg";
-            if( demoMode ) imageUrl = "https://images.pexels.com/photos/814499/pexels-photo-814499.jpeg";
+            if( mx.Page.isDemoMode() ) imageUrl = "/shared/demo_background.jpeg";
             var titleUrl = "/img/potd/todayTitle.txt";
             mx.MainImage.init(imageUrl,titleUrl,initContent);
         });
@@ -232,7 +230,7 @@ require "./shared/libs/ressources.php";
     mx.App = (function( ret ) {
         ret.initTheme = function()
         {
-            var darkMql = window.matchMedia( ( demoMode ? '' : '(prefers-color-scheme: dark) and ' ) + '(max-width: 600px)');
+            var darkMql = window.matchMedia( ( mx.Page.isDemoMode() ? '' : '(prefers-color-scheme: dark) and ' ) + '(max-width: 600px)');
             if( darkMql.matches )
             {
                 pageTheme = "dark";

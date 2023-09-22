@@ -280,7 +280,7 @@ mx.Actions = (function( ret ) {
         window.setTimeout( function(){
             mx.Core.waitForTransitionEnd(submenu,function()
             {
-                callbacks.forEach( (callback) => callback() );
+                callbacks.forEach( (callback) => callback(submenu) );
             },"setSubMenu2");
             submenu.style.opacity = "1.0";
         },0);
@@ -325,7 +325,7 @@ mx.Actions = (function( ret ) {
         {
             submenu.style.opacity = "0";
             submenu.innerHTML = content;
-            init_callbacks.forEach( (callback) => callback() );
+            init_callbacks.forEach( (callback) => callback(submenu) );
             _fadeInMenu(submenu, post_callbacks);
         }
         else
@@ -336,7 +336,7 @@ mx.Actions = (function( ret ) {
                 mx.Core.waitForTransitionEnd(submenu,function()
                 {
                     submenu.innerHTML = content;
-                    init_callbacks.forEach( (callback) => callback() );
+                    init_callbacks.forEach( (callback) => callback(submenu) );
                     _fadeInMenu(submenu, post_callbacks);
                     
                 },"setSubMenu1");
@@ -396,7 +396,7 @@ mx.Actions = (function( ret ) {
         }
         else
         {
-            showMenuContent(entry.getHtml(), entry.getCallback(), entry.getTitle());
+            showMenuContent(entry.getHtml(), [entry.getCallback()], entry.getTitle());
         }
 
         if( visualisationType != "desktop" ) menuPanel.close();

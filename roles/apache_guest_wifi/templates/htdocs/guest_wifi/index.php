@@ -8,8 +8,17 @@ if( empty($_GET['name']) )
     exit(0);
 }
 
-$name = $_GET['name'];
-$password = $wifi_networks[$name];
+$is_demo = strpos($_SERVER["HTTP_COOKIE"], "demo=") !== false;
+if( $is_demo )
+{
+    $name = "demo";
+    $password = "demo";
+}
+else
+{
+    $name = $_GET['name'];
+    $password = $wifi_networks[$name];
+}
 
 $generator = new QRCode("WIFI:T:WPA;S:" . $name . ";P:" . $password . ";;", [ 'w' => 350, 'h' => 350, 'wq' => 1 ]);
 

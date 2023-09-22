@@ -25,6 +25,9 @@ mx.UNCore = (function( ret ) {
     var isTable = false;
     var activeTerm = "";
 
+    var demo_ip_map = {};
+    var demo_mac_map = {};
+
     function getDeviceSignal(device)
     {
         let group = null;
@@ -183,6 +186,15 @@ mx.UNCore = (function( ret ) {
         if( replacesNodes ) devices = {}
         data["devices"]["values"].forEach(function(device)
         {
+            if( mx.Page.isDemoMode() )
+            {
+                if( demo_mac_map[device["mac"]] == undefined ) demo_mac_map[device["mac"]] = "XX:XX:XX:XX:XX:XX".replace(/X/g, function() { return "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16)) });
+                device["_demo_mac"] = demo_mac_map[device["mac"]];
+
+                if( demo_ip_map[device["ip"]] == undefined ) demo_ip_map[device["ip"]] = "192.168.77." + Object.keys(demo_ip_map).length;
+                device["_demo_ip"] = demo_ip_map[device["ip"]];
+            }
+
             device["update"] = now;
             devices[device["mac"]] = device;
             _devices[device["mac"]] = device;
