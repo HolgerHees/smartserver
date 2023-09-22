@@ -120,11 +120,11 @@ mx.Menu = (function( ret ) {
                                     }
                                 };
                             },
-                            addHtml: function(entryId, html, callback, usergroups, order = 0, title = null, info = null, iconUrl = null){
+                            addHtml: function(entryId, html, callbacks, usergroups, order = 0, title = null, info = null, iconUrl = null){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
                                 let entries = subGroup['menuEntries'];
                                 let entry = entries[entryId] = {
-                                    id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'html',html:html,callback:callback,title:title,info:info, iconUrl: iconUrl,
+                                    id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'html',html:html,callbacks:callbacks,title:title,info:info, iconUrl: iconUrl,
                                     _: {
                                         getId: function(){ return entry['id']; },
                                         getUId: function(){ return entry['uid']; },
@@ -139,7 +139,7 @@ mx.Menu = (function( ret ) {
                                         getIconUrl: function(){ return entry['iconUrl']; },
 
                                         getHtml: function(){ return entry['html']; },
-                                        getCallback: function(){ return entry['callback']; },
+                                        getCallbacks: function(){ return entry['callbacks']; },
 
                                         isLoadingGearEnabled: function(){ return true; }
                                     }
@@ -301,7 +301,7 @@ mx.Menu = (function( ret ) {
         }
     }
 
-    function pushEntry(entries, callbacks, currentIndex, entry, html, callback)
+    function pushEntry(entries, callbacks, currentIndex, entry, html, _callbacks)
     {
         let index = Math.floor(entry.getOrder()/100);
 
@@ -315,7 +315,12 @@ mx.Menu = (function( ret ) {
         }
 
         entries.push(html);
-        if( callback ) callbacks.push(callback);
+
+        if( _callbacks )
+        {
+            if( _callbacks["post"] ) callbacks["post"] = callbacks["post"].concat(_callbacks["post"]);
+            if( _callbacks["init"] ) callbacks["init"] = callbacks["init"].concat(_callbacks["init"]);
+        }
 
         return currentIndex
     }
@@ -323,7 +328,7 @@ mx.Menu = (function( ret ) {
     ret.buildContentSubMenu = function(subGroup)
     {
         let entries = [];
-        let callbacks = [];
+        let callbacks = {"post":[],"init":[]};
 
         let menuEntries = subGroup.getEntries();
         let currentIndex = -1;
@@ -351,7 +356,7 @@ mx.Menu = (function( ret ) {
             }
             else if( entry.getContentType() == 'html' )
             {
-                currentIndex = pushEntry(entries, callbacks, currentIndex, entry, entry.getHtml(), entry.getCallback());
+                currentIndex = pushEntry(entries, callbacks, currentIndex, entry, entry.getHtml(), entry.getCallbacks());
             }
         }
         

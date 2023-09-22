@@ -3,7 +3,7 @@ html += '<div style="cursor:pointer" onClick="mx.Actions.openEntryById(event,\'a
 html += '</div>';
 
 var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}', 'device_camera.svg');
-cameraSubGroup.addHtml('cameras', html, function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); }, 'user', 100 );
+cameraSubGroup.addHtml('cameras', html, {"post": [ function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); } ] }, 'user', 100 );
 cameraSubGroup.addUrl('camera_streedside','/gallery/?sub=camera', 'user');
 
 var subGroup = mx.Menu.getMainGroup('admin').getSubGroup('devices');

@@ -1,6 +1,18 @@
 mx.Page = (function( ret ) {
     let visualisationType = "phone";
 
+    if( document.location.search.indexOf("demo=") != -1 )
+    {
+        if( document.location.search.indexOf("demo=1") != -1 )
+        {
+            document.cookie = "demo=1; Domain=." + mx.Host.getDomain() + "; Path=/; SameSite=None; Secure";
+        }
+        else
+        {
+            document.cookie = "demo=; Domain=." + mx.Host.getDomain() + "; Path=/; SameSite=None; Secure; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+        }
+    }
+
     cookies = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )
     let theme = cookies[ "theme" ];
     let demo = cookies[ "demo" ] != undefined;

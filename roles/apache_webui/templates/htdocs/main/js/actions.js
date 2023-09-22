@@ -396,7 +396,7 @@ mx.Actions = (function( ret ) {
         }
         else
         {
-            showMenuContent(entry.getHtml(), [entry.getCallback()], entry.getTitle());
+            showMenuContent(entry.getHtml(), entry.getCallbacks(), entry.getTitle());
         }
 
         if( visualisationType != "desktop" ) menuPanel.close();
