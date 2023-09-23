@@ -274,7 +274,7 @@
           "zoom": 3
         }
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -430,6 +430,6 @@
   "timezone": "",
   "title": "World Map",
   "uid": "system-service-netflow-geopmap",
-  "version": 21,
+  "version": 1,
   "weekStart": ""
 }

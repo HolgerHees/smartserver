@@ -119,9 +119,7 @@ class Helper():
                     else:
                         if TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
                             return True
-            return False
-        else:
-            return srcIsExternal
+        return srcIsExternal
 
 class Connection:
     def __init__(self, gateway_base_time, request_ts, request_flow, answer_flow, config, ipcache):

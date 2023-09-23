@@ -622,7 +622,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -997,6 +997,6 @@
   "timezone": "",
   "title": "Detailed Traffic Events",
   "uid": "system-service-netflow-details",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

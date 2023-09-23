@@ -486,7 +486,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -650,7 +650,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -850,7 +850,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1125,7 +1125,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1266,7 +1266,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1414,7 +1414,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1585,7 +1585,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1743,7 +1743,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1886,7 +1886,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1958,14 +1958,7 @@
           "type": "influxdb",
           "uid": "system_info_influxdb"
         },
-        "filters": [
-          {
-            "condition": "",
-            "key": "group",
-            "operator": "!=",
-            "value": "normal"
-          }
-        ],
+        "filters": [],
         "hide": 0,
         "name": "Filters",
         "skipUrlSync": false,
@@ -1981,6 +1974,6 @@
   "timezone": "",
   "title": "Overview",
   "uid": "system-service-netflow-overview",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }

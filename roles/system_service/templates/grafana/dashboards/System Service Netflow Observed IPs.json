@@ -57,7 +57,7 @@
         "content": "<iframe \nallowtransparency=\"true\" width=\"100%\" height=\"100%\" frameBorder=\"0\" id=\"buttonFrame\"\nsrc=\"about:blank\"></iframe>\n<script>\ndomain = document.location.hostname.substr(document.location.hostname.indexOf(\".\")+1); \ndocument.getElementById('buttonFrame').setAttribute(\"src\",\"https://\" + domain + \"/system_service/observed_ips/\");\n</script>",
         "mode": "html"
       },
-      "pluginVersion": "10.0.4",
+      "pluginVersion": "10.0.6",
       "title": "Observed IPs",
       "type": "text"
     }
@@ -91,6 +91,6 @@
   "timezone": "",
   "title": "Observed IP's",
   "uid": "system-service-netflow-observed-ips",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

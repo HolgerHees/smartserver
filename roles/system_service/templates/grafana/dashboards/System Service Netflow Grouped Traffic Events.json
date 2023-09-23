@@ -640,7 +640,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.5",
+      "pluginVersion": "10.0.6",
       "targets": [
         {
           "datasource": {
@@ -1006,6 +1006,6 @@
   "timezone": "",
   "title": "Grouped Traffic Events",
   "uid": "system-service-netflow-summary",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
