@@ -86,39 +86,37 @@ class Helper():
     def shouldSwapDirection(connection, config, cache):
         srcIsExternal = cache.isExternal(connection.src)
 
-        if connection.protocol in IP_PING_protocolIdentifierS:
-            return srcIsExternal
-            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REPLY"]): # is an answer flow
-            #    return True
-            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["TIME_REPLY"]): # is an answer flow
-            #    return True
-            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["EXTENDED_ECHO_REPLY"]): # is an answer flow
-            #    return True
-            #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]): # can only happen from inside, because gateway firewall is blocking/nat traffic
-            #    return True
-        elif connection.protocol in IP_DATA_protocolIdentifierS:
+        #if connection.protocol in IP_PING_protocolIdentifierS:
+        #    return srcIsExternal
+        #    #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REPLY"]): # is an answer flow
+        #    #    return True
+        #    #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["TIME_REPLY"]): # is an answer flow
+        #    #    return True
+        #    #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["EXTENDED_ECHO_REPLY"]): # is an answer flow
+        #    #    return True
+        #    #if Helper.checkFlag(connection.request_icmp_flags, ICMP_TYPES["ECHO_REQUEST"]): # can only happen from inside, because gateway firewall is blocking/nat traffic
+        #    #    return True
+        if connection.protocol in IP_DATA_protocolIdentifierS:
             #if connection.answer_tcp_flags is not None:
             #    if Helper.checkFlag(connection.request_tcp_flags, TCP_FLAG_TYPES["ACK"]): # is an answer flow
             #        return True
             if connection.src_port is not None and connection.dest_port is not None:
                 # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
-                if connection.src_port < 1024: # System ports
-                    if connection.dest_port >= 1024:
-                        return True
-                elif connection.src_port < 49152: # Registered ports
-                    if connection.dest_port >= 49152:
-                        return True
-                else:
-                    if connection.dest_port < 49152:
-                        return False
+                if connection.src_port < 1024 and connection.dest_port >= 1024: # System ports
+                    return True
+                elif connection.dest_port < 1024 and connection.src_port >= 1024: # System ports
+                    return False
+                elif connection.src_port < 49152 and connection.dest_port >= 49152: # Registered ports
+                    return True
+                elif connection.dest_port < 49152 and connection.src_port >= 49152: # Registered ports
+                    return False
 
                 if config.netflow_incoming_traffic:
                     if srcIsExternal:
-                        if TrafficHelper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic:
-                            return True
+                        return TrafficHelper.getServiceKey(connection.dest, connection.dest_port) not in config.netflow_incoming_traffic
                     else:
-                        if TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic:
-                            return True
+                        return TrafficHelper.getServiceKey(connection.src, connection.src_port) in config.netflow_incoming_traffic
+
         return srcIsExternal
 
 class Connection:
