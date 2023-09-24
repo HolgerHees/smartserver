@@ -101,15 +101,15 @@ class Helper():
             #    if Helper.checkFlag(connection.request_tcp_flags, TCP_FLAG_TYPES["ACK"]): # is an answer flow
             #        return True
             if connection.src_port is not None and connection.dest_port is not None:
-                # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
-                if connection.src_port < 1024 and connection.dest_port >= 1024: # System ports
+                # https://en.wikipedia.org/wiki/list_of_tcp_and_udp_port_numbers
+                if connection.src_port < 1024 and connection.dest_port >= 1024: # system ports
                     return True
-                elif connection.dest_port < 1024 and connection.src_port >= 1024: # System ports
+                elif connection.dest_port < 1024 and connection.src_port >= 1024: # system ports
                     return False
-                elif connection.src_port < 49152 and connection.dest_port >= 49152: # Registered ports
-                    return True
-                elif connection.dest_port < 49152 and connection.src_port >= 49152: # Registered ports
-                    return False
+                #elif connection.src_port < 49152 and connection.dest_port >= 49152: # registered ports
+                #    return True
+                #elif connection.dest_port < 49152 and connection.src_port >= 49152: # registered ports
+                #    return False
 
                 if config.netflow_incoming_traffic:
                     if srcIsExternal:
