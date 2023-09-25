@@ -200,6 +200,9 @@ class IPCache(threading.Thread):
             else:
                 try:
                     response = requests.get(self.ip2location_url.format(_ip))
+                except requests.exceptions.ConnectionError as e:
+                    logging.warn("Connection error during fetching iplocations.")
+                    return None
                 except:
                     logging.error("Error fetching ip {}".format(_ip))
                     logging.error(traceback.format_exc())
