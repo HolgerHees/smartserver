@@ -4,6 +4,8 @@ import logging
 import re
 import schedule
 import time
+import requests
+
 from datetime import datetime
 
 from smartserver import command
@@ -110,6 +112,8 @@ class TrafficWatcher(threading.Thread):
         self.last_traffic_event = {}
         self.last_traffic_summery = None
 
+        self.is_initialized = False
+
         self.stats_lock = threading.Lock()
 
         self.wireguard_peers = {}
@@ -134,6 +138,7 @@ class TrafficWatcher(threading.Thread):
 
     def terminate(self):
         self.is_running = False
+        self.is_initialized = False
 
         self.logcollector.terminate()
 
@@ -147,19 +152,17 @@ class TrafficWatcher(threading.Thread):
     def run(self):
         logging.info("Init traffic state")
         while self.is_running:
-            try:
-                self._initTrafficEvents()
+            if self._initTrafficEvents():
                 break
-            except Exception as e:
-                logging.info(e)
-                #logging.info(traceback.format_exc())
-                logging.info("InfluxDB not ready. Will retry in 15 seconds.")
+            else:
                 self.event.wait(15)
                 self.event.clear()
 
         if self.is_running:
             # must stay here, because it depends from initialized traffic state
             self.logcollector.start()
+
+        self.is_initialized = True
 
         logging.info("IP traffic watcher started")
         try:
@@ -336,37 +339,53 @@ class TrafficWatcher(threading.Thread):
         return stats
 
     def getTrafficStateSummery(self):
-        now = time.strftime("%Y-%m-%d %H:%M")
-        if self.last_traffic_summery is None or self.last_traffic_summery[1] != now:
-            #start_time = time.time()
-            count_values = {}
-            results = self.influxdb.query('SELECT SUM("traffic_count") FROM "autogen"."trafficflow" WHERE time >= now() - 362m AND time <= now() - 2m AND "group"::tag != \'normal\' GROUP BY "group"::tag')
-            if results is not None:
-                for result in results:
-                    count_values[result["tags"]["group"]] = result["values"][0][1]
-            end_time = time.time()
-            #logging.info(round(end_time-start_time, 3))
-            #logging.info(results)
-            self._fillTrafficGroups(count_values)
-            self.last_traffic_summery = [ count_values, now ]
+        if self.is_initialized:
+            try:
+                now = time.strftime("%Y-%m-%d %H:%M")
+                if self.last_traffic_summery is None or self.last_traffic_summery[1] != now:
+                    #start_time = time.time()
+                    count_values = {}
+                    results = self.influxdb.query('SELECT SUM("traffic_count") FROM "autogen"."trafficflow" WHERE time >= now() - 362m AND time <= now() - 2m AND "group"::tag != \'normal\' GROUP BY "group"::tag')
+                    if results is not None:
+                        for result in results:
+                            count_values[result["tags"]["group"]] = result["values"][0][1]
+                    end_time = time.time()
+                    #logging.info(round(end_time-start_time, 3))
+                    #logging.info(results)
+                    self._fillTrafficGroups(count_values)
+                    self.last_traffic_summery = [ count_values, now ]
 
-        return self.last_traffic_summery[0]
+                return self.last_traffic_summery[0]
+            except requests.exceptions.ConnectionError:
+                logging.info(e)
+                logging.info("InfluxDB not ready.")
+
+        count_values = {}
+        self._fillTrafficGroups(count_values)
+        return count_values
 
     def _initTrafficEvents(self):
         #logging.info("_initTrafficEvents")
         with self.stats_lock:
-            # trafficevents,connection_type={},extern_ip={},traffic_group={}.blocklist_name={}
-            results = self.influxdb.query('SELECT "connection_type","extern_ip","traffic_group","blocklist_name","value" FROM "trafficevents" WHERE time >= now() - 1440m') # => 24h
-            #results = self.influxdb.query('SELECT "type","extern_ip","group","count" FROM "trafficflow" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
-            if results is not None:
-                for result in results:
-                    for value in result["values"]:
-                        #if value[3] > 1:
-                        #    logging.info("{} {} {}".format(value[1], value[2], value[3]))
-                        value_time = InfluxDB.parseDatetime(value[0])
-                        self._addTrafficEvent(value[1], value[2], value[3], value[4], value_time.timestamp())
+            try:
+                # trafficevents,connection_type={},extern_ip={},traffic_group={}.blocklist_name={}
+                results = self.influxdb.query('SELECT "connection_type","extern_ip","traffic_group","blocklist_name","value" FROM "trafficevents" WHERE time >= now() - 1440m') # => 24h
+                #results = self.influxdb.query('SELECT "type","extern_ip","group","count" FROM "trafficflow" WHERE time >= now() - 358m AND "group"::tag != \'normal\'')
+                if results is not None:
+                    for result in results:
+                        for value in result["values"]:
+                            #if value[3] > 1:
+                            #    logging.info("{} {} {}".format(value[1], value[2], value[3]))
+                            value_time = InfluxDB.parseDatetime(value[0])
+                            self._addTrafficEvent(value[1], value[2], value[3], value[4], value_time.timestamp())
 
-            self.traffic_metrics = {} # reset, will be used by prometheus metrics
+                self.traffic_metrics = {} # reset, will be used by prometheus metrics
+                return True
+            except requests.exceptions.ConnectionError:
+                #logging.info(e)
+                logging.info("InfluxDB not ready. Will retry in 15 seconds.")
+
+        return False
 
     def _addTrafficEvent(self, connection_type, ip, traffic_group, blocklist_name, time):
         # lock is called in place where this function is called

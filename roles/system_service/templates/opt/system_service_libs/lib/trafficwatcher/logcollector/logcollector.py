@@ -237,4 +237,4 @@ class LogCollector(threading.Thread):
             logging.error(traceback.format_exc())
 
     def getStateMetrics(self):
-        return [ "system_service_process{{type=\"trafficwatcher.logcollector\"}} {}".format("1" if self.is_running else "0") ]
+        return [ "system_service_process{{type=\"trafficwatcher.logcollector\"}} {}".format("1" if self.is_running else ( "-1" if self.ws is None else "0" )) ]
