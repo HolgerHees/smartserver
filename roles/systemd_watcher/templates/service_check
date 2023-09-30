@@ -13,7 +13,7 @@ from smartserver.argsparser import ArgsParser
 
 
 ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
-CONFIG_DIR = "/dataDisk/etc/systemd_watcher/services/"
+CONFIG_DIR = "{{global_etc}}systemd_watcher/services/"
 
 args_cfg = { "deployment": False }
 args_values = ArgsParser.parse(args_cfg,sys.argv)
@@ -41,9 +41,15 @@ def fetchAlertmanagerAlerts():
 def buildAlert(severity, name, service, summary = None):
     return Alertmanager.buildAlert("service-check", severity, name, summary, datetime.utcnow(), {"service": service})
 
+# cron job should start checking services 5 minutes after reboot, to give alle services enough time to start
+if not is_cli and not args_values["deployment"]:
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+        if int(uptime_seconds) < 300:
+            exit(0)
+
 alertmanager_alerts = fetchAlertmanagerAlerts()
 fired_alerts = []
-
 
 result = subprocess.run([ "hostnamectl status | grep -o \"Chassis: vm\"" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 isVirtualized = result.returncode == 0
@@ -162,7 +168,7 @@ for line in lines:
 
     fired_alerts.append(buildAlert(Alertmanager.SEVERITY_CRITICAL, "Service failed", service))
 
-if len(fired_alerts) > 0 and ( is_cli or args_values["deployment"]):
+if len(fired_alerts) > 0 and (is_cli or args_values["deployment"]):
     print(fired_alerts)
 
 if args_values["deployment"]:
