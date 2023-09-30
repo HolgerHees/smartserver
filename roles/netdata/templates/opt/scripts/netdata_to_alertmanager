@@ -14,7 +14,7 @@ from smartserver.alertmanager import Alertmanager
 NETDATA_URL = "http://localhost:19999/api/v1/alarms?active"
 ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
 
-GENERATOR_URL = "https://netdata.smartmarvin.de/"
+GENERATOR_URL = "https://netdata.{{server_domain}}/"
 INTERVAL = 60
 
 IS_DAEMON = not os.isatty(sys.stdin.fileno())
