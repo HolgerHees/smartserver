@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    librenms_version: '23.8.2'
+    librenms_version: '23.9.1'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
