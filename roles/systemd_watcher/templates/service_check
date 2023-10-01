@@ -23,6 +23,9 @@ is_cli = sys.stdin and sys.stdin.isatty()
 def error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+def info(*args, **kwargs):
+    print(*args, file=sys.stdout, **kwargs)
+
 def triggerAlertmanagerAlert(alerts):
     try:
         Alertmanager.triggerAlerts(ALERTMANAGER_BASE_URL, alerts)
@@ -93,7 +96,7 @@ for line in result.stderr.decode("utf-8").split("\n"):
 for systemd_service in services:
 
         role_name = services[systemd_service]["role_name"]
-        #print(state)
+        #info(state)
 
         if len(services[systemd_service]["error"]) > 0:
             msg = "\n".join(services[systemd_service]["error"]).strip()
@@ -156,20 +159,27 @@ for systemd_service in services:
 
 result = subprocess.run([ "/usr/bin/systemctl list-units --type=service | grep failed" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
 lines = result.stdout.decode("utf-8").split("\n")
+failed_services = []
 for line in lines:
     columns = line.split()
     if len(columns) == 0:
         continue
     service = columns[1] if len(columns[0]) == 1 else columns[0]
-
     _service, _ = service.split(".",1)
+    failed_services.append(_service)
     if _service in notified_service:
         continue
 
     fired_alerts.append(buildAlert(Alertmanager.SEVERITY_CRITICAL, "Service failed", service))
 
 if len(fired_alerts) > 0 and (is_cli or args_values["deployment"]):
-    print(fired_alerts)
+    info(fired_alerts)
+    for service in failed_services:
+        info("SERVICE: {}".format(service))
+        result = subprocess.run([ "/usr/bin/journalctl -n 50 -t {}".format(service) ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
+        lines = result.stdout.decode("utf-8").split("\n")
+        for line in lines:
+            info("  {}".format(line))
 
 if args_values["deployment"]:
     exit(1 if len(fired_alerts) > 0 else 0)
