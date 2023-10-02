@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     def handleServer():
         WSGIRequestHandler.protocol_version = "HTTP/1.1"
-        socketio.run(app=app, use_reloader=False, host=config.service_ip, port=config.service_port)
+        socketio.run(app=app, use_reloader=False, host=config.service_ip, port=config.service_port, allow_unsafe_werkzeug=True)
         
     handler.start(handleServer)
 

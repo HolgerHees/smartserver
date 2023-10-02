@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     def handleServer():
         WSGIRequestHandler.protocol_version = "HTTP/1.1"
-        app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
+        app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80', allow_unsafe_werkzeug=True)
 
     handler.start(handleServer)
 
