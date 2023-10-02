@@ -455,7 +455,7 @@ handler.start()
 
 try:
     WSGIRequestHandler.protocol_version = "HTTP/1.1"
-    app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80', allow_unsafe_werkzeug=True)
+    app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
 except ShutdownException as e:
     pass
 
