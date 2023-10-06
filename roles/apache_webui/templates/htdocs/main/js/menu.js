@@ -122,6 +122,7 @@ mx.Menu = (function( ret ) {
                             },
                             addHtml: function(entryId, html, callbacks, usergroups, order = 0, title = null, info = null, iconUrl = null){
                                 if( typeof usergroups == 'string' ) usergroups = [usergroups];
+                                if( typeof callbacks == 'function' ) callbacks = {"post": [ callbacks ] };
                                 let entries = subGroup['menuEntries'];
                                 let entry = entries[entryId] = {
                                     id: entryId, uid: subGroup['uid'] + "-" + entryId, order:order,usergroups:usergroups,type:'html',html:html,callbacks:callbacks,title:title,info:info, iconUrl: iconUrl,
