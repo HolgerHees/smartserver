@@ -266,14 +266,14 @@ class Connection:
 
     def getDebugData(self):
         _request_flow = self.request_flow.copy()
-        _request_flow["src"] = ipaddress.ip_address(_request_flow["sourceIPv4Address"]).compressed
+        _request_flow["src"] = ipaddress.ip_address( _request_flow["sourceIPv4Address"] if self.ip_type == "v4" else _request_flow["sourceIPv6Address"] ).compressed
         del _request_flow['sourceIPv4Address']
         port = _request_flow['sourceTransportPort'] if 'sourceTransportPort' in _request_flow else None
         if port:
             _request_flow["src"] = "{}:{}".format(_request_flow["src"], port)
             del _request_flow['sourceTransportPort']
 
-        _request_flow["dest"] = ipaddress.ip_address(_request_flow["destinationIPv4Address"]).compressed
+        _request_flow["dest"] = ipaddress.ip_address( _request_flow["destinationIPv4Address"] if self.ip_type == "v4" else _request_flow["destinationIPv6Address"] ).compressed
         del _request_flow['destinationIPv4Address']
         port = _request_flow['destinationTransportPort'] if 'destinationTransportPort' in _request_flow else None
         if port:
