@@ -36,7 +36,7 @@
 #  notify: "restart grafana"
 
 - name: check individual grafana dashboards
-  shell: "ls {{config_path}}roles/grafana/templates/dashboards/"
+  shell: "ls {{config_path}}templates/grafana/dashboards/"
   register: dashboard_config_result
   changed_when: no
   failed_when: no
