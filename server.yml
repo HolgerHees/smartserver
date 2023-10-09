@@ -141,8 +141,6 @@
 #    - { import_role: { name: netdata, tasks_from: main_container, handlers_from: empty }, tags: [ 'netdata_container' ] }
 
     - { import_role: { name: librenms }, tags: [ 'librenms' ], when: "librenms_devices | length > 0" } # network monitoring                                          [docker,user:1000|1000]
-    - { import_role: { name: openwrt }, tags: [ 'openwrt' ], when: "openwrt_devices | length > 0" } # default configs for uploading to openwrt to allow monitoring
-    - { import_role: { name: speedtest }, tags: [ 'speedtest' ] }                                # inhouse network performance test                                  [docker,user:1000|1000]
     
     - { import_role: { name: system_service }, tags: [ 'system_service', 'alpine' ] }            # system monitoring                                                 [docker,user:root]
 
@@ -166,6 +164,10 @@
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 
     - { import_role: { name: update_service }, tags: [ 'update_service' ], when: "update_service_software_check_enabled or update_service_system_check_enabled" }    # update check & handler
+
+    - { import_role: { name: speedtest }, tags: [ 'speedtest' ] }                                # inhouse network performance test                                  [docker,user:1000|1000]
+
+    - { import_role: { name: openwrt }, tags: [ 'openwrt' ], when: "openwrt_devices | length > 0" } # default configs for uploading to openwrt to allow monitoring
 
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml", tags: [ 'always' ] }                          # Details can be found inside the demo configuration 'config/demo/roles.yml'
@@ -192,4 +194,3 @@
     - { import_role: { name: update_service, tasks_from: confirm_roles, handlers_from: empty }, tags: [ 'always' ], when: "update_service_system_check_enabled" } # removes outdated role state files
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] } # last check if all registered services are running
- 

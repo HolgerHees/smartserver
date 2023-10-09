@@ -105,9 +105,10 @@ class DBConnection():
         return rows
 
     def _convertRow(self, row):
-        for name, value in row.items():
-            if isinstance(value, Decimal):
-                row[name] = float(value)
+        if row is not None:
+            for name, value in row.items():
+                if isinstance(value, Decimal):
+                    row[name] = float(value)
         return row
 
 class DB():
