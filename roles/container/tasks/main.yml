@@ -99,10 +99,10 @@
 
 #- name: add suse zypper repository
 #  zypper_repository:
-#    name: Devel:Kubic (podman)
-#    repo: 'http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Leap_{{ansible_distribution_version}}/'
+#    name: Docker
+#    repo: 'https://download.opensuse.org/repositories/Virtualization:/containers/{{ansible_distribution_version}}/'
 #    auto_import_keys: yes
-#    priority: "100"
+#    priority: "50"
 #    state: present
 #  when: is_suse|bool
 
@@ -110,6 +110,7 @@
   zypper:
     name: [
         docker
+#        , docker-buildx
 #        , python2-docker   # used by ansible docker module => python2 is used because "/usr/lib/python3.6/site-packages/ansible/modules/cloud/docker_container.py" is using python2 (vagrant suse version is using it)
         , python3-docker    # used by ansible docker module
         , podman
