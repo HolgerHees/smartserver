@@ -42,37 +42,54 @@ class Application(App):
 
         self.pattern = self.plugin_config['pattern']
         
-        if Application.repositories is None:
-            Application.repositories = {}
-            result = command.exec([ "/usr/bin/docker", "image", "list" ] )
-            lines = result.stdout.decode("utf-8").split("\n")
-            for line in lines:
-                columns = line.split()
-                if len(columns) == 0:
-                    continue
-                
-                if columns[0] not in Application.repositories:
-                    Application.repositories[columns[0]] = []
-
-                Application.repositories[columns[0]].append({'tag': columns[1],'image': columns[2]})
-                
-
-        data_r = Application.repositories[self.plugin_config['repository']]
         version = None
         tag = None
         tag_r = []
-        for data in data_r:
-            _version = Version.parseVersionString(data['tag'],self.pattern)
-            if _version is not None and (version is None or version.compare(_version) == 1):
-                version = _version
-                tag = data['tag']
-            tag_r.append(data['tag'])
+
+        # parse for parent images first, because new "docker buildx" will never cache parent images.
+        result = command.exec("/usr/bin/grep -R 'FROM {}:' /dataDisk/build/*/Dockerfile".format(self.plugin_config['repository']), exitstatus_check = False, shell=True )
+        if result.returncode == 0:
+            rows = result.stdout.decode("utf-8").split("\n")
+            for row in rows:
+                if row == "":
+                    continue
+                prefix, reference = row.split("FROM ")
+
+                _, tag = reference.split(":")
+                if tag not in tag_r:
+                    tag_r.append(tag)
+
+                _version = Version.parseVersionString(tag, self.pattern)
+                if version is None or _version.compare(version) == 1:
+                    version = _version
+        else:
+            if Application.repositories is None:
+                Application.repositories = {}
+                result = command.exec([ "/usr/bin/docker", "image", "list" ] )
+                lines = result.stdout.decode("utf-8").split("\n")
+                for line in lines:
+                    columns = line.split()
+                    if len(columns) == 0:
+                        continue
+
+                    if columns[0] not in Application.repositories:
+                        Application.repositories[columns[0]] = []
+
+                    Application.repositories[columns[0]].append({'tag': columns[1],'image': columns[2]})
+
+            data_r = Application.repositories[self.plugin_config['repository']]
+            for data in data_r:
+                _version = Version.parseVersionString(data['tag'],self.pattern)
+                if _version is not None and (version is None or version.compare(_version) == 1):
+                    version = _version
+                    tag = data['tag']
+                tag_r.append(data['tag'])
 
         if version:
             self.current_version = version.getVersionString()
             self.current_tag = tag
         else:
-            raise Exception('Can\'t find current version with pattern \'{}\'. Available versions are {}'.format(self.pattern,tag_r))
+            raise Exception('Can\'t find current version with pattern \'{}\'. Available versions are {}'.format(self.pattern, tag_r))
               
         url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:{}:pull".format(self.repository)
         token_result = self._requestData(url)

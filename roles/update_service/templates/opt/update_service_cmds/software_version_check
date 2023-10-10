@@ -21,10 +21,7 @@ from smartserver import command
 def checkParameter(name, args_values, last_states, current_states):
     if args_values["confirm"]:
         last_state = last_states.get(name, None)
-        if last_state is None:
-            print("  - '{}' skipped".format(name))
-            return False
-        elif len(last_state["updates"]) == 0:
+        if last_state is not None and len(last_state["updates"]) == 0:
             current_states['states'].append(last_state)
             print("  - '{}' skipped".format(name))
             return False
@@ -40,6 +37,9 @@ if os.path.isfile(config.software_version_state_file):
         data = json.load(f)
         for state in data['states']:
             last_states[state['name']] = state
+elif args_values["confirm"]:
+    print("Nothing to confirm. Initial software version check is missing")
+    exit(0)
 
 update_time = "{}".format(datetime.now().astimezone().isoformat())
             
