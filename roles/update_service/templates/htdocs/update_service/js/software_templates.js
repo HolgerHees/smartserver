@@ -34,7 +34,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
         
         let msg = mx.I18N.get("{1}Software check{2} is running since {3} {4}").fill({"1": action_1, "2": action_2, "3": duration, "4": mx.I18N.get( duration == 1 ? "second" : "seconds" ) })
         
-        document.body.innerHTML = "<div class=\"is_running\">" + msg + "</div>";
+        document.body.querySelector(".list").innerHTML = "<div class=\"is_running\">" + msg + "</div>";
     }
     
     ret.processData = function(last_data_modified, changed_data)

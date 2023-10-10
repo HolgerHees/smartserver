@@ -50,7 +50,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "update_check": "Last {1}update check{2}: {3} {4}",
         "system_update_check": "Last {1}system update check{2}: {3} {4}",
         "deployment_update_check": "Last {1}smartserver update check{2}: {3} {4}",
-        "process_check": "Last {1}process check{2}: {3}",
+        "process_check": "Last {1}process check{2}: {3} {4}",
 
         "service_restart": "Last {1}service restart{2}: {3} {4}",
         "system_update": "Last {1}system update{2}: {3} {4}",
