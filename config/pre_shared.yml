@@ -24,11 +24,6 @@ nextcloud_data_path:              "/dataRaid/nextcloud/"
 
 samba_master:                     "{%if is_production%}yes{%else%}no{%endif%}"
 
-default_server_ip_r:              "{{default_server_ip.split('.')}}"
-default_server_arpa:              "{{default_server_ip_r[3]}}.{{default_server_ip_r[2]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[0]}}"
-default_server_subnet:            "{{default_server_ip_r[0]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[2]}}"
-default_server_network:           "{{default_server_subnet}}.0/24"
-
 # used for e.g. openwrt's md5 password crypt
 default_password_salt:            "{{((server_domain+':'+default_server_ip) | b64encode | replace(';','0') )[:-1]}}"
 

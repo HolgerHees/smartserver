@@ -50,7 +50,7 @@
 # userdata/config/SymmetricKeyCipher.config
 
 # ****** GITHUB SHARED PROJECT ******
-- name: clone git
+- name: clone shared git
   vars:
     git_clone_name: "shared"
     git_clone_path: "{{projects_path}}openhab_shared"
@@ -233,22 +233,16 @@
     mode: "pull"
     archive: no
     checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D755,F644"
+#    group: yes
+#    owner: yes
+#    perms: yes
     recursive: yes
   changed_when: no
   when: "services_result.rc == 0"
 
-#- name: prepare service configs
-#  fetch:
-#    src: "{{projects_path}}openhab_config/templates/services/{{item}}"
-#    dest: "/tmp/ansible/openhab/services/{{item}}"
-#    flat: yes
-#  register: services_state
-#  with_items: "{{services_result.stdout_lines}}"
-#  changed_when: no
-    
 - name: copy service configs
   template:
     src: "/tmp/ansible/openhab/services/{{item}}"
@@ -273,21 +267,15 @@
     mode: "pull"
     archive: no
     checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D755,F644"
+#    group: yes
+#    owner: yes
+#    perms: yes
     recursive: yes
   changed_when: no
   when: "things_result.rc == 0"
-
-#- name: prepare things config
-#  fetch:
-#    src: "{{projects_path}}openhab_config/templates/things/{{item}}"
-#    dest: "/tmp/ansible/openhab/things/{{item}}"
-#    flat: yes
-#  register: things_state
-#  with_items: "{{things_result.stdout_lines}}"
-#  changed_when: no
 
 - name: copy things configs
   template:
@@ -313,21 +301,15 @@
     mode: "pull"
     archive: no
     checksum: yes
-    group: yes
-    owner: yes
-    perms: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=D755,F644"
+#    group: yes
+#    owner: yes
+#    perms: yes
     recursive: yes
   changed_when: no
   when: "udev_result.rc == 0"
-
-#- name: prepare udev rules
-#  fetch:
-#    src: "{{projects_path}}openhab_config/templates/udev/rules.d/{{item}}"
-#    dest: "/tmp/ansible/openhab/udev/{{item}}"
-#    flat: yes
-#  register: udev_state
-#  with_items: "{{udev_result.stdout_lines}}"
-#  changed_when: no
 
 - name: copy udev rules
   template:

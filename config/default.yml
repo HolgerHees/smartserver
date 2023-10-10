@@ -27,7 +27,7 @@ default_variables: {
     "server_network_ipv6": { "optional": "{{server_ipv6 is not defined}}" }, # "fde7:1250:3eaf::/48" your networkmask for ipv6
     "server_gateway_ipv6": { "optional": "{{server_ipv6 is not defined}}" }, # "fe80::3895:1ff:fe6c:4b01" your gateway for ipv6
 
-    "intern_networks": { "default": [ "{{default_server_network}}" ] }, # e.g. intern ipv4 & ipv6 address ranges
+    "intern_networks": { "default": [] },                         # e.g. intern ipv4 & ipv6 address ranges, default_server_ip and host_ip will be added additionally
     "public_networks": { "default": [] },                         # e.g. public ipv6 address ranges
     "trusted_networks": { "default": [] },                        # additional ipv4 & ipv6 networks allowed to connect the server
 

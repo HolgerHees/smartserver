@@ -33,7 +33,7 @@
  
 - name: ensure that right owner is assigned => git_clone_result changed
   file:
-    path: "{{projects_path}}openhab_shared"
+    path: "{{git_clone_path}}"
     owner: "{{git_owner | default(ansible_user)}}"
     group: "{{git_group | default('root')}}"
     mode: "{{git_mode | default('u=rwX,g=rX,o=')}}"

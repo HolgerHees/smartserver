@@ -1,7 +1,3 @@
-#- name: debug
-#  debug: msg="{{ hostvars }}"
-#  tags: always
-
 #- name: read service facts
 #  service_facts:
 #  tags: always
@@ -44,11 +40,26 @@
 
     is_production: "{{host_ip == production_ip}}"
 
-    default_network_interface: "{{ansible_default_ipv4['interface']}}"
+#    default_network_interface: "{{ansible_default_ipv4['interface']}}"
+#    default_server_ip: "{{ansible_default_ipv4['address']}}"
+#    default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
 
-#    ansible_remote_ip: "{{ ansible_ssh_host if ansible_ssh_host != '127.0.0.1' else host_ip }}"
     default_server_ip: "{{ansible_default_ipv4['address']}}"
     default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
+    default_network_interface: "{{ansible_default_ipv4['interface']}}"
+
+    default_server_ip_r:              "{{ansible_default_ipv4['address'].split('.')}}"
+    host_server_ip_r:                 "{{host_ip.split('.')}}"
+
+- name: set server network vars
+  set_fact:
+    default_server_arpa:              "{{default_server_ip_r[3]}}.{{default_server_ip_r[2]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[0]}}"
+    default_server_subnet:            "{{default_server_ip_r[0]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[2]}}"
+    default_server_network:           "{{default_server_ip_r[0]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[2]}}.0/24"
+
+    #host_server_arpa:                 "{{host_server_ip_r[3]}}.{{host_server_ip_r[2]}}.{{host_server_ip_r[1]}}.{{host_server_ip_r[0]}}"
+    #host_server_subnet:               "{{host_server_ip_r[0]}}.{{host_server_ip_r[1]}}.{{host_server_ip_r[2]}}"
+    host_server_network:              "{{host_server_ip_r[0]}}.{{host_server_ip_r[1]}}.{{host_server_ip_r[2]}}.0/24"
 
 #- name: debug
 #  debug:
@@ -151,6 +162,14 @@
 #        },
 #      {% endfor %}
 #    ]
+
+- name: add intern_networks
+  set_fact:
+    intern_networks: "{{intern_networks}} + {{[ item ]}}"
+  when: "item not in intern_networks"
+  with_items:
+    - "{{default_server_network}}"
+    - "{{host_server_network}}"
 
 - name: set ipv6 env state vars
   set_fact:

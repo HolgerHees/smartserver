@@ -63,9 +63,17 @@ mx.WeatherCore = (function( ret ) {
 
         if( "dayActive" in changedValues )
         {
-            active_day = new Date();
-            active_day.setTime(Date.parse(currentValues["dayActive"]));
-            mx.$(".today .title").innerHTML = mx.WeatherHelper.formatDay(active_day);
+            if( changedValues["dayActive"] )
+            {
+                active_day = new Date();
+                active_day.setTime(Date.parse(currentValues["dayActive"]));
+                mx.$(".today .title").innerHTML = mx.WeatherHelper.formatDay(active_day);
+            }
+            else
+            {
+                active_day = null;
+                mx.$(".today .title").innerHTML = "";
+            }
         }
 
         let now = new Date();
@@ -151,7 +159,7 @@ mx.WeatherCore = (function( ret ) {
                 html_rows.push(html_row);
             });
 
-            mx.$(".today .hours").innerHTML = html_rows.join("");
+            mx.$(".today .hours").innerHTML = html_rows.length > 0 ? html_rows.join("") : mx.I18N.get("No forecasts available");
             if( active_id ) mx.$("#" + active_id ).classList.add("active");
         }
 
@@ -190,7 +198,7 @@ mx.WeatherCore = (function( ret ) {
                 html_rows.push(html_row);
             });
 
-            mx.$(".week .hours").innerHTML = html_rows.join("");
+            mx.$(".week .hours").innerHTML = html_rows.length > 0 ? html_rows.join("") : mx.I18N.get("No forecasts available");;
 
             function clickHandler()
             {
@@ -211,7 +219,8 @@ mx.WeatherCore = (function( ret ) {
         {
             element.classList.remove("active");
         });
-        mx.$("#week_" + active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()) ).classList.add("active");
+
+        if( active_day ) mx.$("#week_" + active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()) ).classList.add("active");
 
         if( mx.$(".week").classList.contains("open") ) document.getElementById("weekButton").click();
     }

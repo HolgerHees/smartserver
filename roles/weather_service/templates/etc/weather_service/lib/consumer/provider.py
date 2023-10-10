@@ -184,36 +184,37 @@ class ProviderConsumer():
 
                 with self.db.open() as db:
                     data = db.getOffset(0)
-                    #logging.info(data)
-                    block = WeatherBlock(data['datetime'])
-                    block.apply(data)
-                    #logging.info("{}".format(block.getPrecipitationAmountInMillimeter()))
+                    if data is not None:
+                        #logging.info(data)
+                        block = WeatherBlock(data['datetime'])
+                        block.apply(data)
+                        #logging.info("{}".format(block.getPrecipitationAmountInMillimeter()))
 
-                    currentRain = 0
-                    currentRainLevel = self.station_consumer.getValue("rainLevel")
-                    if currentRainLevel > 0:
-                        if self.current_is_raining or currentRainLevel > 2:
-                            currentRain = 0.1
+                        currentRain = 0
+                        currentRainLevel = self.station_consumer.getValue("rainLevel")
+                        if currentRainLevel > 0:
+                            if self.current_is_raining or currentRainLevel > 2:
+                                currentRain = 0.1
 
-                            currentRain15Min = self.station_consumer.getValue("rainLast15MinInMillimeter")
-                            if currentRain15Min * 4 > currentRain:
-                                currentRain = currentRain15Min * 4
+                                currentRain15Min = self.station_consumer.getValue("rainLast15MinInMillimeter")
+                                if currentRain15Min * 4 > currentRain:
+                                    currentRain = currentRain15Min * 4
 
-                            currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
-                            if currentRain1Hour > currentRain:
-                                currentRain = currentRain1Hour
+                                currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
+                                if currentRain1Hour > currentRain:
+                                    currentRain = currentRain1Hour
 
-                    self.current_is_raining = currentRain > 0
+                        self.current_is_raining = currentRain > 0
 
-                     #if currentRain > block.getPrecipitationAmountInMillimeter():
-                    block.setPrecipitationAmountInMillimeter(currentRain)
+                         #if currentRain > block.getPrecipitationAmountInMillimeter():
+                        block.setPrecipitationAmountInMillimeter(currentRain)
 
-                    block.effectiveCloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
-                    #logging.info("{}".format(block.effectiveCloudCoverInOcta))
+                        block.effectiveCloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
+                        #logging.info("{}".format(block.effectiveCloudCoverInOcta))
 
-                    icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
+                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
 
-                    result["currentCloudsAsSVG"] = self.getCachedIcon(icon_name)
+                        result["currentCloudsAsSVG"] = self.getCachedIcon(icon_name)
 
         return [ result, last_modified ]
 
@@ -235,27 +236,30 @@ class ProviderConsumer():
                 if "dayList" in requested_fields:
                     todayValues = [];
                     dayList = db.getRangeList(start, end)
+                    if len(dayList) > 0:
+                        minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
 
-                    minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
+                        current_value = WeatherBlock( dayList[0]['datetime'] )
 
-                    current_value = WeatherBlock( dayList[0]['datetime'] )
+                        index = 0;
+                        for hourlyData in dayList:
+                            if index > 0 and index % 3 == 0:
+                                #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
+                                current_value.setEnd(hourlyData['datetime'])
+                                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                                current_value.setSVG(self.getCachedIcon(icon_name))
+                                todayValues.append( current_value )
+                                current_value = WeatherBlock( hourlyData['datetime'] )
+                            current_value.apply(hourlyData)
+                            index += 1
 
-                    index = 0;
-                    for hourlyData in dayList:
-                        if index > 0 and index % 3 == 0:
-                            #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
-                            current_value.setEnd(hourlyData['datetime'])
-                            icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                            current_value.setSVG(self.getCachedIcon(icon_name))
-                            todayValues.append( current_value )
-                            current_value = WeatherBlock( hourlyData['datetime'] )
-                        current_value.apply(hourlyData)
-                        index += 1
+                        current_value.setEnd(current_value.getStart() + timedelta(hours=3))
+                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                        current_value.setSVG(self.getCachedIcon(icon_name))
+                        todayValues.append(current_value)
 
-                    current_value.setEnd(current_value.getStart() + timedelta(hours=3))
-                    icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                    current_value.setSVG(self.getCachedIcon(icon_name))
-                    todayValues.append(current_value)
+                    else:
+                        minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = activeDay = None
 
                     values["dayList"] = todayValues
                     values["dayActive"] = activeDay
@@ -271,22 +275,24 @@ class ProviderConsumer():
 
                     weekFrom = datetime.now().replace(hour=0, minute=0, second=0)
                     weekList = db.getWeekList(weekFrom)
+                    if len(weekList) > 0:
+                        minTemperatureWeekly, maxTemperatureWeekly, maxWindSpeedWeekly, sumSunshineWeekly, sumRainWeekly = WeatherHelper.calculateSummary(weekList)
 
-                    minTemperatureWeekly, maxTemperatureWeekly, maxWindSpeedWeekly, sumSunshineWeekly, sumRainWeekly = WeatherHelper.calculateSummary(weekList)
-
-                    start = weekList[0]['datetime'].replace(hour=0, minute=0, second=0)
-                    current_value = WeatherBlock( start )
-                    index = 1
-                    for hourlyData in weekList:
-                        _datetime = hourlyData['datetime'].replace(hour=0, minute=0, second=0);
-                        if _datetime != current_value.getStart():
-                            current_value.setEnd(_datetime)
-                            icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                            current_value.setSVG(self.getCachedIcon(icon_name))
-                            weekValues.append(current_value)
-                            current_value = WeatherBlock( _datetime )
-                        current_value.apply(hourlyData)
-                        index += 1
+                        start = weekList[0]['datetime'].replace(hour=0, minute=0, second=0)
+                        current_value = WeatherBlock( start )
+                        index = 1
+                        for hourlyData in weekList:
+                            _datetime = hourlyData['datetime'].replace(hour=0, minute=0, second=0);
+                            if _datetime != current_value.getStart():
+                                current_value.setEnd(_datetime)
+                                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                                current_value.setSVG(self.getCachedIcon(icon_name))
+                                weekValues.append(current_value)
+                                current_value = WeatherBlock( _datetime )
+                            current_value.apply(hourlyData)
+                            index += 1
+                    else:
+                        minTemperatureWeekly = maxTemperatureWeekly = maxWindSpeedWeekly = sumSunshineWeekly = sumRainWeekly = None
 
                     values["weekList"] = weekValues
                     values["weekMinTemperature"] = minTemperatureWeekly
@@ -319,30 +325,33 @@ class ProviderConsumer():
             end = start + timedelta(hours=24)
 
             dayList = db.getRangeList(start, end)
-            todayValues = [];
-
-            blockConfigs = [ 21, 16, 11, 6, 1 ]
-
-            current_value = None;
-            for hourlyData in dayList:
-                hour = hourlyData['datetime'].hour;
-
-                if hour in blockConfigs:
-                    if current_value is not None:
-                        current_value.setEnd(hourlyData['datetime'])
-                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                        current_value.setSVG(self.getCachedIcon(icon_name))
-                        todayValues.append(current_value)
-                    current_value = WeatherBlock( hourlyData['datetime'] )
-
-                current_value.apply(hourlyData)
-
-                if len(todayValues) == 4:
-                    break
-
-            minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
-
             values = {}
+            if len(dayList) > 0:
+                todayValues = [];
+
+                blockConfigs = [ 21, 16, 11, 6, 1 ]
+
+                current_value = None;
+                for hourlyData in dayList:
+                    hour = hourlyData['datetime'].hour;
+
+                    if hour in blockConfigs:
+                        if current_value is not None:
+                            current_value.setEnd(hourlyData['datetime'])
+                            icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                            current_value.setSVG(self.getCachedIcon(icon_name))
+                            todayValues.append(current_value)
+                        current_value = WeatherBlock( hourlyData['datetime'] )
+
+                    current_value.apply(hourlyData)
+
+                    if len(todayValues) == 4:
+                        break
+
+                minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
+            else:
+                minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = None
+
             values["dayList"] = todayValues
             values["dayMinTemperature"] = minTemperature
             values["dayMaxTemperature"] = maxTemperature
