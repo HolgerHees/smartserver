@@ -31,10 +31,20 @@ require "../shared/libs/ressources.php";
     $folder = new Folder($ftp_folder,$sub_folder);
     $images = $folder->getImages();
     
-    list($width, $height, $type, $attr) = getimagesize($images[0]->getPath());
-    
-    $starttime = Template::getStarttime($images);
-    $endtime = Template::getEndtime($images);
+    if( count($images) == 0 )
+    {
+        $width = 0;
+        $height = 0;
+        $starttime = new DateTime();
+        $endtime = $starttime;
+    }
+    else
+    {
+        list($width, $height, $type, $attr) = getimagesize($images[0]->getPath());
+
+        $starttime = Template::getStarttime($images);
+        $endtime = Template::getEndtime($images);
+    }
 ?>
 <script>
     var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];

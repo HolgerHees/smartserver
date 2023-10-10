@@ -1,3 +1,17 @@
+- name: ensure user and group exists
+  vars:
+    user: { name: "ftp", system: true, home: "{{ftp_path}}" }
+    group: { name: "ftp", system: true }
+  import_tasks: roles/user/shared/add_system_user.yml
+
+- name: prepare ftp camera upload folder
+  file:
+    path: "{{ftp_path}}/camera"
+    state: directory
+    owner: "{{system_users['ftp'].name}}"
+    group: "{{system_groups['ftp'].name}}"
+    mode: 0755
+
 - name: register webui
   vars:
     name: "proxy"

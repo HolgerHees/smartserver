@@ -21,6 +21,9 @@ class Template {
         $_diff = $starttime->diff($endtime);
         $_hours = $_diff->h;
         $_hours = $_hours + ($_diff->days*24);
+
+        if( $_hours == 0 ) return "<div style=\"margin: auto;\">No images available</div>";
+
         $_max_steps = 100;
         $stepDurationInHours = ceil($_hours / $_max_steps);
 

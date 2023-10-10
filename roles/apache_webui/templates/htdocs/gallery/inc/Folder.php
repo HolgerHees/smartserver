@@ -17,7 +17,7 @@ class Folder {
     public function getImages()
     {
         $file_times = array();
-        $list = shell_exec("stat -c \"%y %n\" " . $this->main_folder . $this->sub_folder . "/*");
+        $list = shell_exec("stat -c \"%y %n\" " . $this->main_folder . $this->sub_folder . "/* 2>/dev/null");
         foreach( explode("\n",$list) as $line )
         {
             if( empty($line) ) continue;
@@ -29,8 +29,8 @@ class Folder {
             $file_times[$parts[3]] = $time;
         }
         
-        $files = scandir($this->main_folder . $this->sub_folder);
         $images = [];
+        $files = scandir($this->main_folder . $this->sub_folder);
         foreach( $files as $file )
         {
             if( $file == '.' or $file == '..' || is_dir($this->sub_folder.$file) ) continue;
