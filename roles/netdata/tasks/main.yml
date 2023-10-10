@@ -2,7 +2,7 @@
   yum_repository:
     name: netdata
     description: Netdata repository
-    priority: "100"
+    priority: "50"
     baseurl: https://packagecloud.io/netdata/netdata/{{'el' if is_rhel else 'fedora'}}/{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}/$basearch/
   when: is_rhel|bool or is_fedora|bool
 
@@ -44,7 +44,7 @@
     name: "Netdata"
     repo: "https://packagecloud.io/netdata/netdata/opensuse/{{ansible_distribution_version}}/x86_64/"
     auto_import_keys: yes
-    priority: "100"
+    priority: "50"
     state: present
   register: netdata_repo
   when: is_suse|bool
