@@ -9,7 +9,8 @@ import time
 from datetime import datetime
 #from decimal import Decimal
 
-from lib.provider.meteo import Meteo
+from lib.provider.meteogroup import MeteoGroup
+#from lib.provider.openmeteo import OpenMeteo
 from lib.consumer.provider import ProviderConsumer
 from lib.consumer.station import StationConsumer
 from lib.consumer.astro import AstroConsumer
@@ -33,7 +34,7 @@ class Handler(Server):
         self.scheduler = Scheduler()
 
         self.mqtt = MQTT(config)
-        self.provider = Meteo(config, self.db, self.mqtt)
+        self.provider = MeteoGroup(config, self.db, self.mqtt)
 
         self.astro_consumer = AstroConsumer(config)
         self.station_consumer = StationConsumer(config, self.mqtt)

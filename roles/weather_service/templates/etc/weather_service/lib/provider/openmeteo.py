@@ -19,50 +19,46 @@ from lib.db import DBException
 
 # possible alternative => https://open-meteo.com/
 
-# https://api.weather.mg/
+current_url  = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current={fields}"
+current_fields = {
+    "temperature_2m": "airTemperatureInCelsius",
+    "apparent_temperature": "feelsLikeTemperatureInCelsius",
+    "relativehumidity_2m": "relativeHumidityInPercent",
+    "windspeed_10m": "windSpeedInKilometerPerHour",
+    "winddirection_10m": "windDirectionInDegree",
+    "cloudcover": "effectiveCloudCoverInOcta"
+}
 
-token_url    = "https://auth.weather.mg/oauth/token"
-current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
-current_fields = [
-    "airTemperatureInCelsius", 
-    "feelsLikeTemperatureInCelsius",
-    "relativeHumidityInPercent",
-    "windSpeedInKilometerPerHour",
-    "windDirectionInDegree",
-    "effectiveCloudCoverInOcta"
-]
-
-forecast_url = 'https://point-forecast.weather.mg/forecast/hourly?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
+forecast_url = 'https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly={fields}';
 forecast_config = {
-	'PT0S': [
-		"airTemperatureInCelsius", 
-		"feelsLikeTemperatureInCelsius", 
-        "relativeHumidityInPercent",
-		"windSpeedInKilometerPerHour", 
-		"windDirectionInDegree", 
-		"effectiveCloudCoverInOcta", 
-		"thunderstormProbabilityInPercent",
-		"freezingRainProbabilityInPercent",
-		"hailProbabilityInPercent",
-		"snowfallProbabilityInPercent",
-		"precipitationProbabilityInPercent",
-		# https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
-		"precipitationType"
-	],
-	'PT1H': [
-		"precipitationAmountInMillimeter", 
-		"sunshineDurationInMinutes"
-	],
-	'PT3H': [
-		"maxWindSpeedInKilometerPerHour"
-	]
+    "temperature_2m": "airTemperatureInCelsius",
+    "apparent_temperature": "feelsLikeTemperatureInCelsius",
+    "relativehumidity_2m": "relativeHumidityInPercent",
+    "windspeed_10m": "windSpeedInKilometerPerHour",
+    "winddirection_10m": "windDirectionInDegree",
+    "cloudcover": "effectiveCloudCoverInOcta",
+
+    "cape": None, #"thunderstormProbabilityInPercent",
+    # 300 - 1.000	schwache Gewitteraktivität
+    # 1.000 - 2.500	häufige Gewitter möglich
+    # 2.500	sehr hohe Gewitteraktivität
+
+    "rain": None, # freezingRainProbabilityInPercent, hailProbabilityInPercent, snowfallProbabilityInPercent
+    "snowfall": None, #
+
+    "precipitation": "precipitationAmountInMillimeter",
+    "precipitation_probability": "precipitationProbabilityInPercent",
+
+    # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
+    "weathercode": "precipitationType",
+
+    #"sunshineDurationInMinutes" ?????????????????????????
+
+    "windgusts_10m": "maxWindSpeedInKilometerPerHour"
 }
     
-summeryOffsets = [0,4,8]
-summeryFields = ["airTemperatureInCelsius","effectiveCloudCoverInOcta"]
-
-class AuthException(Exception):
-    pass
+#summeryOffsets = [0,4,8]
+#summeryFields = ["airTemperatureInCelsius","effectiveCloudCoverInOcta"]
 
 class RequestDataException(Exception):
     pass
@@ -77,20 +73,6 @@ class Fetcher(object):
     def __init__(self, config):
         self.config = config
 
-    def getAuth(self):
-      
-        fields = {'grant_type': 'client_credentials'};
-      
-        r = requests.post(token_url, data=fields, auth=(self.config.api_username, self.config.api_password))
-        if r.status_code != 200:
-            raise AuthException("Failed getting auth token. Code: {}, Raeson: {}".format(r.status_code, r.reason))
-        else:
-            data = json.loads(r.text)
-            if "access_token" in data:
-                return data["access_token"]
-            
-        raise AuthException("Failed getting auth token. Content: {}".format(r.text))
-      
     def get(self, url, token):
       
         headers = {"Authorization": "Bearer {}".format(token)}
@@ -299,7 +281,7 @@ class Fetcher(object):
 
             logging.info("Summery data published")
 
-class Meteo():
+class OpenMeteo():
     '''Handler client'''
     def __init__(self, config, db, mqtt):
         self.is_running = False
