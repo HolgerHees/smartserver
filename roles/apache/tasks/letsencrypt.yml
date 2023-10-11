@@ -14,7 +14,7 @@
     changed_when: "certificate_mode != 'exists'"
   
 # CREATE #  
-- name: check for vault certificate files
+- name: check for existing certificate files
   stat:
     path: "{{global_etc}}letsencrypt/live/{{server_domain}}"
   register: certificate_files
