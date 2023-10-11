@@ -79,7 +79,7 @@
   openssl_privatekey:
     path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
     mode: 0600
-#  when: not certificate_files.stat.exists
+  when: not certificate_files.stat.exists
     
 - name: generate openssl csr => certificate_files not exists
   openssl_csr:
@@ -87,7 +87,7 @@
     privatekey_path: "{{global_etc}}letsencrypt/live/{{server_domain}}/privkey.pem"
     common_name: "*.{{server_domain}}"
     mode: 0600
-#  when: not certificate_files.stat.exists
+  when: not certificate_files.stat.exists
     
 - name: generate openssl certificate => certificate_files not exists
   openssl_certificate:
@@ -99,7 +99,7 @@
 #    ownca_path: "{{global_etc}}letsencrypt/live/ca/fullchain.pem"
 #    ownca_privatekey_path: "{{global_etc}}letsencrypt/live/ca/privkey.pem"
     mode: 0640
-#  when: not certificate_files.stat.exists
+  when: not certificate_files.stat.exists
   
 # APACHE
 - name: prepare needed folder
