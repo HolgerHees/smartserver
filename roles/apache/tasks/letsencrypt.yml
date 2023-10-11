@@ -44,7 +44,7 @@
 
 - name: create certificates => certificate_mode = 'create'
   shell: "/opt/scripts/apache_check_letsencrypt.sh update"
-#  notify: "restart apache2"
+  notify: "restart apache2"
   when: "certificate_mode == 'create'"
 
 - name: create cron job
