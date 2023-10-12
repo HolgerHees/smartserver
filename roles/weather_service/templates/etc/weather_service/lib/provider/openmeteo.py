@@ -35,12 +35,12 @@ forecast_config = {
 
     "thunderstormProbabilityInPercent": [ [ "cape" ], lambda self, fetched_values: self.buildThunderstormInPersent(fetched_values) ],
 
-    "freezingRainProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildFreezingRainInPercent(fetched_values) ],
-    "hailProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height", "weathercode" ], lambda self, fetched_values: self.buildHailInPercent(fetched_values) ],
-    "snowfallProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildSnowfallInPercent(fetched_values) ],
+    "freezingRainProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: self.buildFreezingRainInPercent(fetched_values) ],
+    "hailProbabilityInPercent": [ [ "weathercode", "precipitation_probability" ], lambda self, fetched_values: self.buildHailInPercent(fetched_values) ],
+    "snowfallProbabilityInPercent": [ [ "snowfall", "precipitation_probability" ], lambda self, fetched_values: self.buildSnowfallInPercent(fetched_values) ],
 
     "precipitationAmountInMillimeter": "precipitation",
-    "precipitationProbabilityInPercent": [ [ "rain", "precipitation_probability" ], lambda self, fetched_values: self.buildPrecipitationInPersent(fetched_values) ],
+    "precipitationProbabilityInPercent": [ [ "precipitation_probability" ], lambda self, fetched_values: self.buildPrecipitationInPersent(fetched_values) ],
 
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     "precipitationType": "weathercode",
@@ -82,43 +82,32 @@ class Fetcher(object):
         # > 3500 Extremely
         return int(round(fetched_values["cape"] * 100.0 / 3500.0, 0))
       
+    # weather codes https://github.com/open-meteo/open-meteo/issues/287
     def buildFreezingRainInPercent(self, fetched_values):
-        if fetched_values["rain"] == 0:
+        if fetched_values["weathercode"] not in [48,56,57,66,67]:
             return 0
 
-        if fetched_values["freezinglevel_height"] > 1500:
-            fetched_values["freezinglevel_height"] = 1500
-
-        percent = fetched_values["freezinglevel_height"] * 100 / 1500
-        percent = int(round( ( percent - 100 ) * -1, 0 ))
-
-        #logging.info("{} {} {}".format(fetched_values["rain"], fetched_values["freezinglevel_height"], percent))
-        return percent
-
+        return self.buildPrecipitationInPersent(fetched_values)
 
     def buildHailInPercent(self, fetched_values):
-        return 50 if fetched_values["weathercode"] in [96,99] else 0
+        if fetched_values["weathercode"] not in [96,99]:
+            return 0
+
+        return self.buildPrecipitationInPersent(fetched_values)
 
     def buildSnowfallInPercent(self, fetched_values):
         if fetched_values["snowfall"] == 0:
             return 0
 
-        if fetched_values["freezinglevel_height"] > 500:
-            fetched_values["freezinglevel_height"] = 500
-
-        percent = fetched_values["freezinglevel_height"] * 100 / 500
-        percent = int(round( ( percent - 100 ) * -1, 0 ))
-
-        #logging.info("{} {} {}".format(fetched_values["rain"], fetched_values["freezinglevel_height"], percent))
-        return percent
+        return self.buildPrecipitationInPersent(fetched_values)
 
     def buildPrecipitationInPersent(self, fetched_values):
         if "precipitation_probability" in fetched_values and fetched_values["precipitation_probability"] is not None:
             return fetched_values["precipitation_probability"]
-        if fetched_values["rain"] > 10:
-            return 100
-        if fetched_values["rain"] > 0:
-            return 50
+        #if fetched_values["rain"] > 10:
+        #    return 100
+        #if fetched_values["rain"] > 0:
+        #    return 50
         return 0
 
     def collectFetchedFields(self, config):
