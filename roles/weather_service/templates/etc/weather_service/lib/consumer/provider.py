@@ -85,7 +85,8 @@ class ProviderConsumer():
                 if is_refreshed:
                     with self.db.open() as db:
                         datetime_str = msg.payload.decode("utf-8")
-                        datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
+                        #logging.info(datetime_str)
+                        #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
                         validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
 
                         update_values = []
