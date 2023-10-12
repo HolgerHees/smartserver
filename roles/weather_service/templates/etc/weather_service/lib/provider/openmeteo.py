@@ -21,7 +21,7 @@ current_config = {
     "relativeHumidityInPercent": "relativehumidity_2m",
     "windSpeedInKilometerPerHour": "windspeed_10m",
     "windDirectionInDegree": "winddirection_10m",
-    "effectiveCloudCoverInOcta": "cloudcover"
+    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: self.buildEffectiveCloudCoverInOcta(fetched_values) ]
 }
 
 forecast_url = "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&timezone={timezone}&forecast_days=14&past_days=0&hourly={fields}";
@@ -31,12 +31,12 @@ forecast_config = {
     "relativeHumidityInPercent": "relativehumidity_2m",
     "windSpeedInKilometerPerHour": "windspeed_10m",
     "windDirectionInDegree": "winddirection_10m",
-    "effectiveCloudCoverInOcta": "cloudcover",
+    "effectiveCloudCoverInOcta": [ [ "cloudcover" ], lambda self, fetched_values: self.buildEffectiveCloudCoverInOcta(fetched_values) ],
 
     "thunderstormProbabilityInPercent": [ [ "cape" ], lambda self, fetched_values: self.buildThunderstormInPersent(fetched_values) ],
 
     "freezingRainProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildFreezingRainInPercent(fetched_values) ],
-    "hailProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildHailInPercent(fetched_values) ],
+    "hailProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height", "weathercode" ], lambda self, fetched_values: self.buildHailInPercent(fetched_values) ],
     "snowfallProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildSnowfallInPercent(fetched_values) ],
 
     "precipitationAmountInMillimeter": "precipitation",
@@ -72,11 +72,15 @@ class Fetcher(object):
         else:
             return json.loads(r.text)
 
+    def buildEffectiveCloudCoverInOcta(self, fetched_values):
+        return fetched_values["cloudcover"] * 9 / 100
+
     def buildThunderstormInPersent(self, fetched_values):
-        # 300 - 1.000	schwache Gewitteraktivität
-        # 1.000 - 2.500	häufige Gewitter möglich
-        # 2.500	sehr hohe Gewitteraktivität
-        return int(round(fetched_values["cape"] * 100.0 / 2500.0, 0))
+        # < 1000 Slight
+        # 1000 – 2500 Moderate
+        # 2500-3500 Very
+        # > 3500 Extremely
+        return int(round(fetched_values["cape"] * 100.0 / 3500.0, 0))
       
     def buildFreezingRainInPercent(self, fetched_values):
         if fetched_values["rain"] == 0:
@@ -93,7 +97,7 @@ class Fetcher(object):
 
 
     def buildHailInPercent(self, fetched_values):
-        return 0
+        return 50 if fetched_values["weathercode"] in [96,99] else 0
 
     def buildSnowfallInPercent(self, fetched_values):
         if fetched_values["snowfall"] == 0:
