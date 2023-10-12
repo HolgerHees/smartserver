@@ -32,8 +32,6 @@ class Provider:
         self.is_running = False
         self.is_fetching = False
 
-        self.is_enabled = False
-
         self.event = threading.Event()
 
         self.config = config
@@ -54,13 +52,11 @@ class Provider:
             self._dump()
 
         self.is_running = True
-        if not self.is_enabled:
-            logging.info("Publishing disabled")
-        else:
-            schedule.every().hour.at("05:00").do(self.fetch)
-            if time.time() - self.last_fetch > 60 * 60:
-                self.fetch()
+
+        schedule.every().hour.at("05:00").do(self.fetch)
+        if time.time() - self.last_fetch > 60 * 60:
             self.fetch()
+        #self.fetch()
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
@@ -193,13 +189,10 @@ class Provider:
         for name, value in self.service_metrics.items():
             state_metrics.append("weather_service_state{{type=\"provider\", group=\"{}\"}} {}".format(name,value))
 
-        if not self.is_enabled:
-            state = -1
+        if self.is_fetching:
+            state = 1 if time.time() - self.last_fetch < 60 * 60 * 3 else 0
         else:
-            if self.is_fetching:
-                state = 1 if time.time() - self.last_fetch < 60 * 60 * 3 else 0
-            else:
-                state = 1 if time.time() - self.last_fetch < 60 * 60 + 5 * 60 else 0
+            state = 1 if time.time() - self.last_fetch < 60 * 60 + 5 * 60 else 0
 
         state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(state))
         return state_metrics

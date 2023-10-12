@@ -255,7 +255,5 @@ class MeteoGroup(Provider):
     def __init__(self, config, db, mqtt):
         super().__init__(config, db, mqtt, "{}provider_meteogroup.json".format(config.lib_path))
 
-        self.is_enabled = self.config.publish_topic and self.config.api_username and self.config.api_password
-
     def _createFetcher(self, config):
         return Fetcher(config)

@@ -7,7 +7,7 @@ db_table        = "weather_forecast"
 db_username     = "{{vault_shared_mysql_username}}"
 db_password     = "{{vault_shared_mysql_password}}"
 
-mosquitto_host  = "cloud_mosquitto"
+mosquitto_host  = "{% if use_cloud_mosquitto %}cloud_{% endif %}mosquitto"
 publish_topic   = {% if publish_topic %}"{{publish_topic}}"{% else %}False{% endif %}
 
 location        = "{{location}}"

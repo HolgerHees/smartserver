@@ -34,9 +34,6 @@ forecast_config = {
     "effectiveCloudCoverInOcta": "cloudcover",
 
     "thunderstormProbabilityInPercent": [ [ "cape" ], lambda self, fetched_values: self.buildThunderstormInPersent(fetched_values) ],
-    # 300 - 1.000	schwache Gewitteraktivität
-    # 1.000 - 2.500	häufige Gewitter möglich
-    # 2.500	sehr hohe Gewitteraktivität
 
     "freezingRainProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildFreezingRainInPercent(fetched_values) ],
     "hailProbabilityInPercent": [ [ "rain", "snowfall", "freezinglevel_height" ], lambda self, fetched_values: self.buildHailInPercent(fetched_values) ],
@@ -76,6 +73,9 @@ class Fetcher(object):
             return json.loads(r.text)
 
     def buildThunderstormInPersent(self, fetched_values):
+        # 300 - 1.000	schwache Gewitteraktivität
+        # 1.000 - 2.500	häufige Gewitter möglich
+        # 2.500	sehr hohe Gewitteraktivität
         return int(round(fetched_values["cape"] * 100.0 / 2500.0, 0))
       
     def buildFreezingRainInPercent(self, fetched_values):
@@ -149,17 +149,13 @@ class Fetcher(object):
 
         for field, value in current_fields.items():
             msg = "{}/weather/provider/current/{}".format(self.config.publish_topic,field)
-            #if is_test:
-            #    logging.info("Publish: {} = {}".format(msg, value))
-            #else:
-            #    mqtt.publish(msg, payload=value, qos=0, retain=False)
+            #logging.info("Publish: {} = {}".format(msg, value))
+            mqtt.publish(msg, payload=value, qos=0, retain=False)
 
         observedFrom = datetime.now().astimezone().replace(minute=0, second=0,microsecond=0).strftime("%Y-%m-%dT%H:%M:%S%z")
         msg = "{}/weather/provider/current/refreshed".format(self.config.publish_topic)
-        #if is_test:
-        #    logging.info("Publish: {} = {}".format(msg, observedFrom))
-        #else:
-        #    mqtt.publish(msg, payload=observedFrom, qos=0, retain=False)
+        #logging.info("Publish: {} = {}".format(msg, observedFrom))
+        mqtt.publish(msg, payload=observedFrom, qos=0, retain=False)
 
         logging.info("Current data published")
 
@@ -199,15 +195,11 @@ class Fetcher(object):
                 if field.startswith("index"):
                     continue
                 msg = "{}/weather/provider/forecast/{}/{}".format(self.config.publish_topic,field,date)
-                #if is_test:
-                #    logging.info("Publish: {} = {}".format(msg, value))
-                #else:
-                #    mqtt.publish(msg, payload=value, qos=0, retain=False)
+                #logging.info("Publish: {} = {}".format(msg, value))
+                mqtt.publish(msg, payload=value, qos=0, retain=False)
         msg = "{}/weather/provider/forecast/refreshed".format(self.config.publish_topic)
-        #if is_test:
-        #    logging.info("Publish: {} = {}".format(msg, value))
-        #else:
-        #    mqtt.publish(msg, payload="1", qos=0, retain=False)
+        #logging.info("Publish: {} = {}".format(msg, value))
+        mqtt.publish(msg, payload="1", qos=0, retain=False)
 
         logging.info("Forecast data published • Total: {}".format(len(forecasts)))
 
@@ -215,8 +207,6 @@ class OpenMeteo(Provider):
     '''Handler client'''
     def __init__(self, config, db, mqtt):
         super().__init__(config, db, mqtt, "{}provider_openmeteo.json".format(config.lib_path))
-
-        self.is_enabled = self.config.publish_topic
 
     def _createFetcher(self, config):
         return Fetcher(config)

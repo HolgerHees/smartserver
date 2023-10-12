@@ -10,7 +10,8 @@ from datetime import datetime
 #from decimal import Decimal
 
 from lib.provider.meteogroup import MeteoGroup
-#from lib.provider.openmeteo import OpenMeteo
+from lib.provider.openmeteo import OpenMeteo
+
 from lib.consumer.provider import ProviderConsumer
 from lib.consumer.station import StationConsumer
 from lib.consumer.astro import AstroConsumer
@@ -34,8 +35,15 @@ class Handler(Server):
         self.scheduler = Scheduler()
 
         self.mqtt = MQTT(config)
-        self.provider = MeteoGroup(config, self.db, self.mqtt)
-        #self.provider = OpenMeteo(config, self.db, self.mqtt)
+
+        if config.publish_topic:
+            if config.api_username and config.api_password:
+                self.provider = MeteoGroup(config, self.db, self.mqtt)
+            else:
+                self.provider = OpenMeteo(config, self.db, self.mqtt)
+        else:
+            logging.info("Publishing disabled")
+            self.provider = None
 
         self.astro_consumer = AstroConsumer(config)
         self.station_consumer = StationConsumer(config, self.mqtt)
@@ -155,7 +163,8 @@ class Handler(Server):
         state_metrics = []
         state_metrics += self.db.getStateMetrics()
         state_metrics += self.mqtt.getStateMetrics()
-        state_metrics += self.provider.getStateMetrics()
+        if self.provider is not None:
+            state_metrics += self.provider.getStateMetrics()
         state_metrics += self.provider_consumer.getStateMetrics()
         state_metrics += self.station_consumer.getStateMetrics()
 
