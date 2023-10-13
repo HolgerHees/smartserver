@@ -122,13 +122,13 @@ class Fetcher(object):
         return 0
 
     def _buildSunshineBlock(self, start_value, end_value, duration):
-        if start_value > 150 and end_value > 150:
+        if start_value > 120 and end_value > 120:
             return duration
-        elif start_value < 150 and end_value < 150:
+        elif start_value < 120 and end_value < 120:
             return 0
         else:
             diff = abs(start_value - end_value)
-            part_diff = ( start_value if start_value > end_value else end_value ) - 150
+            part_diff = ( start_value if start_value > end_value else end_value ) - 120
             minutes = part_diff * duration / diff
             return minutes
 
