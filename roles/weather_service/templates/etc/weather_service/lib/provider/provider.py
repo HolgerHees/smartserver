@@ -56,7 +56,7 @@ class Provider:
         schedule.every().hour.at("05:00").do(self.fetch)
         if time.time() - self.last_fetch > 60 * 60:
             self.fetch()
-        #self.fetch()
+        self.fetch()
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
@@ -82,36 +82,39 @@ class Provider:
         with db.open() as db:
             result = db.getFullDay()
 
-            tmp = {}
-            for field in summeryFields:
-                tmp[field] = [ None, None, 0.0 ]
-            for row in result:
-                for field in tmp:
-                    value = row[field]
-                    if tmp[field][0] == None:
-                        tmp[field][0] = value
-                        tmp[field][1] = value
-                    else:
-                        if tmp[field][0] > value:
+            if len(result) > 0:
+                tmp = {}
+                for field in summeryFields:
+                    tmp[field] = [ None, None, 0.0 ]
+                for row in result:
+                    for field in tmp:
+                        value = row[field]
+                        if tmp[field][0] == None:
                             tmp[field][0] = value
-                        if tmp[field][1] < value:
                             tmp[field][1] = value
-                    tmp[field][2] = tmp[field][2] + value
+                        else:
+                            if tmp[field][0] > value:
+                                tmp[field][0] = value
+                            if tmp[field][1] < value:
+                                tmp[field][1] = value
+                        tmp[field][2] = tmp[field][2] + value
 
-            for field in summeryFields:
-                tmp[field][2] = tmp[field][2] / len(result)
+                for field in summeryFields:
+                    tmp[field][2] = tmp[field][2] / len(result)
 
-                mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
-                mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
-                mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
+                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"min"), payload=str(tmp[field][0]).encode("utf-8"), qos=0, retain=False)
+                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"max"), payload=str(tmp[field][1]).encode("utf-8"), qos=0, retain=False)
+                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,"avg"), payload=str(tmp[field][2]).encode("utf-8"), qos=0, retain=False)
 
-            for offset in summeryOffsets:
-                data = db.getOffset(offset)
-                for field, value in data.items():
-                    mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,offset), payload=str(value).encode("utf-8"), qos=0, retain=False)
-            mqtt.publish("{}/weather/provider/items/refreshed".format(self.config.publish_topic), payload="1", qos=0, retain=False)
+                for offset in summeryOffsets:
+                    data = db.getOffset(offset)
+                    for field, value in data.items():
+                        mqtt.publish("{}/weather/provider/items/{}/{}".format(self.config.publish_topic,field,offset), payload=str(value).encode("utf-8"), qos=0, retain=False)
+                mqtt.publish("{}/weather/provider/items/refreshed".format(self.config.publish_topic), payload="1", qos=0, retain=False)
 
-            logging.info("Summery data published")
+                logging.info("Summery data published")
+            else:
+                logging.info("Summery data skipped. Not enough data.")
 
     def fetch(self):
         if self.is_fetching:

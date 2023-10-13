@@ -15,15 +15,23 @@ from lib.provider.provider import Provider
 # https://api.weather.mg/
 
 token_url    = "https://auth.weather.mg/oauth/token"
+
 current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
-current_fields = [
-    "airTemperatureInCelsius", 
-    "feelsLikeTemperatureInCelsius",
-    "relativeHumidityInPercent",
-    "windSpeedInKilometerPerHour",
-    "windDirectionInDegree",
-    "effectiveCloudCoverInOcta"
-]
+current_fields = {
+    "airTemperatureInCelsius": "airTemperatureInCelsius",
+    "feelsLikeTemperatureInCelsius": "feelsLikeTemperatureInCelsius",
+    "relativeHumidityInPercent": "relativeHumidityInPercent",
+
+    "windDirectionInDegree": "windDirectionInDegree",
+    "windSpeedInKilometerPerHour": "windSpeedInKilometerPerHour",
+    "maxWindSpeedInKilometerPerHour": "maxWindGustInKilometerPerHour", # => !!!!!!
+
+    "effectiveCloudCoverInOcta": "effectiveCloudCoverInOcta",
+
+    "precipitationAmountInMillimeter": "precipitationAmountInMillimeter",
+
+#    "uvIndexWithClouds": "uvIndexWithClouds"
+}
 
 forecast_url = 'https://point-forecast.weather.mg/forecast/hourly?locatedAt={location}&validPeriod={period}&fields={fields}&validFrom={start}&validUntil={end}';
 forecast_config = {
@@ -97,61 +105,64 @@ class Fetcher(object):
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
         
-        url = current_url.format(location=location, period="PT0S", fields=",".join(current_fields), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
+        url = current_url.format(location=location, period="PT0S", fields=",".join(current_fields.values()), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
 
         currentFallbacks = None
 
         data = self.get(url)
         if "observations" not in data:
             raise CurrentDataException("Failed getting current data. Content: {}".format(data))
+
+        #logging.info(url)
+        #logging.info(data)
+
+        data["observations"].reverse()
+        missing_fields = None
+
+        _data = {"observation": None, "missing_fields": current_fields.keys()}
+        for observation in data["observations"]:
+            missing_fields = [field for field in current_fields.keys() if current_fields[field] not in observation]
+
+            if _data["observation"] is None or len(_data["missing_fields"]) < len(missing_fields):
+                _data["observation"] = observation
+                _data["missing_fields"] = missing_fields
+
+            if len(_data["missing_fields"]) == 0:
+                break
+
+        for missing_field in list(_data["missing_fields"]):
+            if currentFallbacks is None:
+                with db.open() as db:
+                    currentFallbacks = db.getOffset(0)
+
+            if missing_field not in currentFallbacks:
+                continue
+
+            logging.warn("Use fallback data for field {}".format(missing_field))
+
+            _data["observation"][current_fields[missing_field]] = currentFallbacks[missing_field]
+            _data["missing_fields"].remove(missing_field)
+
+        #time.sleep(60000)
+
+        if len(_data["missing_fields"]) > 0:
+            raise CurrentDataException("Failed processing current data. Missing fields: {}, Content: {}".format(_data["missing_fields"], _data["observation"]))
         else:
-            data["observations"].reverse()
-            missing_fields = None
+            for field, _field in current_fields.items():
+                mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_topic,field), payload=_data["observation"][_field], qos=0, retain=False)
 
-            _data = {"observation": None, "missing_fields": current_fields}
-            for observation in data["observations"]:
-                missing_fields = [field for field in current_fields if field not in observation]
-
-                if _data["observation"] is None or len(_data["missing_fields"]) < len(missing_fields):
-                    _data["observation"] = observation
-                    _data["missing_fields"] = missing_fields
-
-                if len(_data["missing_fields"]) == 0:
-                    break
-
-            for missing_field in list(_data["missing_fields"]):
-                if currentFallbacks is None:
-                    with db.open() as db:
-                        currentFallbacks = db.getOffset(0)
-
-                if missing_field not in currentFallbacks:
-                    continue
-
-                logging.warn("Use fallback data for field {}".format(missing_field))
-
-                _data["observation"][missing_field] = currentFallbacks[missing_field]
-                _data["missing_fields"].remove(missing_field)
-
-            #time.sleep(60000)
-
-            if len(_data["missing_fields"]) > 0:
-                raise CurrentDataException("Failed processing current data. Missing fields: {}, Content: {}".format(_data["missing_fields"], _data["observation"]))
+            if "observedFrom" in _data["observation"]:
+                observedFrom = _data["observation"]["observedFrom"]
+                observedFrom = u"{0}{1}".format(observedFrom[:-3],observedFrom[-2:])
             else:
-                for field in current_fields:
-                    mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_topic,field), payload=_data["observation"][field], qos=0, retain=False)
+                observedFrom = datetime.now().astimezone()
+                observedFrom = observedFrom.replace(minute=0, second=0,microsecond=0)
+                observedFrom = observedFrom.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-                if "observedFrom" in _data["observation"]:
-                    observedFrom = _data["observation"]["observedFrom"]
-                    observedFrom = u"{0}{1}".format(observedFrom[:-3],observedFrom[-2:])
-                else:
-                    observedFrom = datetime.now().astimezone()
-                    observedFrom = observedFrom.replace(minute=0, second=0,microsecond=0)
-                    observedFrom = observedFrom.strftime("%Y-%m-%dT%H:%M:%S%z")
+            #logging.info(observedFrom)
+            mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_topic), payload=observedFrom, qos=0, retain=False)
 
-                #logging.info(observedFrom)
-                mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_topic), payload=observedFrom, qos=0, retain=False)
-
-            logging.info("Current data published")
+        logging.info("Current data published")
 
     def fetchForecast(self, mqtt ):
         date = datetime.now().astimezone()#.now(timezone(self.config.timezone))

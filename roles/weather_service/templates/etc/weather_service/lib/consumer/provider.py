@@ -29,8 +29,10 @@ class ProviderConsumer():
         self.version = 1
         self.valid_cache_file = True
 
+        self.processed_current_values = None
+        self.processed_forecast_values = None
+
         self.current_values = None
-        self.forecast_values = None
 
         self.consume_errors = { "forecast": 0, "current": 0, "summery": 0 }
         self.consume_refreshed = { "forecast": 0, "current": 0, "summery": 0 }
@@ -42,6 +44,9 @@ class ProviderConsumer():
         self.last_consume_error = None
 
         self.current_is_raining = False
+
+        with self.db.open() as db:
+            self.field_names = db.getFields()
 
     def start(self):
         self._restore()
@@ -88,10 +93,10 @@ class ProviderConsumer():
                         #logging.info(datetime_str)
                         #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
                         validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
-
                         update_values = []
-                        for field in self.current_values:
-                            update_values.append("`{}`='{}'".format(field,self.current_values[field]))
+                        for field in self.processed_current_values:
+                            if field in self.field_names:
+                                update_values.append("`{}`='{}'".format(field,self.processed_current_values[field]))
 
                         if db.hasEntry(validFrom.timestamp()):
                             isModified = db.update(validFrom.timestamp(),update_values)
@@ -99,49 +104,54 @@ class ProviderConsumer():
                         else:
                             logging.info(u"Current data not updated: Topic: " + msg.topic + ", message:" + str(msg.payload))
 
-                        self.current_values = None
+                        self.current_values = self.processed_current_values
+                        self.processed_current_values = None
                 else:
-                    if self.current_values is None:
-                        self.current_values = {}
-                    self.current_values[topic[4]] = msg.payload.decode("utf-8")
+                    if self.processed_current_values is None:
+                        self.processed_current_values = {}
+                    self.processed_current_values[topic[4]] = msg.payload.decode("utf-8")
             elif state_name == u"forecast":
                 if is_refreshed:
-                    if self.forecast_values is not None:
+                    if self.processed_forecast_values is not None:
                         with self.db.open() as db:
                             updateCount = 0
                             insertCount = 0
-                            for datetime_str in self.forecast_values:
+                            for datetime_str in self.processed_forecast_values:
                                 validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
 
                                 update_values = []
-                                for field in self.forecast_values[datetime_str]:
-                                    update_values.append(u"`{}`='{}'".format(field,self.forecast_values[datetime_str][field]))
+                                for field in self.processed_forecast_values[datetime_str]:
+                                    update_values.append(u"`{}`='{}'".format(field,self.processed_forecast_values[datetime_str][field]))
 
                                 isUpdate = db.hasEntry(validFrom.timestamp())
-                                isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
-                                if isModified:
-                                    if isUpdate:
-                                        updateCount += 1
-                                    else:
-                                        insertCount += 1
+                                try:
+                                    isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
+                                    if isModified:
+                                        if isUpdate:
+                                            updateCount += 1
+                                        else:
+                                            insertCount += 1
+                                except Exception as e:
+                                    logging.info(update_values)
+                                    raise e
+                            logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_forecast_values),updateCount,insertCount))
 
-                            logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.forecast_values),updateCount,insertCount))
-
-                            self.forecast_values = None
+                            self.processed_forecast_values = None
                     else:
                         logging.info("Forcecasts not processed")
                 else:
-                    if self.forecast_values is None:
-                        self.forecast_values = {}
+                    if self.processed_forecast_values is None:
+                        self.processed_forecast_values = {}
                         
                     field = topic[4]
                     datetime_str = topic[5].replace("plus","+")
-                    datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
-                    
-                    if datetime_str not in self.forecast_values:
-                        self.forecast_values[datetime_str] = {}
+                    #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
+                    #logging.info("{} {}".format(topic[5], datetime_str))
+
+                    if datetime_str not in self.processed_forecast_values:
+                        self.processed_forecast_values[datetime_str] = {}
                         
-                    self.forecast_values[datetime_str][field] = msg.payload.decode("utf-8")
+                    self.processed_forecast_values[datetime_str][field] = msg.payload.decode("utf-8")
             elif state_name == u"summary":
                 if is_refreshed:
                     logging.info("Summery data processed")
@@ -170,6 +180,34 @@ class ProviderConsumer():
                 self.icon_cache[icon_name] = f.read()
         return self.icon_cache[icon_name]
 
+    def getCurrentValues(self, last_modified, requested_fields = None):
+        result, _last_modified = self.station_consumer.getValues(last_modified, requested_fields)
+
+        if result is None and last_modified < self.consume_refreshed["forecast"]:
+            result = {}
+            with self.db.open() as db:
+                mapping = {
+                    'currentAirTemperatureInCelsius': "airTemperatureInCelsius",
+                    'currentPerceivedTemperatureInCelsius': "feelsLikeTemperatureInCelsius",
+                    'currentWindGustInKilometerPerHour': "maxWindSpeedInKilometerPerHour",
+                    'currentWindSpeedInKilometerPerHour': "windSpeedInKilometerPerHour",
+                    'currentRainLastHourInMillimeter': "precipitationAmountInMillimeter",
+                    'currentUvIndex': "uvIndexWithClouds"
+                }
+                for field, _field in mapping.items():
+                    if _field is not None and _field in self.current_values:
+                        result[field] = self.current_values[_field]
+                    else:
+                        result[field] = -1
+
+                end = datetime.now()
+                start = end.replace(hour=0, minute=0, second=0, microsecond=0)
+
+                values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
+                result["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+
+        return [result, _last_modified]
+
     def getWidgetSVG(self, last_modified, requested_fields):
         # curl -d 'type=widget' -H "Content-Type: application/x-www-form-urlencoded" -X POST http://172.16.0.201/data/
 
@@ -193,7 +231,9 @@ class ProviderConsumer():
 
                         currentRain = 0
                         currentRainLevel = self.station_consumer.getValue("rainLevel")
-                        if currentRainLevel > 0:
+                        if currentRainLevel is None:
+                            currentRain = data["precipitationAmountInMillimeter"]
+                        elif currentRainLevel > 0:
                             if self.current_is_raining or currentRainLevel > 2:
                                 currentRain = 0.1
 
@@ -204,13 +244,15 @@ class ProviderConsumer():
                                 currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
                                 if currentRain1Hour > currentRain:
                                     currentRain = currentRain1Hour
-
                         self.current_is_raining = currentRain > 0
 
                          #if currentRain > block.getPrecipitationAmountInMillimeter():
                         block.setPrecipitationAmountInMillimeter(currentRain)
 
-                        block.effectiveCloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
+                        cloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
+                        if cloudCoverInOcta is None:
+                            cloudCoverInOcta = data["effectiveCloudCoverInOcta"]
+                        block.effectiveCloudCoverInOcta = cloudCoverInOcta
                         #logging.info("{}".format(block.effectiveCloudCoverInOcta))
 
                         icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)

@@ -25,6 +25,19 @@ class DBConnection():
         self.cursor.close()
         self.connection.close()
 
+    def getFields(self):
+        try:
+            self.cursor.execute(u"SHOW FIELDS FROM {}".format(self.config.db_table))
+            self.db.state = 1
+            fields = []
+            for row in self.cursor.fetchall():
+                fields.append(row["Field"])
+            return fields
+        except MySQLdb._exceptions.OperationalError as e:
+            logging.warn("{}: {}".format(str(e.__class__),str(e)))
+            self.db.state = 0
+            raise(DBException(e))
+
     def hasEntry(self, timestamp):
         try:
             self.cursor.execute(u"SELECT * FROM {} WHERE `datetime`=from_unixtime({})".format(self.config.db_table,timestamp))
@@ -84,6 +97,19 @@ class DBConnection():
             self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` <= '{}' ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
             self.db.state = 1
             return self._convertRows(self.cursor.fetchall())
+        except MySQLdb._exceptions.OperationalError as e:
+            logging.warn("{}: {}".format(str(e.__class__),str(e)))
+            self.db.state = 0
+            raise(DBException(e))
+
+    def getRangeSum(self, start, end, fields):
+        try:
+            sql = []
+            for field in fields:
+                sql.append("SUM(\"{}\") as '{}'".format(field, field))
+            self.cursor.execute("SELECT {} FROM {} WHERE `datetime` >= '{}' AND `datetime` <= '{}'".format( ",".join(sql), self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S'), end.strftime('%Y-%m-%d %H:%M:%S')))
+            self.db.state = 1
+            return self._convertRow(self.cursor.fetchone())
         except MySQLdb._exceptions.OperationalError as e:
             logging.warn("{}: {}".format(str(e.__class__),str(e)))
             self.db.state = 0

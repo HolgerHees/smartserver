@@ -55,20 +55,23 @@ class StationConsumer():
         value = float(value) if "." in value else int(value)
         self.station_values[ topic[3] ] = { "time": time.time(), "value": value  }
 
-    def getValue(self, key ):
-        return self.station_values[key]["value"]
+    def getValue(self, key, fallback = None ):
+        return self.station_values[key]["value"] if key in self.station_values else fallback
 
     def getValues(self, last_modified, requested_fields = None ):
-        result = {}
         _last_modified = last_modified
-        for key, data in self.station_values.items():
-            key = "current{}{}".format(key[0].upper(),key[1:])
-            if requested_fields is not None and key not in requested_fields:
-                continue
-            if last_modified < data["time"]:
-                result[key] = data["value"]
-                if _last_modified < data["time"]:
-                    _last_modified = data["time"]
+        if len(self.station_values) > 0:
+            result = {}
+            for key, data in self.station_values.items():
+                key = "current{}{}".format(key[0].upper(),key[1:])
+                if requested_fields is not None and key not in requested_fields:
+                    continue
+                if last_modified < data["time"]:
+                    result[key] = data["value"]
+                    if _last_modified < data["time"]:
+                        _last_modified = data["time"]
+        else:
+            result = None
         return [result, _last_modified]
 
     def getLastModified(self, last_modified, requested_fields = None ):

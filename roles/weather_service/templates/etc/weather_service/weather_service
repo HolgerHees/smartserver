@@ -123,22 +123,18 @@ class Handler(Server):
         if type == "widget":
             requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
 
-            _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station") if not force else -1, requested_fields)
-            last_data_modified["station"] = _last_modified
-            result["changed_data"] |= _values
-
             _values, _last_modified = self.provider_consumer.getWidgetSVG(self.getLastDataModified("clouds") if not force else -1, requested_fields)
             last_data_modified["clouds"] = _last_modified
+            result["changed_data"] |= _values
+
+            _values, _last_modified = self.provider_consumer.getCurrentValues(self.getLastDataModified("station") if not force else -1, requested_fields)
+            last_data_modified["station"] = _last_modified
             result["changed_data"] |= _values
         elif type == "week":
             requested_fields = request.form["fields"].split(",") if "fields" in request.form else None
 
             _values, _last_modified = self.astro_consumer.getValues(self.getLastDataModified("astro") if not force else -1, requested_fields)
             last_data_modified["astro"] = _last_modified
-            result["changed_data"] |= _values
-
-            _values, _last_modified = self.station_consumer.getValues(self.getLastDataModified("station") if not force else -1, requested_fields)
-            last_data_modified["station"] = _last_modified
             result["changed_data"] |= _values
 
             _values, _last_modified = self.provider_consumer.getWidgetSVG(self.getLastDataModified("clouds") if not force else -1, requested_fields)
@@ -148,6 +144,10 @@ class Handler(Server):
             requested_day = request.form["day"] if "day" in request.form else None
             _values, _last_modified = self.provider_consumer.getDetailOverviewValues(self.getLastDataModified("provider") if not force else -1, requested_fields, requested_day)
             last_data_modified["provider"] = _last_modified
+            result["changed_data"] |= _values
+
+            _values, _last_modified = self.provider_consumer.getCurrentValues(self.getLastDataModified("station") if not force else -1, requested_fields)
+            last_data_modified["station"] = _last_modified
             result["changed_data"] |= _values
         elif type == "today":
             _values = self.provider_consumer.getTodayOverviewValues()
