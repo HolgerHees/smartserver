@@ -95,6 +95,7 @@ class ProviderConsumer():
                         validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
                         update_values = []
                         for field in self.processed_current_values:
+                            self.processed_current_values[field] = float(self.processed_current_values[field]) if "." in self.processed_current_values[field] else int(self.processed_current_values[field])
                             if field in self.field_names:
                                 update_values.append("`{}`='{}'".format(field,self.processed_current_values[field]))
 
