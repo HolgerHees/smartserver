@@ -92,7 +92,7 @@ fi
 
 if [[ "$IS_AP" == 1 ]]; then
   echo "Install wifi packages ..."
-  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl > /dev/null"
+  sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg remove wpad-basic-wolfssl wpad-basic-mbedtls > /dev/null"
   sshpass -f <(printf '%s\n' $PASSWORD) ssh root@$IP "opkg install wpad-wolfssl hostapd-utils > /dev/null"
 
   grep "ieee80211r '1'" "$SOURCE/$IP/etc/config/wireless" > /dev/null
