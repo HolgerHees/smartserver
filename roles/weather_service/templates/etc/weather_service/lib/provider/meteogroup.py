@@ -213,8 +213,8 @@ class Fetcher(object):
                         continue
 
                     values = {}
-                    values["validFromAsString"] = forecast["validFrom"]
-                    values["validUntilAsString"] = forecast["validUntil"]
+                    values["validFromAsString"] = u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:])
+                    values["validUntilAsString"] = u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:])
                     values["validFromAsDatetime"] = validFrom
                     values["validUntilAsDatetime"] = validUntil
                     _entries[values["validFromAsString"]] = values
