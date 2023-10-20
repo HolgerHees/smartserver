@@ -570,6 +570,6 @@ class Processor(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "system_service_trafficwatcher_netflowcollector{{type=\"device_init_time\",}} {}".format( "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0" ),
+            "system_service_state{{type=\"trafficwatcher.netflowcollector\",details=\"device_init_time\",}} {}".format( "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0" ),
             "system_service_process{{type=\"trafficwatcher.netflowcollector\",}} {}".format("1" if self.is_running else "0")
         ]
