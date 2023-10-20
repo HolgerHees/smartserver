@@ -120,27 +120,11 @@ class Helper():
         return srcIsExternal
 
 class Connection:
-    def __init__(self, gateway_base_time, request_ts, request_flow, answer_flow, config, ipcache):
+    def __init__(self, start_time, end_time, request_flow, answer_flow, config, ipcache):
         self.connection_type = "netflow"
 
-        if gateway_base_time > 0:
-            #_diff = ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000
-            self.start_timestamp = ( gateway_base_time + request_flow["flowStartSysUpTime"] ) / 1000
-            self.end_timestamp = ( gateway_base_time + request_flow["flowEndSysUpTime"] ) / 1000
-            if request_ts - self.start_timestamp > 600:
-                # can happen after 2982 days uptime
-                logging.error("FALLBACK happens {} {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(request_ts)))
-                self.start_timestamp = self.end_timestamp = 0
-            #logging.info("{} => {}".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(_timestamp)))
-        else:
-            self.start_timestamp = self.end_timestamp = 0
-
-        if self.start_timestamp == 0:
-            # METRIC_TIMESHIFT => most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
-            self.start_timestamp = request_ts - ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000  - METRIC_TIMESHIFT
-            self.end_timestamp = request_ts
-        #self.timestamp = request_ts - METRIC_TIMESHIFT
-        #logging.info("{} => {} : {}".format(datetime.fromtimestamp(request_ts - METRIC_TIMESHIFT), datetime.fromtimestamp(self.timestamp),_diff))
+        self.start_timestamp = start_time
+        self.end_timestamp = end_time
 
         # https://www.iana.org/assignments/ipfix/ipfix.xhtml
         # TODO flowDirection
@@ -374,6 +358,9 @@ class Processor(threading.Thread):
         self.watcher = watcher
         self.ipcache = ipcache
 
+        self.device_base_time = 0
+        self.device_base_error = 0
+
         #_ip = "192.168.0.1"
         #ip = ipaddress.IPv4Address(_ip)
         #logging.info("IP: {}, is_multicast: {}, is_private: {}, is_global: {}, is_unspecified: {}, is_reserved: {}, is_loopback: {}, is_link_local: {}".format(_ip, ip.is_multicast, ip.is_private, ip.is_global, ip.is_unspecified, ip.is_reserved, ip.is_loopback, ip.is_link_local))
@@ -397,6 +384,33 @@ class Processor(threading.Thread):
         self.is_running = True
         super().start()
 
+    def buildTimestamps(self, request_flow, request_ts):
+        if self.device_base_time > 0:
+            #_diff = ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000
+            start_timestamp = ( self.device_base_time + request_flow["flowStartSysUpTime"] ) / 1000
+            end_timestamp = ( self.device_base_time + request_flow["flowEndSysUpTime"] ) / 1000
+            if request_ts - start_timestamp > 600:
+                # can happen after 2982 days uptime
+                start_timestamp = self.end_timestamp = 0
+                self.device_base_time = 0
+                if self.device_base_error == 0:
+                    self.device_base_error = time.time()
+                    logging.warning("RESET: device_base_time: {}, flowStartSysUpTime: {}, request_ts: {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.device_base_time / 1000), request_flow["flowStartSysUpTime"], datetime.fromtimestamp(request_ts)))
+            else:
+                self.device_base_error = 0
+            #logging.info("{} => {}".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(_timestamp)))
+        else:
+            start_timestamp = self.end_timestamp = 0
+
+        if start_timestamp == 0:
+            # METRIC_TIMESHIFT => most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
+            start_timestamp = request_ts - ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000  - METRIC_TIMESHIFT
+            end_timestamp = request_ts
+        #timestamp = request_ts - METRIC_TIMESHIFT
+        #logging.info("{} => {} : {}".format(datetime.fromtimestamp(request_ts - METRIC_TIMESHIFT), datetime.fromtimestamp(timestamp),_diff))
+
+        return [start_timestamp, end_timestamp]
+
     def run(self):
         if self.config.netflow_bind_ip is None:
             return
@@ -408,8 +422,6 @@ class Processor(threading.Thread):
 
         self.listener = ThreadedNetFlowListener(self.config.netflow_bind_ip, self.config.netflow_bind_port)
         self.listener.start()
-
-        self.gateway_base_time = 0
 
         try:
             pending = {}
@@ -453,7 +465,9 @@ class Processor(threading.Thread):
                     for f in export.flows:
                         flow = f.data
                         if "systemInitTimeMilliseconds" in flow:
-                            self.gateway_base_time = flow["systemInitTimeMilliseconds"]
+                            if self.device_base_time == 0:
+                                logging.info("Got initial system init time: {}".format(flow["systemInitTimeMilliseconds"]))
+                            self.device_base_time = flow["systemInitTimeMilliseconds"]
 
                         # ignore non traffic related flows
                         if "flowStartSysUpTime" not in flow:
@@ -510,7 +524,8 @@ class Processor(threading.Thread):
                                 request_key = "{}-{}".format(src_addr,first_switched)
                                 if request_key in pending:
                                     request_flow, request_ts = pending.pop(request_key)
-                                    con = Connection(self.gateway_base_time, request_ts, request_flow, None, self.config, self.ipcache)
+                                    [start_time, end_time] = self.buildTimestamps(request_flow, request_ts)
+                                    con = Connection(start_time, end_time, request_flow, None, self.config, self.ipcache)
                                     connections.append(con)
                                 pending[request_key] = [ flow, ts ]
                                 continue
@@ -521,7 +536,8 @@ class Processor(threading.Thread):
 
                         #raise Exception
 
-                        con = Connection(self.gateway_base_time, request_ts, request_flow, answer_flow, self.config, self.ipcache)
+                        [start_time, end_time] = self.buildTimestamps(request_flow, request_ts)
+                        con = Connection(start_time, end_time, request_flow, answer_flow, self.config, self.ipcache)
                         connections.append(con)
 
                     #self.getMetrics()
@@ -536,7 +552,8 @@ class Processor(threading.Thread):
                     for request_key in list(pending.keys()):
                         request_flow, request_ts = pending[request_key]
                         if ts - request_ts > 15:
-                            con = Connection(self.gateway_base_time, request_ts, request_flow, None, self.config, self.ipcache)
+                            [start_time, end_time] = self.buildTimestamps(request_flow, request_ts)
+                            con = Connection(start_time, end_time, request_flow, None, self.config, self.ipcache)
                             connections.append(con)
                             del pending[request_key]
                     last_cleanup = now
@@ -552,4 +569,7 @@ class Processor(threading.Thread):
             self.listener.join()
 
     def getStateMetrics(self):
-        return [ "system_service_process{{type=\"trafficwatcher.netflowcollector\",}} {}".format("1" if self.is_running else "0") ]
+        return [
+            "system_service_trafficwatcher_netflowcollector{{type=\"device_init_time\",}} {}".format( "1" if self.device_base_error == 0 or time.time() - self.device_base_error < 600 else "0" ),
+            "system_service_process{{type=\"trafficwatcher.netflowcollector\",}} {}".format("1" if self.is_running else "0")
+        ]
