@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import re
-from dateutil import parser
+from datetime import datetime
 
 #from github import Github
 
@@ -20,7 +20,23 @@ def initRepository(repository_dir, repository_url, build_dir):
 
 def updateRepository(repository_dir,branch):
     # git ls-remote {{vault_deployment_config_git}} HEAD
-    helper.execCommand( u"git pull", repository_dir )
+    count = 0
+    while True:
+        try:
+            helper.execCommand( u"git pull", repository_dir )
+            break
+        except Exception as e:
+            if count < 4:
+                log.info("Git pull problem '{}'. Retry in 15 seconds.".format(str(e)))
+                time.sleep(15)
+                count += 1
+            else:
+                raise e
+
+#def getLastPull(repository_dir):
+#    lastPullResult = helper.execCommand( u"stat -c %Y .git/FETCH_HEAD", repository_dir )
+#    lastPullTimestamp = lastPullResult.stdout.decode("utf-8").strip()
+#    datetime.fromtimestamp(lastPullTimestamp)
 
 def getHash(repository_dir):
     checkResult = helper.execCommand( u"git rev-parse @", repository_dir )
