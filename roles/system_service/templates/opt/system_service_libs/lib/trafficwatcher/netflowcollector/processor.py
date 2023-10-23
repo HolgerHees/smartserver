@@ -392,10 +392,10 @@ class Processor(threading.Thread):
             if request_ts - start_timestamp > 600:
                 # can happen after 2982 days uptime
                 start_timestamp = self.end_timestamp = 0
-                self.device_base_time = 0
                 if self.device_base_error == 0:
                     self.device_base_error = time.time()
                     logging.warning("RESET: device_base_time: {}, flowStartSysUpTime: {}, request_ts: {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.device_base_time / 1000), request_flow["flowStartSysUpTime"], datetime.fromtimestamp(request_ts)))
+                self.device_base_time = 0
             else:
                 self.device_base_error = 0
             #logging.info("{} => {}".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(_timestamp)))
@@ -465,8 +465,9 @@ class Processor(threading.Thread):
                     for f in export.flows:
                         flow = f.data
                         if "systemInitTimeMilliseconds" in flow:
-                            if self.device_base_time == 0:
-                                logging.info("Got initial system init time: {}".format(flow["systemInitTimeMilliseconds"]))
+                            if self.device_base_time == 0 or self.device_base_time != flow["systemInitTimeMilliseconds"]:
+                                self.device_base_error = 0
+                                logging.info("Got system init time: {}".format(datetime.fromtimestamp(flow["systemInitTimeMilliseconds"] / 1000)))
                             self.device_base_time = flow["systemInitTimeMilliseconds"]
 
                         # ignore non traffic related flows
