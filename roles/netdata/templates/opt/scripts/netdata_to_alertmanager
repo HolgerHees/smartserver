@@ -92,7 +92,7 @@ for alert in netdata_alerts:
 
 
     labels = {
-        "family": alert["family"]
+        "family": alert["family"] if "family" in alert else "unknown"
     }
     summary = "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
     startAt = datetime.utcfromtimestamp(alert["last_status_change"])
