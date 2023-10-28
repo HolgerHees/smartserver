@@ -90,6 +90,8 @@ for alert in netdata_alerts:
         #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
         continue
 
+    if "family" not in alert:
+        logInfo("Missing family in netdata: {}".format(str(alert)))
 
     labels = {
         "family": alert["family"] if "family" in alert else "unknown"
