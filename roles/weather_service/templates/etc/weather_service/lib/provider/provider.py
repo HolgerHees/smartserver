@@ -145,10 +145,6 @@ class Provider:
                     target = target + timedelta(hours=1)
                 diff = target - date
 
-                sleepTime = diff.total_seconds()
-
-                error_count = 0
-
                 self.service_metrics["data_provider"] = 1
                 self.service_metrics["publish"] = 1
 
@@ -180,8 +176,7 @@ class Provider:
                 self.service_metrics["publish"] = 0
                 error_count += 1
 
-            if error_count > 0:
-                sleepTime = 600 * error_count if error_count < 6 else 3600
+            sleepTime = 600 * error_count if error_count < 6 else 3600
 
             logging.info("Sleep {} seconds".format(sleepTime))
             self.event.wait(sleepTime)
@@ -192,10 +187,8 @@ class Provider:
         for name, value in self.service_metrics.items():
             state_metrics.append("weather_service_state{{type=\"provider\", group=\"{}\"}} {}".format(name,value))
 
-        if self.is_fetching:
-            state = 1 if time.time() - self.last_fetch < 60 * 60 * 3 else 0
-        else:
-            state = 1 if time.time() - self.last_fetch < 60 * 60 + 5 * 60 else 0
+        max_hours = 3 if self.is_fetching else 6
+        state = 1 if time.time() - self.last_fetch < 60 * 60 * max_hours else 0
 
         state_metrics.append("weather_service_state{{type=\"provider\", group=\"running\"}} {}".format(state))
         return state_metrics
