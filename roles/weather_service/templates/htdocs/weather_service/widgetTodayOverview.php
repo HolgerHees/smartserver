@@ -39,9 +39,9 @@ function formatDuration($duration)
     return round( $duration / 60 ) . " h";
 }
 
-function formatNumber($number)
+function formatNumber($number, $precission = 1)
 {
-    return number_format($number, 1);
+    return number_format($number, $precission);
 }
 
 //echo print_r($values,true);
@@ -63,24 +63,24 @@ function formatNumber($number)
             <div class="time"><div class="from"><?php echo $start->format("H:i") . ' -</div><div class="to">' . $end->format("H:i"); ?></div></div>
             <div class="sun"><?php echo $blockData->svg; ?>
             </div>
-            <div class="value temperature"><div class="main"><?php echo formatNumber($blockData->airTemperatureInCelsius); ?></div><div class="sub">°C</div></div>
+            <div class="value temperature"><div class="main"><?php echo formatNumber($blockData->airTemperatureInCelsius); ?></div><div class="sub">&nbsp;°C</div></div>
             <div class="value precipitationProbability">
-                <?php echo getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . formatNumber($blockData->precipitationProbabilityInPercent); ?></div><div class="sub">%</div>
+                <?php echo getSVG('rain', 'rain_grayscaled') . "<div class=\"main\">" . formatNumber($blockData->precipitationProbabilityInPercent, 0); ?></div><div class="sub">&nbsp;%</div>
             </div>
             <div class="value precipitationAmount">
-                <div class="main"><?php echo formatNumber($blockData->precipitationAmountInMillimeter); ?></div><div class="sub">mm</div>
+                <div class="main"><?php echo formatNumber($blockData->precipitationAmountInMillimeter); ?></div><div class="sub">&nbsp;mm</div>
             </div>
 		</div>
 <?php } ?>
 	</div>
 	<div class="summary">
-		<div class="cell"><div class="txt">Min.:</div><div class="icon temperature"><?php echo getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->dayMinTemperature); ?> °C</div></div>
+		<div class="cell"><div class="txt">Min.:</div><div class="icon temperature"><?php echo getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->dayMinTemperature); ?>&nbsp;°C</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Max.:</div><div class="icon temperature"><?php echo getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->dayMaxTemperature); ?> °C</div></div>
+		<div class="cell"><div class="txt">Max.:</div><div class="icon temperature"><?php echo getSVG('temperature', 'temperature_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->dayMaxTemperature); ?>&nbsp;°C</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->dayMaxWindSpeed); ?> km/h</div></div>
+		<div class="cell"><div class="txt">Max.:</div><div class="icon wind"><?php echo getSVG('wind', 'wind_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->dayMaxWindSpeed); ?>&nbsp;km/h</div></div>
 		<div class="bullet">•</div>
-		<div class="cell"><div class="txt">Sum:</div><div class="icon rain"><?php echo getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->daySumRain); ?> mm</div></div>
+		<div class="cell"><div class="txt">Sum:</div><div class="icon rain"><?php echo getSVG('rain', 'rain_grayscaled') . "</div><div class=\"value\">" . formatNumber($values->daySumRain); ?>&nbsp;mm</div></div>
 		<div class="bullet">•</div>
 		<div class="cell"><div class="txt">Dauer:</div><div class="icon sun"><?php echo getSVG('sun', 'sun_grayscaled') . "</div><div class=\"value\">" . formatDuration( $values->daySumSunshine ); ?></div></div>
 	</div>
