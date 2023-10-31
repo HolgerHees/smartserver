@@ -90,12 +90,14 @@ for alert in netdata_alerts:
         #print("delayed alarm {} by {}".format(name, delay_up_to_timestamp-ts))
         continue
 
-    if "family" not in alert:
-        logInfo("Missing family in netdata: {}".format(str(alert)))
+    #if "component" not in alert:
+    #    logInfo("Missing family in netdata: {}".format(str(alert)))
 
     labels = {
-        "family": alert["family"] if "family" in alert else "unknown"
+        "component": alert["component"],
+        "type": alert["type"]
     }
+
     summary = "{} was {}".format(alert["info"].capitalize(),alert["value_string"])
     startAt = datetime.utcfromtimestamp(alert["last_status_change"])
     fired_alert = Alertmanager.buildAlert("netdata", alert['status'], alert["name"], summary, startAt, labels, GENERATOR_URL)
