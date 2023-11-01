@@ -117,16 +117,16 @@ class Blocklists(threading.Thread):
 
                         self._build()
                     elif len(map_data) == 0:
-                        logging.error("Error parsing {} list. Got empty map data".format(name))
+                        logging.warning("Error parsing '{}' list. Got empty map data".format(name))
                 else:
-                    logging.error("Error fetching {} list. Got empty response".format(name))
+                    logging.warning("Error fetching '{}' list. Got empty response".format(name))
             else:
-                logging.error("Error fetching {} list. Got code: '{}' and repsonse: '{}'".format(name, response.status_code, response.content))
-
+                logging.warning("Error fetching '{}' list. Got code: '{}' and repsonse: '{}'".format(name, response.status_code, response.content))
+        except requests.exceptions.ConnectionError as e:
+                logging.warning("Error fetching '{}' list. Got '{}'".format(name, response.status_code, str(e)))
         except:
-            logging.error("Error fetching ipsum list")
+            logging.error("Error fetching '{}' list".format(name))
             logging.error(traceback.format_exc())
-            return
 
     def _processIPSum(self, name, lines):
         created = deleted = 0

@@ -356,9 +356,8 @@ class TrafficWatcher(threading.Thread):
                     self.last_traffic_summery = [ count_values, now ]
 
                 return self.last_traffic_summery[0]
-            except requests.exceptions.ConnectionError:
-                logging.info(e)
-                logging.info("InfluxDB not ready.")
+            except requests.exceptions.ConnectionError as e:
+                logging.info("InfluxDB not ready. '{}'".format(str(e)))
 
         count_values = {}
         self._fillTrafficGroups(count_values)
@@ -381,9 +380,8 @@ class TrafficWatcher(threading.Thread):
 
                 self.traffic_metrics = {} # reset, will be used by prometheus metrics
                 return True
-            except requests.exceptions.ConnectionError:
-                #logging.info(e)
-                logging.info("InfluxDB not ready. Will retry in 15 seconds.")
+            except requests.exceptions.ConnectionError as e:
+                logging.info("InfluxDB not ready. Will retry in 15 seconds. '{}'".format(str(e)))
 
         return False
 
