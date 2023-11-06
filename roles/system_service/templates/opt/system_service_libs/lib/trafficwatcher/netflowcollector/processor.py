@@ -196,11 +196,7 @@ class Connection:
         self.packages = self.request_flow["packetDeltaCount"] + ( self.answer_flow["packetDeltaCount"] if self.answer_flow is not None else 0 )
 
         # Duration is given in milliseconds
-        self.duration = self.request_flow['flowEndSysUpTime'] - self.request_flow['flowStartSysUpTime']
-        if self.duration < 0:
-            # 32 bit int has its limits. Handling overflow here
-            # TODO: Should be handled in the collection phase
-            self.duration = (2 ** 32 - self.request_flow['flowStartSysUpTime']) + self.request_flow['flowEndSysUpTime']
+        self.duration = ( end_time - start_time ) * 1000
 
         is_multicast = True if self.dest.is_multicast or self.src.is_multicast else False
         is_broadcast = True if self.dest.compressed.endswith(".255") or self.src.compressed.endswith(".255") else False
@@ -244,10 +240,6 @@ class Connection:
         #elif self.is_swapped:
         #    logging.info("SWAPPED {} => {}".format(self.src,self.dest))
 
-
-#Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:121] - {'sourceIPv4Address': '34.158.0.131', 'destinationIPv4Address': '192.168.0.108', 'flowStartSysUpTime': 24968747, 'flowEndSysUpTime': 25030465, 'IN_BYTES': 441, 'IN_PKTS': 7, 'INPUT_SNMP': 0, 'OUTPUT_SNMP': 0, 'sourceTransportPort': 4070, 'destinationTransportPort': 48096, 'protocolIdentifier': 6, 'TCP_FLAGS': 24, 'ipVersion': 4, 'SRC_TOS': 0}
-#Apr 03 15:10:49 marvin system_service[3445]: [INFO] - [lib.netflow.processor:122] - False
-
     def getDebugData(self):
         _request_flow = self.request_flow.copy()
         _request_flow["src"] = ipaddress.ip_address( _request_flow["sourceIPv4Address"] if self.ip_type == "v4" else _request_flow["sourceIPv6Address"] ).compressed
@@ -264,10 +256,14 @@ class Connection:
             _request_flow["dest"] = "{}:{}".format(_request_flow["dest"], port)
             del _request_flow['destinationTransportPort']
 
-        for key in ["flowStartSysUpTime", "flowEndSysUpTime", "ingressInterface", "egressInterface", "octetDeltaCount", "packetDeltaCount", "ipClassOfService", "ipVersion"]:
+        for key in ["ingressInterface", "egressInterface", "octetDeltaCount", "packetDeltaCount", "ipClassOfService", "ipVersion"]:
             del _request_flow[key]
             #if data["response"] is not None:
             #    del data["response"][key]
+
+        for key in _request_flow.keys():
+             if key.startswith("flowStart") or key.startswith("flowEnd"):
+                del _request_flow[key]
 
         return " - answer: {} - {}".format("yes" if self.answer_flow is not None else "no", _request_flow)
 
@@ -384,32 +380,39 @@ class Processor(threading.Thread):
         self.is_running = True
         super().start()
 
-    def buildTimestamps(self, request_flow, request_ts):
-        if self.device_base_time > 0:
-            #_diff = ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000
-            start_timestamp = ( self.device_base_time + request_flow["flowStartSysUpTime"] ) / 1000
-            end_timestamp = ( self.device_base_time + request_flow["flowEndSysUpTime"] ) / 1000
-            if request_ts - start_timestamp > 600:
-                # can happen after 2982 days uptime
-                start_timestamp = self.end_timestamp = 0
-                if self.device_base_error == 0:
-                    self.device_base_error = time.time()
-                    logging.warning("RESET: device_base_time: {}, flowStartSysUpTime: {}, request_ts: {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.device_base_time / 1000), request_flow["flowStartSysUpTime"], datetime.fromtimestamp(request_ts)))
-                self.device_base_time = 0
+    def buildTimestamps(self, flow, flow_ts):
+        if "flowStartMilliseconds" in flow:
+            #logging.info(str(datetime.fromtimestamp(flow["flowStartMilliseconds"] / 1000)))
+            return [ flow["flowStartMilliseconds"] / 1000, flow["flowEndMilliseconds"] / 1000 ]
+
+        if "flowStartSysUpTime" in flow:
+            if self.device_base_time > 0:
+                #_diff = ( flow["flowEndSysUpTime"] - flow["flowStartSysUpTime"]) / 1000
+                start_timestamp = ( self.device_base_time + flow["flowStartSysUpTime"] ) / 1000
+                end_timestamp = ( self.device_base_time + flow["flowEndSysUpTime"] ) / 1000
+                if flow_ts - start_timestamp > 600:
+                    # can happen after 49 days uptime
+                    start_timestamp = self.end_timestamp = 0
+                    if self.device_base_error == 0:
+                        self.device_base_error = time.time()
+                        logging.warning("RESET: device_base_time: {}, flowStartSysUpTime: {}, flow_ts: {}. Maybe overflow of datatype unsigned 32bit for 'flowStartSysUpTime'".format(datetime.fromtimestamp(self.device_base_time / 1000), flow["flowStartSysUpTime"], datetime.fromtimestamp(flow_ts)))
+                    self.device_base_time = 0
+                else:
+                    self.device_base_error = 0
+                #logging.info("{} => {}".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(_timestamp)))
             else:
-                self.device_base_error = 0
-            #logging.info("{} => {}".format(datetime.fromtimestamp(self.start_timestamp), datetime.fromtimestamp(_timestamp)))
-        else:
-            start_timestamp = self.end_timestamp = 0
+                start_timestamp = self.end_timestamp = 0
 
-        if start_timestamp == 0:
-            # METRIC_TIMESHIFT => most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
-            start_timestamp = request_ts - ( request_flow["flowEndSysUpTime"] - request_flow["flowStartSysUpTime"]) / 1000  - METRIC_TIMESHIFT
-            end_timestamp = request_ts
-        #timestamp = request_ts - METRIC_TIMESHIFT
-        #logging.info("{} => {} : {}".format(datetime.fromtimestamp(request_ts - METRIC_TIMESHIFT), datetime.fromtimestamp(timestamp),_diff))
+            if start_timestamp == 0:
+                # METRIC_TIMESHIFT => most flows are already 60 seconds old when they are delivered (flow expire config in softflowd)
+                start_timestamp = flow_ts - ( flow["flowEndSysUpTime"] - flow["flowStartSysUpTime"]) / 1000  - METRIC_TIMESHIFT
+                end_timestamp = flow_ts
+            #timestamp = flow_ts - METRIC_TIMESHIFT
+            #logging.info("{} => {} : {}".format(datetime.fromtimestamp(flow_ts - METRIC_TIMESHIFT), datetime.fromtimestamp(timestamp),_diff))
 
-        return [start_timestamp, end_timestamp]
+            return [start_timestamp, end_timestamp]
+
+        return [None, None]
 
     def run(self):
         if self.config.netflow_bind_ip is None:
@@ -470,12 +473,14 @@ class Processor(threading.Thread):
                                 logging.info("Got system init time: {}".format(datetime.fromtimestamp(flow["systemInitTimeMilliseconds"] / 1000)))
                             self.device_base_time = flow["systemInitTimeMilliseconds"]
 
+                        [start_time, end_time] = self.buildTimestamps(flow, ts)
+
                         # ignore non traffic related flows
-                        if "flowStartSysUpTime" not in flow:
-                            #logging.info(flow)
+                        if start_time is None:
+                        #    #logging.info(flow)
                             continue
 
-                        first_switched = flow["flowStartSysUpTime"]
+                        #first_switched = flow["flowStartSysUpTime"]
 
                         if "protocolIdentifier" not in flow:
                             if "icmpTypeCodeIPv4" in flow or "icmpTypeCodeIPv6" in flow:
@@ -491,10 +496,6 @@ class Processor(threading.Thread):
                             #logging.info(flow)
                             #continue
 
-                        #if first_switched - 1 in pending:
-                        #    # TODO: handle fitting, yet mismatching (here: 1 second) pairs
-                        #    pass
-
                         # Find the peer for this connection
                         if "sourceIPv4Address" in flow or flow.get("ipVersion") == 4:
                             src_addr = flow["sourceIPv4Address"]
@@ -503,32 +504,23 @@ class Processor(threading.Thread):
                             src_addr = flow["sourceIPv6Address"]
                             dest_addr = flow["destinationIPv6Address"]
 
-                        #if src_addr == client[0] or dest_addr == client[0]:
-                        #    logging.info("SKIPPED")
-                        #    logging.info(flow)
-                        #    continue
-
-                        #if first_switched not in pending:
-                        #    pending[first_switched] = {}
-
                         # Match peers
-                        _request_key = "{}-{}".format(dest_addr,first_switched)
+                        _request_key = "{}-{}".format(dest_addr,start_time)
                         if _request_key in pending:
-                            request_flow, request_ts = pending.pop(_request_key)
+                            request_flow, request_ts, _, _ = pending.pop(_request_key)
                             answer_flow = flow
                         else:
-                            _request_key = "{}-{}".format(dest_addr,first_switched - 1)
+                            _request_key = "{}-{}".format(dest_addr,start_time - 1)
                             if _request_key in pending:
-                                request_flow, request_ts = pending.pop(_request_key)
+                                request_flow, request_ts, _, _ = pending.pop(_request_key)
                                 answer_flow = flow
                             else:
-                                request_key = "{}-{}".format(src_addr,first_switched)
+                                request_key = "{}-{}".format(src_addr,start_time)
                                 if request_key in pending:
-                                    request_flow, request_ts = pending.pop(request_key)
-                                    [start_time, end_time] = self.buildTimestamps(request_flow, request_ts)
+                                    request_flow, request_ts, _, _ = pending.pop(request_key)
                                     con = Connection(start_time, end_time, request_flow, None, self.config, self.ipcache)
                                     connections.append(con)
-                                pending[request_key] = [ flow, ts ]
+                                pending[request_key] = [ flow, ts, start_time, end_time ]
                                 continue
 
                         #logging.info("{}".format(peer_flow))
@@ -537,7 +529,6 @@ class Processor(threading.Thread):
 
                         #raise Exception
 
-                        [start_time, end_time] = self.buildTimestamps(request_flow, request_ts)
                         con = Connection(start_time, end_time, request_flow, answer_flow, self.config, self.ipcache)
                         connections.append(con)
 
@@ -551,9 +542,8 @@ class Processor(threading.Thread):
                 now = time.time()
                 if now - last_cleanup >= 1:
                     for request_key in list(pending.keys()):
-                        request_flow, request_ts = pending[request_key]
+                        request_flow, request_ts, start_time, end_time = pending[request_key]
                         if ts - request_ts > 15:
-                            [start_time, end_time] = self.buildTimestamps(request_flow, request_ts)
                             con = Connection(start_time, end_time, request_flow, None, self.config, self.ipcache)
                             connections.append(con)
                             del pending[request_key]
