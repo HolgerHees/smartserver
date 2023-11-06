@@ -261,7 +261,7 @@ class Connection:
             #if data["response"] is not None:
             #    del data["response"][key]
 
-        for key in _request_flow.keys():
+        for key in list(_request_flow.keys()):
              if key.startswith("flowStart") or key.startswith("flowEnd"):
                 del _request_flow[key]
 
