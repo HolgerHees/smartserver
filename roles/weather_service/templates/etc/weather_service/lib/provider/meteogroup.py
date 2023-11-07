@@ -8,7 +8,7 @@ import urllib.parse
 import json
 import decimal
 
-from lib.provider.provider import Provider
+from lib.provider.provider import Provider, AuthException, RequestDataException, CurrentDataException, ForecastDataException
 
 # possible alternative => https://open-meteo.com/
 
@@ -16,7 +16,8 @@ from lib.provider.provider import Provider
 
 token_url    = "https://auth.weather.mg/oauth/token"
 
-current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
+current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}';
+#current_url  = 'https://point-observation.weather.mg/observation/hourly?locatedAt={location}&observedPeriod={period}&fields={fields}&observedFrom={start}&observedUntil={end}';
 current_fields = {
     "airTemperatureInCelsius": "airTemperatureInCelsius",
     "feelsLikeTemperatureInCelsius": "feelsLikeTemperatureInCelsius",
@@ -95,17 +96,19 @@ class Fetcher(object):
 
     def fetchCurrent(self, db, mqtt ):
         
-        date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
-        date = date.replace(minute=0, second=0,microsecond=0)
-        end_date = self._prepareDate(date)
+        #date = datetime.now().astimezone()#.now(timezone(self.config.timezone))
+        #date = date.replace(minute=0, second=0,microsecond=0) + timedelta(hours=1)
+        #end_date = self._prepareDate(date)
         
-        date = date - timedelta(hours=2)
-        start_date = self._prepareDate(date)
+        #date = date - timedelta(hours=2)
+        #start_date = self._prepareDate(date)
         
         latitude, longitude = self.config.location.split(",")
         location = u"{},{}".format(longitude,latitude)
         
-        url = current_url.format(location=location, period="PT0S", fields=",".join(current_fields.values()), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
+        url = current_url.format(location=location, period="PT0S,PT1H,PT3H", fields=",".join(current_fields.values()))
+        #url = current_url.format(location=location, period="PT0S,PT1H,PT3H", fields=",".join(current_fields.values()), start=urllib.parse.quote(start_date), end=urllib.parse.quote(end_date))
+        #logging.info(url)
 
         currentFallbacks = None
 
@@ -117,15 +120,17 @@ class Fetcher(object):
         #logging.info(data)
 
         data["observations"].reverse()
-        missing_fields = None
-
-        _data = {"observation": None, "missing_fields": current_fields.keys()}
+        _data = {"observation": {}, "missing_fields": current_fields.keys()}
         for observation in data["observations"]:
-            missing_fields = [field for field in current_fields.keys() if current_fields[field] not in observation]
+            #logging.info(observation)
 
-            if _data["observation"] is None or len(_data["missing_fields"]) < len(missing_fields):
-                _data["observation"] = observation
-                _data["missing_fields"] = missing_fields
+            missing_fields = []
+            for field in _data["missing_fields"]:
+                if current_fields[field] in observation:
+                    _data["observation"][current_fields[field]] = observation[current_fields[field]]
+                else:
+                    missing_fields.append(field)
+            _data["missing_fields"] = missing_fields
 
             if len(_data["missing_fields"]) == 0:
                 break
@@ -151,13 +156,13 @@ class Fetcher(object):
             for field, _field in current_fields.items():
                 mqtt.publish("{}/weather/provider/current/{}".format(self.config.publish_topic,field), payload=_data["observation"][_field], qos=0, retain=False)
 
-            if "observedFrom" in _data["observation"]:
-                observedFrom = _data["observation"]["observedFrom"]
-                observedFrom = u"{0}{1}".format(observedFrom[:-3],observedFrom[-2:])
-            else:
-                observedFrom = datetime.now().astimezone()
-                observedFrom = observedFrom.replace(minute=0, second=0,microsecond=0)
-                observedFrom = observedFrom.strftime("%Y-%m-%dT%H:%M:%S%z")
+            #if "observedFrom" in _data["observation"]:
+            #    observedFrom = _data["observation"]["observedFrom"]
+            #    observedFrom = u"{0}{1}".format(observedFrom[:-3],observedFrom[-2:])
+            #else:
+            observedFrom = datetime.now().astimezone()
+            observedFrom = observedFrom.replace(minute=0, second=0,microsecond=0)
+            observedFrom = observedFrom.strftime("%Y-%m-%dT%H:%M:%S%z")
 
             #logging.info(observedFrom)
             mqtt.publish("{}/weather/provider/current/refreshed".format(self.config.publish_topic), payload=observedFrom, qos=0, retain=False)

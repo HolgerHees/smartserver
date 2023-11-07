@@ -8,7 +8,7 @@ import urllib.parse
 import json
 import decimal
 
-from lib.provider.provider import Provider
+from lib.provider.provider import Provider, RequestDataException, CurrentDataException, ForecastDataException
 
 # possible alternative => https://open-meteo.com/
 
@@ -58,15 +58,6 @@ forecast_config = {
     "sunshineDurationInMinutes": [ [ "cloudcover","direct_radiation","terrestrial_radiation" ], lambda self, fetched_values, last_values: self.buildSunshineDurationInMinutes(fetched_values, last_values) ]
 }
     
-class RequestDataException(Exception):
-    pass
-
-class CurrentDataException(RequestDataException):
-    pass
-  
-class ForecastDataException(RequestDataException):
-    pass
-
 class Fetcher(object):
     def __init__(self, config):
         self.config = config
