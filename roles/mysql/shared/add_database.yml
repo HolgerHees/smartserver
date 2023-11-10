@@ -25,7 +25,7 @@
 - name: "mysql : create cron job"
   vars:
     name: "MySQL {{database | capitalize}} Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump {{database}} -h 127.0.0.1\" | bzip2 -c > /dataRaid/backups/mysql/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump --quick --single-transaction {{database}} -h 127.0.0.1\" | bzip2 -c > /dataRaid/backups/mysql/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     file: "ansible_mysql"
     hour: "1"
     minute: "0"
