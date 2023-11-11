@@ -60,6 +60,7 @@ class Server():
         signal.signal(signal.SIGINT, shutdown)
         sys.excepthook = self._exceptionHandler
 
+        self.thread_debugger = {}
         self._installThreadExcepthook()
 
         self._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
@@ -74,16 +75,19 @@ class Server():
 
     def _installThreadExcepthook(self):
         _init = threading.Thread.__init__
+        _self = self
 
         def init(self, *args, **kwargs):
             _init(self, *args, **kwargs)
             _run = self.run
 
             def run(*args, **kwargs):
+                _self.thread_debugger[self.name] = str(_run)
                 try:
                     _run(*args, **kwargs)
                 except:
                     sys.excepthook(*sys.exc_info())
+                del _self.thread_debugger[self.name]
             self.run = run
 
         threading.Thread.__init__ = init
@@ -105,6 +109,11 @@ class Server():
             pass
         except Exception as e:
             logging.error(traceback.format_exc())
+
+        for thread in threading.enumerate():
+            if thread.name == "MainThread":
+                continue
+            logging.warning("Thread '{}' is still running: {}".format(thread.name, self.thread_debugger[thread.name]))
 
         logging.info("Server stopped")
 
