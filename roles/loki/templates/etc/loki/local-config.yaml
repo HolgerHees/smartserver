@@ -22,6 +22,7 @@ frontend:
 
 querier:
 #  max_concurrent: 20
+  tail_max_duration: 25h       # external services, using tail, reconnects after 24h (like log collector from network traffic analyser)
   engine:
     timeout: 5m
 

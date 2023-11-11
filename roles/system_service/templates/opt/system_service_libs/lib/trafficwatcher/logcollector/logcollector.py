@@ -106,7 +106,7 @@ class LogCollector(threading.Thread):
         self.watcher = watcher
         self.ipcache = ipcache
 
-        self.connection_state = 0
+        self.timer = None
 
         server_ports = []
         for service in self.config.netflow_incoming_traffic:
@@ -137,15 +137,20 @@ class LogCollector(threading.Thread):
             self.is_running = False
             if self.ws is not None:
                 self.ws.close()
+            if self.timer is not None:
+                self.timer.cancel()
             self.event.set()
 
     def run(self):
         logging.info("Log collector started")
         try:
             while self.is_running:
+                self.timer = threading.Timer(60 * 60 * 24, self._force_reconnect)
+                self.timer.start()
+
                 self._connect()
 
-                if self.connection_state == 1011: # reached tail max duration limit
+                if self.ws is None:
                     continue
 
                 self.event.wait(15)
@@ -155,6 +160,12 @@ class LogCollector(threading.Thread):
             self.is_running = False
 
         logging.info("Log collector stopped")
+
+    def _force_reconnect(self):
+        if self.ws is not None:
+            logging.info("Log stream forced to reconnect")
+            self.ws.close()
+            self.ws = None
 
     def _connect(self):
         now = time.time()
@@ -175,15 +186,16 @@ class LogCollector(threading.Thread):
         self.ws.run_forever(ping_interval=5, ping_timeout=1, reconnect=5)
 
     def _on_open(self, ws):
-        self.connection_state = 0
         logging.info("Log stream started at {}".format(datetime.fromtimestamp(self.starttime)))
 
     def _on_close(self, ws, close_status_code, close_message):
-        self.connection_state = close_status_code
+        if self.ws is None:
+            return
         logging.info("Log stream closed with status: {}, message: {}".format(close_status_code, close_message))
 
     def _on_error(self, ws, error):
-        self.connection_state = -1
+        if self.ws is None:
+            return
         logging.error("Log stream got error {}".format(error))
 
     def _on_message(self, ws, message):
