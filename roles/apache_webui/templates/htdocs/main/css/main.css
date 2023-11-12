@@ -426,12 +426,9 @@ body.phone #menu .header {
     color: var(--menu-text);
     font-size: 16px;
 }
-#menu .service, #submenu .service {
-    transition: background-color 200ms ease-out; 
-    -webkit-transition: background-color 200ms ease-out; 
-    -moz-transition: background-color 200ms ease-out;
-    -o-transition: background-color 200ms ease-out;
-}
+/*#menu .service, #submenu .service {
+    transition: background-color 100ms cubic-bezier(.17,.67,.83,.67);
+}*/
 #menu .service {
     border-radius: 0 21px 21px 0;    
 }

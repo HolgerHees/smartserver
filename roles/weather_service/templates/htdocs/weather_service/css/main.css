@@ -321,6 +321,7 @@ body{
 
 .forecast .mvClickable {
     padding: 0.2vw;
+    /*transition: background-color 100ms cubic-bezier(.17,.67,.83,.67);*/
 }
 @media not (hover: none) {
     .forecast .mvClickable:hover {
