@@ -55,7 +55,7 @@ forecast_config = {
     # https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
     "precipitationType": "weathercode",
 
-    "sunshineDurationInMinutes": [ [ "cloudcover","direct_radiation","terrestrial_radiation" ], lambda self, fetched_values, last_values: self.buildSunshineDurationInMinutes(fetched_values, last_values) ]
+    "sunshineDurationInMinutes": [ [ "sunshine_duration" ], lambda self, fetched_values: self.buildSunshineDurationInMinutes(fetched_values) ]
 }
     
 class Fetcher(object):
@@ -82,65 +82,27 @@ class Fetcher(object):
         # > 3500 Extremely
         return int(round(fetched_values["cape"] * 100.0 / 3500.0, 0))
       
+    def buildPrecipitationInPersent(self, fetched_values):
+        return fetched_values["precipitation_probability"]
+
     # weather codes https://github.com/open-meteo/open-meteo/issues/287
     def buildFreezingRainInPercent(self, fetched_values):
         if fetched_values["weathercode"] not in [48,56,57,66,67]:
             return 0
-
-        #soil_temperature_0cm
-
         return self.buildPrecipitationInPersent(fetched_values)
 
     def buildHailInPercent(self, fetched_values):
         if fetched_values["weathercode"] not in [96,99]:
             return 0
-
         return self.buildPrecipitationInPersent(fetched_values)
 
     def buildSnowfallInPercent(self, fetched_values):
         if fetched_values["snowfall"] == 0:
             return 0
-
         return self.buildPrecipitationInPersent(fetched_values)
 
-    def buildPrecipitationInPersent(self, fetched_values):
-        if "precipitation_probability" in fetched_values and fetched_values["precipitation_probability"] is not None:
-            return fetched_values["precipitation_probability"]
-        #if fetched_values["rain"] > 10:
-        #    return 100
-        #if fetched_values["rain"] > 0:
-        #    return 50
-        return 0
-
-    def _buildSunshineBlock(self, start_value, end_value, duration):
-        if start_value > 120 and end_value > 120:
-            return duration
-        elif start_value < 120 and end_value < 120:
-            return 0
-        else:
-            diff = abs(start_value - end_value)
-            part_diff = ( start_value if start_value > end_value else end_value ) - 120
-            minutes = part_diff * duration / diff
-            return minutes
-
-    def buildSunshineDurationInMinutes(self, fetched_values, last_values):
-        if last_values is not None:
-            start_value = last_values["direct_radiation"][-1]
-        else:
-            start_value = 0
-
-        total_amount = 0
-        if len(fetched_values["direct_radiation"]) > 1:
-            for index, value in enumerate(fetched_values["direct_radiation"]):
-                end_value = fetched_values["direct_radiation"][index]
-                total_amount += self._buildSunshineBlock(start_value, end_value, 15)
-                start_value = end_value
-        else:
-            end_value = fetched_values["direct_radiation"][0]
-            total_amount += self._buildSunshineBlock(start_value, end_value, 60)
-            #logging.info("{} {} {}".format(start_value, end_value, total_amount))
-        #logging.info(fetched_values)
-        return int(round(total_amount,0))
+    def buildSunshineDurationInMinutes(self, fetched_values):
+        return int(round(fetched_values["sunshine_duration"] / 60,0))
 
     def collectFetchedFields(self, config):
         fields = []
@@ -215,29 +177,7 @@ class Fetcher(object):
                     for field in mapping[0]:
                         fetched_values[field] = data["hourly"][field][forecasts[period]["index"]]
 
-                    if messurementName == "sunshineDurationInMinutes":
-                        fetched_15_min_indexes = []
-                        for x, date_str in enumerate(data["minutely_15"]["time"]):
-                            if period[:-10] == date_str[:-2]:
-                                fetched_15_min_indexes.append(x)
-
-                        fetched_15_min_values = {}
-                        fields = ["direct_radiation","terrestrial_radiation"]
-                        for field in fields:
-                            fetched_15_min_values[field] = []
-                            for index in fetched_15_min_indexes:
-                                fetched_15_min_values[field].append(data["minutely_15"][field][index])
-
-                            if len(fetched_15_min_values[field]) == 4:
-                                fetched_values[field] = fetched_15_min_values[field]
-                            else:
-                                fetched_values[field] = [ fetched_values[field] ]
-
-                        #logging.info("{} {}".format(period, fetched_values))
-
-                        forecasts[period][messurementName] = mapping[1](self,fetched_values, last_values)
-                    else:
-                        forecasts[period][messurementName] = mapping[1](self,fetched_values)
+                    forecasts[period][messurementName] = mapping[1](self,fetched_values)
 
                     last_values = fetched_values
 
