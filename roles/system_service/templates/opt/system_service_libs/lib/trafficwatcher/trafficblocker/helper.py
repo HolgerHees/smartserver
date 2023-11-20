@@ -9,38 +9,43 @@ from smartserver import command
 
 class Helper():
     @staticmethod
-    def getBlockedIps():
-        returncode, cmd_result = command.exec2(["/sbin/iptables", "-S", "INPUT"])
+    def _fetchBlockedIps(result, cmd, regex):
+        returncode, cmd_result = command.exec2(cmd)
         if returncode != 0:
-            raise Exception("Cmd 'iptables' was not successful")
+            raise Exception("Cmd '{}' was not successful".format(" ",join(cmd)))
 
-        result = []
         for row in cmd_result.split("\n"):
             if "trafficblocker" not in row:
                 continue
-            match = re.match("-A INPUT -s ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\/32 .* -j DROP",row)
+            match = re.match("-A INPUT -s {} .* -j DROP".format(regex) ,row)
             if match:
                 result.append(match[1])
 
+    @staticmethod
+    def getBlockedIps():
+        result = []
+        Helper._fetchBlockedIps(result, ["/sbin/iptables", "-S", "INPUT"], "([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\/32")
+        Helper._fetchBlockedIps(result, ["/sbin/ip6tables", "-S", "INPUT"], "([0-9a-z:]*)\/128")
         return result
 
     @staticmethod
-    def blockIp(ip):
-        returncode, cmd_result = command.exec2(["/sbin/iptables", "-I", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
+    def _modifyBlockedIps(cmd):
+        returncode, cmd_result = command.exec2(cmd)
         if returncode != 0:
-            raise Exception("Cmd 'iptables -A' was not successful")
+            raise Exception("Cmd '{}' was not successful".format(" ",join(cmd)))
 
-        #returncode, cmd_result = command.exec2(["/sbin/iptables", "-I", "INPUT", "-s", "{}/32".format(ip), "-j", "LOG", "--log-prefix", "INPUT:DROP: ", "--log-level", "6" ])
-        #if returncode != 0:
-        #    raise Exception("Cmd 'iptables -A' was not successful")
+    @staticmethod
+    def blockIp(ip):
+        if ":" in ip:
+            cmd = ["/sbin/ip6tables", "-I", "INPUT", "-s", "{}/128".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]
+        else:
+            cmd = ["/sbin/iptables", "-I", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]
+        Helper._modifyBlockedIps(cmd)
 
     @staticmethod
     def unblockIp(ip):
-        #logging.info(" ".join(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]))
-        returncode, cmd_result = command.exec2(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"])
-        if returncode != 0:
-            raise Exception("Cmd 'iptables -D' was not successful")
-
-        #returncode, cmd_result = command.exec2(["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-j", "LOG", "--log-prefix", "INPUT:DROP: ", "--log-level", "6" ])
-        #if returncode != 0:
-        #    raise Exception("Cmd 'iptables -D' was not successful")
+        if ":" in ip:
+            cmd = ["/sbin/ip6tables", "-D", "INPUT", "-s", "{}/128".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]
+        else:
+            cmd = ["/sbin/iptables", "-D", "INPUT", "-s", "{}/32".format(ip), "-m", "comment", "--comment", "trafficblocker", "-j", "DROP"]
+        Helper._modifyBlockedIps(cmd)

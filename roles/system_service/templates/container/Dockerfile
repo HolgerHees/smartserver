@@ -3,7 +3,7 @@ FROM alpine:{{alpine_version}}
 COPY entrypoint.sh /entrypoint.sh
 
 RUN chmod 755 /entrypoint.sh \
-    && apk --update --no-cache add python3 py3-inotify py3-paho-mqtt py3-pip py3-websocket-client coreutils tcpdump arping fping nmap nmap-scripts iptables wireguard-tools-wg-quick tzdata \
+    && apk --update --no-cache add python3 py3-inotify py3-paho-mqtt py3-pip py3-websocket-client coreutils tcpdump arping fping nmap nmap-scripts iptables ip6tables wireguard-tools-wg-quick tzdata \
     && pip3 install --upgrade pip \
     && pip3 install flask=={{flask_core_version}} flask-socketio=={{flask_socketio_version}} simple-websocket fritzconnection netflow schedule \
     && apk --update --no-cache add git autoconf automake make gcc g++ libpcap-dev \
