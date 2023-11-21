@@ -37,12 +37,12 @@ default_variables: {
     "pihole_ipv6":    { "optional": yes },                        # pihole ipv6 address from same network as your server ip
     "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] }, # domains are needed to use google search results
     "pihole_addlist_urls": { "default": [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ] },
-    "pihole_dhcp_active": { "optional": yes },
-    "pihole_default_domain": {"default": "lan", "optional": "{{pihole_dhcp_active is not defined}}"},
-    "pihole_dhcp_range_start": { "default": "{{default_server_subnet}}.151", "optional": "{{pihole_dhcp_active is not defined}}"},
-    "pihole_dhcp_range_end": { "default": "{{default_server_subnet}}.200", "optional": "{{pihole_dhcp_active is not defined}}"},
-    "pihole_dns_overrides": {"default": [], "optional": "{{pihole_dhcp_active is not defined}}"},
-    "pihole_dhcp_reservations": {"default": [], "optional": "{{pihole_dhcp_active is not defined}}"},
+    "pihole_dhcp_active": { "default": no },
+    "pihole_default_domain": {"default": "lan", "optional": "{{pihole_dhcp_active is not defined or not pihole_dhcp_active}}"},
+    "pihole_dhcp_range_start": { "default": "{{default_server_subnet}}.151", "optional": "{{pihole_dhcp_active is not defined or not pihole_dhcp_active}}"},
+    "pihole_dhcp_range_end": { "default": "{{default_server_subnet}}.200", "optional": "{{pihole_dhcp_active is not defined or not pihole_dhcp_active}}"},
+    "pihole_dns_overrides": {"default": [], "optional": "{{pihole_dhcp_active is not defined or not pihole_dhcp_active}}"},
+    "pihole_dhcp_reservations": {"default": [], "optional": "{{pihole_dhcp_active is not defined or not pihole_dhcp_active}}"},
 
     "dlna_ip":        { "optional": yes },                        # dlna ip address from same network as your server ip
     "dlna_ipv6":      { "optional": yes },                        # dlna ipv6 address from same network as your server ip
