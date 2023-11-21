@@ -1,0 +1,13 @@
+# {{ansible_managed}}
+{% for override in pihole_dns_overrides %}
+{{override.ip}} {{override.custom_dns}}
+{% endfor %}
+{% for client in pihole_dhcp_reservations %}
+{{client.ip}} {{client.hostname}}
+{{client.ip}} {{client.hostname}}.{{pihole_default_domain}}
+{% if client.custom_dns is defined %}
+{% for item in client.custom_dns %}
+{{client.ip}} {{item}}.{{pihole_default_domain}}
+{% endfor %}
+{% endif %}
+{% endfor %}

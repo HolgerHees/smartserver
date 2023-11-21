@@ -2,18 +2,86 @@
   set_fact:
     pihole_version: '2023.10.0'
   tags: [ 'update_notifier_config' ]
-  
+
 - name: prepare needed folder
   file:
     path: '{{item}}'
     state: directory
     owner: "999"
-    group: "999"
+    group: "1000"
     mode: 0770
   with_items:
     - "{{ global_etc }}pihole"
     - "{{ global_etc }}pihole/dnsmasq.d/"
-    
+
+- name: basic preflight duplicate checks
+  block:
+# source: https://www.reddit.com/r/ansible/comments/b5tzp1/ansible_get_list_of_subelements_and_assert_for/
+    - name: create data structure to check via assertion
+      set_fact:
+        dupe_check: |
+          {
+            'reservation_count_total': {{ pihole_dhcp_reservations | length }},
+            'reservation_mac_unique': {{ (pihole_dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') | list) | unique | length }},
+            'reservation_ip_unique': {{ (pihole_dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') | list) | unique | length }},
+            'reservation_hostname_unique': {{ (pihole_dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') | list) | unique | length }}
+          }
+
+    - name: prints counts for basic duplicate checks
+      debug:
+        var: dupe_check
+
+    - name: assert no duplicates
+      assert:
+        that:
+        - dupe_check.reservation_count_total == dupe_check.reservation_mac_unique
+        - dupe_check.reservation_count_total == dupe_check.reservation_ip_unique
+        - dupe_check.reservation_count_total == dupe_check.reservation_hostname_unique
+  
+  rescue:
+    - name: dupe check
+      debug:
+        msg: "Duplicate entry: {{ item | duplicates }}"
+      loop:
+        - "{{ pihole_dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') }}"
+        - "{{ pihole_dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') }}"
+        - "{{ pihole_dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') }}"
+
+    - name: Fail when errors
+      ansible.builtin.fail:
+        msg: 'Duplicate MAC, IP or hostname found. Go to fail!'
+  when: pihole_dhcp_active is defined and pihole_dhcp_active | bool
+
+- name: generate custom.list (local DNS records)
+  template:
+    src: templates/etc/pihole/custom.list
+    dest: "{{global_etc}}pihole/custom.list"
+    owner: "999"
+    group: "1000"
+  notify: restart pihole
+  when: pihole_dhcp_active is defined and pihole_dhcp_active | bool
+
+- name: write static dhcp file
+  template:
+    src: templates/etc/pihole/dnsmasq.d/04-pihole-static-dhcp.conf
+    dest: "{{global_etc}}pihole/dnsmasq.d/04-pihole-static-dhcp.conf"
+    owner: "999"
+    group: "1000"
+  register: dhcp_changed
+  when: pihole_dhcp_active is defined and pihole_dhcp_active | bool
+  
+- name: revoke existing leases if dhcpd file changed
+  file:
+    path: "{{global_etc}}pihole/dhcp.leases"
+    state: absent
+  when: pihole_dhcp_active is defined  and pihole_dhcp_active | bool and dhcp_changed.changed
+
+- name: revoke existing leases if dhcpd file changed
+  file:
+    path: "{{global_etc}}pihole/dhcp.leases"
+    state: touch
+  when: pihole_dhcp_active is defined  and pihole_dhcp_active | bool and dhcp_changed.changed
+
 - name: check started docker
   systemd:
     name: docker
@@ -30,19 +98,39 @@
         {% endif %}
       }
 
+- name: prepare pihole environment variables
+  set_fact:
+    pihole_env: |
+      {
+        "TZ": "{{timezone}}",
+        "WEBPASSWORD": "{{vault_pihole_password}}",
+        "DNS1": "127.0.0.11",
+        "DNS2": "no"
+        {% if pihole_dhcp_active is defined and pihole_dhcp_active | bool%}
+            , "DNS_BOGUS_PRIV": "true"
+            , "DNS_FQDN_REQUIRED": "true"
+            , "REV_SERVER": "false"
+            , "REV_SERVER_DOMAIN": "{{pihole_default_domain}}"
+            , "REV_SERVER_TARGET": "{{default_server_gateway}}"
+            , "REV_SERVER_CIDR": "{{host_server_network}}"
+            , "DHCP_ACTIVE": "{{pihole_dhcp_active}}"
+            , "DHCP_START": "{{pihole_dhcp_range_start}}"
+            , "DHCP_END": "{{pihole_dhcp_range_end}}"
+            , "DHCP_ROUTER": "{{default_server_gateway}}"
+            , "DHCP_LEASETIME": "24"
+            , "PIHOLE_DOMAIN": "{{pihole_default_domain}}"
+        {% endif %}
+      }
+
 - name: create docker container
   docker_container:
     name: pihole
     image: "pihole/pihole:{{pihole_version}}"
     state: present
 #    recreate: true
-    env:
-      TZ: "{{timezone}}"
-      WEBPASSWORD: "{{vault_pihole_password}}"
-      DNS1: "127.0.0.11"
-      DNS2: "no"
-    #capabilities:
-    #  - NET_ADMIN
+    env: "{{pihole_env}}"
+    capabilities:
+      - net_admin
     log_driver: journald
     log_options:
       tag: pihole
