@@ -123,7 +123,7 @@ class Blocklists(threading.Thread):
             else:
                 logging.warning("Error fetching '{}' list. Got code: '{}' and repsonse: '{}'".format(name, response.status_code, response.content))
         except requests.exceptions.ConnectionError as e:
-                logging.warning("Error fetching '{}' list. Got '{}'".format(name, response.status_code, str(e)))
+                logging.warning("Error fetching '{}' list. Got '{}'".format(name, str(e)))
         except:
             logging.error("Error fetching '{}' list".format(name))
             logging.error(traceback.format_exc())
