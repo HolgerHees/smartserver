@@ -10,15 +10,18 @@
 
 - name: copy config
   template:
-    src: "templates/etc/{{item}}"
-    dest: "{{ global_etc }}named/{{item}}"
+    src: "templates/etc/{{item.file}}"
+    dest: "{{ global_etc }}named/{{item.file}}"
     owner: root
     group: root
     mode: 0640
+  when: "item.condition is undefined or item.condition == 1"
   with_items:
-    - "dnsmasq.conf"
-    - "dnsmasq-hosts"
-    - "resolv.dnsmasq.conf"
+    - { file: "dnsmasq.conf" }
+    - { file: "hosts" }
+    - { file: "resolv.conf" }
+    - { file: "hosts.custom", condition: "{{1 if dns_type == 'dnsmasq' else 0}}" }
+    - { file: "dhcp.conf", condition: "{{1 if dhcp_type == 'dnsmasq' else 0}}" }
   notify: "restart named"
 
 - name: build docker image
@@ -27,7 +30,7 @@
     image_name: "custom_named"
     image_version: "{{alpine_version}}"
     files:
-      - roles/dns/templates/container/Dockerfile
+      - roles/dnsmasq/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
@@ -48,9 +51,8 @@
         ipv4_address: "{{docker_dns_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{ global_etc }}named/dnsmasq-hosts:/etc/dnsmasq-hosts:z'
       - '{{ global_etc }}named/dnsmasq.conf:/etc/dnsmasq.conf:z'
-      - '{{ global_etc }}named/resolv.dnsmasq.conf:/etc/resolv.dnsmasq.conf:z'
+      - '{{ global_etc }}named/:/etc/dnsmasq/:z'
     published_ports: |
       [
         "53:53/udp",
@@ -85,7 +87,7 @@
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
 - name: enable dns
-  import_tasks: roles/dns/tasks/enable.yml
+  import_tasks: roles/dnsmasq/tasks/enable.yml
 
 - name: force dns restart
   systemd:

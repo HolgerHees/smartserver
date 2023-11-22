@@ -99,9 +99,9 @@
 
     - { import_role: { name: ssh }, tags: [ 'ssh' ] }                                            # setup allowed ssh user
 
-    - { import_role: { name: dns }, tags: [ 'dns', 'alpine' ] }                                  # dns server                                                        [docker,user:root]
+    - { import_role: { name: dnsmasq }, tags: [ 'dnsmasq', 'alpine' ] }                          # dns server                                                        [docker,user:root]
 
-    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip is defined" }         # adblock server                                                    [docker,user:root]
+    - { import_role: { name: pihole }, tags: [ 'pihole' ], when: "pihole_ip is defined" }        # adblock server                                                    [docker,user:root]
 
     - { import_role: { name: wireguard_mobile }, tags: [ 'wireguard', 'wireguard_mobile', 'macvlan', 'alpine' ] } # vpn configuration (mobile access)                [docker,user:root]
 

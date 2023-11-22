@@ -44,7 +44,7 @@
 
 - name: copy resolv.conf
   copy:
-    src: templates/etc/resolv.conf
+    src: templates/resolv.conf
     dest: /etc/resolv.conf
     owner: root
     group: root
