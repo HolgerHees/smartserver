@@ -121,8 +121,8 @@
         "21:21",
         "30000-30005:30000-30005",
         {% if default_server_ipv6 is defined %}
-          "[{{default_server_ipv6}}]:21:21",
-          "[{{default_server_ipv6}}]:30000-30005:30000-30005",
+          "[::]:21:21",
+          "[::]:30000-30005:30000-30005",
         {% endif %}
       ]
   notify: "restart vsftpd"

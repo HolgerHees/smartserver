@@ -1,4 +1,4 @@
-netgroup:                         "{{default_server_ip_r[2]}}"
+netgroup:                         "{{default_server_ip.split('.')[2]}}"
 
 vpn_mobile_network:               "10.100.{{netgroup}}.0"
 vpn_mobile_subnet:                "10.100.{{netgroup}}"

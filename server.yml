@@ -27,7 +27,7 @@
           - "gateway:    {{default_server_gateway}}{{ ( ', ' + default_server_gateway_ipv6 ) if default_server_gateway_ipv6 is defined else ''}}"
           - "network:    {{intern_networks | join(', ') }}"
           - "macvlan:    {{macvlan_range if macvlan_range | length > 0 else 'None'}}"
-          - "arpha:      {{default_server_arpa}}"
+          - "arpa:       {{default_server_arpa}}"
           - "interface:  {{default_network_interface}}"
           - "-------------------------------------------------------------"
           - "vault:      {{'encrypted' if has_encrypted_vault else 'plain'}}"

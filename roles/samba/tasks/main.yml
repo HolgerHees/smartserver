@@ -60,10 +60,10 @@
         "139:139/tcp",
         "445:445/tcp",
         {% if default_server_ipv6 is defined %}
-          "[{{default_server_ipv6}}]:137:137/udp",
-          "[{{default_server_ipv6}}]:138:138/udp",
-          "[{{default_server_ipv6}}]:137:137/tcp",
-          "[{{default_server_ipv6}}]:138:138/tcp",
+          "[::]:137:137/udp",
+          "[::]:138:138/udp",
+          "[::]:137:137/tcp",
+          "[::]:138:138/tcp",
         {% endif %}
       ]
   notify: "restart samba"

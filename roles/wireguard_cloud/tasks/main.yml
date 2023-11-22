@@ -129,7 +129,7 @@
       [
         "{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
         {% if default_server_ipv6 is defined %}
-          "[{{default_server_ipv6}}]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
+          "[::]:{{cloud_vpn.interface.port}}:{{cloud_vpn.interface.port}}/udp",
         {% endif %}
       ]
   notify: "restart wireguard_cloud"

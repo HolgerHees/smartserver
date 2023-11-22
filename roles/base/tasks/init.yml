@@ -40,43 +40,16 @@
 
     is_production: "{{host_ip == production_ip}}"
 
-#    default_network_interface: "{{ansible_default_ipv4['interface']}}"
-#    default_server_ip: "{{ansible_default_ipv4['address']}}"
-#    default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
+    default_server_ip:                 "{{ansible_default_ipv4['address']}}"
+    default_server_gateway:            "{{ansible_default_ipv4['gateway'] }}"
+    default_network_interface:         "{{ansible_default_ipv4['interface']}}"
+    default_server_arpa:               "{{ansible_default_ipv4['address'] | ipaddr('revdns')}}"
+    default_server_subnet:             "{{ansible_default_ipv4['address'].rsplit('.',1)[0]}}"
+    default_server_network:            "{{( ( ansible_facts[ansible_default_ipv4['interface']]['ipv4']['network'] + '/' + ansible_facts[ansible_default_ipv4['interface']]['ipv4']['netmask'] ) | ipaddr('subnet') )}}"
 
-    default_server_ip: "{{ansible_default_ipv4['address']}}"
-    default_server_gateway: "{{ ansible_default_ipv4['gateway'] }}"
-    default_network_interface: "{{ansible_default_ipv4['interface']}}"
-
-    default_server_ip_r:              "{{ansible_default_ipv4['address'].split('.')}}"
-    host_server_ip_r:                 "{{host_ip.split('.')}}"
-
-- name: set server network vars
-  set_fact:
-    default_server_arpa:              "{{default_server_ip_r[3]}}.{{default_server_ip_r[2]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[0]}}"
-    default_server_subnet:            "{{default_server_ip_r[0]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[2]}}"
-    default_server_network:           "{{default_server_ip_r[0]}}.{{default_server_ip_r[1]}}.{{default_server_ip_r[2]}}.0/24"
-
-    #host_server_arpa:                 "{{host_server_ip_r[3]}}.{{host_server_ip_r[2]}}.{{host_server_ip_r[1]}}.{{host_server_ip_r[0]}}"
-    #host_server_subnet:               "{{host_server_ip_r[0]}}.{{host_server_ip_r[1]}}.{{host_server_ip_r[2]}}"
-    host_server_network:              "{{host_server_ip_r[0]}}.{{host_server_ip_r[1]}}.{{host_server_ip_r[2]}}.0/24"
-
-#- name: debug
-#  debug:
-#    msg: "{{ansible_default_ipv4['network'] | ansible.utils.ipaddr('net') }}"
-
-#- name: detect network interface
-#  #shell: "ip a | grep -P \"inet {{host_ip}}\" | grep -Po \"[a-z0-9]*$\""
-#  shell: "ip route list | grep -Po \"default via [0-9\\.]* dev [a-z0-9]*\" | grep -Po \"[a-z0-9]*$\""
-#  register: "default_network_interface_result"
-#  changed_when: False
-#  tags: always
-
-#- name: detect network ip
-#  shell: "ip a | grep -Po \"[0-9\\.]*/.*{{default_network_interface_result.stdout_lines[0]}}$\" | grep -Po \"^[0-9\\.]*\""
-#  register: "main_network_ip_result"
-#  changed_when: False
-#  tags: always
+    #host_server_arpa:                  "{{host_ip | ipaddr('revdns')}}"
+    #host_server_subnet:                "{{host_ip.rsplit('.',1)[0]}}"
+    host_server_network:               "{{( ( host_ip + '/' + ansible_facts[ansible_default_ipv4['interface']]['ipv4']['netmask'] ) | ipaddr('subnet') )}}"
 
 # load vault file
 - name: load vault vars
@@ -163,6 +136,13 @@
 #      {% endfor %}
 #    ]
 
+- name: set ipv6 env state vars
+  set_fact:
+    default_server_ipv6:              "{{ansible_default_ipv6['address']}}"
+    default_server_gateway_ipv6:      "{{ansible_default_ipv6['gateway']}}"
+    default_server_network_ipv6:      "{{( ( ansible_default_ipv6['address'] + '/' + ansible_default_ipv6['prefix'] ) | ipaddr('subnet') )}}"
+  when: "ipv6_enabled and 'address' in ansible_default_ipv6"
+
 - name: add intern_networks
   set_fact:
     intern_networks: "{{intern_networks}} + {{[ item ]}}"
@@ -170,13 +150,6 @@
   with_items:
     - "{{default_server_network}}"
     - "{{host_server_network}}"
-
-- name: set ipv6 env state vars
-  set_fact:
-    default_server_ipv6:              "{{server_ipv6}}"
-    default_server_gateway_ipv6:      "{{server_gateway_ipv6}}"
-    default_server_network_ipv6:      "{{server_network_ipv6}}"
-  when: server_ipv6 is defined
 
 - name: check for missing variables
   assert:

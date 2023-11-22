@@ -56,8 +56,8 @@
         "53:53/udp",
         "53:53/tcp",
         {% if default_server_ipv6 is defined %}
-          "[{{default_server_ipv6}}]:53:53/udp",
-          "[{{default_server_ipv6}}]:53:53/tcp",
+          "[::]:53:53/udp",
+          "[::]:53:53/tcp",
         {% endif %}
       ]
   register: dns_result
