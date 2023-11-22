@@ -1,3 +1,32 @@
+- name: check named service
+  stat:
+    path: "{{ global_etc }}named/"
+  register: named_service
+
+- name: cleanup named
+  block:
+    - name: cleanup named configs
+      file:
+        path: "{{item}}"
+        state: absent
+      with_items:
+        - '{{ global_etc }}named'
+        - '/etc/systemd/system/named.service'
+        - '{{global_etc}}systemd_watcher/services/named.conf'
+        - '/etc/ferm/ferm.d/30-dns.ferm'
+    - name: stop named
+      systemd:
+        name: named
+        state: stopped
+        enabled: false
+    - name: cleanup named docker
+      shell: "docker rm named"
+    - name: temporary enable public dns
+      copy:
+        content: "nameserver 8.8.8.8"
+        dest: "/etc/resolv.conf"
+  when: "named_service.stat.exists"
+
 - name: prepare needed folder
   file:
     path: '{{item}}'
@@ -6,12 +35,12 @@
     group: root
     mode: 0750
   with_items:
-    - "{{ global_etc }}named"
+    - "{{ global_etc }}dnsmasq"
 
 - name: copy config
   template:
     src: "templates/etc/{{item.file}}"
-    dest: "{{ global_etc }}named/{{item.file}}"
+    dest: "{{ global_etc }}dnsmasq/{{item.file}}"
     owner: root
     group: root
     mode: 0640
@@ -21,12 +50,12 @@
     - { file: "resolv.conf" }
     - { file: "hosts" }
     - { file: "dhcp.conf", condition: "{{1 if dhcp_type == 'dnsmasq' else 0}}" }
-  notify: "restart named"
+  notify: "restart dnsmasq"
 
 - name: build docker image
   vars:
-    name: "named"
-    image_name: "custom_named"
+    name: "dnsmasq"
+    image_name: "custom_dnsmasq"
     image_version: "{{alpine_version}}"
     files:
       - roles/dnsmasq/templates/container/Dockerfile
@@ -34,15 +63,15 @@
   
 - name: create docker container
   docker_container:
-    name: named
-    image: "custom_named:{{alpine_version}}"
+    name: dnsmasq
+    image: "custom_dnsmasq:{{alpine_version}}"
     state: present
 #    recreate: true
     env:
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
-      tag: named
+      tag: dnsmasq
     container_default_behavior: "compatibility"
     network_mode: "default"
     networks:
@@ -50,8 +79,8 @@
         ipv4_address: "{{docker_dns_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{ global_etc }}named/dnsmasq.conf:/etc/dnsmasq.conf:z'
-      - '{{ global_etc }}named/:/etc/dnsmasq/:z'
+      - '{{ global_etc }}dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:z'
+      - '{{ global_etc }}dnsmasq/:/etc/dnsmasq/:z'
     published_ports: |
       [
         "53:53/udp",
@@ -62,7 +91,7 @@
         {% endif %}
       ]
   register: dns_result
-  notify: "restart named"
+  notify: "restart dnsmasq"
 
 # ***** FINALIZE *****
 - name: prepare iptables rules
@@ -73,7 +102,7 @@
 
 - name: allow dns service
   vars:
-    name: "dns"
+    name: "dnsmasq"
     rules: "{{dns_rules}}"
     instant_activation: True
   import_tasks: roles/firewall/shared/allow_service.yml
@@ -81,23 +110,23 @@
 
 - name: create systemd service
   vars:
-    container_name: "named"
+    container_name: "dnsmasq"
   import_tasks: roles/container/shared/add_docker_service.yml
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
-- name: enable dns
+- name: enable dnsmasq
   import_tasks: roles/dnsmasq/tasks/enable.yml
 
-- name: force dns restart
+- name: force dnsmasq restart
   systemd:
     state: restarted
     daemon_reload: yes
-    name: named
+    name: dnsmasq
   when: dns_result.changed
 
-- name: trigger named handler
+- name: trigger dnsmasq handler
   vars:
-    notify: "restart named"
-    service: "named.service"
+    notify: "restart dnsmasq"
+    service: "dnsmasq.service"
   import_tasks: roles/_shared/service_check.yml
 

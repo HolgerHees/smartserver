@@ -1,8 +1,8 @@
-- name: restart named
+- name: restart dnsmasq
   systemd:
-    name: named
+    name: dnsmasq
     state: restarted
     daemon_reload: yes
     enabled: yes
     masked: no
-  listen: "restart named"
+  listen: "restart dnsmasq"
