@@ -1,3 +1,17 @@
 {{default_server_ip}} {{server_name}}
 {%if default_server_ipv6 is defined %}{{default_server_ipv6}} {{server_name}}
 {% endif %}
+{% if dns_type == 'dnsmasq' %}
+{% for override in dns_overrides %}
+{{override.ip}} {{override.custom_dns}}
+{% endfor %}
+{% for client in dhcp_reservations %}
+{{client.ip}} {{client.hostname}}
+{{client.ip}} {{client.hostname}}.{{dns_default_domain}}
+{% if client.custom_dns is defined %}
+{% for item in client.custom_dns %}
+{{client.ip}} {{item}}.{{dns_default_domain}}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}

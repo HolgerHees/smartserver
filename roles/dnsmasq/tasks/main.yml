@@ -18,9 +18,8 @@
   when: "item.condition is undefined or item.condition == 1"
   with_items:
     - { file: "dnsmasq.conf" }
-    - { file: "hosts" }
     - { file: "resolv.conf" }
-    - { file: "hosts.custom", condition: "{{1 if dns_type == 'dnsmasq' else 0}}" }
+    - { file: "hosts" }
     - { file: "dhcp.conf", condition: "{{1 if dhcp_type == 'dnsmasq' else 0}}" }
   notify: "restart named"
 
