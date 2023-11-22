@@ -21,10 +21,10 @@
       set_fact:
         dupe_check: |
           {
-            'reservation_count_total': {{ pihole_dhcp_reservations | length }},
-            'reservation_mac_unique': {{ (pihole_dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') | list) | unique | length }},
-            'reservation_ip_unique': {{ (pihole_dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') | list) | unique | length }},
-            'reservation_hostname_unique': {{ (pihole_dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') | list) | unique | length }}
+            'reservation_count_total': {{ dhcp_reservations | length }},
+            'reservation_mac_unique': {{ (dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') | list) | unique | length }},
+            'reservation_ip_unique': {{ (dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') | list) | unique | length }},
+            'reservation_hostname_unique': {{ (dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') | list) | unique | length }}
           }
 
     - name: prints counts for basic duplicate checks
@@ -43,14 +43,36 @@
       debug:
         msg: "Duplicate entry: {{ item | duplicates }}"
       loop:
-        - "{{ pihole_dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') }}"
-        - "{{ pihole_dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') }}"
-        - "{{ pihole_dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') }}"
+        - "{{ dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') }}"
+        - "{{ dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') }}"
+        - "{{ dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') }}"
 
     - name: Fail when errors
       ansible.builtin.fail:
         msg: 'Duplicate MAC, IP or hostname found. Go to fail!'
-  when: pihole_dhcp_active | bool
+  when: dhcp_type == 'pihole'
+
+- name: generate static-dhcp.conf
+  block:
+    - name: write static dhcp file
+      template:
+        src: templates/etc/pihole/dnsmasq.d/04-pihole-static-dhcp.conf
+        dest: "{{global_etc}}pihole/dnsmasq.d/04-pihole-static-dhcp.conf"
+        owner: "999"
+        group: "1000"
+      register: dhcp_changed
+
+    - name: revoke existing leases if dhcpd file changed
+      file:
+        path: "{{global_etc}}pihole/dhcp.leases"
+        state: absent
+      when: dhcp_changed.changed
+
+    - name: revoke existing leases if dhcpd file changed
+      file:
+        path: "{{global_etc}}pihole/dhcp.leases"
+        state: touch
+  when: dhcp_type == 'pihole'
 
 - name: generate custom.list (local DNS records)
   template:
@@ -59,28 +81,7 @@
     owner: "999"
     group: "1000"
   notify: restart pihole
-  when: pihole_dhcp_active | bool
-
-- name: write static dhcp file
-  template:
-    src: templates/etc/pihole/dnsmasq.d/04-pihole-static-dhcp.conf
-    dest: "{{global_etc}}pihole/dnsmasq.d/04-pihole-static-dhcp.conf"
-    owner: "999"
-    group: "1000"
-  register: dhcp_changed
-  when: pihole_dhcp_active | bool
-  
-- name: revoke existing leases if dhcpd file changed
-  file:
-    path: "{{global_etc}}pihole/dhcp.leases"
-    state: absent
-  when: pihole_dhcp_active | bool and dhcp_changed.changed
-
-- name: revoke existing leases if dhcpd file changed
-  file:
-    path: "{{global_etc}}pihole/dhcp.leases"
-    state: touch
-  when: pihole_dhcp_active | bool and dhcp_changed.changed
+  when: dns_type == 'pihole'
 
 - name: check started docker
   systemd:
@@ -106,19 +107,21 @@
         "WEBPASSWORD": "{{vault_pihole_password}}",
         "DNS1": "127.0.0.11",
         "DNS2": "no"
-        {% if pihole_dhcp_active is defined and pihole_dhcp_active | bool%}
+        {% if dns_type == 'pihole' %}
             , "DNS_BOGUS_PRIV": "true"
             , "DNS_FQDN_REQUIRED": "true"
             , "REV_SERVER": "false"
-            , "REV_SERVER_DOMAIN": "{{pihole_default_domain}}"
+            , "REV_SERVER_DOMAIN": "{{dns_default_domain}}"
             , "REV_SERVER_TARGET": "{{default_server_gateway}}"
             , "REV_SERVER_CIDR": "{{host_server_network}}"
-            , "DHCP_ACTIVE": "{{'true' if pihole_dhcp_active | bool else 'false'}}"
-            , "DHCP_START": "{{pihole_dhcp_range_start}}"
-            , "DHCP_END": "{{pihole_dhcp_range_end}}"
+            , "PIHOLE_DOMAIN": "{{dns_default_domain}}"
+        {% endif %}
+        {% if dhcp_type == 'pihole' %}
+            , "DHCP_ACTIVE": "true"
+            , "DHCP_START": "{{dhcp_range_start}}"
+            , "DHCP_END": "{{dhcp_range_end}}"
             , "DHCP_ROUTER": "{{default_server_gateway}}"
             , "DHCP_LEASETIME": "24"
-            , "PIHOLE_DOMAIN": "{{pihole_default_domain}}"
         {% endif %}
       }
 
