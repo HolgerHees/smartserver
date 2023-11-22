@@ -1,18 +1,18 @@
-- name: "pihole : check if running"
-  command: "systemctl is-active --quiet pihole"
+- name: "librenms : check if running"
+  command: "systemctl is-active --quiet librenms"
   register: "service_result"
   changed_when: no
   failed_when: no
   
-- name: "pihole : start service"
+- name: "librenms : start service"
   systemd:
-    name: pihole
+    name: librenms
     state: started
     daemon_reload: yes
   when: "service_result.rc != 0"
   
-- name: "pihole : wait for to become ready"
-  command: "docker exec pihole sh -c \"echo 'hello' > /dev/null\""
+- name: "librenms : wait for to become ready"
+  command: "docker exec librenms sh -c \"echo 'hello' > /dev/null\""
   register: check_result
   until: not check_result.rc  # or check_result.rc == 0 if you prefer
   retries: 20

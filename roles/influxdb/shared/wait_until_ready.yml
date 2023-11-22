@@ -1,8 +1,5 @@
-#- name: read service facts
-#  service_facts:
-
 - name: "influxdb : check if running"
-  shell: "systemctl is-active --quiet influxdb"
+  command: "systemctl is-active --quiet influxdb"
   register: "service_result"
   changed_when: no
   failed_when: no
@@ -12,15 +9,14 @@
     name: influxdb
     state: started
     daemon_reload: yes
-#  changed_when: "'influxdb.service' not in ansible_facts.services or ansible_facts.services['influxdb.service'].state != 'running'"
   when: "service_result.rc != 0"
   
 - name: "influxdb : wait to become ready"
   uri:
     url: "http://influxdb:8086/ping"
     status_code: 204
-  register: result
-  until: result.status == 204
+  register: check_result
+  until: check_result.status == 204
   retries: 300
   delay: 1
 #  changed_when: "'influxdb.service' not in ansible_facts.services or ansible_facts.services['influxdb.service'].state != 'running'"
