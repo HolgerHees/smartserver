@@ -11,7 +11,9 @@
     - { import_role: { name: base, tasks_from: init, handlers_from: empty }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************  
 
-    #- name: 
+    - { import_role: { name: base, tasks_from: validate_dhcp_reservations, handlers_from: empty }, tags: [ 'dnsmasq', "pihole" ], when: "dhcp_reservations | length > 0" }
+
+    #- name:
     #  debug:  
     #    msg: "{{ansible_facts}}" 
     #  tags: always
