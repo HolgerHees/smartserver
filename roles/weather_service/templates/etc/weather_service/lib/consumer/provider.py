@@ -228,7 +228,6 @@ class ProviderConsumer():
                         #logging.info(data)
                         block = WeatherBlock(data['datetime'])
                         block.apply(data)
-                        #logging.info("{}".format(block.getPrecipitationAmountInMillimeter()))
 
                         currentRain = 0
                         currentRainLevel = self.station_consumer.getValue("rainLevel")
@@ -247,7 +246,6 @@ class ProviderConsumer():
                                     currentRain = currentRain1Hour
                         self.current_is_raining = currentRain > 0
 
-                         #if currentRain > block.getPrecipitationAmountInMillimeter():
                         block.setPrecipitationAmountInMillimeter(currentRain)
 
                         cloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")

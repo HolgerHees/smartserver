@@ -7,8 +7,6 @@ class WeatherBlock():
         self.start = start
         self.end = None
 
-        self.sunshineDurationInMinutesSum = 0
-        self.precipitationAmountInMillimeterSum= 0
         self.sunshineDurationInMinutes= 0
         self.effectiveCloudCoverInOcta= 0
         self.precipitationType = -100
@@ -24,7 +22,8 @@ class WeatherBlock():
 
         self.minAirTemperatureInCelsius = None
         self.maxAirTemperatureInCelsius = None
-        self.maxPrecipitationAmountInMillimeter = None
+        self.maxPrecipitationAmountInMillimeter = 0
+        self.maxIsSnowing = False
 
         self.svg = None
 
@@ -64,17 +63,23 @@ class WeatherBlock():
         if self.thunderstormProbabilityInPercent < hourlyData['thunderstormProbabilityInPercent']:
             self.thunderstormProbabilityInPercent = hourlyData['thunderstormProbabilityInPercent']
 
-        if self.freezingRainProbabilityInPercent < hourlyData['freezingRainProbabilityInPercent']:
-            self.freezingRainProbabilityInPercent = hourlyData['freezingRainProbabilityInPercent']
+        if hourlyData['precipitationAmountInMillimeter'] > 0:
+            if self.freezingRainProbabilityInPercent < hourlyData['freezingRainProbabilityInPercent']:
+                self.freezingRainProbabilityInPercent = hourlyData['freezingRainProbabilityInPercent']
 
-        if self.hailProbabilityInPercent < hourlyData['hailProbabilityInPercent']:
-            self.hailProbabilityInPercent = hourlyData['hailProbabilityInPercent']
+            if self.hailProbabilityInPercent < hourlyData['hailProbabilityInPercent']:
+                self.hailProbabilityInPercent = hourlyData['hailProbabilityInPercent']
 
-        if self.snowfallProbabilityInPercent < hourlyData['snowfallProbabilityInPercent']:
-            self.snowfallProbabilityInPercent = hourlyData['snowfallProbabilityInPercent']
+            if self.snowfallProbabilityInPercent < hourlyData['snowfallProbabilityInPercent']:
+                self.snowfallProbabilityInPercent = hourlyData['snowfallProbabilityInPercent']
 
-        if self.precipitationProbabilityInPercent < hourlyData['precipitationProbabilityInPercent'] and self.precipitationAmountInMillimeter > 0:
-            self.precipitationProbabilityInPercent = hourlyData['precipitationProbabilityInPercent']
+            if self.precipitationProbabilityInPercent < hourlyData['precipitationProbabilityInPercent']:
+                self.precipitationProbabilityInPercent = hourlyData['precipitationProbabilityInPercent']
+
+            if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter < hourlyData['precipitationAmountInMillimeter']:
+                self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
+
+                self.maxIsSnowing = hourlyData['freezingRainProbabilityInPercent'] > 10 or hourlyData['hailProbabilityInPercent'] > 10 or hourlyData['snowfallProbabilityInPercent'] > 10
 
         if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
             self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
@@ -82,9 +87,6 @@ class WeatherBlock():
         if self.windSpeedInKilometerPerHour < hourlyData['windSpeedInKilometerPerHour']:
             self.windSpeedInKilometerPerHour = hourlyData['windSpeedInKilometerPerHour']
             self.windDirectionInDegree = hourlyData['windDirectionInDegree']
-
-        if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter < hourlyData['precipitationAmountInMillimeter']:
-            self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
 
         if self.minAirTemperatureInCelsius is None or self.minAirTemperatureInCelsius > hourlyData['airTemperatureInCelsius']:
             self.minAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
@@ -166,7 +168,8 @@ class WeatherHelper():
             else:
                 amount = 1
 
-            rain_type = 'snowflake' if ( block.freezingRainProbabilityInPercent >= 10 or block.hailProbabilityInPercent >= 10 or block.snowfallProbabilityInPercent >= 10 ) else 'raindrop'
+            rain_type = 'snowflake' if block.maxIsSnowing else 'raindrop'
+            #rain_type = 'snowflake' if ( block.freezingRainProbabilityInPercent >= 10 or block.hailProbabilityInPercent >= 10 or block.snowfallProbabilityInPercent >= 10 ) else 'raindrop'
             rain_type = "{}{}".format(rain_type, amount)
         else:
             rain_type = 'none'
