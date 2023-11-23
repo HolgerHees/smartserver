@@ -39,18 +39,78 @@
 
 - name: copy config
   template:
-    src: "templates/etc/{{item.file}}"
-    dest: "{{ global_etc }}dnsmasq/{{item.file}}"
+    src: "templates/etc/{{item}}"
+    dest: "{{ global_etc }}dnsmasq/{{item}}"
     owner: root
     group: root
     mode: 0640
-  when: "item.condition is undefined or item.condition == 1"
   with_items:
-    - { file: "dnsmasq.conf" }
-    - { file: "resolv.conf" }
-    - { file: "hosts" }
-    - { file: "dhcp.conf", condition: "{{1 if dhcp_type == 'dnsmasq' else 0}}" }
+    - "dnsmasq.conf"
+    - "resolv.conf"
+    - "hosts"
   notify: "restart dnsmasq"
+
+- name: basic preflight duplicate checks
+  block:
+# source: https://www.reddit.com/r/ansible/comments/b5tzp1/ansible_get_list_of_subelements_and_assert_for/
+    - name: create data structure to check via assertion
+      set_fact:
+        dupe_check: |
+          {
+            'reservation_count_total': {{ dhcp_reservations | length }},
+            'reservation_mac_unique': {{ (dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') | list) | unique | length }},
+            'reservation_ip_unique': {{ (dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') | list) | unique | length }},
+            'reservation_hostname_unique': {{ (dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') | list) | unique | length }}
+          }
+
+    - name: prints counts for basic duplicate checks
+      debug:
+        var: dupe_check
+
+    - name: assert no duplicates
+      assert:
+        that:
+        - dupe_check.reservation_count_total == dupe_check.reservation_mac_unique
+        - dupe_check.reservation_count_total == dupe_check.reservation_ip_unique
+        - dupe_check.reservation_count_total == dupe_check.reservation_hostname_unique
+
+  rescue:
+    - name: dupe check
+      debug:
+        msg: "Duplicate entry: {{ item | duplicates }}"
+      loop:
+        - "{{ dhcp_reservations | selectattr('mac', 'defined') | map(attribute='mac') }}"
+        - "{{ dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') }}"
+        - "{{ dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') }}"
+
+    - name: Fail when errors
+      ansible.builtin.fail:
+        msg: 'Duplicate MAC, IP or hostname found. Go to fail!'
+  when: dhcp_type == 'dnsmasq'
+
+- name: generate dhcp.conf
+  block:
+    - name: write static dhcp file
+      template:
+        src: templates/etc/dhcp.conf
+        dest: "{{ global_etc }}dnsmasq/dhcp.conf"
+        owner: root
+        group: root
+        mode: 0640
+      register: dhcp_changed
+
+    - name: revoke existing leases if dhcpd file changed
+      file:
+        path: "{{ global_etc }}dnsmasq/dhcp.leases"
+        state: absent
+      when: dhcp_changed.changed
+
+    - name: revoke existing leases if dhcpd file changed
+      file:
+        path: "{{ global_etc }}dnsmasq/dhcp.leases"
+        state: touch
+      when: dhcp_changed.changed
+  when: dhcp_type == 'dnsmasq'
 
 - name: build docker image
   vars:

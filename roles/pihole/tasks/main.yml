@@ -72,6 +72,7 @@
       file:
         path: "{{global_etc}}pihole/dhcp.leases"
         state: touch
+      when: dhcp_changed.changed
   when: dhcp_type == 'pihole'
 
 - name: generate custom.list (local DNS records)
