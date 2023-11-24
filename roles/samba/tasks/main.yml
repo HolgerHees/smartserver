@@ -48,7 +48,7 @@
       - '{{ global_etc }}samba:/etc/samba:z'
       - '{{ global_lib }}samba:/var/lib/samba:z'
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'
-      - '{{raid_path}}:{{raid_path}}:z'
+      - '{{env_path}}:{{env_path}}:z'
       - '{{data_path}}:{{data_path}}:z'
       - '/etc/group:/etc/group:ro,z'
       - '/etc/passwd:/etc/passwd:ro,z'

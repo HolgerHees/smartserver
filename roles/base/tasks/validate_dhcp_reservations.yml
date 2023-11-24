@@ -1,7 +1,7 @@
 - name: basic preflight duplicate checks
   block:
 # source: https://www.reddit.com/r/ansible/comments/b5tzp1/ansible_get_list_of_subelements_and_assert_for/
-    - name: "dhcp_reservations: create data structure to check via assertion"
+    - name: "validate dhcp_reservations: create data structure to check via assertion"
       set_fact:
         dupe_check: |
           {
@@ -11,11 +11,11 @@
             'reservation_hostname_unique': {{ (dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') | list) | unique | length }}
           }
 
-    - name: "dhcp_reservations: prints counts for basic duplicate checks"
+    - name: "validate dhcp_reservations: prints counts for basic duplicate checks"
       debug:
         var: dupe_check
 
-    - name: "dhcp_reservations: assert no duplicates"
+    - name: "validate dhcp_reservations: assert no duplicates"
       assert:
         that:
         - dupe_check.reservation_count_total == dupe_check.reservation_mac_unique
@@ -23,7 +23,7 @@
         - dupe_check.reservation_count_total == dupe_check.reservation_hostname_unique
 
   rescue:
-    - name: "dhcp_reservations: dupe check"
+    - name: "validate dhcp_reservations: dupe check"
       debug:
         msg: "Duplicate entry: {{ item | duplicates }}"
       loop:
@@ -31,7 +31,7 @@
         - "{{ dhcp_reservations | selectattr('ip', 'defined') | map(attribute='ip') }}"
         - "{{ dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') }}"
 
-    - name: "dhcp_reservations: Fail when errors"
+    - name: "validate dhcp_reservations: Fail when errors"
       ansible.builtin.fail:
         msg: 'Duplicate MAC, IP or hostname found. Go to fail!'
 

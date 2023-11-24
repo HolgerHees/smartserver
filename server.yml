@@ -10,9 +10,6 @@
     # ************ INIT CONFIG ***********   
     - { import_role: { name: base, tasks_from: init, handlers_from: empty }, tags: [ 'always' ] }                                       # detect environment and load configs
     # ************************************  
-
-    - { import_role: { name: base, tasks_from: validate_dhcp_reservations, handlers_from: empty }, tags: [ 'dnsmasq', "pihole" ], when: "dhcp_reservations | length > 0" }
-
     #- name:
     #  debug:  
     #    msg: "{{ansible_facts}}" 
@@ -161,7 +158,7 @@
     - { import_role: { name: openhab }, tags: [ 'openhab' ] }                                    # openhab iot server                                                [docker,user:openhab|openhab]
     - { import_role: { name: openhab_toolbox }, tags: [ 'openhab_toolbox' ] }                    # admin scripts and tools
 
-    - { import_role: { name: backup_rsync }, tags: [ 'backup_rsync' ] }                          # rsync copy of {{data_path}} to {{backup_path}}dataDisk/
+    - { import_role: { name: backup_rsync }, tags: [ 'backup_rsync' ] }                          # rsync copy of {{env_path}} to {{backup_path}}dataDisk/
 
     - { import_role: { name: deployment }, tags: [ 'deployment' ] }                              # ansible deployment project + backup collector
 

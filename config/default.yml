@@ -1,7 +1,7 @@
 # **** DEFAULT Variables ***
 #
 # - Variables without a default value are MANDATORY except there is a optional.
-#    - In this case it is only mandatory if the optional is true. e.g variable 'system_update_notification_email'
+#    - In this case it is only mandatory if the optional is true. e.g variable 'update_service_system_check_email'
 #
 # - The default value is used if the variable is not defined in your configuration
 #
@@ -238,6 +238,113 @@ default_variables: {
     "vault_fritzbox_api_username": { "default": "api", "optional": "{{fritzbox_devices | length == 0}}" },
     "vault_fritzbox_api_password": { "optional": "{{fritzbox_devices | length == 0}}" },
 }
+
+project_name:                     "smartserver"
+
+# version of alpine linux used in several container based roles
+alpine_version:                   "3.18.4"
+
+flask_core_version:               "3.0.0"
+flask_socketio_version:           "5.3.6"
+
+env_path:                         "/dataDisk/"
+ftp_path:                         "{{env_path}}ftp/"
+htdocs_path:                      "{{env_path}}htdocs/"
+global_etc:                       "{{env_path}}etc/"
+global_tmp:                       "{{env_path}}tmp/"
+global_build:                     "{{env_path}}build/"
+global_log:                       "{{env_path}}var/log/"
+global_lib:                       "{{env_path}}var/lib/"
+
+data_path:                        "/dataRaid/"
+projects_path:                    "{{data_path}}projects/"
+cloud_path:                       "{{data_path}}cloud/"
+backup_path:                      "{{data_path}}backups/"
+
+deployment_path:                  "{{projects_path}}{{project_name}}/"
+
+deployment_config_path:           "{{deployment_path}}{{config_path}}"
+deployment_inventory_path:        "{{ansible_inventory_sources[0]}}"
+
+nextcloud_data_path:              "{{data_path}}nextcloud/"
+
+samba_master:                     "{%if is_production%}yes{%else%}no{%endif%}"
+
+# used for e.g. openwrt's md5 password crypt
+default_password_salt:            "{{((server_domain+':'+default_server_ip) | b64encode | replace(';','0') )[:-1]}}"
+
+docker_base_network:              "172.16.0.0"
+docker_base_gateway:              "172.16.0.1"
+docker_dns_ip:                    "172.16.0.100"
+docker_postfix_ip:                "172.16.0.101"
+docker_influxdb_ip:               "172.16.0.103"
+docker_redis_ip:                  "172.16.0.104"
+docker_mysql_ip:                  "172.16.0.105"
+docker_mosquitto_ip:              "172.16.0.106"
+docker_speedtest_ip:              "172.16.0.107"
+docker_libreoffice_ip:            "172.16.0.108"
+docker_alertmanager_ip:           "172.16.0.109"
+docker_loki_ip:                   "172.16.0.110"
+docker_fluentd_ip:                "172.16.0.111"
+docker_php_ip:                    "172.16.0.112"
+docker_librenms_ip:               "172.16.0.113"
+docker_prometheus_ip:             "172.16.0.114"
+docker_grafana_ip:                "172.16.0.115"
+
+docker_cloud_mosquitto_ip:        "172.16.0.200"
+docker_weather_service_ip:        "172.16.0.201"
+docker_cloud_check_ip:            "172.16.0.202"
+
+docker_vcontrold_ip:              "172.16.0.230"
+
+netgroup:                         "{{default_server_ip.split('.')[2]}}"
+
+vpn_mobile_network:               "10.100.{{netgroup}}.0"
+vpn_mobile_subnet:                "10.100.{{netgroup}}"
+
+vpn_cloud_subnet:                 "10.101"
+vpn_cloud_services:               "{
+{% if cloud_vpn is defined %}
+  \"local\": {
+      \"bridge\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.1\",
+      \"gateway\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.2\",
+      \"nfs\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.3\",
+      \"mosquitto\": \"{{cloud_vpn.interface.network.split('.')[:3] | join('.')}}.4\"
+  },
+  \"remote\": {
+      {% for peer in cloud_vpn.peers %}
+      \"{{peer}}\": {
+          \"bridge\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.1\",
+          \"gateway\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.2\",
+          \"nfs\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.3\",
+          \"mosquitto\": \"{{cloud_vpn.peers[peer].network.split('.')[:3] | join('.')}}.4\"
+      },
+      {% endfor %}
+  }
+{% endif %}
+}"
+
+macvlan_ips:                      "[
+{% if pihole_ip is defined %}'{{pihole_ip}}',{% endif %}
+{% if dlna_ip is defined %}'{{dlna_ip}}',{% endif %}
+]"
+
+macvlan_range: "{% if macvlan_ips | length > 0 %}{{macvlan_ips | cidr_merge('span')}}{% else %}{% endif %}"
+
+#- name: detect macvlan subnet
+#  debug:
+#    msg: "{{macvlan_range}}"
+
+dlna_volumes:                    "{
+{% for username in userdata %}
+{% if userdata[username].media_dir is defined %}
+{% for media_name in userdata[username].media_dir %}
+  \"{{nextcloud_data_path}}{{username}}/files/{{userdata[username].media_dir[media_name]}}\": \"/media/{{media_name}}\",
+{% endfor %}
+{% endif %}
+{% endfor %}
+}"
+
 
 librenms_devices: "{{network_devices | default([]) | selectattr('snmp_method', 'defined') | list}}"
 openwrt_devices: "{{network_devices | default([]) | selectattr('type', 'defined') | selectattr('type','==','openwrt') | list}}"

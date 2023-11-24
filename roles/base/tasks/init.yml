@@ -1,7 +1,3 @@
-#- name: read service facts
-#  service_facts:
-#  tags: always
-      
 # set config path based on hostname
 - name: set config path
   set_fact:
@@ -13,17 +9,26 @@
   include_vars: "{{config_path}}env.yml"
   tags: always
   
+- name: load vault vars
+  include_vars: "{{config_path}}vault/vault.yml"
+  tags: always
+
+- name: check if vault is encrypted
+  shell: "head -1 {{config_path}}vault/vault.yml | grep \"\\$ANSIBLE_VAULT\""
+  changed_when: False
+  failed_when: no
+  register: "vault_check_result"
+
 # detect main ip. must be specified in env.yml
 - name: detect host ip address
   set_fact:
-    host_ip: "{{ item }}"
-  with_items: "{{ ansible_all_ipv4_addresses }}"
-  when: "item == production_ip or item == staging_ip"
+    host_ip: "{{ production_ip if production_ip in ansible_all_ipv4_addresses else ( staging_ip if staging_ip in ansible_all_ipv4_addresses else '' ) }}"
   tags: always
     
 # check for a valid main ip
-- assert:
-    that: host_ip is defined
+- name: check for valid ip
+  assert:
+    that: host_ip != ''
     msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), staging ({{ staging_ip if staging_ip else 'disabled' }})"
   tags: always
 
@@ -32,6 +37,9 @@
   set_fact:
     system_users: {}
     system_groups: {}
+
+    has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
+
     is_suse: "{{ansible_distribution == 'openSUSE Leap'}}"
     is_fedora: "{{ansible_distribution == 'Fedora'}}"
     is_rhel: "{{ansible_distribution == 'AlmaLinux'}}"
@@ -50,29 +58,9 @@
     #host_server_arpa:                  "{{host_ip | ipaddr('revdns')}}"
     #host_server_subnet:                "{{host_ip.rsplit('.',1)[0]}}"
     host_server_network:               "{{( ( host_ip + '/' + ansible_facts[ansible_default_ipv4['interface']]['ipv4']['netmask'] ) | ipaddr('subnet') )}}"
-
-# load vault file
-- name: load vault vars
-  include_vars: "{{config_path}}vault/vault.yml"
-  tags: always
-  
-- name: check if vault is encrypted
-  shell: "cat {{config_path}}vault/vault.yml | grep \"\\$ANSIBLE_VAULT\""
-  changed_when: False
-  failed_when: no
-  register: "vault_check_result"
-  
-- name: set vault state vars
-  set_fact:
-    has_encrypted_vault: "{{true if vault_check_result.rc == 0 else false}}"
   tags: always
 
-# load shared variables
-- name: load shared vars
-  include_vars: "config/pre_shared.yml"
-  tags: always
-
-# load initial environment variables
+# **** load initial environment variables ****
 - name: load default vars
   include_vars: "config/default.yml"
   tags: always
@@ -106,35 +94,10 @@
       {% endfor %}
     ]
 
-#- name: apply default vars
-#  set_fact:
-#    "{{item.name}}": "{{ default_variables[item.name]['default'] }}"
-##    "{{item.name}}": "{{ vars['default_variables'][item.name]['default'] }}"
-#  when: "item.state in ['missing','default']"
-#  failed_when: "item.state  == 'missing'"
-#  ignore_errors: True
-#  register: check_result
-#  with_items:  |
-#    [
-#      {% for item in default_variables %}
-#        { 'name': '{{item}}',
-#          'state':
-#          {% if item in vars %}
-#              'custom'
-#          {% else %}
-#              {% if ('optional' not in default_variables[item] or not default_variables[item]['optional']) %}
-#                  {% if 'default' not in default_variables[item] %}
-#                      'missing'
-#                  {% else %}
-#                      'default'
-#                  {% endif %}
-#              {% else %}
-#                  'not needed'
-#              {% endif %}
-#          {% endif %}
-#        },
-#      {% endfor %}
-#    ]
+- name: check for missing variables
+  assert:
+    that: "check_result.failed is not defined or not check_result.failed"
+    msg: "Some variables are not defined. Please check the 'config/default.yml' file and add the missing variables to your configuration."
 
 - name: set ipv6 env state vars
   set_fact:
@@ -143,22 +106,12 @@
     default_server_network_ipv6:      "{{( ( ansible_default_ipv6['address'] + '/' + ansible_default_ipv6['prefix'] ) | ipaddr('subnet') )}}"
   when: "ipv6_enabled and 'address' in ansible_default_ipv6"
 
-- name: add intern_networks
+- name: collect intern_networks
   set_fact:
-    intern_networks: "{{intern_networks}} + {{[ item ]}}"
-  when: "item not in intern_networks"
-  with_items:
-    - "{{default_server_network}}"
-    - "{{host_server_network}}"
+    intern_networks: "{{ [default_server_network] + ( [host_server_network] if default_server_network != host_server_network else [] ) }}"
 
-- name: check for missing variables
-  assert:
-    that: "check_result.failed is not defined or not check_result.failed"
-    msg: "Some variables are not defined. Please check the 'config/default.yml' file and add the missing variables to your configuration."
+- name: validate dhcp reservations
+  include_tasks: "validate_dhcp_reservations.yml"
+  tags: [ 'dnsmasq', "pihole" ]
+  when: "dhcp_reservations | length > 0"
 
-# load shared variables
-- name: load shared vars
-  include_vars: "config/post_shared.yml"
-  tags: always
-
-  

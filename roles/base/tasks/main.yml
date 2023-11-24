@@ -6,8 +6,9 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{env_path}}" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{data_path}}" }
-    
+
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_etc}}" }
 
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}" }
@@ -16,8 +17,6 @@
 
     - { mode: "u=rwx,g=,o=", path: "{{global_build}}" }
     
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{raid_path}}" }
-
     - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
     - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}" }
 
