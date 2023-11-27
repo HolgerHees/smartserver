@@ -77,10 +77,11 @@ class WeatherBlock():
                 self.precipitationProbabilityInPercent = hourlyData['precipitationProbabilityInPercent']
 
             if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= hourlyData['precipitationAmountInMillimeter']:
-                _maxIsSnowing = hourlyData['freezingRainProbabilityInPercent'] > 10 or hourlyData['hailProbabilityInPercent'] > 10 or hourlyData['snowfallProbabilityInPercent'] > 10
-                if not self.maxIsSnowing or ( self.maxPrecipitationAmountInMillimeter == hourlyData['precipitationAmountInMillimeter'] and _maxIsSnowing ):
-                    self.maxIsSnowing = _maxIsSnowing
-                self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
+                _isSnowing = hourlyData['freezingRainProbabilityInPercent'] > 10 or hourlyData['hailProbabilityInPercent'] > 10 or hourlyData['snowfallProbabilityInPercent'] > 10
+                if not self.maxIsSnowing or _isSnowing:
+                    if _isSnowing:
+                        self.maxIsSnowing = True
+                    self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
 
         if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
             self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
