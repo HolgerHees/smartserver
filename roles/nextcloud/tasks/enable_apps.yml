@@ -313,3 +313,8 @@
 #    - "apps/passman/lib/Db/CredentialMapper.php" # https://github.com/nextcloud/passman/pull/781
 #    - "apps/passman/lib/Service/IconService.php" # https://github.com/nextcloud/passman/pull/785
 
+# APP cleanups
+#    Disable and remove news app
+#    Remove all settings in the db: DELETE FROM oc_appconfig WHERE appid = ‘news’;
+#    Remove all migrations in the db: DELETE FROM oc_migrations WHERE app = ‘news’;
+#    Reinstall and Enable news app.
