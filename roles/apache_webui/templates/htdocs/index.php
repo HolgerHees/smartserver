@@ -216,9 +216,8 @@ require "./shared/libs/ressources.php";
         }
         
         mx.OnScriptReady.push( function(){
-            var imageUrl = "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg";
-            if( mx.Page.isDemoMode() ) imageUrl = "/shared/demo_background.jpeg";
-            var titleUrl = "/img/potd/todayTitle.txt";
+            var imageUrl = mx.Page.isDemoMode() ? "/shared/demo_background.jpeg" : "/img/potd/today" + ( mx.Core.isSmartphone() ? "Portrait" : "Landscape") + ".jpg";
+            var titleUrl = mx.Page.isDemoMode() ? "/shared/demo_title.txt" : "/img/potd/todayTitle.txt";
             mx.MainImage.init(imageUrl,titleUrl,initContent);
         });
 
