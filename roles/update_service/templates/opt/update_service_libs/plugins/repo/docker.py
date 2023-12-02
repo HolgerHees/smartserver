@@ -60,7 +60,7 @@ class Application(App):
                     tag_r.append(tag)
 
                 _version = Version.parseVersionString(tag, self.pattern)
-                if version is None or _version.compare(version) == 1:
+                if version is None or _version.compare(version) == -1:
                     version = _version
         else:
             if Application.repositories is None:
