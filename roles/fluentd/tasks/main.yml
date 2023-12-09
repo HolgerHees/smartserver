@@ -25,6 +25,12 @@
       - roles/fluentd/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
 
+- name: check journal log directory
+  shell: "ls -A /run/log/journal/"
+  register: journal_log_directory_check
+  failed_when: no
+  changed_when: no
+
 - name: create docker container
   docker_container:
     name: fluentd
@@ -45,7 +51,7 @@
     volumes:
       - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
-      - '{{ "/run" if is_suse else "/var" }}/log/journal:{{ "/run" if is_suse else "/var" }}/log/journal:z'
+      - '/{{ "run" if journal_log_directory_check.stdout != "" else "var" }}/log/journal:/var/log/journal:z'
   notify: "restart fluentd"
     
 - name: allow fluentd service
