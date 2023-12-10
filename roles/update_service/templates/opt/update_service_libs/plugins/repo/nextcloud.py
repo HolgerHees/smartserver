@@ -8,16 +8,20 @@ from helper.version import Version
 
 from plugins.repo.app import App
 
+from config import config
+
+
 class Repository(object):
     def __init__(self,job_config, global_config, operating_system):
         self.job_config = job_config
+        self.htdocs_dir = config.htdocs_dir
 
     def getApplications(self, limit):
         apps = []
 
         if limit is None or "nextcloud" in limit:
             #self.apps = [ Application(job_config,global_config) ]
-            result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:list" ] )
+            result = command.exec([ "docker","exec", "php", "sh", "-c", "php {}nextcloud/occ app:list".format(self.htdocs_dir) ] )
             lines = result.stdout.decode("utf-8").split("\n")
             current_versions = {}
             for line in lines:
@@ -28,7 +32,7 @@ class Repository(object):
 
             #print(current_versions)
 
-            result = command.exec([ "docker","exec", "php", "sh", "-c", "php /dataDisk/htdocs/nextcloud/occ app:update --showonly" ] )
+            result = command.exec([ "docker","exec", "php", "sh", "-c", "php {}nextcloud/occ app:update --showonly".format(self.htdocs_dir) ] )
             lines = result.stdout.decode("utf-8").split("\n")
             for line in lines:
                 columns = line.split()

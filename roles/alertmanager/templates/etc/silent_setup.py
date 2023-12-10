@@ -6,7 +6,7 @@ import re
 from smartserver.alertmanager import Alertmanager
 
 ALERTMANAGER_BASE_URL = "http://alertmanager:9093/"
-CONFIG_YML = "/dataDisk/etc/alertmanager/silent_alerts.yml"
+CONFIG_YML = "{{global_etc}}alertmanager/silent_alerts.yml"
 
 alertmanager_silences = Alertmanager.fetchSilences(ALERTMANAGER_BASE_URL)
 

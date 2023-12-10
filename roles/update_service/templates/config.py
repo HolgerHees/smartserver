@@ -7,6 +7,8 @@ service_ip = "127.0.0.1"
 service_port = "8505"
 
 target_dir = "{{global_lib}}update_service/"
+build_dir = "{{global_build}}"
+htdocs_dir = "{{htdocs_path}}"
 
 components_config_dir = "{{global_etc}}update_service/software/"
 dependencies_config_dir = "{{global_etc}}update_service/dependencies/"

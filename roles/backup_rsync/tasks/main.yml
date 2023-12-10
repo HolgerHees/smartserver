@@ -1,7 +1,7 @@
 # DataDisk rsync
 - name: prepare needed folder
   file:
-    path: '{{backup_path}}dataDisk'
+    path: '{{backup_path}}environment'
     state: directory
     owner: root
     group: root
@@ -11,13 +11,13 @@
 #  register: source_result
     
 #- name: detect target device
-#  shell: "df {{backup_path}}dataDisk/ | grep -Po \"/dev/[a-z0-9]*\""
+#  shell: "df {{backup_path}}environment/ | grep -Po \"/dev/[a-z0-9]*\""
 #  register: target_result
 
 #- name: create cron job => is_production
 #  vars:
 #    name: "DataDisk RSync Backup"
-#    cmd: "systemd-run -p IOReadBandwidthMax=\"{{source_result.stdout}} 10M\" -p IOReadIOPSMax=\"{{source_result.stdout}} 80\" -p IOWriteBandwidthMax=\"{{source_result.stdout}} 10M\" -p IOWriteIOPSMax=\"{{source_result.stdout}} 80\" -p IOReadBandwidthMax=\"{{target_result.stdout}} 10M\" -p IOReadIOPSMax=\"{{target_result.stdout}} 80\" -p IOWriteBandwidthMax=\"{{target_result.stdout}} 10M\" -p IOWriteIOPSMax=\"{{target_result.stdout}} 80\" --quiet --scope /usr/bin/rsync --quiet -av --bwlimit=10M --one-file-system --delete {{env_path}} {{backup_path}}dataDisk/ --exclude=var --exclude=tmp"
+#    cmd: "systemd-run -p IOReadBandwidthMax=\"{{source_result.stdout}} 10M\" -p IOReadIOPSMax=\"{{source_result.stdout}} 80\" -p IOWriteBandwidthMax=\"{{source_result.stdout}} 10M\" -p IOWriteIOPSMax=\"{{source_result.stdout}} 80\" -p IOReadBandwidthMax=\"{{target_result.stdout}} 10M\" -p IOReadIOPSMax=\"{{target_result.stdout}} 80\" -p IOWriteBandwidthMax=\"{{target_result.stdout}} 10M\" -p IOWriteIOPSMax=\"{{target_result.stdout}} 80\" --quiet --scope /usr/bin/rsync --quiet -av --bwlimit=10M --one-file-system --delete {{env_path}} {{backup_path}}environment/ --exclude=var --exclude=tmp"
 #    file: "ansible_cron_backup_rsync"
 #    hour: "5"
 #    minute: "0"
@@ -27,7 +27,7 @@
 - name: create cron job => is_production
   vars:
     name: "DataDisk RSync Backup"
-    cmd: "systemd-run -p CPUQuota=\"30\\%\" -p IOReadBandwidthMax=\"{{env_path}} 10M\" -p IOReadIOPSMax=\"{{env_path}} 80\" -p IOWriteBandwidthMax=\"{{env_path}} 10M\" -p IOWriteIOPSMax=\"{{env_path}} 80\" -p IOReadBandwidthMax=\"{{backup_path}}dataDisk/ 10M\" -p IOReadIOPSMax=\"{{backup_path}}dataDisk/ 80\" -p IOWriteBandwidthMax=\"{{backup_path}}dataDisk/ 10M\" -p IOWriteIOPSMax=\"{{backup_path}}dataDisk/ 80\" --quiet --scope /usr/bin/rsync --quiet -av --one-file-system --delete {{env_path}} {{backup_path}}dataDisk/ --exclude=var --exclude=tmp"
+    cmd: "systemd-run -p CPUQuota=\"30\\%\" -p IOReadBandwidthMax=\"{{env_path}} 10M\" -p IOReadIOPSMax=\"{{env_path}} 80\" -p IOWriteBandwidthMax=\"{{env_path}} 10M\" -p IOWriteIOPSMax=\"{{env_path}} 80\" -p IOReadBandwidthMax=\"{{backup_path}}environment/ 10M\" -p IOReadIOPSMax=\"{{backup_path}}environment/ 80\" -p IOWriteBandwidthMax=\"{{backup_path}}environment/ 10M\" -p IOWriteIOPSMax=\"{{backup_path}}environment/ 80\" --quiet --scope /usr/bin/rsync --quiet -av --one-file-system --delete {{env_path}} {{backup_path}}environment/ --exclude=var --exclude=tmp"
     file: "ansible_rsync_backup"
     hour: "5"
     minute: "0"

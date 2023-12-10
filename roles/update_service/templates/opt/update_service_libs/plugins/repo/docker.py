@@ -11,6 +11,8 @@ import re
 
 from plugins.repo.app import App
 #, SkipableVersionError
+from config import config
+
 
 class Repository(object):
     def __init__(self,job_config,global_config, operating_system):
@@ -33,6 +35,7 @@ class Application(App):
         super().__init__(job_config)
 
         self.plugin_config = job_config["config"]
+        self.build_dir = config.build_dir
 
     def checkForUpdates(self):
 
@@ -47,7 +50,7 @@ class Application(App):
         tag_r = []
 
         # parse for parent images first, because new "docker buildx" will never cache parent images.
-        result = command.exec("/usr/bin/grep -R 'FROM {}:' /dataDisk/build/*/Dockerfile".format(self.plugin_config['repository']), exitstatus_check = False, shell=True )
+        result = command.exec("/usr/bin/grep -R 'FROM {}:' {}*/Dockerfile".format(self.plugin_config['repository'], self.build_dir), exitstatus_check = False, shell=True )
         if result.returncode == 0:
             rows = result.stdout.decode("utf-8").split("\n")
             for row in rows:

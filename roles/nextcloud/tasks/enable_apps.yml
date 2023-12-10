@@ -60,7 +60,7 @@
   when: "'- ' + item.app + ':' not in app_list_result.stdout"
   with_items: "{{nextcloud_additional_apps}}"
 
-#docker exec php sh -c "php -f /dataDisk/htdocs/nextcloud/occ update:check"
+#docker exec php sh -c "php -f {{htdocs_path}}nextcloud/occ update:check"
 - name: check available app updates
   shell: "docker exec php sh -c \"php {{htdocs_path}}nextcloud/occ app:update --showonly\""
   changed_when: no

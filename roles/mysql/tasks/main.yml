@@ -83,7 +83,7 @@
 - name: create cron job
   vars:
     name: "MySQL Core Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1\" | bzip2 -c > /dataRaid/backups/mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1\" | bzip2 -c > {{backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     file: "ansible_mysql"
     hour: "1"
     minute: "0"

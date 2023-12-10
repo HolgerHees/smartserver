@@ -1,6 +1,6 @@
 - name: set devel vars
   set_fact:
-    cloud_smb_path: "/dataRaid/cloud_smb/"
+    cloud_smb_path: "{{data_path}}cloud_smb/"
   
 - name: prepare needed folder
   file:

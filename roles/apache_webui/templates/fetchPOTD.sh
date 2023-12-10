@@ -50,7 +50,7 @@ then
         mainColor=$(convert "$targetName" -resize 1x1  txt:- | grep -oP '#[0-9A-Za-z]+')
         mainGray=$(convert "$targetName" -colorspace gray -resize 1x1  txt:- | grep -oP '#[0-9A-Za-z]+')
 
-        printf "$headline\n$copyright\n$mainColor\n$mainGray" > "/dataDisk/htdocs/img/potd/todayTitle.txt"
+        printf "$headline\n$copyright\n$mainColor\n$mainGray" > "{{htdocs_path}}img/potd/todayTitle.txt"
 
         convert "{{htdocs_path}}img/potd/todayLandscape.jpg" -gravity Center -crop 1920x1080+0+0 -quality 80% "{{htdocs_path}}img/potd/todayLandscape.jpg"
         convert "{{htdocs_path}}img/potd/todayPortrait.jpg" -gravity Center -crop 1080x1920+0+0 -quality 80% "{{htdocs_path}}img/potd/todayPortrait.jpg"
