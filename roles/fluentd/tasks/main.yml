@@ -3,6 +3,22 @@
     fluentd_version: '1.16.3-debian-1.0'
   tags: [ 'update_notifier_config' ]    
   
+# force /var/log/journal as log target, instead of /run/log/journal
+- name: prepare needed folder
+  file:
+    path: "/var/log/journal"
+    state: directory
+    owner: "root"
+    group: "systemd-journal"
+    mode: "u=rwx,g=rx,o=rx,g+s"
+  register: "journald_folder"
+
+- name: restart journald
+  systemd:
+    state: restarted
+    name: systemd-journald
+  when: "journald_folder.changed"
+
 - name: copy config and service
   template:
     src: "templates/etc/fluentd/{{item}}"
@@ -25,12 +41,6 @@
       - roles/fluentd/templates/container/Dockerfile
   import_tasks: roles/container/shared/build_docker_image.yml
 
-- name: find journal log directory
-  shell: "systemctl status systemd-journald | grep -o '/[a-z]*/log/journal/' | tail -1"
-  register: journal_log_directory
-  failed_when: no
-  changed_when: no
-
 - name: create docker container
   docker_container:
     name: fluentd
@@ -51,7 +61,7 @@
     volumes:
       - '{{ global_etc }}fluentd:/fluentd/etc/:z'
       - '{{ global_log }}:{{ global_log }}:z'
-      - '{{ journal_log_directory.stdout }}:/var/log/journal:z'
+      - '/var/log/journal:/var/log/journal:z'
   notify: "restart fluentd"
     
 - name: allow fluentd service
