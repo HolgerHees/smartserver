@@ -55,14 +55,17 @@ class Provider:
 
         schedule.every().hour.at("05:00").do(self.fetch)
         if time.time() - self.last_fetch > 60 * 60:
-            self.fetch()
-        #self.fetch()
+            self.fetch(True)
+        #else:
+        #    self.fetch(True)
 
     def terminate(self):
         if self.is_running and os.path.exists(self.dump_path):
             self._dump()
+        logging.info("INTERRUPT")
         self.is_running = False
         self.event.set()
+        logging.info("INTERRUPT")
 
     def _restore(self):
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
@@ -116,7 +119,7 @@ class Provider:
             else:
                 logging.info("Summery data skipped. Not enough data.")
 
-    def fetch(self):
+    def fetch(self, oneTime=False):
         if self.is_fetching:
             logging.warn("Skip fetching. Older job is still runing")
             return
@@ -175,6 +178,9 @@ class Provider:
                 traceback.print_exc()
                 self.service_metrics["publish"] = 0
                 error_count += 1
+
+            if oneTime:
+                return
 
             sleepTime = 600 * error_count if error_count < 6 else 3600
 
