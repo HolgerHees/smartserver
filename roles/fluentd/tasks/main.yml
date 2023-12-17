@@ -26,7 +26,7 @@
   import_tasks: roles/container/shared/build_docker_image.yml
 
 - name: find journal log directory
-  shell: "systemctl status systemd-journald | grep -o '/[a-z]*/log/journal/'"
+  shell: "systemctl status systemd-journald | grep -o '/[a-z]*/log/journal/' | tail -1"
   register: journal_log_directory
   failed_when: no
   changed_when: no
