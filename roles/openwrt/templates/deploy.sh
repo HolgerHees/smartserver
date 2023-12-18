@@ -70,10 +70,15 @@ fi
 
 connectivity
 
-authenticate
-
 SOURCE=`dirname "$0"`
+if [ ! -f "$SOURCE/$IP.env" ]; then
+    echo "Exit... Configuration for IP $IP does not exists."
+    exit
+fi
+
 source "$SOURCE/$IP.env"
+
+authenticate
 
 TZ=`tail -1 "/usr/share/zoneinfo/$TIMEZONE"`
 
