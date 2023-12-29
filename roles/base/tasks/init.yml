@@ -108,7 +108,19 @@
 
 - name: collect intern_networks
   set_fact:
-    intern_networks: "{{ [default_server_network] + ( [host_server_network] if default_server_network != host_server_network else [] ) }}"
+#            {% if default_server_network_ipv6 is defined %}
+#                "{{default_server_network_ipv6}}",
+#            {% endif %}
+    intern_networks: |
+        [
+            "{{default_server_network}}",
+            {% if default_server_network != host_server_network %}
+                "{{host_server_network}}",
+            {% endif %}
+            {% for network in intern_networks %}
+                "{{network}}",
+            {% endfor %}
+        ]
 
 - name: validate dhcp reservations
   include_tasks: "validate_dhcp_reservations.yml"

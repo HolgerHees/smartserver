@@ -5,12 +5,6 @@ domain (ip ip6) {
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;
 {% endfor %}
-{% if trusted_networks | length > 0 %}
-            # trusted ip's can connect to host
-{% for network in trusted_networks %}
-            saddr {{network}} ACCEPT;
-{% endfor %}
-{% endif %}
             # mobile vpn ip's can connect to host
             saddr {{vpn_mobile_network}}/24 ACCEPT;
         }
@@ -19,12 +13,6 @@ domain (ip ip6) {
 {% for network in intern_networks %}
             saddr {{network}} ACCEPT;
 {% endfor %}
-{% if trusted_networks | length > 0 %}
-            # trusted ip's can forward to containers
-{% for network in trusted_networks %}
-            saddr {{network}} ACCEPT;
-{% endfor %}
-{% endif %}
 {% if macvlan_range | length > 0 %}
             # mobile vpn ip's can forward to pihole
             saddr {{vpn_mobile_network}}/24 daddr {{macvlan_range}} ACCEPT;

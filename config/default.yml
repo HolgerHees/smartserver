@@ -25,9 +25,8 @@ default_variables: {
 
     "ipv6_enabled":   { "default": no },
 
-    "intern_networks": { "default": [] },                         # e.g. intern ipv4 & ipv6 address ranges, default_server_ip and host_ip will be added additionally
+    "intern_networks": { "default": [] },                         # e.g. intern (trusted) ipv4 & ipv6 address ranges, default_server_ip network and host_ip network will be added additionally
     "public_networks": { "default": [] },                         # e.g. public ipv6 address ranges
-    "trusted_networks": { "default": [] },                        # additional ipv4 & ipv6 networks allowed to connect the server
 
     "dns_type":       { "default": "" },                          # 'pihole' or 'dnsmasq'
     "dns_overrides":  {"default": [] },
