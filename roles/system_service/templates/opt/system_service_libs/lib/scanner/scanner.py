@@ -3,6 +3,7 @@ import threading
 import logging
 from collections import deque
 import traceback
+import ipaddress
 
 from lib.scanner.dto.device import Device, Connection
 from lib.scanner.dto.event import Event
@@ -42,16 +43,31 @@ class Scanner(threading.Thread):
         self.cache = Cache(config)
 
         self._register(ArpScanner(config, self.cache ))
-        if len(config.openwrt_devices) > 0:
-            self._register(OpenWRT(config, self.cache ))
-        if len(config.fritzbox_devices) > 0:
-            self._register(Fritzbox(config, self.cache ))
+
+        network = ipaddress.ip_network(config.default_server_network)#.hosts()
+
+        openwrt_devices = self._filterLocalIPs(network, config.openwrt_devices)
+        if len(openwrt_devices) > 0:
+            self._register(OpenWRT(config, self.cache, openwrt_devices ))
+
+        fritzbox_devices = self._filterLocalIPs(network, config.fritzbox_devices)
+        if len(fritzbox_devices) > 0:
+            self._register(Fritzbox(config, self.cache, fritzbox_devices ))
+
         if config.librenms_token:
             self._register(LibreNMS(config, self.cache ))
         self._register(PortScanner(config, self.cache ))
         self._register(Gateway(config, self.cache ))
         self._register(MQTTPublisher(config, self.cache, mqtt ))
         self._register(InfluxDBPublisher(config, self.cache, influxdb ))
+
+    def _filterLocalIPs(self, network, ips):
+        _ips = []
+        for ip in ips:
+            if ipaddress.ip_address(ip) not in network:
+                continue
+            _ips.append(ip)
+        return _ips
 
     def _register(self, handler):
         handler.setDispatcher(self)

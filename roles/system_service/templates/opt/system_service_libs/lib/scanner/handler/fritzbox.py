@@ -18,9 +18,11 @@ from lib.scanner.helper import Helper
 
 
 class Fritzbox(_handler.Handler): 
-    def __init__(self, config, cache ):
+    def __init__(self, config, cache, fritzbox_devices ):
         super().__init__(config,cache)
         
+        self.fritzbox_devices = fritzbox_devices
+
         self.sessions = {}
         
         self.next_run = {}
@@ -54,13 +56,13 @@ class Fritzbox(_handler.Handler):
 
     def _initNextRuns(self):
         now = datetime.now()
-        for fritzbox_ip in self.config.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices:
             self.next_run[fritzbox_ip] = {"device": now, "dhcp_clients": now, "mesh_clients": now}
         
     def _run(self):
         self._initNextRuns()
 
-        for fritzbox_ip in self.config.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices:
             self.wifi_networks[fritzbox_ip] = {}
             
             self.wifi_associations[fritzbox_ip] = {}
@@ -73,7 +75,7 @@ class Fritzbox(_handler.Handler):
 
             self._setDeviceMetricState(fritzbox_ip, -1)
         
-        for fritzbox_ip in self.config.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices:
             while True:
                 try:
                     self.fc[fritzbox_ip] = FritzConnection(address=fritzbox_ip, user=self.config.fritzbox_username, password=self.config.fritzbox_password)
@@ -90,7 +92,7 @@ class Fritzbox(_handler.Handler):
         while self._isRunning():
             events = []
 
-            for fritzbox_ip in self.config.fritzbox_devices:
+            for fritzbox_ip in self.fritzbox_devices:
                 try:
                     if self._isSuspended(fritzbox_ip):
                         continue
@@ -113,7 +115,7 @@ class Fritzbox(_handler.Handler):
 
             timeout = 9999999999
             now = datetime.now()
-            for fritzbox_ip in self.config.fritzbox_devices:
+            for fritzbox_ip in self.fritzbox_devices:
                 suspend_timeout = self._getSuspendTimeout(fritzbox_ip)
                 if suspend_timeout > 0:
                     if suspend_timeout < timeout:
@@ -200,7 +202,7 @@ class Fritzbox(_handler.Handler):
                     del self.wifi_networks[fritzbox_ip][gid]
             
         has_wifi_networks = False
-        for _fritzbox_ip in self.config.fritzbox_devices:
+        for _fritzbox_ip in self.fritzbox_devices:
             if self.wifi_networks[_fritzbox_ip]:
                 has_wifi_networks = True
                 break
@@ -524,13 +526,13 @@ class Fritzbox(_handler.Handler):
         self.devices[fritzbox_ip] = now
 
     def _isKnownDHCPClient(self, mac):
-        for fritzbox_ip in self.config.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices:
             if mac in self.dhcp_clients[fritzbox_ip]:
                 return True
         return False
 
     def _isKnownWifiClient(self, mac):
-        for fritzbox_ip in self.config.fritzbox_devices:
+        for fritzbox_ip in self.fritzbox_devices:
             if mac in self.wifi_clients[fritzbox_ip]:
                 return True
         return False

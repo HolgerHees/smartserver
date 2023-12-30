@@ -20,9 +20,11 @@ from lib.scanner.helper import Helper
 
 
 class OpenWRT(_handler.Handler): 
-    def __init__(self, config, cache ):
+    def __init__(self, config, cache, openwrt_devices ):
         super().__init__(config,cache)
         
+        self.openwrt_devices = openwrt_devices
+
         self.sessions = {}
         
         self.next_run = {}
@@ -45,7 +47,7 @@ class OpenWRT(_handler.Handler):
 
     def _initNextRuns(self, limit_openwrt_ip = None):
         now = datetime.now()
-        for openwrt_ip in self.config.openwrt_devices:
+        for openwrt_ip in self.openwrt_devices:
             if limit_openwrt_ip is not None and limit_openwrt_ip != openwrt_ip:
                 continue
             self.sessions[openwrt_ip] = [ None, datetime.now()]
@@ -54,7 +56,7 @@ class OpenWRT(_handler.Handler):
     def _run(self):
         self._initNextRuns()
 
-        for openwrt_ip in self.config.openwrt_devices:
+        for openwrt_ip in self.openwrt_devices:
             self.active_vlans[openwrt_ip] = {}
 
             self.wifi_networks[openwrt_ip] = {}
@@ -67,7 +69,7 @@ class OpenWRT(_handler.Handler):
         while self._isRunning():
             #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
             
-            for openwrt_ip in self.config.openwrt_devices:
+            for openwrt_ip in self.openwrt_devices:
                 try:
                     if self._isSuspended(openwrt_ip):
                         continue
@@ -110,7 +112,7 @@ class OpenWRT(_handler.Handler):
                 
             timeout = 9999999999
             now = datetime.now()
-            for openwrt_ip in self.config.openwrt_devices:
+            for openwrt_ip in self.openwrt_devices:
                 suspend_timeout = self._getSuspendTimeout(openwrt_ip)
                 if suspend_timeout > 0:
                     if suspend_timeout < timeout:
@@ -333,7 +335,7 @@ class OpenWRT(_handler.Handler):
             self.cache.unlock(self)
 
         has_wifi_networks = False
-        for _openwrt_ip in self.config.openwrt_devices:
+        for _openwrt_ip in self.openwrt_devices:
             if self.wifi_networks[_openwrt_ip]:
                 has_wifi_networks = True
                 break
@@ -529,7 +531,7 @@ class OpenWRT(_handler.Handler):
         return self._parseResult(ip, r, "client_list of '{}'".format(interface))
     
     def _isKnownWifiClient(self, mac):
-        for openwrt_ip in self.config.openwrt_devices:
+        for openwrt_ip in self.openwrt_devices:
             if mac in self.wifi_clients[openwrt_ip]:
                 return True
         return False
