@@ -25,11 +25,11 @@ librenms_poller_interval = {{librenms_poller_interval | int * 60}}
 
 openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_username | default('')}}{% endif %}"
 openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
-openwrt_devices = [{% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
+openwrt_devices = [{% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | reduce_on_network(default_server_network) | list | join('","') }}"{% endif %}]
 
 fritzbox_username = "{% if fritzbox_devices|length > 0 %}{{vault_fritzbox_api_username}}{% endif %}"
 fritzbox_password = "{% if fritzbox_devices|length > 0 %}{{vault_fritzbox_api_password}}{% endif %}"
-fritzbox_devices = [{% if fritzbox_devices|length > 0 %}"{{fritzbox_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
+fritzbox_devices = [{% if fritzbox_devices|length > 0 %}"{{fritzbox_devices | map(attribute='host') | reduce_on_network(default_server_network) | list | join('","') }}"{% endif %}]
 
 influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
