@@ -25,7 +25,7 @@ default_variables: {
 
     "ipv6_enabled":   { "default": no },
 
-    "intern_networks": { "default": [] },                         # e.g. intern (trusted) ipv4 & ipv6 address ranges, default_server_ip network and host_ip network will be added additionally
+    "intern_networks": { "default": [] },                         # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
     "public_networks": { "default": [] },                         # e.g. public ipv6 address ranges
 
     "dns_type":       { "default": "" },                          # 'pihole' or 'dnsmasq'

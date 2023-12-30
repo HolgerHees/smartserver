@@ -86,6 +86,16 @@
 
 - name: prepare installed packages
   set_fact:
+    exec_scripts: |
+      [
+        {% for device in devices %}
+          {% for feature in devices[device]["features"] %}
+            {% if feature["cfg"] in vars and "exec" in vars[feature["cfg"]] %}{% for script in vars[feature["cfg"]]["exec"] %}
+              "{{script}}",
+            {% endfor %}{% endif %}
+          {% endfor %}
+        {% endfor %}
+      ]
     device_install_packages: |
       {
         {% for device in openwrt_devices %}
@@ -174,7 +184,7 @@
     dest: "{{global_etc}}openwrt/ap/{{item.host}}/{{item.filename}}"
     owner: "root"
     group: "root"
-    mode: "{{ 'u=rwx,g=rx,o=' if item.cfg != '' and 'exec' in vars[item.cfg] and '/' + item.filename in vars[item.cfg]['exec'] else 'u=rwX,g=rX,o=' }}"
+    mode: "{{ 'u=rwx,g=rx,o=' if '/' + item.filename in exec_scripts else 'u=rwX,g=rX,o=' }}"
 #  changed_when: no
   with_items: |
     [
