@@ -42,6 +42,7 @@ class ThreadedNetFlowListener(threading.Thread):
         self.port = port
         self.server = QueuingUDPListener((host, port), self.input)
         self.thread = threading.Thread(target=self.server.serve_forever)
+        self.thread.daemon = True
         self.thread.start()
         self._shutdown = threading.Event()
         super().__init__()
@@ -100,6 +101,6 @@ class ThreadedNetFlowListener(threading.Thread):
         #logging.info("Shuttdown netflow listener")
         self._shutdown.set()
 
-    def join(self, timeout=None):
-        self.thread.join(timeout=timeout)
-        super().join(timeout=timeout)
+    #def join(self, timeout=None):
+    #    self.thread.join(timeout=timeout)
+    #    super().join(timeout=timeout)

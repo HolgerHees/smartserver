@@ -104,7 +104,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "location_geohash"
+              "options": "geohash"
             },
             "properties": [
               {
@@ -274,7 +274,7 @@
           "zoom": 3
         }
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
@@ -293,19 +293,13 @@
                 "location_org"
               ],
               "type": "tag"
-            },
-            {
-              "params": [
-                "location_zip::tag"
-              ],
-              "type": "tag"
             }
           ],
-          "measurement": "netflow",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
           "policy": "autogen",
           "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"traffic_count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'outgoing' AND \"location_has_geohash\" = '1') AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
-          "rawQuery": true,
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "table",
           "select": [
@@ -315,20 +309,48 @@
                   "location_geohash"
                 ],
                 "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "geohash"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "traffic_count"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              },
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "alias"
               }
             ]
           ],
           "tags": [
             {
-              "key": "direction",
+              "key": "direction::tag",
               "operator": "=",
               "value": "outgoing"
             },
             {
               "condition": "AND",
-              "key": "location_geohash",
-              "operator": "!=",
-              "value": "\"\""
+              "key": "location_has_geohash::tag",
+              "operator": "=",
+              "value": "1"
             }
           ]
         },
@@ -338,12 +360,6 @@
             "uid": "system_info_influxdb"
           },
           "groupBy": [
-            {
-              "params": [
-                "location_geohash"
-              ],
-              "type": "tag"
-            },
             {
               "params": [
                 "location_city"
@@ -358,38 +374,62 @@
             }
           ],
           "hide": false,
-          "measurement": "netflow_size",
+          "measurement": "trafficflow",
           "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"traffic_count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'incoming' AND \"location_has_geohash\" = '1' ) AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
-          "rawQuery": true,
+          "policy": "autogen",
+          "query": "SELECT last(\"location_geohash\") as \"geohash\",sum(\"traffic_count\") as \"count\" FROM \"autogen\".\"trafficflow\" WHERE (\"direction\" = 'outgoing' AND \"location_has_geohash\" = '1') AND $timeFilter GROUP BY \"location_city\", \"location_org\"",
+          "rawQuery": false,
           "refId": "B",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "value"
+                  "location_geohash"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "count"
+                "type": "last"
+              },
+              {
+                "params": [
+                  "geohash"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "traffic_count"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "sum"
+              },
+              {
+                "params": [
+                  "count"
+                ],
+                "type": "alias"
               }
             ]
           ],
           "tags": [
             {
-              "key": "direction",
+              "key": "direction::tag",
               "operator": "=",
               "value": "incoming"
             },
             {
               "condition": "AND",
-              "key": "location_geohash",
-              "operator": "!=",
-              "value": "\"\""
+              "key": "location_has_geohash::tag",
+              "operator": "=",
+              "value": "1"
             }
           ]
         }
@@ -402,8 +442,7 @@
   ],
   "refresh": "1m",
   "revision": 1,
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
     "netflow"
   ],
@@ -430,6 +469,6 @@
   "timezone": "",
   "title": "World Map",
   "uid": "system-service-netflow-geopmap",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

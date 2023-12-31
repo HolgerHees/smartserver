@@ -640,7 +640,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.6",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
@@ -725,14 +725,30 @@
           "orderByTime": "DESC",
           "policy": "autogen",
           "query": "SELECT \"traffic_count\",\"log_count\",\"blocked\" FROM \"autogen\".\"trafficflow\" WHERE $timeFilter GROUP BY \"direction\"::tag, \"extern_group\"::tag, \"extern_host\"::tag, \"extern_ip\"::tag, \"group\"::tag, \"intern_host\"::tag, \"intern_ip\"::tag, \"location_city\"::tag, \"location_country_name\"::tag, \"location_org\"::tag, \"service\"::tag, \"log_type\"::tag, \"log_group\"::tag, \"traffic_group\"::tag ORDER BY time DESC",
-          "rawQuery": true,
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "count"
+                  "traffic_count"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "log_count"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "blocked"
                 ],
                 "type": "field"
               }
@@ -978,8 +994,7 @@
   ],
   "refresh": "1m",
   "revision": 1,
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
     "netflow"
   ],
@@ -1006,6 +1021,6 @@
   "timezone": "",
   "title": "Grouped Traffic Events",
   "uid": "system-service-netflow-summary",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
