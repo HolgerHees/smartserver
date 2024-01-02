@@ -77,11 +77,13 @@ class WeatherBlock():
                 self.precipitationProbabilityInPercent = hourlyData['precipitationProbabilityInPercent']
 
             if self.maxPrecipitationAmountInMillimeter is None or self.maxPrecipitationAmountInMillimeter <= hourlyData['precipitationAmountInMillimeter']:
+                self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
+
+            if self.checkRainProbability( hourlyData['precipitationProbabilityInPercent'], hourlyData['precipitationAmountInMillimeter'] ):
                 _isSnowing = hourlyData['freezingRainProbabilityInPercent'] > 10 or hourlyData['hailProbabilityInPercent'] > 10 or hourlyData['snowfallProbabilityInPercent'] > 10
                 if not self.maxIsSnowing or _isSnowing:
                     if _isSnowing:
                         self.maxIsSnowing = True
-                    self.maxPrecipitationAmountInMillimeter = hourlyData['precipitationAmountInMillimeter']
 
         if self.airTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
             self.airTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
@@ -95,6 +97,9 @@ class WeatherBlock():
 
         if self.maxAirTemperatureInCelsius is None or self.maxAirTemperatureInCelsius < hourlyData['airTemperatureInCelsius']:
             self.maxAirTemperatureInCelsius = hourlyData['airTemperatureInCelsius']
+
+    def checkRainProbability( self, precipitationProbabilityInPercent, precipitationAmountInMillimeter ):
+        return ( precipitationProbabilityInPercent >= 30 and precipitationAmountInMillimeter > 0 ) or ( precipitationProbabilityInPercent >= 25 and precipitationAmountInMillimeter > 0.5 )
 
 class WeatherHelper():
     sunConfig = {
@@ -160,7 +165,7 @@ class WeatherHelper():
         ref_datetime = ref_datetime.replace(year=now.year,month=now.month,day=now.day)
         isNight = ( ref_datetime < sunrise or ref_datetime > sunset )
 
-        if ( block.precipitationProbabilityInPercent >= 30 and block.maxPrecipitationAmountInMillimeter > 0 ) or ( block.precipitationProbabilityInPercent >= 25 and block.maxPrecipitationAmountInMillimeter > 0.5 ):
+        if block.checkRainProbability( block.precipitationProbabilityInPercent, block.maxPrecipitationAmountInMillimeter ):
             if block.maxPrecipitationAmountInMillimeter >= 1.3:
                 amount = 4
             elif block.maxPrecipitationAmountInMillimeter >= 0.9:
