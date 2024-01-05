@@ -10,7 +10,7 @@ cameraSubGroup.addHtml('cameras', html, {"post": [ function(){ mx.ImageWatcher.i
 cameraSubGroup.addUrl('{{camera['uid']}}','/gallery/?sub={{camera['ftp_upload_name']}}', 'user');
 {% endif %}{% endfor %}
 
-var subGroup = mx.Menu.getMainGroup('admin').getSubGroup('devices');
+/*var subGroup = mx.Menu.getMainGroup('admin').getSubGroup('devices');
 {% for camera in camera_devices %}
 subGroup.addUrl('{{camera['uid']}}', '{{camera['external_url']}}', 'admin', 310, '{i18n_Camera} {{camera['name']}}', '{{camera['details']}}', "device_camera.svg", true);
-{% endfor %}
+{% endfor %}*/
