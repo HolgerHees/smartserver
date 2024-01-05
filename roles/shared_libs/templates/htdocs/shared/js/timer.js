@@ -13,6 +13,12 @@ mx.Timer = (function( ret ) {
         }
     };
 
+    ret.stop = function(id)
+    {
+        refreshTimer.splice(refreshTimer.indexOf(id), 1);
+        window.clearTimeout(id);
+    }
+
     ret.register = function(func,timeout)
     {
         var refreshTimerID = window.setTimeout(function(){
@@ -23,6 +29,8 @@ mx.Timer = (function( ret ) {
             }
         },timeout);
         refreshTimer.push( refreshTimerID );
+
+        return refreshTimerID;
     };
 
     return ret;
