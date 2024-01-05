@@ -1,9 +1,7 @@
 /.vagrant/
 /.vscode/
-/config/*
-/!config/demo/
-/!config/pre_shared.yml
-/!config/post_shared.yml
-/!config/default.yml
+config/*
+!config/demo/
+!config/default.yml
 /ansible.cfg
 /*.retry

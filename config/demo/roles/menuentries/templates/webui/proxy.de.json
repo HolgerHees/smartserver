@@ -1,0 +1,12 @@
+{
+  "admin_devices": {
+    "Automower": "Automower",
+    "Robonect": "Robonect",
+    "Inverter": "Wechselrichter",
+    "Solar (Extern)": "Solar (Extern)",
+    "Laserprinter": "Laserdrucker",
+    "HPLaserJet": "HPLaserJet",
+    "Router": "Router",
+    "FritzBox": "FritzBox"
+  }
+}

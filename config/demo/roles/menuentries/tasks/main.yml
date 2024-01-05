@@ -1,0 +1,7 @@
+- name: register webui
+  vars:
+    name: "proxy"
+    js_file: "templates/webui/proxy.js"
+    i18n_files: [ { language: "de", file: "templates/webui/proxy.de.json" } ]
+    icons: [ 'templates/webui/icons/proxy_mower.svg', 'templates/webui/icons/proxy_solar.svg' ]
+  import_tasks: roles/apache_webui/shared/add_webui.yml
