@@ -16,7 +16,7 @@ list($content, $mime, $time, $error_count) = getData( $url, $age, $auth );
 if( $content )
 {
     try {
-        if( !empty( $_GET['width'] ) && empty( $_GET['height'] ) )
+        if( !empty( $_GET['width'] ) && $_GET['width'] > 0 && !empty( $_GET['height'] ) && $_GET['height'] > 0 )
         {
             list( $content, $mime ) = scaleImage( $content, $_GET['width'], $_GET['height'], true );
         }
@@ -156,7 +156,9 @@ function scaleImage( $image, $width, $height, $force )
     $imagick = new Imagick;
     $imagick->readImageBlob( $image );
     //$img->setImageCompression(imagick::COMPRESSION_JPEG);
-    $imagick->setImageCompressionQuality(50);
+
+    $orgQuality = $imagick->getImageCompressionQuality();
+    if( $orgQuality > 70 ) $imagick->setImageCompressionQuality(70);
 
     $orgWidth = $imagick->getImageWidth();
     $orgHeight = $imagick->getImageHeight();
