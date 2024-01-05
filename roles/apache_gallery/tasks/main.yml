@@ -11,6 +11,7 @@
     owner: "{{system_users['ftp'].name}}"
     group: "{{system_groups['ftp'].name}}"
     mode: 0755
+  when: "'ftp_upload_name' in item"
   with_items: "{{camera_devices}}"
 
 - name: synchronize htdocs
