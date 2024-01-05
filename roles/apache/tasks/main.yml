@@ -203,6 +203,7 @@
     mode: 0644
   with_items:
     - error.php
+    - device404.jpg
     - domain/index.html
     - domain/style.css
 

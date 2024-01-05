@@ -149,6 +149,7 @@
     - { import_role: { name: mysql_adminer }, tags: [ 'mysql_adminer' ] }                        # Adminer
 
     - { import_role: { name: apache_webui }, tags: [ 'apache_webui' ] }                          # responsive web ui
+    - { import_role: { name: apache_gallery }, tags: [ 'apache_gallery' ], when: "camera_devices | length > 0" }    # camera image gallery
 
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
     - { import_role: { name: nextcloud_libreoffice }, tags: [ 'nextcloud_libreoffice' ] }        # office editor                                                     [docker,user:106|108]

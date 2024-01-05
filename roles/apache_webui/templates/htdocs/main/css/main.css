@@ -737,6 +737,25 @@ body.nobackground #submenu .service.button div:last-child {
     width: auto;
     max-width: 90%;
     padding-bottom: 5px;
+    cursor: pointer;
+}
+#submenu .service.imageWatcher > div.fullscreen {
+    position: fixed !important;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    z-index: 100000;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    background-color: black;
+}
+#submenu .service.imageWatcher > div.fullscreen > img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 #submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
     width: auto;
@@ -748,14 +767,33 @@ body.nobackground #submenu .service.button div:last-child {
 }
 #submenu .service.imageWatcher > div > span {
     position: absolute;
-    top: 3px;
     color: var(--image-watcher-text);
+}
+#submenu .service.imageWatcher > div > span.gallery {
+    top: 0;
+    left: 0;
+    padding: 3px 40px 40px 1%;
+}
+#submenu .service.imageWatcher > div > span.gallery:hover::before {
+    color: red;
+}
+#submenu .service.imageWatcher > div > span.external {
+    top: 0;
+    right: 0;
+    padding: 3px 1% 40px 40px;
+}
+#submenu .service.imageWatcher > div > span.external:hover::before {
+    color: red;
 }
 #submenu .service.imageWatcher > div > span.name {
     left: 1%;    
+    bottom: 3px;
+    cursor: default;
 }
 #submenu .service.imageWatcher > div > span.time {
     right: 1%;
+    bottom: 3px;
+    cursor: default;
 }
 @media screen and (min-width: 1400px) {
     #submenu .service.imageWatcher {

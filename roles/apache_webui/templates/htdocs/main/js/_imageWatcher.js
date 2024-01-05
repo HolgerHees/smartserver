@@ -1,21 +1,23 @@
 mx.ImageWatcher = (function( ret ) {
-    function refreshImage(container)
+    function getInterval(container)
+    {
+        return container.getAttribute(container.classList.contains("fullscreen") ? 'data-fullscreen-interval' : 'data-preview-interval')
+    }
+
+    function refreshImage(container, interval)
     {
         var image = container.querySelector('img');
         var timeSpan = container.querySelector('span.time');
-        var nameSpan = container.querySelector('span.name');
 
         var datetime = new Date();
         var h = datetime.getHours();
         var m = datetime.getMinutes();
         var s = datetime.getSeconds();
 
-        var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2) + ':' + ("0" + s).slice(-2);
-        timeSpan.innerText = time;
-        nameSpan.innerText = image.getAttribute('data-name');
+        var interval = getInterval(container);
 
         let id = Date.now();
-        let src = image.getAttribute('data-src') + '?' + id;
+        let src = container.getAttribute('data-src') + '?' + id + '&age=' + ( interval - 100 );
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", src);
@@ -28,7 +30,11 @@ mx.ImageWatcher = (function( ret ) {
             {
                 var imageURL = window.URL.createObjectURL(this.response);
                 image.setAttribute('src', imageURL );
-                mx.Timer.register(function(){refreshImage(container);},image.getAttribute('data-interval'));
+
+                var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2) + ':' + ("0" + s).slice(-2);
+                timeSpan.innerText = time;
+
+                mx.Timer.register(function(){refreshImage(container);}, getInterval(container) );
             }
             else
             {
@@ -43,14 +49,44 @@ mx.ImageWatcher = (function( ret ) {
         var containers = mx.$$(selector);
         containers.forEach(function(container){
 
+            container.addEventListener("click",function(event)
+            {
+                event.stopPropagation();
+                container.classList.toggle("fullscreen");
+            });
+
             var timeSpan = document.createElement("span");
             timeSpan.classList.add("time");
+            container.appendChild(timeSpan);
 
             var nameSpan = document.createElement("span");
             nameSpan.classList.add("name");
-
-            container.appendChild(timeSpan);
+            nameSpan.innerText = container.getAttribute('data-name');
             container.appendChild(nameSpan);
+
+            var gallerySpan = document.createElement("span");
+            gallerySpan.classList.add("gallery");
+            gallerySpan.classList.add("icon-chart-area");
+            container.appendChild(gallerySpan);
+            gallerySpan.addEventListener("click",function(event)
+            {
+                event.stopPropagation();
+                mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
+            });
+
+            var externalSpan = document.createElement("span");
+            externalSpan.classList.add("external");
+            externalSpan.classList.add("icon-export");
+            container.appendChild(externalSpan);
+            externalSpan.addEventListener("click",function(event)
+            {
+                event.stopPropagation();
+
+                var win = window.open(container.getAttribute('data-external-url'), '_blank');
+                win.focus();
+            });
+
+            //mx.Actions.openEntryById(event,\'automation-cameras-{{camera['ftp_upload_name']}}\')
 
             refreshImage(container);
         });

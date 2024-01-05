@@ -196,6 +196,20 @@ default_variables: {
     #     }
     # ]
 
+    "camera_devices": { "default": [] },                          # used for ftp upload, image gallkery and menu entries
+    # *** EXAMPLE ***
+    # [
+    #     {
+    #         name: {},                                           #
+    #         details: { "optional": yes },                       #
+    #         ftp_upload_name: {},                                #
+    #         proxy_identifier: {},                               #
+    #         snapshot_url: {},                                   #
+    #         snapshot_username: { "optional": yes }              #
+    #         snapshot_password: { "optional": yes }              #
+    #     }
+    # ]
+
     "traffic_blocker": { "default": yes },                        # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
     # 1. if suspicious traffic arrives the apache webserver => which traffic, can be configured in the variable 'netflow_incoming_traffic' and the attribute 'log'
     # 2. if unexcpected traffic arrives the network  => which traffic, can be configured  in the variable 'netflow_incoming_traffic' and the attribute 'allowed'

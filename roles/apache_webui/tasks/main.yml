@@ -32,7 +32,6 @@
     mode: "u=rwX,g=rX,o="
   with_items:
     - main/manifest.json
-    - gallery/config.php
 
 - name: copy proxy config
   vars:
