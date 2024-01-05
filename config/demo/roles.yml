@@ -17,7 +17,7 @@
 # *** OPTIONAL OTHERS ***
 #- { import_role: { name: vcontrold }, tags: [ 'vcontrold', 'alpine' ] }                 # heating control for viessmann vitodens            [docker,user:nobody|dialout]
 
-- { import_role: { name: "config/demo/roles/apache_proxy" }, tags: [ 'apache_proxy' ] }  # proxy and redirect configs for custom devices
+- { import_role: { name: "config/demo/roles/menuentries" }, tags: [ 'menuentries' ] }    # additional menuentries for external devices
 
 #- { import_role: { name: ci_service }, tags: [ 'ci_service' ] }                         # continues integration test service
 
