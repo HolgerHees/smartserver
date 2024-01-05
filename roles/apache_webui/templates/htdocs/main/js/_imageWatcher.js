@@ -4,7 +4,7 @@ mx.ImageWatcher = (function( ret ) {
         return container.getAttribute(container.classList.contains("fullscreen") ? 'data-fullscreen-interval' : 'data-preview-interval')
     }
 
-    function refreshImage(container, interval)
+    function refreshImage(container, last_duration)
     {
         var image = container.querySelector('img');
         var timeSpan = container.querySelector('span.time');
@@ -17,7 +17,9 @@ mx.ImageWatcher = (function( ret ) {
         var interval = getInterval(container);
 
         let id = Date.now();
-        let src = container.getAttribute('data-src') + '?' + id + '&age=' + ( interval - 100 );
+        let src = container.getAttribute('data-src') + '?' + id + '&age=' + ( interval - 200 - last_duration );
+
+        const startTime = performance.now();
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", src);
@@ -34,11 +36,21 @@ mx.ImageWatcher = (function( ret ) {
                 var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2) + ':' + ("0" + s).slice(-2);
                 timeSpan.innerText = time;
 
-                mx.Timer.register(function(){refreshImage(container);}, getInterval(container) );
+                const duration = performance.now() - startTime;
+                const interval = getInterval(container) - duration;
+
+                if( interval > 0 )
+                {
+                    mx.Timer.register( function(){refreshImage(container, duration);}, interval );
+                }
+                else
+                {
+                    refreshImage(container, duration);
+                }
             }
             else
             {
-                mx.Page.handleRequestError(this.status,src,function(){refreshImage(container);});
+                mx.Page.handleRequestError(this.status,src,function(){refreshImage(container, duration);});
             }
         };
         xhr.send();
@@ -64,18 +76,15 @@ mx.ImageWatcher = (function( ret ) {
             nameSpan.innerText = container.getAttribute('data-name');
             container.appendChild(nameSpan);
 
-            if( container.getAttribute('data-internal-menu') )
+            var gallerySpan = document.createElement("span");
+            gallerySpan.classList.add("gallery");
+            gallerySpan.classList.add("icon-chart-area");
+            container.appendChild(gallerySpan);
+            gallerySpan.addEventListener("click",function(event)
             {
-                var gallerySpan = document.createElement("span");
-                gallerySpan.classList.add("gallery");
-                gallerySpan.classList.add("icon-chart-area");
-                container.appendChild(gallerySpan);
-                gallerySpan.addEventListener("click",function(event)
-                {
-                    event.stopPropagation();
-                    mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
-                });
-            }
+                event.stopPropagation();
+                mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
+            });
 
             var externalSpan = document.createElement("span");
             externalSpan.classList.add("external");
@@ -91,7 +100,7 @@ mx.ImageWatcher = (function( ret ) {
 
             //mx.Actions.openEntryById(event,\'automation-cameras-{{camera['ftp_upload_name']}}\')
 
-            refreshImage(container);
+            refreshImage(container, 0);
         });
     };
 
