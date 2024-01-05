@@ -1,4 +1,6 @@
 mx.ImageWatcher = (function( ret ) {
+    var activeTimer = {};
+
     function getInterval(container)
     {
         return container.getAttribute(container.classList.contains("fullscreen") ? 'data-fullscreen-interval' : 'data-preview-interval')
@@ -6,6 +8,9 @@ mx.ImageWatcher = (function( ret ) {
 
     function refreshImage(container, last_duration)
     {
+        var index = container.getAttribute("data-index");
+        activeTimer[index] = null;
+
         var image = container.querySelector('img');
         var timeSpan = container.querySelector('span.time');
 
@@ -15,9 +20,11 @@ mx.ImageWatcher = (function( ret ) {
         var s = datetime.getSeconds();
 
         var interval = getInterval(container);
+        var age = ( interval - 200 - last_duration );
+        if( age < 0 ) age = 0;
 
         let id = Date.now();
-        let src = container.getAttribute('data-src') + '?' + id + '&age=' + ( interval - 200 - last_duration );
+        let src = container.getAttribute('data-src') + '?' + id + '&age=' + age;
 
         const startTime = performance.now();
 
@@ -41,7 +48,7 @@ mx.ImageWatcher = (function( ret ) {
 
                 if( interval > 0 )
                 {
-                    mx.Timer.register( function(){refreshImage(container, duration);}, interval );
+                    activeTimer[index] = mx.Timer.register( function(){refreshImage(container, duration);}, interval );
                 }
                 else
                 {
@@ -59,12 +66,21 @@ mx.ImageWatcher = (function( ret ) {
     ret.init = function(selector)
     {
         var containers = mx.$$(selector);
-        containers.forEach(function(container){
+        containers.forEach(function(container, index){
+            container.setAttribute("data-index", index);
+            activeTimer[index] = null;
 
             container.addEventListener("click",function(event)
             {
                 event.stopPropagation();
                 container.classList.toggle("fullscreen");
+                var index = container.getAttribute("data-index");
+
+                if( activeTimer[index] != null )
+                {
+                    mx.Timer.stop(activeTimer[index]);
+                    refreshImage(container, 0);
+                }
             });
 
             var timeSpan = document.createElement("span");
