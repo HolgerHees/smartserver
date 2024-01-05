@@ -64,15 +64,18 @@ mx.ImageWatcher = (function( ret ) {
             nameSpan.innerText = container.getAttribute('data-name');
             container.appendChild(nameSpan);
 
-            var gallerySpan = document.createElement("span");
-            gallerySpan.classList.add("gallery");
-            gallerySpan.classList.add("icon-chart-area");
-            container.appendChild(gallerySpan);
-            gallerySpan.addEventListener("click",function(event)
+            if( container.getAttribute('data-internal-menu') )
             {
-                event.stopPropagation();
-                mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
-            });
+                var gallerySpan = document.createElement("span");
+                gallerySpan.classList.add("gallery");
+                gallerySpan.classList.add("icon-chart-area");
+                container.appendChild(gallerySpan);
+                gallerySpan.addEventListener("click",function(event)
+                {
+                    event.stopPropagation();
+                    mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
+                });
+            }
 
             var externalSpan = document.createElement("span");
             externalSpan.classList.add("external");

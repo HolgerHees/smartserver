@@ -1,6 +1,6 @@
 var html = '<div class="service imageWatcher">';
 {% for camera in camera_devices %}
-html += '<div data-preview-interval="5000" data-fullscreen-interval="2000" data-name="{{camera['name']}}" data-src="/camera{{camera['uid'] | capitalize}}Image" data-external-url="{{camera['external_url']}}" data-internal-menu="automation-cameras-{{camera['uid']}}"><img src="/main/img/loading.png"></div>';
+html += '<div data-preview-interval="5000" data-fullscreen-interval="2000" data-name="{{camera['name']}}" data-src="/camera{{camera['uid'] | capitalize}}Image" data-external-url="{{camera['external_url']}}"{% if 'ftp_upload_name' in camera %} data-internal-menu="automation-cameras-{{camera['uid']}}"{% endif %}><img src="/main/img/loading.png"></div>';
 {% endfor %}
 html += '</div>';
 
