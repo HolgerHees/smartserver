@@ -23,8 +23,12 @@ mx.ImageWatcher = (function( ret ) {
         var age = ( interval - 200 - last_duration );
         if( age < 0 ) age = 0;
 
+        //console.log(container.offsetHeight,container.offsetWidth);
+
         let id = Date.now();
         let src = container.getAttribute('data-src') + '?' + id + '&age=' + age;
+
+        if( !container.classList.contains("fullscreen") ) src += "&width=" + container.offsetWidth * 1.5 + "&height=" + container.offsetHeight * 1.5;
 
         const startTime = performance.now();
 

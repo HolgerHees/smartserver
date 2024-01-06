@@ -11,7 +11,7 @@ $auth = empty($_GET['user']) || empty($_GET['password']) ? null : base64_encode(
 
 $age = empty($_GET['age']) ? 1000 : $_GET['age'];
 
-list($content, $mime, $time, $error_count) = getData( $url, $age, $auth );
+list($content, $mime, $time) = getData( $url, $age, $auth );
 
 if( $content )
 {
@@ -21,6 +21,9 @@ if( $content )
             list( $content, $mime ) = scaleImage( $content, $_GET['width'], $_GET['height'], true );
         }
 
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
         header("Content-Type: " . $mime);
         echo $content;
     }
@@ -31,14 +34,9 @@ if( $content )
 }
 else
 {
-    fetchError();
-}
-
-function fetchError()
-{
     $url = str_replace($_SERVER['REDIRECT_SCRIPT_URL'], "/_fallback/cam.jpg", $_SERVER['REDIRECT_SCRIPT_URI']);
 
-    list($content, $mime, $time, $error_count) = getData( $url, 60000, null );
+    list($content, $mime, $time) = getData( $url, 60000, null );
 
     header("Content-Type: " . $mime);
     echo $content;
@@ -46,35 +44,32 @@ function fetchError()
 
 function getData($url, $age, $auth)
 {
-    list($content, $mime, $time, $error_count) = fetchData( $url );
-    if( empty($content) || time() - $time > $age / 1000 )
+    $meta = apcu_fetch( $url . ":meta" );
+    list( $mime, $time ) = empty($meta) ? array(null, -1) : $meta;
+    if( $time == -1 || time() - $time > $age / 1000 )
     {
-        list( $_content, $_mime ) = fetchUrl( $url, $auth, $error_count );
+        //error_log("fetch " . $url);
+        list( $_content, $_mime ) = fetchUrl( $url, $auth );
         if( !empty($_content) )
         {
             $content = $_content;
             $mime = $_mime;
         }
+        else
+        {
+            $content = apcu_fetch( $url . ":content" );
+        }
     }
-
-    return array( $content, $mime, $time, $error_count );
-}
-
-function fetchData($url)
-{
-    $data = apcu_fetch( $url );
-    $error_count = apcu_fetch( $url . ":error" );
-    
-    if( empty($data) )
+    else
     {
-        return array(false, time(), $error_count);
+        //error_log("reuse " . $url);
+        $content = apcu_fetch( $url . ":content" );
     }
-    
-    list( $content, $mime, $time ) = $data;
-    return array($content, $mime, $time, $error_count);
+
+    return array($content, $mime, $time);
 }
 
-function fetchUrl( $url, $auth, $error_count )
+function fetchUrl( $url, $auth )
 {
     $c = initCurl($url, $auth);
 
@@ -95,41 +90,19 @@ function fetchUrl( $url, $auth, $error_count )
 
     if( empty( $content ) )
     {
+        $error_count = apcu_fetch( $url . ":error" );
         if( $error_count > 1 ) error_log( $url . " had " . $error_count . " times not content" );
         apcu_store( $url . ":error", $error_count !== false ? $error_count + 1 : 1 );
 	}
 	else
 	{
-        apcu_store( $url, array( $content, $mime, time() ) );
+        apcu_store( $url . ":meta", array( $mime, time() ) );
+        apcu_store( $url . ":content", $content );
         apcu_delete( $url . ":error" );
 	}
 	
 	return array( $content, $mime );
 }
-
-/*function streamUrl( $url, $auth )
-{
-    $c = initCurl($url, $auth);
-
-    curl_setopt($c, CURLOPT_WRITEFUNCTION, 'streamCallback');
-
-    $boundaryOut = "MyMultipartBoundaryDoNotStumble";
-    header("Content-Type: multipart/x-mixed-replace; boundary=$boundaryOut");
-    echo "--$boundaryOut\r\n";
-
-    curl_exec($c);
-    curl_close($c);
-
-    return False;
-}
-
-function streamCallback($curl, $data) {
-    // Process the received data
-    echo $data;
-
-    // Return the length of the data processed
-    return strlen($data);
-}*/
 
 function initCurl( $url, $auth )
 {
@@ -163,7 +136,8 @@ function scaleImage( $image, $width, $height, $force )
     $orgWidth = $imagick->getImageWidth();
     $orgHeight = $imagick->getImageHeight();
 
-    if( $force || $orgWidth > $width || $orgHeight > $height )
+    //if( $force || $orgWidth > $width || $orgHeight > $height )
+    if( $orgWidth > $width || $orgHeight > $height )
     {
         $imagick->scaleImage( $width, $height, true );
     }
