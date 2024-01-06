@@ -48,16 +48,30 @@ function getData($url, $age, $auth)
     list( $mime, $time ) = empty($meta) ? array(null, -1) : $meta;
     if( $time == -1 || time() - $time > $age / 1000 )
     {
-        //error_log("fetch " . $url);
-        list( $_content, $_mime ) = fetchUrl( $url, $auth );
-        if( !empty($_content) )
+        $recheck = 0;
+        while( apcu_fetch( $url . ":fetch" ) )
         {
-            $content = $_content;
-            $mime = $_mime;
+            usleep(50000);
+            $recheck += 1;
+        }
+        if( $recheck > 0 )
+        {
+            //error_log("delayed reuse " . $recheck . " " . $url);
+            $content = apcu_fetch( $url . ":content" );
         }
         else
         {
-            $content = apcu_fetch( $url . ":content" );
+            //error_log("fetch " . $url);
+            list( $_content, $_mime ) = fetchUrl( $url, $auth );
+            if( !empty($_content) )
+            {
+                $content = $_content;
+                $mime = $_mime;
+            }
+            else
+            {
+                $content = apcu_fetch( $url . ":content" );
+            }
         }
     }
     else
@@ -71,6 +85,8 @@ function getData($url, $age, $auth)
 
 function fetchUrl( $url, $auth )
 {
+    apcu_store( $url . ":fetch", 1 );
+
     $c = initCurl($url, $auth);
 
     #$start = microtime(true);
@@ -101,7 +117,9 @@ function fetchUrl( $url, $auth )
         apcu_delete( $url . ":error" );
 	}
 	
-	return array( $content, $mime );
+    apcu_delete( $url . ":fetch" );
+
+    return array( $content, $mime );
 }
 
 function initCurl( $url, $auth )
