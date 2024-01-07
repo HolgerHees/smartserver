@@ -8,19 +8,26 @@ if( empty($_GET['name']) )
     exit(0);
 }
 
-$is_demo = strpos($_SERVER["HTTP_COOKIE"], "demo=") !== false;
-if( $is_demo )
+$options = [ 'w' => 350, 'h' => 350, 'wq' => 1 ];
+
+if( $_GET['obfuscated'] == "-1" )
 {
-    $name = "demo";
-    $password = "demo";
+    $name = "honeypot";
+    $password = "honeypot";
+    $data = "WIFI:T:WPA;S:" . $name . ";P:" . $password . ";;";
+    #$options["bc"] = "#FF0000";
 }
-else
+elseif( $_GET['obfuscated'] == "0" )
 {
     $name = $_GET['name'];
     $password = $wifi_networks[$name];
+    $data = "WIFI:T:WPA;S:" . $name . ";P:" . $password . ";;";
+}
+else
+{
+    $data = "honeypot";
 }
 
-$generator = new QRCode("WIFI:T:WPA;S:" . $name . ";P:" . $password . ";;", [ 'w' => 350, 'h' => 350, 'wq' => 1 ]);
-
+$generator = new QRCode($data, $options);
 /* Output directly to standard output. */
 $generator->output_image();

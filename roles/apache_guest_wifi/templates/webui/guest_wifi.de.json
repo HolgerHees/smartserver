@@ -1,4 +1,7 @@
 {
+  "guest_wifi": {
+    "Click to show QR Code": "Klicke um den QR-Code anzuzeigen"
+  },
   "admin_tools": {
     "Guest Wifi": "Gäste WLAN",
     "QRCode": "QRCode"
