@@ -46,12 +46,14 @@ mx.GuestWifi = (function( ret ) {
             function deobfuscate(event)
             {
                 var img = mx._$("img", element);
-
+                img.onload = function()
+                {
+                    img.classList.remove("obfuscated");
+                    element.removeChild(obfuscationInfoDiv);
+                };
                 img.src = img.getAttribute("src").replace("obfuscated=1", mx.Page.isDemoMode() ? "obfuscated=-1" : "obfuscated=0");
-                img.classList.remove("obfuscated");
 
                 element.removeEventListener("click",deobfuscate);
-                element.removeChild(obfuscationInfoDiv);
             }
             element.addEventListener("click",deobfuscate);
         });
