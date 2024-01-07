@@ -741,13 +741,7 @@ body.nobackground #submenu .service.button div:last-child {
 }
 #submenu .service.imageWatcher > div.fullscreen {
     position: fixed !important;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
     z-index: 100000;
-    height: 100%;
-    width: 100%;
     max-width: 100%;
     background-color: black;
 }

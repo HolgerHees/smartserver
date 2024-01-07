@@ -1,4 +1,5 @@
 mx.ImageWatcher = (function( ret ) {
+    var activeAnimations = {};
     var activeTimer = {};
 
     function getInterval(container)
@@ -73,12 +74,75 @@ mx.ImageWatcher = (function( ret ) {
         containers.forEach(function(container, index){
             container.setAttribute("data-index", index);
             activeTimer[index] = null;
+            activeAnimations[index] = null;
 
             container.addEventListener("click",function(event)
             {
                 event.stopPropagation();
-                container.classList.toggle("fullscreen");
+
                 var index = container.getAttribute("data-index");
+
+                if( container.classList.contains("fullscreen") )
+                {
+                    if( activeAnimations[index] == null ) return;
+
+                    container.style.left = activeAnimations[index]["offsets"]["left"] + "px";
+                    container.style.top = activeAnimations[index]["offsets"]["top"] + "px";
+                    container.style.width = activeAnimations[index]["width"] + "px";
+                    container.style.height = activeAnimations[index]["height"] + "px";
+
+                    // force refresh
+                    container.offsetHeight;
+
+                    window.setTimeout( function()
+                    {
+                        if( activeAnimations[index] == null ) return;
+
+                        container.classList.remove("fullscreen");
+                        container.style.transition = "";
+                        container.style.left = "";
+                        container.style.top = "";
+                        container.style.right = "";
+                        container.style.bottom = "";
+                        container.style.width = "";
+                        container.style.height = "";
+
+                        activeAnimations[index]["placeholder"].parentNode.removeChild(activeAnimations[index]["placeholder"]);
+                        activeAnimations[index] = null;
+                    },300);
+                }
+                else
+                {
+                    if( activeAnimations[index] != null ) return;
+
+                    activeAnimations[index] = {
+                        "offsets":  mx.Core.getOffsets(container),
+                        "width": container.offsetWidth,
+                        "height": container.offsetHeight,
+                        "placeholder": document.createElement("div")
+                    }
+
+                    //console.log(animationOffsets,animationWidth, animationHeight);
+
+                    activeAnimations[index]["placeholder"].classList.add("placeholder");
+                    container.parentNode.insertBefore(activeAnimations[index]["placeholder"], container);
+                    container.style.left = activeAnimations[index]["offsets"]["left"] + "px";
+                    container.style.top = activeAnimations[index]["offsets"]["top"] + "px";
+                    container.style.width = activeAnimations[index]["width"] + "px";
+                    container.style.height = activeAnimations[index]["height"] + "px";
+
+                    // force refresh
+                    container.offsetHeight;
+
+                    container.classList.add("fullscreen");
+                    container.style.transition = "all 0.3s";
+                    container.style.left = "0";
+                    container.style.top = "0";
+                    container.style.right = "0";
+                    container.style.bottom = "0";
+                    container.style.width = "100%";
+                    container.style.height = "100%";
+                }
 
                 if( activeTimer[index] != null )
                 {
