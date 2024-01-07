@@ -210,7 +210,7 @@ class Fetcher(object):
 
             _periods[period] = {"start": start_date_str, "fetch_start":  fetch_start_date_str, "end": end_date_str, "fetch_end": fetch_end_date_str, "values": []}
             for forecast in data["forecasts"]:
-                logging.info(forecast)
+                #logging.info(forecast)
 
                 validFrom = datetime.strptime(u"{0}{1}".format(forecast["validFrom"][:-3],forecast["validFrom"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
                 validUntil = datetime.strptime(u"{0}{1}".format(forecast["validUntil"][:-3],forecast["validUntil"][-2:]),"%Y-%m-%dT%H:%M:%S%z")
