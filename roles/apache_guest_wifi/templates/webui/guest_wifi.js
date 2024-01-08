@@ -1,5 +1,4 @@
 var subGroup = mx.Menu.getMainGroup('admin').getSubGroup('tools');
-//subGroup.addUrl('guest_wifi', '/guest_wifi/', 'admin', 380, '{i18n_Guest Wifi}', '{i18n_QRCode}', false, "guest_wifi.svg");
 
 mx.GuestWifi = (function( ret ) {
     var css = `
@@ -13,6 +12,8 @@ mx.GuestWifi = (function( ret ) {
         margin-left: auto;
         margin-right: auto;
         z-index: 1;
+        opacity: 0;
+        position: absolute;
     }
     div.guestwifi > img.obfuscated {
         filter: blur(10px);
@@ -52,32 +53,23 @@ mx.GuestWifi = (function( ret ) {
             obfuscationInfoDiv.classList.add("obfuscated");
             element.appendChild(obfuscationInfoDiv);
 
-            function deobfuscate(event)
+            var obfuscated_img = mx._$("img.obfuscated", element);
+            var deobfuscated_img = mx._$("img.deobfuscated", element);
+
+            function handler(event)
             {
-                var img = mx._$("img", element);
-                var _img = document.createElement("img");
-                _img.onload = function()
+                if( obfuscated_img.style.opacity == "" )
                 {
-                    mx.Core.waitForTransitionEnd(_img, function()
-                    {
-                        _img.style.position = "";
-                        img.parentNode.removeChild(img);
-                        element.removeChild(obfuscationInfoDiv);
-                    }, "guest_wifi");
-                    _img.style.opacity = "";
-                };
-                _img.classList.add("deobfuscated");
-                _img.style.opacity = "0";
-                _img.style.position = "absolute";
-                _img.src = img.getAttribute("src").replace("obfuscated=1", mx.Page.isDemoMode() ? "obfuscated=-1" : "obfuscated=0");
-
-                img.style.opacity = "0";
-
-                img.parentNode.insertBefore(_img, img);
-
-                element.removeEventListener("click",deobfuscate);
+                    deobfuscated_img.style.opacity = "1";
+                    obfuscated_img.style.opacity = "0";
+                }
+                else
+                {
+                    deobfuscated_img.style.opacity = "";
+                    obfuscated_img.style.opacity = "";
+                }
             }
-            element.addEventListener("click",deobfuscate);
+            element.addEventListener("click",handler);
         });
     }
     return ret;
