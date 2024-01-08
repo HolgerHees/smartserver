@@ -86,10 +86,11 @@ mx.ImageWatcher = (function( ret ) {
                 {
                     if( activeAnimations[index] == null ) return;
 
-                    container.style.left = activeAnimations[index]["offsets"]["left"] + "px";
-                    container.style.top = activeAnimations[index]["offsets"]["top"] + "px";
-                    container.style.width = activeAnimations[index]["width"] + "px";
-                    container.style.height = activeAnimations[index]["height"] + "px";
+                    var data = activeAnimations[index];
+                    container.style.left = data["offsets"]["left"] + "px";
+                    container.style.top = data["offsets"]["top"] + "px";
+                    container.style.width = data["width"] + "px";
+                    container.style.height = data["height"] + "px";
 
                     // force refresh
                     container.offsetHeight;
@@ -115,21 +116,24 @@ mx.ImageWatcher = (function( ret ) {
                 {
                     if( activeAnimations[index] != null ) return;
 
-                    activeAnimations[index] = {
+                    var data = {
                         "offsets":  mx.Core.getOffsets(container),
                         "width": container.offsetWidth,
                         "height": container.offsetHeight,
                         "placeholder": document.createElement("div")
                     }
+                    activeAnimations[index] = data;
 
                     //console.log(animationOffsets,animationWidth, animationHeight);
 
-                    activeAnimations[index]["placeholder"].classList.add("placeholder");
-                    container.parentNode.insertBefore(activeAnimations[index]["placeholder"], container);
-                    container.style.left = activeAnimations[index]["offsets"]["left"] + "px";
-                    container.style.top = activeAnimations[index]["offsets"]["top"] + "px";
-                    container.style.width = activeAnimations[index]["width"] + "px";
-                    container.style.height = activeAnimations[index]["height"] + "px";
+                    data["placeholder"].classList.add("placeholder");
+                    data["placeholder"].style.width = data["width"] + "px";
+                    data["placeholder"].style.height = data["height"] + "px";
+                    container.parentNode.insertBefore(data["placeholder"], container);
+                    container.style.left = data["offsets"]["left"] + "px";
+                    container.style.top = data["offsets"]["top"] + "px";
+                    container.style.width = data["width"] + "px";
+                    container.style.height = data["height"] + "px";
 
                     // force refresh
                     container.offsetHeight;
