@@ -6,7 +6,7 @@
 
 - name: set openhab version
   set_fact:
-    openhab_version: "4.1.0"
+    openhab_version: "4.1.1"
     openhab_uid: "{{system_users['openhab'].id}}"
     openhab_user: "{{system_users['openhab'].name}}"
     openhab_gid: "{{system_groups['openhab'].id}}"
