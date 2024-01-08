@@ -6,8 +6,17 @@ mx.GuestWifi = (function( ret ) {
     div.guestwifi {
         position: relative;
     }
+    div.guestwifi > img.deobfuscated {
+        transition: opacity 0.3s;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        z-index: 1;
+    }
     div.guestwifi > img.obfuscated {
         filter: blur(10px);
+        transition: opacity 0.3s;
     }
     div.guestwifi > div.obfuscated {
         position: absolute;
@@ -46,12 +55,25 @@ mx.GuestWifi = (function( ret ) {
             function deobfuscate(event)
             {
                 var img = mx._$("img", element);
-                img.onload = function()
+                var _img = document.createElement("img");
+                _img.onload = function()
                 {
-                    img.classList.remove("obfuscated");
-                    element.removeChild(obfuscationInfoDiv);
+                    mx.Core.waitForTransitionEnd(_img, function()
+                    {
+                        _img.style.position = "";
+                        img.parentNode.removeChild(img);
+                        element.removeChild(obfuscationInfoDiv);
+                    }, "guest_wifi");
+                    _img.style.opacity = "";
                 };
-                img.src = img.getAttribute("src").replace("obfuscated=1", mx.Page.isDemoMode() ? "obfuscated=-1" : "obfuscated=0");
+                _img.classList.add("deobfuscated");
+                _img.style.opacity = "0";
+                _img.style.position = "absolute";
+                _img.src = img.getAttribute("src").replace("obfuscated=1", mx.Page.isDemoMode() ? "obfuscated=-1" : "obfuscated=0");
+
+                img.style.opacity = "0";
+
+                img.parentNode.insertBefore(_img, img);
 
                 element.removeEventListener("click",deobfuscate);
             }
