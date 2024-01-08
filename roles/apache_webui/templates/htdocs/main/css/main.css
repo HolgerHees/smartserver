@@ -749,6 +749,9 @@ body.nobackground #submenu .service.button div:last-child {
     position: absolute;
     left: 50%;
     top: 50%;
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
     transform: translate(-50%, -50%);
 }
 #submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
