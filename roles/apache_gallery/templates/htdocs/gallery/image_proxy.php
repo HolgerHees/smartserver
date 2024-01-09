@@ -5,8 +5,10 @@ if( empty($_GET["url"]) )
   exit;
 }
 
+register_shutdown_function( "fatal_handler" );
+
 $url = $_GET["url"];
-$auth = empty($_GET['user']) || empty($_GET['password']) ? null : base64_encode( $_GET['user']. ":" . $_GET['password'] );
+$auth = empty($_GET['user']) || empty($_GET['password']) ? null : ( $_GET['user']. ":" . $_GET['password'] );
 
 
 $age = empty($_GET['age']) ? 1000 : $_GET['age'];
@@ -40,6 +42,14 @@ else
 
     header("Content-Type: " . $mime);
     echo $content;
+}
+
+function fatal_handler() {
+    global $url;
+
+    # cleanup
+    #error_log("cleanup");
+    apcu_delete( $url . ":fetch" );
 }
 
 function getData($url, $age, $auth)
@@ -98,25 +108,31 @@ function fetchUrl( $url, $auth )
     #error_log("fetched size " . $size);
     #error_log("calculated size " . strlen($content));
 
-    list( $content, $mime ) = scaleImage( $content, 1920, 1080, false );
-
     #$mime = curl_getinfo($c, CURLINFO_CONTENT_TYPE);
 
-	curl_close($c);	
+    $return_code =  curl_getinfo($c, CURLINFO_HTTP_CODE);
 
-    if( empty( $content ) )
+	curl_close($c);
+
+    if( empty( $content ) || $return_code != 200 )
     {
         $error_count = apcu_fetch( $url . ":error" );
-        if( $error_count > 1 ) error_log( $url . " had " . $error_count . " times not content" );
+        if( $return_code != 200 ) error_log( $url . " had response code " . $return_code );
+        elseif( $error_count > 1 ) error_log( $url . " had " . $error_count . " times not content" );
         apcu_store( $url . ":error", $error_count !== false ? $error_count + 1 : 1 );
+
+        $content = "";
+        $mime = "";
 	}
 	else
 	{
+        list( $content, $mime ) = scaleImage( $content, 1920, 1080, false );
+
         apcu_store( $url . ":meta", array( $mime, time() ) );
         apcu_store( $url . ":content", $content );
         apcu_delete( $url . ":error" );
 	}
-	
+
     apcu_delete( $url . ":fetch" );
 
     return array( $content, $mime );
@@ -134,8 +150,8 @@ function initCurl( $url, $auth )
 
     if( !empty($auth) )
     {
-        $headers = array( 'Authorization: Basic '. $auth );
-        curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($c, CURLOPT_HTTPAUTH, CURLAUTH_ANY );
+        curl_setopt($c, CURLOPT_USERPWD, $auth );
     }
     curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 
