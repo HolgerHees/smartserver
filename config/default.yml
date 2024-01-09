@@ -203,7 +203,7 @@ default_variables: {
     #         uid: {},                                            # unique identifier for this device. Will be used to generate proxy urls like /camera{uid | capelized}Image
     #         name: {},                                           # menu and gallery name
     #         details: { "optional": yes },                       # additional details like brand name
-    #         ftp_upload_name: { "optional": yes },               # the folder name where alert images are uploaded
+    #         ftp_upload_name: { "optional": yes },               # the folder name where alert images are uploaded int the ftp folder (it is just the subfolder name, not the whole path)
     #         snapshot_url: {},                                   # external url to get a snapshot/preview image
     #         snapshot_username: { "optional": yes }              # username to authenticate external url
     #         snapshot_password: { "optional": yes }              # password to authenticate external url
