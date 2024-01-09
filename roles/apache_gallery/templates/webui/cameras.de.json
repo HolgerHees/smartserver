@@ -2,7 +2,7 @@
   "automation": {
     "Cameras": "Kameras"
   },
-  "admin_devices": {
-    "Camera": "Kamera"
+  "cameras": {
+    "Loading": "Lädt"
   }
 }

@@ -7,7 +7,7 @@ mx.ImageWatcher = (function( ret ) {
         return container.getAttribute(container.classList.contains("fullscreen") ? 'data-fullscreen-interval' : 'data-preview-interval')
     }
 
-    function refreshImage(container, last_duration)
+    function refreshImage(container, last_duration, callback)
     {
         var index = container.getAttribute("data-index");
         activeTimer[index] = null;
@@ -42,6 +42,8 @@ mx.ImageWatcher = (function( ret ) {
             
             if( this.status == 200 ) 
             {
+                if(callback) callback();
+
                 var imageURL = window.URL.createObjectURL(this.response);
                 image.setAttribute('src', imageURL );
 
@@ -186,9 +188,16 @@ mx.ImageWatcher = (function( ret ) {
                 win.focus();
             });
 
-            //mx.Actions.openEntryById(event,\'automation-cameras-{{camera['ftp_upload_name']}}\')
+            var loadingSpan = document.createElement("span");
+            loadingSpan.classList.add("loading");
+            var i18n = container.getAttribute("data-loading").split("_");
+            loadingSpan.innerText = mx.I18N.get(i18n[1],i18n[0]) + " ...";
+            container.appendChild(loadingSpan);
 
-            refreshImage(container, 0);
+            refreshImage(container, 0, function()
+            {
+                container.removeChild(loadingSpan);
+            });
         });
     };
 

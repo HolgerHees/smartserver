@@ -792,6 +792,17 @@ body.nobackground #submenu .service.button div:last-child {
     bottom: 3px;
     cursor: default;
 }
+#submenu .service.imageWatcher > div > span.loading {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+    display: grid;
+    align-items: center;
+    color: var(--image-watcher-text);
+    font-size: 40px;
+}
 @media screen and (orientation: landscape) {
     #submenu .service.imageWatcher {
         flex-direction: row;
