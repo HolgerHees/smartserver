@@ -5,7 +5,7 @@ html += '<div data-loading="cameras_Loading" data-preview-interval="5000" data-f
 html += '</div>';
 
 var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}', 'device_camera.svg');
-cameraSubGroup.addHtml('cameras', html, {"post": [ function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); } ] }, 'user', 100 );
+cameraSubGroup.addHtml('cameras', html, {"init": [ function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); } ], "post": [ function(){ mx.ImageWatcher.post('.service.imageWatcher > div'); } ] }, 'user', 100 );
 {% for camera in camera_devices %}{% if 'ftp_upload_name' in camera %}
 cameraSubGroup.addUrl('{{camera['uid']}}','/gallery/?sub={{camera['ftp_upload_name']}}', 'user');
 {% endif %}{% endfor %}

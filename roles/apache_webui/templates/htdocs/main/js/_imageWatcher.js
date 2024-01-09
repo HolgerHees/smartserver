@@ -9,8 +9,8 @@ mx.ImageWatcher = (function( ret ) {
 
     function refreshImage(container, last_duration, callback)
     {
-        var index = container.getAttribute("data-index");
-        activeTimer[index] = null;
+        var uid = container.getAttribute("data-uid");
+        activeTimer[uid] = null;
 
         var image = container.querySelector('img');
         var timeSpan = container.querySelector('span.time');
@@ -45,6 +45,18 @@ mx.ImageWatcher = (function( ret ) {
                 if(callback) callback();
 
                 var imageURL = window.URL.createObjectURL(this.response);
+                image.onload = function()
+                {
+                    image.style.aspectRatio = "";
+                    //console.log("load" + image.naturalWidth + ":" + image.naturalHeight);
+                    sessionStorage.setItem("gallery_dimensions_" + uid, image.naturalWidth + ":" + image.naturalHeight);
+                }
+                image.onerror = function()
+                {
+                    image.style.aspectRatio = "";
+                    //console.log("error");
+                    sessionStorage.removeItem("gallery_dimensions_" + uid);
+                }
                 image.setAttribute('src', imageURL );
 
                 var time = ("0" + h).slice(-2) + ':' + ("0" + m).slice(-2) + ':' + ("0" + s).slice(-2);
@@ -55,7 +67,7 @@ mx.ImageWatcher = (function( ret ) {
 
                 if( interval > 0 )
                 {
-                    activeTimer[index] = mx.Timer.register( function(){refreshImage(container, duration);}, interval );
+                    activeTimer[uid] = mx.Timer.register( function(){refreshImage(container, duration);}, interval );
                 }
                 else
                 {
@@ -74,21 +86,40 @@ mx.ImageWatcher = (function( ret ) {
     {
         var containers = mx.$$(selector);
         containers.forEach(function(container, index){
-            container.setAttribute("data-index", index);
-            activeTimer[index] = null;
-            activeAnimations[index] = null;
+            uid = selector + ":" + index;
+            container.setAttribute("data-uid", uid);
+
+            var image = container.querySelector('img');
+
+            var dimensions = sessionStorage.getItem("gallery_dimensions_" + uid);
+            if( dimensions )
+            {
+                var size = dimensions.split(":");
+                image.style.aspectRatio = size[0] + "/" + size[1];
+            }
+        });
+    }
+
+    ret.post = function(selector)
+    {
+        var containers = mx.$$(selector);
+        containers.forEach(function(container){
+            var uid = container.getAttribute("data-uid");
+
+            activeTimer[uid] = null;
+            activeAnimations[uid] = null;
 
             container.addEventListener("click",function(event)
             {
                 event.stopPropagation();
 
-                var index = container.getAttribute("data-index");
+                var uid = container.getAttribute("data-uid");
 
                 if( container.classList.contains("fullscreen") )
                 {
-                    if( activeAnimations[index] == null ) return;
+                    if( activeAnimations[uid] == null ) return;
 
-                    var data = activeAnimations[index];
+                    var data = activeAnimations[uid];
                     container.style.left = data["offsets"]["left"] + "px";
                     container.style.top = data["offsets"]["top"] + "px";
                     container.style.width = data["width"] + "px";
@@ -99,7 +130,7 @@ mx.ImageWatcher = (function( ret ) {
 
                     window.setTimeout( function()
                     {
-                        if( activeAnimations[index] == null ) return;
+                        if( activeAnimations[uid] == null ) return;
 
                         container.classList.remove("fullscreen");
                         container.style.transition = "";
@@ -110,13 +141,13 @@ mx.ImageWatcher = (function( ret ) {
                         container.style.width = "";
                         container.style.height = "";
 
-                        activeAnimations[index]["placeholder"].parentNode.removeChild(activeAnimations[index]["placeholder"]);
-                        activeAnimations[index] = null;
+                        activeAnimations[uid]["placeholder"].parentNode.removeChild(activeAnimations[uid]["placeholder"]);
+                        activeAnimations[uid] = null;
                     },300);
                 }
                 else
                 {
-                    if( activeAnimations[index] != null ) return;
+                    if( activeAnimations[uid] != null ) return;
 
                     var data = {
                         "offsets":  mx.Core.getOffsets(container),
@@ -124,7 +155,7 @@ mx.ImageWatcher = (function( ret ) {
                         "height": container.offsetHeight,
                         "placeholder": document.createElement("div")
                     }
-                    activeAnimations[index] = data;
+                    activeAnimations[uid] = data;
 
                     //console.log(animationOffsets,animationWidth, animationHeight);
 
@@ -150,9 +181,9 @@ mx.ImageWatcher = (function( ret ) {
                     container.style.height = "100%";
                 }
 
-                if( activeTimer[index] != null )
+                if( activeTimer[uid] != null )
                 {
-                    mx.Timer.stop(activeTimer[index]);
+                    mx.Timer.stop(activeTimer[uid]);
                     refreshImage(container, 0);
                 }
             });

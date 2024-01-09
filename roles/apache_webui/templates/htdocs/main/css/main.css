@@ -734,8 +734,9 @@ body.nobackground #submenu .service.button div:last-child {
 }
 #submenu .service.imageWatcher > div {
     position: relative;
-    width: auto;
-    max-width: 90%;
+    /*width: auto;
+     max-width: 90%;*/
+    width: 90%;
     padding-bottom: 5px;
     cursor: pointer;
 }
@@ -754,10 +755,10 @@ body.nobackground #submenu .service.button div:last-child {
     width: 100%;
     transform: translate(-50%, -50%);
 }
-#submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
+/*#submenu .service.imageWatcher > div:first-child:nth-last-child(1) {
     width: auto;
     max-width: 90%;
-}
+}*/
 #submenu .service.imageWatcher > div > a,
 #submenu .service.imageWatcher > div > img {
     display: block;
@@ -765,6 +766,7 @@ body.nobackground #submenu .service.button div:last-child {
 #submenu .service.imageWatcher > div > span {
     position: absolute;
     color: var(--image-watcher-text);
+    font-size: 16px;
 }
 #submenu .service.imageWatcher > div > span.gallery {
     top: 0;
@@ -801,7 +803,7 @@ body.nobackground #submenu .service.button div:last-child {
     display: grid;
     align-items: center;
     color: var(--image-watcher-text);
-    font-size: 40px;
+    font-size: 30px;
 }
 @media screen and (orientation: landscape) {
     #submenu .service.imageWatcher {
@@ -868,5 +870,5 @@ body.phone #menu .spacer {
     opacity: 1;
 }
 body.phone #submenu .service.imageWatcher {
-    margin-top: -5vh;
+    margin-top: -4.4vh;
 }
