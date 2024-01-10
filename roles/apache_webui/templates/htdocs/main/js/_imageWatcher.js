@@ -7,7 +7,12 @@ mx.ImageWatcher = (function( ret ) {
         return container.getAttribute(container.classList.contains("fullscreen") ? 'data-fullscreen-interval' : 'data-preview-interval')
     }
 
-    function refreshImage(container, last_duration, callback)
+    function showError()
+    {
+
+    }
+
+    function refreshImage(container, last_duration)
     {
         var uid = container.getAttribute("data-uid");
         activeTimer[uid] = null;
@@ -40,22 +45,18 @@ mx.ImageWatcher = (function( ret ) {
         xhr.onreadystatechange = function() {
             if (this.readyState != 4) return;
             
-            if( this.status == 200 ) 
-            {
-                if(callback) callback();
+            var infoSpan = container.querySelector('span.info');
 
+            if( this.status == 200 )
+            {
                 var imageURL = window.URL.createObjectURL(this.response);
                 image.onload = function()
                 {
-                    image.style.aspectRatio = "";
-                    //console.log("load" + image.naturalWidth + ":" + image.naturalHeight);
-                    localStorage.setItem("gallery_dimensions_" + uid, image.naturalWidth + ":" + image.naturalHeight);
+                    showImage(uid, image, infoSpan);
                 }
-                image.onerror = function()
+                image.onerror = function(event)
                 {
-                    image.style.aspectRatio = "";
-                    //console.log("error");
-                    localStorage.removeItem("gallery_dimensions_" + uid);
+                    showError(uid, image, infoSpan, "Error" );
                 }
                 image.setAttribute('src', imageURL );
 
@@ -76,10 +77,34 @@ mx.ImageWatcher = (function( ret ) {
             }
             else
             {
+                showError(uid, image, infoSpan, "Error " + this.status );
+
                 mx.Page.handleRequestError(this.status,src,function(){refreshImage(container, duration);});
             }
         };
         xhr.send();
+    }
+
+    function showImage(uid, image, infoSpan)
+    {
+        image.style.aspectRatio = "";
+
+        infoSpan.style.opacity = "0";
+
+        //console.log("load" + image.naturalWidth + ":" + image.naturalHeight);
+        localStorage.setItem("gallery_dimensions_" + uid, image.naturalWidth + ":" + image.naturalHeight);
+    }
+
+    function showError(uid, image, infoSpan, errorMsg)
+    {
+        image.style.aspectRatio = "";
+
+        infoSpan.classList.add("error");
+        infoSpan.innerText = errorMsg;
+        infoSpan.style.opacity = "1";
+
+        //console.log("error");
+        localStorage.removeItem("gallery_dimensions_" + uid);
     }
 
     ret.init = function(selector)
@@ -219,16 +244,13 @@ mx.ImageWatcher = (function( ret ) {
                 win.focus();
             });
 
-            var loadingSpan = document.createElement("span");
-            loadingSpan.classList.add("loading");
+            var infoSpan = document.createElement("span");
+            infoSpan.classList.add("info");
             var i18n = container.getAttribute("data-loading").split("_");
-            loadingSpan.innerText = mx.I18N.get(i18n[1],i18n[0]) + " ...";
-            container.appendChild(loadingSpan);
+            infoSpan.innerText = mx.I18N.get(i18n[1],i18n[0]) + " ...";
+            container.appendChild(infoSpan);
 
-            refreshImage(container, 0, function()
-            {
-                container.removeChild(loadingSpan);
-            });
+            refreshImage(container, 0);
         });
     };
 

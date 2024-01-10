@@ -794,7 +794,7 @@ body.nobackground #submenu .service.button div:last-child {
     bottom: 3px;
     cursor: default;
 }
-#submenu .service.imageWatcher > div > span.loading {
+#submenu .service.imageWatcher > div > span.info {
     top: 0;
     left: 0;
     right: 0;
@@ -804,6 +804,10 @@ body.nobackground #submenu .service.button div:last-child {
     align-items: center;
     color: var(--image-watcher-text);
     font-size: 30px;
+    transition: opacity 300ms linear;
+}
+#submenu .service.imageWatcher > div > span.info.error {
+    color: var(--alarm-button-error);
 }
 @media screen and (orientation: landscape) {
     #submenu .service.imageWatcher {
