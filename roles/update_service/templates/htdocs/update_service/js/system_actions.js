@@ -163,7 +163,7 @@ mx.UpdateServiceActions = (function( ret ) {
             
             if( hasEncryptedVault )
             {
-                var lastDeploymentPassword = sessionStorage.getItem("lastDeploymentPassword");
+                var lastDeploymentPassword = localStorage.getItem("lastDeploymentPassword");
                 
                 body += "<div class=\"row\">";
                 body += "  <div>" + mx.I18N.get("Password") + ":</div>";
@@ -237,8 +237,8 @@ mx.UpdateServiceActions = (function( ret ) {
                         {
                             passwordHint.style.maxHeight = "";
                             parameter["password"] = passwordField.value;
-                            if( passwordRemember.checked ) sessionStorage.setItem("lastDeploymentPassword", passwordField.value);
-                            else sessionStorage.removeItem("lastDeploymentPassword");
+                            if( passwordRemember.checked ) localStorage.setItem("lastDeploymentPassword", passwordField.value);
+                            else localStorage.removeItem("lastDeploymentPassword");
                         }
                     }
                     

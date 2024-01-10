@@ -49,13 +49,13 @@ mx.ImageWatcher = (function( ret ) {
                 {
                     image.style.aspectRatio = "";
                     //console.log("load" + image.naturalWidth + ":" + image.naturalHeight);
-                    sessionStorage.setItem("gallery_dimensions_" + uid, image.naturalWidth + ":" + image.naturalHeight);
+                    localStorage.setItem("gallery_dimensions_" + uid, image.naturalWidth + ":" + image.naturalHeight);
                 }
                 image.onerror = function()
                 {
                     image.style.aspectRatio = "";
                     //console.log("error");
-                    sessionStorage.removeItem("gallery_dimensions_" + uid);
+                    localStorage.removeItem("gallery_dimensions_" + uid);
                 }
                 image.setAttribute('src', imageURL );
 
@@ -91,7 +91,7 @@ mx.ImageWatcher = (function( ret ) {
 
             var image = container.querySelector('img');
 
-            var dimensions = sessionStorage.getItem("gallery_dimensions_" + uid);
+            var dimensions = localStorage.getItem("gallery_dimensions_" + uid);
             if( dimensions )
             {
                 var size = dimensions.split(":");
