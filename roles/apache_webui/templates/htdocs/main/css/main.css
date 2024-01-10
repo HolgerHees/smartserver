@@ -805,6 +805,7 @@ body.nobackground #submenu .service.button div:last-child {
     color: var(--image-watcher-text);
     font-size: 30px;
     transition: opacity 300ms linear;
+    pointer-events: none;
 }
 #submenu .service.imageWatcher > div > span.info.error {
     color: var(--alarm-button-error);
