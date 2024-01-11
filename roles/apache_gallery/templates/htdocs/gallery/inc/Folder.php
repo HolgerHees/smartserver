@@ -16,27 +16,22 @@ class Folder {
     
     public function getImages()
     {
-        $file_times = array();
-        $list = shell_exec("stat -c \"%y %n\" " . $this->main_folder . $this->sub_folder . "/* 2>/dev/null");
-        foreach( explode("\n",$list) as $line )
-        {
-            if( empty($line) ) continue;
-            
-            $parts = explode(" ",$line);
-            
-            $time = strtotime($parts[0] . " " . $parts[1] . " " . $parts[2]);
-            $time = DateTime::createFromFormat('Y-m-d H:i:s O', $parts[0] . " " . explode(".",$parts[1])[0] . " " . $parts[2]);
-            $file_times[$parts[3]] = $time;
-        }
-        
         $images = [];
         $files = scandir($this->main_folder . $this->sub_folder);
         foreach( $files as $file )
         {
             if( $file == '.' or $file == '..' || is_dir($this->sub_folder.$file) ) continue;
-            $images[] = new Image($this->main_folder , $this->sub_folder, $file, $file_times[ $this->main_folder . $this->sub_folder . "/" . $file ] );
+
+            $path = $this->main_folder . $this->sub_folder . "/" . $file;
+
+            $timestamp = filemtime($path);
+            $date = new DateTime();
+            $date->setTimestamp($timestamp);
+
+            $images[] = new Image($this->main_folder , $this->sub_folder, $file, $date );
         }
-        usort($images,function($a,$b){ 
+
+        usort($images,function($a,$b){
             $aTimestamp = $a->getTime()->getTimestamp();
             $bTimestamp = $b->getTime()->getTimestamp();
 

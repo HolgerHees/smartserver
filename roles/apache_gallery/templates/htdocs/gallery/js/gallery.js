@@ -30,6 +30,7 @@ mx.Gallery = (function( ret ) {
     var tabStartPageX = -1;
     var tabStartScrollX = -1;
     var isTabMoving = false;
+    var isTabTouch = false;
     var momentumScrollTimer = null;
 
     var playTimer = null;
@@ -228,7 +229,7 @@ mx.Gallery = (function( ret ) {
     function processMomentingScroll()
     {
         if( momentumScrollTimer ) window.clearTimeout(momentumScrollTimer);
-        
+
         momentumScrollTimer = window.setTimeout(function()
         {
             momentumScrollTimer = null;
@@ -248,23 +249,54 @@ mx.Gallery = (function( ret ) {
         {
             targetIndex = (window.scrollX - currentImageX) / activeItem.offsetWidth;
         }
-        
+
         return containers[targetIndex];
     }
+
+    var tabticker = null;
+    var tracker_current_offset = 0;
+    var tracker_last_offset = 0;
+    var tracker_velocity = 0;
+    var tracker_timestamp = null;
+
     function tapstart(e)
     {
         if( e.target.classList.contains("button") )
         {
             return;
         }
-        
+
         //console.log("tabstart");
         tabStartPageX = e.detail.clientX;
         tabStartScrollX = window.scrollX;
         isTabMoving = false;
+        isTabTouch = true;
+
+        tracker_current_offset = e.detail.clientX;
+        tracker_last_offset = e.detail.clientX;
+        tracker_velocity = 0;
+        tracker_timestamp = performance.now();
+        tabticker = setInterval(tabtracker, 100);
     }
+
+    function tabtracker()
+    {
+        var now = performance.now();
+
+        var elapsed = now - tracker_timestamp;
+        var delta = tracker_current_offset - tracker_last_offset;
+        tracker_last_offset = tracker_current_offset;
+
+        v = 1000 * delta / (1 + elapsed);
+        tracker_velocity = 0.8 * v + 0.2 * tracker_velocity;
+
+        tracker_timestamp = now;
+    }
+
     function tapmove(e)
     {
+        tracker_current_offset = e.detail.clientX;
+
         isTabMoving = true;
         //console.log("tapmove " + ( tabStartScrollX - diff ) );
         var diff = e.detail.clientX - tabStartPageX;
@@ -272,19 +304,64 @@ mx.Gallery = (function( ret ) {
     }
     function tapend(e)
     {
-        if( !isTabMoving ) return;
-        isTabMoving = false;
-        
-        //console.log("tapend");
-        tabStartPageX = -1;
-        
-        if( mx.Core.isTouchDevice() )
+        clearInterval(tabticker);
+
+        if( isTabMoving )
         {
-            processMomentingScroll();
+            isTabMoving = false;
+
+            //console.log("tapend");
+            tabStartPageX = -1;
+
+            if( mx.Core.isTouchDevice() )
+            {
+                processMomentingScroll();
+            }
+            else
+            {
+                if (tracker_velocity > 500 )
+                {
+                    var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
+                    if( typeof nextContainer != "undefined" )
+                    {
+                        scrollToActiveItem(nextContainer,true);
+                        return;
+                    }
+                }
+                else if( tracker_velocity < -500 )
+                {
+                    var nextContainer = containers[parseInt(activeItem.dataset.index) + 1];
+                    if( typeof nextContainer != "undefined" )
+                    {
+                        scrollToActiveItem(nextContainer,true);
+                        return;
+                    }
+                }
+                scrollToActiveItem(getMostVisibleItem(),true);
+            }
         }
-        else
+
+        isTabTouch = false;
+    }
+
+    function scrollHandler(e){
+        if( requestedScrollPosition != null )
         {
-            scrollToActiveItem(getMostVisibleItem(),true);
+            if( checkRequestedPosition() )
+            {
+                if( debug ) console.log("requestedScrollPosition reset");
+                requestedScrollPosition = null;
+                lastScrollPosition = null;
+            }
+            return;
+        }
+
+        if( isFullscreen )
+        {
+            if( !isTabTouch )
+            {
+                processMomentingScroll();
+            }
         }
     }
 
@@ -399,7 +476,7 @@ mx.Gallery = (function( ret ) {
             gallery.addEventListener("tapstart",tapstart);
             gallery.addEventListener("tapmove",tapmove);
             gallery.addEventListener("tapend",tapend);
-            
+
             layer.style.cssText = "";
             img.style.cssText = "";
 
@@ -464,6 +541,11 @@ mx.Gallery = (function( ret ) {
     
     function delayedPosition()
     {
+        if( isTabTouch )
+        {
+            return;
+        }
+
         if( requestedScrollPosition != null )
         {
             if( debug ) console.log("delayedPositon: skipped");
@@ -566,24 +648,6 @@ mx.Gallery = (function( ret ) {
 
         return false;
     }
-    
-    function scrollHandler(e){
-        if( requestedScrollPosition != null )
-        {
-            if( checkRequestedPosition() )
-            {
-                if( debug ) console.log("requestedScrollPosition reset");
-                requestedScrollPosition = null;
-                lastScrollPosition = null;
-            }
-            return;
-        }
-        
-        if( isFullscreen )
-        {
-            if( !isTabMoving ) processMomentingScroll();
-        }
-    }
 
     function updateList()
     {
@@ -601,50 +665,49 @@ mx.Gallery = (function( ret ) {
                 
                 if( content.querySelector("#gallery") )
                 {
-                    var _containers = content.querySelector("#gallery").childNodes;
-                    
                     var containerMap = {};
                     containers.forEach(function(container,index){
-                        containerMap[container.dataset.src] = index;
+                        containerMap[container.dataset.src] = container;
                     });
-                    
-                    var currentIndex = 0;//containers[0];
-                    var _containerMap = {};
-                    _containers.forEach(function(container,index){
-                        _containerMap[container.dataset.src] = index;
 
+                    var _containers = content.querySelector("#gallery").childNodes;
+                    var _nextContainer = containers[0];
+                    Object.values(_containers).forEach(function(container,index){
                         if( typeof containerMap[container.dataset.src] == "undefined" )
                         {
-                            gallery.insertBefore(container,containers[currentIndex]);
+                            if( _nextContainer )
+                            {
+                                gallery.insertBefore(container,_nextContainer);
+                            }
+                            else
+                            {
+                                gallery.appendChild(container);
+                            }
                             containerObserver.observe(container);
-                            //console.log("add image");
                         }
                         else
                         {
-                            currentIndex = containerMap[container.dataset.src] + 1;
+                            _nextContainer = containerMap[container.dataset.src].nextSibling;
+                            containerMap[container.dataset.src].dataset.index = container.dataset.index;
+                            delete containerMap[container.dataset.src];
                         }
                     });
-                    
+
                     var _activeItem = activeItem;
-                    containers.forEach(function(container,index){
-                        if( typeof _containerMap[container.dataset.src] == "undefined" )
+                    Object.values(containerMap).forEach(function(container,index){
+                        container.parentNode.removeChild(container);
+                        //console.log("remove image");
+                        if( container.dataset.src == activeItem.dataset.src )
                         {
-                            container.parentNode.removeChild(container);
-                            //console.log("remove image");
-                            if( container.dataset.src == activeItem.dataset.src )
-                            {
-                                _activeItem = null;
-                            }
-                        }
-                        else if(_activeItem == null)
-                        {
-                            _activeItem = container;
+                            _activeItem = null;
                         }
                     });
-                    
+
+                    if( _activeItem == null ) _activeItem = containers[0]
+
                     // refresh containers
                     containers = gallery.querySelectorAll(".container");
-                    
+
                     slotOverview.innerHTML = content.querySelector("#slots").innerHTML;
                     
                     // reset active states
