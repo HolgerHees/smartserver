@@ -703,6 +703,7 @@ mx.Gallery = (function( ret ) {
 
         if( containerObserver ) containerObserver.disconnect();
 
+        // rootMargin does not work propperly on android devices in iframes
         var observerOptions = { rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px " + window.innerWidth + "px " + ( window.innerHeight / 2 ) + "px 0px" };
 
         containerObserver = new IntersectionObserver((entries, imgObserver) => {
