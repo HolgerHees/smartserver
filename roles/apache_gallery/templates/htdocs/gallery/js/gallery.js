@@ -452,11 +452,11 @@ mx.Gallery = (function( ret ) {
         if( sourceImgRect.height * ratio > targetLayerRect.height ) ratio = targetLayerRect.height / sourceImgRect.height;
         targetImgRect.height = sourceImgRect.height * ratio;
         targetImgRect.width = sourceImgRect.width * ratio;
-        if( targetImgRect.height > imageHeight ) targetImgRect.height = imageHeight;
-        if( targetImgRect.width > imageWidth ) targetImgRect.width = imageWidth;
+        //if( targetImgRect.height > imageHeight ) targetImgRect.height = imageHeight;
+        //if( targetImgRect.width > imageWidth ) targetImgRect.width = imageWidth;
         targetImgRect.top = targetLayerRect.top + ( targetLayerRect.height - targetImgRect.height ) / 2 - 1;
         targetImgRect.left = targetLayerRect.left + ( targetLayerRect.width - targetImgRect.width ) / 2 - 1;
-        
+
         var t5 = performance.now()
 
         layer.style.cssText = "display: block; top: " + targetLayerRect.top + "px; left: " + targetLayerRect.left + "px; width: " + targetLayerRect.width + "px; height: " + targetLayerRect.height + "px";

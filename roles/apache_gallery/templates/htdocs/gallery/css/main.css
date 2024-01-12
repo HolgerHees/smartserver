@@ -131,6 +131,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
     white-space:nowrap;
     position: absolute;
     height: calc(100% - 100px);
+    z-index: 0 !important;
 }
 #gallery.fullscreen > span.button {
     display: inline;
@@ -180,8 +181,8 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
 #gallery.fullscreen > div.container > img {
     max-width:100%;
     max-height:100%;
-    height:auto;
-    width: auto;
+    /*height:auto;
+    width: auto;*/
     margin: auto;
 }
 #gallery.fullscreen > div.container > div.dummy { 
@@ -195,6 +196,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
   right: 0;
   height: 100%;
   width: 100%;
+  object-fit: contain;
 }
 #gallery > div.container > span:first-of-type {
   display: none;
