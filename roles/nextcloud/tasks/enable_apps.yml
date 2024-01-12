@@ -1,7 +1,8 @@
 - name: set version
   set_fact:
     nextcloud_keeweb_version: '0.6.13'
-  
+#    nextcloud_keeweb_version: '0.6.15'
+
 # ***** CHECK *****
 - name: check mysql service
   import_tasks: roles/mysql/shared/wait_until_ready.yml
