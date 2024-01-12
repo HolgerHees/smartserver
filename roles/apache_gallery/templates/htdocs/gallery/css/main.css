@@ -132,6 +132,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
     position: absolute;
     height: calc(100% - 100px);
     z-index: 0 !important;
+    touch-action: none;
 }
 #gallery.fullscreen > span.button {
     display: inline;

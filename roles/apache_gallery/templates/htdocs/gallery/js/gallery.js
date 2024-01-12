@@ -1,4 +1,8 @@
 mx.Gallery = (function( ret ) {
+    const ANIMATION_INSTANT = 0;
+    const ANIMATION_SMOOTH = 1;
+    const ANIMATION_CUSTOM = 2;
+
     var isFullscreen = false;
     
     var activeItem = null;
@@ -22,16 +26,14 @@ mx.Gallery = (function( ret ) {
     var galleryRect = null;
 
     var containers = [];
-
-    var visibleContainer = [];
     
     var containerObserver = null;
+    var visibleContainer = [];
     
     var tabStartPageX = -1;
     var tabStartScrollX = -1;
     var isTabMoving = false;
     var isTabTouch = false;
-    var momentumScrollTimer = null;
 
     var playTimer = null;
     var isPlaying = false;
@@ -139,25 +141,47 @@ mx.Gallery = (function( ret ) {
         timeLabel.innerHTML = element.dataset.formattedtime;
         element.appendChild(timeLabel);
     }
-    function delayedLoading(element)
+
+    function scrollTo(options)
     {
-        if( !element.dataset.loaded )
+        if( options["behavior"] != ANIMATION_CUSTOM || !isFullscreen )
         {
-            var id = window.setTimeout(function(){ loadImage(element); },100);
-            element.dataset.timer = id;
+            options["behavior"] = options["behavior"] == ANIMATION_INSTANT ? 'instant' : 'smooth';
+            window.scrollTo(options);
         }
-    }
-    
-    function cancelLoading(element)
-    {
-        if( element.dataset.timer ) 
+        else
         {
-            window.clearTimeout(element.dataset.timer);
-            element.removeAttribute("data-timer");
+            // happens only for fullscreen
+            const startPos = window.scrollX;
+            const diff = options["left"] - startPos;
+            const max = window.innerWidth;
+            const duration = Math.abs(diff) * 800 / max;
+
+            let startTime = null;
+            let requestId;
+            const loop = function (currentTime) {
+                if (!startTime) {
+                    startTime = currentTime;
+                }
+
+                // Elapsed time in miliseconds
+                const time = currentTime - startTime;
+
+                const percent = Math.min(time / duration, 1);
+                // https://easings.net/de => easeOutQuint
+                const animation = function (x) { return 1 - Math.pow(1 - x, 5); };
+
+                window.scrollTo(startPos + diff * animation(percent), 0);
+
+                // Continue moving
+                if (time < duration) requestId = window.requestAnimationFrame(loop);
+                else window.cancelAnimationFrame(requestId);
+            };
+            requestId = window.requestAnimationFrame(loop);
         }
     }
 
-    function scrollToActiveItem(item,animated)
+    function scrollToActiveItem(item,behavior)
     {
         if( isFullscreen )
         {
@@ -166,10 +190,8 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
     
                 requestedScrollPosition = { source: window.scrollX, target: item.offsetLeft };
-                window.scrollTo({
-                  left: requestedScrollPosition["target"],
-                  behavior: animated ? 'smooth' : 'auto'
-                });
+
+                scrollTo({ left: requestedScrollPosition["target"], behavior: behavior });
             }
         }
         else
@@ -180,10 +202,7 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
 
                 requestedScrollPosition = { source: window.scrollY, target: targetPosition };
-                window.scrollTo({
-                  top: requestedScrollPosition["target"],
-                  behavior: animated ? 'smooth' : 'auto'
-                });
+                scrollTo({ top: requestedScrollPosition["target"], behavior: behavior });
             }
         }
         
@@ -223,19 +242,9 @@ mx.Gallery = (function( ret ) {
 
     function jumpToSlot(timeslot) {
         var firstItemInSlot = gallery.querySelector("div.container[data-timeslot='" + timeslot + "']");
-        scrollToActiveItem(firstItemInSlot,true);
+        scrollToActiveItem(firstItemInSlot,ANIMATION_SMOOTH);
     }
 
-    function processMomentingScroll()
-    {
-        if( momentumScrollTimer ) window.clearTimeout(momentumScrollTimer);
-
-        momentumScrollTimer = window.setTimeout(function()
-        {
-            momentumScrollTimer = null;
-            scrollToActiveItem(getMostVisibleItem(),true);
-        },200);
-    }
     function getMostVisibleItem()
     {
         var scrollX = window.scrollX;
@@ -261,10 +270,7 @@ mx.Gallery = (function( ret ) {
 
     function tapstart(e)
     {
-        if( e.target.classList.contains("button") )
-        {
-            return;
-        }
+        if( e.target.classList.contains("button") ) return;
 
         //console.log("tabstart");
         tabStartPageX = e.detail.clientX;
@@ -284,6 +290,7 @@ mx.Gallery = (function( ret ) {
         var now = performance.now();
 
         var elapsed = now - tracker_timestamp;
+
         var delta = tracker_current_offset - tracker_last_offset;
         tracker_last_offset = tracker_current_offset;
 
@@ -310,59 +317,89 @@ mx.Gallery = (function( ret ) {
         {
             isTabMoving = false;
 
-            //console.log("tapend");
             tabStartPageX = -1;
 
-            if( mx.Core.isTouchDevice() )
+            if( tracker_velocity == 0 ) tabtracker();
+
+            if (tracker_velocity > 500 )
             {
-                processMomentingScroll();
+                var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
+                if( typeof nextContainer != "undefined" )
+                {
+                    scrollToActiveItem(nextContainer,ANIMATION_CUSTOM);
+                    return;
+                }
             }
-            else
+            else if( tracker_velocity < -500 )
             {
-                if (tracker_velocity > 500 )
+                var nextContainer = containers[parseInt(activeItem.dataset.index) + 1];
+                if( typeof nextContainer != "undefined" )
                 {
-                    var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
-                    if( typeof nextContainer != "undefined" )
-                    {
-                        scrollToActiveItem(nextContainer,true);
-                        return;
-                    }
+                    scrollToActiveItem(nextContainer,ANIMATION_CUSTOM);
+                    return;
                 }
-                else if( tracker_velocity < -500 )
-                {
-                    var nextContainer = containers[parseInt(activeItem.dataset.index) + 1];
-                    if( typeof nextContainer != "undefined" )
-                    {
-                        scrollToActiveItem(nextContainer,true);
-                        return;
-                    }
-                }
-                scrollToActiveItem(getMostVisibleItem(),true);
             }
+
+            scrollToActiveItem(getMostVisibleItem(),ANIMATION_SMOOTH);
         }
 
-        isTabTouch = false;
+        window.setTimeout(function()
+        {
+            //console.log("touchend");
+            isTabTouch = false;
+        }, 10);
     }
 
     function scrollHandler(e){
-        if( requestedScrollPosition != null )
+        if( requestedScrollPosition == null || !checkRequestedPosition() )
         {
-            if( checkRequestedPosition() )
-            {
-                if( debug ) console.log("requestedScrollPosition reset");
-                requestedScrollPosition = null;
-                lastScrollPosition = null;
-            }
             return;
         }
 
-        if( isFullscreen )
+        if( debug ) console.log("requestedScrollPosition reset");
+        requestedScrollPosition = null;
+        lastScrollPosition = null;
+    }
+
+    function checkRequestedPosition()
+    {
+        if( lastScrollPosition == null ) lastScrollPosition = requestedScrollPosition["source"];
+
+        var currentScrollPosition = isFullscreen ? window.scrollX : window.scrollY;
+
+        if( currentScrollPosition != lastScrollPosition )
         {
-            if( !isTabTouch )
+            //console.log(isForwardRequested + " " + isForwardActive + " " + currentScrollPosition + " " + lastScrollPosition);
+
+            var isForwardRequested = requestedScrollPosition["target"] - requestedScrollPosition["source"] > 0;
+            var isForwardActive = currentScrollPosition - lastScrollPosition > 0;
+            lastScrollPosition = currentScrollPosition;
+
+            if( isForwardRequested )
             {
-                processMomentingScroll();
+                if( !isForwardActive )
+                {
+                    //console.log("forward");
+                    return true;
+                }
+            }
+            else
+            {
+                if( isForwardActive )
+                {
+                    //console.log("backward");
+                    return true;
+                }
             }
         }
+
+        // offset of 1 is needed for chrome browser
+        if( Math.abs( requestedScrollPosition["target"] - Math.round( isFullscreen ? window.scrollX : window.scrollY ) ) <= 1 )
+        {
+            return true;
+        }
+
+        return false;
     }
 
     function playIteration()
@@ -375,7 +412,7 @@ mx.Gallery = (function( ret ) {
             stopPlay();
             return;
         }
-        scrollToActiveItem(nextContainer,false);
+        scrollToActiveItem(nextContainer,ANIMATION_INSTANT);
         
         nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
         if( typeof nextContainer == "undefined" )
@@ -402,8 +439,10 @@ mx.Gallery = (function( ret ) {
             playTimer = window.setTimeout(playIteration,500);
         }
     }
-    function stopPlay()
+    function stopPlay(e)
     {
+        if( e && e.target.classList.contains("button") && e.type == 'tapstart' ) return;
+
         isPlaying = false;
 
         if( playTimer != null )
@@ -417,7 +456,7 @@ mx.Gallery = (function( ret ) {
         
         document.removeEventListener("tapstart",stopPlay);
     }
-    function startPlay()
+    function startPlay(e)
     {
         isPlaying = true;
 
@@ -480,7 +519,7 @@ mx.Gallery = (function( ret ) {
             layer.style.cssText = "";
             img.style.cssText = "";
 
-            scrollToActiveItem(containers[index],false);
+            scrollToActiveItem(containers[index],ANIMATION_INSTANT);
 
             positionSlotTooltip();
         },300);
@@ -505,7 +544,7 @@ mx.Gallery = (function( ret ) {
         gallery.removeEventListener("tapmove",tapmove);
         gallery.removeEventListener("tapend",tapend);
         
-        scrollToActiveItem(activeItem,false);
+        scrollToActiveItem(activeItem,ANIMATION_INSTANT);
 
         var targetImgRect = getOffset(img);
         
@@ -531,122 +570,12 @@ mx.Gallery = (function( ret ) {
   
     function jumpToPreviousImage()
     {
-        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) - 1],true);
+        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) - 1],ANIMATION_SMOOTH);
     }
     
     function jumpToNextImage()
     {
-        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) + 1],true);
-    }
-    
-    function delayedPosition()
-    {
-        if( isTabTouch )
-        {
-            return;
-        }
-
-        if( requestedScrollPosition != null )
-        {
-            if( debug ) console.log("delayedPositon: skipped");
-            return;
-        }
-        
-        var offsetReference = Math.round( isFullscreen ? window.scrollX : window.scrollY);
-        
-        var galleryRect = gallery.getBoundingClientRect();
-        var galleryTop = galleryRect.top + window.scrollY;
-        
-        var firstElement = null;
-        var firstElementRect = null;
-        
-        visibleContainer.forEach(function(element,index){
-            var elementRect = element.getBoundingClientRect();
-        
-            if( isFullscreen )
-            {
-                if( elementRect.left < -2 )
-                {
-                    return;
-                }
-            
-                if( firstElement == null 
-                    || firstElementRect.left > elementRect.left
-                    || firstElementRect.left == elementRect.left
-                ){
-                    firstElement = element;
-                    firstElementRect = elementRect;
-                }
-            }
-            else
-            {
-                //console.log(element.dataset.formattedtime);
-                if( elementRect.top + elementRect.height < galleryTop - 2 )
-                {
-                    return;
-                }
-            
-                if( firstElement == null 
-                    || firstElementRect.top > elementRect.top
-                    || ( firstElementRect.top == elementRect.top && firstElementRect.left > elementRect.left )
-                ){
-                    firstElement = element;
-                    firstElementRect = elementRect;
-                }
-            }
-        });
-        
-        if( firstElement != null )
-        {
-            //console.log(firstElement.dataset.formattedtime);
-            if( debug ) console.log("delayedPositon: " + firstElement.dataset.formattedtime);
-            setActiveItem(firstElement);
-        }
-        else
-        {
-            if( debug ) console.log("delayedPositon: notfound");
-        }
-    }
-    
-    function checkRequestedPosition()
-    {
-        if( lastScrollPosition == null ) lastScrollPosition = requestedScrollPosition["source"];
-            
-        var currentScrollPosition = isFullscreen ? window.scrollX : window.scrollY;
-        
-        if( currentScrollPosition != lastScrollPosition )
-        {
-            //console.log(isForwardRequested + " " + isForwardActive + " " + currentScrollPosition + " " + lastScrollPosition);
-
-            var isForwardRequested = requestedScrollPosition["target"] - requestedScrollPosition["source"] > 0;
-            var isForwardActive = currentScrollPosition - lastScrollPosition > 0;
-            lastScrollPosition = currentScrollPosition;
-            
-            if( isForwardRequested )
-            {
-                if( !isForwardActive ) 
-                {
-                    //console.log("forward");
-                    return true;
-                }
-            }
-            else
-            {
-                if( isForwardActive )
-                {
-                    //console.log("backward");
-                    return true;
-                }
-            }
-        }
-        
-        // offset of 1 is needed for chrome browser
-        if( Math.abs( requestedScrollPosition["target"] - Math.round( isFullscreen ? window.scrollX : window.scrollY ) ) <= 1 )
-        {
-            return true;
-        }
-
-        return false;
+        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) + 1],ANIMATION_SMOOTH);
     }
 
     function updateList()
@@ -721,7 +650,7 @@ mx.Gallery = (function( ret ) {
                     }
                     else
                     {
-                        scrollToActiveItem(_activeItem,false);
+                        scrollToActiveItem(_activeItem,ANIMATION_INSTANT);
                     }
                 }
         
@@ -740,36 +669,75 @@ mx.Gallery = (function( ret ) {
         xhr.send(JSON.stringify(data));
     }
 
+    function delayedSlotPosition()
+    {
+        if( isFullscreen ) return;
+
+        if( requestedScrollPosition != null )
+        {
+            if( debug ) console.log("delayedPositon: skipped");
+            return;
+        }
+
+        var firstElement = visibleContainer[0];
+        var minIndex = visibleContainer[0].dataset.index;
+        visibleContainer.forEach(function(element,index){
+            if( minIndex > element.dataset.index )
+            {
+                _firstElement = element;
+                minIndex = element.dataset.index
+            }
+        });
+
+        setActiveItem(firstElement);
+    }
+
+    var initObserverTimer;
     function initObserver()
     {
-        var observerOptions = {
-            rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px 0px 0px 0px"
-        };
-        containerObserver = new IntersectionObserver((entries, imgObserver) => {        
+        if( window.innerWidth == 0 )
+        {
+            initObserverTimer = window.setTimeout(initObserver, 1);
+            return;
+        }
+
+        if( containerObserver ) containerObserver.disconnect();
+
+        var observerOptions = { rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px " + window.innerWidth + "px " + ( window.innerHeight / 2 ) + "px 0px" };
+
+        containerObserver = new IntersectionObserver((entries, imgObserver) => {
             var activeItemUpdateNeeded = activeItem == null;
-            
+
             entries.forEach((entry) => {
-                if(entry.isIntersecting) 
+                if( entry.isIntersecting )
                 {
                     activeItemUpdateNeeded = true;
-                    
-                    delayedLoading(entry.target);
+
+                    if( !entry.target.dataset.loaded )
+                    {
+                        var id = window.setTimeout(function(){
+                            entry.target.removeAttribute("data-timer");
+                            loadImage(entry.target);
+                        },100);
+                        entry.target.dataset.timer = id;
+                    }
                     visibleContainer.push(entry.target);
                 }
                 else
                 {
                     if( activeItem == entry.target ) activeItemUpdateNeeded = true;
 
-                    cancelLoading(entry.target);
-                    var index = visibleContainer.indexOf(entry.target)
-                    if( index != -1 )
+                    if( entry.target.dataset.timer )
                     {
-                        visibleContainer.splice(index, 1);
+                        window.clearTimeout(entry.target.dataset.timer);
+                        entry.target.removeAttribute("data-timer");
                     }
+                    var index = visibleContainer.indexOf(entry.target)
+                    if( index != -1 ) visibleContainer.splice(index, 1);
                 }
             });
-            
-            if( activeItemUpdateNeeded ) delayedPosition();
+
+            if( activeItemUpdateNeeded ) delayedSlotPosition();
         },observerOptions);
 
         containers.forEach( function(container,index){
@@ -808,13 +776,13 @@ mx.Gallery = (function( ret ) {
         containers = gallery.querySelectorAll(".container");
         
         initObserver();
-        
+
         document.addEventListener('scroll', scrollHandler);
         
         window.addEventListener('resize', function(e) {
             if( activeItem )
             {
-                scrollToActiveItem(activeItem,false);
+                scrollToActiveItem(activeItem,ANIMATION_INSTANT);
                 positionSlotTooltip();
             }
         });
@@ -824,7 +792,7 @@ mx.Gallery = (function( ret ) {
             {
                 if( e.clientY > document.documentElement.clientHeight )
                 {
-                    scrollToActiveItem(activeItem,true);
+                    scrollToActiveItem(activeItem,ANIMATION_SMOOTH);
                 }
             }
         });

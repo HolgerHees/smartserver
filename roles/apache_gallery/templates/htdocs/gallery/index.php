@@ -57,11 +57,11 @@ require "../shared/libs/ressources.php";
 <div class="slots"><?php echo Template::getSlots($starttime,$endtime,$images); ?></div>
 <div id="gallery">
   <div class="layer"></div>
-  <span class="button previous icon-left" onclick="mx.Gallery.jumpToPreviousImage()"></span>
-  <span class="button next icon-right" onclick="mx.Gallery.jumpToNextImage()"></span>
-  <span class="button close icon-cancel" onclick="mx.Gallery.closeDetails()"></span>
-  <span class="button start icon-play" onclick="mx.Gallery.startPlay()"></span>
-  <span class="button stop icon-stop" onclick="mx.Gallery.stopPlay()"></span>
+  <span class="button previous icon-left" onclick="mx.Gallery.jumpToPreviousImage(event)"></span>
+  <span class="button next icon-right" onclick="mx.Gallery.jumpToNextImage(event)"></span>
+  <span class="button close icon-cancel" onclick="mx.Gallery.closeDetails(event)"></span>
+  <span class="button start icon-play" onclick="mx.Gallery.startPlay(event)"></span>
+  <span class="button stop icon-stop" onclick="mx.Gallery.stopPlay(event)"></span>
 <?php echo Template::getImages($images); ?>
 </div>
 </body>
