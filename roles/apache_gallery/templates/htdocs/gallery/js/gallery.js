@@ -321,33 +321,35 @@ mx.Gallery = (function( ret ) {
 
             if( tracker_velocity == 0 ) tabtracker();
 
+            var index1 = -1;
+
             if (tracker_velocity > 500 )
             {
-                var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
-                if( typeof nextContainer != "undefined" )
-                {
-                    scrollToActiveItem(nextContainer,ANIMATION_CUSTOM);
-                    return;
-                }
+                index1 = parseInt(activeItem.dataset.index) - 1;
+                index2 = index1 - 1;
             }
             else if( tracker_velocity < -500 )
             {
-                var nextContainer = containers[parseInt(activeItem.dataset.index) + 1];
-                if( typeof nextContainer != "undefined" )
+                index1 = parseInt(activeItem.dataset.index) + 1;
+                index2 = index1 + 1;
+            }
+
+
+            if( index1 != -1 && index1 < containers.length )
+            {
+                if( index2 != -1 && index2 < containers.length )
                 {
-                    scrollToActiveItem(nextContainer,ANIMATION_CUSTOM);
-                    return;
+                    delayedLoading(containers[index2]);
                 }
+
+                scrollToActiveItem(containers[index1],ANIMATION_CUSTOM);
+                return;
             }
 
             scrollToActiveItem(getMostVisibleItem(),ANIMATION_SMOOTH);
         }
 
-        window.setTimeout(function()
-        {
-            //console.log("touchend");
-            isTabTouch = false;
-        }, 10);
+        window.setTimeout(function(){ isTabTouch = false; }, 10);
     }
 
     function scrollHandler(e){
@@ -684,7 +686,7 @@ mx.Gallery = (function( ret ) {
         visibleContainer.forEach(function(element,index){
             if( minIndex > element.dataset.index )
             {
-                _firstElement = element;
+                firstElement = element;
                 minIndex = element.dataset.index
             }
         });
@@ -692,19 +694,29 @@ mx.Gallery = (function( ret ) {
         setActiveItem(firstElement);
     }
 
-    var initObserverTimer;
+    function delayedLoading(element)
+    {
+        if( element.dataset.loaded ) return;
+
+        var id = window.setTimeout(function(){
+            element.removeAttribute("data-timer");
+            loadImage(element);
+        },100);
+        element.dataset.timer = id;
+    }
+
+    function cancelLoading(element)
+    {
+        if( !element.dataset.timer ) return;
+
+        window.clearTimeout(element.dataset.timer);
+        element.removeAttribute("data-timer");
+    }
+
     function initObserver()
     {
-        if( window.innerWidth == 0 )
-        {
-            initObserverTimer = window.setTimeout(initObserver, 1);
-            return;
-        }
-
-        if( containerObserver ) containerObserver.disconnect();
-
         // rootMargin does not work propperly on android devices in iframes
-        var observerOptions = { rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px " + window.innerWidth + "px " + ( window.innerHeight / 2 ) + "px 0px" };
+        var observerOptions = { rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px 0px 0px 0px" };
 
         containerObserver = new IntersectionObserver((entries, imgObserver) => {
             var activeItemUpdateNeeded = activeItem == null;
@@ -713,26 +725,13 @@ mx.Gallery = (function( ret ) {
                 if( entry.isIntersecting )
                 {
                     activeItemUpdateNeeded = true;
-
-                    if( !entry.target.dataset.loaded )
-                    {
-                        var id = window.setTimeout(function(){
-                            entry.target.removeAttribute("data-timer");
-                            loadImage(entry.target);
-                        },100);
-                        entry.target.dataset.timer = id;
-                    }
+                    delayedLoading(entry.target);
                     visibleContainer.push(entry.target);
                 }
                 else
                 {
                     if( activeItem == entry.target ) activeItemUpdateNeeded = true;
-
-                    if( entry.target.dataset.timer )
-                    {
-                        window.clearTimeout(entry.target.dataset.timer);
-                        entry.target.removeAttribute("data-timer");
-                    }
+                    cancelLoading(entry.target);
                     var index = visibleContainer.indexOf(entry.target)
                     if( index != -1 ) visibleContainer.splice(index, 1);
                 }
