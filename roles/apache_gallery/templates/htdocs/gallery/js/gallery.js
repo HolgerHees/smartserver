@@ -190,7 +190,6 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
     
                 requestedScrollPosition = { source: window.scrollX, target: item.offsetLeft };
-
                 scrollTo({ left: requestedScrollPosition["target"], behavior: behavior });
             }
         }
@@ -673,7 +672,7 @@ mx.Gallery = (function( ret ) {
 
     function delayedSlotPosition()
     {
-        if( isFullscreen ) return;
+        if( isFullscreen || visibleContainer.length == 0 ) return;
 
         if( requestedScrollPosition != null )
         {
@@ -715,7 +714,6 @@ mx.Gallery = (function( ret ) {
 
     function initObserver()
     {
-        // rootMargin does not work propperly on android devices in iframes
         var observerOptions = { rootMargin: ( ( galleryRect.top+window.scrollY ) * -1 ) + "px 0px 0px 0px" };
 
         containerObserver = new IntersectionObserver((entries, imgObserver) => {
