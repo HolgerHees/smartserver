@@ -1,8 +1,149 @@
-mx.Gallery = (function( ret ) {
-    const ANIMATION_INSTANT = 0;
-    const ANIMATION_SMOOTH = 1;
-    const ANIMATION_CUSTOM = 2;
+mx.GalleryAnimation = (function( ret ) {
+    ret.TYPE_INSTANT = 0;
+    ret.TYPE_SMOOTH = 1;
+    ret.TYPE_CUSTOM = 2;
 
+    var requestId = null;
+    var startPos = null;
+    var diff = null;
+    var duration = null;
+    var startTime = null;
+
+    ret.scrollTo = function(options, behavior)
+    {
+        if( behavior != mx.GalleryAnimation.TYPE_CUSTOM )
+        {
+            options["behavior"] = behavior == mx.GalleryAnimation.TYPE_INSTANT ? 'instant' : 'smooth';
+            window.scrollTo(options);
+        }
+        else
+        {
+            // happens only for fullscreen
+            startPos = window.scrollX;
+            diff = options["left"] - startPos;
+            duration = Math.abs(diff) * 800 / window.innerWidth;
+            startTime = null;
+
+            if( requestId != null ) return;
+
+            const loop = function (currentTime) {
+                if (!startTime) startTime = currentTime;
+
+                // Elapsed time in miliseconds
+                const time = currentTime - startTime;
+
+                const percent = Math.min(time / duration, 1);
+                // https://easings.net/de => easeOutQuint
+                const animation = function (x) { return 1 - Math.pow(1 - x, 5); };
+
+                window.scrollTo(startPos + diff * animation(percent), 0);
+
+                // Continue moving
+                if (time < duration)
+                {
+                    requestId = window.requestAnimationFrame(loop);
+                }
+                else
+                {
+                    window.cancelAnimationFrame(requestId);
+                    requestId = null;
+                }
+            };
+            requestId = window.requestAnimationFrame(loop);
+        }
+    }
+
+    return ret;
+})( mx.GalleryAnimation || {} );
+
+mx.GallerySwipeHandler = (function( ret ) {
+    var startClientX = -1;
+    var startScrollX = -1;
+    var isMoving = false;
+
+    var tabticker = null;
+    var trackerCurrentOffset = 0;
+    var trackerLastOffset = 0;
+    var trackerVelocity = 0;
+    var trackerTimestamp = null;
+
+    var tabendCallback = null;
+
+    function tabtracker()
+    {
+        var now = performance.now();
+
+        var elapsed = now - trackerTimestamp;
+
+        var delta = trackerCurrentOffset - trackerLastOffset;
+        trackerLastOffset = trackerCurrentOffset;
+
+        v = 1000 * delta / (1 + elapsed);
+        trackerVelocity = 0.8 * v + 0.2 * trackerVelocity;
+
+        trackerTimestamp = now;
+    }
+
+    function tapstart(e)
+    {
+        if( e.target.classList.contains("button") ) return;
+
+        //console.log("tabstart");
+        startClientX = e.detail.clientX;
+        startScrollX = window.scrollX;
+        isMoving = false;
+
+        trackerCurrentOffset = e.detail.clientX;
+        trackerLastOffset = e.detail.clientX;
+        trackerVelocity = 0;
+        trackerTimestamp = performance.now();
+        tabticker = setInterval(tabtracker, 100);
+    }
+
+    function tapmove(e)
+    {
+        trackerCurrentOffset = e.detail.clientX;
+
+        isMoving = true;
+        //console.log("tapmove " + ( startScrollX - diff ) );
+        var diff = e.detail.clientX - startClientX;
+        window.scrollTo( startScrollX - diff, 0 );
+    }
+
+    function tapend(e)
+    {
+        clearInterval(tabticker);
+
+        if( !isMoving ) return;
+        isMoving = false;
+
+        startClientX = -1;
+
+        if( trackerVelocity == 0 ) tabtracker();
+
+        tabendCallback(trackerVelocity);
+    }
+
+    ret.enable = function(element, callback)
+    {
+        tabendCallback = callback;
+
+        element.addEventListener("tapstart",tapstart);
+        element.addEventListener("tapmove",tapmove);
+        element.addEventListener("tapend",tapend);
+    }
+
+    ret.disable = function(element)
+    {
+        element.removeEventListener("tapstart",tapstart);
+        element.removeEventListener("tapmove",tapmove);
+        element.removeEventListener("tapend",tapend);
+    }
+
+    return ret;
+})( mx.GallerySwipeHandler || {} );
+
+mx.Gallery = (function( ret ) {
     var isFullscreen = false;
     
     var activeItem = null;
@@ -12,7 +153,6 @@ mx.Gallery = (function( ret ) {
     var imageHeight = 0;
     var imageWidth = 0;
     var folder = null;
-    var requestedScrollPosition = null;
     var debug = false;
     
     var slotOverview = null;
@@ -29,16 +169,103 @@ mx.Gallery = (function( ret ) {
     
     var containerObserver = null;
     var visibleContainer = [];
-    
-    var tabStartPageX = -1;
-    var tabStartScrollX = -1;
-    var isTabMoving = false;
-    var isTabTouch = false;
 
     var playTimer = null;
     var isPlaying = false;
 
+    var requestedScrollPosition = null;
     var lastScrollPosition = null;
+
+    function updateList()
+    {
+        var url = mx.Host.getBase() + 'index_update.php';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url );
+        xhr.onreadystatechange = function() {
+            if (this.readyState != 4) return;
+
+            if( this.status == 200 )
+            {
+                var content = document.createElement("div");
+                content.innerHTML = this.response;
+
+                if( content.querySelector("#gallery") )
+                {
+                    var containerMap = {};
+                    containers.forEach(function(container,index){
+                        containerMap[container.dataset.src] = container;
+                    });
+
+                    var _containers = content.querySelector("#gallery").childNodes;
+                    var _nextContainer = containers[0];
+                    Object.values(_containers).forEach(function(container,index){
+                        if( typeof containerMap[container.dataset.src] == "undefined" )
+                        {
+                            if( _nextContainer )
+                            {
+                                gallery.insertBefore(container,_nextContainer);
+                            }
+                            else
+                            {
+                                gallery.appendChild(container);
+                            }
+                            containerObserver.observe(container);
+                        }
+                        else
+                        {
+                            _nextContainer = containerMap[container.dataset.src].nextSibling;
+                            containerMap[container.dataset.src].dataset.index = container.dataset.index;
+                            delete containerMap[container.dataset.src];
+                        }
+                    });
+
+                    var _activeItem = activeItem;
+                    Object.values(containerMap).forEach(function(container,index){
+                        container.parentNode.removeChild(container);
+                        //console.log("remove image");
+                        if( container.dataset.src == activeItem.dataset.src )
+                        {
+                            _activeItem = null;
+                        }
+                    });
+
+                    if( _activeItem == null ) _activeItem = containers[0]
+
+                    // refresh containers
+                    containers = gallery.querySelectorAll(".container");
+
+                    slotOverview.innerHTML = content.querySelector("#slots").innerHTML;
+
+                    // reset active states
+                    activeItem = null;
+                    activeSlot = null;
+                    slotTooltipElement = null;
+
+                    if( ( isFullscreen ? window.scrollX : window.scrollY ) == 0 )
+                    {
+                        setActiveItem(containers[0]);
+                    }
+                    else
+                    {
+                        scrollToActiveItem(_activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+                    }
+                }
+
+                updateTimer = window.setTimeout(updateList,30000);
+            }
+            else
+            {
+                updateTimer = mx.Page.handleRequestError(this.status,url,updateList,60000);
+            }
+        };
+
+        var data = {};
+        data['count'] = containers.length;
+        data['sub'] = folder;
+
+        xhr.send(JSON.stringify(data));
+    }
 
     function getOffset(element)
     {
@@ -97,20 +324,30 @@ mx.Gallery = (function( ret ) {
     
     function setSlotTooltip(element)
     {
-        if( element == slotTooltipElement )
-        {
-            return;
-        }
+        if( element == slotTooltipElement ) return;
         
-        if( slotTooltipElement != null )
-        {
-            slotTooltipElement.classList.remove("active");
-        }
+        if( slotTooltipElement != null ) slotTooltipElement.classList.remove("active");
         
         slotTooltipElement = element;
         slotTooltipElement.classList.add("active");
         
         positionSlotTooltip();
+    }
+
+    function slotHoverHandler(e)
+    {
+        var reference = e.target;
+        if( !reference.classList ) return;
+
+        if( reference.classList.contains("bar") ) reference = reference.parentNode;
+
+        if( !reference.classList.contains("slot") )
+        {
+            if( activeSlot ) setSlotTooltip(activeSlot);
+            return;
+        }
+
+        setSlotTooltip(reference);
     }
     
     function loadImage(element,callback)
@@ -124,12 +361,8 @@ mx.Gallery = (function( ret ) {
         img.src = "image.php?sub=" + folder + "&image=" + element.dataset.src;
         if( typeof callback != "undefined" )
         {
-            img.onload = function() {
-                callback(true);
-            };
-            img.onerror = function() {
-                callback(false);
-            };
+            img.onload = function() { callback(true); };
+            img.onerror = function() { callback(false); };
         }
         element.appendChild(img);
         
@@ -142,43 +375,23 @@ mx.Gallery = (function( ret ) {
         element.appendChild(timeLabel);
     }
 
-    function scrollTo(options)
+    function delayedLoading(element)
     {
-        if( options["behavior"] != ANIMATION_CUSTOM || !isFullscreen )
-        {
-            options["behavior"] = options["behavior"] == ANIMATION_INSTANT ? 'instant' : 'smooth';
-            window.scrollTo(options);
-        }
-        else
-        {
-            // happens only for fullscreen
-            const startPos = window.scrollX;
-            const diff = options["left"] - startPos;
-            const max = window.innerWidth;
-            const duration = Math.abs(diff) * 800 / max;
+        if( element.dataset.loaded ) return;
 
-            let startTime = null;
-            let requestId;
-            const loop = function (currentTime) {
-                if (!startTime) {
-                    startTime = currentTime;
-                }
+        var id = window.setTimeout(function(){
+            element.removeAttribute("data-timer");
+            loadImage(element);
+        },100);
+        element.dataset.timer = id;
+    }
 
-                // Elapsed time in miliseconds
-                const time = currentTime - startTime;
+    function cancelLoading(element)
+    {
+        if( !element.dataset.timer ) return;
 
-                const percent = Math.min(time / duration, 1);
-                // https://easings.net/de => easeOutQuint
-                const animation = function (x) { return 1 - Math.pow(1 - x, 5); };
-
-                window.scrollTo(startPos + diff * animation(percent), 0);
-
-                // Continue moving
-                if (time < duration) requestId = window.requestAnimationFrame(loop);
-                else window.cancelAnimationFrame(requestId);
-            };
-            requestId = window.requestAnimationFrame(loop);
-        }
+        window.clearTimeout(element.dataset.timer);
+        element.removeAttribute("data-timer");
     }
 
     function scrollToActiveItem(item,behavior)
@@ -190,7 +403,7 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
     
                 requestedScrollPosition = { source: window.scrollX, target: item.offsetLeft };
-                scrollTo({ left: requestedScrollPosition["target"], behavior: behavior });
+                mx.GalleryAnimation.scrollTo({ left: requestedScrollPosition["target"] }, behavior);
             }
         }
         else
@@ -201,7 +414,7 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
 
                 requestedScrollPosition = { source: window.scrollY, target: targetPosition };
-                scrollTo({ top: requestedScrollPosition["target"], behavior: behavior });
+                mx.GalleryAnimation.scrollTo({ top: requestedScrollPosition["target"] }, behavior);
             }
         }
         
@@ -239,11 +452,6 @@ mx.Gallery = (function( ret ) {
         }
     }
 
-    function jumpToSlot(timeslot) {
-        var firstItemInSlot = gallery.querySelector("div.container[data-timeslot='" + timeslot + "']");
-        scrollToActiveItem(firstItemInSlot,ANIMATION_SMOOTH);
-    }
-
     function getMostVisibleItem()
     {
         var scrollX = window.scrollX;
@@ -261,107 +469,6 @@ mx.Gallery = (function( ret ) {
         return containers[targetIndex];
     }
 
-    var tabticker = null;
-    var tracker_current_offset = 0;
-    var tracker_last_offset = 0;
-    var tracker_velocity = 0;
-    var tracker_timestamp = null;
-
-    function tapstart(e)
-    {
-        if( e.target.classList.contains("button") ) return;
-
-        //console.log("tabstart");
-        tabStartPageX = e.detail.clientX;
-        tabStartScrollX = window.scrollX;
-        isTabMoving = false;
-        isTabTouch = true;
-
-        tracker_current_offset = e.detail.clientX;
-        tracker_last_offset = e.detail.clientX;
-        tracker_velocity = 0;
-        tracker_timestamp = performance.now();
-        tabticker = setInterval(tabtracker, 100);
-    }
-
-    function tabtracker()
-    {
-        var now = performance.now();
-
-        var elapsed = now - tracker_timestamp;
-
-        var delta = tracker_current_offset - tracker_last_offset;
-        tracker_last_offset = tracker_current_offset;
-
-        v = 1000 * delta / (1 + elapsed);
-        tracker_velocity = 0.8 * v + 0.2 * tracker_velocity;
-
-        tracker_timestamp = now;
-    }
-
-    function tapmove(e)
-    {
-        tracker_current_offset = e.detail.clientX;
-
-        isTabMoving = true;
-        //console.log("tapmove " + ( tabStartScrollX - diff ) );
-        var diff = e.detail.clientX - tabStartPageX;
-        window.scrollTo( tabStartScrollX - diff, 0 );
-    }
-    function tapend(e)
-    {
-        clearInterval(tabticker);
-
-        if( isTabMoving )
-        {
-            isTabMoving = false;
-
-            tabStartPageX = -1;
-
-            if( tracker_velocity == 0 ) tabtracker();
-
-            var index1 = -1;
-
-            if (tracker_velocity > 500 )
-            {
-                index1 = parseInt(activeItem.dataset.index) - 1;
-                index2 = index1 - 1;
-            }
-            else if( tracker_velocity < -500 )
-            {
-                index1 = parseInt(activeItem.dataset.index) + 1;
-                index2 = index1 + 1;
-            }
-
-
-            if( index1 != -1 && index1 < containers.length )
-            {
-                if( index2 != -1 && index2 < containers.length )
-                {
-                    delayedLoading(containers[index2]);
-                }
-
-                scrollToActiveItem(containers[index1],ANIMATION_CUSTOM);
-                return;
-            }
-
-            scrollToActiveItem(getMostVisibleItem(),ANIMATION_SMOOTH);
-        }
-
-        window.setTimeout(function(){ isTabTouch = false; }, 10);
-    }
-
-    function scrollHandler(e){
-        if( requestedScrollPosition == null || !checkRequestedPosition() )
-        {
-            return;
-        }
-
-        if( debug ) console.log("requestedScrollPosition reset");
-        requestedScrollPosition = null;
-        lastScrollPosition = null;
-    }
-
     function checkRequestedPosition()
     {
         if( lastScrollPosition == null ) lastScrollPosition = requestedScrollPosition["source"];
@@ -370,27 +477,17 @@ mx.Gallery = (function( ret ) {
 
         if( currentScrollPosition != lastScrollPosition )
         {
-            //console.log(isForwardRequested + " " + isForwardActive + " " + currentScrollPosition + " " + lastScrollPosition);
-
             var isForwardRequested = requestedScrollPosition["target"] - requestedScrollPosition["source"] > 0;
             var isForwardActive = currentScrollPosition - lastScrollPosition > 0;
             lastScrollPosition = currentScrollPosition;
 
             if( isForwardRequested )
             {
-                if( !isForwardActive )
-                {
-                    //console.log("forward");
-                    return true;
-                }
+                if( !isForwardActive ) return true;
             }
             else
             {
-                if( isForwardActive )
-                {
-                    //console.log("backward");
-                    return true;
-                }
+                if( isForwardActive ) return true;
             }
         }
 
@@ -401,273 +498,6 @@ mx.Gallery = (function( ret ) {
         }
 
         return false;
-    }
-
-    function playIteration()
-    {
-        if( isPlaying == false ) return;
-                
-        var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
-        if( typeof nextContainer == "undefined" )
-        {
-            stopPlay();
-            return;
-        }
-        scrollToActiveItem(nextContainer,ANIMATION_INSTANT);
-        
-        nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
-        if( typeof nextContainer == "undefined" )
-        {
-            stopPlay();
-            return;
-        }
-        var img = nextContainer.querySelector("img");
-        if( img == null || img.naturalWidth  == 0 )
-        { 
-            //console.log("not loaded");
-            var startTime = new Date().getTime();
-            cancelLoading(nextContainer);
-            loadImage(nextContainer,function(success)
-            {
-                var endTime = new Date().getTime();
-                var diff = endTime - startTime;
-                if( diff > 500 ) playIteration();
-                else playTimer = window.setTimeout(playIteration,500-diff);
-            });
-        }
-        else
-        {
-            playTimer = window.setTimeout(playIteration,500);
-        }
-    }
-    function stopPlay(e)
-    {
-        if( e && e.target.classList.contains("button") && e.type == 'tapstart' ) return;
-
-        isPlaying = false;
-
-        if( playTimer != null )
-        {
-            window.clearTimeout(playTimer);
-            playTimer = null;
-        }
-        
-        galleryStartPlayButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
-        galleryStopPlayButton.style.display = "";
-        
-        document.removeEventListener("tapstart",stopPlay);
-    }
-    function startPlay(e)
-    {
-        isPlaying = true;
-
-        galleryStartPlayButton.style.display = "none";
-        galleryStopPlayButton.style.display = "inline";
-        
-        document.addEventListener("tapstart",stopPlay);
-        
-        playIteration();
-    }
-    function openDetails(index)
-    { 
-        if( isFullscreen ) return;
-        isFullscreen = true;
-        
-        var layer = gallery.querySelector("div.layer");
-        
-        var item = containers[index];
-        var img = item.querySelector("img");
-        
-        var scrollbarSize = window.innerWidth - document.documentElement.clientWidth;
-        
-        var sourceImgRect = img.getBoundingClientRect();
-        var galleryRect = gallery.getBoundingClientRect();
-        var galleryTop = galleryRect.top + window.scrollY;
-        
-        var targetLayerRect = {top: galleryTop, left: 0, width: window.innerWidth, height: window.innerHeight - galleryTop - scrollbarSize };
-        var targetImgRect = {top: 0, left: 0, width: 0, height: 0 };
-        var imgRatio = sourceImgRect.height / sourceImgRect.width;
-        
-        var ratio = targetLayerRect.width / sourceImgRect.width;
-        if( sourceImgRect.height * ratio > targetLayerRect.height ) ratio = targetLayerRect.height / sourceImgRect.height;
-        targetImgRect.height = sourceImgRect.height * ratio;
-        targetImgRect.width = sourceImgRect.width * ratio;
-        //if( targetImgRect.height > imageHeight ) targetImgRect.height = imageHeight;
-        //if( targetImgRect.width > imageWidth ) targetImgRect.width = imageWidth;
-        targetImgRect.top = targetLayerRect.top + ( targetLayerRect.height - targetImgRect.height ) / 2 - 1;
-        targetImgRect.left = targetLayerRect.left + ( targetLayerRect.width - targetImgRect.width ) / 2 - 1;
-
-        var t5 = performance.now()
-
-        layer.style.cssText = "display: block; top: " + targetLayerRect.top + "px; left: " + targetLayerRect.left + "px; width: " + targetLayerRect.width + "px; height: " + targetLayerRect.height + "px";
-        
-        img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";
-        
-        // force refresh
-        img.offsetHeight;
-        
-        window.setTimeout(function() { layer.style.opacity = "1.0"; }, 150);
-        
-        img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
-
-        window.setTimeout(function(){
-            gallery.classList.add("fullscreen");
-            
-            gallery.addEventListener("tapstart",tapstart);
-            gallery.addEventListener("tapmove",tapmove);
-            gallery.addEventListener("tapend",tapend);
-
-            layer.style.cssText = "";
-            img.style.cssText = "";
-
-            scrollToActiveItem(containers[index],ANIMATION_INSTANT);
-
-            positionSlotTooltip();
-        },300);
-    }
-    
-    function closeDetails()
-    {
-        if( !isFullscreen ) return;
-        isFullscreen = false;
-        
-        var layer = gallery.querySelector("div.layer");
-        
-        var img = activeItem.querySelector("img");
-
-        var sourceImgRect = getOffset(img);
-        sourceImgRect.left = img.offsetLeft;
-        var sourceLayerRect = getOffset(activeItem);
-        sourceLayerRect.left = 0;
-        
-        gallery.classList.remove("fullscreen");
-        gallery.removeEventListener("tapstart",tapstart);
-        gallery.removeEventListener("tapmove",tapmove);
-        gallery.removeEventListener("tapend",tapend);
-        
-        scrollToActiveItem(activeItem,ANIMATION_INSTANT);
-
-        var targetImgRect = getOffset(img);
-        
-        layer.style.cssText = "display: block; top: " + sourceLayerRect.top + "px; left: " + sourceLayerRect.left + "px; width: " + sourceLayerRect.width + "px; height: " + sourceLayerRect.height + "px; opacity: 1.0";
-
-        img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";
-        
-        // force refresh
-        img.offsetHeight;
-
-        layer.style.opacity = "";
-        
-        img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
-
-        window.setTimeout(function(){
-            layer.style.display = "";
-            
-            img.style.cssText = "";
-            
-            positionSlotTooltip();
-        },300);
-    }
-  
-    function jumpToPreviousImage()
-    {
-        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) - 1],ANIMATION_SMOOTH);
-    }
-    
-    function jumpToNextImage()
-    {
-        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) + 1],ANIMATION_SMOOTH);
-    }
-
-    function updateList()
-    {
-        var url = mx.Host.getBase() + 'index_update.php';
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", url );
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-            
-            if( this.status == 200 ) 
-            {
-                var content = document.createElement("div");
-                content.innerHTML = this.response;
-                
-                if( content.querySelector("#gallery") )
-                {
-                    var containerMap = {};
-                    containers.forEach(function(container,index){
-                        containerMap[container.dataset.src] = container;
-                    });
-
-                    var _containers = content.querySelector("#gallery").childNodes;
-                    var _nextContainer = containers[0];
-                    Object.values(_containers).forEach(function(container,index){
-                        if( typeof containerMap[container.dataset.src] == "undefined" )
-                        {
-                            if( _nextContainer )
-                            {
-                                gallery.insertBefore(container,_nextContainer);
-                            }
-                            else
-                            {
-                                gallery.appendChild(container);
-                            }
-                            containerObserver.observe(container);
-                        }
-                        else
-                        {
-                            _nextContainer = containerMap[container.dataset.src].nextSibling;
-                            containerMap[container.dataset.src].dataset.index = container.dataset.index;
-                            delete containerMap[container.dataset.src];
-                        }
-                    });
-
-                    var _activeItem = activeItem;
-                    Object.values(containerMap).forEach(function(container,index){
-                        container.parentNode.removeChild(container);
-                        //console.log("remove image");
-                        if( container.dataset.src == activeItem.dataset.src )
-                        {
-                            _activeItem = null;
-                        }
-                    });
-
-                    if( _activeItem == null ) _activeItem = containers[0]
-
-                    // refresh containers
-                    containers = gallery.querySelectorAll(".container");
-
-                    slotOverview.innerHTML = content.querySelector("#slots").innerHTML;
-                    
-                    // reset active states
-                    activeItem = null;
-                    activeSlot = null;
-                    slotTooltipElement = null;
-                    
-                    if( ( isFullscreen ? window.scrollX : window.scrollY ) == 0 )
-                    {
-                        setActiveItem(containers[0]);
-                    }
-                    else
-                    {
-                        scrollToActiveItem(_activeItem,ANIMATION_INSTANT);
-                    }
-                }
-        
-                updateTimer = window.setTimeout(updateList,30000);
-            }
-            else 
-            {
-                updateTimer = mx.Page.handleRequestError(this.status,url,updateList,60000);
-            }
-        };
-        
-        var data = {};
-        data['count'] = containers.length;
-        data['sub'] = folder;
-        
-        xhr.send(JSON.stringify(data));
     }
 
     function delayedSlotPosition()
@@ -691,25 +521,6 @@ mx.Gallery = (function( ret ) {
         });
 
         setActiveItem(firstElement);
-    }
-
-    function delayedLoading(element)
-    {
-        if( element.dataset.loaded ) return;
-
-        var id = window.setTimeout(function(){
-            element.removeAttribute("data-timer");
-            loadImage(element);
-        },100);
-        element.dataset.timer = id;
-    }
-
-    function cancelLoading(element)
-    {
-        if( !element.dataset.timer ) return;
-
-        window.clearTimeout(element.dataset.timer);
-        element.removeAttribute("data-timer");
     }
 
     function initObserver()
@@ -743,13 +554,222 @@ mx.Gallery = (function( ret ) {
         });
     }
 
-    ret.jumpToSlot = jumpToSlot;
-    ret.jumpToPreviousImage = jumpToPreviousImage;
-    ret.jumpToNextImage = jumpToNextImage;
-    ret.openDetails = openDetails;
-    ret.closeDetails = closeDetails;
-    ret.startPlay = startPlay;
-    ret.stopPlay = stopPlay;
+    function swipeHandler(velocity)
+    {
+        var index1 = -1, index2 = -1;
+
+        if (velocity > 500 )
+        {
+            index1 = parseInt(activeItem.dataset.index) - 1;
+            index2 = index1 - 1;
+        }
+        else if( velocity < -500 )
+        {
+            index1 = parseInt(activeItem.dataset.index) + 1;
+            index2 = index1 + 1;
+        }
+
+        if( index1 >= 0 && index1 < containers.length )
+        {
+            if( index2 >= 0 && index2 < containers.length ) delayedLoading(containers[index2]);
+
+            scrollToActiveItem(containers[index1],mx.GalleryAnimation.TYPE_CUSTOM);
+            return;
+        }
+
+        scrollToActiveItem(getMostVisibleItem(),mx.GalleryAnimation.TYPE_SMOOTH);
+    }
+
+    function playIteration()
+    {
+        if( isPlaying == false ) return;
+
+        var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
+        if( typeof nextContainer == "undefined" )
+        {
+            stopPlay();
+            return;
+        }
+        scrollToActiveItem(nextContainer,mx.GalleryAnimation.TYPE_INSTANT);
+
+        nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
+        if( typeof nextContainer == "undefined" )
+        {
+            stopPlay();
+            return;
+        }
+        var img = nextContainer.querySelector("img");
+        if( img == null || img.naturalWidth  == 0 )
+        {
+            //console.log("not loaded");
+            var startTime = new Date().getTime();
+            cancelLoading(nextContainer);
+            loadImage(nextContainer,function(success)
+            {
+                var endTime = new Date().getTime();
+                var diff = endTime - startTime;
+                if( diff > 500 ) playIteration();
+                else playTimer = window.setTimeout(playIteration,500-diff);
+            });
+        }
+        else
+        {
+            playTimer = window.setTimeout(playIteration,500);
+        }
+    }
+
+    // watcher to check if scroll animations are finished
+    function scrollHandler()
+    {
+        if( requestedScrollPosition == null || !checkRequestedPosition() ) return;
+
+        if( debug ) console.log("requestedScrollPosition reset");
+        requestedScrollPosition = null;
+        lastScrollPosition = null;
+    }
+
+    function resizeHandler()
+    {
+        if( !activeItem ) return;
+
+        scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+        positionSlotTooltip();
+
+        console.log("resize");
+    }
+
+    ret.openDetails = function(index)
+    {
+        if( isFullscreen ) return;
+        isFullscreen = true;
+
+        mx.GallerySwipeHandler.enable(gallery, swipeHandler);
+
+        var layer = gallery.querySelector("div.layer");
+        var img = containers[index].querySelector("img");
+
+        var scrollbarSize = window.innerWidth - document.documentElement.clientWidth;
+
+        var sourceImgRect = img.getBoundingClientRect();
+        var galleryRect = gallery.getBoundingClientRect();
+        var galleryTop = galleryRect.top + window.scrollY;
+
+        var targetLayerRect = {top: galleryTop, left: 0, width: window.innerWidth, height: window.innerHeight - galleryTop - scrollbarSize };
+        var targetImgRect = {top: 0, left: 0, width: 0, height: 0 };
+        var imgRatio = sourceImgRect.height / sourceImgRect.width;
+
+        var ratio = targetLayerRect.width / sourceImgRect.width;
+        if( sourceImgRect.height * ratio > targetLayerRect.height ) ratio = targetLayerRect.height / sourceImgRect.height;
+        targetImgRect.height = sourceImgRect.height * ratio;
+        targetImgRect.width = sourceImgRect.width * ratio;
+        //if( targetImgRect.height > imageHeight ) targetImgRect.height = imageHeight;
+        //if( targetImgRect.width > imageWidth ) targetImgRect.width = imageWidth;
+        targetImgRect.top = targetLayerRect.top + ( targetLayerRect.height - targetImgRect.height ) / 2 - 1;
+        targetImgRect.left = targetLayerRect.left + ( targetLayerRect.width - targetImgRect.width ) / 2 - 1;
+
+        layer.style.cssText = "display: block; top: " + targetLayerRect.top + "px; left: " + targetLayerRect.left + "px; width: " + targetLayerRect.width + "px; height: " + targetLayerRect.height + "px";
+        img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";
+
+        // force refresh
+        img.offsetHeight;
+
+        window.setTimeout(function() { layer.style.opacity = "1.0"; }, 150);
+
+        img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
+
+        window.setTimeout(function(){
+            gallery.classList.add("fullscreen");
+
+            layer.style.cssText = "";
+            img.style.cssText = "";
+
+            scrollToActiveItem(containers[index],mx.GalleryAnimation.TYPE_INSTANT);
+            positionSlotTooltip();
+        },300);
+    }
+
+    ret.closeDetails = function()
+    {
+        if( !isFullscreen ) return;
+        isFullscreen = false;
+
+        mx.GallerySwipeHandler.disable(gallery);
+
+        var layer = gallery.querySelector("div.layer");
+        var img = activeItem.querySelector("img");
+
+        var sourceImgRect = getOffset(img);
+        sourceImgRect.left = img.offsetLeft;
+        var sourceLayerRect = getOffset(activeItem);
+        sourceLayerRect.left = 0;
+
+        gallery.classList.remove("fullscreen");
+
+        scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+
+        var targetImgRect = getOffset(img);
+
+        layer.style.cssText = "display: block; top: " + sourceLayerRect.top + "px; left: " + sourceLayerRect.left + "px; width: " + sourceLayerRect.width + "px; height: " + sourceLayerRect.height + "px; opacity: 1.0";
+        img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";
+
+        // force refresh
+        img.offsetHeight;
+
+        layer.style.opacity = "";
+        img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
+
+        window.setTimeout(function(){
+            layer.style.display = "";
+            img.style.cssText = "";
+
+            positionSlotTooltip();
+        },300);
+    }
+
+    ret.stopPlay = function(e)
+    {
+        if( e && e.target.classList.contains("button") && e.type == 'tapstart' ) return;
+
+        isPlaying = false;
+
+        if( playTimer != null )
+        {
+            window.clearTimeout(playTimer);
+            playTimer = null;
+        }
+
+        galleryStartPlayButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
+        galleryStopPlayButton.style.display = "";
+
+        document.removeEventListener("tapstart",stopPlay);
+    }
+
+    ret.startPlay = function(e)
+    {
+        isPlaying = true;
+
+        galleryStartPlayButton.style.display = "none";
+        galleryStopPlayButton.style.display = "inline";
+
+        document.addEventListener("tapstart",stopPlay);
+
+        playIteration();
+    }
+
+    ret.jumpToSlot = function(timeslot) {
+        var firstItemInSlot = gallery.querySelector("div.container[data-timeslot='" + timeslot + "']");
+        scrollToActiveItem(firstItemInSlot,mx.GalleryAnimation.TYPE_SMOOTH);
+    }
+
+    ret.jumpToPreviousImage = function()
+    {
+        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) - 1],mx.GalleryAnimation.TYPE_SMOOTH);
+    }
+
+    ret.jumpToNextImage = function()
+    {
+        scrollToActiveItem(containers[parseInt(activeItem.dataset.index) + 1],mx.GalleryAnimation.TYPE_SMOOTH);
+    }
 
     ret.init = function(_imageHeight,_imageWidth,_folder)
     {
@@ -775,42 +795,9 @@ mx.Gallery = (function( ret ) {
         
         initObserver();
 
-        document.addEventListener('scroll', scrollHandler);
-        
-        window.addEventListener('resize', function(e) {
-            if( activeItem )
-            {
-                scrollToActiveItem(activeItem,ANIMATION_INSTANT);
-                positionSlotTooltip();
-            }
-        });
-        
-        document.addEventListener('mouseup', function(e) {
-            if( isFullscreen )
-            {
-                if( e.clientY > document.documentElement.clientHeight )
-                {
-                    scrollToActiveItem(activeItem,ANIMATION_SMOOTH);
-                }
-            }
-        });
-        
-        document.addEventListener('mousemove', function(e) {
-            var reference = e.target;
-            if( !reference.classList ) return;
-            
-            if( reference.classList.contains("bar") )
-            {
-                reference = reference.parentNode;
-            }
-            if( !reference.classList.contains("slot") )
-            {
-                if( activeSlot ) setSlotTooltip(activeSlot);
-                return;
-            }
-            
-            setSlotTooltip(reference);
-        });
+        window.addEventListener('resize', resizeHandler);
+        document.addEventListener('scroll', scrollHandler, {passive: true});
+        document.addEventListener('mousemove', slotHoverHandler, {passive: true});
         
         mx.Swipe.init();
     
