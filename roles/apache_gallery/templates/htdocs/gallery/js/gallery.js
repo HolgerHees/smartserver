@@ -77,7 +77,8 @@ mx.GallerySwipeHandler = (function( ret ) {
     var trackerVelocity = 0;
     var trackerTimestamp = null;
 
-    var tabendCallback = null;
+    var swipeCallback = null;
+    var swipeElement = null;
 
     function tabtracker()
     {
@@ -98,7 +99,6 @@ mx.GallerySwipeHandler = (function( ret ) {
     {
         if( e.target.classList.contains("button") ) return;
 
-        //console.log("tabstart");
         startClientX = e.detail.clientX;
         startScrollX = window.scrollX;
         isMoving = false;
@@ -108,6 +108,9 @@ mx.GallerySwipeHandler = (function( ret ) {
         trackerVelocity = 0;
         trackerTimestamp = performance.now();
         tabticker = setInterval(tabtracker, 100);
+
+        swipeElement.addEventListener("tapmove",tapmove);
+        swipeElement.addEventListener("tapend",tapend);
     }
 
     function tapmove(e)
@@ -124,6 +127,9 @@ mx.GallerySwipeHandler = (function( ret ) {
     {
         clearInterval(tabticker);
 
+        swipeElement.removeEventListener("tapmove",tapmove);
+        swipeElement.removeEventListener("tapend",tapend);
+
         if( !isMoving ) return;
         isMoving = false;
 
@@ -131,23 +137,20 @@ mx.GallerySwipeHandler = (function( ret ) {
 
         if( trackerVelocity == 0 ) tabtracker();
 
-        tabendCallback(trackerVelocity);
+        swipeCallback(trackerVelocity);
     }
 
     ret.enable = function(element, callback)
     {
-        tabendCallback = callback;
+        swipeCallback = callback;
+        swipeElement = element;
 
         element.addEventListener("tapstart",tapstart);
-        element.addEventListener("tapmove",tapmove);
-        element.addEventListener("tapend",tapend);
     }
 
-    ret.disable = function(element)
+    ret.disable = function()
     {
-        element.removeEventListener("tapstart",tapstart);
-        element.removeEventListener("tapmove",tapmove);
-        element.removeEventListener("tapend",tapend);
+        swipeElement.removeEventListener("tapstart",tapstart);
     }
 
     return ret;
@@ -701,7 +704,7 @@ mx.Gallery = (function( ret ) {
         if( !isFullscreen ) return;
         isFullscreen = false;
 
-        mx.GallerySwipeHandler.disable(gallery);
+        mx.GallerySwipeHandler.disable();
 
         var layer = gallery.querySelector("div.layer");
         var img = activeItem.querySelector("img");
