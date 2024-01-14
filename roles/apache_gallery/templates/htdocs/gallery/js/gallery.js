@@ -14,11 +14,8 @@ mx.GalleryAnimation = (function( ret ) {
     {
         if( behavior != mx.GalleryAnimation.TYPE_CUSTOM )
         {
-            if( requestId != null )
-            {
-                window.cancelAnimationFrame(requestId);
-                requestId = currentPos = null;
-            }
+            mx.GalleryAnimation.stop();
+
             options["behavior"] = behavior == mx.GalleryAnimation.TYPE_INSTANT ? 'instant' : 'smooth';
             window.scrollTo(options);
         }
@@ -63,6 +60,14 @@ mx.GalleryAnimation = (function( ret ) {
         }
     }
 
+    ret.stop = function()
+    {
+        if( requestId == null ) return;
+
+        window.cancelAnimationFrame(requestId);
+        requestId = currentPos = null;
+    }
+
     return ret;
 })( mx.GalleryAnimation || {} );
 
@@ -98,6 +103,8 @@ mx.GallerySwipeHandler = (function( ret ) {
     function tapstart(e)
     {
         if( e.target.classList.contains("button") ) return;
+
+        mx.GalleryAnimation.stop();
 
         startClientX = e.detail.clientX;
         startScrollX = window.scrollX;
