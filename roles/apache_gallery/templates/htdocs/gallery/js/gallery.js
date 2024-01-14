@@ -8,22 +8,24 @@ mx.GalleryAnimation = (function( ret ) {
     var diff = null;
     var duration = null;
     var startTime = null;
+    var currentPos = null;
 
-    ret.scrollTo = function(options, behavior)
+    ret.scrollTo = function(options, behavior, item)
     {
         if( behavior != mx.GalleryAnimation.TYPE_CUSTOM )
         {
             if( requestId != null )
             {
                 window.cancelAnimationFrame(requestId);
-                requestId = null;
+                requestId = currentPos = null;
             }
             options["behavior"] = behavior == mx.GalleryAnimation.TYPE_INSTANT ? 'instant' : 'smooth';
             window.scrollTo(options);
         }
         else
         {
-            startPos = window.scrollX;
+            // scrollX is not 100% reliable during animations on mobile devices.
+            startPos = currentPos == null ? window.scrollX : currentPos;
             diff = options["left"] - startPos;
             duration = Math.abs(diff) * 800 / window.innerWidth;
             if( duration > 2000 ) duration = 2000;
@@ -43,7 +45,8 @@ mx.GalleryAnimation = (function( ret ) {
                 // https://easings.net/de => easeOutQuint
                 const animation = function (x) { return 1 - Math.pow(1 - x, 5); };
 
-                window.scrollTo(startPos + diff * animation(percent), 0);
+                currentPos = startPos + diff * animation(percent);
+                window.scrollTo(currentPos, 0);
 
                 // Continue moving
                 if (time < duration)
@@ -53,7 +56,7 @@ mx.GalleryAnimation = (function( ret ) {
                 else
                 {
                     window.cancelAnimationFrame(requestId);
-                    requestId = null;
+                    requestId = currentPos = null;
                 }
             };
             requestId = window.requestAnimationFrame(loop);
@@ -410,7 +413,7 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
     
                 requestedScrollPosition = { source: window.scrollX, target: item.offsetLeft };
-                mx.GalleryAnimation.scrollTo({ left: requestedScrollPosition["target"] }, behavior);
+                mx.GalleryAnimation.scrollTo({ left: requestedScrollPosition["target"] }, behavior, item);
             }
         }
         else
@@ -421,7 +424,7 @@ mx.Gallery = (function( ret ) {
                 if( debug ) console.log("scrollToActiveItem: " + item.dataset.formattedtime);
 
                 requestedScrollPosition = { source: window.scrollY, target: targetPosition };
-                mx.GalleryAnimation.scrollTo({ top: requestedScrollPosition["target"] }, behavior);
+                mx.GalleryAnimation.scrollTo({ top: requestedScrollPosition["target"] }, behavior, item);
             }
         }
         
