@@ -641,8 +641,6 @@ mx.Gallery = (function( ret ) {
 
         scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
         positionSlotTooltip();
-
-        console.log("resize");
     }
 
     ret.openDetails = function(index)
