@@ -13,20 +13,27 @@ mx.GalleryAnimation = (function( ret ) {
     {
         if( behavior != mx.GalleryAnimation.TYPE_CUSTOM )
         {
+            if( requestId != null )
+            {
+                window.cancelAnimationFrame(requestId);
+                requestId = null;
+            }
             options["behavior"] = behavior == mx.GalleryAnimation.TYPE_INSTANT ? 'instant' : 'smooth';
             window.scrollTo(options);
         }
         else
         {
-            // happens only for fullscreen
             startPos = window.scrollX;
             diff = options["left"] - startPos;
             duration = Math.abs(diff) * 800 / window.innerWidth;
+            if( duration > 2000 ) duration = 2000;
             startTime = null;
 
             if( requestId != null ) return;
 
             const loop = function (currentTime) {
+                if( requestId == null ) return;
+
                 if (!startTime) startTime = currentTime;
 
                 // Elapsed time in miliseconds
@@ -587,7 +594,7 @@ mx.Gallery = (function( ret ) {
         var nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
         if( typeof nextContainer == "undefined" )
         {
-            stopPlay();
+            mx.Gallery.stopPlay();
             return;
         }
         scrollToActiveItem(nextContainer,mx.GalleryAnimation.TYPE_INSTANT);
@@ -595,7 +602,7 @@ mx.Gallery = (function( ret ) {
         nextContainer = containers[parseInt(activeItem.dataset.index) - 1];
         if( typeof nextContainer == "undefined" )
         {
-            stopPlay();
+            mx.Gallery.stopPlay();
             return;
         }
         var img = nextContainer.querySelector("img");
@@ -728,7 +735,7 @@ mx.Gallery = (function( ret ) {
 
     ret.stopPlay = function(e)
     {
-        if( e && e.target.classList.contains("button") && e.type == 'tapstart' ) return;
+        if( e && e.target.classList.contains("button") && e.target.classList.contains("stop") && e.type == 'tapstart' ) return;
 
         isPlaying = false;
 
@@ -741,7 +748,8 @@ mx.Gallery = (function( ret ) {
         galleryStartPlayButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
         galleryStopPlayButton.style.display = "";
 
-        document.removeEventListener("tapstart",stopPlay);
+        document.removeEventListener("tapstart",mx.Gallery.stopPlay);
+
     }
 
     ret.startPlay = function(e)
@@ -751,7 +759,7 @@ mx.Gallery = (function( ret ) {
         galleryStartPlayButton.style.display = "none";
         galleryStopPlayButton.style.display = "inline";
 
-        document.addEventListener("tapstart",stopPlay);
+        document.addEventListener("tapstart",mx.Gallery.stopPlay);
 
         playIteration();
     }
