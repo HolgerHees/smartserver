@@ -12,7 +12,7 @@ mx.ImageWatcher = (function( ret ) {
 
     }
 
-    function refreshImage(container, last_duration)
+    function refreshImage(container, last_duration, i18n_component)
     {
         var uid = container.getAttribute("data-uid");
         activeTimer[uid] = null;
@@ -56,7 +56,7 @@ mx.ImageWatcher = (function( ret ) {
                 }
                 image.onerror = function(event)
                 {
-                    showError(uid, image, infoSpan, "Error" );
+                    showError(uid, image, infoSpan, mx.I18N.get("Image error",i18n_component) );
                 }
                 image.setAttribute('src', imageURL );
 
@@ -68,18 +68,18 @@ mx.ImageWatcher = (function( ret ) {
 
                 if( interval > 0 )
                 {
-                    activeTimer[uid] = mx.Timer.register( function(){refreshImage(container, duration);}, interval );
+                    activeTimer[uid] = mx.Timer.register( function(){refreshImage(container, duration, i18n_component);}, interval );
                 }
                 else
                 {
-                    refreshImage(container, duration);
+                    refreshImage(container, duration, i18n_component);
                 }
             }
             else
             {
-                showError(uid, image, infoSpan, "Error " + this.status );
+                showError(uid, image, infoSpan,  this.status == 0 ? mx.I18N.get("Offline",i18n_component) : mx.I18N.get("Error",i18n_component) + ": " + this.status );
 
-                mx.Page.handleRequestError(this.status,src,function(){refreshImage(container, duration);});
+                mx.Page.handleRequestError(this.status,src,function(){refreshImage(container, 0, i18n_component);});
             }
         };
         xhr.send();
@@ -125,7 +125,7 @@ mx.ImageWatcher = (function( ret ) {
         });
     }
 
-    ret.post = function(selector)
+    ret.post = function(selector, i18n_component)
     {
         var containers = mx.$$(selector);
         containers.forEach(function(container){
@@ -209,7 +209,7 @@ mx.ImageWatcher = (function( ret ) {
                 if( activeTimer[uid] != null )
                 {
                     mx.Timer.stop(activeTimer[uid]);
-                    refreshImage(container, 0);
+                    refreshImage(container, 0, i18n_component);
                 }
             });
 
@@ -222,15 +222,18 @@ mx.ImageWatcher = (function( ret ) {
             nameSpan.innerText = container.getAttribute('data-name');
             container.appendChild(nameSpan);
 
-            var gallerySpan = document.createElement("span");
-            gallerySpan.classList.add("gallery");
-            gallerySpan.classList.add("icon-chart-area");
-            container.appendChild(gallerySpan);
-            gallerySpan.addEventListener("click",function(event)
+            if( container.hasAttribute('data-internal-menu') )
             {
-                event.stopPropagation();
-                mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
-            });
+                var gallerySpan = document.createElement("span");
+                gallerySpan.classList.add("gallery");
+                gallerySpan.classList.add("icon-chart-area");
+                container.appendChild(gallerySpan);
+                gallerySpan.addEventListener("click",function(event)
+                {
+                    event.stopPropagation();
+                    mx.Actions.openEntryById(event,container.getAttribute('data-internal-menu'));
+                });
+            }
 
             var externalSpan = document.createElement("span");
             externalSpan.classList.add("external");
@@ -246,11 +249,10 @@ mx.ImageWatcher = (function( ret ) {
 
             var infoSpan = document.createElement("span");
             infoSpan.classList.add("info");
-            var i18n = container.getAttribute("data-loading").split("_");
-            infoSpan.innerText = mx.I18N.get(i18n[1],i18n[0]) + " ...";
+            infoSpan.innerText = mx.I18N.get("Loading",i18n_component) + " ...";
             container.appendChild(infoSpan);
 
-            refreshImage(container, 0);
+            refreshImage(container, 0, i18n_component);
         });
     };
 

@@ -78,7 +78,7 @@ mx.App = (function( ret ) {
             }
             else if( connectionState == mx.State.ONLINE || connectionState == mx.State.UNREACHABLE || connectionState == mx.State.REACHABLE )
             {
-                showInfo(animated,mx.I18N.get("VPN Offline"));
+                showInfo(animated,mx.I18N.get("Server Offline"));
             }
             else if( connectionState == mx.State.UNAUTHORIZED )
             {

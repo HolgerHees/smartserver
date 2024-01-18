@@ -3,6 +3,9 @@
     "Cameras": "Kameras"
   },
   "cameras": {
+    "Image error": "Bildfehler",
+    "Offline": "Offline",
+    "Error": "Fehler",
     "Loading": "Lädt"
   }
 }
