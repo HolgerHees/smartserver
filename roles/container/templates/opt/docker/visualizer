@@ -59,8 +59,8 @@ class Chain:
         self.name = name
         self.rule_r = []
 
-    def addRule(self,sourceIp,targetIp,targetPort, mode, type, interface, raw):
-        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "targetIp": targetIp, "targetPort": targetPort, "mode": mode, "type": type, "interface": interface, "raw": raw })
+    def addRule(self,sourceIp,sourcePort,targetIp,targetPort, mode, type, interface, raw):
+        self.rule_r.append({"chain": self.name, "sourceIp": sourceIp, "sourcePort": sourcePort, "targetIp": targetIp, "targetPort": targetPort, "mode": mode, "type": type, "interface": interface, "raw": raw })
 
 def execCommand(cmd, cwd=None ):
     return subprocess.run([ cmd ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
@@ -133,15 +133,14 @@ for rule in iptables_rules:
         source_ip = rule_r[7]
         target_ip = rule_r[8]
         target_port = ""
+        source_port = ""
         if len(rule_r) > 10:
             if rule_r[10].startswith("dpt:"):
                 target_port = rule_r[10][4:]
-            else:
-                continue
+            elif rule_r[10].startswith("spt:"):
+                source_port = rule_r[10][4:]
 
-        #print(rule_r)
-
-        current_chain.addRule(source_ip,target_ip,target_port,rule_r[2],rule_r[3],rule_r[6],rule_r)
+        current_chain.addRule(source_ip,source_port,target_ip,target_port,rule_r[2],rule_r[3],rule_r[6],rule_r)
         #print(source_ip + ' => ' + target_ip + ' ' + target_port)
             
         #chain_r[current_chain].append()
@@ -459,14 +458,22 @@ for network in sorted_network_r:
                         else:
                             targetIp = rule['targetIp']
 
-                        value = targetIp
+                        value = ""
+
+                        if rule['sourcePort'] != '':
+                            value += ":" + rule['sourcePort']
+                        if rule['interface'] != "*":
+                            value += ":" + rule['interface']
+
+                        if value != "":
+                            value += " ➞ "
+
+                        value += targetIp
+
                         if rule['targetPort'] != '':
                             value += ":" + rule['targetPort']
                         if rule['type'] not in ["all","tcp","udp"]:
                             value += ":" + rule['type']
-
-                        if rule['interface'] != "*":
-                            value += ":" + rule['interface']
 
                         if value in dns_reverse_r:
                             name = dns_reverse_r[value]
