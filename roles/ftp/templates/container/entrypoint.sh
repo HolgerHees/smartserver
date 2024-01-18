@@ -14,6 +14,8 @@ echo "$FTP_USER:$FTP_PASS" | /usr/sbin/chpasswd > /dev/null 2>&1
 
 cp /etc/vsftpd/vsftpd.conf_or /etc/vsftpd/vsftpd.conf
 
+#echo "log_ftp_protocol=YES" >> /etc/vsftpd/vsftpd.conf
+
 if [[ "$PASV_ENABLE" == "YES" ]]; then
   echo "PASV is enabled"
   echo "pasv_enable=YES" >> /etc/vsftpd/vsftpd.conf

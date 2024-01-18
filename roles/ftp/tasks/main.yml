@@ -115,10 +115,12 @@
     network_mode: "default"
     networks:
       - name: "isolated"
+        ipv4_address: "{{docker_ftp_ip}}"
     networks_cli_compatible: yes
     published_ports: |
       [
         "21:21",
+        "20:20",
         "30000-30005:30000-30005",
         {% if default_server_ipv6 is defined %}
           "[::]:21:21",
@@ -126,6 +128,19 @@
         {% endif %}
       ]
   notify: "restart vsftpd"
+
+- name: prepare iptables rules
+  set_fact:
+    ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + docker_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
+  with_items: "{{ intern_networks }}"
+  tags: [ 'firewall_config' ]
+
+- name: allow ftp service
+  vars:
+    name: "ftp"
+    rules: "{{ftp_rules}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
 
 #- name: clean old docker images => image does not exists
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
