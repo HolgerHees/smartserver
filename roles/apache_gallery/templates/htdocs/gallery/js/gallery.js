@@ -308,15 +308,15 @@ mx.Gallery = (function( ret ) {
         return offset;
     }
 
-    function getNextItem()
+    function getNextItem(item)
     {
-        var index = parseInt(activeItem.dataset.index) - 1;
+        var index = parseInt((item ? item : activeItem).dataset.index) - 1;
         return index >= 0 ? containers[index] : null;
     }
 
-    function getPreviousItem()
+    function getPreviousItem(item)
     {
-        var index = parseInt(activeItem.dataset.index) + 1;
+        var index = parseInt((item ? item : activeItem).dataset.index) + 1;
         return index < containers.length ? containers[index] : null;
     }
 
@@ -636,9 +636,9 @@ mx.Gallery = (function( ret ) {
         isFullscreen = true;
 
         loadImage(item);
-        var nextItem = getNextItem();
+        var nextItem = getNextItem(item);
         if( nextItem != null ) delayedLoading(nextItem);
-        var previousItem = getPreviousItem();
+        var previousItem = getPreviousItem(item);
         if( previousItem != null ) delayedLoading(previousItem);
 
         mx.GallerySwipeHandler.enable(gallery, swipeHandler);
