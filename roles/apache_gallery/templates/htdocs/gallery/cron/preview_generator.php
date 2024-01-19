@@ -23,7 +23,7 @@ if( $cmd == "clean" )
 else
 {
     //$result = shell_exec("find " . FTP_FOLDER . " -maxdepth 2 -mmin -5760 -type f -name '*.jpg'");
-    $cmd = "find " . FTP_FOLDER . " -maxdepth 2 " . ( !empty($argv[2]) && $argv[2] == "full" ? "" : "-mmin -120 " ) . "-type f -name '*.jpg'";
+    $cmd = "find " . FTP_FOLDER . " -maxdepth 2 -readable " . ( !empty($argv[2]) && $argv[2] == "full" ? "" : "-mmin -120 " ) . "-type f -name '*.jpg' 2>/dev/null";
     //echo $cmd;
     $result = shell_exec($cmd);
 
