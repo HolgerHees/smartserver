@@ -15,40 +15,40 @@ class Preview {
                 {
                     if( $file == "." || $file == ".." || strpos($file, ".lock") !== false ) continue;
 
-                    $index = strpos($file, "_small.jpg");
-                    if( $index !== false )
+                    $index = strrpos($file, ".");
+                    if( $index === false ) continue;
+
+                    $filename = substr($file,0,$index);
+
+                    $index = strrpos($filename, "_");
+                    if( $index === false ) continue;
+
+                    $name = substr($filename,0,$index);
+                    $type = substr($filename,$index + 1);
+
+                    if( !isset($images[$name]) ) $images[$name] = array(null,null,null,null);
+                    $image_data = &$images[$name];
+
+                    switch($type)
                     {
-                        $name = substr($file,0,$index);
-                        if( !isset($images[$name]) ) $images[$name] = array(null,null,$file);
-                        else $images[$name][2] = $file;
-                    }
-                    else
-                    {
-                        $index = strpos($file, "_medium.jpg");
-                        if( $index !== false )
-                        {
-                            $name = substr($file,0,$index);
-                            if( !isset($images[$name]) ) $images[$name] = array(null,$file,null);
-                            else $images[$name][1] = $file;
-                        }
-                        else
-                        {
-                            $index = strpos($file, ".");
-                            if( $index !== false )
-                            {
-                                $name = substr($file,0,$index);
-                                if( !isset($images[$name]) ) $images[$name] = array($file,null,null);
-                                else $images[$name][0] = $file;
-                            }
-                        }
+                        case "small":
+                            $image_data[2] = $file;
+                            break;
+                        case "medium":
+                            $image_data[1] = $file;
+                            break;
+                        default:
+                            $image_data[0] = $file;
+                            $image_data[4] = $type;
                     }
                 }
-                Preview::$cache_map[$camera_name] = $images;
+
+                Preview::$cache_map[$camera_name] = array_filter($images, function($image_data){ return $image_data[0] != null && $image_data[1] != null && $image_data[2] != null; } );;
             }
         }
     }
 
-    private static function generatePreview($img, $original_file, $preview_file, $preview_size, $timestamp)
+    private static function generatePreview($img, $original_file, $preview_file, $preview_size)
     {
         list( $width, $height ) = explode("x", $preview_size);
 
@@ -66,7 +66,6 @@ class Preview {
         $img->scaleImage( $width, $height, true );
 
         file_put_contents($preview_file, $img->getImageBlob());
-        touch($preview_file, $timestamp);
     }
 
     public static function getCount($camera_name)
@@ -80,15 +79,7 @@ class Preview {
     {
         if( !array_key_exists($camera_name, Preview::$cache_map) ) Preview::initFiles($camera_name);
 
-        $files = array();
-        foreach( Preview::$cache_map[$camera_name] as $data )
-        {
-            if( $data[0] == null || $data[1] == null || $data[2] == null ) continue;
-
-            $files[] = $data;
-        }
-
-        return $files;
+        return array_values(Preview::$cache_map[$camera_name]);
     }
 
     public static function check($original_file)
@@ -102,37 +93,31 @@ class Preview {
 
         $name = $path_parts["filename"];
 
-        if( !isset(Preview::$cache_map[$camera_name][$name]) || Preview::$cache_map[$camera_name][$name][0] == null || Preview::$cache_map[$camera_name][$name][1] == null || Preview::$cache_map[$camera_name][$name][2] == null )
+        if( !isset(Preview::$cache_map[$camera_name][$name]) )
         {
             $org_cache_name = $path_parts["basename"];
-            $org_cache_path = $camera_cache_directory . $org_cache_name;
+            $org_lock_path = $camera_cache_directory . $name . ".lock";
 
-            $fp = fopen( $org_cache_path.".lock", "c");
+            $fp = fopen( $org_lock_path, "c");
             if( flock($fp, LOCK_EX | LOCK_NB) )
             {
-                if( is_file($org_cache_path.".lock") )
+                if( is_file($org_lock_path) )
                 {
                     echo "create " . $name . "\n";
 
                     $timestamp = filemtime($original_file);
+                    $org_cache_path = $camera_cache_directory . $name . "_" . $timestamp . "." . $path_parts["extension"] ;
 
-                    $medium_cache_name = $path_parts["filename"] . "_medium.jpg";
-                    $small_cache_name = $path_parts["filename"] . "_small.jpg";
-
-                    $small_cache_path = $camera_cache_directory . $small_cache_name;
-                    $medium_cache_path = $camera_cache_directory . $medium_cache_name;
-
-                    if( !is_file( $org_cache_path ) )
-                    {
-                        copy($original_file, $org_cache_path);
-                        touch($org_cache_path, $timestamp);
-                    }
+                    if( !is_file( $org_cache_path ) ) copy($original_file, $org_cache_path);
 
                     $img = null;
-                    if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE, $timestamp);
-                    if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE, $timestamp);
+                    $medium_cache_path = $camera_cache_directory . $path_parts["filename"] . "_medium.jpg";
+                    if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE);
 
-                    unlink($org_cache_path.".lock");
+                    $small_cache_path = $camera_cache_directory . $path_parts["filename"] . "_small.jpg";
+                    if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE);
+
+                    unlink($org_lock_path);
                 }
                 flock($fp, LOCK_UN);
             }

@@ -21,11 +21,8 @@ class Folder {
         $images = [];
         foreach( $files as $data )
         {
-            $path = CACHE_DIRECTORY . $this->sub_folder . "/" . $data[0];
-
-            $timestamp = filemtime($path);
             $date = new DateTime();
-            $date->setTimestamp($timestamp);
+            $date->setTimestamp($data[4]);
 
             $images[] = new Image($this->sub_folder, $data[2], $data[1], $data[0], $date );
         }
