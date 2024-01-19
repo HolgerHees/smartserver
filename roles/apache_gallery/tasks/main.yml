@@ -50,3 +50,31 @@
     i18n_files: [ { language: "de", file: "templates/webui/cameras.de.json" } ]
     icons: []
   import_tasks: roles/apache_webui/shared/add_webui.yml
+
+# ***** FINALIZE *****
+- name: create cleanup cron job
+  vars:
+    name: "Gallery Cleanup"
+    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}gallery/cron/preview_generator.php clean\""
+    file: "ansible_gallery"
+    hour: "0"
+    minute: "50"
+  import_tasks: roles/cron/shared/add_cronjob.yml
+
+- name: create full preview cron job
+  vars:
+    name: "Gallery Full Previews"
+    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}gallery/cron/preview_generator.php generate full\""
+    file: "ansible_gallery"
+    hour: "0"
+    minute: "50"
+  import_tasks: roles/cron/shared/add_cronjob.yml
+
+- name: create partial preview cron job
+  vars:
+    name: "Gallery Partial Previews"
+    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}gallery/cron/preview_generator.php generate partial\""
+    file: "ansible_gallery"
+    hour: "*"
+    minute: "*"
+  import_tasks: roles/cron/shared/add_cronjob.yml

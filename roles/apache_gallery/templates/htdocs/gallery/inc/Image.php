@@ -5,24 +5,34 @@ class Image {
     private $file = null;
     private $time = null;
     
-    public function __construct($main_folder , $sub_folder, $file, $creation_time ) {
-        $this->main_folder = $main_folder;
+    public function __construct($sub_folder, $small_cache_name, $medium_cache_name, $org_cache_name, $creation_time ) {
         $this->sub_folder = $sub_folder;
-        $this->file = $file;
-        
+        $this->small_cache_name = $small_cache_name;
+        $this->medium_cache_name = $medium_cache_name;
+        $this->original_cache_name = $org_cache_name;
         $this->time = $creation_time;
     }
     
-    public function getFile()
+    public function getSubFolder()
     {
-        return $this->file;
+        return $this->sub_folder;
     }
-    
-    public function getPath()
+
+    public function getSmallCacheName()
     {
-        return $this->main_folder . $this->sub_folder . "/" . $this->file;
+        return $this->small_cache_name;
     }
-    
+
+    public function getMediumCacheName()
+    {
+        return $this->medium_cache_name;
+    }
+
+    public function getOriginalCacheName()
+    {
+        return $this->original_cache_name;
+    }
+
     public function getTime()
     {
         return $this->time;

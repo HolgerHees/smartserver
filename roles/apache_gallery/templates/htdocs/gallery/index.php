@@ -28,7 +28,7 @@ require "../shared/libs/ressources.php";
     if( empty($_GET["sub"]) ) exit;
     $sub_folder = $_GET['sub'];
     
-    $folder = new Folder($ftp_folder,$sub_folder);
+    $folder = new Folder($sub_folder);
     $images = $folder->getImages();
     
     if( count($images) == 0 )
@@ -40,7 +40,7 @@ require "../shared/libs/ressources.php";
     }
     else
     {
-        list($width, $height, $type, $attr) = getimagesize($images[0]->getPath());
+        list($width, $height, $type, $attr) = getimagesize(CACHE_DIRECTORY.$images[0]->getSubFolder()."/".$images[0]->getOriginalCacheName());
 
         $starttime = Template::getStarttime($images);
         $endtime = Template::getEndtime($images);

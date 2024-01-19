@@ -15,12 +15,12 @@ include "inc/Template.php";
 
 include "config.php";
 
-$folder = new Folder($ftp_folder,$data->sub);
+$folder = new Folder($data->sub);
 $count = $folder->getImageCount();
 
 if( $count != $data->count )
 {
-    $folder = new Folder($ftp_folder,$data->sub);
+    $folder = new Folder($data->sub);
     $images = $folder->getImages();
     
     $starttime = Template::getStarttime($images);

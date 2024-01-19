@@ -1,10 +1,12 @@
 <?php
+include "Preview.php";
+
 class Folder {
     private $main_folder = null;
     private $sub_folder = null;
     
-    public function __construct($main_folder , $sub_folder ) {
-        $this->main_folder = $main_folder;
+    public function __construct($sub_folder) {
+        $this->main_folder = FTP_FOLDER;
         $this->sub_folder = $sub_folder;
     }
     
@@ -18,17 +20,19 @@ class Folder {
     {
         $images = [];
         $files = scandir($this->main_folder . $this->sub_folder);
-        foreach( $files as $file )
+        foreach( $files as $filename )
         {
-            if( $file == '.' or $file == '..' || is_dir($this->sub_folder.$file) ) continue;
+            if( $filename == '.' || $filename == '..' || is_dir($this->sub_folder.$filename) ) continue;
 
-            $path = $this->main_folder . $this->sub_folder . "/" . $file;
+            $path = $this->main_folder . $this->sub_folder . "/" . $filename;
 
             $timestamp = filemtime($path);
             $date = new DateTime();
             $date->setTimestamp($timestamp);
 
-            $images[] = new Image($this->main_folder , $this->sub_folder, $file, $date );
+            list( $small_cache_name, $medium_cache_name, $org_cache_name ) = Preview::check($path);
+
+            $images[] = new Image($this->sub_folder, $small_cache_name, $medium_cache_name, $org_cache_name, $date );
         }
 
         usort($images,function($a,$b){
@@ -38,7 +42,7 @@ class Folder {
             if( $aTimestamp < $bTimestamp ) return 1; 
             if( $aTimestamp > $bTimestamp ) return -1;
             
-            return strcmp($a->getFile(), $b->getFile()) * -1;
+            return strcmp($a->getOriginalCacheName(), $b->getOriginalCacheName()) * -1;
         });
         
         return $images;

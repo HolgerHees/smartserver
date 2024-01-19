@@ -194,6 +194,26 @@ mx.Gallery = (function( ret ) {
     var playTimer = null;
     var isPlaying = false;
 
+    function buildContainer(element_data){
+        var container = document.createElement("div");
+        container.classList.add("container");
+        container.dataset.index = element_data["index"];
+        container.setAttribute("onclick", "mx.Gallery.openDetails(this)" );
+        container.dataset.src = element_data["org"];
+        container.dataset.small_src = element_data["small"];
+        container.dataset.medium_src = element_data["medium"];
+        container.dataset.formattedtime = element_data["time"];
+        container.dataset.timeslot = element_data["slot"];
+
+        var dummy = document.createElement("div");
+        dummy.classList.add("dummy");
+        container.appendChild(dummy);
+
+        return container;
+
+        gallery.appendChild(container);
+    }
+
     function updateList()
     {
         var url = mx.Host.getBase() + 'index_update.php';
@@ -213,12 +233,13 @@ mx.Gallery = (function( ret ) {
                     var containerMap = {};
                     containers.forEach(function(container,index){ containerMap[container.dataset.src] = container; });
 
-                    var _containers = content.querySelector("#gallery").childNodes;
+                    var container_data = JSON.parse(content.querySelector("#gallery").innerText);
                     var _nextContainer = containers[0];
-                    Object.values(_containers).forEach(function(container,index)
+                    Object.values(container_data).forEach(function(element_data,index)
                     {
-                        if( typeof containerMap[container.dataset.src] == "undefined" )
+                        if( typeof containerMap[element_data["org"]] == "undefined" )
                         {
+                            var container = buildContainer(element_data);
                             if( _nextContainer ) gallery.insertBefore(container,_nextContainer);
                             else gallery.appendChild(container);
 
@@ -226,9 +247,9 @@ mx.Gallery = (function( ret ) {
                         }
                         else
                         {
-                            _nextContainer = containerMap[container.dataset.src].nextSibling;
-                            containerMap[container.dataset.src].dataset.index = container.dataset.index;
-                            delete containerMap[container.dataset.src];
+                            _nextContainer = containerMap[element_data["org"]].nextSibling;
+                            containerMap[element_data["org"]].dataset.index = element_data["index"];
+                            delete containerMap[element_data["org"]];
                         }
                     });
 
@@ -364,34 +385,54 @@ mx.Gallery = (function( ret ) {
         setSlotTooltip(reference);
     }
     
+    function requiredImageSize()
+    {
+        return isFullscreen ? 2: 1;
+    }
+
+    function isImageLoaded(element)
+    {
+        return element.dataset.loaded >= requiredImageSize();
+    }
+
     function loadImage(element,callback)
     {
-        element.dataset.loaded = true;
+        if( isImageLoaded(element) ) return;
+
+        element.dataset.loaded = requiredImageSize();
 
         var img = element.querySelector("img");
+        var isNew = !img;
+        if( isNew ) img = document.createElement("img");
 
-        element.addEventListener("dragstart",function(e){ e.preventDefault(); });
-        var img = document.createElement("img");
-        img.src = "image.php?sub=" + folder + "&image=" + element.dataset.src;
         if( typeof callback != "undefined" )
         {
             img.onload = function() { callback(true); };
             img.onerror = function() { callback(false); };
         }
-        element.appendChild(img);
-        
-        var srcLabel = document.createElement("span");
-        srcLabel.innerHTML = element.dataset.src;
-        element.appendChild(srcLabel);
 
-        var timeLabel = document.createElement("span");
-        timeLabel.innerHTML = element.dataset.formattedtime;
-        element.appendChild(timeLabel);
+        if( isFullscreen ) img.src = "./cache/" + folder + "/" + element.dataset.src;
+        else img.src = "./cache/" + folder + "/" + element.dataset.medium_src;
+
+        if( isNew )
+        {
+            element.appendChild(img);
+
+            element.addEventListener("dragstart",function(e){ e.preventDefault(); });
+
+            var srcLabel = document.createElement("span");
+            srcLabel.innerHTML = element.dataset.src;
+            element.appendChild(srcLabel);
+
+            var timeLabel = document.createElement("span");
+            timeLabel.innerHTML = element.dataset.formattedtime;
+            element.appendChild(timeLabel);
+        }
     }
 
     function delayedLoading(element)
     {
-        if( element.dataset.loaded ) return;
+        if( isImageLoaded(element) ) return;
 
         var id = window.setTimeout(function(){ element.removeAttribute("data-timer"); loadImage(element); },100);
         element.dataset.timer = id;
@@ -553,10 +594,8 @@ mx.Gallery = (function( ret ) {
             mx.Gallery.stopPlay();
             return;
         }
-        var img = item.querySelector("img");
-        if( img == null || img.naturalWidth  == 0 )
+        if( !isImageLoaded(item) )
         {
-            //console.log("not loaded");
             var startTime = new Date().getTime();
             cancelLoading(item);
             loadImage(item,function(success)
@@ -595,6 +634,12 @@ mx.Gallery = (function( ret ) {
     {
         if( isFullscreen ) return;
         isFullscreen = true;
+
+        loadImage(item);
+        var nextItem = getNextItem();
+        if( nextItem != null ) delayedLoading(nextItem);
+        var previousItem = getPreviousItem();
+        if( previousItem != null ) delayedLoading(previousItem);
 
         mx.GallerySwipeHandler.enable(gallery, swipeHandler);
         window.addEventListener("keydown",keyHandler);
@@ -744,6 +789,9 @@ mx.Gallery = (function( ret ) {
         galleryNextButton = gallery.querySelector(".button.next");
         galleryStartPlayButton = gallery.querySelector(".button.start");
         galleryStopPlayButton = gallery.querySelector(".button.stop");
+
+        var data = JSON.parse(gallery.querySelector(".data").innerText);
+        data.forEach(function(element_data){ var container = buildContainer(element_data); gallery.appendChild(container); });
 
         var style = document.createElement('style');
         style.type = 'text/css';

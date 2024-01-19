@@ -110,7 +110,7 @@ class Template {
     
     public static function getImages($images)
     {
-        $html = "";
+        $data = array();
         foreach( $images as $index => $image )
         {
             // add timeslot key
@@ -122,9 +122,10 @@ class Template {
             $date->setTime( $date->format("H"), 0, 0, 0 );
             $date->add(new DateInterval('PT1H'));
             
-            $html .= "<div class='container' data-index='" . $index . "' onclick='mx.Gallery.openDetails(this)' data-src='" . urlencode($image->getFile()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
+            array_push($data, array( "index" => $index, "org" => $image->getOriginalCacheName(), "small" => $image->getSmallCacheName(), "medium" => $image->getMediumCacheName(), "time" => $formattedTime, "slot" => $date->getTimestamp() ) );
+            //$html .= "<div class='container' data-index='" . $index . "' onclick='mx.Gallery.openDetails(this)' data-src='" . urlencode($image->getOriginalCacheName()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
         }
         
-        return $html;
+        return "<div class=\"data\">". json_encode($data) . "</div>";
     }
 }

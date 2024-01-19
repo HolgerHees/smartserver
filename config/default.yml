@@ -140,6 +140,7 @@ default_variables: {
 
     "vault_ftp_username": { "optional": yes },                    # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
     "vault_ftp_password": { "optional": "{{vault_ftp_username is not defined}}" },
+    "ftp_max_file_age": { "default": "{{2 * 24 * 60}}" },         # images, older then 2 days are discarded
 
     "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
     "vault_influxdb_admin_password": {},
