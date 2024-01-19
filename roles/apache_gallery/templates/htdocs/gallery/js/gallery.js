@@ -81,12 +81,13 @@ mx.GalleryAnimation = (function( ret ) {
 
 mx.GallerySwipeHandler = (function( ret ) {
     var isMoving = false;
-    var startClientX = 0;
     var startScrollX = 0;
+    var startClientX = 0;
+    var currentClientX = 0;
+    var currentClientY = 0;
 
     var tabticker = null;
-    var trackerCurrentOffset = 0;
-    var trackerLastOffset = 0;
+    var trackerLastClientX = 0;
     var trackerVelocity = 0;
     var trackerTimestamp = null;
 
@@ -97,9 +98,9 @@ mx.GallerySwipeHandler = (function( ret ) {
     {
         var now = performance.now();
         var elapsed = now - trackerTimestamp;
-        var delta = trackerCurrentOffset - trackerLastOffset;
+        var delta = currentClientX - trackerLastClientX;
 
-        trackerLastOffset = trackerCurrentOffset;
+        trackerLastClientX = currentClientX;
 
         v = 1000 * delta / (1 + elapsed);
         trackerVelocity = 0.8 * v + 0.2 * trackerVelocity;
@@ -109,16 +110,16 @@ mx.GallerySwipeHandler = (function( ret ) {
 
     function tapstart(e)
     {
-        if( e.target.classList.contains("button") ) return;
+        if( e.target.classList.contains("button") && !e.target.classList.contains("next") && !e.target.classList.contains("previous") ) return;
 
         mx.GalleryAnimation.stop();
 
         isMoving = false;
-        startClientX = e.detail.clientX;
         startScrollX = window.scrollX;
+        startClientX = e.detail.clientX;
+        currentClientX = startClientX;
 
-        trackerCurrentOffset = e.detail.clientX;
-        trackerLastOffset = e.detail.clientX;
+        trackerLastClientX = startClientX;
         trackerVelocity = 0;
         trackerTimestamp = performance.now();
         tabticker = setInterval(tabtracker, 100);
@@ -130,9 +131,10 @@ mx.GallerySwipeHandler = (function( ret ) {
     function tapmove(e)
     {
         isMoving = true;
-        trackerCurrentOffset = e.detail.clientX;
+        currentClientX = e.detail.clientX;
+        currentClientY = e.detail.clientY;
 
-        var diff = e.detail.clientX - startClientX;
+        var diff = currentClientX - startClientX;
         window.scrollTo( startScrollX - diff, 0 );
     }
 
@@ -145,7 +147,14 @@ mx.GallerySwipeHandler = (function( ret ) {
 
         if( !isMoving ) return;
 
+        if( e.target.classList.contains("button") )
+        {
+            let elements = document.elementsFromPoint(currentClientX, currentClientY);
+            if( elements[0].classList.contains("button") ) return;
+        }
+
         if( trackerVelocity == 0 ) tabtracker();
+
         swipeCallback(trackerVelocity);
     }
 
