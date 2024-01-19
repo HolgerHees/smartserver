@@ -48,7 +48,7 @@ class Preview {
         }
     }
 
-    private static function generatePreview($img, $original_file, $preview_file, $preview_size)
+    private static function generatePreview($img, $original_file, $preview_file, $preview_size, $timestamp)
     {
         list( $width, $height ) = explode("x", $preview_size);
 
@@ -66,6 +66,7 @@ class Preview {
         $img->scaleImage( $width, $height, true );
 
         file_put_contents($preview_file, $img->getImageBlob());
+        touch($preview_file,$timestamp);
     }
 
     public static function getCount($camera_name)
@@ -108,14 +109,18 @@ class Preview {
                     $timestamp = filemtime($original_file);
                     $org_cache_path = $camera_cache_directory . $name . "_" . $timestamp . "." . $path_parts["extension"] ;
 
-                    if( !is_file( $org_cache_path ) ) copy($original_file, $org_cache_path);
+                    if( !is_file( $org_cache_path ) )
+                    {
+                        copy($original_file, $org_cache_path);
+                        touch($org_cache_path,$timestamp);
+                    }
 
                     $img = null;
                     $medium_cache_path = $camera_cache_directory . $path_parts["filename"] . "_medium.jpg";
-                    if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE);
+                    if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE, $timestamp);
 
                     $small_cache_path = $camera_cache_directory . $path_parts["filename"] . "_small.jpg";
-                    if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE);
+                    if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE, $timestamp);
 
                     unlink($org_lock_path);
                 }
