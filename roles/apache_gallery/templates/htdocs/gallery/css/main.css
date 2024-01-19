@@ -176,8 +176,11 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
     margin-left: 0;
     background-color: black;
     cursor: default;
-    border-left: 1px solid black;
+    border-left: 1px solid gray;
     border-bottom: none;
+}
+#gallery.fullscreen > div.container[data-loaded] {
+    border-left: 1px solid black;
 }
 #gallery.fullscreen > div.container > img {
     max-width:100%;
