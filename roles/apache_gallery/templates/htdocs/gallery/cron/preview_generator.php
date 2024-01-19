@@ -32,7 +32,7 @@ else
     {
         if( empty($line) ) continue;
 
-        Preview::check($line);
+        Preview::check($line, true);
     }
 }
 

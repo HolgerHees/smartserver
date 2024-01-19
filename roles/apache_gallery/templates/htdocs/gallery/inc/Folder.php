@@ -30,7 +30,9 @@ class Folder {
             $date = new DateTime();
             $date->setTimestamp($timestamp);
 
-            list( $small_cache_name, $medium_cache_name, $org_cache_name ) = Preview::check($path);
+            list( $small_cache_name, $medium_cache_name, $org_cache_name ) = Preview::check($path, false);
+
+            if( $org_cache_name == null ) continue;
 
             $images[] = new Image($this->sub_folder, $small_cache_name, $medium_cache_name, $org_cache_name, $date );
         }
@@ -44,7 +46,7 @@ class Folder {
             
             return strcmp($a->getOriginalCacheName(), $b->getOriginalCacheName()) * -1;
         });
-        
+
         return $images;
     }
 }

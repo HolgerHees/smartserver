@@ -3,7 +3,7 @@
 class Preview {
     static $cache_map = array();
 
-    public static function check($original_file)
+    public static function check($original_file, $process)
     {
         $path_parts = pathinfo($original_file);
         $camera_name = basename($path_parts["dirname"]);
@@ -13,20 +13,23 @@ class Preview {
         {
             if( !is_dir( $camera_cache_directory ) ) mkdir( $camera_cache_directory, 0750, true );
 
-            Preview::$cache_map[$camera_name] = scandir($camera_cache_directory);
+            Preview::$cache_map[$camera_name] = array_fill_keys( scandir($camera_cache_directory), 1 );
         }
 
         $small_cache_name = $path_parts["filename"] . "_small.jpg";
         $medium_cache_name = $path_parts["filename"] . "_medium.jpg";
         $org_cache_name = $path_parts["basename"];
 
-        if( !in_array($small_cache_name, Preview::$cache_map[$camera_name] ) || !in_array($medium_cache_name, Preview::$cache_map[$camera_name] ) || !in_array($org_cache_name, Preview::$cache_map[$camera_name] ) )
+        if( !isset(Preview::$cache_map[$camera_name][$small_cache_name]) || !isset(Preview::$cache_map[$camera_name][$medium_cache_name]) || !isset(Preview::$cache_map[$camera_name][$org_cache_name]) )
         {
-            Preview::processFile($camera_cache_directory, $original_file, $small_cache_name, $medium_cache_name, $org_cache_name);
-
-            if( !in_array($small_cache_name, Preview::$cache_map[$camera_name] ) ) array_push(Preview::$cache_map[$camera_name],$small_cache_name);
-            if( !in_array($medium_cache_name, Preview::$cache_map[$camera_name] ) ) array_push(Preview::$cache_map[$camera_name],$medium_cache_name);
-            if( !in_array($org_cache_name, Preview::$cache_map[$camera_name] ) ) array_push(Preview::$cache_map[$camera_name],$org_cache_name);
+            if( $process )
+            {
+                Preview::processFile($camera_cache_directory, $original_file, $small_cache_name, $medium_cache_name, $org_cache_name);
+            }
+            else
+            {
+                return array(null, null, null);
+            }
         }
 
         return array($small_cache_name, $medium_cache_name, $org_cache_name);
