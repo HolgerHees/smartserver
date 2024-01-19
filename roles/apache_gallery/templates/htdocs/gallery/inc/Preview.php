@@ -47,10 +47,11 @@ class Preview {
         {
             if( is_file($org_cache_path.".lock") )
             {
-                #echo "process " . $org_cache_path ."\n";
+                //echo "process " . $org_cache_path ."\n";
                 if( !is_file( $org_cache_path ) ) copy($original_file, $org_cache_path);
-                if( !is_file( $small_cache_path ) ) Preview::generatePreview($original_file, $small_cache_path, PREVIEW_SMALL_SIZE);
-                if( !is_file( $medium_cache_path ) ) Preview::generatePreview($original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE);
+                $img = null;
+                if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE);
+                if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE);
 
                 unlink($org_cache_path.".lock");
             }
@@ -70,26 +71,23 @@ class Preview {
 
     //docker exec php sh -c "php -f /dataDisk/htdocs/gallery/preview_generator.php"
 
-    private static function generatePreview($original_file, $preview_file, $preview_size)
+    private static function generatePreview($img, $original_file, $preview_file, $preview_size)
     {
         list( $width, $height ) = explode("x", $preview_size);
 
-        $imagick = new Imagick;
-        $imagick->readImage( $original_file );
-        //$img->setImageCompression(imagick::COMPRESSION_JPEG);
-
-        $orgQuality = $imagick->getImageCompressionQuality();
-        if( $orgQuality > 70 ) $imagick->setImageCompressionQuality(70);
-
-        $orgWidth = $imagick->getImageWidth();
-        $orgHeight = $imagick->getImageHeight();
-
-        //if( $force || $orgWidth > $width || $orgHeight > $height )
-        if( $orgWidth > $width || $orgHeight > $height )
+        if( $img == null )
         {
-            $imagick->scaleImage( $width, $height, true );
+            $img = new Imagick;
+            $img->readImage( $original_file );
+            $img->setImageCompression(imagick::COMPRESSION_JPEG);
+
+            $orgQuality = $img->getImageCompressionQuality();
+            if( $orgQuality > 70 ) $img->setImageCompressionQuality(70);
+
         }
 
-        file_put_contents($preview_file, $imagick->getImageBlob());
+        $img->scaleImage( $width, $height, true );
+
+        file_put_contents($preview_file, $img->getImageBlob());
     }
 }

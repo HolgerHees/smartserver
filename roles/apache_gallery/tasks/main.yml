@@ -64,7 +64,7 @@
 - name: create full preview cron job
   vars:
     name: "Gallery Full Previews"
-    cmd: "docker exec php sh -c \"php -f {{htdocs_path}}gallery/cron/preview_generator.php generate full\""
+    cmd: "/usr/bin/flock -n {{global_tmp}}gallery.lock timeout 30m docker exec php sh -c \"php -f {{htdocs_path}}gallery/cron/preview_generator.php generate full\""
     file: "ansible_gallery"
     hour: "0"
     minute: "50"
