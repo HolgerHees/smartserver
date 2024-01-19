@@ -112,8 +112,6 @@ mx.GallerySwipeHandler = (function( ret ) {
     {
         if( e.target.classList.contains("button") && !e.target.classList.contains("next") && !e.target.classList.contains("previous") ) return;
 
-        mx.GalleryAnimation.stop();
-
         isMoving = false;
         startScrollX = window.scrollX;
         startClientX = e.detail.clientX;
@@ -130,6 +128,8 @@ mx.GallerySwipeHandler = (function( ret ) {
 
     function tapmove(e)
     {
+        if( !isMoving ) mx.GalleryAnimation.stop();
+
         isMoving = true;
         currentClientX = e.detail.clientX;
         currentClientY = e.detail.clientY;
@@ -486,13 +486,19 @@ mx.Gallery = (function( ret ) {
                 setSlotTooltip(activeSlot);
             }
             activeItem = item;
-        }
-        
-        if( isFullscreen )
-        {
-            galleryStartPlayButton.style.display = activeItem.dataset.index == 0 || isPlaying ? "none" : "";
-            galleryNextButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
-            galleryPreviousButton.style.display = activeItem.dataset.index == containers.length - 1 ? "none" : "";
+
+            if( isFullscreen )
+            {
+                galleryStartPlayButton.style.display = activeItem.dataset.index == 0 || isPlaying ? "none" : "";
+                galleryNextButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
+                galleryPreviousButton.style.display = activeItem.dataset.index == containers.length - 1 ? "none" : "";
+
+                var previousItem = getPreviousItem();
+                if( previousItem != null ) delayedLoading(previousItem);
+
+                var nextItem = getNextItem();
+                if( nextItem != null ) delayedLoading(nextItem);
+            }
         }
     }
 
@@ -579,9 +585,6 @@ mx.Gallery = (function( ret ) {
         if( item != null )
         {
             scrollToActiveItem(item, mx.GalleryAnimation.TYPE_SMOOTH);
-
-            item = direction == -1 ? getNextItem() : getPreviousItem();
-            if( item != null ) delayedLoading(item);
         }
         else
         {
@@ -649,10 +652,6 @@ mx.Gallery = (function( ret ) {
         isFullscreen = true;
 
         loadImage(item);
-        var nextItem = getNextItem(item);
-        if( nextItem != null ) delayedLoading(nextItem);
-        var previousItem = getPreviousItem(item);
-        if( previousItem != null ) delayedLoading(previousItem);
 
         mx.GallerySwipeHandler.enable(gallery, swipeHandler);
         window.addEventListener("keydown",keyHandler);
@@ -780,9 +779,6 @@ mx.Gallery = (function( ret ) {
         var item = getPreviousItem();
         if( item == null ) return;
         scrollToActiveItem(item,mx.GalleryAnimation.TYPE_SMOOTH);
-
-        var item = getPreviousItem();
-        if( item != null ) delayedLoading(item);
     }
 
     ret.jumpToNextImage = function()
@@ -790,9 +786,6 @@ mx.Gallery = (function( ret ) {
         var item = getNextItem();
         if( item == null ) return;
         scrollToActiveItem(item,mx.GalleryAnimation.TYPE_SMOOTH);
-
-        var item = getNextItem();
-        if( item != null ) delayedLoading(item);
     }
 
     ret.init = function(_imageHeight,_imageWidth,_folder)
