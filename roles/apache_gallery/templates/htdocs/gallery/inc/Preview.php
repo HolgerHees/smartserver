@@ -112,7 +112,7 @@ class Preview {
             {
                 if( is_file($org_cache_path.".lock") )
                 {
-                    #echo "create " . $name . "\n";
+                    echo "create " . $name . "\n";
 
                     $timestamp = filemtime($original_file);
 
