@@ -150,7 +150,11 @@ mx.GallerySwipeHandler = (function( ret ) {
         if( e.target.classList.contains("button") )
         {
             let elements = document.elementsFromPoint(currentClientX, currentClientY);
-            if( elements[0].classList.contains("button") ) return;
+            if( elements[0].classList.contains("button") )
+            {
+                window.scrollTo(startScrollX, 0);
+                return;
+            }
         }
 
         if( trackerVelocity == 0 ) tabtracker();
@@ -776,6 +780,9 @@ mx.Gallery = (function( ret ) {
         var item = getPreviousItem();
         if( item == null ) return;
         scrollToActiveItem(item,mx.GalleryAnimation.TYPE_SMOOTH);
+
+        var item = getPreviousItem();
+        if( item != null ) delayedLoading(item);
     }
 
     ret.jumpToNextImage = function()
@@ -783,6 +790,9 @@ mx.Gallery = (function( ret ) {
         var item = getNextItem();
         if( item == null ) return;
         scrollToActiveItem(item,mx.GalleryAnimation.TYPE_SMOOTH);
+
+        var item = getNextItem();
+        if( item != null ) delayedLoading(item);
     }
 
     ret.init = function(_imageHeight,_imageWidth,_folder)
