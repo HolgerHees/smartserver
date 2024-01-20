@@ -661,14 +661,10 @@ mx.Gallery = (function( ret ) {
         var targetImgRect = {top: 0, left: 0, width: 0, height: 0 };
         var imgRatio = sourceImgRect.height / sourceImgRect.width;
 
-        var ratio = targetLayerRect.width / sourceImgRect.width;
-        if( sourceImgRect.height * ratio > targetLayerRect.height ) ratio = targetLayerRect.height / sourceImgRect.height;
-        targetImgRect.height = sourceImgRect.height * ratio;
-        targetImgRect.width = sourceImgRect.width * ratio;
-        //if( targetImgRect.height > imageHeight ) targetImgRect.height = imageHeight;
-        //if( targetImgRect.width > imageWidth ) targetImgRect.width = imageWidth;
-        targetImgRect.top = targetLayerRect.top + ( targetLayerRect.height - targetImgRect.height ) / 2 - 1;
-        targetImgRect.left = targetLayerRect.left + ( targetLayerRect.width - targetImgRect.width ) / 2 - 1;
+        targetImgRect.height = targetLayerRect.height;
+        targetImgRect.width = targetLayerRect.width
+        targetImgRect.top = targetLayerRect.top;
+        targetImgRect.left = targetLayerRect.left;
 
         layer.style.cssText = "display: block; top: " + targetLayerRect.top + "px; left: " + targetLayerRect.left + "px; width: " + targetLayerRect.width + "px; height: " + targetLayerRect.height + "px";
         img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";

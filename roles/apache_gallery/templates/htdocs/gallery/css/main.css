@@ -125,6 +125,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
     #gallery > div.container {
         width: 100%;
         margin-left: 0;
+        border-left: none !important;
     }
 }
 #gallery.fullscreen {
