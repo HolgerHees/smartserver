@@ -40,7 +40,7 @@ require "../shared/libs/ressources.php";
     }
     else
     {
-        list($width, $height, $type, $attr) = getimagesize(CACHE_DIRECTORY.$images[0]->getSubFolder()."/".$images[0]->getOriginalCacheName());
+        list($width, $height, $type, $attr) = getimagesize(CACHE_DIRECTORY.$_GET["sub"]."/".$images[0]->getOriginalCacheName());
 
         $starttime = Template::getStarttime($images);
         $endtime = Template::getEndtime($images);

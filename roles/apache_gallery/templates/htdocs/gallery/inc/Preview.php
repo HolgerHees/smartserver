@@ -13,7 +13,7 @@ class Preview {
                 $images = array();
                 foreach( scandir($camera_cache_directory) as $file )
                 {
-                    preg_match('/^(.+)_([a-z0-9]+)\.[a-z]+$/', $file, $matches);
+                    preg_match('/^(.+)_([a-z0-9]+)\.jpg+$/', $file, $matches);
                     if( !$matches ) continue;
                     $name =  $matches[1];
                     $type =  $matches[2];
@@ -40,8 +40,6 @@ class Preview {
 
     private static function generatePreview($img, $original_file, $preview_file, $preview_size, $timestamp)
     {
-        list( $width, $height ) = explode("x", $preview_size);
-
         if( $img == null )
         {
             $img = new Imagick;
@@ -53,7 +51,11 @@ class Preview {
 
         }
 
-        $img->scaleImage( $width, $height, true );
+        if( $preview_size != null )
+        {
+            list( $width, $height ) = explode("x", $preview_size);
+            $img->scaleImage( $width, $height, true );
+        }
 
         file_put_contents($preview_file, $img->getImageBlob());
         touch($preview_file,$timestamp);
@@ -70,7 +72,7 @@ class Preview {
     {
         if( !array_key_exists($camera_name, Preview::$cache_map) ) Preview::initFiles($camera_name);
 
-        return array_values(Preview::$cache_map[$camera_name]);
+        return Preview::$cache_map[$camera_name];
     }
 
     public static function check($original_file)
@@ -97,15 +99,11 @@ class Preview {
                     echo "create " . $name . "\n";
 
                     $timestamp = filemtime($original_file);
-                    $org_cache_path = $camera_cache_directory . $name . "_" . $timestamp . "." . $path_parts["extension"] ;
-
-                    if( !is_file( $org_cache_path ) )
-                    {
-                        copy($original_file, $org_cache_path);
-                        touch($org_cache_path,$timestamp);
-                    }
 
                     $img = null;
+                    $org_cache_path = $camera_cache_directory . $name . "_" . $timestamp . ".jpg" ;
+                    if( !is_file( $org_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $org_cache_path, null, $timestamp);
+
                     $medium_cache_path = $camera_cache_directory . $path_parts["filename"] . "_medium.jpg";
                     if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE, $timestamp);
 

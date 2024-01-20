@@ -104,7 +104,7 @@ class Template {
         $data = array();
         foreach( $images as $index => $image )
         {
-            array_push($data, array( "index" => $index, "org" => $image->getOriginalCacheName(), "small" => $image->getSmallCacheName(), "medium" => $image->getMediumCacheName(), "time" => $image->getDateTime()->format("d.m. H:i:s"), "slot" => $image->getSlot() ) );
+            array_push($data, array( "index" => $index, "name" => $image->getName(), "timestamp" => $image->getDateTime()->getTimestamp(), "formatted" => $image->getDateTime()->format("d.m. H:i:s"), "slot" => $image->getSlot() ) );
         }
         
         return "<div class=\"data\">". json_encode($data) . "</div>";

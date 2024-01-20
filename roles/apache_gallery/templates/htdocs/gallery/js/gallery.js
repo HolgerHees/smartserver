@@ -212,15 +212,24 @@ mx.Gallery = (function( ret ) {
         container.classList.add("container");
         container.dataset.index = element_data["index"];
         container.setAttribute("onclick", "mx.Gallery.openDetails(this)" );
-        container.dataset.src = element_data["org"];
-        container.dataset.small_src = element_data["small"];
-        container.dataset.medium_src = element_data["medium"];
-        container.dataset.formattedtime = element_data["time"];
+        container.dataset.src = element_data["name"] + "_" + element_data["timestamp"] + ".jpg";
+        container.dataset.small_src = element_data["name"] + "_small.jpg";
+        container.dataset.medium_src = element_data["name"] + "_medium.jpg";
         container.dataset.timeslot = element_data["slot"];
+
+        var srcLabel = document.createElement("span");
+        srcLabel.innerHTML = element_data["name"];
+        container.appendChild(srcLabel);
+
+        var timeLabel = document.createElement("span");
+        timeLabel.innerHTML = element_data["formatted"];
+        container.appendChild(timeLabel);
 
         var dummy = document.createElement("div");
         dummy.classList.add("dummy");
         container.appendChild(dummy);
+
+        container.addEventListener("dragstart",function(e){ e.preventDefault(); });
 
         return container;
     }
@@ -413,8 +422,7 @@ mx.Gallery = (function( ret ) {
         element.dataset.loaded = requiredImageSize();
 
         var img = element.querySelector("img");
-        var isNew = !img;
-        if( isNew ) img = document.createElement("img");
+        if( !img ) img = document.createElement("img");
 
         if( typeof callback != "undefined" )
         {
@@ -425,20 +433,7 @@ mx.Gallery = (function( ret ) {
         if( isFullscreen ) img.src = "./cache/" + folder + "/" + element.dataset.src;
         else img.src = "./cache/" + folder + "/" + element.dataset.medium_src;
 
-        if( isNew )
-        {
-            element.appendChild(img);
-
-            element.addEventListener("dragstart",function(e){ e.preventDefault(); });
-
-            var srcLabel = document.createElement("span");
-            srcLabel.innerHTML = element.dataset.src;
-            element.appendChild(srcLabel);
-
-            var timeLabel = document.createElement("span");
-            timeLabel.innerHTML = element.dataset.formattedtime;
-            element.appendChild(timeLabel);
-        }
+        if( !img.parentNode) element.insertBefore(img, element.firstElement);
     }
 
     function delayedLoading(element)

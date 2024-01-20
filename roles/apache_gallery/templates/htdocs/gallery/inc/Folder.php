@@ -19,9 +19,9 @@ class Folder {
         $files = Preview::getFiles($this->sub_folder);
 
         $images = [];
-        foreach( $files as $data )
+        foreach( $files as $name => $data )
         {
-            $images[] = new Image($this->sub_folder, $data["small"], $data["medium"], $data["original"], $data["timestamp"] );
+            $images[] = new Image($name, $data["original"], $data["timestamp"] );
         }
 
         usort($images,function($a,$b){

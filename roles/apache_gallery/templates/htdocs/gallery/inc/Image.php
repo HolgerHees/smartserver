@@ -1,16 +1,12 @@
 <?php
 class Image {
-    private $sub_folder = null;
-    private $small_cache_name = null;
-    private $medium_cache_name = null;
+    private $name = null;
     private $original_cache_name = null;
     private $datetime = null;
     private $slot = null;
     
-    public function __construct($sub_folder, $small_cache_name, $medium_cache_name, $org_cache_name, $timestamp ) {
-        $this->sub_folder = $sub_folder;
-        $this->small_cache_name = $small_cache_name;
-        $this->medium_cache_name = $medium_cache_name;
+    public function __construct($name, $org_cache_name, $timestamp ) {
+        $this->name = $name;
         $this->original_cache_name = $org_cache_name;
 
         $datetime = new DateTime();
@@ -23,19 +19,9 @@ class Image {
         $this->slot = $date->getTimestamp();
     }
     
-    public function getSubFolder()
+    public function getName()
     {
-        return $this->sub_folder;
-    }
-
-    public function getSmallCacheName()
-    {
-        return $this->small_cache_name;
-    }
-
-    public function getMediumCacheName()
-    {
-        return $this->medium_cache_name;
+        return $this->name;
     }
 
     public function getOriginalCacheName()
