@@ -212,18 +212,12 @@ mx.Gallery = (function( ret ) {
         container.classList.add("container");
         container.dataset.index = element_data["index"];
         container.setAttribute("onclick", "mx.Gallery.openDetails(this)" );
+        container.dataset.name = element_data["name"];
+        container.dataset.formatted = element_data["formatted"];
         container.dataset.src = element_data["name"] + "_" + element_data["timestamp"] + ".jpg";
         container.dataset.small_src = element_data["name"] + "_small.jpg";
         container.dataset.medium_src = element_data["name"] + "_medium.jpg";
         container.dataset.timeslot = element_data["slot"];
-
-        var srcLabel = document.createElement("span");
-        srcLabel.innerHTML = element_data["name"];
-        container.appendChild(srcLabel);
-
-        var timeLabel = document.createElement("span");
-        timeLabel.innerHTML = element_data["formatted"];
-        container.appendChild(timeLabel);
 
         var dummy = document.createElement("div");
         dummy.classList.add("dummy");
@@ -433,6 +427,14 @@ mx.Gallery = (function( ret ) {
 
         if( !img.parentNode)
         {
+            var timeLabel = document.createElement("span");
+            timeLabel.innerHTML = element.dataset.formatted;
+            element.appendChild(timeLabel);
+
+            var srcLabel = document.createElement("span");
+            srcLabel.innerHTML = element.dataset.name;
+            element.insertBefore(srcLabel, element.firstChild);
+
             element.insertBefore(img, element.firstChild);
             element.addEventListener("dragstart",function(e){ e.preventDefault(); });
         }
