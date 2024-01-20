@@ -173,7 +173,6 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
 #gallery.fullscreen > div.container {
     width: 100%;
     height: calc(100% - 1px);
-    margin-left: 0;
     background-color: black;
     cursor: default;
     border-left: 1px solid gray;
@@ -181,16 +180,6 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
 }
 #gallery.fullscreen > div.container[data-loaded] {
     border-left: 1px solid black;
-}
-#gallery.fullscreen > div.container > img {
-    max-width:100%;
-    max-height:100%;
-    /*height:auto;
-    width: auto;*/
-    margin: auto;
-}
-#gallery.fullscreen > div.container > div.dummy { 
-  display: none;
 }
 #gallery > div.container > img {
   position: absolute;

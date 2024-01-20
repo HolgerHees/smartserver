@@ -218,11 +218,6 @@ mx.Gallery = (function( ret ) {
         container.dataset.small_src = element_data["name"] + "_small.jpg";
         container.dataset.medium_src = element_data["name"] + "_medium.jpg";
         container.dataset.timeslot = element_data["slot"];
-
-        var dummy = document.createElement("div");
-        dummy.classList.add("dummy");
-        container.appendChild(dummy);
-
         return container;
     }
 
@@ -804,7 +799,7 @@ mx.Gallery = (function( ret ) {
 
         var style = document.createElement('style');
         style.type = 'text/css';
-        style.innerHTML = 'div.dummy { margin-top: ' + (imageHeight*100/imageWidth) + '%; }';
+        style.innerHTML = '#gallery:not(.fullscreen) > div.container { aspect-ratio: ' + (imageWidth / imageHeight) + '; }';
         document.getElementsByTagName('head')[0].appendChild(style);
         
         galleryRect = gallery.getBoundingClientRect();
