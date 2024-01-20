@@ -481,16 +481,19 @@ mx.Gallery = (function( ret ) {
 
             if( isFullscreen )
             {
-                galleryStartPlayButton.style.display = activeItem.dataset.index == 0 || isPlaying ? "none" : "";
-                galleryNextButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
-                galleryPreviousButton.style.display = activeItem.dataset.index == containers.length - 1 ? "none" : "";
-
                 var previousItem = getPreviousItem();
                 if( previousItem != null ) delayedLoading(previousItem);
 
                 var nextItem = getNextItem();
                 if( nextItem != null ) delayedLoading(nextItem);
             }
+        }
+
+        if( isFullscreen )
+        {
+            galleryStartPlayButton.style.display = activeItem.dataset.index == 0 || isPlaying ? "none" : "";
+            galleryNextButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
+            galleryPreviousButton.style.display = activeItem.dataset.index == containers.length - 1 ? "none" : "";
         }
     }
 
@@ -548,7 +551,7 @@ mx.Gallery = (function( ret ) {
                 {
                     if( activeItem == entry.target ) activeItemUpdateNeeded = true;
                     cancelLoading(entry.target);
-                    var index = visibleContainer.indexOf(entry.target)
+                    var index = visibleContainer.indexOf(entry.target);
                     if( index != -1 ) visibleContainer.splice(index, 1);
                 }
             });
@@ -638,10 +641,13 @@ mx.Gallery = (function( ret ) {
         else if( e["key"] == "ArrowRight" ) mx.Gallery.jumpToPreviousImage();
     }
 
+    var openDetailStart = null;
     ret.openDetails = function(item)
     {
         if( isFullscreen ) return;
         isFullscreen = true;
+
+        openDetailStart = { "index": item.dataset.index, "scrollY": window.scrollY };
 
         loadImage(item);
 
@@ -705,7 +711,9 @@ mx.Gallery = (function( ret ) {
 
         gallery.classList.remove("fullscreen");
 
-        scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+        if( openDetailStart["index"] == activeItem.dataset.index ) window.scrollTo(0,openDetailStart["scrollY"]);
+        else scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+        openDetailStart = null;
 
         var targetImgRect = getOffset(img);
 
