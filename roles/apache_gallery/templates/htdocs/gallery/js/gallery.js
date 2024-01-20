@@ -229,8 +229,6 @@ mx.Gallery = (function( ret ) {
         dummy.classList.add("dummy");
         container.appendChild(dummy);
 
-        container.addEventListener("dragstart",function(e){ e.preventDefault(); });
-
         return container;
     }
 
@@ -433,7 +431,11 @@ mx.Gallery = (function( ret ) {
         if( isFullscreen ) img.src = "./cache/" + folder + "/" + element.dataset.src;
         else img.src = "./cache/" + folder + "/" + element.dataset.medium_src;
 
-        if( !img.parentNode) element.insertBefore(img, element.firstElement);
+        if( !img.parentNode)
+        {
+            element.insertBefore(img, element.firstChild);
+            element.addEventListener("dragstart",function(e){ e.preventDefault(); });
+        }
     }
 
     function delayedLoading(element)
