@@ -3,7 +3,7 @@ class Template {
 
     public static function getStarttime($images)
     {
-        $starttime = clone $images[0]->getTime();
+        $starttime = clone $images[0]->getDateTime();
         $starttime->setTime($starttime->format('H'),0,0,0);
         $starttime->add(new DateInterval('PT1H'));
         return $starttime;
@@ -11,7 +11,7 @@ class Template {
     
     public static function getEndtime($images)
     {
-        $endtime = clone $images[count($images)-1]->getTime();
+        $endtime = clone $images[count($images)-1]->getDateTime();
         $endtime->setTime($endtime->format('H'),0,0,0);
         return $endtime;
     }
@@ -36,16 +36,7 @@ class Template {
         }
         
         foreach( $images as $image ){
-            $current_step_time = clone $image->getTime();
-            $current_step_time->setTime($current_step_time->format('H'),0,0,0);
-            $current_step_time->add(new DateInterval('PT1H'));
-            
-            //if( !isset($grouped_images[$current_step_time->getTimestamp()]) )
-            //{
-            //    echo "missing " . $current_step_time->format("d.m H:i:s") . "\n";
-            //}
-            
-            array_push($grouped_images[$current_step_time->getTimestamp()],$image);
+            array_push($grouped_images[$image->getSlot()],$image);
         }    
         
         $max_count = 0;
@@ -113,17 +104,7 @@ class Template {
         $data = array();
         foreach( $images as $index => $image )
         {
-            // add timeslot key
-            // add formatted time
-            
-            $date = clone $image->getTime();
-            $formattedTime = $date->format("d.m. H:i:s");
-            
-            $date->setTime( $date->format("H"), 0, 0, 0 );
-            $date->add(new DateInterval('PT1H'));
-            
-            array_push($data, array( "index" => $index, "org" => $image->getOriginalCacheName(), "small" => $image->getSmallCacheName(), "medium" => $image->getMediumCacheName(), "time" => $formattedTime, "slot" => $date->getTimestamp() ) );
-            //$html .= "<div class='container' data-index='" . $index . "' onclick='mx.Gallery.openDetails(this)' data-src='" . urlencode($image->getOriginalCacheName()) . "' data-formattedtime='" . $formattedTime . "' data-timeslot='" . $date->getTimestamp() . "'><div class='dummy'></div></div>";
+            array_push($data, array( "index" => $index, "org" => $image->getOriginalCacheName(), "small" => $image->getSmallCacheName(), "medium" => $image->getMediumCacheName(), "time" => $image->getDateTime()->format("d.m. H:i:s"), "slot" => $image->getSlot() ) );
         }
         
         return "<div class=\"data\">". json_encode($data) . "</div>";

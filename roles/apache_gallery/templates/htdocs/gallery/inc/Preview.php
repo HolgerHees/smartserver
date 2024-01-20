@@ -13,37 +13,27 @@ class Preview {
                 $images = array();
                 foreach( scandir($camera_cache_directory) as $file )
                 {
-                    if( $file == "." || $file == ".." || strpos($file, ".lock") !== false ) continue;
+                    preg_match('/^(.+)_([a-z0-9]+)\.[a-z]+$/', $file, $matches);
+                    if( !$matches ) continue;
+                    $name =  $matches[1];
+                    $type =  $matches[2];
 
-                    $index = strrpos($file, ".");
-                    if( $index === false ) continue;
-
-                    $filename = substr($file,0,$index);
-
-                    $index = strrpos($filename, "_");
-                    if( $index === false ) continue;
-
-                    $name = substr($filename,0,$index);
-                    $type = substr($filename,$index + 1);
-
-                    if( !isset($images[$name]) ) $images[$name] = array(null,null,null,null);
+                    if( !isset($images[$name]) ) $images[$name] = array();
                     $image_data = &$images[$name];
 
                     switch($type)
                     {
                         case "small":
-                            $image_data[2] = $file;
-                            break;
                         case "medium":
-                            $image_data[1] = $file;
+                            $image_data[$type] = $file;
                             break;
                         default:
-                            $image_data[0] = $file;
-                            $image_data[4] = $type;
+                            $image_data["original"] = $file;
+                            $image_data["timestamp"] = $type;
                     }
                 }
 
-                Preview::$cache_map[$camera_name] = array_filter($images, function($image_data){ return $image_data[0] != null && $image_data[1] != null && $image_data[2] != null; } );;
+                Preview::$cache_map[$camera_name] = array_filter($images, function($image_data){ return count($image_data) == 4; } );
             }
         }
     }

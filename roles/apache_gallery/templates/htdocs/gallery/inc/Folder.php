@@ -21,15 +21,12 @@ class Folder {
         $images = [];
         foreach( $files as $data )
         {
-            $date = new DateTime();
-            $date->setTimestamp($data[4]);
-
-            $images[] = new Image($this->sub_folder, $data[2], $data[1], $data[0], $date );
+            $images[] = new Image($this->sub_folder, $data["small"], $data["medium"], $data["original"], $data["timestamp"] );
         }
 
         usort($images,function($a,$b){
-            $aTimestamp = $a->getTime()->getTimestamp();
-            $bTimestamp = $b->getTime()->getTimestamp();
+            $aTimestamp = $a->getDateTime()->getTimestamp();
+            $bTimestamp = $b->getDateTime()->getTimestamp();
 
             if( $aTimestamp < $bTimestamp ) return 1; 
             if( $aTimestamp > $bTimestamp ) return -1;
