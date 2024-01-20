@@ -223,8 +223,6 @@ mx.Gallery = (function( ret ) {
         container.appendChild(dummy);
 
         return container;
-
-        gallery.appendChild(container);
     }
 
     function updateList()
