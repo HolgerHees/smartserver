@@ -534,7 +534,7 @@ mx.Gallery = (function( ret ) {
     function initObserver()
     {
         var galleryRect = gallery.getBoundingClientRect();
-        var observerOptions = { root: document, rootMargin: ( galleryRect.top * -1 ) + "px 0px 0px 0px" };
+        var observerOptions = { root: document, rootMargin: ( ( galleryRect.top + 1 ) * -1 ) + "px 0px 0px 0px" };
 
         var activeItemUpdateNeeded = true;
         containerObserver = new IntersectionObserver((entries, imgObserver) => {
