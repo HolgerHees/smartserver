@@ -49,6 +49,13 @@ class Preview {
             $orgQuality = $img->getImageCompressionQuality();
             if( $orgQuality > 70 ) $img->setImageCompressionQuality(70);
 
+            $img->setSamplingFactors(array('2x2', '1x1', '1x1'));
+
+            $profiles = $img->getImageProfiles("icc", true);
+            $img->stripImage();
+            if(!empty($profiles)) $img->profileImage("icc", $profiles['icc']);
+
+            $img->setImageFormat('jpeg');
         }
 
         if( $preview_size != null )
@@ -109,6 +116,8 @@ class Preview {
 
                     $small_cache_path = $camera_cache_directory . $path_parts["filename"] . "_small.jpg";
                     if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE, $timestamp);
+
+                    if( $img != null ) $img->destroy();
 
                     unlink($org_lock_path);
                 }
