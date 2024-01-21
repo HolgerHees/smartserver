@@ -810,7 +810,7 @@ mx.Gallery = (function( ret ) {
         
         containers = gallery.querySelectorAll(".container");
         
-        window.addEventListener('load', initObserver);
+        window.addEventListener('load', initObserver); // css must be applied to gallery
 
         window.addEventListener('resize', resizeHandler);
         document.addEventListener('mousemove', slotHoverHandler, {passive: true});
