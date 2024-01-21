@@ -543,9 +543,8 @@ mx.Gallery = (function( ret ) {
                 if( entry.isIntersecting )
                 {
                     activeItemUpdateNeeded = true;
-                    if( isInitialLoading ) loadImage(entry.target);
+                    if( isInitialLoading || !mx.GalleryAnimation.isScrolling() ) loadImage(entry.target); // mx.GalleryAnimation.isScrolling() == false : if touch or mouse initiated scrolling
                     else delayedLoading(entry.target);
-                    visibleContainer.push(entry.target);
                 }
                 else if( !isInitialLoading )
                 {
