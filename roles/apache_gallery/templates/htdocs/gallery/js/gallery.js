@@ -416,7 +416,7 @@ mx.Gallery = (function( ret ) {
         }
 
         if( isFullscreen ) img.src = "./cache/" + folder + "/" + element.dataset.src;
-        else img.src = "./cache/" + folder + "/" + element.dataset.medium_src;
+        else img.src = "./cache/" + folder + "/" + element.dataset.small_src;
 
         if( !img.parentNode)
         {
@@ -538,14 +538,16 @@ mx.Gallery = (function( ret ) {
 
         var activeItemUpdateNeeded = true;
         containerObserver = new IntersectionObserver((entries, imgObserver) => {
+            var isInitialLoading = activeItem == null;
             entries.forEach((entry) => {
                 if( entry.isIntersecting )
                 {
                     activeItemUpdateNeeded = true;
-                    delayedLoading(entry.target);
+                    if( isInitialLoading ) loadImage(entry.target);
+                    else delayedLoading(entry.target);
                     visibleContainer.push(entry.target);
                 }
-                else if( activeItem != null ) // not initial loading
+                else if( !isInitialLoading )
                 {
                     if( activeItem == entry.target ) activeItemUpdateNeeded = true;
                     cancelLoading(entry.target);
