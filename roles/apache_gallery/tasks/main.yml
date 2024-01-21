@@ -66,8 +66,8 @@
     name: "Gallery Full Previews"
     cmd: "/usr/bin/flock -n {{global_tmp}}gallery.lock timeout 30m docker exec php sh -c \"php -f {{htdocs_path}}gallery/cron/preview_generator.php generate full > /dev/null\""
     file: "ansible_gallery"
-    hour: "0"
-    minute: "50"
+    hour: "1"
+    minute: "0"
   import_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: create partial preview cron job
