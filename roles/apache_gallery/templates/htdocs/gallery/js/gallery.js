@@ -194,8 +194,8 @@ mx.Gallery = (function( ret ) {
     var gallery = null;
     var galleryPreviousButton = null;
     var galleryNextButton = null;
-    var galleryStartPlayButton = null;
-    var galleryStopPlayButton = null;
+    var galleryPlayButton = null;
+    var galleryCloseButton = null;
   
     var containers = [];
     
@@ -488,12 +488,14 @@ mx.Gallery = (function( ret ) {
             }
         }
 
-        if( isFullscreen )
-        {
-            galleryStartPlayButton.style.display = activeItem.dataset.index == 0 || isPlaying ? "none" : "";
-            galleryNextButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
-            galleryPreviousButton.style.display = activeItem.dataset.index == containers.length - 1 ? "none" : "";
-        }
+        if( isFullscreen ) alignGalleryButtons(activeItem);
+    }
+
+    function alignGalleryButtons(item)
+    {
+        galleryPlayButton.style.transform = item.dataset.index == 0 ? "" : "translate(0)";
+        galleryNextButton.style.transform = item.dataset.index == 0 ? "" : "translate(0)";
+        galleryPreviousButton.style.transform = item.dataset.index == containers.length - 1 ? "" : "translate(0)";
     }
 
     function getMostVisibleItem()
@@ -662,6 +664,9 @@ mx.Gallery = (function( ret ) {
         var layer = gallery.querySelector("div.layer");
         var img = item.querySelector("img");
 
+        galleryCloseButton.style.transform = "translate(0)";
+        alignGalleryButtons(item);
+
         var scrollbarSize = window.innerWidth - document.documentElement.clientWidth;
 
         var sourceImgRect = img.getBoundingClientRect();
@@ -683,8 +688,7 @@ mx.Gallery = (function( ret ) {
         // force refresh
         img.offsetHeight;
 
-        window.setTimeout(function() { layer.style.opacity = "1.0"; }, 150);
-
+        layer.style.opacity = "1.0";
         img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
 
         window.setTimeout(function(){
@@ -703,47 +707,87 @@ mx.Gallery = (function( ret ) {
         if( !isFullscreen ) return;
         isFullscreen = false;
 
+        mx.GalleryAnimation.stop();
+
         mx.GallerySwipeHandler.disable();
         window.removeEventListener("keydown",keyHandler);
 
+        galleryNextButton.style.transform = "";
+        galleryPreviousButton.style.transform = "";
+        galleryPlayButton.style.transform = "";
+        galleryCloseButton.style.transform = "";
+
         var layer = gallery.querySelector("div.layer");
         var img = activeItem.querySelector("img");
+        if( img )
+        {
+            var sourceImgRect = getOffset(img);
+            sourceImgRect.left = img.offsetLeft;
+            var sourceLayerRect = getOffset(activeItem);
+            sourceLayerRect.left = 0;
 
-        var sourceImgRect = getOffset(img);
-        sourceImgRect.left = img.offsetLeft;
-        var sourceLayerRect = getOffset(activeItem);
-        sourceLayerRect.left = 0;
+            gallery.classList.remove("fullscreen");
 
-        gallery.classList.remove("fullscreen");
+            if( openerDetails["visible_indexes"].includes(activeItem.dataset.index) ) mx.GalleryAnimation.scrollTo({"top": openerDetails["top"], "behavior": mx.GalleryAnimation.TYPE_INSTANT});
+            else scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+            openerDetails = null;
 
-        if( openerDetails["visible_indexes"].includes(activeItem.dataset.index) ) mx.GalleryAnimation.scrollTo({"top": openerDetails["top"], "behavior": mx.GalleryAnimation.TYPE_INSTANT});
-        else scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
-        openerDetails = null;
+            var targetImgRect = getOffset(img);
 
-        var targetImgRect = getOffset(img);
+            layer.style.cssText = "display: block; top: " + sourceLayerRect.top + "px; left: " + sourceLayerRect.left + "px; width: " + sourceLayerRect.width + "px; height: " + sourceLayerRect.height + "px; opacity: 1.0";
+            img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";
 
-        layer.style.cssText = "display: block; top: " + sourceLayerRect.top + "px; left: " + sourceLayerRect.left + "px; width: " + sourceLayerRect.width + "px; height: " + sourceLayerRect.height + "px; opacity: 1.0";
-        img.style.cssText = "position: fixed; z-index: 50; top: " + sourceImgRect.top + "px; left: " + sourceImgRect.left + "px; width: " + sourceImgRect.width + "px; height: " + sourceImgRect.height + "px;";
+            // force refresh
+            img.offsetHeight;
 
-        // force refresh
-        img.offsetHeight;
+            layer.style.opacity = "";
+            img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
 
-        layer.style.opacity = "";
-        img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
+            window.setTimeout(function(){
+                layer.style.display = "";
+                img.style.cssText = "";
 
-        window.setTimeout(function(){
-            layer.style.display = "";
-            img.style.cssText = "";
+                positionSlotTooltip();
+            },300);
+        }
+        else
+        {
+            gallery.classList.remove("fullscreen");
+
+            if( openerDetails["visible_indexes"].includes(activeItem.dataset.index) ) mx.GalleryAnimation.scrollTo({"top": openerDetails["top"], "behavior": mx.GalleryAnimation.TYPE_INSTANT});
+            else scrollToActiveItem(activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+            openerDetails = null;
 
             positionSlotTooltip();
-        },300);
+        }
+    }
+
+    ret.tooglePlay = function(e )
+    {
+        if( !isPlaying ) mx.Gallery.startPlay();
+        else mx.Gallery.stopPlay();
+    }
+
+    ret.startPlay = function()
+    {
+        isPlaying = true;
+
+        galleryPlayButton.classList.remove("icon-play");
+        galleryPlayButton.classList.add("icon-stop");
+
+        document.addEventListener("tapstart",mx.Gallery.stopPlay);
+
+        playIteration();
     }
 
     ret.stopPlay = function(e)
     {
-        if( e && e.target.classList.contains("button") && e.target.classList.contains("stop") && e.type == 'tapstart' ) return;
+        if( e && e.target.classList.contains("button") && e.target.classList.contains("play") && e.type == 'tapstart' ) return;
 
         isPlaying = false;
+
+        galleryPlayButton.classList.add("icon-play");
+        galleryPlayButton.classList.remove("icon-stop");
 
         if( playTimer != null )
         {
@@ -751,23 +795,9 @@ mx.Gallery = (function( ret ) {
             playTimer = null;
         }
 
-        galleryStartPlayButton.style.display = activeItem.dataset.index == 0 ? "none" : "";
-        galleryStopPlayButton.style.display = "";
+        galleryPlayButton.style.display = activeItem.dataset.index == 0 ? "" : "translate(0)";
 
         document.removeEventListener("tapstart",mx.Gallery.stopPlay);
-
-    }
-
-    ret.startPlay = function(e)
-    {
-        isPlaying = true;
-
-        galleryStartPlayButton.style.display = "none";
-        galleryStopPlayButton.style.display = "inline";
-
-        document.addEventListener("tapstart",mx.Gallery.stopPlay);
-
-        playIteration();
     }
 
     ret.jumpToSlot = function(timeslot) {
@@ -800,8 +830,8 @@ mx.Gallery = (function( ret ) {
         gallery = document.querySelector("#gallery");
         galleryPreviousButton = gallery.querySelector(".button.previous");
         galleryNextButton = gallery.querySelector(".button.next");
-        galleryStartPlayButton = gallery.querySelector(".button.start");
-        galleryStopPlayButton = gallery.querySelector(".button.stop");
+        galleryPlayButton = gallery.querySelector(".button.play");
+        galleryCloseButton = gallery.querySelector(".button.close");
 
         var data = JSON.parse(gallery.querySelector(".data").innerText);
         data.forEach(function(element_data){ var container = buildContainer(element_data); gallery.appendChild(container); });

@@ -92,7 +92,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
 #gallery > div.layer {
   position: fixed;
   background-color: black;
-  transition: all 0.15s;
+  transition: all 0.3s;
   opacity: 0;
   z-index: 1;
 }
@@ -131,14 +131,7 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
         border-left: none !important;
     }
 }
-#gallery.fullscreen {
-    white-space:nowrap;
-    position: absolute;
-    height: calc(100% - 100px);
-    z-index: 0 !important;
-    touch-action: none;
-}
-#gallery.fullscreen > span.button {
+#gallery > span.button {
     display: inline;
     position: fixed;
     color: gray;
@@ -146,33 +139,47 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
     z-index: 100;
     opacity: 0.5;
     cursor: pointer;
+    transition: transform 300ms
 }
-#gallery.fullscreen > span.button:hover {
-    opacity: 0.8 !important;
+#gallery > span.button.icon-left,
+#gallery > span.button.icon-play,
+#gallery > span.button.icon-stop {
+    transform: translate(-90px, 0);
 }
-#gallery.fullscreen > span.button.icon-left {
+#gallery > span.button.icon-right,
+#gallery > span.button.icon-cancel {
+    transform: translate(90px, 0);
+}
+#gallery > span.button.icon-left {
     left: 0;
     bottom: calc(50% - 175px);
     padding: 100px 50px 100px 0;
 }
-#gallery.fullscreen > span.button.icon-right {
+#gallery > span.button.icon-right {
     right: 0;
     bottom: calc(50% - 175px);
     padding: 100px 0 100px 50px;
 }
-#gallery.fullscreen > span.button.icon-cancel {
+#gallery > span.button.icon-cancel {
     right: 0;
     top: 100px;
     padding: 10px 0 20px 20px;
 }
-#gallery.fullscreen > span.button.icon-play,
-#gallery.fullscreen > span.button.icon-stop {
+#gallery > span.button.icon-play,
+#gallery > span.button.icon-stop {
     left: 0;
     top: 100px;
     padding: 10px 20px 20px 0;
 }
-#gallery.fullscreen > span.button.icon-stop {
-    display: none;
+#gallery.fullscreen > span.button:hover {
+    opacity: 0.8 !important;
+}
+#gallery.fullscreen {
+    white-space:nowrap;
+    position: absolute;
+    height: calc(100% - 100px);
+    z-index: 0 !important;
+    touch-action: none;
 }
 #gallery.fullscreen > div.container {
     width: 100%;

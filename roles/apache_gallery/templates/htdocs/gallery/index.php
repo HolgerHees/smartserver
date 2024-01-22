@@ -60,8 +60,7 @@ require "../shared/libs/ressources.php";
   <span class="button next icon-left" onclick="mx.Gallery.jumpToNextImage(event)"></span>
   <span class="button previous icon-right" onclick="mx.Gallery.jumpToPreviousImage(event)"></span>
   <span class="button close icon-cancel" onclick="mx.Gallery.closeDetails(event)"></span>
-  <span class="button start icon-play" onclick="mx.Gallery.startPlay(event)"></span>
-  <span class="button stop icon-stop" onclick="mx.Gallery.stopPlay(event)"></span>
+  <span class="button play icon-play" onclick="mx.Gallery.tooglePlay(event)"></span>
 <?php echo Template::getImages($images); ?>
 </div>
 </body>
