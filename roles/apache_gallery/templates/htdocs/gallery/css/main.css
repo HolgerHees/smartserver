@@ -106,6 +106,9 @@ body.dark .tooltip, body.dark .tooltip > .arrow {
   position: relative;
   cursor: pointer;
 }
+#gallery > div.container[data-loaded] {
+  background-color: black;
+}
 @media (max-width: 1350px) {
     #gallery > div.container {
         width: calc(25% - 1px);
