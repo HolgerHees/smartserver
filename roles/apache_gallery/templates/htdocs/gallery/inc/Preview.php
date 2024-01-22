@@ -1,6 +1,8 @@
 <?php
 
 class Preview {
+    //static $mime = array("suffix" => "avif", "type" => "avif");
+    static $mime = array("suffix" => "jpg", "type" => "jpeg");
     static $cache_map = array();
 
     private static function initFiles($camera_name)
@@ -44,7 +46,11 @@ class Preview {
         {
             $img = new Imagick;
             $img->readImage( $original_file );
-            $img->setImageCompression(imagick::COMPRESSION_JPEG);
+
+            if( Preview::$mime["type"] == "jpeg" )
+            {
+                $img->setImageCompression(imagick::COMPRESSION_JPEG);
+            }
 
             $orgQuality = $img->getImageCompressionQuality();
             if( $orgQuality > 70 ) $img->setImageCompressionQuality(70);
@@ -55,7 +61,7 @@ class Preview {
             $img->stripImage();
             if(!empty($profiles)) $img->profileImage("icc", $profiles['icc']);
 
-            $img->setImageFormat('jpeg');
+            $img->setImageFormat(Preview::$mime["type"]);
         }
 
         if( $preview_size != null )
@@ -108,13 +114,13 @@ class Preview {
                     $timestamp = filemtime($original_file);
 
                     $img = null;
-                    $org_cache_path = $camera_cache_directory . $name . "_" . $timestamp . ".jpg" ;
+                    $org_cache_path = $camera_cache_directory . $name . "_" . $timestamp . "." . Preview::$mime["suffix"];
                     if( !is_file( $org_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $org_cache_path, null, $timestamp);
 
-                    $medium_cache_path = $camera_cache_directory . $path_parts["filename"] . "_medium.jpg";
+                    $medium_cache_path = $camera_cache_directory . $path_parts["filename"] . "_medium." . Preview::$mime["suffix"];
                     if( !is_file( $medium_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $medium_cache_path, PREVIEW_MEDIUM_SIZE, $timestamp);
 
-                    $small_cache_path = $camera_cache_directory . $path_parts["filename"] . "_small.jpg";
+                    $small_cache_path = $camera_cache_directory . $path_parts["filename"] . "_small." . Preview::$mime["suffix"];
                     if( !is_file( $small_cache_path ) ) $img = Preview::generatePreview($img, $original_file, $small_cache_path, PREVIEW_SMALL_SIZE, $timestamp);
 
                     if( $img != null ) $img->destroy();
