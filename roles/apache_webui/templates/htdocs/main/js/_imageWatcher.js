@@ -1,21 +1,15 @@
 mx.ImageWatcher = (function( ret ) {
-    var activeAnimations = {};
-    var activeTimer = {};
+    var activeWatcher = {};
 
     function getInterval(container)
     {
         return container.getAttribute(container.classList.contains("fullscreen") ? 'data-fullscreen-interval' : 'data-preview-interval')
     }
 
-    function showError()
-    {
-
-    }
-
     function refreshImage(container, last_duration, i18n_component)
     {
         var uid = container.getAttribute("data-uid");
-        activeTimer[uid] = null;
+        activeWatcher[uid]["timer"] = null;
 
         var image = container.querySelector('img');
         var timeSpan = container.querySelector('span.time');
@@ -35,6 +29,7 @@ mx.ImageWatcher = (function( ret ) {
         let src = container.getAttribute('data-src') + '?' + id + '&age=' + age;
 
         if( !container.classList.contains("fullscreen") ) src += "&width=" + container.offsetWidth * 1.5 + "&height=" + container.offsetHeight * 1.5;
+        //console.log(src);
 
         const startTime = performance.now();
 
@@ -56,9 +51,9 @@ mx.ImageWatcher = (function( ret ) {
                 }
                 image.onerror = function(event)
                 {
-                    image.onload = null;
-                    image.onerror = null;
-                    image.setAttribute('src', "/main/img/loading.png" );
+                    //image.onload = null;
+                    //image.onerror = null;
+                    //image.setAttribute('src', "/main/img/loading.png" );
                     showError(uid, image, infoSpan, mx.I18N.get("Image error",i18n_component) );
                 }
                 image.setAttribute('src', imageURL );
@@ -71,7 +66,7 @@ mx.ImageWatcher = (function( ret ) {
 
                 if( interval > 0 )
                 {
-                    activeTimer[uid] = mx.Timer.register( function(){refreshImage(container, duration, i18n_component);}, interval );
+                    activeWatcher[uid]["timer"] = mx.Timer.register( function(){refreshImage(container, duration, i18n_component);}, interval );
                 }
                 else
                 {
@@ -90,24 +85,25 @@ mx.ImageWatcher = (function( ret ) {
 
     function showImage(uid, image, infoSpan)
     {
+        infoSpan.style.opacity = "0";
+        image.style.visibility = "";
         image.style.aspectRatio = "";
 
-        infoSpan.style.opacity = "0";
-
-        //console.log("load" + image.naturalWidth + ":" + image.naturalHeight);
-        localStorage.setItem("gallery_dimensions_" + uid, image.naturalWidth + ":" + image.naturalHeight);
+        var aspectRation = Math.round( ( image.naturalWidth / image.naturalHeight ) * 100 ) / 100;
+        if( aspectRation != activeWatcher[uid]["aspectRatio"] )
+        {
+            activeWatcher[uid]["aspectRatio"] = aspectRation;
+            localStorage.setItem("gallery_aspect_ratio_" + uid, aspectRation);
+        }
     }
 
     function showError(uid, image, infoSpan, errorMsg)
     {
-        image.style.aspectRatio = "";
-
         infoSpan.classList.add("error");
         infoSpan.innerText = errorMsg;
         infoSpan.style.opacity = "1";
-
-        //console.log("error");
-        localStorage.removeItem("gallery_dimensions_" + uid);
+        image.style.visibility = "hidden";
+        if( activeWatcher[uid]["aspectRatio"] ) image.style.aspectRatio = activeWatcher[uid]["aspectRatio"];
     }
 
     ret.init = function(selector)
@@ -117,13 +113,15 @@ mx.ImageWatcher = (function( ret ) {
             uid = selector + ":" + index;
             container.setAttribute("data-uid", uid);
 
+            activeWatcher[uid] = {"timer": null, "animation": null, "aspectRatio": null};
+
             var image = container.querySelector('img');
 
-            var dimensions = localStorage.getItem("gallery_dimensions_" + uid);
-            if( dimensions )
+            var aspectRatio = localStorage.getItem("gallery_aspect_ratio_" + uid);
+            if( aspectRatio )
             {
-                var size = dimensions.split(":");
-                image.style.aspectRatio = size[0] + "/" + size[1];
+                activeWatcher[uid]["aspectRatio"] = aspectRatio;
+                image.style.aspectRatio = aspectRatio;
             }
         });
     }
@@ -134,9 +132,6 @@ mx.ImageWatcher = (function( ret ) {
         containers.forEach(function(container){
             var uid = container.getAttribute("data-uid");
 
-            activeTimer[uid] = null;
-            activeAnimations[uid] = null;
-
             container.addEventListener("click",function(event)
             {
                 event.stopPropagation();
@@ -145,9 +140,9 @@ mx.ImageWatcher = (function( ret ) {
 
                 if( container.classList.contains("fullscreen") )
                 {
-                    if( activeAnimations[uid] == null ) return;
+                    if( activeWatcher[uid]["animation"] == null ) return;
 
-                    var data = activeAnimations[uid];
+                    var data = activeWatcher[uid]["animation"];
                     container.style.left = data["offsets"]["left"] + "px";
                     container.style.top = data["offsets"]["top"] + "px";
                     container.style.width = data["width"] + "px";
@@ -158,7 +153,7 @@ mx.ImageWatcher = (function( ret ) {
 
                     window.setTimeout( function()
                     {
-                        if( activeAnimations[uid] == null ) return;
+                        if( activeWatcher[uid]["animation"] == null ) return;
 
                         container.classList.remove("fullscreen");
                         container.style.transition = "";
@@ -169,13 +164,13 @@ mx.ImageWatcher = (function( ret ) {
                         container.style.width = "";
                         container.style.height = "";
 
-                        activeAnimations[uid]["placeholder"].parentNode.removeChild(activeAnimations[uid]["placeholder"]);
-                        activeAnimations[uid] = null;
+                        activeWatcher[uid]["animation"]["placeholder"].parentNode.removeChild(activeWatcher[uid]["animation"]["placeholder"]);
+                        activeWatcher[uid]["animation"] = null;
                     },300);
                 }
                 else
                 {
-                    if( activeAnimations[uid] != null ) return;
+                    if( activeWatcher[uid]["animation"] != null ) return;
 
                     var data = {
                         "offsets":  mx.Core.getOffsets(container),
@@ -183,7 +178,7 @@ mx.ImageWatcher = (function( ret ) {
                         "height": container.offsetHeight,
                         "placeholder": document.createElement("div")
                     }
-                    activeAnimations[uid] = data;
+                    activeWatcher[uid]["animation"] = data;
 
                     //console.log(animationOffsets,animationWidth, animationHeight);
 
@@ -209,9 +204,9 @@ mx.ImageWatcher = (function( ret ) {
                     container.style.height = "100%";
                 }
 
-                if( activeTimer[uid] != null )
+                if( activeWatcher[uid]["timer"] != null )
                 {
-                    mx.Timer.stop(activeTimer[uid]);
+                    mx.Timer.stop(activeWatcher[uid]["timer"]);
                     refreshImage(container, 0, i18n_component);
                 }
             });
