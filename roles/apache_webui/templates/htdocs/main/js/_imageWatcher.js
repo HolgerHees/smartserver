@@ -56,6 +56,9 @@ mx.ImageWatcher = (function( ret ) {
                 }
                 image.onerror = function(event)
                 {
+                    image.onload = null;
+                    image.onerror = null;
+                    image.setAttribute('src', "/main/img/loading.png" );
                     showError(uid, image, infoSpan, mx.I18N.get("Image error",i18n_component) );
                 }
                 image.setAttribute('src', imageURL );
