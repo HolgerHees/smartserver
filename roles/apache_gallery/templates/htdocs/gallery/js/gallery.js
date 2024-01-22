@@ -390,26 +390,26 @@ mx.Gallery = (function( ret ) {
         setSlotTooltip(reference);
     }
     
-    function requiredImageSize()
+    function missingImageSize(element)
     {
-        return isFullscreen ? 3: ( window.devicePixelRatio > 1 ? 2 : 1 );
-    }
-
-    function isImageLoaded(element, imageSize)
-    {
-        return element.dataset.loaded >= imageSize;
+        var imageSize = isFullscreen ? 3: ( window.devicePixelRatio > 1 ? 2 : 1 );
+        return element.dataset.loaded >= imageSize ? 0 : imageSize;
     }
 
     function loadImage(element,callback)
     {
-        var imageSize = requiredImageSize();
-        if( isImageLoaded(element, imageSize) ) return;
+        var imageSize = missingImageSize(element);
+        if( !imageSize )
+        {
+            if( callback ) console.error("should never happen " + imageSize);
+            return;
+        }
         element.dataset.loaded = imageSize;
 
         var img = element.querySelector("img");
         if( !img ) img = document.createElement("img");
 
-        if( typeof callback != "undefined" )
+        if( callback )
         {
             img.onload = function() { callback(true); };
             img.onerror = function() { callback(false); };
@@ -436,7 +436,7 @@ mx.Gallery = (function( ret ) {
 
     function delayedLoading(element)
     {
-        if( element.dataset.timer || isImageLoaded(element, requiredImageSize()) ) return;
+        if( element.dataset.timer || !missingImageSize(element) ) return;
 
         var id = window.setTimeout(function(){ element.removeAttribute("data-timer"); loadImage(element); },100);
         element.dataset.timer = id;
@@ -612,7 +612,7 @@ mx.Gallery = (function( ret ) {
             mx.Gallery.stopPlay();
             return;
         }
-        if( !isImageLoaded(item) )
+        if( missingImageSize(item) )
         {
             var startTime = new Date().getTime();
             cancelLoading(item);
