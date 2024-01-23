@@ -740,13 +740,12 @@ body.nobackground #submenu .service.button div:last-child {
     width: 90%;
     margin-bottom: 5px;
     cursor: pointer;
-    background-color: black;
+    background-color: var(--image-watcher-bg);
 }
 #submenu .service.imageWatcher > div.fullscreen {
     position: fixed !important;
     z-index: 100000;
     max-width: 100%;
-    background-color: var(--image-watcher-bg);
 }
 #submenu .service.imageWatcher > div.fullscreen > img {
     position: absolute;
