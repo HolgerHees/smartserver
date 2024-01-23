@@ -691,8 +691,11 @@ mx.Gallery = (function( ret ) {
         layer.style.opacity = "1.0";
         img.style.cssText = "position: fixed; z-index: 50; transition: all 0.3s; top: " + targetImgRect.top + "px; left: " + targetImgRect.left + "px; width: " + targetImgRect.width + "px; height: " + targetImgRect.height + "px;";
 
+        item.style.backgroundColor = "black";
+
         window.setTimeout(function(){
             gallery.classList.add("fullscreen");
+            item.style.backgroundColor = "";
 
             layer.style.cssText = "";
             img.style.cssText = "";
@@ -721,6 +724,8 @@ mx.Gallery = (function( ret ) {
         var img = activeItem.querySelector("img");
         if( img )
         {
+            activeItem.style.backgroundColor = "black";
+
             var sourceImgRect = getOffset(img);
             sourceImgRect.left = img.offsetLeft;
             var sourceLayerRect = getOffset(activeItem);
@@ -746,6 +751,7 @@ mx.Gallery = (function( ret ) {
             window.setTimeout(function(){
                 layer.style.display = "";
                 img.style.cssText = "";
+                activeItem.style.backgroundColor = "";
 
                 positionSlotTooltip();
             },300);
