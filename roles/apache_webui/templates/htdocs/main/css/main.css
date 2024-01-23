@@ -731,14 +731,16 @@ body.nobackground #submenu .service.button div:last-child {
 }
 #submenu .service.imageWatcher img {
     width: 100%;
+    visibility: hidden;
 }
 #submenu .service.imageWatcher > div {
     position: relative;
     /*width: auto;
      max-width: 90%;*/
     width: 90%;
-    padding-bottom: 5px;
+    margin-bottom: 5px;
     cursor: pointer;
+    background-color: black;
 }
 #submenu .service.imageWatcher > div.fullscreen {
     position: fixed !important;

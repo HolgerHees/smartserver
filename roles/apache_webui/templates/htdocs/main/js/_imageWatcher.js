@@ -86,7 +86,7 @@ mx.ImageWatcher = (function( ret ) {
     function showImage(uid, image, infoSpan)
     {
         infoSpan.style.opacity = "0";
-        image.style.visibility = "";
+        image.style.visibility = "visible";
         image.style.aspectRatio = "";
 
         var aspectRation = Math.round( ( image.naturalWidth / image.naturalHeight ) * 100 ) / 100;
@@ -102,7 +102,7 @@ mx.ImageWatcher = (function( ret ) {
         infoSpan.classList.add("error");
         infoSpan.innerText = errorMsg;
         infoSpan.style.opacity = "1";
-        image.style.visibility = "hidden";
+        image.style.visibility = "";
         if( activeWatcher[uid]["aspectRatio"] ) image.style.aspectRatio = activeWatcher[uid]["aspectRatio"];
     }
 

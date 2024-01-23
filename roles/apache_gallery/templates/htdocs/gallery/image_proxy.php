@@ -15,6 +15,10 @@ $age = empty($_GET['age']) ? 1000 : $_GET['age'];
 
 list($content, $mime, $time) = getData( $url, $age, $auth );
 
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 if( $content )
 {
     try {
@@ -23,26 +27,23 @@ if( $content )
             list( $content, $mime ) = scaleImage( $content, $_GET['width'], $_GET['height'], true );
         }
 
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
         header("Content-Type: " . $mime);
         echo $content;
     }
     catch (ImagickException $e)
     {
+        header("Content-Type: text/plain");
         http_response_code(503);
+
     }
 }
 else
 {
-    $url = str_replace($_SERVER['REDIRECT_SCRIPT_URL'], "/_fallback/cam.jpg", $_SERVER['REDIRECT_SCRIPT_URI']);
-
-    list($content, $mime, $time) = getData( $url, 60000, null );
-
-    header("Content-Type: " . $mime);
-    echo $content;
+    header("Content-Type: text/plain");
+    http_response_code(504);
 }
+
+exit(0);
 
 function fatal_handler() {
     global $url;
@@ -80,7 +81,7 @@ function getData($url, $age, $auth)
             }
             else
             {
-                $content = apcu_fetch( $url . ":content" );
+                $content = "";
             }
         }
     }
