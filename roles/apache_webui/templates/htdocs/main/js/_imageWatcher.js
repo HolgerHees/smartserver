@@ -118,11 +118,9 @@ mx.ImageWatcher = (function( ret ) {
             var image = container.querySelector('img');
 
             var aspectRatio = localStorage.getItem("gallery_aspect_ratio_" + uid);
-            if( aspectRatio )
-            {
-                activeWatcher[uid]["aspectRatio"] = aspectRatio;
-                image.style.aspectRatio = aspectRatio;
-            }
+            if( !aspectRatio ) aspectRatio = 1.78;
+            activeWatcher[uid]["aspectRatio"] = aspectRatio;
+            image.style.aspectRatio = aspectRatio;
         });
     }
 
