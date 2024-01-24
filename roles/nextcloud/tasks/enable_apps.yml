@@ -125,7 +125,7 @@
 #      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
 #      - { app: "onlyoffice", name: "versionHistory", value: "true" }
 
-      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var script = document.createElement('script'); script.src = 'https://{{server_domain}}/main/listener/frame.js'; document.head.appendChild(script); }" }
+      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(\\.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
 
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
