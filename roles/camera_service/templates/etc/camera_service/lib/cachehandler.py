@@ -214,13 +214,19 @@ class CacheHandler(threading.Thread):
 
             with self.map_lock:
                 if self.cache_map[camera_name]["height"] == 0:
-                    _img = Image(filename=org_cache_path) if img == None else img
+                    _img = Image(filename=org_cache_path) if img is None else img
                     self.cache_map[camera_name]["height"] = _img.height
                     self.cache_map[camera_name]["width"] = _img.width
+                    if img is None:
+                        _img.close()
 
                 self.cache_map[camera_name]["entries"][picture_name] = { "name": picture_name, "timestamp": int(timestamp) }
 
-            return img is not None
+            if img is not None:
+                img.close()
+                return True
+
+            return False
 
         except wand.exceptions.MissingDelegateError:
             logging.error("Unsupported file '{}'".format(picture_org_path))
