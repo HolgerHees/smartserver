@@ -50,6 +50,7 @@ class FileWatcher(pyinotify.ProcessEvent):
 
     def process_default(self, event):
         #self.logger.info(event)
+
         if event.path in self.watched_parents:
             if event.mask & pyinotify.IN_DELETE:
                 pass
@@ -70,7 +71,7 @@ class FileWatcher(pyinotify.ProcessEvent):
                     self.delayed_file_events[event.pathname] = notifier_event
                 else:
                     self.notifyListener(notifier_event)
-            elif event.mask & ( pyinotify.IN_CLOSE_WRITE | pyinotify.IN_CLOSE_NOWRITE ):
+            elif event.mask & pyinotify.IN_CLOSE_WRITE:
                 if event.pathname in self.delayed_file_events:
                     # trigger CREATE event when file is completly written
                     self.notifyListener(self.delayed_file_events[event.pathname])
@@ -108,7 +109,7 @@ class FileWatcher(pyinotify.ProcessEvent):
             self.wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE, rec=False, auto_add=False)
         else:
             self.watched_directories[path] = True
-            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_CLOSE_NOWRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM, rec=False, auto_add=False)
+            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM, rec=False, auto_add=False)
 
     def getModifiedTime(self,path):
         return self.modified_time[path.rstrip("/")]
