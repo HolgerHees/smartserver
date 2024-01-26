@@ -364,6 +364,7 @@ mx.Gallery = (function( ret ) {
 
     function updateContainers(data)
     {
+        //var startOffsetHeight = gallery.offsetHeight;
         var _activeItem = activeItem;
 
         if( data["removed"].length > 0 )
@@ -401,8 +402,7 @@ mx.Gallery = (function( ret ) {
                 containerObserver.observe(container);
             }
         });
-
-        if( _activeItem == null ) _activeItem = getItemByIndex(0)
+        //var endOffsetHeight = gallery.offsetHeight;
 
         buildSlots();
 
@@ -411,8 +411,25 @@ mx.Gallery = (function( ret ) {
         activeSlot = null;
         slotTooltipElement = null;
 
-        if( ( isFullscreen ? window.scrollX : window.scrollY ) == 0 ) setActiveItem(getItemByIndex(0));
-        else scrollToActiveItem(_activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+        if( ( isFullscreen ? window.scrollX : window.scrollY ) == 0 )
+        {
+            setActiveItem(getItemByIndex(0));
+        }
+        // TODO - stay on old position
+        /*else if( !isFullscreen && _activeItem != null )
+        {
+            console.log(_activeItem);
+            setActiveItem(_activeItem);
+            if( endOffsetHeight != startOffsetHeight )
+            {
+                mx.GalleryAnimation.scrollTo({ top: window.scrollY + (endOffsetHeight - startOffsetHeight), behavior: mx.GalleryAnimation.TYPE_INSTANT });
+            }
+        }*/
+        else
+        {
+            if( _activeItem == null ) _activeItem = getItemByIndex(0)
+            scrollToActiveItem(_activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+        }
     }
 
     function getOffset(element)
@@ -665,7 +682,7 @@ mx.Gallery = (function( ret ) {
             entries.forEach((entry) => {
                 if( entry.isIntersecting )
                 {
-                    activeItemUpdateNeeded = true;
+                    //activeItemUpdateNeeded = true;
                     if( isInitialLoading || !mx.GalleryAnimation.isScrolling() ) loadImage(entry.target); // mx.GalleryAnimation.isScrolling() == false : if touch or mouse initiated scrolling
                     else delayedLoading(entry.target);
                     visibleContainer.push(entry.target);
