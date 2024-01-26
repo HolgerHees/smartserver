@@ -201,6 +201,7 @@ mx.Gallery = (function( ret ) {
 
     var playTimer = null;
     var isPlaying = false;
+    var isUpdating = false;
 
     function getItemIndex(item)
     {
@@ -364,25 +365,28 @@ mx.Gallery = (function( ret ) {
 
     function updateContainers(data)
     {
-        //var startOffsetHeight = gallery.offsetHeight;
+        if( !listData ) return;
+
+        isUpdating = true;
+
+        var startScroll = isFullscreen ? window.scrollX : window.scrollY;
+        var startOffset = isFullscreen ? gallery.offsetWidth : gallery.offsetHeight;
+
         var _activeItem = activeItem;
 
-        if( data["removed"].length > 0 )
+        data["removed"].forEach(function(name)
         {
-            data["removed"].forEach(function(name)
-            {
-                var index = listData["images"].findIndex(function(_data){
-                    return _data["name"] == name;
-                });
-                if( index != -1 )
-                {
-                    var item = getItemByIndex(index);
-                    item.parentNode.removeChild(item);
-                    listData["images"].splice(index, 1);
-                    if( _activeItem == item ) _activeItem = null;
-                }
+            var index = listData["images"].findIndex(function(_data){
+                return _data["name"] == name;
             });
-        }
+            if( index != -1 )
+            {
+                var item = getItemByIndex(index);
+                item.parentNode.removeChild(item);
+                listData["images"].splice(index, 1);
+                if( _activeItem == item ) _activeItem = null;
+            }
+        });
         data["added"].forEach(function(_data)
         {
             var index = listData["images"].findIndex(function(__data){
@@ -402,7 +406,7 @@ mx.Gallery = (function( ret ) {
                 containerObserver.observe(container);
             }
         });
-        //var endOffsetHeight = gallery.offsetHeight;
+        var endOffset = isFullscreen ? gallery.offsetWidth : gallery.offsetHeight;
 
         buildSlots();
 
@@ -411,25 +415,21 @@ mx.Gallery = (function( ret ) {
         activeSlot = null;
         slotTooltipElement = null;
 
-        if( ( isFullscreen ? window.scrollX : window.scrollY ) == 0 )
+        if( startScroll == 0 )
         {
             setActiveItem(getItemByIndex(0));
         }
-        // TODO - stay on old position
-        /*else if( !isFullscreen && _activeItem != null )
-        {
-            console.log(_activeItem);
-            setActiveItem(_activeItem);
-            if( endOffsetHeight != startOffsetHeight )
-            {
-                mx.GalleryAnimation.scrollTo({ top: window.scrollY + (endOffsetHeight - startOffsetHeight), behavior: mx.GalleryAnimation.TYPE_INSTANT });
-            }
-        }*/
         else
         {
-            if( _activeItem == null ) _activeItem = getItemByIndex(0)
-            scrollToActiveItem(_activeItem,mx.GalleryAnimation.TYPE_INSTANT);
+            if( _activeItem == null ) _activeItem = getItemByIndex(0);
+
+            setActiveItem(_activeItem);
+
+            if( isFullscreen ) mx.GalleryAnimation.scrollTo({ left: startScroll + (endOffset - startOffset), behavior: mx.GalleryAnimation.TYPE_INSTANT });
+            else mx.GalleryAnimation.scrollTo({ top: startScroll + (endOffset - startOffset), behavior: mx.GalleryAnimation.TYPE_INSTANT });
         }
+
+        window.setTimeout(function(){ isUpdating = false; },100);
     }
 
     function getOffset(element)
@@ -657,6 +657,8 @@ mx.Gallery = (function( ret ) {
 
         if( mx.GalleryAnimation.isScrolling() ) return;
 
+        if( isUpdating ) return;
+
         var firstElement = visibleContainer[0];
         var minIndex = getItemIndex(visibleContainer[0]);
         visibleContainer.forEach(function(element,index){
@@ -682,7 +684,7 @@ mx.Gallery = (function( ret ) {
             entries.forEach((entry) => {
                 if( entry.isIntersecting )
                 {
-                    //activeItemUpdateNeeded = true;
+                    activeItemUpdateNeeded = true;
                     if( isInitialLoading || !mx.GalleryAnimation.isScrolling() ) loadImage(entry.target); // mx.GalleryAnimation.isScrolling() == false : if touch or mouse initiated scrolling
                     else delayedLoading(entry.target);
                     visibleContainer.push(entry.target);
