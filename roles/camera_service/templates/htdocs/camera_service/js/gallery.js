@@ -201,7 +201,9 @@ mx.Gallery = (function( ret ) {
 
     var playTimer = null;
     var isPlaying = false;
-    var isUpdating = false;
+
+    var updateStateFlag = null;
+    var updateStateTimer = null;
 
     function getItemIndex(item)
     {
@@ -367,7 +369,8 @@ mx.Gallery = (function( ret ) {
     {
         if( !listData ) return;
 
-        isUpdating = true;
+        if( updateStateTimer ) window.clearTimeout(updateStateTimer);
+        updateStateFlag = true;
 
         var startScroll = isFullscreen ? window.scrollX : window.scrollY;
         var startOffset = isFullscreen ? gallery.offsetWidth : gallery.offsetHeight;
@@ -429,7 +432,14 @@ mx.Gallery = (function( ret ) {
             else mx.GalleryAnimation.scrollTo({ top: startScroll + (endOffset - startOffset), behavior: mx.GalleryAnimation.TYPE_INSTANT });
         }
 
-        window.setTimeout(function(){ isUpdating = false; },100);
+        updateStateFlag = false
+        updateStateTimer = window.setTimeout(function(){ updateStateTimer = updateStateFlag = null; },250);
+    }
+
+    function resetUpdateStateFlag()
+    {
+        if( updateStateTimer ) window.clearTimeout(updateStateTimer);
+        updateStateTimer = updateStateFlag = null;
     }
 
     function getOffset(element)
@@ -657,7 +667,7 @@ mx.Gallery = (function( ret ) {
 
         if( mx.GalleryAnimation.isScrolling() ) return;
 
-        if( isUpdating ) return;
+        if( updateStateFlag !== null ) return;
 
         var firstElement = visibleContainer[0];
         var minIndex = getItemIndex(visibleContainer[0]);
@@ -703,6 +713,9 @@ mx.Gallery = (function( ret ) {
                 delayedSlotPosition();
                 activeItemUpdateNeeded = false;
             }
+
+            // avoid a delayedSlotPosition as a result of an update process
+            if( updateStateFlag === false ) resetUpdateStateFlag();
         },observerOptions);
 
         listData["images"].forEach( function(data,index){ containerObserver.observe(data["item"]); });
