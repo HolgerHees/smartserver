@@ -241,6 +241,7 @@ class CacheHandler(threading.Thread):
                 img.compression_quality = 70
 
             img.sampling_factors = [4, 2, 2];
+            img.format = self.config.preview_mime["format"]
 
             profile = img.profiles["icc"]
             img.strip();
