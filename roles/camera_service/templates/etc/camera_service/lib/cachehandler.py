@@ -66,10 +66,10 @@ class CacheHandler(threading.Thread):
                         changes[camera_name] = {"added": [], "removed": []}
 
                     if job_is_new:
-                        diff = time.time() - job_time
-                        if diff < 1.0:
-                            # wait some time to finalize file operations like finish upload or setting mtime
-                            time.sleep(1.0-diff)
+                        #diff = time.time() - job_time
+                        #if diff < 1.0:
+                        #    # wait some time to finalize file operations like finish upload or setting mtime
+                        #    time.sleep(1.0-diff)
                         if self.processUploadedImage(camera_name, picture_name, picture_suffix, job_path):
                             logging.info("New image '{}/{}' cached".format(camera_name, picture_name))
                             changes[camera_name]["added"].append(self.cache_map[camera_name]["entries"][picture_name])
