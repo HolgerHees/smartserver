@@ -1,0 +1,128 @@
+# suse user: ftp:x:476:476:FTP Account:/srv/ftp:/sbin/nologin
+# suse group: ftp:!:476:
+# fedora user: ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+# fedora group: ftp:x:50:
+- name: ensure user and group exists
+  vars:
+    user: { name: "ftp", system: true, home: "{{global_lib}}/camera_service/upload/" }
+    group: { name: "ftp", system: true }
+  import_tasks: roles/user/shared/add_system_user.yml
+
+- name: prepare ftp folder
+  file:
+    path: "{{global_lib}}/camera_service/upload/"
+    state: directory
+    owner: "{{system_users['ftp'].name}}"
+    group: "{{system_groups['ftp'].name}}"
+    mode: 0755
+
+#- name: check owner and group
+#  file:
+#    path: "{{global_lib}}/camera_service/upload/"
+#    state: directory
+#    owner: "{{system_users['ftp'].name}}"
+#    group: "{{system_groups['ftp'].name}}"
+#    recurse: yes
+
+- name: prepare ftp camera upload folder
+  file:
+    path: "{{global_lib}}/camera_service/upload/{{item['ftp_upload_name']}}"
+    state: directory
+    owner: "{{system_users['ftp'].name}}"
+    group: "{{system_groups['ftp'].name}}"
+    mode: 0755
+  when: "'ftp_upload_name' in item"
+  with_items: "{{camera_devices}}"
+
+- name: build docker image
+  vars:
+    name: "ftp"
+    image_name: "custom_vsftpd"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/camera_ftp/templates/container/Dockerfile
+      - roles/camera_ftp/templates/container/entrypoint.sh
+  import_tasks: roles/container/shared/build_docker_image.yml
+  
+- name: create docker container
+  docker_container:
+    name: vsftpd
+    image: "custom_vsftpd:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      FTP_USER: "{{vault_ftp_username}}"
+      FTP_PASS: "{{vault_ftp_password}}"
+      FTP_UID: "{{system_users['ftp'].id}}"
+      FTP_GID: "{{system_groups['ftp'].id}}"
+      ONLY_UPLOAD: "YES"
+      ONLY_DOWNLOAD: "NO"
+      PASV_ENABLE: "YES"
+      PASV_ADDRESS: "127.0.0.1"
+      PASV_MIN: "30000"
+      PASV_MAX: "30005"
+      UMASK: "022"
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: vsftpd
+    volumes:
+      - '{{global_lib}}/camera_service/upload/:/home/upload:z'
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_camera_ftp_ip}}"
+    networks_cli_compatible: yes
+    published_ports: |
+      [
+        "21:21",
+        "20:20",
+        "30000-30005:30000-30005",
+        {% if default_server_ipv6 is defined %}
+          "[::]:21:21",
+          "[::]:30000-30005:30000-30005",
+        {% endif %}
+      ]
+  notify: "restart vsftpd"
+
+- name: prepare iptables rules
+  set_fact:
+    ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + docker_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
+  with_items: "{{ intern_networks }}"
+  tags: [ 'firewall_config' ]
+
+- name: allow ftp service
+  vars:
+    name: "ftp"
+    rules: "{{ftp_rules}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
+
+#- name: clean old docker images => image does not exists
+#  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
+#  when: "'custom_vsftpd' not in image_exists.stdout"
+  
+# ***** FINALIZE *****
+- name: create cron job
+  vars:
+    name: "Camera Cleanup"
+    cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +{{ftp_max_file_age}} -exec rm {} +"
+    file: "ansible_ftp_camera"
+    hour: "0"
+    minute: "50"
+  import_tasks: roles/cron/shared/add_cronjob.yml
+
+- name: create systemd service
+  vars:
+    container_name: "vsftpd"
+  import_tasks: roles/container/shared/add_docker_service.yml
+
+- name: trigger vsftpd handler
+  vars:
+    notify: "restart vsftpd"
+    service: "vsftpd.service"
+  import_tasks: roles/_shared/service_check.yml
+          
+    
+    

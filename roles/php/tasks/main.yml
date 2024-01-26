@@ -41,7 +41,6 @@
       - '{{global_log}}:{{global_log}}:z'                         # needed by update service and ci service
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
-      - '{{ftp_path}}:{{ftp_path}}:z'                             # needed by apache_gallery
     exposed_ports:
       - "9000"
   notify: "restart php"

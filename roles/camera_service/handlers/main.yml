@@ -1,0 +1,8 @@
+- name: restart camera_service
+  systemd:
+    name: camera_service
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+    masked: no
+  listen: "restart camera_service"

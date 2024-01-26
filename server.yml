@@ -112,8 +112,6 @@
 
     - { import_role: { name: samba }, tags: [ 'samba', 'alpine' ] }                              # smb file server                                                   [docker,user:root]
 
-    - { import_role: { name: ftp }, tags: [ 'ftp', 'alpine' ], when: "vault_ftp_username is defined" } # ftp file server for camera picture upload and cleanup        [docker,user:ftp]
-
     - { import_role: { name: mysql }, tags: [ 'mysql' ] }                                        # mysql db => needed by nextcloud and openhab                       [docker,user:999]
 
     - { import_role: { name: influxdb }, tags: [ 'influxdb' ] }                                  # influxdb => needed by openhab & system_info                       [docker,user:root]
@@ -148,8 +146,10 @@
     - { import_role: { name: mysql_phpmyadmin }, tags: [ 'mysql_phpmyadmin' ] }                  # phpMyAdmin
     - { import_role: { name: mysql_adminer }, tags: [ 'mysql_adminer' ] }                        # Adminer
 
+    - { import_role: { name: camera_ftp }, tags: [ 'camera_ftp', 'alpine' ], when: "camera_devices | length > 0" } # ftp file server for camera picture upload       [docker,user:ftp]
+    - { import_role: { name: camera_service }, tags: [ 'camera_service', 'alpine' ], when: "camera_devices | length > 0" } # camera image gallery
+
     - { import_role: { name: apache_webui }, tags: [ 'apache_webui' ] }                          # responsive web ui
-    - { import_role: { name: apache_gallery }, tags: [ 'apache_gallery' ], when: "camera_devices | length > 0" }    # camera image gallery
 
     - { import_role: { name: nextcloud }, tags: [ 'nextcloud' ] }                                # private cloud
     - { import_role: { name: nextcloud_libreoffice }, tags: [ 'nextcloud_libreoffice' ] }        # office editor                                                     [docker,user:106|108]

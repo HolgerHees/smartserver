@@ -250,8 +250,6 @@
       - '{{global_log}}:{{global_log}}:z'
 
       - '{{htdocs_path}}:{{htdocs_path}}:z'
-
-      - '{{ftp_path}}:{{ftp_path}}:z'                             # needed by apache_gallery
 #    published_ports:
 #      - "80:80"
 #      - "443:443"

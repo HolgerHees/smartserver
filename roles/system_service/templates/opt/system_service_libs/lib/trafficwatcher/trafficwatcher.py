@@ -85,6 +85,8 @@ class TrafficWatcher(threading.Thread):
         self.debugging_ips = []
         self.profiling_enabled = False
 
+        self.is_running = False
+
         self.influxdb = influxdb
         self.ipcache = ipcache
 

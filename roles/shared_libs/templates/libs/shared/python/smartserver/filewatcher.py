@@ -26,7 +26,7 @@ class FileWatcher(pyinotify.ProcessEvent):
         
     def notifyListener(self, event):
         if self.callback:
-            self.logger.info("Notify listener of '{}' - '{}'".format(event["path"],event["maskname"]))
+            #self.logger.info("Notify listener of '{}' - '{}'".format(event["path"],event["maskname"]))
             self.callback(event)
 
     def process_default(self, event):
@@ -35,22 +35,24 @@ class FileWatcher(pyinotify.ProcessEvent):
         if event.path in self.watched_parents:
             if event.mask & pyinotify.IN_DELETE:
                 pass
-            elif event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ):
+            elif event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM ):
                 if event.pathname in self.modified_time:
                     self.logger.info("New path '{}' watched".format(event.pathname))
                     self.addPath(event.pathname)
                     if not event.dir:
-                        self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE, "maskname": "IN_CLOSE_WRITE" })
+                        self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE, "maskname": "IN_CLOSE_WRITE", "time": datetime.now().timestamp(), "cookie": event.cookie if hasattr(event,"cookie") else None })
 
         elif event.path in self.watched_directories:
-            if event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO ):
-                self.modified_time[event.path] = datetime.now().timestamp()
-                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname })
+            if event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM ):
+                now = datetime.now().timestamp()
+                self.modified_time[event.path] = now
+                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname, "time": now, "cookie": event.cookie if hasattr(event,"cookie") else None })
       
         elif event.path in self.watched_files:
             if event.mask & pyinotify.IN_CLOSE_WRITE:
-                self.modified_time[event.path] = datetime.now().timestamp()
-                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname })
+                now = datetime.now().timestamp()
+                self.modified_time[event.path] = now
+                self.notifyListener({"path": event.path, "pathname": event.pathname, "mask": event.mask, "maskname": event.maskname, "time": now, "cookie": event.cookie if hasattr(event,"cookie") else None })
             else:
                 pass
         
@@ -60,7 +62,7 @@ class FileWatcher(pyinotify.ProcessEvent):
         parent = os.path.dirname(path)
         if parent not in self.watched_parents:
             self.watched_parents[parent] = True
-            self.wm.add_watch(parent, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO, rec=False, auto_add=False)
+            self.wm.add_watch(parent, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM, rec=False, auto_add=False)
             
         if os.path.exists(path):
             self.addPath(path)
@@ -79,8 +81,8 @@ class FileWatcher(pyinotify.ProcessEvent):
             self.wm.add_watch(path, pyinotify.IN_DELETE_SELF | pyinotify.IN_CLOSE_WRITE, rec=False, auto_add=False)
         else:
             self.watched_directories[path] = True
-            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO, rec=False, auto_add=False)
-            
+            self.wm.add_watch(path, pyinotify.IN_CREATE | pyinotify.IN_DELETE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM, rec=False, auto_add=False)
+
     def getModifiedTime(self,path):
         return self.modified_time[path.rstrip("/")]
       

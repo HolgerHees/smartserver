@@ -1,0 +1,11 @@
+groups:
+- name: cache_service
+  rules:
+  - alert: Camera service process crashed
+    expr: 'camera_service_process{job="cache_service"} == 0'
+    for: 0m
+    labels:
+      notifyGroup: "cache_service"
+      severity: critical
+    annotations:
+      summary: "Cache service process '{{'{{'}} $labels.type {{'}}'}}' crashed"

@@ -11,6 +11,7 @@ require "../shared/libs/ressources.php";
 <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
 <script src="<?php echo Ressources::getJSPath('/system_service/'); ?>"></script>
 <script src="<?php echo Ressources::getComponentPath('/system_service/'); ?>"></script>
+<script src="/shared/js/socketio/socket.io.min.js"></script>
 <script>
 mx.UNCore = (function( ret ) {
     var groups = {};    

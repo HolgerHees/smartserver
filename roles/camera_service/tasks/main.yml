@@ -1,0 +1,164 @@
+- name: prepare needed folder
+  file:
+    path: "{{item.path}}"
+    state: directory
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
+    mode: "{{item.mode}}"
+  with_items:
+    -  { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}camera_service/", owner: "root", group: "root" }
+    -  { mode: "u=rwx,g=rx,o=", path: "{{global_lib}}camera_service/", owner: "root", group: "root" }
+    -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
+    -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/cache/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
+
+- name: prepare camera cache folder
+  file:
+    path: "{{htdocs_path}}/camera_service/cache/{{item['ftp_upload_name']}}"
+    state: directory
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: 0755
+  when: "'ftp_upload_name' in item"
+  with_items: "{{camera_devices}}"
+
+- name: build docker image
+  vars:
+    name: "camera_service"
+    image_name: "custom_camera_service"
+    image_version: "{{alpine_version}}"
+    files:
+      - roles/camera_service/templates/container/Dockerfile
+      - roles/camera_service/templates/container/entrypoint.sh
+  import_tasks: roles/container/shared/build_docker_image.yml
+
+- name: create docker container
+  docker_container:
+    name: camera_service
+    image: "custom_camera_service:{{alpine_version}}"
+    state: present
+#    recreate: true
+    env:
+      TZ: "{{timezone}}"
+    log_driver: journald
+    log_options:
+      tag: camera_service
+    container_default_behavior: "compatibility"
+    network_mode: "default"
+    networks:
+      - name: "isolated"
+        ipv4_address: "{{docker_camera_service_ip}}"
+    networks_cli_compatible: yes
+    volumes:
+      - '{{global_etc}}camera_service/:/etc/camera_service:ro,z'
+      - "{{global_lib}}camera_service/:/var/lib/camera_service:rw,z"
+      - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw,z'
+      - '/opt/shared/python:/opt/shared/python:ro,z'
+  notify: "restart camera_service"
+
+- name: copy config
+  template:
+    src: "templates/config.py"
+    dest: "{{global_etc}}camera_service/config.py"
+    owner: root
+    group: root
+    mode: 0640
+  notify: "restart camera_service"
+
+- name: synchronize daemon
+  synchronize:
+    src: "templates/etc/camera_service/{{item}}/"
+    dest: "{{global_etc}}camera_service/{{item}}/"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown=root:root"
+      - "--chmod=F640"
+  with_items:
+      - "lib"
+  notify: "restart camera_service"
+
+- name: copy daemon
+  copy:
+    src: "templates/etc/camera_service/camera_service"
+    dest: "{{global_etc}}camera_service/camera_service"
+    owner: root
+    group: root
+    mode: 0750
+  notify: "restart camera_service"
+
+- name: synchronize htdocs
+  synchronize:
+    src: "templates/htdocs/"
+    dest: "{{htdocs_path}}"
+    archive: no
+    checksum: yes
+    group: yes
+    owner: yes
+    perms: yes
+    recursive: yes
+    rsync_opts:
+      - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
+      - "--chmod=D755,F644"
+  
+- name: copy htdocs configs
+  template:
+    src: "templates/config.php"
+    dest: "{{htdocs_path}}/camera_service/config.php"
+    owner: "{{system_users['www'].name}}"
+    group: "{{system_groups['www'].name}}"
+    mode: "u=rwX,g=rX,o="
+
+- name: copy proxy config
+  vars:
+    config_file: "templates/etc/apache2/_.ansible.d/cameras.conf"
+  import_tasks: roles/apache/shared/add_config.yml
+
+- name: register webui
+  vars:
+    name: "cameras"
+    js_file: "templates/webui/cameras.js"
+    i18n_files: [ { language: "de", file: "templates/webui/cameras.de.json" } ]
+    icons: []
+  import_tasks: roles/apache_webui/shared/add_webui.yml
+
+# ***** FINALIZE *****
+- name: register prometheus rules & metrics
+  vars:
+    name: "camera_service"
+    rules_file: "templates/prometheus/rules.yml"
+    scrape_file: "templates/prometheus/scrape.yml"
+  import_tasks: roles/prometheus/shared/add_config.yml
+
+- name: copy service apache config
+  vars:
+    service_name: "camera_service"
+    service_host: "{{docker_camera_service_ip}}"
+  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+
+- name: copy service fluentd config
+  vars:
+    service_name: "camera_service"
+    service_is_container: no
+  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+
+- name: create systemd service
+  vars:
+    container_name: "camera_service"
+    container_after: [ "camera_ftp" ]
+  import_tasks: roles/container/shared/add_docker_service.yml
+
+- name: register systemd service watcher
+  vars:
+    name: "camera_service"
+  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+
+- name: trigger update_service handler
+  vars:
+    notify: "restart camera_service"
+    service: "camera_service.service"
+  import_tasks: roles/_shared/service_check.yml
+
