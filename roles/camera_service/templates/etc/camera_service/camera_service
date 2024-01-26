@@ -40,9 +40,9 @@ class Handler(Server):
     def fileChangeTriggered(self, event):
         #logging.info(event);
         if event["pathname"][:len(config.upload_path)] == config.upload_path:
-            self.cache_handler.uploadChangeTriggered(event["pathname"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
+            self.cache_handler.uploadChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
         elif event["pathname"][:len(config.cache_path)] == config.cache_path:
-            self.cache_handler.cacheChangeTriggered(event["pathname"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
+            self.cache_handler.cacheChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
 
     def start(self, callback):
         self.scheduler.start()
