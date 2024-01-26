@@ -120,8 +120,8 @@
 - name: register webui
   vars:
     name: "cameras"
-    js_file: "templates/webui/cameras.js"
-    i18n_files: [ { language: "de", file: "templates/webui/cameras.de.json" } ]
+    js_file: "templates/webui/camera_service.js"
+    i18n_files: [ { language: "de", file: "templates/webui/camera_service.de.json" } ]
     icons: []
   import_tasks: roles/apache_webui/shared/add_webui.yml
 
