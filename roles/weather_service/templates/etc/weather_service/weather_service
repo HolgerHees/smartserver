@@ -17,9 +17,9 @@ from lib.consumer.station import StationConsumer
 from lib.consumer.astro import AstroConsumer
 from lib.mqtt import MQTT
 from lib.db import DB
-from lib.scheduler import Scheduler
 from lib.helper.forecast import WeatherBlock
 
+from smartserver.scheduler import Scheduler
 from smartserver.server import Server
 
 import config
@@ -32,7 +32,7 @@ class Handler(Server):
         super().__init__("weatcher_service" )
 
         self.db = DB(config)
-        self.scheduler = Scheduler()
+        self.scheduler = Scheduler("weatcher_service")
 
         self.mqtt = MQTT(config)
 
@@ -161,6 +161,7 @@ class Handler(Server):
 
     def getStateMetrics(self):
         state_metrics = []
+        state_metrics += self.scheduler.getStateMetrics()
         state_metrics += self.db.getStateMetrics()
         state_metrics += self.mqtt.getStateMetrics()
         if self.provider is not None:

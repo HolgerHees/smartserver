@@ -55,6 +55,14 @@
       - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart camera_service"
 
+- name: allow camera_service service
+  vars:
+    name: "camera_service"
+    rules:
+      - "saddr {{docker_prometheus_ip}} daddr {{docker_camera_service_ip}}"
+  import_tasks: roles/firewall/shared/allow_service.yml
+  tags: [ 'firewall_config' ]
+
 - name: copy config
   template:
     src: "templates/config.py"

@@ -126,7 +126,7 @@ class Server():
           
     def initWatchedFiles(self, watched_data_files, callback = None ):
         if watched_data_files is not None and len(watched_data_files) > 0:
-            self.filewatcher = FileWatcher( logging, callback )
+            self.filewatcher = FileWatcher( callback )
             
             self.watched_data_files = {}
             for watched_data_file in watched_data_files:

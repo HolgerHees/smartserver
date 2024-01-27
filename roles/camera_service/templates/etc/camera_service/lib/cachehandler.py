@@ -73,10 +73,14 @@ class CacheHandler(threading.Thread):
                         if self.processUploadedImage(camera_name, picture_name, picture_suffix, job_path):
                             logging.info("New image '{}/{}' cached".format(camera_name, picture_name))
                             changes[camera_name]["added"].append(self.cache_map[camera_name]["entries"][picture_name])
+                        else:
+                            logging.info("Ignore created file '{}'".format(job_path))
                     else:
                         if self.cleanCachedImages(camera_name, picture_name):
                             logging.info("Old image '{}/{}' cleaned".format(camera_name, picture_name))
                             changes[camera_name]["removed"].append(picture_name)
+                        else:
+                            logging.info("Ignore deleted file '{}'".format(job_path))
                 except queue.Empty:
                     for camera_name in changes:
                         if len(changes[camera_name]["added"]) > 0 or len(changes[camera_name]["removed"]) > 0:

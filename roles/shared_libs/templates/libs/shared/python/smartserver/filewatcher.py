@@ -1,16 +1,16 @@
 import pyinotify
 import os
 import threading
+import logging
+
 from datetime import datetime
 
 class FileWatcher(pyinotify.ProcessEvent):
-    def __init__(self, logger, callback = None):
+    def __init__(self, callback = None):
         super().__init__(pyinotify.Stats())
         
         self.is_running = True
 
-        self.logger = logger
-        
         self.callback = callback
 
         wm = pyinotify.WatchManager()
@@ -39,24 +39,24 @@ class FileWatcher(pyinotify.ProcessEvent):
             now = datetime.now().timestamp()
             for event in list(self.delayed_file_events.values()):
                 if now - event["time"] > 60:
-                    self.logger.error("Outdated IN_CREATE event: {}".format(event))
+                    logging.error("Outdated IN_CREATE event: {}".format(event))
             self.validation_event.wait(60)
             self.validation_event.clear()
 
     def notifyListener(self, event):
         if self.callback:
-            #self.logger.info("Notify listener of '{}' - '{}'".format(event["path"],event["maskname"]))
+            #logging.info("Notify listener of '{}' - '{}'".format(event["path"],event["maskname"]))
             self.callback(event)
 
     def process_default(self, event):
-        #self.logger.info(event)
+        #logging.info(event)
 
         if event.path in self.watched_parents:
             if event.mask & pyinotify.IN_DELETE:
                 pass
             elif event.mask & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM ):
                 if event.pathname in self.modified_time:
-                    self.logger.info("New path '{}' watched".format(event.pathname))
+                    logging.info("New path '{}' watched".format(event.pathname))
                     self.addPath(event.pathname)
                     if not event.dir:
                         self.notifyListener({"path": event.pathname, "pathname": event.pathname, "mask": pyinotify.IN_CLOSE_WRITE, "maskname": "IN_CLOSE_WRITE", "time": datetime.now().timestamp(), "cookie": event.cookie if hasattr(event,"cookie") else None })
