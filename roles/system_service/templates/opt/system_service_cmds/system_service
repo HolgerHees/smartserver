@@ -127,20 +127,20 @@ class Handler(Server):
 
     def getStateMetrics(self):
         metrics = []
-        metrics = metrics + self.trafficwatcher.getStateMetrics()
+        metrics += self.trafficwatcher.getStateMetrics()
 
-        metrics = metrics + self.scanner.getStateMetrics()
-        metrics = metrics + self.speedtest.getStateMetrics()
-        metrics = metrics + self.fping.getStateMetrics()
+        metrics += self.scanner.getStateMetrics()
+        metrics += self.speedtest.getStateMetrics()
+        metrics += self.fping.getStateMetrics()
 
-        metrics = metrics + self.info.getStateMetrics()
+        metrics += self.info.getStateMetrics()
 
-        metrics = metrics + self.ipcache.getStateMetrics()
+        metrics += self.ipcache.getStateMetrics()
 
-        metrics = metrics + self.influxdb.getStateMetrics()
-        metrics = metrics + self.mqtt.getStateMetrics()
+        metrics += self.influxdb.getStateMetrics()
+        metrics += self.mqtt.getStateMetrics()
 
-        metrics = metrics + self.scheduler.getStateMetrics()
+        metrics += self.scheduler.getStateMetrics()
 
         return "{}\n".format( "\n".join(metrics) )
 

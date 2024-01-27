@@ -73,8 +73,8 @@ class Handler(Server):
 
     def getStateMetrics(self):
         metrics = []
-        metrics = metrics + self.scheduler.getStateMetrics()
-        metrics = metrics + self.cache_handler.getStateMetrics()
+        metrics += self.scheduler.getStateMetrics()
+        metrics += self.cache_handler.getStateMetrics()
         return "{}\n".format( "\n".join(metrics) )
             
 @app.route('/metrics/', methods = ['GET'])
