@@ -34,8 +34,12 @@
       - "--chown=root:root"
       - "--chmod={{item.chmod}}"
   with_items:
-    - { "chmod": "D750,F640", "path": "update_service_libs/" }
-    - { "chmod": "D750,F750", "path": "update_service_cmds/" }
+    - { "chmod": "D750,F640", "path": "update_service/helper/" }
+    - { "chmod": "D750,F640", "path": "update_service/plugins/" }
+    - { "chmod": "D750,F640", "path": "update_service/server/" }
+    - { "chmod": "D750,F750", "path": "update_service/software_version_check" }
+    - { "chmod": "D750,F750", "path": "update_service/system_update_check" }
+    - { "chmod": "D750,F750", "path": "update_service/update_service" }
 
 - name: copy service config
   template:

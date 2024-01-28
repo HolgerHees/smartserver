@@ -17,7 +17,7 @@
 
 - name: synchronize service
   synchronize:
-    src: "templates/opt/{{item.path}}"
+    src: "templates/etc/{{item.path}}"
     dest: "{{global_etc}}system_service/"
     archive: no
     checksum: yes
@@ -29,8 +29,8 @@
       - "--chown=root:root"
       - "--chmod={{item.chmod}}"
   with_items:
-    - { "chmod": "D750,F640", "path": "system_service_libs/" }
-    - { "chmod": "D750,F750", "path": "system_service_cmds/" }
+    - { "chmod": "D750,F640", "path": "system_service/lib" }
+    - { "chmod": "D750,F750", "path": "system_service/system_service" }
   notify: "restart system_service"
 
 - name: copy service config

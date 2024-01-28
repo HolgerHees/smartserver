@@ -1,18 +1,12 @@
 #!/usr/bin/python3
 
-from flask import Flask, request, make_response
-from werkzeug.serving import WSGIRequestHandler
-
 import logging
-
 import glob
 import json
 import os
 import importlib
 from datetime import datetime
-import logging
 
-from config import config
 from server.cmd.builder import CmdBuilder
 from server.cmd.executer import CmdExecuter
 from server.cmd.workflow import CmdWorkflow
@@ -23,7 +17,10 @@ from server.watcher.deployment_state import DeploymentStateWatcher
 from server.watcher.deployment_tags import DeploymentTagsWatcher
 from server.watcher.software_version import SoftwareVersionWatcher
 
-from smartserver.server import Server
+from smartserver.server import Server, serverWeb
+
+from config import config
+
 
 watched_data_files = [
   config.outdated_roles_state_dir,
@@ -35,7 +32,7 @@ watched_data_files = [
 
 class Handler(Server):
     def __init__(self):
-        super().__init__("update_service" )
+        super().__init__("update_service", config.service_ip, config.service_port )
            
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
         operating_system = plugin.OperatingSystem()
@@ -63,10 +60,10 @@ class Handler(Server):
         
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
         
-    def start(self, callback):
+    def start(self):
         self.cmd_workflow.handleRunningStates()
 
-        super().start(callback)
+        super().start()
 
     def terminate(self):
         self.process_watcher.terminate()
@@ -89,7 +86,8 @@ class Handler(Server):
             
     def checkLastDataModified(self,key,last_data_modified):
         form_key = "last_data_modified[{}]".format(key)
-        return form_key not in request.form or float(request.form[form_key]) < last_data_modified[key]
+        value = self.getRequestValue(form_key)
+        return not value or float(value) < last_data_modified[key]
             
     def buildSuccessResult(self, running_type, cmd_type, state_type ):
         #self.logger.info(__file__)
@@ -110,7 +108,8 @@ class Handler(Server):
 
         changed_data = {}
         
-        force = "last_data_modified[startup]" not in request.form or float(request.form["last_data_modified[startup]"]) < last_data_modified["startup"]
+        value = self.getRequestValue("last_data_modified[startup]")
+        force = not value or float(value) < last_data_modified["startup"]
 
         if state_type == "widget":
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
@@ -194,52 +193,51 @@ class Handler(Server):
         else:
             return self.buildErrorResult(1, u"Job not started" )
           
-app = Flask(__name__)
-
-@app.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
+@serverWeb.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
 def refreshSoftwareVersionCheck():
-    cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(request.headers['X-Forwarded-User'])
+    cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     return handler.runWorkflow([ cmd ], "software", True);
 
-@app.route('/state/', methods = ['POST'])
+@serverWeb.route('/state/', methods = ['POST'])
 def state():     
-    return handler.getState(request.form['type'])
+    return handler.getState(handler.getRequestValue('type'))
   
-@app.route('/refreshSystemUpdateCheck/', methods = ['POST'])
+@serverWeb.route('/refreshSystemUpdateCheck/', methods = ['POST'])
 def refreshSystemUpdateCheck():
-    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(request.headers['X-Forwarded-User'],request.form["type"] if "type" in request.form else None)
+    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(handler.getRequestHeader('X-Forwarded-User'),handler.getRequestValue('type'))
     return handler.runWorkflow([ cmd ], "update", True );
 
-@app.route('/restartService/', methods = ['POST'])
+@serverWeb.route('/restartService/', methods = ['POST'])
 def restartService():
-    cmd = handler.cmd_builder.buildRestartServiceCmdBlock(request.headers['X-Forwarded-User'],request.form["service"])
+    cmd = handler.cmd_builder.buildRestartServiceCmdBlock(handler.getRequestHeader('X-Forwarded-User'),handler.getRequestValue('service'))
     return handler.runWorkflow([ cmd ], "update", True );
       
-@app.route('/restartDaemon/', methods = ['POST'])
+@serverWeb.route('/restartDaemon/', methods = ['POST'])
 def restartDaemon():
-    cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(request.headers['X-Forwarded-User'])
+    cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     return handler.runWorkflow([ cmd ], "update", False );
 
-@app.route('/installSystemUpdates/', methods = ['POST'])
+@serverWeb.route('/installSystemUpdates/', methods = ['POST'])
 def installSystemUpdates():
     cmds = [
-        handler.cmd_builder.buildSystemUpdateCheckBlock( request.headers['X-Forwarded-User'], "system_update" ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.validateUpdateHashes", { "system_updates_hash": request.form["system_updates_hash"], "smartserver_changes_hash": None } ),
-        handler.cmd_builder.buildInstallSystemUpdateCmdBlock(request.headers['X-Forwarded-User'])
+        handler.cmd_builder.buildSystemUpdateCheckBlock( handler.getRequestHeader('X-Forwarded-User'), "system_update" ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.validateUpdateHashes", { "system_updates_hash": handler.getRequestValue('system_updates_hash'), "smartserver_changes_hash": None } ),
+        handler.cmd_builder.buildInstallSystemUpdateCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     ]
     return handler.runWorkflow(cmds, "update", True );
 
-@app.route('/deploySmartserverUpdates/', methods = ['POST'])
+@serverWeb.route('/deploySmartserverUpdates/', methods = ['POST'])
 def deploySmartserverUpdates():
-    tags = request.form["tags"].split(",") if request.form["tags"] else []
-    confirm = request.form["confirm"] == "1"
+    value = handler.getRequestValue('tags')
+    tags = value.split(",") if value else []
+    confirm = handler.getRequestValue('confirm') == "1"
     if len(tags) > 0 or confirm:
-        password = request.form["password"] if "password" in request.form else None
+        password = value = handler.getRequestValue('password')
         if "all" in tags:
             tags = []
         elif confirm:
             tags.append("confirm_deployment")
-        cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(request.headers['X-Forwarded-User'], password, tags )
+        cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(handler.getRequestHeader('X-Forwarded-User'), password, tags )
         if cmd:
             return handler.runWorkflow([ cmd ], "update", True );
         else:
@@ -247,35 +245,28 @@ def deploySmartserverUpdates():
     else:
             return make_response("Missing tag", 501);
 
-@app.route('/systemReboot/', methods = ['POST'])
+@serverWeb.route('/systemReboot/', methods = ['POST'])
 def systemReboot():
-    cmd = handler.cmd_builder.buildSystemRebootCmdBlock(request.headers['X-Forwarded-User'])
+    cmd = handler.cmd_builder.buildSystemRebootCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     return handler.runWorkflow([ cmd ], "update", True );
 
-@app.route('/updateWorkflow/', methods = ['POST'])
+@serverWeb.route('/updateWorkflow/', methods = ['POST'])
 def updateWorkflow():
     workflow = [
-        handler.cmd_builder.buildSystemUpdateCheckBlock( request.headers['X-Forwarded-User'], None ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.validateUpdateHashes", { "system_updates_hash": request.form["system_updates_hash"], "smartserver_changes_hash": request.form["smartserver_changes_hash"] } ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", request.form ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.buildSystemRebootCmdBlockIfNecessary", request.form ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.buildRestartDaemonCmdBlockIfNecessary", request.form ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.buildRestartServiceCmdBlockIfNecessary", request.form ),
-        handler.cmd_builder.buildFunctionBlock( request.headers['X-Forwarded-User'], "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", request.form )
+        handler.cmd_builder.buildSystemUpdateCheckBlock( handler.getRequestHeader('X-Forwarded-User'), None ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.validateUpdateHashes", { "system_updates_hash": handler.getRequestValues("system_updates_hash"), "smartserver_changes_hash": handler.getRequestValues("smartserver_changes_hash") } ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", handler.getRequestValues() ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildSystemRebootCmdBlockIfNecessary", handler.getRequestValues() ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildRestartDaemonCmdBlockIfNecessary", handler.getRequestValues() ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildRestartServiceCmdBlockIfNecessary", handler.getRequestValues() ),
+        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", handler.getRequestValues() )
     ]
     return handler.runWorkflow(workflow, "update", True );
 
-@app.route('/killProcess/', methods = ['POST'])
+@serverWeb.route('/killProcess/', methods = ['POST'])
 def killProcess():
     handler.cmd_workflow.killWorkflow()
     return handler.getState("update")
 
-if __name__ == '__main__':
-    Server.initLogger(logging.INFO)
-    handler = Handler()
-
-    def handleServer():
-        WSGIRequestHandler.protocol_version = "HTTP/1.1"
-        app.run(debug=False, use_reloader=False, threaded=True, host=config.service_ip, port=config.service_port)
-        
-    handler.start(handleServer)
+handler = Handler()
+handler.start()

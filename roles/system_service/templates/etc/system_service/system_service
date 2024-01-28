@@ -1,19 +1,12 @@
 #!/usr/bin/python3
 
-from flask import Flask, request, make_response
-from flask_socketio import SocketIO, emit
-from werkzeug.serving import WSGIRequestHandler
-
 import logging
 import sys
 import json
-
 from datetime import datetime
 
-from smartserver.server import Server
+from smartserver.server import Server, serverWeb, serverSocket
 from smartserver.scheduler import Scheduler
-
-from config import config
 
 from lib.scanner.scanner import Scanner as NetworkScanner
 from lib.speedtest.speedtest import Speedtest
@@ -26,15 +19,12 @@ from lib.ipcache import IPCache
 
 from lib.trafficwatcher.trafficwatcher import TrafficWatcher
 
-app = Flask(__name__ )
-app.logger = logging.getLogger()
-#app.config['SECRET_KEY'] = 'test!'
-#socketio = SocketIO(app, async_mode="threading", logger=logging.getLogger(), cors_allowed_origins="*")
-socketio = SocketIO(app, async_mode="threading", cors_allowed_origins="*")
+from config import config
+
 
 class Handler(Server):
     def __init__(self):
-        super().__init__("system_service")
+        super().__init__("system_service", config.service_ip, config.service_port)
         
         #self.startup_timestamp = round(datetime.now().timestamp(),3)
         
@@ -55,7 +45,7 @@ class Handler(Server):
 
         self.startup_timestamp = round(datetime.now().timestamp(),3)
 
-    def start(self, callback):
+    def start(self):
         self.mqtt.start()
         self.influxdb.start()
 
@@ -71,7 +61,7 @@ class Handler(Server):
 
         self.scheduler.start()
 
-        super().start(callback)
+        super().start()
 
     def terminate(self):
         self.scheduler.terminate()
@@ -93,34 +83,25 @@ class Handler(Server):
         
     def notifyNetworkData(self, changed_data, msg):
         logging.info("Emit changed network {}".format(msg))
-
-        with app.app_context():
-            socketio.emit('network_data', changed_data)
-        #socketio.sleep(5)
+        self.emitSocketData('network_data', changed_data)
         
     def emitNetworkData(self):
         [ data, msg ] = self.scanner.getWebSocketData();
-
         logging.info("Emit initial network {}".format(msg))
-
         data["root"] = self.scanner.getGatewayMAC()
-        emit('network_data', data)
+        self.emitSocketData('network_data', data)
 
     def notifySpeedtestData(self):
         data = self.speedtest.getWebSocketData();
 
         logging.info("Emit changed speedtest {}".format(data))
-
-        with app.app_context():
-            socketio.emit('speedtest', data)
-        #socketio.sleep(5)
+        self.emitSocketData('speedtest', data)
 
     def emitSpeedtestData(self):
         data = self.speedtest.getWebSocketData();
 
         logging.info("Emit initial speedtest {}".format(data))
-
-        emit('speedtest', data)
+        self.emitSocketData('speedtest', data)
 
     def triggerSpeedtest(self):
         self.speedtest.triggerSpeedtest()
@@ -177,50 +158,31 @@ class Handler(Server):
 
         return json.dumps(result)
 
-#@app.route('/state/', methods = ['POST'])
-#def state():
-#    pass
-
-#https://github.com/miguelgrinberg/Flask-SocketIO/blob/main/example/app.py
-
-@app.route('/observed_ips/', methods = ['POST'])
+@serverWeb.route('/observed_ips/', methods = ['POST'])
 def observed_ips():
     return handler.getObservedIPData()
 
-@app.route('/widget_state/', methods = ['GET'])
+@serverWeb.route('/widget_state/', methods = ['GET'])
 def widget_state():
     return handler.getWidgetState()
 
-@app.route('/wan_state/', methods = ['GET'])
+@serverWeb.route('/wan_state/', methods = ['GET'])
 def wan_state():
     return handler.getConnectionState()
 
-@app.route('/metrics/', methods = ['GET'])
+@serverWeb.route('/metrics/', methods = ['GET'])
 def metrics():
     #logging.info(request.headers.get('User-Agent'))
     #return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
     return handler.getStateMetrics()
 
-@app.route('/triggerSpeedtest/', methods = ['GET'])
+@serverWeb.route('/triggerSpeedtest/', methods = ['GET'])
 def speedtest():
     #logging.info(request.headers.get('User-Agent'))
     handler.triggerSpeedtest()
     return "ok"
-
-@socketio.on_error_default
-def on_error(e):
-    logging.error(e)
-    sys.excepthook(*sys.exc_info())
-
-@socketio.on('connect')
-def on_connect():
-    logging.info("on_connect {}".format(request.sid))
     
-@socketio.on('disconnect')
-def on_disconnect():
-    logging.info("on_disconnect {}".format(request.sid))
-    
-@socketio.on('call')
+@serverSocket.on('call')
 def on_call(type):
     logging.info("on_call {}".format(type))
     if type == "network_data":
@@ -228,14 +190,6 @@ def on_call(type):
     elif type == "speedtest":
         handler.emitSpeedtestData()
 
-if __name__ == '__main__':
-    Server.initLogger(logging.INFO)
-
-    handler = Handler()
-
-    def handleServer():
-        WSGIRequestHandler.protocol_version = "HTTP/1.1"
-        socketio.run(app=app, use_reloader=False, host=config.service_ip, port=config.service_port, allow_unsafe_werkzeug=True)
-        
-    handler.start(handleServer)
+handler = Handler()
+handler.start()
 

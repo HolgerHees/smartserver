@@ -1,32 +1,23 @@
 #!/usr/bin/python3
 
 import logging
-
-from flask import Flask, request, make_response
-from flask_socketio import SocketIO, emit
-from werkzeug.serving import WSGIRequestHandler
-from datetime import datetime
+import sys
 import os
 import pyinotify
-import sys
+from datetime import datetime
 
-from smartserver.server import Server
+from smartserver.server import Server, serverWeb, serverSocket
 from smartserver.scheduler import Scheduler
 
 from lib.cachehandler import CacheHandler
 
 import config
 
-app = Flask(__name__)
-app.logger = logging.getLogger()
-#app.config['SECRET_KEY'] = 'test!'
-#socketio = SocketIO(app, async_mode="threading", logger=logging.getLogger(), cors_allowed_origins="*")
-socketio = SocketIO(app, async_mode="threading", cors_allowed_origins="*")
 
 class Handler(Server):
     '''Handler client'''
     def __init__(self):
-        super().__init__("camera_service" )
+        super().__init__("camera_service", "0.0.0.0", "80")
 
         self.scheduler = Scheduler("camera_service")
         self.cache_handler = CacheHandler(self, config)
@@ -44,10 +35,10 @@ class Handler(Server):
         elif event["pathname"][:len(config.cache_path)] == config.cache_path:
             self.cache_handler.cacheChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
 
-    def start(self, callback):
+    def start(self):
         self.scheduler.start()
         self.cache_handler.start()
-        super().start(callback)
+        super().start()
 
     def terminate(self):
         self.scheduler.terminate()
@@ -58,55 +49,31 @@ class Handler(Server):
         while self.is_running:
             self.event.wait(60)
             self.event.clear()
-
             #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
 
     def emitChangedData(self, camera_name, changed_data):
         logging.info("Emit changed cache data for camera '{}'".format(camera_name))
-        with app.app_context():
-            socketio.emit('change_' + camera_name, changed_data)
+        self.emitSocketData('change_' + camera_name, changed_data)
 
     def emitInitialData(self, camera_name):
         data = self.cache_handler.getCacheData(camera_name);
         logging.info("Emit initial cache data for camera '{}'".format(camera_name))
-        emit('init', data)
+        self.emitSocketData('init', data)
 
     def getStateMetrics(self):
         metrics = []
         metrics += self.scheduler.getStateMetrics()
         metrics += self.cache_handler.getStateMetrics()
         return "{}\n".format( "\n".join(metrics) )
-            
-@app.route('/metrics/', methods = ['GET'])
+
+@serverWeb.route('/metrics/', methods = ['GET'])
 def metrics():
     return handler.getStateMetrics()
 
-@socketio.on_error_default
-def on_error(e):
-    logging.error(e)
-    sys.excepthook(*sys.exc_info())
-
-@socketio.on('connect')
-def on_connect():
-    logging.info("on_connect {}".format(request.sid))
-
-@socketio.on('disconnect')
-def on_disconnect():
-    logging.info("on_disconnect {}".format(request.sid))
-
-@socketio.on('init')
+@serverSocket.on('init')
 def on_init(camera_name):
     handler.emitInitialData(camera_name)
 
-if __name__ == '__main__':
-    Server.initLogger(logging.INFO)
-
-    handler = Handler()
-
-    def handleServer():
-        WSGIRequestHandler.protocol_version = "HTTP/1.1"
-        socketio.run(app=app, use_reloader=False, host="0.0.0.0", port='80', allow_unsafe_werkzeug=True)
-        #app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
-
-    handler.start(handleServer)
+handler = Handler()
+handler.start()
 

@@ -144,7 +144,10 @@
        
 - name: install pexpect
   pip:
-    name: pexpect          # needed for ansible expect module (openvpn)
+    name:
+      - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service and ci_service
+      - simple-websocket # used for daemon services like update_service and ci_service
+      - pexpect          # needed for ansible expect module (openvpn)
   
 - name: prepare shared backup folder
   file:

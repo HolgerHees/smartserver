@@ -7,11 +7,20 @@ import traceback
 import logging
 import threading
 
+from flask import Flask, request
+from flask_socketio import SocketIO
+from werkzeug.serving import WSGIRequestHandler
 
 from datetime import datetime, timezone
 
 from smartserver.filewatcher import FileWatcher
 
+
+serverWeb = Flask(__name__)
+serverWeb.logger = logging.getLogger()
+#app.config['SECRET_KEY'] = 'test!'
+#socketio = SocketIO(app, async_mode="threading", logger=logging.getLogger(), cors_allowed_origins="*")
+serverSocket = SocketIO(serverWeb, async_mode="threading", cors_allowed_origins="*")
 
 class ShutdownException(Exception):
     pass
@@ -50,7 +59,10 @@ class Server():
             datefmt="%d.%m.%Y %H:%M:%S"
         )
 
-    def __init__(self,name):
+    def __init__(self, name, ip, port):
+        self.ip = ip
+        self.port = port
+
         self.filewatcher = None
 
         def shutdown(signum, frame):
@@ -102,9 +114,11 @@ class Server():
                     continue
                 logger.error(row)
 
-    def start(self, callback):
+    def start(self):
         try:
-            callback()
+            WSGIRequestHandler.protocol_version = "HTTP/1.1"
+            serverSocket.run(app=serverWeb, use_reloader=False, host=self.ip, port=self.port, allow_unsafe_werkzeug=True)
+            #app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
         except ShutdownException as e:
             pass
         except Exception as e:
@@ -123,7 +137,20 @@ class Server():
         if self.filewatcher is not None:
             self.filewatcher.terminate()
         raise ShutdownException()
-          
+
+    def getRequestHeader(self, field):
+        return request.headers[field] if field in request.headers else None
+
+    def getRequestValue(self, field):
+        return request.form[field] if field in request.form else None
+
+    def getRequestValues(self, field):
+        return request.form
+
+    def emitSocketData(self, topic, data):
+        with serverWeb.app_context():
+            return serverSocket.emit(topic, data)
+
     def initWatchedFiles(self, watched_data_files, callback = None ):
         if watched_data_files is not None and len(watched_data_files) > 0:
             self.filewatcher = FileWatcher( callback )
@@ -141,4 +168,19 @@ class Server():
 
     def confirmFileChanged(self,watched_data_file):
         self.watched_data_files[watched_data_file] = self.filewatcher.getModifiedTime(watched_data_file)
-        
+
+@serverSocket.on_error_default
+def on_error(e):
+    logging.error(e)
+    sys.excepthook(*sys.exc_info())
+
+@serverSocket.on('connect')
+def on_connect():
+    logging.info("on_connect {}".format(request.sid))
+
+@serverSocket.on('disconnect')
+def on_disconnect():
+    logging.info("on_disconnect {}".format(request.sid))
+
+Server.initLogger(logging.INFO)
+
