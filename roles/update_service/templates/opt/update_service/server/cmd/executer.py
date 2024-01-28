@@ -140,10 +140,18 @@ class CmdExecuter(watcher.Watcher):
         self.killed_job = False
         self.killed_logfile = None
 
+    def getJobStatus(self):
+        if self.isRunning():
+            return {"job": self.current_cmd_type if self.current_cmd_type else self.getExternalCmdType(), "state": "running", "started": self.current_started.astimezone().isoformat() if self.current_started else None, "finished": None, "exit_code": None }
+        else:
+            return {"job": None, "state": "idle", "started": None, "finished": None, "exit_code": None }
+
     def restoreLock(self,cmd_type,start_time,file_name):
         self.current_cmd_type = cmd_type
         self.current_started = start_time
         self.current_logfile = file_name
+
+        self.handler.emitJobStatus(self.getJobStatus())
         
     def lock(self, cmd_type, file_name):
         if self.current_started != None:
@@ -153,11 +161,19 @@ class CmdExecuter(watcher.Watcher):
             self.current_started = datetime.now()
             self.current_logfile = file_name
 
+            self.handler.emitJobStatus(self.getJobStatus())
+
             self.resetKilledJobState()
             return True
 
     def _unlock(self, exit_code):
         self.initJobs()
+
+        status = self.getJobStatus()
+        status["state"] = "finished"
+        status["finished"] = datetime.now().astimezone().isoformat()
+        status["exit_code"] = exit_code
+        self.handler.emitJobStatus(status)
 
         self.current_cmd_type = None
         self.current_started = None
@@ -327,12 +343,14 @@ class CmdExecuter(watcher.Watcher):
                                 break
                 
                 if external_cmd_type is None and self.external_cmd_type is not None:
+                    self.handler.emitJobStatus(self.getJobStatus())
                     self.process_watcher.refresh()
 
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
         else:
             if self.external_cmd_type is not None:
+                self.handler.emitJobStatus(self.getJobStatus())
                 self.process_watcher.refresh()
 
             self.external_cmd_type = None

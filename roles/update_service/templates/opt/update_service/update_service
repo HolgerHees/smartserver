@@ -165,7 +165,7 @@ class Handler(Server):
         result["changed_data"] = changed_data
         return json.dumps(result)
 
-    def buildErrorResult(self, status, message):
+    def buildResult(self, status, message):
         return json.dumps({ 
             "status": status, 
             "message": message
@@ -186,7 +186,14 @@ class Handler(Server):
         if is_success :
             return self.getState(state_type)
         else:
-            return self.buildErrorResult(1, u"Job not started" )
+            return self.buildResult(1, u"Job not started" )
+
+    def runWorkflow2(self, workflow, state_type, checkGlobalRunning ):
+        is_success = self.cmd_workflow.runWorkflow( workflow, checkGlobalRunning )
+        if is_success :
+            return self.buildResult(0, u"Job started")
+        else:
+            return self.buildResult(1, u"Job not started" )
 
     def emitUpdateSoftwareData(self, data):
          logging.info("Emit update software data")
@@ -196,11 +203,17 @@ class Handler(Server):
          data = self.software_versions_watcher.getSoftwareVersions()
          logging.info("Emit initial software data")
          self.emitSocketData('initSoftware', data)
-          
+         if self.cmd_executer.isDaemonJobRunning():
+             self.emitSocketData('job_status', self.cmd_executer.getJobStatus())
+
+    def emitJobStatus(self, data):
+         logging.info("Emit job status '{}'".format(data["job"]))
+         self.emitSocketData('job_status', data)
+
 @serverWeb.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
 def refreshSoftwareVersionCheck():
     cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
-    return handler.runWorkflow([ cmd ], "software", True);
+    return handler.runWorkflow2([ cmd ], "software", True);
 
 @serverWeb.route('/state/', methods = ['POST'])
 def state():     

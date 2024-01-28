@@ -20,6 +20,13 @@ mx.SNCore = (function( ret ) {
         jobtimer = window.setTimeout(function(){ setLoadingGear(data); }, 1000);
     }
 
+    function jobStatus(data)
+    {
+        if( data["job"] != "software_check" ) return;
+
+        if( data["state"] == "running" ) setLoadingGear(data["started"]);
+    }
+
     function processData(data)
     {
         if( jobtimer ) window.clearTimeout(jobtimer);
@@ -40,17 +47,8 @@ mx.SNCore = (function( ret ) {
             if( this.status == 200 ) 
             {
                 var response = JSON.parse(this.response);
-                if( response["status"] == "0" )
-                {
-                    mx.Error.confirmSuccess();
-
-                    if( response["job_is_running"] && response["job_cmd_type"] == "software_check" ) setLoadingGear(response["job_started"]);
-                    mx.Page.refreshUI();
-                }
-                else
-                {
-                    mx.Error.handleServerError(response["message"]);
-                }
+                if( response["status"] == "0" ) mx.Error.confirmSuccess();
+                else mx.Error.handleServerError(response["message"]);
             }
             else
             {
@@ -67,8 +65,9 @@ mx.SNCore = (function( ret ) {
         socket.on("connect", (socket) => socket.emit('initSoftware'));
         socket.on("initSoftware", (data) => processData( data ) );
         socket.on("updateSoftware", (data) => processData( data ) );
+        socket.on("job_status", (data) => jobStatus(data) );
     }
-    
+
     ret.openUrl = function(event,url)
     {
         event.stopPropagation();
