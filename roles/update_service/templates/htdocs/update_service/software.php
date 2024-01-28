@@ -7,85 +7,32 @@ require "config.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/update_service/"]); ?>
+<?php echo Ressources::getModules(["/shared/mod/websocket/", "/update_service/"]); ?>
 <script>
 mx.SNCore = (function( ret ) {
   
-    var daemonApiUrl = mx.Host.getBase() + '../api/'; 
-    var refreshDaemonStateTimer = 0;
-        
-    function handleDaemonState(state)
-    {
-        window.clearTimeout(refreshDaemonStateTimer);
-        
-        //console.log(state);
-        
-        if( state["job_is_running"] )
-        {
-            refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 1000);
-        }
-        else
-        {
-            refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
-        }
+    var daemonApiUrl = mx.Host.getBase() + '../api/';
+    var jobtimer = null;
 
-        if( state["job_is_running"] && state["job_cmd_type"] == "software_check" ) mx.SoftwareVersionsTemplates.setLoadingGear(state["job_started"]);
-        else if( Object.keys(state["changed_data"]).length > 0 ) mx.SoftwareVersionsTemplates.processData(state["last_data_modified"], state["changed_data"] );
-             
+    function setLoadingGear(data)
+    {
+        mx.SoftwareVersionsTemplates.setLoadingGear(data);
+        jobtimer = window.setTimeout(function(){ setLoadingGear(data); }, 1000);
+    }
+
+    function processData(data)
+    {
+        if( jobtimer ) window.clearTimeout(jobtimer);
+
+        mx.SoftwareVersionsTemplates.processData(data)
         mx.Page.refreshUI();
     }
-    
-    function refreshDaemonState(last_data_modified,callback)
-    {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl + "state/" );
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-            
-            if( this.status == 200 ) 
-            {
-                var response = JSON.parse(this.response);
-                if( response["status"] == "0" )
-                {
-                    mx.Error.confirmSuccess();
-                    
-                    handleDaemonState(response);
-                    
-                    if( callback ) callback();
-                }
-                else
-                {
-                    mx.Error.handleServerError(response["message"]);
-                }
-            }
-            else
-            {
-                let timeout = 15000;
-                if( this.status == 0 || this.status == 503 ) 
-                {
-                    mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-                }
-                else
-                {
-                    if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
-                }
-                
-                refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
-            }
-        };
-        
-        xhr.send(mx.Core.encodeDict( { "type": "software", "last_data_modified": last_data_modified } ));
-    }
-    
+
     ret.startSoftwareCheck = function()
     {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", daemonApiUrl + "refreshSoftwareVersionCheck/" );
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        
         xhr.withCredentials = true;
         xhr.onreadystatechange = function() {
             if (this.readyState != 4) return;
@@ -96,8 +43,9 @@ mx.SNCore = (function( ret ) {
                 if( response["status"] == "0" )
                 {
                     mx.Error.confirmSuccess();
-                    
-                    handleDaemonState(response);
+
+                    if( response["job_is_running"] && response["job_cmd_type"] == "software_check" ) setLoadingGear(response["job_started"]);
+                    mx.Page.refreshUI();
                 }
                 else
                 {
@@ -115,9 +63,10 @@ mx.SNCore = (function( ret ) {
         
     ret.init = function()
     { 
-        refreshDaemonState(null, function(){}); 
-        
-        mx.Page.refreshUI();
+        let socket = mx.ServiceSocket.init('update_service');
+        socket.on("connect", (socket) => socket.emit('initSoftware'));
+        socket.on("initSoftware", (data) => processData( data ) );
+        socket.on("updateSoftware", (data) => processData( data ) );
     }
     
     ret.openUrl = function(event,url)

@@ -17,7 +17,7 @@ from server.watcher.deployment_state import DeploymentStateWatcher
 from server.watcher.deployment_tags import DeploymentTagsWatcher
 from server.watcher.software_version import SoftwareVersionWatcher
 
-from smartserver.server import Server, serverWeb
+from smartserver.server import Server, serverWeb, serverSocket
 
 from config import config
 
@@ -42,7 +42,7 @@ class Handler(Server):
         self.dependency_watcher = DependencyWatcher( self.system_update_watcher)
         self.deployment_state_watcher = DeploymentStateWatcher()
         self.deployment_tags_watcher = DeploymentTagsWatcher()
-        self.software_versions_watcher = SoftwareVersionWatcher()
+        self.software_versions_watcher = SoftwareVersionWatcher(self)
 
         self.cmd_builder = CmdBuilder( self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
         self.cmd_executer = CmdExecuter( self, self.process_watcher )
@@ -117,11 +117,6 @@ class Handler(Server):
             result["component_updates"] = self.software_versions_watcher.getVersionCount()
             result["needs_attention"] = ( result["workflow_state"] is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
             result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
-
-        elif state_type == "software":
-            last_data_modified["software"] = self.software_versions_watcher.getLastModifiedAsTimestamp()
-            if force or self.checkLastDataModified("software",last_data_modified):
-                changed_data["software"] = self.software_versions_watcher.getSoftwareVersions()
         else:
             last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
             last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
@@ -192,6 +187,15 @@ class Handler(Server):
             return self.getState(state_type)
         else:
             return self.buildErrorResult(1, u"Job not started" )
+
+    def emitUpdateSoftwareData(self, data):
+         logging.info("Emit update software data")
+         self.emitSocketData('updateSoftware', data)
+
+    def emitInitialSoftwareData(self):
+         data = self.software_versions_watcher.getSoftwareVersions()
+         logging.info("Emit initial software data")
+         self.emitSocketData('initSoftware', data)
           
 @serverWeb.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
 def refreshSoftwareVersionCheck():
@@ -267,6 +271,10 @@ def updateWorkflow():
 def killProcess():
     handler.cmd_workflow.killWorkflow()
     return handler.getState("update")
+
+@serverSocket.on('initSoftware')
+def initSoftware():
+    handler.emitInitialSoftwareData()
 
 handler = Handler()
 handler.start()

@@ -4,9 +4,11 @@ from server.watcher import watcher
 
 
 class SoftwareVersionWatcher(watcher.Watcher): 
-    def __init__(self):
+    def __init__(self, handler):
         super().__init__()
-      
+
+        self.handler = handler
+
         self.software = {}
         self.update_count = 0
         self.last_modified = self.getStartupTimestamp()
@@ -15,6 +17,7 @@ class SoftwareVersionWatcher(watcher.Watcher):
         
     def notifyChange(self, event):
         self.initSoftwareState(True)
+        self.handler.emitUpdateSoftwareData(self.software)
         
     def initSoftwareState(self, shouldRetry):
         self.software = self.readJsonFile(config.software_version_state_file,shouldRetry,{})
