@@ -5,13 +5,7 @@ require "../shared/libs/ressources.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-<link href="<?php echo Ressources::getCSSPath('/system_service/'); ?>" rel="stylesheet">
-<script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-<script src="<?php echo Ressources::getJSPath('/system_service/'); ?>"></script>
-<script src="<?php echo Ressources::getComponentPath('/system_service/'); ?>"></script>
-<script src="/shared/js/socketio/socket.io.min.js"></script>
+<?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
     var groups = {};    
@@ -337,21 +331,9 @@ mx.UNCore = (function( ret ) {
         
         //refreshDaemonState(null, function(state){});
         
-        function handleErrors()
-        {
-            mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-        }
-        const socket = io("/", {path: '/system_service/api/socket.io' });
-        socket.on('connect', function() {
-            mx.Error.confirmSuccess();
-            socket.emit('call', "network_data");
-        });
-        socket.on('network_data', function(data) {
-            processData(data);
-        });
-        socket.on('connect_error', err => handleErrors(err))
-        socket.on('connect_failed', err => handleErrors(err))
-        socket.on('disconnect', err => handleErrors(err))
+        let socket = mx.ServiceSocket.init('system_service');
+        socket.on("connect", (socket) => socket.emit('call', "network_data"));
+        socket.on("network_data", (data) => processData(data));
         
         mx.$("#networkToolbar .networkDisplay.button").addEventListener("click",function()
         {

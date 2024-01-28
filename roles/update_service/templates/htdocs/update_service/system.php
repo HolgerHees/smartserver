@@ -9,14 +9,7 @@ require "config.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-<link href="<?php echo Ressources::getCSSPath('/update_service/'); ?>" rel="stylesheet">
-<link rel="stylesheet" href="/shared/css/logfile/logfile_box.css">
-<script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-<script src="<?php echo Ressources::getComponentPath('/update_service/'); ?>"></script>
-<script src="<?php echo Ressources::getJSPath('/update_service/'); ?>"></script>
-<script src="/shared/js/logfile/logfile.js"></script>
+<?php echo Ressources::getModules(["/shared/mod/logfile/","/update_service/"]); ?>
 <script>
     mx.UNCore = (function( ret ) {
         var job_is_running = null;

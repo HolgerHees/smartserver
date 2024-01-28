@@ -10,12 +10,7 @@ function getSVG( $icon, $id)
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-<link href="<?php echo Ressources::getCSSPath('/weather_service/'); ?>" rel="stylesheet">
-<script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-<script src="<?php echo Ressources::getJSPath('/weather_service/'); ?>"></script>
-<script src="<?php echo Ressources::getComponentPath('/weather_service/'); ?>"></script>
+<?php echo Ressources::getModules(["/weather_service/"]); ?>
 <script>
 mx.WeatherCore = (function( ret ) {
     //var serviceApiUrl = mx.Host.getBase() + '../api/';

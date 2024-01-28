@@ -5,12 +5,7 @@ require "../shared/libs/ressources.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-<link href="<?php echo Ressources::getCSSPath('/system_service/'); ?>" rel="stylesheet">
-<script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-<script src="<?php echo Ressources::getJSPath('/system_service/'); ?>"></script>
-<script src="<?php echo Ressources::getComponentPath('/system_service/'); ?>"></script>
+<?php echo Ressources::getModules(["/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
     var daemonApiUrl = mx.Host.getBase() + '../api/';

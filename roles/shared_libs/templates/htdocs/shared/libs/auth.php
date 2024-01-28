@@ -8,10 +8,15 @@ class Auth
 
     public static function getFullname() 
     {
-        return explode(",",trim($_SERVER['REMOTE_USERFULLNAME']));
+        return trim($_SERVER['REMOTE_USERFULLNAME']);
     }
 
-    public static function getGroups() 
+    public static function getFirstname()
+    {
+        return explode(",",trim($_SERVER['REMOTE_USERFULLNAME']))[0];
+    }
+
+    public static function getGroups()
     {
         return explode(",",trim($_SERVER['REMOTE_USERGROUP']));
     }

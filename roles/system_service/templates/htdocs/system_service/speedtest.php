@@ -5,27 +5,16 @@ require "../shared/libs/ressources.php";
 <html style="background-color: transparent !important;">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-<script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [], Translations: [] };</script>
-<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-<script src="<?php echo Ressources::getJSPath('/system_service/'); ?>"></script>
-<script src="<?php echo Ressources::getComponentPath('/system_service/'); ?>"></script>
+<?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
     ret.init = function()
     { 
         mx.I18N.process(document);
         
-        function handleErrors()
-        {
-            mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-        }
-        const socket = io("/", {path: '/system_service/api/socket.io' });
-        socket.on('connect', function() {
-            mx.Error.confirmSuccess();
-            socket.emit('call', "speedtest");
-        });
-        socket.on('speedtest', function(data) {
+        let socket = mx.ServiceSocket.init('system_service');
+        socket.on("connect", (socket) => socket.emit('call', "speedtest"));
+        socket.on("speedtest", function(data) {
             let btn = mx.$(".speedtest.button");
             if( data["is_running"] )
             {
@@ -42,11 +31,7 @@ mx.UNCore = (function( ret ) {
                 btn.classList.remove("disabled")
                 btn.innerText = mx.I18N.get("Start speedtest");
             }
-            //console.log(data)
         });
-        socket.on('connect_error', err => handleErrors(err))
-        socket.on('connect_failed', err => handleErrors(err))
-        socket.on('disconnect', err => handleErrors(err))
     }
 
     ret.trigger = function()

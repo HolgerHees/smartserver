@@ -35,13 +35,9 @@ else
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-<link rel="stylesheet" href="/shared/css/logfile/logfile.css">
-<link rel="stylesheet" href="/shared/css/logfile/logfile_box.css">
+<?php echo Ressources::getModules(["/shared/mod/logfile/"]); ?>
+
 <link rel="stylesheet" href="../css/core.css">
-<script type="text/javascript">var mx = { OnScriptReady: [], OnDocReady: [] };</script>
-<script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-<script src="/shared/js/logfile/logfile.js"></script>
 <script src="../js/core.js"></script>
 <script>
 function initPage()

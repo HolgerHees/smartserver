@@ -245,7 +245,13 @@ class CacheHandler(threading.Thread):
                 img.compression_quality = 70
 
             img.sampling_factors = [4, 2, 2];
+            #img.compression = self.config.preview_mime["format"]
             img.format = self.config.preview_mime["format"]
+            #img.filter = "triangle"
+            #img.unsharp_mask(0.25, 0.08, 8.3, 0.045) # optimize
+            #img.unsharp_mask(0.25, 0.08, 8.3, 0.045)
+            #img.options = { "jpeg:fancy-upsampling": "off" }
+            #img.options = { "filter:support": "2.0" }
 
             profile = img.profiles["icc"]
             img.strip();

@@ -1,5 +1,6 @@
 <?php
 require "./shared/libs/ressources.php";
+require "./shared/libs/auth.php";
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -8,21 +9,15 @@ require "./shared/libs/ressources.php";
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/png" href="/main/img/res/mipmap-mdpi/ic_launcher.png" />
     <link href="main/manifest.json" rel="manifest">
-
-    <link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-    <link href="<?php echo Ressources::getCSSPath('/main/'); ?>" rel="stylesheet">
-
-    <script>var mx = { OnScriptReady: [], OnDocReady: [], Translations: [], User: { 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return mx.User.user == usergroups || usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };<?php
-        require "./shared/libs/auth.php";
-        echo " mx.User.user = " . json_encode(Auth::getUser()) . ";";
-        echo " mx.User.name = " . json_encode(Auth::getFullname()) . ";";
-        echo " mx.User.groups = " . json_encode(Auth::getGroups()) . ";";
-    ?></script>
-    
-    <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-    <script src="<?php echo Ressources::getJSPath('/main/'); ?>"></script>
-    <script src="<?php echo Ressources::getComponentPath('/main/'); ?>"></script>
-
+    <script>
+        var mx = { 'User': { 'user': '', 'name': '', 'groups': [], 'memberOf': function(usergroups){ if( typeof usergroups == 'string' ) { usergroups = [usergroups]; }; return mx.User.user == usergroups || usergroups.filter(value => mx.User.groups.includes(value)).length > 0; }  } };
+<?php
+        echo "        mx.User.user = " . json_encode(Auth::getUser()) . ";\n";
+        echo "        mx.User.name = " . json_encode(Auth::getFullname()) . ";\n";
+        echo "        mx.User.groups = " . json_encode(Auth::getGroups()) . ";\n";
+?>
+    </script>
+    <?php echo Ressources::getModules(["/main/"]); ?>
     <script>
         var pageTheme = null;
 

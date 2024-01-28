@@ -8,13 +8,7 @@ require "../shared/libs/ressources.php";
       width=device-width, initial-scale=1.0, 
       minimum-scale=1.0, maximum-scale=1.0, 
       user-scalable=no, target-densitydpi=device-dpi">
-    <link href="<?php echo Ressources::getCSSPath('/shared/'); ?>" rel="stylesheet">
-    <link href="<?php echo Ressources::getCSSPath('/camera_service/'); ?>" rel="stylesheet">
-    <script>var mx = { OnScriptReady: [], OnDocReady: [] };</script>
-    <script src="<?php echo Ressources::getJSPath('/shared/'); ?>"></script>
-    <script src="<?php echo Ressources::getJSPath('/camera_service/'); ?>"></script>
-    <script src="/shared/js/socketio/socket.io.min.js"></script>
-    <script src="<?php echo Ressources::getComponentPath('/camera_service/'); ?>"></script>
+    <?php echo Ressources::getModules(["/shared/mod/websocket/","/camera_service/"]); ?>
 </head>
 <body>
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "Gallery"); } );</script>
@@ -28,20 +22,10 @@ require "../shared/libs/ressources.php";
     var camera_name = "<?php echo $sub_folder; ?>";
 
     mx.OnDocReady.push( function(){
-        function handleErrors()
-        {
-            mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-        }
-        const socket = io("/", {path: '/camera_service/api/socket.io' });
-        socket.on('connect', function() {
-            mx.Error.confirmSuccess();
-            socket.emit('init', camera_name);
-        });
-        socket.on('init', data => mx.Gallery.init(data));
-        socket.on('change_' + camera_name, data => mx.Gallery.update(data));
-        socket.on('connect_error', err => handleErrors(err))
-        socket.on('connect_failed', err => handleErrors(err))
-        socket.on('disconnect', err => handleErrors(err))
+        let socket = mx.ServiceSocket.init('camera_service');
+        socket.on("connect", (socket) => socket.emit('init', camera_name));
+        socket.on("init", (data) => mx.Gallery.init(data));
+        socket.on("change_" + camera_name, (data) => mx.Gallery.update(data));
     });
 </script>
 <div class="contentLayer error"></div>
