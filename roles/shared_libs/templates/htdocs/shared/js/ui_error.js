@@ -1,5 +1,6 @@
 mx.Error = (function( ret ) {
     let hasError = false;
+    let errorLayer = null;
     
     function hideError()
     {
@@ -11,7 +12,7 @@ mx.Error = (function( ret ) {
         {
             let element = elements[i];
             if( element.nodeType == Node.TEXT_NODE ) continue;
-            if( element.classList.contains("error") )
+            if( element.isSameNode(errorLayer) )
             {
                 element.style.display = "";
             }
@@ -30,13 +31,25 @@ mx.Error = (function( ret ) {
     {
         if( hasError ) return;
         hasError = true;
+
+        if( !errorLayer )
+        {
+            errorLayer = mx.$("div.contentLayer.error");
+            if( !errorLayer )
+            {
+                errorLayer = document.createElement("div");
+                errorLayer.classList.add("contentLayer");
+                errorLayer.classList.add("error");
+                document.body.appendChild(errorLayer);
+            }
+        }
         
         let elements = document.body.childNodes;
         for( let i = 0; i < elements.length; i++ )
         {
             let element = elements[i];
             if( element.nodeType == Node.TEXT_NODE ) continue;
-            if( element.classList.contains("error") )
+            if( element.isSameNode(errorLayer) )
             {
                 element.style.display = "block";
                 element.innerHTML = "<div>" + message + "</div>";

@@ -54,7 +54,6 @@ mx.OnDocReady.push( mx.UNCore.init );
 <body class="inline" style="background-color: transparent !important;">
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame("", mx.I18N.get("Network speedtest")); } );</script>
 <div style="display:flex;align-items:center;justify-content:center;height:100%;">
-  <div class="contentLayer error"></div>
   <div class="speedtest form button" onclick="mx.UNCore.trigger()"></div>
 </div>
 <span style="display:none">

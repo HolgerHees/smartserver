@@ -28,7 +28,6 @@ require "../shared/libs/ressources.php";
         socket.on("change_" + camera_name, (data) => mx.Gallery.update(data));
     });
 </script>
-<div class="contentLayer error"></div>
 <div class="slots"></div>
 <div id="gallery">
   <div class="layer"></div>
