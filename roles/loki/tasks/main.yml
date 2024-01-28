@@ -1,6 +1,6 @@
 - name: set version
   set_fact:
-    loki_version: '2.9.3'
+    loki_version: '2.9.4'
   tags: [ 'update_notifier_config' ]    
 
 - name: prepare needed folder
