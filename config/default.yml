@@ -258,7 +258,7 @@ default_variables: {
 project_name:                     "smartserver"
 
 # version of alpine linux used in several container based roles
-alpine_version:                   "3.19.0"
+alpine_version:                   "3.19.1"
 
 flask_core_version:               "3.0.0"
 flask_socketio_version:           "5.3.6"
