@@ -79,7 +79,7 @@
     js_file: "templates/webui/update_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/update_service.de.json" } ]
     icons: [ 'templates/webui/icons/update_software_logo.svg', 'templates/webui/icons/update_system_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
   
 - name: create version check cron job
   vars:
@@ -88,7 +88,7 @@
     file: "ansible_update_service"
     minute: "0"
     hour: "3"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
   when: "update_service_software_check_enabled|bool"
 
 - name: create system check cron job
@@ -98,7 +98,7 @@
     file: "ansible_update_service"
     minute: "30"
     hour: "3"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
   when: "update_service_system_check_enabled|bool"
   
 - name: create cleanup cron job
@@ -108,19 +108,19 @@
     file: "ansible_update_service"
     hour: "0"
     minute: "40"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: copy service apache config
   vars:
     service_name: "update_service"
     service_host: "127.0.0.1:8505"
-  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
 
 - name: copy service fluentd config
   vars:
     service_name: "update_service"
     service_is_container: no
-  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
 
 - name: "create systemd service"
   template:
@@ -133,11 +133,11 @@
 - name: register systemd service watcher
   vars:
     name: "update_service"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
 
 - name: trigger update_service handler
   vars:
     notify: "restart update_service"
     service: "update_service.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 

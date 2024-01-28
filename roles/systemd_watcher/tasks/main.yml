@@ -12,4 +12,4 @@
     cmd: "/opt/scripts/systemd_watcher_service_check"
     file: "ansible_systemd_watcher"
     minute: "*/5"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml

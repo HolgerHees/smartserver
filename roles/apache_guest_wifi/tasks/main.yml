@@ -4,7 +4,7 @@
     js_file: "templates/webui/guest_wifi.js"
     i18n_files: [ { language: "de", file: "templates/webui/guest_wifi.de.json" } ]
     icons: [ 'templates/webui/icons/guest_wifi.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: synchronize webui
   synchronize:

@@ -35,7 +35,7 @@
     files:
       - roles/minidlna/templates/container/Dockerfile
       - roles/minidlna/templates/container/entrypoint.sh
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: prepare volumes
   set_fact:
@@ -87,10 +87,10 @@
 - name: create systemd service
   vars:
     container_name: "minidlna"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger minidlna handler
   vars:
     notify: "restart minidlna"
     service: "minidlna.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

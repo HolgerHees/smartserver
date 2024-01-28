@@ -1,5 +1,5 @@
 - name: "mysql : check service"
-  import_tasks: roles/mysql/shared/wait_until_ready.yml
+  include_tasks: roles/mysql/shared/wait_until_ready.yml
   
 - name: "mysql : check databases"
   shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e 'show databases;'\""
@@ -29,7 +29,7 @@
     file: "ansible_mysql"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
   when: "backup|bool"
 
 - name: "mysql : register result state"

@@ -14,5 +14,5 @@
 #    network_saddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
     network_saddr: "{{network_firewall_subnet | default(network_ip)}}"
     network_daddr: "{{network_firewall_subnet | default(network_ip.split('.')[:3] | join('.') + '.0/24')}}"
-  import_tasks: roles/firewall/shared/allow_network.yml
+  include_tasks: roles/firewall/shared/allow_network.yml
 
