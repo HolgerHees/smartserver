@@ -64,7 +64,7 @@
       - "--chown=root:root"
       - "--chmod={{item.chmod}}"
   with_items:
-    - { "chmod": "D750,F640", "path": "ci_service/lib/" }
+    - { "chmod": "D750,F640", "path": "ci_service/lib" }
     - { "chmod": "D750,F750", "path": "ci_service/ci_job_handler" }
     - { "chmod": "D750,F750", "path": "ci_service/ci_service" }
   notify: "restart ci_service"
