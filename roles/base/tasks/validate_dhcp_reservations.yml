@@ -14,10 +14,6 @@
             'reservation_hostname_unique': {{ (dhcp_reservations | selectattr('hostname', 'defined') | map(attribute='hostname') | list) | unique | length }}
           }
 
-    - name: "validate dhcp_reservations: prints counts for basic duplicate checks"
-      debug:
-        var: dupe_check
-
     - name: "validate dhcp_reservations: assert no duplicates"
       assert:
         that:
