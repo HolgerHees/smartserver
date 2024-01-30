@@ -152,19 +152,19 @@ default_variables: {
     # used in generic optional role 'wireguard_mobile'
     "mobile_vpn_enabled": { "default": "yes" },                   # enabled by default
     "mobile_vpn_internal_port": { "default": "51828" },           # the port, used on your server
-    "mobile_vpn_public_port": {},                                 # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+    "mobile_vpn_public_port": { "optional": "{{not mobile_vpn_enabled}}" }, # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     # *** END VPN ***
 
     # *** BEGIN DATABASES ***
     "influxdb_enabled": { "default": yes },                       # enabled by default, be careful with disabling, because it will break openhab, system_service and netdata.
     "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
-    "vault_influxdb_admin_password": {},
-    "vault_influxdb_admin_token": {},                             # "lkjfdh7123kjas" => token used for internal command line operations
+    "vault_influxdb_admin_password": { "optional": "{{not influxdb_enabled}}" },
+    "vault_influxdb_admin_token": { "optional": "{{not influxdb_enabled}}" }, # "lkjfdh7123kjas" => token used for internal command line operations
 
     "mysql_enabled": { "default": yes },                          # enabled by default, be careful with disabling, because it will break openhab, nextcloud, and librenms.
     "vault_shared_mysql_username": { "default": "shared" },       # used for internal data
-    "vault_shared_mysql_password": {},
+    "vault_shared_mysql_password": { "optional": "{{not mysql_enabled}}" },
 
     "redis_enabled": { "default": yes },                          # enabled by default, be careful with disabling, because it will break nextcloud and librenms
 
@@ -179,13 +179,13 @@ default_variables: {
 
     # *** BEGIN NEXTCLOUD ***
     "nextcloud_enabled": { "default": yes },                      # enabled by default
-    "vault_nextcloud_instance_id": {},                            # "234sdgzw87399443s" => used internally
-    "vault_nextcloud_password_salt": {},                          # "9ad9aus92z4ij20j20idj928912hd1jd0"
-    "vault_nextcloud_secret": {},                                 # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+    "vault_nextcloud_instance_id": { "optional": "{{not nextcloud_enabled}}" }, # "234sdgzw87399443s" => used internally
+    "vault_nextcloud_password_salt": { "optional": "{{not nextcloud_enabled}}" }, # "9ad9aus92z4ij20j20idj928912hd1jd0"
+    "vault_nextcloud_secret": { "optional": "{{not nextcloud_enabled}}" }, # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
     "vault_nextcloud_mysql_username": { "default": "nextcloud" }, # used for nextcloud data
-    "vault_nextcloud_mysql_password": {},
+    "vault_nextcloud_mysql_password": { "optional": "{{not nextcloud_enabled}}" },
     "vault_nextcloud_admin_username": { "default": "admin" },     # used to login as a nextcloud data
-    "vault_nextcloud_admin_password": {},
+    "vault_nextcloud_admin_password": { "optional": "{{not nextcloud_enabled}}" },
     "nextcloud_additional_apps": { "default": [] },               # additional apps for nextcloud
     # *** EXAMPLE ***
     # [
@@ -205,7 +205,7 @@ default_variables: {
     "openhab_enabled": { "default": yes },                         # enabled by default
     "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
-    "vault_openhab_mysql_password": {},
+    "vault_openhab_mysql_password": { "optional": "{{not openhab_enabled}}" },
     # *** END OPENHAB ***
 
     # *** BEGIN CAMERA & FTP SERVICE ***
