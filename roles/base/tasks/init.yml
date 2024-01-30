@@ -61,43 +61,71 @@
   tags: always
 
 # **** load initial environment variables ****
-- name: load default vars
-  include_vars: "config/default.yml"
-  tags: always
-  
-- name: apply default vars
-  set_fact:
-    "{{item.name}}": "{{ item.default }}"
-  when: "item.state in ['missing','default']"
-  failed_when: "item.state  == 'missing'"
-  ignore_errors: True
-  register: check_result
-  with_items:  |
-    [
-      {% for name, config in default_variables.items() %}
-        { 'name': '{{name}}',
-          'state':
-          {% if name in vars %}
-              'custom'
-          {% else %}
-              {% if ('optional' not in config or not config['optional']) %}
-                  {% if 'default' in config %}
-                      'default', 'default': {{config['default'] | to_json}}
-                  {% else %}
-                      'missing'
-                  {% endif %}
-              {% else %}
-                  'not needed'
-              {% endif %}
-          {% endif %}
-        },
-      {% endfor %}
-    ]
+#- name: load default vars
+#  include_vars: "config/default.yml"
+#  tags: always
 
-- name: check for missing variables
-  assert:
-    that: "check_result.failed is not defined or not check_result.failed"
-    msg: "Some variables are not defined. Please check the 'config/default.yml' file and add the missing variables to your configuration."
+- name: load default vars
+  include_config:
+    file: "config/default.yml"
+  tags: always
+
+- name: check for parsing errors of 'config/default.yml'
+  debug:
+    msg: |
+      {% if parser_errors | length > 0 %}
+      [
+        "The parse errors happens during loading of 'config/default.yml'",
+        "",
+        {% for parser_error in parser_errors %}
+          "{{parser_error}}",
+        {% endfor %}
+      ]
+      {% else %}Config file successfully loaded{% endif %}
+  failed_when: "parser_errors | length > 0"
+
+#- name: check for parsing errors of 'config/default.yml'
+#  assert:
+#    that: no
+#    fail_msg: "{{item}}"
+#  with_items: "{{parser_errors}}"
+
+- name: check for missing mandatory variables in your {{config_path}}env.yml
+  debug:
+    msg: |
+      {% if parser_missing_variables | length > 0 %}
+      [
+        "The following mandatory variables has to be defined",
+        "",
+        {% for missing_variable in parser_missing_variables %}
+          "'{{missing_variable['name']}}' is missing",
+        {% endfor %}
+      ]
+      {% else %}All mandatory variables are defined{% endif %}
+  failed_when: "parser_missing_variables | length > 0"
+
+#- name: check for missing variables
+#  assert:
+#    that: no
+#    fail_msg: "'{{item}}' is missing"
+#    quiet: yes
+#  with_items: |
+#    [
+#     {% for name in parser_all_variables %}
+#         {% if parser_all_variables[name]["state"] == "missing" %}
+#             '{{name}} ',
+#         {% endif %}
+#      {% endfor %}
+#    ]
+
+- name: show custom and default variables
+  debug:
+    msg:
+      - "Default variables (Variables using default values)"
+      - "[{% for parsed_variable in parser_all_variables %}{% if parsed_variable['state'] == 'default' %} {{parsed_variable['name']}}, {% endif %}{% endfor %}]"
+      - ""
+      - "Custom variables (Variables customized in your configuration)"
+      - "[{% for parsed_variable in parser_all_variables %}{% if parsed_variable['state'] == 'custom' %} {{parsed_variable['name']}}, {% endif %}{% endfor %}]"
 
 - name: set ipv6 env state vars
   set_fact:

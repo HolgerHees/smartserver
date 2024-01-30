@@ -125,7 +125,8 @@
 #      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
 #      - { app: "onlyoffice", name: "versionHistory", value: "true" }
 
-      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(\\.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
+      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
+#      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(\\.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
 
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
@@ -134,7 +135,7 @@
       - { app: "notes", name: "fileSuffix", value: ".md" }
 
       - { app: "text", name: "workspace_available", value: "0" }
-      
+
 - name: prepare app configs
   set_fact:
     prepared_app_configs: "{{ prepared_app_configs | default([]) + [ { 'app': item.app, 'name': item.name, 'value': item.value | replace(\"'\", \"\\'\" ) | replace('\"', '\\\\\\\"') } ] }}"

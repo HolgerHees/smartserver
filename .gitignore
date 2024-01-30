@@ -5,3 +5,4 @@ config/*
 !config/default.yml
 /ansible.cfg
 /*.retry
+*/__pycache__/*

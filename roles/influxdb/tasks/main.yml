@@ -28,6 +28,7 @@
     state: present
 #    recreate: true
     entrypoint: "sh -c \"/entrypoint.sh influxd 2>&1\""
+    command_handling: "compatibility"
     env:
       DOCKER_INFLUXDB_INIT_MODE: "setup"
       DOCKER_INFLUXDB_INIT_USERNAME: "{{vault_influxdb_admin_username}}"

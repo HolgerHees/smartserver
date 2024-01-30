@@ -1,5 +1,8 @@
 - name: basic preflight duplicate checks
   block:
+    - name: debug
+      debug:
+        msg: "{{dhcp_reservations}}"
 # source: https://www.reddit.com/r/ansible/comments/b5tzp1/ansible_get_list_of_subelements_and_assert_for/
     - name: "validate dhcp_reservations: create data structure to check via assertion"
       set_fact:

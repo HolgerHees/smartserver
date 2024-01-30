@@ -6,7 +6,7 @@
     group: root
     mode: 0644
   notify: "refresh prometheus"
-  when: "rules_file is defined"
+  when: "monitoring_enabled and rules_file is defined"
   tags: ['prometheus_config']
 
 - name: "prometheus : copy scrape config '{{name}}'"
@@ -17,5 +17,5 @@
     group: root
     mode: 0644
   notify: "refresh prometheus"
-  when: "scrape_file is defined"
+  when: "monitoring_enabled and scrape_file is defined"
   tags: ['prometheus_config']

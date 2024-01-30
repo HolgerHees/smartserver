@@ -3,13 +3,14 @@
   register: "service_result"
   changed_when: no
   failed_when: no
-  
+  when: "influxdb_enabled"
+
 - name: "influxdb : start service"
   systemd:
     name: influxdb
     state: started
     daemon_reload: yes
-  when: "service_result.rc != 0"
+  when: "influxdb_enabled and service_result.rc != 0"
   
 - name: "influxdb : wait to become ready"
   uri:
@@ -21,3 +22,4 @@
   delay: 1
 #  changed_when: "'influxdb.service' not in ansible_facts.services or ansible_facts.services['influxdb.service'].state != 'running'"
   changed_when: "service_result.rc != 0"
+  when: "influxdb_enabled"

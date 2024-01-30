@@ -6,10 +6,11 @@
   shell: "docker exec influxdb sh -c \"influx bucket list --org default-org\""
   register: influxdb_bucket_result
   changed_when: False
+  when: "influxdb_enabled"
 
 - name: "influxdb : create bucket => bucket does not exists"
   shell: "docker exec influxdb sh -c \"influx bucket create --name {{database + ('_' + item.name if item.name is defined else '')}} --org default-org --retention {{item.retention}}\""
-  when: "'\t' + database + ('_' + item.name if item.name is defined else '') + '\t' not in influxdb_bucket_result.stdout"
+  when: "influxdb_enabled and '\t' + database + ('_' + item.name if item.name is defined else '') + '\t' not in influxdb_bucket_result.stdout"
   with_items: "{{retentions}}"
 
 # MAPPINGS
@@ -17,15 +18,17 @@
   shell: "docker exec influxdb sh -c \"influx bucket list --org default-org --json\""
   register: influxdb_bucket_result
   changed_when: False
+  when: "influxdb_enabled"
 
 - name: "influxdb : check v1 mapping"
   shell: "docker exec influxdb sh -c \"influx v1 dbrp list --org default-org\""
   register: influxdb_mapping_result
   changed_when: False
-  
+  when: "influxdb_enabled"
+
 - name: "influxdb : create v1 mapping => bucket mapping does not exists"
   shell: "docker exec influxdb sh -c \"influx v1 dbrp create --db {{database}} --org default-org --rp {{item.name if item.name is defined else 'autogen'}} --bucket-id {{(influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', database + ('_' + item.name if item.name is defined else '')) )[0].id}} {{'' if item.name is defined else '--default'}}\""
-  when: "'\t' + ( influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', database + ('_' + item.name if item.name is defined else '')) )[0].id + '\t' not in influxdb_mapping_result.stdout"
+  when: "influxdb_enabled and '\t' + ( influxdb_bucket_result.stdout | from_json | selectattr('name', 'equalto', database + ('_' + item.name if item.name is defined else '')) )[0].id + '\t' not in influxdb_mapping_result.stdout"
   with_items: "{{retentions}}"  
 
 # TASKS
@@ -40,19 +43,20 @@
     src: "roles/influxdb/templates/downsampling.flux"
     dest: "{{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux"
     mode: 0640
-  when: "item.name is defined"
+  when: "influxdb_enabled and item.name is defined"
   with_items: "{{retentions}}"
   
 - name: "influxdb : check task"
   shell: "docker exec influxdb sh -c \"influx task list --org default-org\""
   register: influxdb_task_result
   changed_when: False
+  when: "influxdb_enabled"
 
 - name: "influxdb : create task => task does not exists => downsampling active and task does not exists"
 #  shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | docker exec -i influxdb sh -c \"influx task create --org default-org\""
 # WORKARROUND for influxdb 2.4
   shell: "cat {{global_build}}influxdb/downsampling_{{database}}_{{item.name}}.flux | docker exec -i influxdb sh -c \"cat > tmp.flux && influx task create --org default-org -f tmp.flux\""
-  when: "item.name is defined and '\tdownsampling_' + database + '_' + item.name + '\t' not in influxdb_task_result.stdout"
+  when: "influxdb_enabled and item.name is defined and '\tdownsampling_' + database + '_' + item.name + '\t' not in influxdb_task_result.stdout"
   with_items: "{{retentions}}"
 
 # BACKUP
@@ -64,8 +68,9 @@
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  when: "influxdb_enabled"
   with_items: "{{retentions}}"
-  
+
 - name: "influxdb : copy backup restore script"
   template:
     src: "roles/influxdb/templates/backup_restore/influxdb.sh"
@@ -74,4 +79,5 @@
     group: root
     mode: 0750
   tags: ['backup_restore']
+  when: "influxdb_enabled"
   with_items: "{{retentions}}"

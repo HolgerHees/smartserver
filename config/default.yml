@@ -31,48 +31,19 @@ default_variables: {
     "env_path":       { "default": "/dataDisk/" },
     "data_path":      { "default": "/dataRaid/" },
 
-    "dns_type":       { "default": "" },                          # 'pihole' or 'dnsmasq'
-    "dns_overrides":  {"default": [] },
-    "dns_default_domain": {"default": "lan"},
-
-    "dhcp_type":      { "default": "" },                          # 'pihole' or 'dnsmasq'
-    "dhcp_range_start": { "default": "{{default_server_subnet}}.151"},
-    "dhcp_range_end": { "default": "{{default_server_subnet}}.200"},
-    "dhcp_reservations": {"default": []},
-    "dhcp_dns_server": {"default": "{{ pihole_ip if pihole_ip is defined else default_server_ip }}"},
-
-    # pihole and dlna ip's should be part of a contiguous area at the end of your server network
-    # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
-    "pihole_ip":      { "optional": yes },                        # pihole ip address from same network as your server ip
-    "pihole_ipv6":    { "optional": yes },                        # pihole ipv6 address from same network as your server ip
-    "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] }, # domains are needed to use google search results
-    "pihole_addlist_urls": { "default": [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ] },
-
-    "dlna_ip":        { "optional": yes },                        # dlna ip address from same network as your server ip
-    "dlna_ipv6":      { "optional": yes },                        # dlna ipv6 address from same network as your server ip
-
     "dns_forward_ip_addresses": { "default": [ "8.8.8.8", "8.8.4.4" ] }, # used by dnsmasq
-    
-    "fping_test_hosts": { "default": [ "8.8.8.8" ] },             # reachability check in netdata
+
+    # *** BEGIN OUTGOING MAIL SERVER ***
+    "vault_mailserver_username": {},                              # "testusername@test.com", "testadmin@test.com" ... => username from your email server
+    "vault_mailserver_password": {},                              # "<mypassword>" => password from your email server
+    "vault_mailserver_host": {},                                  # "smtp.gmail.com" => smtp address from your email server
+    "vault_mailserver_port": {},                                  # "587" => smtp port from your email server
+    # *** END OUTGOING MAIL SERVER
 
     # used in main role 'apache' and can be an empty array []
     "authenticated_ip_addresses": { "default": [] },              # apache access always allowed for ipaddresses e.g. from wallmounted tablets
     
     "public_domain":                                              { "default": "public.{{server_domain}}" },
-    "default_isp":                                                { "default": {} }, # is used to detect a fallback internet connection in system_service
-    # *** EXAMPLE ***
-    # {
-    #     org: [ ".+ Sverige AB" ],                               # external ip must be registered to a organisation or isp named ".+ Sverige AB"
-    #     hostname: [ ".+d1-online\\\\.com" ],                    # external ip must be resolved to a spcific dns name
-    #     ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ]              # fixed external ip ranges
-    # }
-
-    # used in generic optional role 'wireguard_mobile'
-    "mobile_vpn_internal_port": { "default": "51828" },           # the port, used on your server
-    "mobile_vpn_public_port": {},                                 # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
-    # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
-    
-    "cloud_vpn": { "optional": yes },                             # used in generic optional role 'wirguard_cloud'
 
     "userdata": {},
     # *** EXAMPLE ***
@@ -98,26 +69,6 @@ default_variables: {
     #     }
     # }
     
-    #"notify_log_errors": { "default": no },                      # send notifications for all log errors
-
-    "update_service_software_check_enabled": { "default": yes },  # enables the update check for software used inside deployment roles / container
-    "update_service_software_check_email": { "optional": yes },   # "testadmin@test.com" => sends a notification email after each check, if new software is available
-    "update_service_system_check_enabled": { "default": yes },    # enables the update check for this deployment
-    "update_service_system_check_email": { "optional": yes },     # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
-    
-    #vault_telegram_bots: {},
-    # {
-    #     bot_testuser1: {
-    #         chat_id: "<chat_id>",
-    #         chat_token: "<chat_token>"
-    #     }
-    # }
-    
-    "vault_mailserver_username": {},                              # "testusername@test.com", "testadmin@test.com" ... => username from your email server
-    "vault_mailserver_password": {},                              # "<mypassword>" => password from your email server
-    "vault_mailserver_host": {},                                  # "smtp.gmail.com" => smtp address from your email server
-    "vault_mailserver_port": {},                                  # "587" => smtp port from your email server
-
     "vault_userpasswords": {},
     # *** EXAMPLE ***
     # {
@@ -126,63 +77,6 @@ default_variables: {
     #         web_password: "<mywebpassword>"
     #     }
     # }
-
-    # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
-    # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
-    "vault_openid_connect_url": { "optional": yes },              # 'optional' means disabled is not defined, to enable check documentation urls to get the right values
-    "vault_openid_connect_client_id": { "optional": yes },
-    "vault_openid_connect_client_secret": { "optional": yes },
-    "vault_openid_connect_passphrase": { "optional": yes },
-
-    "vault_form_auth_passphrase": {},                             # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
-
-    "vault_pihole_password": { "optional": "{{pihole_ip is not defined}}"}, # used to login into pihole
-
-    "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
-    "vault_influxdb_admin_password": {},
-    "vault_influxdb_admin_token": {},                             # "lkjfdh7123kjas" => token used for internal command line operations
-
-    "vault_shared_mysql_username": { "default": "shared" },       # used for internal data
-    "vault_shared_mysql_password": {},
-
-    # to enable obtain a login from https://api.weather.mg/
-    # to disable, leave the username empty
-    "vault_weather_api_username": { "optional": yes },            # 'optional' means disabled is not defined
-    "vault_weather_api_password": { "optional": yes },
-
-    "vault_nextcloud_instance_id": {},                            # "234sdgzw87399443s" => used internally
-    "vault_nextcloud_password_salt": {},                          # "9ad9aus92z4ij20j20idj928912hd1jd0"
-    "vault_nextcloud_secret": {},                                 # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
-    "vault_nextcloud_mysql_username": { "default": "nextcloud" }, # used for nextcloud data
-    "vault_nextcloud_mysql_password": {},
-    "vault_nextcloud_admin_username": { "default": "admin" },     # used to login as a nextcloud data
-    "vault_nextcloud_admin_password": {},
-    
-    "nextcloud_additional_apps": { "default": [] },               # additional apps for nextcloud
-    # *** EXAMPLE ***
-    # [
-    #     {
-    #         "app": { "optional": yes },                         # app id. e.g. "cookbook"
-    #         "name": { "optional": yes },                        # webui menu name. e.g. "Cookbook"
-    #         "description": { "optional": yes },                 # webui menu info. e.g. "Recipes"
-    #         "icon": { "optional": yes },                        # webui icon. e.g. "icons/nextcloud_cookbook.svg"
-    #
-    #         "usergroups": { "default": [] }                     # optional. limit visibility to specific groups or users. e.g. ["admin", "user", "<username>"]
-    #         "order": { "default": 200 }                         # optional. control order in webui menu
-    #     }
-    # ]
-    
-    "vault_grafana_app_username": { "default": "admin" },
-
-    "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
-    "vault_deployment_token_git": { "optional": yes },            # only needed if you enable "ci_service"
-
-    #"vault_dockerhub_username":   { "default": "holgerhees" },
-    #"vault_dockerhub_password":   { "optional": yes },
-
-    "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
-    "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
-    "vault_openhab_mysql_password": {},
 
     "network_devices": { "default": [] },                         # used for librenms and system_service (network monitoring)
     # *** EXAMPLE ***
@@ -196,6 +90,127 @@ default_variables: {
     #     }
     # ]
 
+    "vault_deployment_config_git": { "default": "https://github.com/HolgerHees/smartserver.git" },
+    "vault_deployment_token_git": { "optional": yes },            # only needed if you enable "ci_service"
+
+    # *** BEGIN APACHE AUTH ***
+    # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
+    # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
+    "vault_openid_connect_url": { "optional": yes },              # 'optional' means disabled is not defined, to enable check documentation urls to get the right values
+    "vault_openid_connect_client_id": { "optional": yes },
+    "vault_openid_connect_client_secret": { "optional": yes },
+    "vault_openid_connect_passphrase": { "optional": yes },
+
+    "vault_form_auth_passphrase": {},                             # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
+    # *** END APACHE AUTH ***
+
+    # *** BEGIN SAMBA ***
+    "samba_enabled": { "default": yes },                          # enabled by default
+    # *** END SAMBA ***
+
+    # *** BEGIN MONITORING ***
+    "monitoring_enabled": { "default": yes },                     # enabled by default => will disable fluentd, loki, prometheus and alertmanager
+
+    "grafana_enabled": { "default": yes },                        # enabled by default
+    "vault_grafana_app_username": { "default": "admin" },
+
+    "netdata_enabled": { "default": yes },                        # enabled by default => needs prometheus
+    # *** END MONITORING ***
+
+    # **** BEGIN LIBRENMS ****
+    # enabled if there are network_devices with attribute 'snmp_method'
+    "librenms_enabled": { "default": "{{librenms_devices | length > 0}}" },
+    "librenms_poller_interval": { "default": 5 },                 # interval in minutes
+    "vault_librenms_mysql_username": { "default": "librenms" },
+    "vault_librenms_mysql_password": { "optional": "{{not librenms_enabled}}" },
+    "vault_librenms_api_token": { "optional": "{{not librenms_enabled}}" },
+    # **** END LIBRENMS ****
+
+    # *** BEGIN DNS SERVER ***
+    # enabled by choosing a type
+    "dns_type":       { "default": "" },                          # 'pihole' or 'dnsmasq'
+    "dns_overrides":  {"default": [] },
+    "dns_default_domain": {"default": "lan"},
+
+    "dhcp_type":      { "default": "" },                          # 'pihole' or 'dnsmasq'
+    "dhcp_range_start": { "default": "{{default_server_subnet}}.151"},
+    "dhcp_range_end": { "default": "{{default_server_subnet}}.200"},
+    "dhcp_reservations": {"default": []},
+    "dhcp_dns_server": {"default": "{{ pihole_ip if pihole_ip is defined else default_server_ip }}"},
+
+    # pihole and dlna ip's should be part of a contiguous area at the end of your server network
+    # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
+    "pihole_enabled": { "default": "{{pihole_ip is defined}}" },
+    "pihole_ip":      { "optional": yes },                        # pihole ip address from same network as your server ip
+    "pihole_ipv6":    { "optional": yes },                        # pihole ipv6 address from same network as your server ip
+    "pihole_whitelist_domains": { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ] }, # domains are needed to use google search results
+    "pihole_addlist_urls": { "default": [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ] },
+    "vault_pihole_password": { "optional": "{{pihole_ip is not defined}}"}, # used to login into pihole
+    # *** END DNS SERVER ***
+
+    # *** BEGIN VPN ***
+    # used in generic optional role 'wireguard_mobile'
+    "mobile_vpn_enabled": { "default": "yes" },                   # enabled by default
+    "mobile_vpn_internal_port": { "default": "51828" },           # the port, used on your server
+    "mobile_vpn_public_port": {},                                 # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+    # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
+    # *** END VPN ***
+
+    # *** BEGIN DATABASES ***
+    "influxdb_enabled": { "default": yes },                       # enabled by default, be careful with disabling, because it will break openhab, system_service and netdata.
+    "vault_influxdb_admin_username": { "default": "admin" },      # used to login into influxdb webui
+    "vault_influxdb_admin_password": {},
+    "vault_influxdb_admin_token": {},                             # "lkjfdh7123kjas" => token used for internal command line operations
+
+    "mysql_enabled": { "default": yes },                          # enabled by default, be careful with disabling, because it will break openhab, nextcloud, and librenms.
+    "vault_shared_mysql_username": { "default": "shared" },       # used for internal data
+    "vault_shared_mysql_password": {},
+
+    "redis_enabled": { "default": yes },                          # enabled by default, be careful with disabling, because it will break nextcloud and librenms
+
+    "mosquitto_enabled": { "default": yes },                      # enabled by default, be careful with disabling, because it will break system_service and openhab
+    # *** END DATABASES AUTH ***
+
+    # *** BEGIN DLNA SERVER ***
+    "dlna_enabled":   { "default": "{{dlna_ip is defined and ( dlna_volumes | length ) > 0}}"},
+    "dlna_ip":        { "optional": yes },                        # dlna ip address from same network as your server ip
+    "dlna_ipv6":      { "optional": yes },                        # dlna ipv6 address from same network as your server ip
+    # *** END DLNA SERVER ***
+
+    # *** BEGIN NEXTCLOUD ***
+    "nextcloud_enabled": { "default": yes },                      # enabled by default
+    "vault_nextcloud_instance_id": {},                            # "234sdgzw87399443s" => used internally
+    "vault_nextcloud_password_salt": {},                          # "9ad9aus92z4ij20j20idj928912hd1jd0"
+    "vault_nextcloud_secret": {},                                 # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+    "vault_nextcloud_mysql_username": { "default": "nextcloud" }, # used for nextcloud data
+    "vault_nextcloud_mysql_password": {},
+    "vault_nextcloud_admin_username": { "default": "admin" },     # used to login as a nextcloud data
+    "vault_nextcloud_admin_password": {},
+    "nextcloud_additional_apps": { "default": [] },               # additional apps for nextcloud
+    # *** EXAMPLE ***
+    # [
+    #     {
+    #         "app": { "optional": yes },                         # app id. e.g. "cookbook"
+    #         "name": { "optional": yes },                        # webui menu name. e.g. "Cookbook"
+    #         "description": { "optional": yes },                 # webui menu info. e.g. "Recipes"
+    #         "icon": { "optional": yes },                        # webui icon. e.g. "icons/nextcloud_cookbook.svg"
+    #
+    #         "usergroups": { "default": [] }                     # optional. limit visibility to specific groups or users. e.g. ["admin", "user", "<username>"]
+    #         "order": { "default": 200 }                         # optional. control order in webui menu
+    #     }
+    # ]
+    # *** END NEXTCLOUD ***
+
+    # *** BEGIN OPENHAB ***
+    "openhab_enabled": { "default": yes },                         # enabled by default
+    "vault_openhab_config_git": {},                               # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
+    "vault_openhab_mysql_username": { "default": "openhab" },     # used for openhab data
+    "vault_openhab_mysql_password": {},
+    # *** END OPENHAB ***
+
+    # *** BEGIN CAMERA & FTP SERVICE ***
+    # enabled if there are camera devices configured
+    "camera_enabled": { "default": "{{camera_devices | length > 0}}" },
     "camera_devices": { "default": [] },                          # used for ftp upload, image gallkery and menu entries
     # *** EXAMPLE ***
     # [
@@ -209,9 +224,31 @@ default_variables: {
     #         snapshot_password: { "optional": yes }              # password to authenticate external url
     #     }
     # ]
-    "vault_ftp_username": { "optional": "{{camera_devices | length == 0}}" }, # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
-    "vault_ftp_password": { "optional": "{{camera_devices | length == 0}}" },
+    "vault_ftp_username": { "optional": "{{not camera_enabled}}" }, # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
+    "vault_ftp_password": { "optional": "{{not camera_enabled}}" },
     "ftp_max_file_age": { "default": "{{2 * 24 * 60}}" },         # images, older then 2 days are discarded
+    # **** END CAMERA SERVICE ****
+
+    # **** BEGIN UPDATE SYSTEM SERVICE ****
+    "update_service_enabled": { "default": "{{ update_service_software_check_enabled or update_service_system_check_enabled}}" },
+    "update_service_software_check_enabled": { "default": yes },  # enables the update check for software used inside deployment roles / container
+    "update_service_software_check_email": { "optional": yes },   # "testadmin@test.com" => sends a notification email after each check, if new software is available
+    "update_service_system_check_enabled": { "default": yes },    # enables the update check for this deployment
+    "update_service_system_check_email": { "optional": yes },     # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    # **** END UPDATE SYSTEM SERVICE ****
+
+    # **** BEGIN SYSTEM SERVICE ****
+    "system_service_enabled": { "default": yes },                 # enabled by default
+
+    "fping_test_hosts": { "default": [ "8.8.8.8" ] },             # reachability check in system_service
+
+    "default_isp":                                                { "default": {} }, # is used to detect a fallback internet connection in system_service
+    # *** EXAMPLE ***
+    # {
+    #     org: [ ".+ Sverige AB" ],                               # external ip must be registered to a organisation or isp named ".+ Sverige AB"
+    #     hostname: [ ".+d1-online\\\\.com" ],                    # external ip must be resolved to a spcific dns name
+    #     ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ]              # fixed external ip ranges
+    # }
 
     "traffic_blocker": { "default": yes },                        # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
     # 1. if suspicious traffic arrives the apache webserver => which traffic, can be configured in the variable 'netflow_incoming_traffic' and the attribute 'log'
@@ -231,28 +268,43 @@ default_variables: {
     # 'allowed' => various regexes agains hostnames, org (ISP) or ip to mark traffic as normal. Type 'wireguard_peers' means the traffic ip is compared with active wireguard endpoints
     # 'name' is just used as an identifier
     # 'target' is a combination of the target ip and port number
-
     "speedtest_server_id": { "default": "auto" },                 # used for system_service speedtest
 
-    "librenms_poller_interval": { "default": 5 },                 # interval in minutes
+    "vault_openwrt_api_username": { "default": "api" },
+    "vault_openwrt_api_password": { "optional": "{{openwrt_devices | length == 0}}" },
+    #"vault_openwrt_root_password": { "optional": "{{openwrt_devices | length == 0}}" },
 
+    "vault_fritzbox_api_username": { "default": "api" },
+    "vault_fritzbox_api_password": { "optional": "{{fritzbox_devices | length == 0}}" },
+    # **** END SYSTEM SERVICE ****
+
+    # **** BEGIN PUBLIC GUEST WIFI BARCODE GENERATOR ****
+    # enabled if there are vault_wifi_networks configured
     "vault_wifi_networks": { "default": {} },
     # {
     #     test1: { password: "1234", type: "public" },
     #     test2: { password: "3456", type: "intern" }
     # }
+    # **** END PUBLIC GUEST WIFI BARCODE GENERATOR ****
 
-    "vault_librenms_mysql_username": { "default": "librenms", "optional": "{{librenms_devices | length == 0}}" },
-    "vault_librenms_mysql_password": { "optional": "{{librenms_devices | length == 0}}" },
+    # **** BEGIN OPENWRT CONFIG GENERATOR ****
+    openwrt_config_generator_enabled: { "default": "{{openwrt_devices | length > 0}}" },
+    # **** END OPENWRT CONFIG GENERATOR ****
 
-    "vault_librenms_api_token": { "optional": "{{librenms_devices | length == 0}}" },
+    # **************************
+    # *** BELOW ARE BY DEFAULT NOT INCLUDED ROLES ***
+    # **************************
 
-    "vault_openwrt_api_username": { "default": "api", "optional": "{{openwrt_devices | length == 0}}" },
-    "vault_openwrt_api_password": { "optional": "{{openwrt_devices | length == 0}}" },
-    #"vault_openwrt_root_password": { "optional": "{{openwrt_devices | length == 0}}" },
+    # *** BEGIN PRIVATE CLOUD SERVICE ***
+    "cloud_vpn": { "optional": yes },                             # used in generic optional role 'wirguard_cloud'
+    # *** END PRIVATE CLOUD SERVICE ***
 
-    "vault_fritzbox_api_username": { "default": "api", "optional": "{{fritzbox_devices | length == 0}}" },
-    "vault_fritzbox_api_password": { "optional": "{{fritzbox_devices | length == 0}}" },
+    # *** BEGIN WEATHER SERVICE ***
+    # to enable just include in your cusom role files
+    # and obtain a login from https://api.weather.mg/
+    "vault_weather_api_username": { "optional": yes },            # 'optional' means disabled is not defined
+    "vault_weather_api_password": { "optional": yes },
+    # *** END WEATHER SERVICE ***
 }
 
 project_name:                     "smartserver"

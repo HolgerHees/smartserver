@@ -88,6 +88,7 @@
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
     backup: yes
   import_tasks: roles/influxdb/shared/add_bucket.yml
+  when: "not influxdb_enabled"
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics

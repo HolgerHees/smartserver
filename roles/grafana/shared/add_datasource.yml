@@ -8,6 +8,7 @@
   with_items: "{{datasources | default([]) }}"
 #  notify: "restart grafana"
   tags: ['grafana_config']
+  when: "grafana_enabled"
 
 - name: "grafana : copy dashboard files for '{{name}}'"
   copy:
@@ -19,4 +20,5 @@
   with_items: "{{dashboards | default([]) }}"
 #  notify: "restart grafana"
   tags: ['grafana_config']
-  
+  when: "grafana_enabled"
+
