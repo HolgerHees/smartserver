@@ -1,16 +1,22 @@
-- name: "fetch last git pull date"
+- name: "fetch last git pull hash"
   shell: "OWNER=`stat -c '%U' .` && sudo -u $OWNER git rev-parse HEAD"
   changed_when: no
-  register: git_fetch_result
+  register: new_git_hash_result
+
+- name: "get confirmed git pull hash"
+  shell: 'cat {{global_lib}}update_service/deployment.state | grep -oP "git_hash\": \"[^\"]+" | grep -oP "[a-z0-9]+$"'
+  changed_when: no
+  register: old_git_hash_result
 
 - name: "confirm deployment"
   vars:
     deployment_date: "{{ ansible_date_time.iso8601_micro[0:-1]}}+00:00"
-    git_hash: "{{git_fetch_result.stdout}}"
+    git_hash: "{{new_git_hash_result.stdout}}"
   template:
     src: "templates/deployment.state"
     dest: "{{global_lib}}update_service/deployment.state"
     owner: root
     group: root
     mode: 0644
+  changed_when: "new_git_hash_result.stdout != old_git_hash_result.stdout"
 #2022-03-17 16:19:34.330117269 +0100
