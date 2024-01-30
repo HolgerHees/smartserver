@@ -1,6 +1,6 @@
 # ***** CHECK *****
 - name: "check service"
-  import_tasks: roles/influxdb/shared/wait_until_ready.yml
+  include_tasks: roles/influxdb/shared/wait_until_ready.yml
 
 # ***** DISABLE APPS *****
 - name: "check users"

@@ -39,7 +39,7 @@
     image_version: "{{fluentd_version}}"
     files:
       - roles/fluentd/templates/container/Dockerfile
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -69,20 +69,20 @@
     name: "fluentd"
     rules:
       - "saddr {{docker_fluentd_ip}} daddr {{docker_loki_ip}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
   
 - name: add container name
   vars:
     host_name: "fluentd"
     host_ip_address: "{{docker_fluentd_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 - name: create systemd service
   vars:
     container_name: "fluentd"
     container_after: [ "loki" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -93,16 +93,18 @@
       repository: "fluent/fluentd",
       pattern: "^v([0-9\\.]+)-debian.*$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 # ***** FINALIZE *****
 - name: register systemd service watcher
   vars:
     name: "fluentd"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: trigger fluentd handler
   vars:
     notify: "restart fluentd"
     service: "fluentd.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

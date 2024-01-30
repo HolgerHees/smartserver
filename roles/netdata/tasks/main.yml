@@ -4,7 +4,7 @@
     description: Netdata repository
     priority: "50"
     baseurl: https://packagecloud.io/netdata/netdata/{{'el' if is_rhel else 'fedora'}}/{{ansible_distribution_major_version if is_rhel else ansible_distribution_version}}/$basearch/
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install required packages => is_rhel or is_fedora
   yum:
@@ -15,19 +15,19 @@
     state: present
     disable_gpg_check: true
   notify: "restart netdata"
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: add netdata gpg key => is_ubuntu
   apt_key:
     url: https://packagecloud.io/netdata/netdata/gpgkey
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install netdata repository => is_ubuntu
   apt_repository:
     repo: "deb [arch=amd64] https://packagecloud.io/netdata/netdata/ubuntu/ {{ansible_distribution_release}} main"
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install required packages => is_ubuntu
   apt:
@@ -37,7 +37,7 @@
     ]
     state: present
   notify: "restart netdata"
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: add zypper repository => is_suse
   zypper_repository:
@@ -47,11 +47,11 @@
     priority: "50"
     state: present
   register: netdata_repo
-  when: is_suse|bool
+  when: is_suse
 
 - name: import zypper gpg key => is_suse
   shell: "zypper --gpg-auto-import-keys ref"
-  when: "is_suse|bool and netdata_repo.changed"
+  when: "is_suse and netdata_repo.changed"
 
 - name: install required packages => is_suse
   zypper:
@@ -71,7 +71,7 @@
     ]
     state: present
   notify: "restart netdata"
-  when: is_suse|bool
+  when: is_suse
 
 - name: prepare needed folder
   file:
@@ -97,7 +97,7 @@
     - "/var/run/netdata"
     - "/usr/lib64/netdata/"
     - "/usr/lib64/netdata/conf.d/"
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: synchronize config
   synchronize:
@@ -160,7 +160,8 @@
 #      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
 #    backup: yes
-#  import_tasks: roles/influxdb/shared/add_bucket.yml
+#  include_tasks: roles/influxdb/shared/add_bucket.yml
+#  when: "influxdb_enabled"
   
 # ***** OTHER *****
 #- name: register grafana configs
@@ -170,7 +171,8 @@
 #      - "templates/grafana/datasources/opentsdb_influxdb.yaml"
 #    dashboards:
 #      - "templates/grafana/dashboards/Server Health.json"
-#  import_tasks: roles/grafana/shared/add_datasource.yml
+#  include_tasks: roles/grafana/shared/add_datasource.yml
+#  when: "grafana_enabled"
 
 - name: register webui
   vars:
@@ -179,14 +181,14 @@
     i18n_files: [ { language: "de", file: "templates/webui/netdata.de.json" } ]
     listener: { "sub_domain": "netdata", "js_file": "templates/webui/netdata.listener.js" }
     icons: [ 'templates/webui/icons/netdata_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "netdata"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: create cron job
   vars:
@@ -194,25 +196,28 @@
     cmd: "/opt/scripts/netdata_to_alertmanager"
     file: "ansible_netdata"
     minute: "*/5"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
   
 # ***** FINALIZE *****
 - name: register prometheus metrics
   vars:
     name: "netdata"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register systemd service watcher
   vars:
     name: "netdata"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: register system package dependency
   vars:
     tag: "netdata"
     packages: [ "netdata" ]
-  import_tasks: roles/update_service/shared/add_dependency.yml
+  include_tasks: roles/update_service/shared/add_dependency.yml
+  when: "update_service_system_check_enabled"
 
 - name: register update notifier
   vars:
@@ -225,10 +230,11 @@
       #version: "v{{netdata_version}}"
       version: "package:netdata"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger netdata handler
   vars:
     notify: "restart netdata"
     service: "netdata.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

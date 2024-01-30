@@ -5,13 +5,15 @@
 
 # ***** CHECK *****
 - name: check mysql service
-  import_tasks: roles/mysql/shared/wait_until_ready.yml
+  include_tasks: roles/mysql/shared/wait_until_ready.yml
+  when: "mysql_enabled"
     
 - name: check redis service
-  import_tasks: roles/redis/shared/wait_until_ready.yml
+  include_tasks: roles/redis/shared/wait_until_ready.yml
+  when: "redis_enabled"
 
 - name: check apache service
-  import_tasks: roles/apache/shared/wait_until_ready.yml
+  include_tasks: roles/apache/shared/wait_until_ready.yml
 
 # ***** DISABLE APPS *****
 - name: disable apps
@@ -162,7 +164,7 @@
     cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
     file: "ansible_nextcloud"
     minute: "*/15"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 # ***** FINALIZE NEWS INSTALLATION *****
 - name: prepare news config folder
@@ -292,7 +294,7 @@
     js_file: "templates/nextcloud_additional_apps.js"
     i18n_files: []
     icons: "{{nextcloud_additional_icons}}"
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
   when: "nextcloud_additional_apps | length > 0"
 
 - name: register update notifier
@@ -301,7 +303,8 @@
     type: "nextcloud"
     url: "https://apps.nextcloud.com/apps/"
     config: {}
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 #- name: apply patches
 #  copy:

@@ -29,7 +29,7 @@
     files:
       - roles/camera_service/templates/container/Dockerfile
       - roles/camera_service/templates/container/entrypoint.sh
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -60,7 +60,7 @@
     name: "camera_service"
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_camera_service_ip}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: copy config
@@ -123,7 +123,7 @@
 - name: copy proxy config
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/cameras.conf"
-  import_tasks: roles/apache/shared/add_config.yml
+  include_tasks: roles/apache/shared/add_config.yml
 
 - name: register webui
   vars:
@@ -131,7 +131,7 @@
     js_file: "templates/webui/camera_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/camera_service.de.json" } ]
     icons: []
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
@@ -139,34 +139,37 @@
     name: "camera_service"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: copy service apache config
   vars:
     service_name: "camera_service"
     service_host: "{{docker_camera_service_ip}}"
-  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
 
 - name: copy service fluentd config
   vars:
     service_name: "camera_service"
     service_is_container: no
-  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "camera_service"
     container_after: [ "camera_ftp" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register systemd service watcher
   vars:
     name: "camera_service"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
-
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
+  
 - name: trigger update_service handler
   vars:
     notify: "restart camera_service"
     service: "camera_service.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 

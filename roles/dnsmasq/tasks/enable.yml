@@ -4,7 +4,7 @@
     state: stopped
     enabled: no
     name: systemd-resolved
-  when: "is_rhel|bool or is_fedora|bool or is_ubuntu|bool"
+  when: "is_rhel or is_fedora or is_ubuntu"
 
 - name: disable NetworkManager dns handling => is_rhel or is_fedora
   lineinfile:
@@ -15,7 +15,7 @@
   register: netconfig_status
   with_items:
     - { field: "dns", value: "none" }
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: disable netconfig dns handling => is_suse
   lineinfile:
@@ -25,11 +25,11 @@
   register: netconfig_status
   with_items:
     - { field: "NETCONFIG_DNS_POLICY", value: "" }
-  when: is_suse|bool
+  when: is_suse
 
 - name: netconfig update => is_suse and netconfig changed
   shell: "netconfig update -f"
-  when: "is_suse|bool and netconfig_status.changed"
+  when: "is_suse and netconfig_status.changed"
   
 #- name: check resolv.conf
 #  stat:

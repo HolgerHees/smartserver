@@ -92,7 +92,7 @@
     image_version: "{{grafana_version}}"
     files:
       - roles/grafana/templates/container/Dockerfile
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
     
 - name: create docker container
   docker_container:
@@ -136,14 +136,14 @@
       - "saddr {{docker_grafana_ip}} daddr {{docker_prometheus_ip}}"
       - "saddr {{docker_grafana_ip}} daddr {{docker_alertmanager_ip}}"
 #      - "saddr {{docker_grafana_ip}} proto tcp dport 443 outerface {{default_network_interface}}" # fetching grafana plugin keys
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
     host_name: "grafana"
     host_ip_address: "{{docker_grafana_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: register webui
@@ -152,25 +152,26 @@
     js_file: "templates/webui/grafana.js"
     i18n_files: [ { language: "de", file: "templates/webui/grafana.de.json" } ]
     icons: [ 'templates/webui/icons/grafana_logo.svg', 'templates/webui/icons/grafana_logs.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "grafana"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/grafana.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/grafana.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
       
 - name: create systemd service
   vars:
     container_name: "grafana"
     container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -181,10 +182,11 @@
       repository: "grafana/grafana",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger grafana handler
   vars:
     notify: "restart grafana"
     service: "grafana.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

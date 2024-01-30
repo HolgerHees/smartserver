@@ -118,14 +118,17 @@
 #      {% endfor %}
 #    ]
 
-- name: show custom and default variables
+- name: show custom, default and unneeded variables
   debug:
     msg:
-      - "Default variables (Variables using default values)"
-      - "[{% for parsed_variable in parser_all_variables %}{% if parsed_variable['state'] == 'default' %} {{parsed_variable['name']}}, {% endif %}{% endfor %}]"
-      - ""
       - "Custom variables (Variables customized in your configuration)"
-      - "[{% for parsed_variable in parser_all_variables %}{% if parsed_variable['state'] == 'custom' %} {{parsed_variable['name']}}, {% endif %}{% endfor %}]"
+      - "- {% for variable in parser_custom_variables %}{{variable['name']}}{% if not loop.last %}, {% endif %}{% endfor %}"
+      - ""
+      - "Default variables (Variables using default values)"
+      - "- {% for variable in parser_default_variables %}{{variable['name']}}{% if not loop.last %}, {% endif %}{% endfor %}"
+      - ""
+      - "Unneeded variables (Because features are disabled or optional)"
+      - "- {% for variable in parser_unneeded_variables %}{{variable['name']}}{% if not loop.last %}, {% endif %}{% endfor %}"
 
 - name: set ipv6 env state vars
   set_fact:

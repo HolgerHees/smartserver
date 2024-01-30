@@ -36,7 +36,7 @@
 - name: copy proxy config
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/manifest.conf"
-  import_tasks: roles/apache/shared/add_config.yml
+  include_tasks: roles/apache/shared/add_config.yml
 
 # POTD FETCHER
 - name: install required packages for fetchPOTD => is_rhel or is_fedora
@@ -45,7 +45,7 @@
       - ImageMagick
       - perl-Image-ExifTool
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install required packages for fetchPOTD => is_ubuntu
   apt:
@@ -53,7 +53,7 @@
       - imagemagick
       - libimage-exiftool-perl
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install required packages for fetchPOTD => is_suse
   zypper:
@@ -62,7 +62,7 @@
       #- perl-Image-ExifTool
       - exiftool
     state: present
-  when: is_suse|bool
+  when: is_suse
   
 - name: copy fetchPOTD cmd
   template:
@@ -90,4 +90,4 @@
     file: "ansible_apache_webui"
     hour: "3"
     minute: "0"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml

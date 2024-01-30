@@ -6,7 +6,7 @@
   vars:
     user: { name: "ftp", system: true, home: "{{global_lib}}/camera_service/upload/" }
     group: { name: "ftp", system: true }
-  import_tasks: roles/user/shared/add_system_user.yml
+  include_tasks: roles/user/shared/add_system_user.yml
 
 - name: prepare ftp folder
   file:
@@ -42,7 +42,7 @@
     files:
       - roles/camera_ftp/templates/container/Dockerfile
       - roles/camera_ftp/templates/container/entrypoint.sh
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -96,7 +96,7 @@
   vars:
     name: "ftp"
     rules: "{{ftp_rules}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 #- name: clean old docker images => image does not exists
@@ -111,18 +111,18 @@
     file: "ansible_ftp_camera"
     hour: "0"
     minute: "50"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: create systemd service
   vars:
     container_name: "vsftpd"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger vsftpd handler
   vars:
     notify: "restart vsftpd"
     service: "vsftpd.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
           
     
     

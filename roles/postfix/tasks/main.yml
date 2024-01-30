@@ -28,7 +28,7 @@
     files:
       - roles/postfix/templates/container/Dockerfile
       - roles/postfix/templates/container/entrypoint.sh
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -60,45 +60,45 @@
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_postfix_ip}}"
       - "saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}} outerface {{default_network_interface}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
     host_name: "postfix"
     host_ip_address: "{{docker_postfix_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # SET LOCAL SMTP CLIENT
 - name: install postfix packages => is_rhel or is_fedora
   yum:
     name: postfix
     state: absent
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: msmtp
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install postfix packages => is_ubuntu
   apt:
     name: postfix
     state: absent
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install required packages => is_ubuntu
   apt:
     name: msmtp
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: remove postfix packages => is_suse
   zypper:
     name: postfix
     state: absent
-  when: is_suse|bool
+  when: is_suse
 
 - name: add zypper repository => is_suse
   zypper_repository:
@@ -108,13 +108,13 @@
     auto_import_keys: yes
     priority: "100"
     state: present
-  when: "is_suse|bool"
+  when: "is_suse"
 
 - name: install required packages => is_suse
   zypper:
     name: msmtp
     state: present
-  when: is_suse|bool
+  when: is_suse
   
 - name: set runtime link
   file:
@@ -139,18 +139,20 @@
     name: "postfix"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register loki rules
   vars:
     name: "postfix"
     rules_file: "templates/loki/rules.yml"
-  import_tasks: roles/loki/shared/add_config.yml
+  include_tasks: roles/loki/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "postfix"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: create cron 'ping' job
   vars:
@@ -159,21 +161,23 @@
     file: "ansible_postfix"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: register systemd service watcher
   vars:
     name: "postfix"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: register system package dependency
   vars:
     tag: "postfix"
     packages: [ "postfix" ]
-  import_tasks: roles/update_service/shared/add_dependency.yml
+  include_tasks: roles/update_service/shared/add_dependency.yml
+  when: "update_service_system_check_enabled"
 
 - name: trigger postfix handler
   vars:
     notify: "restart postfix"
     service: "postfix.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

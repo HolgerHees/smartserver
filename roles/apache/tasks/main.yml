@@ -11,7 +11,7 @@
       python3-cryptography
     ]
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
   
 - name: install required packages => is_ubuntu
   apt:
@@ -19,7 +19,7 @@
       python3-cryptography
     ]
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install required packages => is_suse
   zypper:
@@ -28,7 +28,7 @@
       python3-cryptography # needed for ansible openssl
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
   
 - name: check certificate
   stat:
@@ -224,7 +224,7 @@
     image_version: "{{apache_version}}"
     files:
       - roles/apache/templates/container/Dockerfile
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -295,19 +295,20 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
   
 - name: allow letsencrypt service
   vars:
     name: "http.letsencrypt"
     rules: [ "daddr {{default_server_ip}} proto tcp dport 80" ]
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
   
 - name: create systemd service
   vars:
     container_name: "apache2"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register apache update notifier
   vars:
@@ -318,7 +319,8 @@
       repository: "httpd", 
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: register openidc update notifier
   vars:
@@ -330,10 +332,11 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{openidc_version}}" 
     }
-  import_tasks: roles/update_service/shared/add_software.yml
-  
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
+
 - name: trigger apache2 handler
   vars:
     notify: "restart apache2"
     service: "apache2.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

@@ -2,14 +2,14 @@
   yum:
     name: virtualbox
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
   notify: "restart virtualbox" 
 
 - name: install required packages => is_ubuntu
   apt:
     name: virtualbox
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
   notify: "restart virtualbox" 
 
 - name: install required packages => is_suse
@@ -19,7 +19,7 @@
       , libncurses5
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
   notify: "restart virtualbox" 
   
 #- name: install required python pip modules
@@ -108,7 +108,7 @@
     js_file: "templates/webui/ci_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/ci_service.de.json" } ]
     icons: [ 'templates/webui/icons/ci_service_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: create check cron job
   vars:
@@ -116,8 +116,8 @@
     cmd: "/opt/ci_service/ci_job_handler  start > /dev/null"
     file: "ansible_ci_service"
     minute: "*/5"
-  import_tasks: roles/cron/shared/add_cronjob.yml
-  when: "is_production|bool"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  when: "is_production"
   
 - name: create cleanup cron job
   vars:
@@ -126,20 +126,21 @@
     file: "ansible_ci_service"
     hour: "0"
     minute: "40"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 # ***** FINALIZE *****
 - name: copy service apache config
   vars:
     service_name: "ci_service"
     service_host: "127.0.0.1:8506"
-  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
 
 - name: copy service fluentd config
   vars:
     service_name: "ci_service"
     service_is_container: no
-  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  when: "monitoring_enabled"
 
 - name: "create systemd service"
   template:
@@ -153,22 +154,24 @@
 - name: register systemd service watcher
   vars:
     name: "ci_service"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: register service watcher
   vars:
     name: "vboxdrv"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
-
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
+  
 - name: trigger vboxdrv handler
   vars:
     notify: "restart virtualbox"
     service: "vboxdrv.service"
     process: "lsmod | grep vbox"
-  import_tasks: roles/_shared/service_process_check.yml
+  include_tasks: roles/_shared/service_process_check.yml
   
 - name: trigger ci_service handler
   vars:
     notify: "restart ci_service"
     service: "ci_service.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

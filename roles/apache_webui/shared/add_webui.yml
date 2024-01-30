@@ -34,4 +34,4 @@
   tags: ['apache_webui_config']
 
 - name: register listener
-  import_tasks: roles/apache_webui/shared/add_listener.yml
+  include_tasks: roles/apache_webui/shared/add_listener.yml

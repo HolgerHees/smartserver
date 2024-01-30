@@ -50,7 +50,7 @@
     files:
       - roles/system_service/templates/container/Dockerfile
       - roles/system_service/templates/container/entrypoint.sh
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -87,8 +87,8 @@
 #      - { retention: "360d", name: "360d", interval: "15m", every: "12h" }
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
     backup: yes
-  import_tasks: roles/influxdb/shared/add_bucket.yml
-  when: "not influxdb_enabled"
+  include_tasks: roles/influxdb/shared/add_bucket.yml
+  when: "influxdb_enabled"
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
@@ -96,7 +96,8 @@
     name: "system_service"
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register grafana configs
   vars:
@@ -106,7 +107,8 @@
     dashboards:
       - "templates/grafana/dashboards/System Service Scanner.json"
       - "templates/grafana/dashboards/System Service WAN.json"
-  import_tasks: roles/grafana/shared/add_datasource.yml
+  include_tasks: roles/grafana/shared/add_datasource.yml
+  when: "grafana_enabled"
 
 - name: register grafana configs
   vars:
@@ -117,8 +119,8 @@
       - "templates/grafana/dashboards/System Service Netflow Observed IPs.json"
       - "templates/grafana/dashboards/System Service Netflow Overview.json"
       - "templates/grafana/dashboards/System Service Netflow World Map.json"
-  import_tasks: roles/grafana/shared/add_datasource.yml
-  when: "netflow_collector"
+  include_tasks: roles/grafana/shared/add_datasource.yml
+  when: "grafana_enabled and netflow_collector"
 
 - name: synchronize webui
   synchronize:
@@ -141,7 +143,7 @@
     js_file: "templates/webui/system_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/system_service.de.json" } ]
     icons: [ 'templates/webui/icons/system_service_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
   
 - name: copy service apache config
   vars:
@@ -152,29 +154,31 @@
           ProxyPass http://127.0.0.1:8507/metrics/
           ProxyPassReverse http://127.0.0.1:8507/metrics/
         </Location>
-  import_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
 
 - name: copy service fluentd config
   vars:
     service_name: "system_service"
     service_is_container: yes
-  import_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  when: "monitoring_enabled"
 
 - name: register systemd service watcher
   vars:
     name: "system_service"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "system_service"
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger device_ping handler
   vars:
     notify: "restart system_service"
     service: "system_service.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 
   

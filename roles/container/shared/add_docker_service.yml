@@ -10,4 +10,5 @@
 - name: "container : register systemd service watcher"
   vars:
     name: "{{container_name}}"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"

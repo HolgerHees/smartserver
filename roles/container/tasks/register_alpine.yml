@@ -7,4 +7,5 @@
       repository: "alpine",
       pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"

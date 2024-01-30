@@ -23,7 +23,7 @@
 #    image_version: "{{libreoffice_version}}"
 #    files:
 #      - roles/nextcloud_libreoffice/templates/container/Dockerfile
-#  import_tasks: roles/container/shared/build_docker_image.yml
+#  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -62,39 +62,40 @@
     name: "libreoffice"
     rules:
       - "saddr {{docker_libreoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
     host_name: "libreoffice"
     host_ip_address: "{{docker_libreoffice_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 #- name: register style
 #  vars:
 #    name: "libreoffice"
 #    listener: { "sub_domain": "libreoffice", "js_file": "templates/webui/libreoffice.listener.js" }
-#  import_tasks: roles/apache_webui/shared/add_listener.yml
+#  include_tasks: roles/apache_webui/shared/add_listener.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "libreoffice"
     usergroup: "user"
     include: "templates/etc/apache2/_.ansible.vhost.d/libreoffice.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/libreoffice.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "libreoffice"
 #    container_after: [ "mysql", "redis" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -105,10 +106,11 @@
       repository: "collabora/code",
       pattern: "^([0-9\\.]+)$" 
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger libreoffice handler
   vars:
     notify: "restart libreoffice"
     service: "libreoffice.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

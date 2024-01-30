@@ -65,14 +65,14 @@
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_alertmanager_ip}}"
       - "saddr {{docker_alertmanager_ip}} daddr {{docker_postfix_ip}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
     host_name: "alertmanager"
     host_ip_address: "{{docker_alertmanager_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: register webui
@@ -81,33 +81,35 @@
     js_file: "templates/webui/alertmanager.js"
     i18n_files: [ { language: "de", file: "templates/webui/alertmanager.de.json" } ]
     icons: [ 'templates/webui/icons/alertmanager_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: register grafana configs
   vars:
     name: "alertmanager"
     datasources: 
       - "templates/grafana/datasources/alertmanager.yaml"
-  import_tasks: roles/grafana/shared/add_datasource.yml
-  
+  include_tasks: roles/grafana/shared/add_datasource.yml
+  when: "grafana_enabled"
+
 - name: copy apache vhost
   vars:
     sub_domain: "alertmanager"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/alertmanager.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/alertmanager.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
     
 - name: create systemd service
   vars:
     container_name: "alertmanager"
     container_after: [ "postfix" ]
     container_post_exec: "nohup /bin/sh -c \"(sleep 15 && {{ global_etc }}alertmanager/silent_setup.py) &\""
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -118,10 +120,11 @@
       repository: "prom/alertmanager",
       pattern: "^v([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger alertmanager handler
   vars:
     notify: "restart alertmanager"
     service: "alertmanager.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

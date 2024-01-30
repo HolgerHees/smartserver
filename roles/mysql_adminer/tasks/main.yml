@@ -50,7 +50,7 @@
 #    js_file: "templates/webui/phpmyadmin.js"
 #    i18n_files: [ { language: "de", file: "templates/webui/phpmyadmin.de.json" } ]
 #    listener: { "prefix": "mysql", "js_file": "templates/webui/phpmyadmin.listener.js" }
-#  import_tasks: roles/apache_webui/shared/add_webui.yml
+#  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 #- name: prepare config folder
 #  file:
@@ -71,4 +71,5 @@
 #      pattern: "^RELEASE_([0-9_]+)$",
 #      version: "RELEASE_{{phpmyadmin_version | regex_replace('\\.','_')}}" 
 #    }
-#  import_tasks: roles/update_service/shared/add_software.yml
+#  include_tasks: roles/update_service/shared/add_software.yml
+#  when: "update_service_software_check_enabled"

@@ -76,7 +76,7 @@
 
     - { import_role: { name: openhab_toolbox, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'openhab_toolbox', 'php', 'apache' ],        when: "openhab_enabled" }
 
-    - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher', "systemd_watcher_config" ] }
+    - { import_role: { name: systemd_watcher, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'systemd_watcher', "systemd_watcher_config" ], when: "monitoring_enabled" }
     
     - { import_role: { name: update_service, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'update_service', "update_system_config", "update_notifier_config" ], when: "update_service_enabled" }
 
@@ -93,11 +93,11 @@
 
     - { import_role: { name: shared_libs },                                                  tags: [ 'shared_libs' ] }                                                                                          # php & python libs
 
-    - { import_role: { name: systemd_watcher },                                              tags: [ 'systemd_watcher' ] }                                                                                      # checking failed service starts
+    - { import_role: { name: systemd_watcher },                                              tags: [ 'systemd_watcher' ],                                    when: "monitoring_enabled" }                       # checking failed service starts
 
-    - { import_role: { name: hardware_mdadm },                                               tags: [ 'hardware_mdadm' ] }                                                                                       # raid weekly check cron job
-    - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ] }                                                                                      # disk monitoring & checks
-    - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ] }                                                                                     # sensors setups
+    - { import_role: { name: hardware_mdadm },                                               tags: [ 'hardware_mdadm' ],                                     when: "monitoring_enabled" }                       # raid weekly check cron job
+    - { import_role: { name: hardware_smartd },                                              tags: [ 'hardware_smartd' ],                                    when: "monitoring_enabled" }                       # disk monitoring & checks
+    - { import_role: { name: hardware_sensors },                                             tags: [ 'hardware_sensors' ],                                   when: "monitoring_enabled or netdata_enabled" }    # sensors setups
 
     - { import_role: { name: container },                                                    tags: [ 'container', 'macvlan' ] }                                                                                 # container env (docker & podman)
     - { import_role: { name: container, tasks_from: register_alpine, handlers_from: empty }, tags: [ 'alpine' ],                                             when: "update_service_system_check_enabled" }      # update notifier for alpine image

@@ -4,7 +4,7 @@
         lm_sensors
     ]
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install required packages => is_ubuntu
   apt:
@@ -12,7 +12,7 @@
         lm-sensors
     ]
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
   
 - name: install required packages => is_suse
   zypper:
@@ -20,7 +20,7 @@
         sensors
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
        
 - name: detect sensors
   shell: "[ -f \"/etc/sysconfig/lm_sensors\" ] || sensors-detect --auto"

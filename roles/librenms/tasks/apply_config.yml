@@ -1,15 +1,17 @@
 # ***** CHECK *****
 - name: "check mysql service"
-  import_tasks: roles/mysql/shared/wait_until_ready.yml
+  include_tasks: roles/mysql/shared/wait_until_ready.yml
+  when: "mysql_enabled"
     
 - name: "check redis service"
-  import_tasks: roles/redis/shared/wait_until_ready.yml
+  include_tasks: roles/redis/shared/wait_until_ready.yml
+  when: "redis_enabled"
 
 - name: "check apache service"
-  import_tasks: roles/apache/shared/wait_until_ready.yml
+  include_tasks: roles/apache/shared/wait_until_ready.yml
 
 - name: "check librenms service"
-  import_tasks: roles/librenms/shared/wait_until_ready.yml
+  include_tasks: roles/librenms/shared/wait_until_ready.yml
 
 - name: "add devices"
   shell: "docker exec librenms sh -c \"lnms device:add --force --{{item.snmp_method}} -c {{item.snmp_community_string}} {{item.host}}\""
@@ -33,7 +35,7 @@
     file: "ansible_librenms"
     hour: "*/6"
     minute: "33"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: "create discovery new cron job"
   vars:
@@ -42,7 +44,7 @@
     file: "ansible_librenms"
     hour: "*"
     minute: "*/5"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: "create poller cron job"
   vars:
@@ -51,7 +53,7 @@
     file: "ansible_librenms"
     hour: "*"
     minute: "*/{{librenms_poller_interval}}"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: "create daily cron job"
   vars:
@@ -61,7 +63,7 @@
     user: "1000"
     hour: "0"
     minute: "15"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: "create alerts cron job"
   vars:
@@ -70,4 +72,4 @@
     file: "ansible_librenms"
     hour: "*"
     minute: "*"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml

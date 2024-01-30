@@ -64,27 +64,29 @@
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_loki_ip}}"
       - "saddr {{docker_loki_ip}} daddr {{docker_alertmanager_ip}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
     host_name: "loki"
     host_ip_address: "{{docker_loki_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
     name: "loki"
     scrape_file: "templates/prometheus/scrape.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register loki rules
   vars:
     name: "loki"
     rules_file: "templates/etc/loki/rules.yaml"
-  import_tasks: roles/loki/shared/add_config.yml
+  include_tasks: roles/loki/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register webui
   vars:
@@ -92,18 +94,19 @@
     js_file: "templates/webui/loki.js"
     i18n_files: [ { language: "de", file: "templates/webui/loki.de.json" } ]
     icons: [ 'templates/webui/icons/loki_logs.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/loki.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "loki"
     container_after: [ "alertmanager" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register grafana configs
   vars:
@@ -112,7 +115,8 @@
       - "templates/grafana/datasources/loki.yaml"
     dashboards:
       - "templates/grafana/dashboards/Logs.json"
-  import_tasks: roles/grafana/shared/add_datasource.yml
+  include_tasks: roles/grafana/shared/add_datasource.yml
+  when: "grafana_enabled"
 
 - name: register update notifier
   vars:
@@ -123,10 +127,11 @@
       repository: "grafana/loki",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger loki handler
   vars:
     notify: "restart loki"
     service: "loki.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

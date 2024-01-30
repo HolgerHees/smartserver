@@ -11,10 +11,11 @@
 - name: register service watcher
   vars:
     name: "{{'ssh' if is_ubuntu else 'sshd'}}"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: trigger sshd handler
   vars:
     notify: "restart sshd"
     service: "{{'ssh' if is_ubuntu else 'sshd'}}.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

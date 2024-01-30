@@ -7,4 +7,3 @@
     mode: 0640
   notify: "restart fluentd"
   tags: ['fluentd_config']
-  when: "monitoring_enabled"

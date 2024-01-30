@@ -3,21 +3,21 @@
     name: "smartmontools"
     state: present
   notify: "restart smartd"
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
   
 - name: install required packages => is_ubuntu
   apt:
     name: "smartmontools"
     state: present
   notify: "restart smartd"
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install required packages => is_suse
   zypper:
     name: "smartmontools"
     state: present
   notify: "restart smartd"
-  when: is_suse|bool
+  when: is_suse
   
 - name: collect devices
   shell: "smartctl --scan | grep -oP \"^[A-z0-9/]+\""
@@ -38,15 +38,17 @@
   vars:
     name: "smartd"
     rules_file: "templates/prometheus/rules.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register systemd service watcher
   vars:
     name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: trigger smartd handler
   vars:
     notify: "restart smartd"
     service: "{{'smartmontools' if is_ubuntu else 'smartd'}}.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

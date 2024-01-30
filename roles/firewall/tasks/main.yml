@@ -21,7 +21,7 @@
       iptables
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
 
 - name: install required packages => is_rhel or is_fedora
   yum:
@@ -30,18 +30,18 @@
       ,iptables
     ]
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: load module ip_tables => is_rhel
   modprobe:
     name: ip_tables
     state: present
   register: iptables_result
-  when: is_rhel|bool
+  when: is_rhel
 
 - name: enable module ip_tables => is_rhel
   shell: "echo \"ip_tables\" > /etc/modules-load.d/iptables.conf"
-  when: is_rhel|bool and iptables_result.changed
+  when: is_rhel and iptables_result.changed
 
 - name: check firewalld status
   shell: "systemctl is-active --quiet firewalld || systemctl is-enabled --quiet firewalld"
@@ -92,7 +92,8 @@
 - name: register systemd service watcher
   vars:
     name: "ferm"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: register update notifier
   vars:
@@ -104,7 +105,8 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{ferm_version}}" 
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 #- name: trigger ferm handler
 #  command: "/bin/true"
@@ -115,7 +117,7 @@
   vars:
     notify: "restart ferm"
     service: "ferm.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
  
 # nftables rule to filter fritzbox homeplug broadcasts
 #table netdev filter {
@@ -132,4 +134,4 @@
 #  vars:
 #    notify: "restart ferm"
 #    service: "ferm.service"
-#  import_tasks: roles/_shared/service_check.yml
+#  include_tasks: roles/_shared/service_check.yml

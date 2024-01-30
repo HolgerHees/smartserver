@@ -25,7 +25,7 @@
     owner: root
     group: root
     mode: 0600
-  when: "is_production|bool and key_directory.matched > 0"
+  when: "is_production and key_directory.matched > 0"
 
 - name: copy startup script
   template:
@@ -46,7 +46,7 @@
   copy:
     src: "{{global_etc}}/wireguard_cloud/keys/"
     dest: "{{config_path}}vault/wireguard_cloud/"
-  when: "is_production|bool and ( stat_server_key_result.changed or key_directory.matched != 2 )"
+  when: "is_production and ( stat_server_key_result.changed or key_directory.matched != 2 )"
   
 - name: fetch keys
   fetch:
@@ -85,7 +85,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/wireguard_cloud/templates/container/Dockerfile
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker network
   vars:
@@ -95,7 +95,7 @@
     network_gateway: "{{vpn_cloud_services.local.bridge}}"
     network_internal: no
     network_firewall_subnet: "{{vpn_cloud_subnet}}.0.0/16"
-  import_tasks: roles/container/shared/create_docker_network.yml
+  include_tasks: roles/container/shared/create_docker_network.yml
 
 - name: create docker container
   docker_container:
@@ -142,7 +142,7 @@
 #  vars:
 #    host_name: "wireguard_cloud"
 #    host_ip_address: "{{vpn_cloud_services.local.gateway}}"
-#  import_tasks: roles/_shared/add_to_hosts.yml
+#  include_tasks: roles/_shared/add_to_hosts.yml
 
 - name: prepare used ports
   set_fact:
@@ -170,7 +170,7 @@
   vars:
     name: "wireguard_cloud"
     rules: "{{wireguard_cloud_ferm_rules}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
@@ -178,10 +178,10 @@
     container_name: "wireguard_cloud"
     trigger_name: "wireguard_cloud"
     container_post_exec: "/opt/docker/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: trigger wireguard_cloud handler
   vars:
     notify: "restart wireguard_cloud"
     service: "wireguard_cloud.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

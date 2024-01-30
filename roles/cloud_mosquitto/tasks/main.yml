@@ -52,20 +52,20 @@
   vars:
     host_name: "cloud_mosquitto"
     host_ip_address: "{{vpn_cloud_services.local.mosquitto}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 #- name: copy fluentd config
 #  vars:
 #    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
-#  import_tasks: roles/fluentd/shared/add_config.yml
+#  include_tasks: roles/fluentd/shared/add_config.yml
 
 - name: create systemd service
   vars:
     container_name: "cloud_mosquitto"
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 #- name: register update notifier
 #  vars:
@@ -76,10 +76,11 @@
 #      repository: "eclipse-mosquitto", 
 #      pattern: "^([0-9\\.]+)$" 
 #    }
-#  import_tasks: roles/update_service/shared/add_software.yml
+#  include_tasks: roles/update_service/shared/add_software.yml
+#  when: "update_service_software_check_enabled"
 
 - name: trigger cloud_mosquitto handler
   vars:
     notify: "restart cloud_mosquitto"
     service: "cloud_mosquitto.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

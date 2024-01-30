@@ -40,13 +40,13 @@
     name: "redis"
     rules:
       - "saddr {{docker_redis_ip}} daddr {{docker_php_ip}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
     container_name: "redis"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -57,10 +57,11 @@
       repository: "redis",
       pattern: "^([0-9\\.]+)-alpine$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger redis handler
   vars:
     notify: "restart redis"
     service: "redis.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

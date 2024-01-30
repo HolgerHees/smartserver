@@ -6,4 +6,3 @@
     group: root
     mode: 0644
   tags: ['update_notifier_config']
-  when: "update_service_software_check_enabled"

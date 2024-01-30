@@ -3,14 +3,13 @@
   register: "service_result"
   changed_when: no
   failed_when: no
-  when: "redis_enabled"
   
 - name: "redis : start service"
   systemd:
     name: redis
     state: started
     daemon_reload: yes
-  when: "redis_enabled and service_result.rc != 0"
+  when: "service_result.rc != 0"
 
 - name: "redis : wait to become ready"
   command: "docker exec redis sh -c 'redis-cli'"
@@ -19,4 +18,3 @@
   delay: 1
   until: "check_result.rc == 0 and check_result.stdout == ''"
   changed_when: "service_result.rc != 0"
-  when: "redis_enabled"

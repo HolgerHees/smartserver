@@ -2,5 +2,5 @@
   vars:
     config_name: "{{service_name}}"
     config_file: "roles/shared_libs/templates/etc/apache2/_.ansible.conf.d/service.conf"
-  import_tasks: roles/apache/shared/add_config.yml
+  include_tasks: roles/apache/shared/add_config.yml
   tags: [ 'service_apache_config' ]

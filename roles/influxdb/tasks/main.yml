@@ -62,7 +62,7 @@
   vars:
     host_name: "influxdb"
     host_ip_address: "{{docker_influxdb_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: create cron job
@@ -72,7 +72,7 @@
     file: "ansible_influxdb"
     hour: "0"
     minute: "45"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: register webui
   vars:
@@ -80,24 +80,25 @@
     js_file: "templates/webui/influxdb.js"
     i18n_files: [ { language: "de", file: "templates/webui/influxdb.de.json" } ]
     icons: [ 'templates/webui/icons/influxdb_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "influxdb"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/influxdb.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/influxdb.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
     
 - name: create systemd service
   vars:
     container_name: "influxdb"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -108,17 +109,18 @@
       repository: "influxdb",
       pattern: "^([0-9\\.]+)-alpine$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger influxdb handler
   vars:
     notify: "restart influxdb"
     service: "influxdb.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 
 # CHECK local cli token => only needed if a new container is created and data folder already exists
 - name: check influxdb service
-  import_tasks: roles/influxdb/shared/wait_until_ready.yml
+  include_tasks: roles/influxdb/shared/wait_until_ready.yml
   when: "influxdb_container_result.changed"
   
 - name: check cli config

@@ -7,4 +7,3 @@
     mode: 0640
   notify: "restart loki"
   tags: ['loki_config']
-  when: "monitoring_enabled"

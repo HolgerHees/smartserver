@@ -8,8 +8,6 @@ from ansible.module_utils.common.text.converters import to_text
 
 import re
 
-#https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/include_vars.py
-
 class ActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):
 
@@ -79,9 +77,15 @@ class ActionModule(ActionBase):
         error_messages += list(set(other_errors))
 
         # prepare result
+        parser_result_values = list(parser_result.values())
+        parser_result_values.sort(key=lambda variable: variable["name"])
+
         result['ansible_facts']["parser_errors"] = error_messages
-        result['ansible_facts']["parser_missing_variables"] = list(filter( lambda item: item["state"] == "missing", parser_result.values()))
-        result['ansible_facts']["parser_all_variables"] = list(parser_result.values())
+        result['ansible_facts']["parser_missing_variables"] = list(filter( lambda item: item["state"] == "missing", parser_result_values))
+        result['ansible_facts']["parser_default_variables"] = list(filter( lambda item: item["state"] == "default", parser_result_values))
+        result['ansible_facts']["parser_custom_variables"] = list(filter( lambda item: item["state"] == "custom", parser_result_values))
+        result['ansible_facts']["parser_unneeded_variables"] = list(filter( lambda item: item["state"] == "unneeded", parser_result_values))
+        result['ansible_facts']["parser_all_variables"] = parser_result_values
 
         self._display.v('Config test %s' % (error_messages))
 

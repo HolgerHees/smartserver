@@ -5,7 +5,7 @@
       , cronie
     ]
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
   
 - name: install required packages => is_suse
   zypper:
@@ -14,7 +14,7 @@
       , cronie
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
 
 - name: copy crony cmd
   template:

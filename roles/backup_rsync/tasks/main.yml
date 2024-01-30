@@ -21,8 +21,8 @@
 #    file: "ansible_cron_backup_rsync"
 #    hour: "5"
 #    minute: "0"
-#  import_tasks: roles/cron/shared/add_cronjob.yml
-#  when: "is_production|bool"
+#  include_tasks: roles/cron/shared/add_cronjob.yml
+#  when: "is_production"
 
 - name: create cron job => is_production
   vars:
@@ -31,5 +31,5 @@
     file: "ansible_rsync_backup"
     hour: "5"
     minute: "0"
-  import_tasks: roles/cron/shared/add_cronjob.yml
-  when: "is_production|bool"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  when: "is_production"

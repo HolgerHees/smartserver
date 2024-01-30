@@ -13,7 +13,7 @@
     git_clone_name: "deployment"
     git_clone_path: "{{deployment_path}}"
     git_clone_url: "{{vault_deployment_config_git}}"
-  import_tasks: roles/_shared/git_clone.yml
+  include_tasks: roles/_shared/git_clone.yml
   when: "ansible_connection != 'local' or not deployment_stat_result.stat.exists"
 
 #- name: install mitogen

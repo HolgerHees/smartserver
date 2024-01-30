@@ -81,7 +81,7 @@
     image_version: "{{alpine_version}}"
     files:
       - roles/dnsmasq/templates/container/Dockerfile
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
   
 - name: create docker container
   docker_container:
@@ -127,17 +127,17 @@
     name: "dnsmasq"
     rules: "{{dns_rules}}"
     instant_activation: True
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: create systemd service
   vars:
     container_name: "dnsmasq"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
 - name: enable dnsmasq
-  import_tasks: roles/dnsmasq/tasks/enable.yml
+  include_tasks: roles/dnsmasq/tasks/enable.yml
 
 - name: force dnsmasq restart
   systemd:
@@ -150,5 +150,5 @@
   vars:
     notify: "restart dnsmasq"
     service: "dnsmasq.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 

@@ -4,26 +4,26 @@
   register: mdraid
   tags: [ "loki_config" ]
 
-- name: install required packages => is_rhel or is_fedora|bool
+- name: install required packages => is_rhel or is_fedora
   yum:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: mdraid.stat.exists and is_rhel|bool or is_fedora|bool
+  when: mdraid.stat.exists and is_rhel or is_fedora
   
 - name: install required packages => is_ubuntu
   apt:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: mdraid.stat.exists and is_ubuntu|bool
+  when: mdraid.stat.exists and is_ubuntu
 
 - name: install required packages => is_suse
   zypper:
     name: "mdadm"
     state: present
   notify: "restart mdmonitor"
-  when: mdraid.stat.exists and is_suse|bool
+  when: mdraid.stat.exists and is_suse
   
 - name: copy event script
   template:
@@ -36,7 +36,7 @@
 
 - name: set config
   lineinfile:
-    path: "/etc/sysconfig/{{ 'mdadm' if is_suse|bool else 'mdmonitor' }}"
+    path: "/etc/sysconfig/{{ 'mdadm' if is_suse else 'mdmonitor' }}"
     regexp: '^{{item.field}}\s*='
     line: '{{item.field}}="{{item.value}}"'
     create: true
@@ -57,7 +57,7 @@
 
 #- name: disable default check cron jobs
 #  file: 
-#    path: "/etc/{{ 'cron.d/mdadm' if is_suse|bool else 'cron.weekly/raid-check' }}"
+#    path: "/etc/{{ 'cron.d/mdadm' if is_suse else 'cron.weekly/raid-check' }}"
 #    state: absent
 #  when: mdraid.stat.exists
 
@@ -80,7 +80,7 @@
 #    weekday: "7"
 #    hour: "1"
 #    minute: "0"
-#  import_tasks: roles/cron/shared/add_cronjob.yml
+#  include_tasks: roles/cron/shared/add_cronjob.yml
 #  when: mdraid.stat.exists
 
 #- name: create cron 'continue' job
@@ -91,7 +91,7 @@
 #    weekday: "1-6"
 #    hour: "1"
 #    minute: "0"
-#  import_tasks: roles/cron/shared/add_cronjob.yml
+#  include_tasks: roles/cron/shared/add_cronjob.yml
 #  when: mdraid.stat.exists
 
 # ***** FINALIZE *****
@@ -99,25 +99,25 @@
   vars:
     name: "mdmonitor"
     rules_file: "templates/prometheus/rules.yml"
-  import_tasks: roles/prometheus/shared/add_config.yml
-  when: mdraid.stat.exists
+  include_tasks: roles/prometheus/shared/add_config.yml
+  when: "monitoring_enabled and mdraid.stat.exists"
 
 - name: register loki rules
   vars:
     name: "mdmonitor"
     rules_file: "templates/loki/rules.yml"
-  import_tasks: roles/loki/shared/add_config.yml
-  when: mdraid.stat.exists
+  include_tasks: roles/loki/shared/add_config.yml
+  when: "monitoring_enabled and mdraid.stat.exists"
 
 - name: register systemd service watcher
   vars:
     name: "mdmonitor"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  when: mdraid.stat.exists
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled and mdraid.stat.exists"
 
 - name: trigger mdmonitor handler
   vars:
     notify: "restart mdmonitor"
     service: "mdmonitor.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
   when: mdraid.stat.exists

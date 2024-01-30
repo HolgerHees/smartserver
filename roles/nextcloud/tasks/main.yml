@@ -70,17 +70,18 @@
     password: "{{vault_nextcloud_mysql_password}}"
     backup: yes
     backup_cleanup: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
-  import_tasks: roles/mysql/shared/add_database.yml
+  include_tasks: roles/mysql/shared/add_database.yml
+  when: "mysql_enabled"
   tags: [ 'user' ]
 
 # ***** REDIS ****
 - name: check redis service => database does not exists
-  import_tasks: roles/redis/shared/wait_until_ready.yml
-  when: "database_added"
+  include_tasks: roles/redis/shared/wait_until_ready.yml
+  when: "redis_enabled and database_added"
 
 # ***** APACHE *****  
 - name: check apache service
-  import_tasks: roles/apache/shared/wait_until_ready.yml
+  include_tasks: roles/apache/shared/wait_until_ready.yml
   when: "database_added or not nextcloud_version_exists.stat.exists"
 
   
@@ -265,7 +266,7 @@
     cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
     file: "ansible_nextcloud"
     minute: "*/5"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: create cron job
   vars:
@@ -274,7 +275,7 @@
     file: "ansible_nextcloud"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: add admin web user
   vars:
@@ -282,7 +283,7 @@
     password: "{{vault_nextcloud_admin_password}}"
     fullname: "Nextcloud System User"
     usergroups: []
-  import_tasks: roles/user/shared/add_web_user.yml
+  include_tasks: roles/user/shared/add_web_user.yml
   tags: [ 'user' ]
 
 - name: register webui
@@ -291,7 +292,7 @@
     js_file: "templates/webui/nextcloud.js"
     i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
     icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg', 'templates/webui/icons/nextcloud_notes.svg', 'templates/webui/icons/nextcloud_photos.svg', 'templates/webui/icons/nextcloud_news.svg', 'templates/webui/icons/nextcloud_passwords.svg', 'templates/webui/icons/nextcloud_deck.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
@@ -301,12 +302,13 @@
       - "{{vault_nextcloud_admin_username}}"
     additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: register update notifier
   vars:
@@ -318,4 +320,5 @@
       pattern: "^v([0-9\\.]+)$",
       version: "v{{nextcloud_version}}" 
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"

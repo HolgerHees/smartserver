@@ -104,14 +104,14 @@
   vars:
     name: "librenms"
     rules: "{{librenms_ferm_rules}}"
-  import_tasks: roles/firewall/shared/allow_service.yml
+  include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]
 
 - name: add container name
   vars:
     host_name: "librenms"
     host_ip_address: "{{docker_librenms_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** MYSQL DATABASE ****
 - name: create database
@@ -120,7 +120,8 @@
     username: "{{vault_librenms_mysql_username}}"
     password: "{{vault_librenms_mysql_password}}"
     backup: yes
-  import_tasks: roles/mysql/shared/add_database.yml
+  include_tasks: roles/mysql/shared/add_database.yml
+  when: "mysql_enabled"
   
 # ***** FINALIZE *****
 - name: register webui
@@ -129,25 +130,26 @@
     js_file: "templates/webui/librenms.js"
     i18n_files: [ { language: "de", file: "templates/webui/librenms.de.json" } ]
     icons: [ 'templates/webui/icons/librenms_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: copy apache vhost
   vars:
     sub_domain: "librenms"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/librenms.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/librenms.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
     
 - name: create systemd service
   vars:
     container_name: "librenms"
     container_after: [ "redis", "mysql" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
   
 - name: register update notifier
   vars:
@@ -158,11 +160,12 @@
       repository: "librenms/librenms",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger librenms handler
   vars:
     notify: "restart librenms"
     service: "librenms.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 

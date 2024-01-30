@@ -123,7 +123,7 @@
     js_file: "templates/webui/pihole.js"
     i18n_files: [ { language: "de", file: "templates/webui/pihole.de.json" } ]
     icons: [ 'templates/webui/icons/pihole_logo.svg' ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
 
 - name: create cron job
   vars:
@@ -132,17 +132,18 @@
     file: "ansible_pihole"
     hour: "1"
     minute: "0"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/pihole.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "pihole"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
 
 - name: register update notifier
   vars:
@@ -153,10 +154,11 @@
       repository: "pihole/pihole",
       pattern: "^(20[0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"
 
 - name: trigger pihole handler
   vars:
     notify: "restart pihole"
     service: "pihole.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

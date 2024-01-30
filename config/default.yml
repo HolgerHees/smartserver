@@ -109,7 +109,7 @@ default_variables: {
     # *** END SAMBA ***
 
     # *** BEGIN MONITORING ***
-    "monitoring_enabled": { "default": yes },                     # enabled by default => will disable fluentd, loki, prometheus and alertmanager
+    "monitoring_enabled": { "default": yes },                     # enabled by default => will disable fluentd, loki, prometheus and alertmanager, systemd_watcher and hardware_*
 
     "grafana_enabled": { "default": yes },                        # enabled by default
     "vault_grafana_app_username": { "default": "admin" },

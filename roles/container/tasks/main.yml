@@ -15,13 +15,13 @@
       #,docker-engine
     ]
     state: absent
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: make sure dnf-plugins.core installed => is_rhel or is_fedora
   dnf:
     name: dnf-plugins-core
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: remove old packages => is_rhel or is_fedora
   yum:
@@ -38,14 +38,14 @@
         , docker-engine
     ]
     state: absent
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install docker repository => is_rhel or is_fedora
   command: dnf config-manager --add-repo https://download.docker.com/linux/{{'centos' if is_rhel else 'fedora'}}/docker-ce.repo
   args:
     warn: no
   changed_when: no
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install required packages => is_rhel or is_fedora
   yum:
@@ -58,7 +58,7 @@
         , hostname
     ]
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
   
 - name: remove old packages => is_ubuntu
   apt:
@@ -70,19 +70,19 @@
         , runc
     ]
     state: absent
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: add docker gpg key => is_ubuntu
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
         
 - name: install docker repository => is_ubuntu
   apt_repository:
     repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable"
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 - name: install required packages => is_ubuntu
   apt:
@@ -95,7 +95,7 @@
         , hostname
     ]
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
 
 #- name: add suse zypper repository
 #  zypper_repository:
@@ -104,7 +104,7 @@
 #    auto_import_keys: yes
 #    priority: "50"
 #    state: present
-#  when: is_suse|bool
+#  when: is_suse
 
 - name: install required packages => is_suse
   zypper:
@@ -121,7 +121,7 @@
 #        , cni-plugins>=0.8.3
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
 
 ##### DOCKER #####
 - name: prepare needed folder
@@ -145,11 +145,11 @@
     seuser: "system_u"
     state: present
   register: sefcontext_result
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: reload selinux configuration => (is_rhel or is_fedora) and sefcontext changed
   shell: "restorecon {{global_lib}}docker"
-  when: (is_rhel|bool or is_fedora|bool) and sefcontext_result.changed
+  when: (is_rhel or is_fedora) and sefcontext_result.changed
 
 - name: copy daemon config
   template:
@@ -164,7 +164,8 @@
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
 
 - name: synchronize docker tools
   synchronize:
@@ -229,7 +230,8 @@
 - name: copy fluentd config => is_suse
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  when: "monitoring_enabled"
   
 #http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Tumbleweed/x86_64/
 #- name: clone dnsname git
@@ -352,34 +354,36 @@
 - name: register systemd service watcher
   vars:
     name: "macvlan_bridge"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
-  when: "macvlan_range | length > 0"
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled and macvlan_range | length > 0"
 
 - name: trigger macvlan_bridge handler
   vars:
     notify: "restart macvlan_bridge"
     service: "macvlan_bridge.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
   when: "macvlan_range | length > 0"
 
 - name: register systemd service watcher
   vars:
     name: "docker"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  when: "monitoring_enabled"
 
 - name: trigger docker handler
   vars:
     notify: "restart docker"
     service: "docker.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 
 #- name: register systemd service watcher
 #  vars:
 #    name: "podman.socket"
-#  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+#  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+#  when: "monitoring_enabled"
 
 #- name: trigger podman handler
 #  vars:
 #    notify: "restart podman"
 #    service: "podman.socket"
-#  import_tasks: roles/_shared/service_check.yml
+#  include_tasks: roles/_shared/service_check.yml

@@ -66,7 +66,7 @@
 #      , redhat-rpm-config  # used by ansible gem mobule
     ]
     state: present
-  when: is_rhel|bool or is_fedora|bool
+  when: is_rhel or is_fedora
 
 - name: install required packages => is_ubuntu
   apt:
@@ -101,7 +101,7 @@
       , python3-passlib
     ]
     state: present
-  when: is_ubuntu|bool
+  when: is_ubuntu
   
 - name: install required packages => is_suse
   zypper:
@@ -140,7 +140,7 @@
       , insserv-compat     # used by ansible systemd module
     ]
     state: present
-  when: is_suse|bool
+  when: is_suse
        
 - name: install pexpect
   pip:
@@ -204,7 +204,7 @@
   vars:
     host_name: "{{server_name}}"
     host_ip_address: "{{default_server_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 #https://cromwell-intl.com/open-source/performance-tuning/ethernet.html
 #ethtool -K eth0 tx-checksum-ipv4 off tx-checksum-ipv6 off

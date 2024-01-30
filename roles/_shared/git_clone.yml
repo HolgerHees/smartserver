@@ -11,7 +11,7 @@
 
 #- name: debug
 #  debug:
-#    msg: "[ ! `git config --global --get-all safe.directory | grep \"{{git_clone_path}}\"` ]"
+#    msg: "[ -d '{{git_clone_path}}' ] && cd {{git_clone_path}} && [ `ls -1A .  | wc -l` -gt 0 ] && ! git diff-index --quiet master"
 
 - name: set {{git_clone_name}} git as safe.directory
   shell: "[ ! `git config --global --get-all safe.directory | grep \"{{git_clone_path}}\"` ] && git config --global --add safe.directory {{git_clone_path}}"
