@@ -198,6 +198,6 @@
 
     - { import_role: { name: update_service, tasks_from: confirm_deployment, handlers_from: empty }, tags: [ 'all', 'confirm_deployment' ],                  when: "update_service_system_check_enabled" }      # set confirm date
 
-    - { import_role: { name: update_service, tasks_from: confirm_roles, handlers_from: empty }, tags: [ 'always' ], when: "update_service_system_check_enabled" }                                               # removes outdated state files
+    - { import_role: { name: update_service, tasks_from: confirm_roles, handlers_from: empty }, tags: [ 'always' ],                                          when: "update_service_system_check_enabled" }      # removes outdated state files
 
     - { import_role: { name: systemd_watcher, tasks_from: check_services, handlers_from: empty }, tags: [ 'validate' ] }                                                                                        # check if services are running
