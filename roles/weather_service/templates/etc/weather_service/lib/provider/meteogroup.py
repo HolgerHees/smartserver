@@ -10,8 +10,6 @@ import decimal
 
 from lib.provider.provider import Provider, AuthException, RequestDataException, CurrentDataException, ForecastDataException
 
-# possible alternative => https://open-meteo.com/
-
 # https://api.weather.mg/
 
 token_url    = "https://auth.weather.mg/oauth/token"

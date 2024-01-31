@@ -48,7 +48,7 @@
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_weather_service_ip}}"
       - "saddr {{docker_weather_service_ip}} daddr {{docker_mysql_ip}}"
-      - "saddr {{docker_weather_service_ip}} daddr {{docker_cloud_mosquitto_ip if use_cloud_mosquitto else docker_mosquitto_ip}}"
+      - "saddr {{docker_weather_service_ip}} daddr {{docker_cloud_mosquitto_ip if weather_mqtt_server == 'cloud_mosquitto' else docker_mosquitto_ip}}"
       - "saddr {{docker_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
   tags: [ 'firewall_config' ]

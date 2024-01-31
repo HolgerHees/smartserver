@@ -35,7 +35,7 @@
         path: "{{global_etc}}pihole/dhcp.leases"
         state: touch
       when: dhcp_changed.changed
-  when: dhcp_type == 'pihole'
+  when: "dhcp_enabled and dhcp_type == 'pihole'"
 
 - name: generate custom.list (local DNS records)
   template:
@@ -44,7 +44,7 @@
     owner: "999"
     group: "1000"
   notify: restart pihole
-  when: dns_type == 'pihole'
+  when: "dns_enabled and dns_type == 'pihole'"
 
 - name: check started docker
   systemd:
@@ -70,7 +70,7 @@
         "WEBPASSWORD": "{{vault_pihole_password}}",
         "DNS1": "127.0.0.11",
         "DNS2": "no"
-        {% if dns_type == 'pihole' %}
+        {% if dns_enabled and dns_type == 'pihole' %}
             , "DNS_BOGUS_PRIV": "true"
             , "DNS_FQDN_REQUIRED": "true"
             , "REV_SERVER": "false"
@@ -79,7 +79,7 @@
             , "REV_SERVER_CIDR": "{{host_server_network}}"
             , "PIHOLE_DOMAIN": "{{dns_default_domain}}"
         {% endif %}
-        {% if dhcp_type == 'pihole' %}
+        {% if dhcp_enabled and dhcp_type == 'pihole' %}
             , "DHCP_ACTIVE": "true"
             , "DHCP_START": "{{dhcp_range_start}}"
             , "DHCP_END": "{{dhcp_range_end}}"

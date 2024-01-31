@@ -32,14 +32,14 @@ class ActionModule(ActionBase):
                         parser_result[default_var_name] = {"name": default_var_name, "state": "custom"}
                         continue
 
+                    if "optional" in default_var_value:
+                        optional_result[default_var_name] = {"name": default_var_name, "optional": default_var_value["optional"], "default": default_var_value["default"] if "default" in default_var_value else None }
+                        parser_result[default_var_name] = {"name": default_var_name, "state": "optional"}
+                        continue
+
                     if "default" in default_var_value:
                         result['ansible_facts'][default_var_name] = task_vars[default_var_name] = default_var_value["default"]
                         parser_result[default_var_name] = {"name": default_var_name, "state": "default"}
-                        continue
-
-                    if "optional" in default_var_value:
-                        optional_result[default_var_name] = {"name": default_var_name, "optional": default_var_value["optional"]}
-                        parser_result[default_var_name] = {"name": default_var_name, "state": "optional"}
                         continue
 
                     parser_result[default_var_name] = {"name": default_var_name, "state": "missing"}
@@ -48,16 +48,31 @@ class ActionModule(ActionBase):
 
         missing_vars = {}
         other_errors = []
-        #templar = Templar(loader=None, variables=task_vars)
-        for var_name in result['ansible_facts']:
-            result['ansible_facts'][var_name] = self.render(var_name, result['ansible_facts'][var_name], result['ansible_facts'][var_name], missing_vars, other_errors)
 
-        for default_var_name in optional_result:
-            is_optional = self.render(default_var_name, optional_result[default_var_name]["optional"], False, missing_vars, other_errors)
+        #templar = Templar(loader=None, variables=task_vars)
+        for var_name, var_value in result['ansible_facts'].items():
+            result['ansible_facts'][var_name] = task_vars[var_name] = self.render(var_name, var_value, var_value, missing_vars, other_errors)
+            #self._display.v('Test "%s" "%s"' % (var_name, result['ansible_facts'][var_name]))
+
+        for default_var_name, default_var_state in optional_result.items():
+            is_optional = self.render(default_var_name, default_var_state["optional"], False, missing_vars, other_errors)
             if not is_optional:
-                parser_result[default_var_name] = {"name": default_var_name, "state": "missing"}
+                #if default_var_name == "vault_fritzbox_api_password":
+                #    self._display.v('Test "%s"' % (is_optional))
+                #    self._display.v('Test "%s"' % (task_vars["system_service_enabled"]))
+                #    self._display.v('Test "%s"' % (task_vars["fritzbox_devices"]))
+                #    self._display.v('Test "%s"' % (default_var_state["optional"]))
+                #    self._display.v('Test "%s"' % (default_var_state["default"]))
+                if default_var_state["default"] is not None:
+                    result['ansible_facts'][default_var_name] = task_vars[default_var_name] = self.render(default_var_name, default_var_state["default"], default_var_state["default"], missing_vars, other_errors)
+                    parser_result[default_var_name] = {"name": default_var_name, "state": "default"}
+                else:
+                    parser_result[default_var_name] = {"name": default_var_name, "state": "missing"}
             else:
                 parser_result[default_var_name] = {"name": default_var_name, "state": "unneeded"}
+
+        #for var_name, var_value in result['ansible_facts'].items():
+        #    self._display.v('Test "%s" "%s"' % (var_name, type(var_value)))
 
         # process errors
         error_messages = []
@@ -81,10 +96,10 @@ class ActionModule(ActionBase):
         parser_result_values.sort(key=lambda variable: variable["name"])
 
         result['ansible_facts']["parser_errors"] = error_messages
-        result['ansible_facts']["parser_missing_variables"] = list(filter( lambda item: item["state"] == "missing", parser_result_values))
-        result['ansible_facts']["parser_default_variables"] = list(filter( lambda item: item["state"] == "default", parser_result_values))
-        result['ansible_facts']["parser_custom_variables"] = list(filter( lambda item: item["state"] == "custom", parser_result_values))
-        result['ansible_facts']["parser_unneeded_variables"] = list(filter( lambda item: item["state"] == "unneeded", parser_result_values))
+        result['ansible_facts']["parser_missing_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "missing", parser_result_values))))
+        result['ansible_facts']["parser_default_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "default", parser_result_values))))
+        result['ansible_facts']["parser_custom_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "custom", parser_result_values))))
+        result['ansible_facts']["parser_unneeded_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "unneeded", parser_result_values))))
         result['ansible_facts']["parser_all_variables"] = parser_result_values
 
         self._display.v('Config test %s' % (error_messages))

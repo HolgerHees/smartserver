@@ -120,15 +120,23 @@
 
 - name: show custom, default and unneeded variables
   debug:
-    msg:
-      - "Custom variables (Variables customized in your configuration)"
-      - "- {% for variable in parser_custom_variables %}{{variable['name']}}{% if not loop.last %}, {% endif %}{% endfor %}"
-      - ""
-      - "Default variables (Variables using default values)"
-      - "- {% for variable in parser_default_variables %}{{variable['name']}}{% if not loop.last %}, {% endif %}{% endfor %}"
-      - ""
-      - "Unneeded variables (Because features are disabled or optional)"
-      - "- {% for variable in parser_unneeded_variables %}{{variable['name']}}{% if not loop.last %}, {% endif %}{% endfor %}"
+    msg: |
+      [
+        "CUSTOM VARIABLES (Variables customized in your configuration)",
+        {% for row in ( parser_custom_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
+          "- {{row | trim('-') | trim(' ')}}",
+        {% endfor %}
+        "",
+        "DEFAULT VARIABLES (Variables using default values)",
+        {% for row in ( parser_default_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
+          "- {{row | trim('-') | trim(' ')}}",
+        {% endfor %}
+        "",
+        "UNNEEDED VARIABLES (Related features are disabled or optional)",
+        {% for row in ( parser_unneeded_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
+          "- {{row | trim('-') | trim(' ')}}",
+        {% endfor %}
+      ]
 
 - name: set ipv6 env state vars
   set_fact:
@@ -156,5 +164,5 @@
 - name: validate dhcp reservations
   include_tasks: "validate_dhcp_reservations.yml"
   tags: [ 'dnsmasq', "pihole" ]
-  when: "dhcp_reservations | length > 0"
+  when: "dhcp_enabled"
 

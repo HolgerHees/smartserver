@@ -72,7 +72,7 @@
         path: "{{ global_etc }}dnsmasq/dhcp.leases"
         state: touch
       when: dhcp_changed.changed
-  when: dhcp_type == 'dnsmasq'
+  when: "dhcp_enabled and dhcp_type == 'dnsmasq'"
 
 - name: build docker image
   vars:

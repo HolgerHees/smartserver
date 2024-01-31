@@ -1,7 +1,7 @@
 {{default_server_ip}} {{server_name}}
 {%if default_server_ipv6 is defined %}{{default_server_ipv6}} {{server_name}}
 {% endif %}
-{% if dns_type == 'dnsmasq' %}
+{% if dns_enabled and dns_type == 'dnsmasq' %}
 {% for override in dns_overrides %}
 {{override.ip}} {{override.custom_dns}}
 {% endfor %}

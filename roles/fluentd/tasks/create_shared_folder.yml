@@ -6,5 +6,5 @@
     group: root
     mode: 0750
   with_items:
-    - "{{global_etc}}/fluentd/"
-    - "{{global_etc}}/fluentd/_.ansible.d"
+    - "{{global_etc}}fluentd/"
+    - "{{global_etc}}fluentd/_.ansible.d"
