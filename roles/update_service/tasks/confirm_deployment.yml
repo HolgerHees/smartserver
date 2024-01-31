@@ -4,8 +4,9 @@
   register: new_git_hash_result
 
 - name: "get confirmed git pull hash"
-  shell: 'cat {{global_lib}}update_service/deployment.state | grep -oP "git_hash\": \"[^\"]+" | grep -oP "[a-z0-9]+$"'
+  shell: '(cat {{global_lib}}update_service/deployment.state | grep -oP "git_hash\": \"[^\"]+" | grep -oP "[a-z0-9]+$") 2>/dev/null'
   changed_when: no
+  failed_when: no
   register: old_git_hash_result
 
 - name: "confirm deployment"
