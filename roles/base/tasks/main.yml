@@ -6,7 +6,7 @@
     group: root
     mode: "{{item.mode}}"
   with_items:
-    - { mode: "u=rwx,g=rx,o=rx", path: "{{env_path}}" }
+    - { mode: "u=rwx,g=rx,o=rx", path: "{{root_path}}" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{data_path}}" }
 
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_etc}}" }

@@ -28,8 +28,9 @@ default_variables: {
     intern_networks:                          { default: [] },                                                      # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
     public_networks:                          { default: [] },                                                      # e.g. public ipv6 address ranges
 
-    env_path:                                 { default: "/dataDisk/" },
-    data_path:                                { default: "/dataRaid/" },
+    root_path:                                { default: "/smartserver/" },                                         # path for smartserver related service data
+    data_path:                                { default: "{{root_path}}data/" },                                    # path for smartserver related user data
+    backup_path:                              { default: "{{data_path}}backups/" },                                 # path for local backup data
 
     # used in main role 'apache' and can be an empty array []
     authenticated_ip_addresses:               { default: [] },                                                      # apache access always allowed for ipaddresses e.g. from wallmounted tablets
@@ -418,7 +419,7 @@ default_variables: {
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # **** BEGIN LOCAL BACKUP SERVICE                                                  ***
-    # This service runs rsync to copy {{env_path}} to {{backup_path}}environment/, excluding 'var' and 'tmp'
+    # This service runs rsync to copy {{root_path}} to {{backup_path}}environment/, excluding 'var', 'tmp', 'build' and {{data_path}}
     # Roles:
     # - 'backup_rsync'
     local_backup_enabled:                     { default: yes },                                                     # enabled by default
@@ -558,16 +559,15 @@ alpine_version:                   "3.19.1"
 flask_core_version:               "3.0.0"
 flask_socketio_version:           "5.3.6"
 
-htdocs_path:                      "{{env_path}}htdocs/"
-global_etc:                       "{{env_path}}etc/"
-global_tmp:                       "{{env_path}}tmp/"
-global_build:                     "{{env_path}}build/"
-global_log:                       "{{env_path}}var/log/"
-global_lib:                       "{{env_path}}var/lib/"
+htdocs_path:                      "{{root_path}}htdocs/"
+global_etc:                       "{{root_path}}etc/"
+global_tmp:                       "{{root_path}}tmp/"
+global_build:                     "{{root_path}}build/"
+global_log:                       "{{root_path}}var/log/"
+global_lib:                       "{{root_path}}var/lib/"
 
 projects_path:                    "{{data_path}}projects/"
 cloud_path:                       "{{data_path}}cloud/"
-backup_path:                      "{{data_path}}backups/"
 
 deployment_path:                  "{{projects_path}}{{project_name}}/"
 
