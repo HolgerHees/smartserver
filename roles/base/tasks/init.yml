@@ -1,3 +1,7 @@
+#- name:
+#  debug:
+#    msg: "{{ansible_version.full}}"
+
 # set config path based on hostname
 - name: set config path
   set_fact:
@@ -124,35 +128,35 @@
         {% if parser_custom_variables | length > 0 %}
         "CUSTOM VARIABLES '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml')",
         {% for row in ( parser_custom_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
-          "- {{row | trim('-') | trim(' ')}}",
+          "- {{row | regex_replace('^\s*-',' ') | regex_replace('-\s*$',' ') | trim()}}",
         {% endfor %}
         "",
         {% endif %}
         {% if parser_adjusted_variables | length > 0 %}
         "ADJUSTED DEFAULT VARIABLES (Defined in '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml')",
         {% for row in ( parser_adjusted_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
-          "- {{row | trim('-') | trim(' ')}}",
+          "- {{row | regex_replace('^\s*-',' ') | regex_replace('-\s*$',' ') | trim()}}",
         {% endfor %}
         "",
         {% endif %}
         {% if parser_default_variables | length > 0 %}
         "PREDEFINED DEFAULT VARIABLES (Defined in 'config/default.yml')",
         {% for row in ( parser_default_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
-          "- {{row | trim('-') | trim(' ')}}",
+          "- {{row | regex_replace('^\s*-',' ') | regex_replace('-\s*$',' ') | trim()}}",
         {% endfor %}
         "",
         {% endif %}
         {% if parser_unneeded_variables | length > 0 %}
         "LEFTOVER VARIABLES (Related features are not active, but the variables still exists in '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml' and can be removed or commented out)",
         {% for row in ( parser_unneeded_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
-          "- {{row | trim('-') | trim(' ')}}",
+          "- {{row | regex_replace('^\s*-',' ') | regex_replace('-\s*$',' ') | trim()}}",
         {% endfor %}
         "",
         {% endif %}
         {% if parser_unused_variables | length > 0 %}
         "UNUSED DEFAULT VARIABLES (Related features are not active)",
         {% for row in ( parser_unused_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
-          "- {{row | trim('-') | trim(' ')}}",
+          "- {{row | regex_replace('^\s*-',' ') | regex_replace('-\s*$',' ') | trim()}}",
         {% endfor %}
         "",
         {% endif %}

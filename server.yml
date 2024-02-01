@@ -7,7 +7,14 @@
   environment:
     PATH: /sbin:/usr/sbin:/usr/local/sbin:/usr/bin:/bin:/usr/local/bin
   pre_tasks:
-    # ************ INIT CONFIG ***********   
+    - name: verify that ansible version is >= 2.11.12
+      assert:
+        that: "ansible_version.full is version_compare('2.11.12', '>=')"
+        fail_msg: "This deployment requires at least ansible-core 2.11.12. You can install it by running 'pip install ansible==4.10.0' which includes this ansible-core version."
+        success_msg: "ansible version is {{ansible_version.full}}"
+      tags: always
+
+    # ************ INIT CONFIG ***********
     - { import_role: { name: base, tasks_from: init, handlers_from: empty }, tags: [ 'always' ] }                                                                                                   # detect environment and load configs
     # ************************************  
     #- name:
