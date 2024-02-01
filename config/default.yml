@@ -1,66 +1,66 @@
 # **** DEFAULT Variables ***
 #
-# - Variables without a default value are MANDATORY except there is a optional.
-#    - In this case it is only mandatory if the optional is true. e.g variable 'update_service_system_check_email'
-#
-# - The default value is used if the variable is not defined in your configuration
+# - Variables a 'default' attribute are assigned as global facts if there is no custom variable defined
+# - Variables without a 'default' attribute are MANDATORY except there is a 'optional' attribute
+# - If the 'optional' attribute applies to False it behaves like a MANDATORY variable.
+# - If the 'optional' attribute applies to TRUE, the 'optional' attribute is a 'template term' and the variable is defined. You will see a warning about a leftover variable which can be cleaned.
 #
 # **************************
 default_variables: {
-    "location":                                 {},                                                                     # "52.3476672,13.6215805" => latitude / longitude
-    "timezone":                                 {},                                                                     # "Europe/Berlin"
-    "language":                                 {},                                                                     # "en", "de" ...
-    "country":                                  {},                                                                     # "EN", "DE" ...
-    "region":                                   {},                                                                     # "bb" => berlin / brandenburg => https://www.openhab.org/docs/configuration/actions.html#ephemeris
+    location:                                 {},                                                                   # "52.3476672,13.6215805" => latitude / longitude
+    timezone:                                 {},                                                                   # "Europe/Berlin"
+    language:                                 {},                                                                   # "en", "de" ...
+    country:                                  {},                                                                   # "EN", "DE" ...
+    region:                                   {},                                                                   # "bb" => berlin / brandenburg => https://www.openhab.org/docs/configuration/actions.html#ephemeris
     
-    "root_email":                               {},                                                                     # "testadmin@test.com" => gets all admin / alert / warning emails from your server
+    root_email:                               {},                                                                   # "testadmin@test.com" => gets all admin / alert / warning emails from your server
 
-    "server_name":                              {},                                                                     # "test"
-    "server_domain":                            {},                                                                     # "smartserver.test"
+    server_name:                              {},                                                                   # "test"
+    server_domain:                            {},                                                                   # "smartserver.test"
     
-    "ssl_certificate":                          { "default": "selfsigned" },                                            # "selfsigned", "letsencrypt"
+    ssl_certificate:                          { default: "selfsigned" },                                            # "selfsigned", "letsencrypt"
     
-    "production_ip":                            {},                                                                     # "192.168.7.50" your server ip
-    "staging_ip":                               { "default": "" },                                                      # "192.168.8.50" your testserver ip
+    production_ip:                            {},                                                                   # "192.168.7.50" your server ip
+    staging_ip:                               { default: "" },                                                      # "192.168.8.50" your testserver ip
 
-    "ipv6_enabled":                             { "default": no },
+    ipv6_enabled:                             { default: no },
 
-    "intern_networks":                          { "default": [] },                                                      # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
-    "public_networks":                          { "default": [] },                                                      # e.g. public ipv6 address ranges
+    intern_networks:                          { default: [] },                                                      # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
+    public_networks:                          { default: [] },                                                      # e.g. public ipv6 address ranges
 
-    "env_path":                                 { "default": "/dataDisk/" },
-    "data_path":                                { "default": "/dataRaid/" },
+    env_path:                                 { default: "/dataDisk/" },
+    data_path:                                { default: "/dataRaid/" },
 
     # used in main role 'apache' and can be an empty array []
-    "authenticated_ip_addresses":               { "default": [] },                                                      # apache access always allowed for ipaddresses e.g. from wallmounted tablets
+    authenticated_ip_addresses:               { default: [] },                                                      # apache access always allowed for ipaddresses e.g. from wallmounted tablets
     
-    "public_domain":                            { "default": "public.{{server_domain}}" },
+    public_domain:                            { default: "public.{{server_domain}}" },
 
-    "userdata": {},
+    userdata: {},
     # *** EXAMPLE for userdata ***
     # {
     #     testuser1: {
-    #         name: "Test User 1"                                                                                       # mandatory.
-    #         email: "test1@test.de"                                                                                    # mandatory.
-    #         groups: [ "admin", "user" ]                                                                               # mandatory.
-    #         telegram_bot: {                                                                                           # optional. used by openhab => reference to bot key in vault.yml
+    #         name: "Test User 1"                                                                                   # mandatory.
+    #         email: "test1@test.de"                                                                                # mandatory.
+    #         groups: [ "admin", "user" ]                                                                           # mandatory.
+    #         telegram_bot: {                                                                                       # optional. used by openhab => reference to bot key in vault.yml
     #             bot_testuser1
     #         },
-    #         phone_device: {                                                                                           # optional. used by device_ping role
+    #         phone_device: {                                                                                       # optional. used by device_ping role
     #             ip: "{{default_server_subnet}}.69",
     #             timeout: 60
     #         },
-    #         vpn_gates: {                                                                                              # optional. used by wireguard_mobile role
-    #             "phone": "{{vpn_mobile_subnet}}.11",
-    #             "tablet": "{{vpn_mobile_subnet}}.12"
+    #         vpn_gates: {                                                                                          # optional. used by wireguard_mobile role
+    #             "phone: "{{vpn_mobile_subnet}}.11",
+    #             "tablet: "{{vpn_mobile_subnet}}.12"
     #         },
-    #         media_dir: {                                                                                              # optional. nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
-    #             "test_media": "/"
+    #         media_dir: {                                                                                          # optional. nextcloud user folder which is available via dlna (can be any nextcloud subfolder)
+    #             "test_media: "/"
     #         }
     #     }
     # }
     
-    "vault_userpasswords": {},
+    vault_userpasswords: {},
     # *** EXAMPLE for vault_userpasswords ***
     # {
     #     testuser1: {
@@ -69,28 +69,31 @@ default_variables: {
     #     }
     # }
 
-    "network_devices": { "default": [] },                                                                               # used for librenms and system_service (network monitoring) => they are preprocessed at the end of this config file
+    network_devices: { default: [] },                                                                               # used for librenms, system_service (network monitoring) and openwrt => they are preprocessed at the end of this config file
     # *** EXAMPLE for network_devices ***
     # [
     #     {
-    #         host: { "optional": yes },                                                                                # "{{default_server_subnet}}.100"
-    #         name: { "optional": yes },                                                                                # "WLan AP Inhouse" => will be used in webui for openwrt devices
-    #         snmp_method: { "optional": yes },                                                                         # "v2c"
-    #         snmp_community_string: { "optional": yes }                                                                # "public"
-    #         is_openwrt: { "optional": yes }                                                                           # True
+    #         host: { optional: yes },                                                                              # "{{default_server_subnet}}.100"
+    #         name: { optional: yes },                                                                              # "WLan AP Inhouse" => will be used in webui for openwrt devices
+    #         snmp_method: { optional: yes },                                                                       # "v2c"
+    #         snmp_community_string: { optional: yes }                                                              # "public"
+    #         type: { optional: yes }                                                                               # 'openwrt', 'fritzbox', or absend
+    #         config: { optional: yes }                                                                             # only related to openwrt deployment
     #     }
     # ]
 
-    "vault_deployment_config_git":              { "default": "https://github.com/HolgerHees/smartserver.git" },         # used deployment, update_service and ci_service role
-    "vault_deployment_token_git":               { "optional": yes },                                                    # used in update_service or ci_service in case of a private repository
+    vault_deployment_config_git:              { default: "https://github.com/HolgerHees/smartserver.git" },         # used deployment, update_service and ci_service role
+    vault_deployment_token_git:               { optional: yes },                                                    # used in update_service or ci_service in case of a private repository
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN OUTGOING MAIL SERVER                                                   ***
-    "vault_mailserver_username":                {},                                                                     # "testusername@test.com", "testadmin@test.com" ... => username from your email server
-    "vault_mailserver_password":                {},                                                                     # "<mypassword>" => password from your email server
-    "vault_mailserver_host":                    {},                                                                     # "smtp.gmail.com" => smtp address from your email server
-    "vault_mailserver_port":                    {},                                                                     # "587" => smtp port from your email server
+    # Roles:
+    # - 'postfix'
+    vault_mailserver_username:                {},                                                                   # "testusername@test.com", "testadmin@test.com" ... => username from your email server
+    vault_mailserver_password:                {},                                                                   # "<mypassword>" => password from your email server
+    vault_mailserver_host:                    {},                                                                   # "smtp.gmail.com" => smtp address from your email server
+    vault_mailserver_port:                    {},                                                                   # "587" => smtp port from your email server
     # *** END OUTGOING MAIL SERVER                                                     ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -99,43 +102,65 @@ default_variables: {
     # *** BEGIN APACHE AUTH                                                            ***
     # for details how to configure, check: https://github.com/zmartzone/mod_auth_openidc
     # to enable openid connect for google, go to: https://console.developers.google.com/apis/credentials
-    "vault_openid_connect_url":                 { "optional": yes },                                                    # 'optional' means disabled is not defined, to enable check documentation urls to get the right values
-    "vault_openid_connect_client_id":           { "optional": yes },
-    "vault_openid_connect_client_secret":       { "optional": yes },
-    "vault_openid_connect_passphrase":          { "optional": yes },
+    # Roles:
+    # - 'apache'
+    vault_openid_connect_url:                 { optional: yes },                                                    # 'optional' means disabled is not defined, to enable check documentation urls to get the right values
+    vault_openid_connect_client_id:           { optional: yes },
+    vault_openid_connect_client_secret:       { optional: yes },
+    vault_openid_connect_passphrase:          { optional: yes },
 
-    "vault_form_auth_passphrase":               {},                                                                     # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
+    vault_form_auth_passphrase:               {},                                                                   # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
     # *** END APACHE AUTH                                                              ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN SAMBA                                                                  ***
-    "samba_enabled":                            { "default": yes },                                                     # enabled by default
+    # Roles:
+    # - 'samba'
+    samba_enabled:                            { default: yes },                                                     # enabled by default
     # *** END SAMBA                                                                    ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN MONITORING                                                             ***
-    "monitoring_enabled":                       { "default": yes },                                                     # enabled by default => will disable fluentd, loki, prometheus and alertmanager, systemd_watcher and hardware_*
+    # Roles:
+    # - 'fluentd'
+    # - 'prometheus'
+    # - 'alertmanager'
+    # - 'systemd_watcher'
+    # - 'hardware_mdadm'
+    # - 'hardware_smartd'
+    # - 'hardware_sensors'
+    monitoring_enabled:                       { default: yes },                                                     # enabled by default
 
-    "grafana_enabled":                          { "default": yes },                                                     # enabled by default
-    "vault_grafana_app_username":               { "default": "admin", "optional": "{{not grafana_enabled}}" },
+    # Roles:
+    # - 'grafana'
+    grafana_enabled:                          { default: yes },                                                     # enabled by default
+    vault_grafana_app_username:               { default: "admin",
+                                                optional: "{{not grafana_enabled}}" },
 
-    "netdata_enabled":                          { "default": yes },                                                     # enabled by default => needs prometheus
+    # Roles:
+    # - 'netdata'
+    netdata_enabled:                          { default: yes,                                                       # enabled by default
+                                                dependency: "influxdb_enabled" },
     # *** END MONITORING                                                               ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # **** BEGIN LIBRENMS                                                              ***
-    # enabled if there are network_devices with attribute 'snmp_method'
-    "librenms_enabled":                         { "default": "{{librenms_devices | length > 0}}" },
-    "librenms_poller_interval":                 { "default": 5, "optional": "{{not librenms_enabled}}" },               # interval in minutes
-    "vault_librenms_mysql_username":            { "default": "librenms", "optional": "{{not librenms_enabled}}" },
-    "vault_librenms_mysql_password":            { "optional": "{{not librenms_enabled}}" },
-    "vault_librenms_api_token":                 { "optional": "{{not librenms_enabled}}" },
+    # Roles:
+    # - 'librenms'
+    librenms_enabled:                         { default: "{{librenms_devices | length > 0}}",
+                                                dependency: "mysql_enabled,redis_enabled" },                        # enabled if there are network_devices with attribute 'snmp_method'
+    librenms_poller_interval:                 { default: 5,                                                         # interval in minutes
+                                                optional: "{{not librenms_enabled}}" },
+    vault_librenms_mysql_username:            { default: "librenms",
+                                                optional: "{{not librenms_enabled}}" },
+    vault_librenms_mysql_password:            { optional: "{{not librenms_enabled}}" },
+    vault_librenms_api_token:                 { optional: "{{not librenms_enabled}}" },
     # **** END LIBRENMS                                                                ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -143,55 +168,66 @@ default_variables: {
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN DNS SERVER                                                             ***
     # There is always a dns service (dnsmasq) running to resolve *.<server_domain> to this server and forwards everthing else to dns_forward_ip_addresses
+    # Roles:
+    # - 'dnsmasq'
+    # - 'pihole'
 
     # The default flow is <pihole:pihole_ip:53> forwards to <dnsmasq:server_ip:53> forwards to <dns_forward_ip_addresses>
     # In this way you can decided, by choosing pihole or dnsmasq, if you want adblocking enabled or not for your device
     # All local containers/services using 'dnsmasq'
 
-    "dns_forward_ip_addresses":                 { "default": [ "8.8.8.8", "8.8.4.4" ] },                                # used by dnsmasq
+    dns_forward_ip_addresses:                 { default: [ "8.8.8.8", "8.8.4.4" ] },                                # used by dnsmasq
 
-    # enabled by choosing a type => this extends 'dnsmasq' or 'pihole' to acts as a full dns server, with custom entries
-    "dns_enabled":                              { "default": "{{dns_type is defined}}" },
-    "dns_type":                                 { "optional": yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
-    "dns_overrides":                            { "default": [], "optional": "{{not dns_enabled}}" },
+    # This extends 'dnsmasq' or 'pihole' to acts as a full dns server, with custom entries
+    dns_enabled:                              { default: "{{dns_type is defined}}" },                               # enabled by define a 'dns_type'
+    dns_type:                                 { optional: yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
+    dns_overrides:                            { default: [],
+                                                optional: "{{not dns_enabled}}" },
      # *** EXAMPLE for dns_overrides ***
      # [
      #     {ip: {{default_server_subnet}}.73, custom_dns: "tv.other.domain.com"}
      # ]
-    "dns_default_domain":                       { "default": "lan", "optional": "{{not dns_enabled}}" },
+    dns_default_domain:                       { default: "lan", optional: "{{not dns_enabled}}" },
 
-    # enabled by choosing a type => this enables dhcp for 'dnsmasq' or 'pihole'
-    "dhcp_enabled":                             { "default": "{{dhcp_type is defined}}" },
-    "dhcp_type":                                { "optional": yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
-    "dhcp_range_start":                         { "default": "{{default_server_subnet}}.151", "optional": "{{not dhcp_enabled}}" },
-    "dhcp_range_end":                           { "default": "{{default_server_subnet}}.200", "optional": "{{not dhcp_enabled}}" },
-    "dhcp_reservations":                        { "default": [], "optional": "{{not dhcp_enabled}}" },                  # dhcp entries
+    # This enables dhcp for 'dnsmasq' or 'pihole'
+    dhcp_enabled:                             { default: "{{dhcp_type is defined}}" },                              # enabled by define a 'dhcp_type'
+    dhcp_type:                                { optional: yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
+    dhcp_range_start:                         { default: "{{default_server_subnet}}.151",
+                                                optional: "{{not dhcp_enabled}}" },
+    dhcp_range_end:                           { default: "{{default_server_subnet}}.200",
+                                                optional: "{{not dhcp_enabled}}" },
+    dhcp_reservations:                        { default: [],                                                        # dhcp entries
+                                                optional: "{{not dhcp_enabled}}" },
      # *** EXAMPLE for dhcp_reservations ***
      # [
      #     { mac: 12:34:56:78:90:11, ip: {{default_server_subnet}}.73, hostname: tv-livingroom, custom_dns: ["smarttv"]}
      # ]
-    "dhcp_dns_server":                          { "default": "{{ pihole_ip if pihole_ip is defined else default_server_ip }}", "optional": "{{not dhcp_enabled}}" },
+    dhcp_dns_server:                          { default: "{{ pihole_ip if pihole_ip is defined else default_server_ip }}",
+                                                optional: "{{not dhcp_enabled}}" },
 
-    # pihole and dlna ip's should be part of a contiguous area at the end of your server network
-    # this contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
-    "pihole_enabled":                           { "default": "{{pihole_ip is defined}}" },
-    "pihole_ip":                                { "optional": yes },                                                    # pihole ip address from same network as your server ip
-    "pihole_ipv6":                              { "optional": yes },                                                    # pihole ipv6 address from same network as your server ip
-    "pihole_whitelist_domains":                 { "default": [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ],
-                                                  "optional": "{{not pihole_enabled}}" },                               # domains are needed to use google search results
-    "pihole_addlist_urls":                      { "default": [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ],
-                                                  "optional": "{{not pihole_enabled}}" },
-    "vault_pihole_password":                    { "optional": "{{not pihole_enabled}}" },                               # used to login into pihole
+    # Pihole and dlna ip's should be part of a contiguous area at the end of your server network
+    # This contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
+    pihole_enabled:                           { default: "{{pihole_ip is defined}}" },
+    pihole_ip:                                { optional: yes },                                                    # pihole ip address from same network as your server ip
+    pihole_ipv6:                              { optional: yes },                                                    # pihole ipv6 address from same network as your server ip
+    pihole_whitelist_domains:                 { default: [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ],
+                                                optional: "{{not pihole_enabled}}" },                               # domains are needed to use google search results
+    pihole_addlist_urls:                      { default: [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ],
+                                                optional: "{{not pihole_enabled}}" },
+    vault_pihole_password:                    { optional: "{{not pihole_enabled}}" },                               # used to login into pihole
     # *** END DNS SERVER                                                               ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN VPN                                                                    ***
-    # used in generic optional role 'wireguard_mobile'
-    "mobile_vpn_enabled":                       { "default": "yes" },                                                   # enabled by default
-    "mobile_vpn_internal_port":                 { "default": "51828", "optional": "{{not mobile_vpn_enabled}}" },       # the port, used on your server
-    "mobile_vpn_public_port":                   { "optional": "{{not mobile_vpn_enabled}}" },                           # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+    # Used in generic optional role 'wireguard_mobile'
+    # Roles:
+    # - 'wireguard_mobile'
+    mobile_vpn_enabled:                       { default: "yes" },                                                   # enabled by default
+    mobile_vpn_internal_port:                 { default: "51828",
+                                                optional: "{{not mobile_vpn_enabled}}" },                           # the port, used on your server
+    mobile_vpn_public_port:                   { optional: "{{not mobile_vpn_enabled}}" },                           # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     # *** END VPN                                                                      ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -199,52 +235,71 @@ default_variables: {
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN DATABASES                                                              ***
-    "influxdb_enabled":                         { "default": yes },                                                     # enabled by default, be careful with disabling, because it will break openhab, system_service and netdata.
-    "vault_influxdb_admin_username":            { "default": "admin", "optional": "{{not influxdb_enabled}}" },         # used to login into influxdb webui
-    "vault_influxdb_admin_password":            { "optional": "{{not influxdb_enabled}}" },
-    "vault_influxdb_admin_token":               { "optional": "{{not influxdb_enabled}}" },                             # "lkjfdh7123kjas" => token used for internal command line operations
+    # Roles:
+    # - 'influxdb'
+    influxdb_enabled:                         { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
+    vault_influxdb_admin_username:            { default: "admin",                                                   # used to login into influxdb webui
+                                                optional: "{{not influxdb_enabled}}" },
+    vault_influxdb_admin_password:            { optional: "{{not influxdb_enabled}}" },
+    vault_influxdb_admin_token:               { optional: "{{not influxdb_enabled}}" },                             # "lkjfdh7123kjas" => token used for internal command line operations
 
-    "mysql_enabled":                            { "default": yes },                                                     # enabled by default, be careful with disabling, because it will break openhab, nextcloud, and librenms.
-    "vault_shared_mysql_username":              { "default": "shared", "optional": "{{not mysql_enabled}}" },           # used for internal data
-    "vault_shared_mysql_password":              { "optional": "{{not mysql_enabled}}" },
+    # Roles:
+    # - 'mysql'
+    mysql_enabled:                            { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
+    vault_shared_mysql_username:              { default: "shared",                                                  # used for internal data
+                                                optional: "{{not mysql_enabled}}" },
+    vault_shared_mysql_password:              { optional: "{{not mysql_enabled}}" },
 
-    "redis_enabled":                            { "default": yes },                                                     # enabled by default, be careful with disabling, because it will break nextcloud and librenms
+    # Roles:
+    # - 'redis'
+    redis_enabled:                            { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
 
-    "mosquitto_enabled":                        { "default": yes },                                                     # enabled by default, be careful with disabling, because it will break system_service, openhab and weather_service
+    # Roles:
+    # - 'mosquitto'
+    mosquitto_enabled:                        { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
     # *** END DATABASES                                                                ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN DLNA SERVER                                                            ***
-    "dlna_enabled":                             { "default": "{{dlna_ip is defined and ( dlna_volumes | length ) > 0}}"},
-    "dlna_ip":                                  { "optional": yes },                                                    # dlna ip address from same network as your server ip
-    "dlna_ipv6":                                { "optional": yes },                                                    # dlna ipv6 address from same network as your server ip
+    # Roles:
+    # - 'minidlna'
+    dlna_enabled:                             { default: "{{dlna_ip is defined and ( dlna_volumes | length ) > 0}}"},
+    dlna_ip:                                  { optional: yes },                                                    # dlna ip address from same network as your server ip
+    dlna_ipv6:                                { optional: yes },                                                    # dlna ipv6 address from same network as your server ip
     # *** END DLNA SERVER                                                              ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN NEXTCLOUD                                                              ***
-    "nextcloud_enabled":                        { "default": yes },                                                     # enabled by default
-    "vault_nextcloud_instance_id":              { "optional": "{{not nextcloud_enabled}}" },                            # "234sdgzw87399443s" => used internally
-    "vault_nextcloud_password_salt":            { "optional": "{{not nextcloud_enabled}}" },                            # "9ad9aus92z4ij20j20idj928912hd1jd0"
-    "vault_nextcloud_secret":                   { "optional": "{{not nextcloud_enabled}}" },                            # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
-    "vault_nextcloud_mysql_username":           { "default": "nextcloud", "optional": "{{not nextcloud_enabled}}" },    # used for nextcloud data
-    "vault_nextcloud_mysql_password":           { "optional": "{{not nextcloud_enabled}}" },
-    "vault_nextcloud_admin_username":           { "default": "admin", "optional": "{{not nextcloud_enabled}}" },        # used to login as a nextcloud data
-    "vault_nextcloud_admin_password":           { "optional": "{{not nextcloud_enabled}}" },
-    "nextcloud_additional_apps":                { "default": [], "optional": "{{not nextcloud_enabled}}" },             # additional apps for nextcloud
+    # Roles:
+    # - 'nextcloud'
+    # - 'nextcloud_libreoffice'
+    nextcloud_enabled:                        { default: yes,                                                       # enabled by default
+                                                dependency: "mysql_enabled,redis_enabled" },
+    vault_nextcloud_instance_id:              { optional: "{{not nextcloud_enabled}}" },                            # "234sdgzw87399443s" => used internally
+    vault_nextcloud_password_salt:            { optional: "{{not nextcloud_enabled}}" },                            # "9ad9aus92z4ij20j20idj928912hd1jd0"
+    vault_nextcloud_secret:                   { optional: "{{not nextcloud_enabled}}" },                            # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+    vault_nextcloud_mysql_username:           { default: "nextcloud",                                               # used for nextcloud data
+                                                optional: "{{not nextcloud_enabled}}" },
+    vault_nextcloud_mysql_password:           { optional: "{{not nextcloud_enabled}}" },
+    vault_nextcloud_admin_username:           { default: "admin",                                                   # used to login as a nextcloud data
+                                                optional: "{{not nextcloud_enabled}}" },
+    vault_nextcloud_admin_password:           { optional: "{{not nextcloud_enabled}}" },
+    nextcloud_additional_apps:                { default: [],                                                        # additional apps for nextcloud
+                                                optional: "{{not nextcloud_enabled}}" },
     # *** EXAMPLE for nextcloud_additional_apps ***
     # [
     #     {
-    #         "app": { "optional": yes },                                                                               # app id. e.g. "cookbook"
-    #         "name": { "optional": yes },                                                                              # webui menu name. e.g. "Cookbook"
-    #         "description": { "optional": yes },                                                                       # webui menu info. e.g. "Recipes"
-    #         "icon": { "optional": yes },                                                                              # webui icon. e.g. "icons/nextcloud_cookbook.svg"
+    #         "app: { optional: yes },                                                                              # app id. e.g. "cookbook"
+    #         "name: { optional: yes },                                                                             # webui menu name. e.g. "Cookbook"
+    #         "description: { optional: yes },                                                                      # webui menu info. e.g. "Recipes"
+    #         "icon: { optional: yes },                                                                             # webui icon. e.g. "icons/nextcloud_cookbook.svg"
     #
-    #         "usergroups": { "default": [] }                                                                           # optional. limit visibility to specific groups or users. e.g. ["admin", "user", "<username>"]
-    #         "order": { "default": 200 }                                                                               # optional. control order in webui menu
+    #         "usergroups: { default: [] }                                                                          # optional. limit visibility to specific groups or users. e.g. ["admin", "user", "<username>"]
+    #         "order: { default: 200 }                                                                              # optional. control order in webui menu
     #     }
     # ]
     # *** END NEXTCLOUD                                                                ***
@@ -253,69 +308,86 @@ default_variables: {
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN OPENHAB                                                                ***
-    "openhab_enabled":                          { "default": yes },                                                     # enabled by default
-    "vault_openhab_config_git":                 { "optional": "{{not openhab_enabled}}" },                              # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
-    "vault_openhab_mysql_username":             { "default": "openhab", "optional": "{{not openhab_enabled}}" },        # used for openhab data
-    "vault_openhab_mysql_password":             { "optional": "{{not openhab_enabled}}" },
+    # Roles:
+    # - 'openhab'
+    # - 'openhab_toolbox'
+    openhab_enabled:                          { default: yes,                                                       # enabled by default
+                                                dependency: "mysql_enabled,influxdb_enabled,mosquitto_enabled" },
+    vault_openhab_config_git:                 { optional: "{{not openhab_enabled}}" },                              # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
+    vault_openhab_mysql_username:             { default: "openhab",                                                 # used for openhab data
+                                                optional: "{{not openhab_enabled}}" },
+    vault_openhab_mysql_password:             { optional: "{{not openhab_enabled}}" },
     # *** END OPENHAB                                                                  ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN CAMMERA SERVICE                                                        ***
-    # enabled if there are camera devices configured
-    "camera_enabled":                           { "default": "{{camera_devices | length > 0}}" },
-    "camera_devices":                           { "default": [] },                                                      # used for ftp upload, image gallkery and menu entries
+    # Roles:
+    # - 'camera_service'
+    # - 'camera_ftp'
+    camera_enabled:                           { default: "{{camera_devices | length > 0}}" },                       # enabled if there are camera devices configured
+    camera_devices:                           { default: [] },                                                      # used for ftp upload, image gallkery and menu entries
     # *** EXAMPLE for camera_devices ***
     # [
     #     {
-    #         uid: {},                                                                                                  # unique identifier for this device. Will be used to generate proxy urls like /camera{uid | capelized}Image
-    #         name: {},                                                                                                 # menu and gallery name
-    #         details: { "optional": yes },                                                                             # additional details like brand name
-    #         ftp_upload_name: { "optional": yes },                                                                     # the folder name where alert images are uploaded int the ftp folder (it is just the subfolder name, not the whole path)
-    #         snapshot_url: {},                                                                                         # external url to get a snapshot/preview image
-    #         snapshot_username: { "optional": yes }                                                                    # username to authenticate external url
-    #         snapshot_password: { "optional": yes }                                                                    # password to authenticate external url
+    #         uid: {},                                                                                              # unique identifier for this device. Will be used to generate proxy urls like /camera{uid | capelized}Image
+    #         name: {},                                                                                             # menu and gallery name
+    #         details: { optional: yes },                                                                           # additional details like brand name
+    #         ftp_upload_name: { optional: yes },                                                                   # the folder name where alert images are uploaded int the ftp folder (it is just the subfolder name, not the whole path)
+    #         snapshot_url: {},                                                                                     # external url to get a snapshot/preview image
+    #         snapshot_username: { optional: yes }                                                                  # username to authenticate external url
+    #         snapshot_password: { optional: yes }                                                                  # password to authenticate external url
     #     }
     # ]
-    "vault_ftp_username":                       { "optional": "{{not camera_enabled}}" },                               # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
-    "vault_ftp_password":                       { "optional": "{{not camera_enabled}}" },
-    "ftp_max_file_age":                         { "default": "{{2 * 24 * 60}}", "optional": "{{not camera_enabled}}" }, # images, older then 2 days are discarded
+    vault_ftp_username:                       { optional: "{{not camera_enabled}}" },                               # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
+    vault_ftp_password:                       { optional: "{{not camera_enabled}}" },
+    ftp_max_file_age:                         { default: "{{2 * 24 * 60}}",                                         # images, older then 2 days are discarded
+                                                optional: "{{not camera_enabled}}" },
     # **** END CAMERA SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # **** BEGIN UPDATE SERVICE                                                        ***
-    "update_service_enabled":                   { "default": "{{ update_service_software_check_enabled or update_service_system_check_enabled}}" },
-    "update_service_software_check_enabled":    { "default": yes },                                                     # enables the update check for software used inside deployment roles / container
-    "update_service_software_check_email":      { "optional": yes },                                                    # "testadmin@test.com" => sends a notification email after each check, if new software is available
-    "update_service_system_check_enabled":      { "default": yes },                                                     # enables the update check for this deployment
-    "update_service_system_check_email":        { "optional": yes },                                                    # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    # Roles:
+    # - 'update_service'
+    update_service_enabled:                   { default: "{{ update_service_software_check_enabled or update_service_system_check_enabled}}" }, # enabled is system check or software check
+    update_service_software_check_enabled:    { default: yes },                                                     # enables the update check for software (version check of running containers) used inside deployment roles / container
+    update_service_software_check_email:      { optional: yes },                                                    # "testadmin@test.com" => sends a notification email after each check, if new software is available
+    update_service_system_check_enabled:      { default: yes },                                                     # enables the update check (os updates or smartserver updates) for this deployment
+    update_service_system_check_email:        { optional: yes },                                                    # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
     # **** END UPDATE SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # **** BEGIN SYSTEM SERVICE                                                        ***
-    "system_service_enabled":                   { "default": yes },                                                     # enabled by default
+    # Roles:
+    # - 'system_service'
+    system_service_enabled:                   { default: yes,                                                       # enabled by default
+                                                dependency: "influxdb_enabled,mosquitto_enabled" },
 
-    "fping_test_hosts":                         { "default": [ "8.8.8.8" ],
-                                                  "optional": "{{not system_service_enabled}}" },                       # reachability check in system_service
+    fping_test_hosts:                         { default: [ "8.8.8.8" ],                                             # reachability check in system_service
+                                                optional: "{{not system_service_enabled}}" },
 
-    "default_isp":                              { "default": {}, "optional": "{{not system_service_enabled}}" },        # is used to detect a fallback internet connection in system_service
+    default_isp:                              { default: {},                                                        # is used to detect a fallback internet connection in system_service
+                                                optional: "{{not system_service_enabled}}" },
     # *** EXAMPLE for default_isp ***
     # {
-    #     org: [ ".+ Sverige AB" ],                                                                                     # external ip must be registered to a organisation or isp named ".+ Sverige AB"
-    #     hostname: [ ".+d1-online\\\\.com" ],                                                                          # external ip must be resolved to a spcific dns name
-    #     ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ]                                                                    # fixed external ip ranges
+    #     org: [ ".+ Sverige AB" ],                                                                                 # external ip must be registered to a organisation or isp named ".+ Sverige AB"
+    #     hostname: [ ".+d1-online\\\\.com" ],                                                                      # external ip must be resolved to a spcific dns name
+    #     ip: [ "185\\\\.89\\\\.36\\\\.[0-9]{1-3}" ]                                                                # fixed external ip ranges
     # }
 
-    "traffic_blocker":                          { "default": yes, "optional": "{{not system_service_enabled}}" },       # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
+    traffic_blocker:                          { default: yes,                                                       # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
+                                                optional: "{{not system_service_enabled}}" },
     # 1. if suspicious traffic arrives the apache webserver => which traffic, can be configured in the variable 'netflow_incoming_traffic' and the attribute 'log'
     # 2. if unexcpected traffic arrives the network  => which traffic, can be configured  in the variable 'netflow_incoming_traffic' and the attribute 'allowed'
-    "netflow_collector":                        { "default": no, "optional": "{{not system_service_enabled}}" },        # enable netflow collector in system_service
-    "netflow_incoming_traffic":                 { "default": [], "optional": "{{not system_service_enabled}}" },        # from internet expected and allowed traffic, (used to detect netflow traffic direction and for traffic blocker to decide which traffic is suspicious)
+    netflow_collector:                        { default: no,                                                        # enable netflow collector in system_service
+                                                optional: "{{not system_service_enabled}}" },
+    netflow_incoming_traffic:                 { default: [],                                                        # from internet expected and allowed traffic, (used to detect netflow traffic direction and for traffic blocker to decide which traffic is suspicious)
+                                                optional: "{{not system_service_enabled}}" },
     # *** EXAMPLE ***
     # {
     #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] }, log="apache" }, # Letsencrypt, CLOUD PING Test
@@ -329,63 +401,152 @@ default_variables: {
     # 'allowed' => various regexes agains hostnames, org (ISP) or ip to mark traffic as normal. Type 'wireguard_peers' means the traffic ip is compared with active wireguard endpoints
     # 'name' is just used as an identifier
     # 'target' is a combination of the target ip and port number
-    "speedtest_server_id":                      { "default": "auto", "optional": "{{not system_service_enabled}}" },    # used for system_service speedtest
+    external_speedtest_server_id:             { default: "auto",                                                    # used for system_service speedtest
+                                                optional: "{{not system_service_enabled}}" },
 
-    "vault_openwrt_api_username":               { "default": "api", "optional": "{{not system_service_enabled or openwrt_devices | length == 0}}" },
-    "vault_openwrt_api_password":               { "optional": "{{not system_service_enabled or openwrt_devices | length == 0}}" },
-    #"vault_openwrt_root_password":             { "optional": "{{openwrt_devices | length == 0}}" },
+    vault_openwrt_api_username:               { default: "api",
+                                                optional: "{{not system_service_enabled or openwrt_devices | length == 0}}" },
+    vault_openwrt_api_password:               { optional: "{{not system_service_enabled or openwrt_devices | length == 0}}" },
+    #"vault_openwrt_root_password:             { optional: "{{openwrt_devices | length == 0}}" },
 
-    "vault_fritzbox_api_username":              { "default": "api", "optional": "{{not system_service_enabled or fritzbox_devices | length == 0}}" },
-    "vault_fritzbox_api_password":              { "optional": "{{not system_service_enabled or fritzbox_devices | length == 0}}" },
+    vault_fritzbox_api_username:              { default: "api",
+                                                optional: "{{not system_service_enabled or fritzbox_devices | length == 0}}" },
+    vault_fritzbox_api_password:              { optional: "{{not system_service_enabled or fritzbox_devices | length == 0}}" },
     # **** END SYSTEM SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # **** BEGIN OPENWRT CONFIG GENERATOR                                              ***
-    "openwrt_config_generator_enabled":         { "default": "{{openwrt_devices | length > 0}}" },
-    # **** END OPENWRT CONFIG GENERATOR ***
+    # **** BEGIN LOCAL BACKUP SERVICE                                                  ***
+    # This service runs rsync to copy {{env_path}} to {{backup_path}}environment/, excluding 'var' and 'tmp'
+    # Roles:
+    # - 'backup_rsync'
+    local_backup_enabled:                     { default: yes },                                                     # enabled by default
+    # **** END LOCAL BACKUP SERVICE                                                    ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # *** BELOW ARE BY DEFAULT NOT INCLUDED ROLES                                      ***
-    # *** 1. They are activated it they are imported manually in your custom roles.yml ***
-    # *** 2. You have to configure related variables below                             ***
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # **** BEGIN PUBLIC GUEST WIFI BARCODE GENERATOR                                   ***
-    "vault_wifi_networks":                      { "default": {}, "optional": yes },
-    # {
-    #     test1: { password: "1234", type: "public" },
-    #     test2: { password: "3456", type: "intern" }
-    # }
-    # **** END PUBLIC GUEST WIFI BARCODE GENERATOR                                     ***
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # *** BEGIN PRIVATE CLOUD SERVICE                                                  ***
-    "cloud_vpn":                                { "optional": yes },                                                    # used in generic optional role 'wirguard_cloud'
-    # *** END PRIVATE CLOUD SERVICE                                                    ***
+    # **** BEGIN INHOUSE SPEEDTEST SERVICE                                             ***
+    # This service provides a speedtest like https://www.speedtest.net/ but localy hosted
+    # Additionally, it provides a iperf (https://en.wikipedia.org/wiki/Iperf) endpoint
+    # Roles:
+    # - 'speedtest'
+    speedtest_enabled:                        { default: yes },                                                     # enabled by default
+    # **** END INHOUSE SPEEDTEST SERVICE                                               ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN WEATHER SERVICE                                                        ***
     # There are 2 modes how you can run weather service. Local mode and cloud mode
-    # 1. If you enable weather service and specify 'openmeteo', you run the local mode. Here you fetch the data from openmeteo and published via the local mqtt to the weather consumer
-    # 2. If you specify the weather_mqtt_server as 'cloud_mosquitto' you can share the data with an additional cloud instance. There is no need to specify a provider. This instance works as a listener only.
-    "weather_service_enabled":                  { "optional": yes },                                                    # yes/no
-    "weather_mqtt_server":                      { "optional": "{{weather_service_enabled is not defined or not weather_service_enabled}}", "default": "mosquitto" }, # 'mosquitto' or 'cloud_mosquitto'
-
-    "weather_api_provider":                     { "optional": yes },                                                    # 'openmeteo' (https://open-meteo.com/) or 'meteogroup' (https://api.weather.mg/) which needs credentials below
-    "weather_mqtt_publish_topic":               { "optional": "{{weather_api_provider is not defined}}", "default": "{{server_name}}" }, # the main topic prefix where you publish weather data
-    "vault_weather_api_username":               { "optional": "{{weather_api_provider is not defined or weather_api_provider != 'meteogroup'}}" },
-    "vault_weather_api_password":               { "optional": "{{weather_api_provider is not defined or weather_api_provider != 'meteogroup'}}" },
+    # 1. If you enable weather service, you run the local mode by default. Here you fetch the data from openmeteo and published via the local mqtt to the weather consumer
+    # 2. If you specify the weather_mqtt_server as 'cloud_mosquitto' you can share the data with an additional cloud instance.
+    # The reason why it is based on mqtt, because the data can be shared with friend via the cloud service or other services like openhab
+    # Roles:
+    # - 'weather_service'
+    weather_service_enabled:                  { default: yes,                                                       # enabled by default
+                                                dependency: "mysql_enabled{{',mosquitto_enabled' if weather_mqtt_server == 'mosquitto' else ''}}" },
+    weather_api_provider:                     { default: "openmeteo",                                               # 'openmeteo' (https://open-meteo.com/), 'meteogroup' (https://api.weather.mg/ => needs credentials) or 'listener'
+                                                optional: "{{not weather_service_enabled}}" },
+    weather_mqtt_server:                      { default: "mosquitto",                                               # 'mosquitto' or 'cloud_mosquitto'
+                                                optional: "{{not weather_service_enabled}}" },
+    weather_mqtt_publish_topic:               { default: "{{server_name}}",
+                                                optional: "{{not weather_service_enabled or weather_api_provider == 'listener'}}" }, # the main topic prefix where you publish weather data
+    vault_weather_api_username:               { optional: "{{not weather_service_enabled or weather_api_provider != 'meteogroup'}}" },
+    vault_weather_api_password:               { optional: "{{not weather_service_enabled or weather_api_provider != 'meteogroup'}}" },
     # *** END WEATHER SERVICE                                                          ***
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # **** BEGIN GUEST WIFI BARCODE GENERATOR                                          ***
+    # This generates a webui menu entry which shows a barcode, to make it easy for your guests to connect
+    # Roles:
+    # - 'weather_service'
+    guest_wifi_enabled:                       { default: "{{vault_wifi_networks is defined and vault_wifi_networks | length > 0}}" },
+    vault_wifi_networks:                      { optional: yes },
+    # {
+    #     test1: { password: "1234", type: "public" },
+    #     test2: { password: "3456", type: "intern" }
+    # }
+    # **** END GUEST WIFI BARCODE GENERATOR                                            ***
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+    # ####################################################################################
+    # ### BELOW ARE BY DEFAULT NOT INCLUDED ROLES                                      ###
+    # ### 1. They are activated it they are imported manually in your custom roles.yml ###
+    # ### 2. You have to configure related variables below                             ###
+    # ####################################################################################
+
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # *** BEGIN PRIVATE CLOUD SERVICE                                                  ***
+    # This service provides a private cloud network between several smartserver instances share data and backups
+    # Roles:
+    # - 'wireguard_cloud'
+    # - 'cloud_nfs'
+    # - 'cloud_mosquitto'
+    # - 'cloud_check'
+    # - 'backup_cloud'
+    # Related variable is 'cloud_vpn'
+    # *** EXAMPLE ***
+    # cloud_vpn: {
+    #    name: "peer1",
+    #    interface: { address: "{{vpn_cloud_subnet}}.0.1", port: "51829", network: "{{vpn_cloud_subnet}}.1.0/24" },
+    #    peers: {
+    #         peer2: { address: "{{vpn_cloud_subnet}}.0.2", port: "51829", network: "{{vpn_cloud_subnet}}.2.0/24", host: "public.peer2.com", notification_email: "test@peer2.com" },
+    #         peer3: { address: "{{vpn_cloud_subnet}}.0.3", port: "51829", network: "{{vpn_cloud_subnet}}.3.0/24", host: "public.peer3.com", notification_email: "test@peer3.com" }
+    #    }
+    # }
+    # *** END PRIVATE CLOUD SERVICE                                                    ***
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # **** BEGIN OPENWRT CONFIG GENERATOR                                              ***
+    # The role is used to preprocess and generate openwrt configurations which can be deployed to openwrt devices like access points, gateways or switches
+    # The openwrt configurations can be found in {{global_etc}}openwrt/ap/ including a script 'deploy.sh'
+    # Related role is
+    # - 'openwrt'
+    # Related variable 'network_devices' which is preprocessed into 'openwrt_devices' end of this config file
+    # *** EXAMPLE ***
+    # network_devices: [
+    #    {
+    #       host: "{{default_server_subnet}}.1",
+    #       name: "Gateway",
+    #       type: "openwrt",
+    #       config: { roles: ["gateway"], features: [ "ipv6-to-hosts", "softflowd", "ddns" ], install_packages: "kmod-usb-net-cdc-ether usb-modeswitch", remove_packages: [ "ntpclient" ] }
+    #    },
+    #    {
+    #       host: "{{default_server_subnet}}.137",
+    #       name: "Wlan AP Garden",
+    #       type: "openwrt",
+    #       config: { roles: ["ap"], features: [ "custom_ap" ] }
+    #    }
+    # ]
+    #
+    # **** END OPENWRT CONFIG GENERATOR                                                ***
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # **** BEGIN CI SERVICE                                                            ***
+    # This services runs various continues integration deployments in a virtual machine on suse, alma and ubuntu
+    # Roles:
+    # - 'ci_service'
+    # **** END CI SERVICE                                                              ***
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # **** BEGIN VCONTROLD SERVICE                                                     ***
+    # This service communicates with Viessmann heating systems and published values and cmd's to mosquitto
+    # Roles:
+    # - 'vcontrol'
+    # Related variables are 'vault_deployment_config_git' and 'vault_deployment_token_git'
+    # **** END VCONTROLD SERVICE                                                       ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
 

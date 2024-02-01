@@ -91,4 +91,4 @@ user_devices = {
 
 fping_test_hosts = [ {% for host in fping_test_hosts %}"{{host}}", {% endfor %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %} ]
 
-speedtest_server_id = "{{speedtest_server_id}}"
+speedtest_server_id = "{{external_speedtest_server_id}}"

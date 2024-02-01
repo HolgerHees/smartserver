@@ -141,6 +141,8 @@
 
     - { import_role: { name: user },                                                         tags: [ 'user' ] }                                                                                                 # users (linux, samba, web ...)
     
+    - { import_role: { name: apache_webui },                                                 tags: [ 'apache_webui' ] }                                                                                         # responsive web ui
+
     - { import_role: { name: netdata },                                                      tags: [ 'netdata' ],                                            when: "netdata_enabled" }                          # server monitoring
 #    - { import_role: { name: netdata, tasks_from: main_container, handlers_from: empty }, tags: [ 'netdata_container' ] }
 
@@ -156,8 +158,6 @@
     - { import_role: { name: camera_ftp },                                                   tags: [ 'camera_ftp', 'alpine' ],                               when: "camera_enabled" }                           # ftp file server
     - { import_role: { name: camera_service },                                               tags: [ 'camera_service', 'alpine' ],                           when: "camera_enabled" }                           # camera image gallery
 
-    - { import_role: { name: apache_webui },                                                 tags: [ 'apache_webui' ] } # responsive web ui
-
     - { import_role: { name: nextcloud },                                                    tags: [ 'nextcloud' ],                                          when: "nextcloud_enabled" }                        # private cloud
     - { import_role: { name: nextcloud_libreoffice },                                        tags: [ 'nextcloud_libreoffice' ],                              when: "nextcloud_enabled" }                        # office editor
 
@@ -166,15 +166,17 @@
     - { import_role: { name: openhab },                                                      tags: [ 'openhab' ],                                            when: "openhab_enabled" }                          # openhab iot server
     - { import_role: { name: openhab_toolbox },                                              tags: [ 'openhab_toolbox' ],                                    when: "openhab_enabled" }                          # admin scripts and tools
 
-    - { import_role: { name: backup_rsync },                                                 tags: [ 'backup_rsync' ] }                                                                 # rsync copy of {{env_path}} to {{backup_path}}dataDisk/
+    - { import_role: { name: speedtest },                                                    tags: [ 'speedtest' ],                                          when: "speedtest_enabled" }                        # inhouse network performance test
 
-    - { import_role: { name: deployment },                                                   tags: [ 'deployment' ] }                                                                   # ansible deployment project + backup collector
+    - { import_role: { name: weather_service },                                              tags: [ 'weather_service', 'alpine' ],                          when: "weather_service_enabled" }                  # weather data provider
+
+    - { import_role: { name: apache_guest_wifi },                                            tags: [ 'apache_guest_wifi' ],                                  when: "guest_wifi_enabled" }                       # guest wifi barcode generator
+
+    - { import_role: { name: deployment },                                                   tags: [ 'deployment' ] }                                                                                           # ansible deployment project + backup collector
 
     - { import_role: { name: update_service },                                               tags: [ 'update_service' ],                                     when: "update_service_enabled" }                   # update check & handler
 
-    - { import_role: { name: speedtest },                                                    tags: [ 'speedtest' ] }                                                                                            # inhouse network performance test
-
-    - { import_role: { name: openwrt },                                                      tags: [ 'openwrt' ],                                            when: "openwrt_config_generator_enabled" }         # openwrt config generator
+    - { import_role: { name: backup_rsync },                                                 tags: [ 'backup_rsync' ],                                       when: "local_backup_enabled" }                     # backup your runtime directory locally
 
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml",                                           tags: [ 'always' ] }                                                                                               # custom roles

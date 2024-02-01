@@ -136,6 +136,7 @@
     mode: 0750
   with_items:
     - "/opt/scripts/netdata_to_alertmanager"
+  when: "monitoring_enabled"
 
 - name: change service config
   lineinfile:
@@ -197,7 +198,8 @@
     file: "ansible_netdata"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
-  
+  when: "monitoring_enabled"
+
 # ***** FINALIZE *****
 - name: register prometheus metrics
   vars:

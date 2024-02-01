@@ -2,13 +2,14 @@
 - name: set config path
   set_fact:
     config_path: "config/{{inventory_hostname}}/"
+    before_var_keys: "{{vars.keys()}}"
   tags: always
 
 # load initial environment variables
 - name: load env vars
   include_vars: "{{config_path}}env.yml"
   tags: always
-  
+
 - name: load vault vars
   include_vars: "{{config_path}}vault/vault.yml"
   tags: always
@@ -23,8 +24,9 @@
 - name: detect host ip address
   set_fact:
     host_ip: "{{ production_ip if production_ip in ansible_all_ipv4_addresses else ( staging_ip if staging_ip in ansible_all_ipv4_addresses else '' ) }}"
+    custom_var_keys: "{{ vars.keys() | difference(before_var_keys + ['config_path', 'before_var_keys', 'vault_check_result']) }}"
   tags: always
-    
+
 # check for a valid main ip
 - name: check for valid ip
   assert:
@@ -61,13 +63,10 @@
   tags: always
 
 # **** load initial environment variables ****
-#- name: load default vars
-#  include_vars: "config/default.yml"
-#  tags: always
-
 - name: load default vars
-  include_config:
+  include_defaults:
     file: "config/default.yml"
+    custom_var_keys: "{{custom_var_keys}}"
   tags: always
 
 - name: check for parsing errors of 'config/default.yml'
@@ -78,7 +77,7 @@
         "The parse errors happens during loading of 'config/default.yml'",
         "",
         {% for parser_error in parser_errors %}
-          "{{parser_error}}",
+          "- {{parser_error}}",
         {% endfor %}
       ]
       {% else %}Config file successfully loaded{% endif %}
@@ -98,44 +97,65 @@
         "The following mandatory variables has to be defined",
         "",
         {% for missing_variable in parser_missing_variables %}
-          "'{{missing_variable['name']}}' is missing",
+          "- '{{missing_variable['name']}}' is missing",
         {% endfor %}
       ]
       {% else %}All mandatory variables are defined{% endif %}
   failed_when: "parser_missing_variables | length > 0"
 
-#- name: check for missing variables
-#  assert:
-#    that: no
-#    fail_msg: "'{{item}}' is missing"
-#    quiet: yes
-#  with_items: |
-#    [
-#     {% for name in parser_all_variables %}
-#         {% if parser_all_variables[name]["state"] == "missing" %}
-#             '{{name}} ',
-#         {% endif %}
-#      {% endfor %}
-#    ]
+- name: check for missing dependencies
+  debug:
+    msg: |
+      {% if parser_missing_dependencies | length > 0 %}
+      [
+        "The following features have unfulfilled dependencies",
+        "",
+        {% for missing_dependency in parser_missing_dependencies %}
+          "- '{{missing_dependency}}' depends on ['{{ parser_missing_dependencies[missing_dependency] | join(', ')}}']",
+        {% endfor %}
+      ]
+      {% else %}All dependencies fulfilled{% endif %}
+  failed_when: "parser_missing_dependencies | length > 0"
 
 - name: show custom, default and unneeded variables
   debug:
     msg: |
       [
-        "CUSTOM VARIABLES (Variables customized in your configuration)",
+        {% if parser_custom_variables | length > 0 %}
+        "CUSTOM VARIABLES '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml')",
         {% for row in ( parser_custom_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
           "- {{row | trim('-') | trim(' ')}}",
         {% endfor %}
         "",
-        "DEFAULT VARIABLES (Variables using default values)",
+        {% endif %}
+        {% if parser_adjusted_variables | length > 0 %}
+        "ADJUSTED DEFAULT VARIABLES (Defined in '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml')",
+        {% for row in ( parser_adjusted_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
+          "- {{row | trim('-') | trim(' ')}}",
+        {% endfor %}
+        "",
+        {% endif %}
+        {% if parser_default_variables | length > 0 %}
+        "PREDEFINED DEFAULT VARIABLES (Defined in 'config/default.yml')",
         {% for row in ( parser_default_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
           "- {{row | trim('-') | trim(' ')}}",
         {% endfor %}
         "",
-        "UNNEEDED VARIABLES (Related features are disabled or optional)",
+        {% endif %}
+        {% if parser_unneeded_variables | length > 0 %}
+        "LEFTOVER VARIABLES (Related features are not active, but the variables still exists in '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml' and can be removed or commented out)",
         {% for row in ( parser_unneeded_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
           "- {{row | trim('-') | trim(' ')}}",
         {% endfor %}
+        "",
+        {% endif %}
+        {% if parser_unused_variables | length > 0 %}
+        "UNUSED DEFAULT VARIABLES (Related features are not active)",
+        {% for row in ( parser_unused_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
+          "- {{row | trim('-') | trim(' ')}}",
+        {% endfor %}
+        "",
+        {% endif %}
       ]
 
 - name: set ipv6 env state vars

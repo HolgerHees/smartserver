@@ -32,16 +32,15 @@ class Handler(Server):
 
         self.mqtt = MQTT(config)
 
-        if config.api_provider:
-            if config.api_provider == 'meteogroup':
-                self.provider = MeteoGroup(config, self.db, self.mqtt)
-            elif config.api_provider == 'openmeteo':
-                self.provider = OpenMeteo(config, self.db, self.mqtt)
-            else:
-                logging.error("Unknown provider '{}'. Publishing disabled".format(config.api_provider))
-                self.provider = None
-        else:
+        if config.api_provider == 'meteogroup':
+            self.provider = MeteoGroup(config, self.db, self.mqtt)
+        elif config.api_provider == 'openmeteo':
+            self.provider = OpenMeteo(config, self.db, self.mqtt)
+        elif config.api_provider == 'listener':
             logging.info("Publishing disabled")
+            self.provider = None
+        else:
+            logging.error("Unknown provider '{}'. Publishing disabled".format(config.api_provider))
             self.provider = None
 
         self.astro_consumer = AstroConsumer(config)
