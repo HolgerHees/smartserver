@@ -100,7 +100,7 @@ def prepareBackupCommand(config, job_config):
 
     return [backup_env, backup_cmd, None]
 
-def prepareSourceBackupCommand(job_config, backup_cmd):
+def prepareSourceBackupCommand(source, job_config, backup_cmd):
     sync_backup_cmd = backup_cmd.copy()
 
     # non encrypted local backups can skip checksum check for performance reasons
@@ -172,7 +172,7 @@ with open(job_config.lockfile, "w") as lock_file_fd:
         start = time.time()
         logInfo("Starting backup sync")
         for source in job_config.sources:
-            sync_backup_cmd = prepareSourceBackupCommand(job_config, backup_cmd)
+            sync_backup_cmd = prepareSourceBackupCommand(source, job_config, backup_cmd)
             #print(sync_backup_cmd)
 
             result = subprocess.run(sync_backup_cmd, env=backup_env, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
