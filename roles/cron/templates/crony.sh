@@ -2,86 +2,50 @@
 
 set -eu
 
-TMP=$(mktemp -d)
-OUT=$TMP/crony.out
-ERR=$TMP/crony.err
-TRACE=$TMP/crony.trace
-
-IFS='|' read -r name command <<< "$@"
+IFS='|' read -r name command journal_type <<< "$@"
 name="$(echo -e "${name}" | sed -e 's/[[:space:]]*$//')"
 command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//')"
+journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
 #name=`echo "$name" | xargs`
 #command=`echo $command | xargs`
 
 #echo "$@";
 #echo ":$name:";
-#echo ":$command:";
+#echo ":$journal_type:";
 #exit;
 
+if [ -z "$journal_type" ]
+then
+    journal_type="crony"
+fi
+
+#exec > >(systemd-cat -t "$(realpath "$0")" -p info ) 2> >(systemd-cat -t "$(realpath "$0")" -p err )
+#echo "stdbuf -i0 -o0 -e0 $command > >(systemd-cat -t $journal_type -p 6) 2> >(systemd-cat -t $journal_type -p 3)"
+
+started=`date '+%Y-%m-%d %H:%M:%S'`
+
 set +e
-eval "$command" >$OUT 2>$TRACE
+eval "$command" > >(systemd-cat -t $journal_type -p 6) 2> >(systemd-cat -t $journal_type -p 3)
 RESULT=$?
 set -e
 
-PATTERN="^${PS4:0:1}\\+${PS4:1}"
-if grep -aq "$PATTERN" $TRACE
+if [ $RESULT -ne 0 ]
 then
-    ! grep -av "$PATTERN" $TRACE > $ERR
-else
-    ERR=$TRACE
-fi
-
-dt=`date '+%d.%m.%Y %H:%M:%S'`
-
-if [ $RESULT -ne 0 -o -s "$ERR" ]
-then
-    OUT_VALUE=`cat $OUT`
-    ERR_VALUE=`cat $ERR`
-    TRACE_VALUE=""
-    
-    SUBJECT="CRON '$name' ERROR at $dt"
-    
-    MESSAGE="COMMAND:\n$command"
-    MESSAGE+="\n\nCODE\n$RESULT"
-    MESSAGE+="\n\nERROR OUTPUT:\n$ERR_VALUE"
-    if [ ! -z "$OUT_VALUE" ]
-    then
-        MESSAGE+="\n\nSTANDARD OUTPUT:\n$OUT_VALUE"
-    fi
-    
-    if [ $TRACE != $ERR ]
-    then
-        $TRACE_VALUE=`cat $TRACE`
-        MESSAGE+="\nTRACE-ERROR OUTPUT:\n$TRACE_VALUE"
-    fi
-    
-    ERR_MSG=`echo $ERR_VALUE | head -c 5000`
-    
-    JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "$ERR_MSG" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
+    JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "failed" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
     echo "$JSON"  | systemd-cat -t crony -p 3
 
-elif [ -s "$OUT" ]
-then
-    OUT_VALUE=`cat $OUT`
+    finished=`date '+%d.%m.%Y %H:%M:%S'`
+    LOGS=$(journalctl --since "$started" -t test -t crony | tail -n 50)
 
-    SUBJECT="CRON '$name' SUCCESS at $dt"
+    SUBJECT="CRON '$name' failed at $finished"
 
     MESSAGE="COMMAND:\n$command"
-    MESSAGE+="\n\nSTANDARD OUTPUT:\n$OUT_VALUE"
+    MESSAGE+="\n\nCODE:\n$RESULT"
 
-    #echo "JOB '$name' was successful" | systemd-cat -t cron -p info
-    #echo "send"
-    #echo -e "$SUBJECT\n\n$MESSAGE"
-else
-    MESSAGE=""
-fi
+    MESSAGE+="\n\nLOGS:\n$LOGS"
 
-if [ ! -z "$MESSAGE" ]
-then
-    #echo "send"
-    #echo -e "$SUBJECT\n\n$MESSAGE"
-    
     echo -e "$MESSAGE" | mail -s "$SUBJECT" root
+#else
+#    JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "failed" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
+#    echo "$JSON"  | systemd-cat -t crony -p 6
 fi
-
-rm -rf "$TMP"

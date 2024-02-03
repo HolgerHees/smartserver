@@ -2,6 +2,7 @@
   vars:
     cron_name: "{{name}}"
     cron_cmd: "{{cmd}}"
+    cron_journal_type: "{{log | default(no)}}"
   cron:
     name: "{{cron_name}}"
     job: "{{ lookup('template', 'roles/cron/templates/cron_job') }}"
