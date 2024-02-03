@@ -389,7 +389,7 @@ default_variables: {
                                                 optional: "{{not system_service_enabled}}" },
     netflow_incoming_traffic:                 { default: [],                                                        # from internet expected and allowed traffic, (used to detect netflow traffic direction and for traffic blocker to decide which traffic is suspicious)
                                                 optional: "{{not system_service_enabled}}" },
-    # *** EXAMPLE ***
+    # *** EXAMPLE for netflow_incoming_traffic ***
     # {
     #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] }, log="apache" }, # Letsencrypt, CLOUD PING Test
     #   { target: "{{production_ip}}:10114", name: "alexa api", allowed: { org: [ "AWS EC2 .+" ] }, log="apache" }, # ALEXA
@@ -422,8 +422,36 @@ default_variables: {
     # This service runs rclone to copy a local source folder to local or remote destination folder
     # Roles:
     # - 'backup_sync'
+
+    # To learn more about filter check https://rclone.org/filtering/
+    # To learn more, how to setup different remote storage targets check https://rclone.org/overview/
+
     backup_sync_enabled:                      { default: "{{backup_syncs is defined and backup_syncs | length > 0}}" },
     backup_syncs:                             { optional: yes },
+    # *** EXAMPLE for backup_syncs ***
+    # [
+    #   {
+    #     name: "smartserver",
+    #     schedule: { hour: "0", minute: "0" },
+    #     destination: "{{backup_path}}smartserver/",
+    #     sources: [
+    #       { path: "{{base_path}}", filter: [ "- /var/**", "- /tmp/**" ] },
+    #       { path: "{{base_path}}", filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ], options: [ "--local-no-check-updated" ] }
+    #     ],
+    #     bandwidth_limit: "10M"
+    #   },
+    #   {
+    #     name: "googledrive",
+    #     schedule: { hour: "2", minute: "0" },
+    #     password: "{{vault_backup_password}}",
+    #     destination: "googledrive:/backup",
+    #     sources: [
+    #       { name: "data", path: "{{backup_path}}", excludes: [ "/smartserver/" ] },
+    #       { name: "nextcloud", path: "{{nextcloud_data_path}}" }
+    #     ],
+    #     bandwidth_limit: "02:00,30M 05:00,20M 06:00,5M 23:00,10M"
+    #   }
+    # ]
     # **** END BACKUP SYNC                                                             ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

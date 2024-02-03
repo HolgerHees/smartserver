@@ -165,9 +165,9 @@ if error_message:
     logError(error_message)
     exit(1)
 
-with open(job_config.lockfile, "w") as f:
+with open(job_config.lockfile, "w") as lock_file_fd:
     try:
-        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(lock_file_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
         start = time.time()
         logInfo("Starting backup sync")
