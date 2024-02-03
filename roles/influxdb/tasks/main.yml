@@ -14,7 +14,7 @@
   with_items:
     - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{ global_build }}influxdb" }
     - { user: "1000", group: "1000", mode: "u=rwx,g=,o=", path: "{{ global_lib }}influxdb" }
-    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{backup_path}}influxdb" }
+    - { user: "root", group: "root", mode: "u=rwx,g=rx,o=", path: "{{database_backup_path}}influxdb" }
 
 - name: check started docker
   systemd:
@@ -52,7 +52,7 @@
     networks_cli_compatible: yes
     volumes:
       - '{{ global_lib }}influxdb:/var/lib/influxdb2:z'
-      - '{{backup_path}}influxdb:/var/lib/influxdb_backup:z'
+      - '{{database_backup_path}}influxdb:/var/lib/influxdb_backup:z'
     exposed_ports:
      - "8086"
   register: influxdb_container_result
@@ -68,7 +68,7 @@
 - name: create cron job
   vars:
     name: "Influxdb Cleanup"
-    cmd: "find {{backup_path}}influxdb/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
+    cmd: "find {{database_backup_path}}influxdb/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
     file: "ansible_influxdb"
     hour: "0"
     minute: "45"

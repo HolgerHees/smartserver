@@ -68,8 +68,8 @@
 
 - name: "influxdb : copy backup restore script"
   template:
-    src: "roles/influxdb/templates/backup_restore/influxdb.sh"
-    dest: "/opt/backup_restore/influxdb_{{database + ('_' + item.name if item.name is defined else '')}}.sh"
+    src: "roles/influxdb/templates/restore/influxdb.sh"
+    dest: "{{backup_path}}/dumps/influxdb_{{database + ('_' + item.name if item.name is defined else '')}}.sh"
     owner: root
     group: root
     mode: 0750

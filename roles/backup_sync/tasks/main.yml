@@ -1,0 +1,102 @@
+- name: set version
+  set_fact:
+    rclone_version: "1.65.2"
+  tags: [ 'update_notifier_config' ]
+  
+# FOLDER
+- name: prepare needed folder
+  file:
+    path: '{{item}}'
+    state: directory
+    mode: 0750
+  with_items:
+    - "/opt/backup_sync"
+    - "/opt/backup_sync/bin"
+    - "/opt/backup_sync/config"
+    - "/opt/backup_sync/config/jobs"
+    - "/opt/backup_sync/config/rclone"
+    - "{{global_log}}backup_sync"
+
+# RCLONE
+- name: install archive
+  unarchive:
+    src: "https://downloads.rclone.org/v{{rclone_version}}/rclone-v{{rclone_version}}-linux-amd64.zip"
+    dest: "/opt/backup_sync/bin"
+    creates: "/opt/backup_sync/bin/rclone-v{{rclone_version}}-linux-amd64"
+    remote_src: yes
+    owner: "root"
+    group: "root"
+    mode: 0750
+
+- name: set symbolic link
+  file:
+    src: "/opt/backup_sync/bin/rclone-v{{rclone_version}}-linux-amd64/rclone"
+    dest: "/opt/backup_sync/bin/rclone"
+    state: link
+    follow: no
+    owner: "root"
+    group: "root"
+
+- name: copy sync cmd
+  copy:
+    src: "templates/sync.py"
+    dest: "/opt/backup_sync/sync.py"
+    mode: 0700
+
+- name: prepare config
+  template:
+    src: "templates/config.py"
+    dest: "/opt/backup_sync/config/config.py"
+  loop_control:
+    label: "name: '{{item.name}}'"
+
+- name: prepare job configs
+  template:
+    src: "templates/job_config.py"
+    dest: "/opt/backup_sync/config/jobs/{{item.name}}.py"
+  loop_control:
+    label: "name: '{{item.name}}'"
+  with_items: "{{backup_syncs}}"
+
+- name: register loki rules
+  vars:
+    name: "backup"
+    rules_file: "templates/loki/rules.yml"
+  include_tasks: roles/loki/shared/add_config.yml
+
+- name: create cron job => is_production
+  vars:
+    name: "Backup sync {{item.name}}"
+    cmd: "/opt/backup_sync/sync.py --job {{item.name}}"
+    log: "backup_sync"
+    file: "ansible_backup_sync"
+    day: "{{item.schedule.day if 'day' in item.schedule else '*'}}"
+    weekday: "{{item.schedule.weekday if 'weekday' in item.schedule else '*'}}"
+    hour: "{{item.schedule.hour if 'hour' in item.schedule else '*'}}"
+    minute: "{{item.schedule.minute if 'minute' in item.schedule else '*'}}"
+  include_tasks: roles/cron/shared/add_cronjob.yml
+  with_items: "{{backup_syncs}}"
+  when: "is_production"
+
+- name: set logrotate job
+  vars:
+    logrotate_path: "{{global_log}}backup_sync/*.log"
+  copy:
+    content: "{{ lookup('template', 'templates/logrotate') }}"
+    dest: "/etc/logrotate.d/ansible_backup_sync"
+    owner: root
+    group: root
+    mode: 0640
+
+- name: register update notifier
+  vars:
+    name: "rclone"
+    type: "github"
+    url: "https://rclone.org/changelog/"
+    config: { 
+      project: "rclone/rclone", 
+      pattern: "^v([0-9\\.]+)$",
+      version: "v{{rclone_version}}" 
+    }
+  include_tasks: roles/update_service/shared/add_software.yml
+  when: "update_service_software_check_enabled"

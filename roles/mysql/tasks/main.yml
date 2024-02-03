@@ -13,7 +13,7 @@
   with_items:
     - '{{ global_etc }}mysql'
     - '{{ global_lib }}mysql'
-    - '{{backup_path}}mysql'
+    - '{{database_backup_path}}mysql'
 
 - name: synchronize config
   synchronize:
@@ -74,7 +74,7 @@
 - name: create cron job
   vars:
     name: "MySQL Clean Backup"
-    cmd: "find {{backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
+    cmd: "find {{database_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
     file: "ansible_mysql"
     hour: "0"
     minute: "45"
@@ -83,7 +83,7 @@
 - name: create cron job
   vars:
     name: "MySQL Core Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1\" | bzip2 -c > {{backup_path}}mysql/mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     file: "ansible_mysql"
     hour: "1"
     minute: "0"

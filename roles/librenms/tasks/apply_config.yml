@@ -60,7 +60,6 @@
     name: "LibreNMS Daily"
     cmd: "docker exec librenms sh -c \"/opt/librenms/daily.sh > /dev/null 2>&1\""
     file: "ansible_librenms"
-    user: "1000"
     hour: "0"
     minute: "15"
   include_tasks: roles/cron/shared/add_cronjob.yml

@@ -45,7 +45,7 @@
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/jsondb" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_lib}}openhab/persistance" }
     - { user: "{{openhab_user}}", group: "{{openhab_group}}", path: "{{global_log}}openhab" }
-    - { user: "root", group: "root", path: "{{backup_path}}openhab" }
+    - { user: "root", group: "root", path: "{{database_backup_path}}openhab" }
 #    - "{{global_lib}}openhab/jsondb" # => for homeconnect oauth => 
 # userdata/config/SymmetricKeyCipher.config
 
@@ -568,7 +568,7 @@
 - name: create cleanup cron job
   vars:
     name: "Openhab Cleanup"
-    cmd: "find {{backup_path}}openhab/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
+    cmd: "find {{database_backup_path}}openhab/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
     file: "ansible_openhab"
     hour: "0"
     minute: "45"
@@ -577,7 +577,7 @@
 - name: create backup cron job
   vars:
     name: "Openhab Backup"
-    cmd: "cp -r {{global_lib}}openhab/persistance/mapdb/ {{backup_path}}openhab/mapdb_$(date +\\%Y-\\%m-\\%d)"
+    cmd: "cp -r {{global_lib}}openhab/persistance/mapdb/ {{database_backup_path}}openhab/mapdb_$(date +\\%Y-\\%m-\\%d)"
     file: "ansible_openhab"
     hour: "0"
     minute: "30"
@@ -585,8 +585,8 @@
   
 - name: copy backup restore script
   template:
-    src: "templates/backup_restore/openhab.sh"
-    dest: "/opt/backup_restore/openhab.sh"
+    src: "templates/restore/openhab.sh"
+    dest: "{{database_backup_path}}openhab.sh"
     owner: root
     group: root
     mode: 0750

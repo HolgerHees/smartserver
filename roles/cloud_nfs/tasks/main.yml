@@ -41,7 +41,7 @@
 
 - name: create fstab mount entries
   mount:
-    path: "{{cloud_path}}/remote/{{item}}"
+    path: "{{cloud_path}}remote/{{item}}"
     src: "{{vpn_cloud_services.remote[item].nfs}}:/"
     fstype: nfs
     opts: "nfsvers=4.2,soft,actimeo=0,rw,timeo=30,retrans=3,noauto,nofail,x-systemd.automount,x-systemd.mount-timeout=5,x-systemd.idle-timeout=300"

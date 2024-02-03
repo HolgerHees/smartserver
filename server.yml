@@ -183,7 +183,7 @@
 
     - { import_role: { name: update_service },                                               tags: [ 'update_service' ],                                     when: "update_service_enabled" }                   # update check & handler
 
-    - { import_role: { name: backup_rsync },                                                 tags: [ 'backup_rsync' ],                                       when: "local_backup_enabled" }                     # backup your runtime directory locally
+    - { import_role: { name: backup_sync },                                                  tags: [ 'backup_sync' ],                                        when: "backup_sync_enabled" }                      # synchronizes local folders to local or remote backup locations
 
     # ************ CUSTOM ROLES ************
     - { include_tasks: "{{config_path}}roles.yml",                                           tags: [ 'always' ] }                                                                                               # custom roles

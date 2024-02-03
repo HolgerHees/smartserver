@@ -28,8 +28,8 @@ default_variables: {
     intern_networks:                          { default: [] },                                                      # e.g. intern (trusted) ipv4 & ipv6 address ranges. Networks, based on production/staging ip and ansible server ip, be added additionally.
     public_networks:                          { default: [] },                                                      # e.g. public ipv6 address ranges
 
-    root_path:                                { default: "/smartserver/" },                                         # path for smartserver related service data
-    data_path:                                { default: "{{root_path}}data/" },                                    # path for smartserver related user data
+    base_path:                                { default: "/smartserver/" },                                         # path for smartserver related service data
+    data_path:                                { default: "{{base_path}}data/" },                                    # path for smartserver related user data
     backup_path:                              { default: "{{data_path}}backups/" },                                 # path for local backup data
 
     # used in main role 'apache' and can be an empty array []
@@ -418,12 +418,13 @@ default_variables: {
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # **** BEGIN LOCAL BACKUP SERVICE                                                  ***
-    # This service runs rsync to copy {{root_path}} to {{backup_path}}environment/, excluding 'var', 'tmp', 'build' and {{data_path}}
+    # **** BEGIN BACKUP SYNC                                                           ***
+    # This service runs rclone to copy a local source folder to local or remote destination folder
     # Roles:
-    # - 'backup_rsync'
-    local_backup_enabled:                     { default: yes },                                                     # enabled by default
-    # **** END LOCAL BACKUP SERVICE                                                    ***
+    # - 'backup_sync'
+    backup_sync_enabled:                      { default: "{{backup_syncs is defined and backup_syncs | length > 0}}" },
+    backup_syncs:                             { optional: yes },
+    # **** END BACKUP SYNC                                                             ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -490,7 +491,6 @@ default_variables: {
     # - 'cloud_nfs'
     # - 'cloud_mosquitto'
     # - 'cloud_check'
-    # - 'backup_cloud'
     # Related variable is 'cloud_vpn'
     # *** EXAMPLE ***
     # cloud_vpn: {
@@ -559,17 +559,17 @@ alpine_version:                   "3.19.1"
 flask_core_version:               "3.0.0"
 flask_socketio_version:           "5.3.6"
 
-htdocs_path:                      "{{root_path}}htdocs/"
-global_etc:                       "{{root_path}}etc/"
-global_tmp:                       "{{root_path}}tmp/"
-global_build:                     "{{root_path}}build/"
-global_log:                       "{{root_path}}var/log/"
-global_lib:                       "{{root_path}}var/lib/"
+htdocs_path:                      "{{base_path}}htdocs/"
+global_etc:                       "{{base_path}}etc/"
+global_tmp:                       "{{base_path}}tmp/"
+global_build:                     "{{base_path}}build/"
+global_log:                       "{{base_path}}var/log/"
+global_lib:                       "{{base_path}}var/lib/"
 
 projects_path:                    "{{data_path}}projects/"
 cloud_path:                       "{{data_path}}cloud/"
-
 deployment_path:                  "{{projects_path}}{{project_name}}/"
+database_backup_path:             "{{backup_path}}databases/"
 
 deployment_config_path:           "{{deployment_path}}{{config_path}}"
 deployment_inventory_path:        "{{ansible_inventory_sources[0]}}"

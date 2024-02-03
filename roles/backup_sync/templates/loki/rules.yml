@@ -1,0 +1,21 @@
+ groups:
+  - name: backup_sync
+    interval: 60s
+    rules:
+{% for item in backup_syncs %}
+      - alert: Backup sync '{{item.name}}' not working
+        expr: |
+            absent_over_time(
+              {group="backup_sync"}
+              |~ "{{item.name | upper}}: Backup sync finished after"
+              [36h]
+            )
+        # 36h => 1 day + runtime (max 12h)
+        for: 0
+        labels:
+            notifyGroup: "backup_sync"
+            severity: critical
+        annotations:
+            summary: "Missing message of backup sync '{{item.name}}' for more then 24 hours."
+            url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
+{% endfor %}

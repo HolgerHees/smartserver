@@ -25,7 +25,7 @@
 - name: "mysql : create cron job"
   vars:
     name: "MySQL {{database | capitalize}} Backup"
-    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump --quick --single-transaction {{database}} -h 127.0.0.1\" | bzip2 -c > {{backup_path}}mysql/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
+    cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump --quick --single-transaction {{database}} -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mysql/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
     file: "ansible_mysql"
     hour: "1"
     minute: "0"
@@ -38,8 +38,8 @@
 
 - name: "mysql : copy backup restore script"
   template:
-    src: "roles/mysql/templates/backup_restore/mysql.sh"
-    dest: "/opt/backup_restore/mysql_{{database}}.sh"
+    src: "roles/mysql/templates/restore/mysql.sh"
+    dest: "{{database_backup_path}}mysql_{{database}}.sh"
     owner: root
     group: root
     mode: 0750
