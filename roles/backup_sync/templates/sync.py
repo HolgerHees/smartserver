@@ -100,7 +100,7 @@ def prepareBackupCommand(config, job_config):
 
     return [backup_env, backup_cmd, None]
 
-def prepareSourceBackupCommand(source, job_config, backup_cmd):
+def prepareSourceBackupCommand(is_single_source, index, source_config, job_config, backup_cmd):
     sync_backup_cmd = backup_cmd.copy()
 
     # non encrypted local backups can skip checksum check for performance reasons
@@ -110,11 +110,13 @@ def prepareSourceBackupCommand(source, job_config, backup_cmd):
     destination = job_config.destination
     if not destination.endswith(os.path.sep):
         destination += os.path.sep
-    if source["name"]:
-        destination += source["name"] + os.path.sep
+    if source_config["name"]:
+        destination += source_config["name"] + os.path.sep
 
-    logfile = job_config.logfile.replace("[DATETIME]", datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    #logfile = job_config.logfile.replace("[DATETIME]", "")
+    index_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    if not is_single_source:
+        index_name = "{}_{}".format(source_config["name"] if source_config["name"] else "source{}".format(index), index_name)
+    logfile = job_config.logfile.replace("[INDEX]", index_name)
 
     sync_backup_cmd.append("--log-file")
     sync_backup_cmd.append(logfile)
@@ -129,23 +131,23 @@ def prepareSourceBackupCommand(source, job_config, backup_cmd):
     #        sync_backup_cmd.append("--include")
     #        sync_backup_cmd.append(prepareFilterTerm(include))
 
-    if source["filter"]:
-        for filter in source["filter"]:
+    if source_config["filter"]:
+        for filter in source_config["filter"]:
             sync_backup_cmd.append("--filter")
             sync_backup_cmd.append(filter)
 
-    if source["options"]:
-        for option in source["options"]:
+    if source_config["options"]:
+        for option in source_config["options"]:
             sync_backup_cmd.append(option)
 
     if job_config.password:
         sync_backup_cmd.append("--crypt-remote")
         sync_backup_cmd.append(destination)
         sync_backup_cmd.append("sync")
-        sync_backup_cmd.append(source["path"])
+        sync_backup_cmd.append(source_config["path"])
         sync_backup_cmd.append("backup:")
     else:
-        sync_backup_cmd.append(source["path"])
+        sync_backup_cmd.append(source_config["path"])
         sync_backup_cmd.append(destination)
 
     return sync_backup_cmd
@@ -171,8 +173,10 @@ with open(job_config.lockfile, "w") as lock_file_fd:
 
         start = time.time()
         logInfo("Starting backup sync")
-        for source in job_config.sources:
-            sync_backup_cmd = prepareSourceBackupCommand(source, job_config, backup_cmd)
+        index = 1
+        is_single_source = len(job_config.sources) < 2
+        for source_config in job_config.sources:
+            sync_backup_cmd = prepareSourceBackupCommand(is_single_source, index, source_config, job_config, backup_cmd)
             #print(sync_backup_cmd)
 
             result = subprocess.run(sync_backup_cmd, env=backup_env, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -183,6 +187,8 @@ with open(job_config.lockfile, "w") as lock_file_fd:
                 logError("Backup sync failed after {}".format(duration))
                 logError(result.stdout)
                 exit(1)
+
+            index += 1
 
         fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
 

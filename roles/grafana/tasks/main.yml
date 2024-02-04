@@ -137,7 +137,7 @@
       - "saddr {{docker_grafana_ip}} daddr {{docker_alertmanager_ip}}"
 #      - "saddr {{docker_grafana_ip}} proto tcp dport 443 outerface {{default_network_interface}}" # fetching grafana plugin keys
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: add container name
   vars:
@@ -153,6 +153,7 @@
     i18n_files: [ { language: "de", file: "templates/webui/grafana.de.json" } ]
     icons: [ 'templates/webui/icons/grafana_logo.svg', 'templates/webui/icons/grafana_logs.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: copy apache vhost
   vars:
@@ -160,11 +161,13 @@
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/grafana.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/grafana.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
       
 - name: create systemd service
@@ -172,6 +175,7 @@
     container_name: "grafana"
     container_after: [ "mysql", "influxdb", "loki", "prometheus", "alertmanager" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register update notifier
   vars:
@@ -183,6 +187,7 @@
       pattern: "^([0-9\\.]+)$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger grafana handler

@@ -37,6 +37,7 @@
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/manifest.conf"
   include_tasks: roles/apache/shared/add_config.yml
+  tags: ['apache_config']
 
 # POTD FETCHER
 - name: install required packages for fetchPOTD => is_rhel or is_fedora
@@ -87,7 +88,9 @@
   vars:
     name: "POTD Fetcher"
     cmd: "/opt/scripts/apache_webui_fetchPOTD.sh"
-    file: "ansible_apache_webui"
+    group: "apache"
+    log: "webui"
     hour: "3"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']

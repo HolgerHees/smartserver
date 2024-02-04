@@ -41,6 +41,7 @@
     listener: { "prefix": "mysql", "js_file": "templates/webui/phpmyadmin.listener.js" }
     icons: [ 'templates/webui/icons/phpmyadmin_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: copy config
   template:
@@ -70,4 +71,5 @@
       version: "RELEASE_{{phpmyadmin_version | regex_replace('\\.','_')}}" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"

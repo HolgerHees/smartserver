@@ -201,3 +201,5 @@
     i18n_files: [ { language: "de", file: "templates/webui/openwrt.de.json" } ]
     icons: []
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
+  

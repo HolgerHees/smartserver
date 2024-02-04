@@ -5,7 +5,7 @@ bandwidth_limit = {% if 'bandwidth_limit' in item %}'{{item.bandwidth_limit}}'{%
 
 
 lockfile        = "{{global_tmp}}backup_sync_{{item.name}}.lock"
-logfile         = "{{global_log}}backup_sync/{{item.name}}_[DATETIME].log"
+logfile         = "{{global_log}}backup_sync/{{item.name}}_[INDEX].log"
 
 destination     = '{{item.destination}}'
 

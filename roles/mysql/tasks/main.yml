@@ -75,30 +75,36 @@
   vars:
     name: "MySQL Clean Backup"
     cmd: "find {{database_backup_path}}mysql/ -name \"*.sql.bz2\" -mtime +30 -exec rm {} +"
-    file: "ansible_mysql"
+    group: "mysql"
+    log: "dump_cleanup"
     hour: "0"
     minute: "45"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: create cron job
   vars:
     name: "MySQL Core Backup"
     cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump mysql -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mysql_$(date +\\%Y-\\%m-\\%d).sql.bz2"
-    file: "ansible_mysql"
+    group: "mysql"
+    log: "dump_mysql"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/mysql.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "mysql"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
     
 - name: register update notifier
   vars:
@@ -110,6 +116,7 @@
       pattern: "^([0-9\\.]+)$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger mysql handler
@@ -134,4 +141,5 @@
     password: "{{vault_shared_mysql_password}}"
     backup: yes
   include_tasks: roles/mysql/shared/add_database.yml
+  tags: ['cron_job','backup_restore']
   

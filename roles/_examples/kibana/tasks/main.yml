@@ -11,7 +11,7 @@
     files:
       - roles/kibana/templates/container/Dockerfile
       - roles/kibana/templates/container/kibana.yml
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
   
 - name: connect elasticsearch and kibana
   docker_network:
@@ -71,23 +71,27 @@
     name: "kibana"
     js_file: "templates/webui/kibana.js"
     i18n_files: [ { language: "de", file: "templates/webui/kibana.de.json" } ]
-  import_tasks: roles/apache_webui/shared/add_webui.yml
+  include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: copy apache vhost
   vars:
     sub_domain: "kibana"
     include: "templates/etc/apache2/_.ansible.vhost.d/kibana.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/kibana.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
-    
+  include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
+
 - name: create systemd service
   vars:
     container_name: "kibana"
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register update notifier
   vars:
@@ -98,10 +102,11 @@
       repository: "amazon/opendistro-for-elasticsearch-kibana",
       pattern: "^([0-9\\.]+)$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
 
 - name: trigger kibana handler
   vars:
     notify: "restart kibana"
     service: "kibana.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

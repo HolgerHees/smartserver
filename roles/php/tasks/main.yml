@@ -56,7 +56,7 @@
       - "saddr {{docker_php_ip}} daddr {{default_server_ip}} proto tcp dport 443"
       - "saddr {{docker_php_ip}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: add container name
   vars:
@@ -69,6 +69,7 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/php.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
   
 - name: create systemd service
@@ -76,6 +77,7 @@
     container_name: "php"
     container_after: [ "mysql", "redis", "postfix", "influxdb" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: register update notifier
   vars:
@@ -87,6 +89,7 @@
       pattern: "^([0-9\\.]+)-fpm$" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger php handler

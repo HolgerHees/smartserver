@@ -26,10 +26,12 @@
   vars:
     name: "MySQL {{database | capitalize}} Backup"
     cmd: "docker exec mysql sh -c \"/usr/bin/mysqldump --quick --single-transaction {{database}} -h 127.0.0.1\" | bzip2 -c > {{database_backup_path}}mysql/{{database}}_$(date +\\%Y-\\%m-\\%d).sql.bz2"
-    file: "ansible_mysql"
+    group: "mysql"
+    log: "dump_{{database}}"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   when: "backup"
 
 - name: "mysql : register result state"

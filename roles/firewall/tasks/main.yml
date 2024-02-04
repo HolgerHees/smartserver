@@ -93,6 +93,7 @@
   vars:
     name: "ferm"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: register update notifier
@@ -106,6 +107,7 @@
       version: "v{{ferm_version}}" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 #- name: trigger ferm handler

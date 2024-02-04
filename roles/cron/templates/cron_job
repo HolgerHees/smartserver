@@ -1,1 +1,1 @@
-/usr/bin/crony.sh '{{cron_name}} | {{cron_cmd | replace("'","'\\''") }}{% if cron_journal_type %} | {{cron_journal_type}}{% endif %}'
+/usr/bin/crony.sh '{{cron_journal_type}} | {{cron_name}} | {{cron_cmd | replace("'","'\\''") }}'

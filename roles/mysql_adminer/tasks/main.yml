@@ -51,7 +51,7 @@
 #    i18n_files: [ { language: "de", file: "templates/webui/phpmyadmin.de.json" } ]
 #    listener: { "prefix": "mysql", "js_file": "templates/webui/phpmyadmin.listener.js" }
 #  include_tasks: roles/apache_webui/shared/add_webui.yml
-
+#  tags: ['apache_webui_config']
 #- name: prepare config folder
 #  file:
 #    path: "{{htdocs_path}}mysql/tmp"
@@ -72,4 +72,5 @@
 #      version: "RELEASE_{{phpmyadmin_version | regex_replace('\\.','_')}}" 
 #    }
 #  include_tasks: roles/update_service/shared/add_software.yml
+#  tags: ['update_notifier_config']
 #  when: "update_service_software_check_enabled"

@@ -8,4 +8,5 @@
       pattern: "^([0-9]{1,2}\\.[0-9\\.]+)$" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"

@@ -193,10 +193,11 @@
 - name: register systemd service watcher
   vars:
     name: "openvpn@mobile"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
-
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
+  
 - name: trigger openvpn@mobile handler
   vars:
     notify: "restart openvpn@mobile"
     service: "openvpn@mobile.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

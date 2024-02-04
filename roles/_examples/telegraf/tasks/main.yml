@@ -56,19 +56,21 @@
   vars:
     host_name: "telegraf"
     host_ip_address: "{{docker_telegraf_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
 
 # ***** FINALIZE *****
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/telegraf.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
-    
+  include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
+
 - name: create systemd service
   vars:
     container_name: "telegraf"
     container_after: [ "influxdb" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register update notifier
   vars:
@@ -79,11 +81,12 @@
       repository: "telegraf",
       pattern: "^([0-9\\.]+)-alpine$"
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
 
 - name: trigger telegraf handler
   vars:
     notify: "restart telegraf"
     service: "telegraf.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
 

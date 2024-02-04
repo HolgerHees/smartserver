@@ -39,12 +39,14 @@
     name: "smartd"
     rules_file: "templates/prometheus/rules.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: register systemd service watcher
   vars:
     name: "{{'smartmontools' if is_ubuntu else 'smartd'}}"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: trigger smartd handler

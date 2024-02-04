@@ -71,8 +71,8 @@
     backup: yes
     backup_cleanup: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
   include_tasks: roles/mysql/shared/add_database.yml
+  tags: ['cron_job','backup_restore']
   when: "mysql_enabled"
-  tags: [ 'user' ]
 
 # ***** REDIS ****
 - name: check redis service => database does not exists
@@ -264,18 +264,22 @@
   vars:
     name: "Nextcloud Updates"
     cmd: "/usr/bin/flock -n {{global_tmp}}nextcloud.lock timeout 28m docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/cron.php > /dev/null\""
-    file: "ansible_nextcloud"
+    group: "nextcloud"
+    log: "cron"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: create cron job
   vars:
     name: "Nextcloud Fileindex"
     cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ files:scan --all > /dev/null\""
-    file: "ansible_nextcloud"
+    group: "nextcloud"
+    log: "file_scan"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: add admin web user
   vars:
@@ -293,6 +297,7 @@
     i18n_files: [ { language: "de", file: "templates/webui/nextcloud.de.json" } ]
     icons: [ 'templates/webui/icons/nextcloud_logo.svg', 'templates/webui/icons/nextcloud_files.svg', 'templates/webui/icons/nextcloud_notes.svg', 'templates/webui/icons/nextcloud_photos.svg', 'templates/webui/icons/nextcloud_news.svg', 'templates/webui/icons/nextcloud_passwords.svg', 'templates/webui/icons/nextcloud_deck.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: copy apache vhost
   vars:
@@ -303,11 +308,13 @@
     additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/nextcloud.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: register update notifier
@@ -321,4 +328,5 @@
       version: "v{{nextcloud_version}}" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"

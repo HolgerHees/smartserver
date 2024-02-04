@@ -2,10 +2,10 @@
 
 set -eu
 
-IFS='|' read -r name command journal_type <<< "$@"
+IFS='|' read -r journal_type name command <<< "$@"
+journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
 name="$(echo -e "${name}" | sed -e 's/[[:space:]]*$//')"
 command="$(echo -e "${command}" | sed -e 's/^[[:space:]]*//')"
-journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
 #name=`echo "$name" | xargs`
 #command=`echo $command | xargs`
 
@@ -13,11 +13,6 @@ journal_type="$(echo -e "${journal_type}" | sed -e 's/^[[:space:]]*//')"
 #echo ":$name:";
 #echo ":$journal_type:";
 #exit;
-
-if [ -z "$journal_type" ]
-then
-    journal_type="crony"
-fi
 
 #exec > >(systemd-cat -t "$(realpath "$0")" -p info ) 2> >(systemd-cat -t "$(realpath "$0")" -p err )
 #echo "stdbuf -i0 -o0 -e0 $command > >(systemd-cat -t $journal_type -p 6) 2> >(systemd-cat -t $journal_type -p 3)"
@@ -32,7 +27,7 @@ set -e
 if [ $RESULT -ne 0 ]
 then
     JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "failed" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
-    echo "$JSON"  | systemd-cat -t crony -p 3
+    echo "$JSON"  | systemd-cat -t $journal_type -p 3
 
     finished=`date '+%d.%m.%Y %H:%M:%S'`
     LOGS=$(journalctl --since "$started" -t test -t crony | tail -n 50)

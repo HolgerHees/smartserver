@@ -75,23 +75,27 @@
 #  vars:
 #    name: "RAID Check (Start)"
 #    cmd: "/usr/share/mdadm/mdcheck --duration 2 hours"
-#    file: "ansible_mdadm"
+#    group: "mdadm"
+#    log: "start"
 #    day: "1-7"
 #    weekday: "7"
 #    hour: "1"
 #    minute: "0"
 #  include_tasks: roles/cron/shared/add_cronjob.yml
+#  tags: ['cron_job']
 #  when: mdraid.stat.exists
 
 #- name: create cron 'continue' job
 #  vars:
 #    name: "RAID Check (Continue)"
 #    cmd: "/usr/share/mdadm/mdcheck --continue --duration 2 hours"
-#    file: "ansible_mdadm"
+#    group: "mdadm"
+#    log: "continue"
 #    weekday: "1-6"
 #    hour: "1"
 #    minute: "0"
 #  include_tasks: roles/cron/shared/add_cronjob.yml
+#  tags: ['cron_job']
 #  when: mdraid.stat.exists
 
 # ***** FINALIZE *****
@@ -100,6 +104,7 @@
     name: "mdmonitor"
     rules_file: "templates/prometheus/rules.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled and mdraid.stat.exists"
 
 - name: register loki rules
@@ -107,12 +112,14 @@
     name: "mdmonitor"
     rules_file: "templates/loki/rules.yml"
   include_tasks: roles/loki/shared/add_config.yml
+  tags: ['loki_config']
   when: "monitoring_enabled and mdraid.stat.exists"
 
 - name: register systemd service watcher
   vars:
     name: "mdmonitor"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled and mdraid.stat.exists"
 
 - name: trigger mdmonitor handler

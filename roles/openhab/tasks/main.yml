@@ -481,6 +481,7 @@
     password: "{{vault_openhab_mysql_password}}"
     backup: yes
   include_tasks: roles/mysql/shared/add_database.yml
+  tags: ['cron_job','backup_restore']
   when: "mysql_enabled"
     
 # ***** INFLUXDB DATABASE ****
@@ -491,6 +492,7 @@
       - { retention: "0" }
     backup: yes
   include_tasks: roles/influxdb/shared/add_bucket.yml
+  tags: ["cron_job", "backup_restore"]
   when: "influxdb_enabled"
 
 # ***** FINALIZE *****
@@ -500,6 +502,7 @@
     #rule_file: "templates/prometheus/rule.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: register loki rules
@@ -507,6 +510,7 @@
     name: "openhab"
     rules_file: "templates/etc/loki/rules.yaml"
   include_tasks: roles/loki/shared/add_config.yml
+  tags: ['loki_config']
   when: "monitoring_enabled"
 
 - name: register grafana configs
@@ -518,6 +522,7 @@
     dashboards:
       - "templates/grafana/dashboards/OpenHAB metrics.json"
   include_tasks: roles/grafana/shared/add_datasource.yml
+  tags: ['grafana_config']
   when: "grafana_enabled"
 
 - name: register default webui
@@ -528,6 +533,7 @@
     listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
     icons: [ 'templates/webui/icons/openhab_logo.svg', 'templates/webui/icons/openhab_basicui.svg', 'templates/webui/icons/openhab_adminui.svg', 'templates/webui/icons/openhab_habot.svg', 'templates/webui/icons/openhab_habpanel.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: register habpanel webui
   vars:
@@ -536,6 +542,7 @@
     i18n_files: [ { language: "de", file: "templates/webui/openhab_habpanel.de.json" } ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
   when: "habpanel_result.rc == 0"
+  tags: ['apache_webui_config']
 
 #- name: add admin web user
 #  vars:
@@ -554,6 +561,7 @@
 #      - "{{vault_openhab_tablet_username}}"
     include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 #- name: copy special vhosts
 #  template:
@@ -569,19 +577,23 @@
   vars:
     name: "Openhab Cleanup"
     cmd: "find {{database_backup_path}}openhab/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
-    file: "ansible_openhab"
+    group: "openhab"
+    log: "dump_cleanup"
     hour: "0"
     minute: "45"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: create backup cron job
   vars:
     name: "Openhab Backup"
     cmd: "cp -r {{global_lib}}openhab/persistance/mapdb/ {{database_backup_path}}openhab/mapdb_$(date +\\%Y-\\%m-\\%d)"
-    file: "ansible_openhab"
+    group: "openhab"
+    log: "dump_mapdb"
     hour: "0"
     minute: "30"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   
 - name: copy backup restore script
   template:
@@ -596,6 +608,7 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/openhab.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
@@ -603,6 +616,7 @@
     container_name: "openhab"
     container_after: [ "mysql", "influxdb", "mosquitto" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register openhab update notifier
   vars:
@@ -614,6 +628,7 @@
       pattern: "^([0-9\\.]+)-debian$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger openhab handler

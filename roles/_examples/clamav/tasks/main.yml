@@ -70,48 +70,52 @@
 #  vars:
 #    name: "ClamAV file check"
 #    cmd: "clamscan -r -i {{nextcloud_data_path}}"
-#    file: "ansible_clamav_check"
+#    group: "clamav_check"
 #    hour: "3"
 #    minute: "0"
-#  import_tasks: roles/cron/shared/add_cronjob.yml
+#  include_tasks: roles/cron/shared/add_cronjob.yml
+#  tags: ['cron_job']
 #  when: "is_production|bool"
 
 # ***** FINALIZE *****
 - name: register service watcher => is_rhel or is_fedora
   vars:
     name: "clamd@scan"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: is_rhel|bool or is_fedora|bool
 
 - name: register service watcher => is_rhel or is_fedora
   vars:
     name: "clamd"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: is_rhel|bool or is_fedora|bool
 
 - name: register service watcher
   vars:
     name: "freshclam"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: is_suse|bool
 
 - name: trigger clamd@scan handler => is_rhel or is_fedora
   vars:
     notify: "restart clamav"
     service: "clamd@scan.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
   when: is_rhel|bool or is_fedora|bool
 
 - name: trigger freshclam handler => is_suse
   vars:
     notify: "restart clamav"
     service: "freshclam.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
   when: is_suse|bool
 
 - name: trigger clamd handler => is_suse
   vars:
     notify: "restart clamav"
     service: "clamd.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
   when: is_suse|bool

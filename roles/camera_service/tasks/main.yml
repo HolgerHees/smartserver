@@ -61,7 +61,7 @@
     rules:
       - "saddr {{docker_prometheus_ip}} daddr {{docker_camera_service_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: copy config
   template:
@@ -124,6 +124,7 @@
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/cameras.conf"
   include_tasks: roles/apache/shared/add_config.yml
+  tags: ['apache_config']
 
 - name: register webui
   vars:
@@ -132,6 +133,7 @@
     i18n_files: [ { language: "de", file: "templates/webui/camera_service.de.json" } ]
     icons: []
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
@@ -140,6 +142,7 @@
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: copy service apache config
@@ -147,12 +150,14 @@
     service_name: "camera_service"
     service_host: "{{docker_camera_service_ip}}"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  tags: ['apache_config']
 
 - name: copy service fluentd config
   vars:
     service_name: "camera_service"
     service_is_container: no
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
@@ -160,11 +165,13 @@
     container_name: "camera_service"
     container_after: [ "camera_ftp" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: register systemd service watcher
   vars:
     name: "camera_service"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
   
 - name: trigger update_service handler

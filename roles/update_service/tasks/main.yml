@@ -80,47 +80,56 @@
     i18n_files: [ { language: "de", file: "templates/webui/update_service.de.json" } ]
     icons: [ 'templates/webui/icons/update_software_logo.svg', 'templates/webui/icons/update_system_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
-  
+  tags: ['apache_webui_config']
+
 - name: create version check cron job
   vars:
     name: "Software Version check"
     cmd: "/opt/update_service/software_version_check > /dev/null"
-    file: "ansible_update_service"
+    group: "update_service"
+    log: "software_version_check"
     minute: "0"
     hour: "3"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   when: "update_service_software_check_enabled"
 
 - name: create system check cron job
   vars:
     name: "System update check"
     cmd: "/opt/update_service/system_update_check > /dev/null"
-    file: "ansible_update_service"
+    group: "update_service"
+    log: "system_update_check"
     minute: "30"
     hour: "3"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   when: "update_service_system_check_enabled"
   
 - name: create cleanup cron job
   vars:
     name: "System update cleanup"
     cmd: "ls -1t {{global_log}}update_service/*.log | tail -n +50 | xargs rm -f"
-    file: "ansible_update_service"
+    group: "update_service"
+    log: "log_cleanup"
     hour: "0"
     minute: "40"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: copy service apache config
   vars:
     service_name: "update_service"
     service_host: "127.0.0.1:8505"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  tags: ['apache_config']
 
 - name: copy service fluentd config
   vars:
     service_name: "update_service"
     service_is_container: no
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: "create systemd service"
@@ -135,6 +144,7 @@
   vars:
     name: "update_service"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: trigger update_service handler

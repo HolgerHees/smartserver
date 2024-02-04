@@ -5,7 +5,8 @@
     i18n_files: [ { language: "de", file: "templates/webui/guest_wifi.de.json" } ]
     icons: [ 'templates/webui/icons/guest_wifi.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
-
+  tags: ['apache_webui_config']
+  
 - name: synchronize webui
   synchronize:
     src: "templates/htdocs/guest_wifi"

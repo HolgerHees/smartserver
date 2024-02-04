@@ -88,6 +88,7 @@
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
     backup: yes
   include_tasks: roles/influxdb/shared/add_bucket.yml
+  tags: ["cron_job", "backup_restore"]
   when: "influxdb_enabled"
 
 # ***** FINALIZE *****
@@ -97,6 +98,7 @@
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: register grafana configs
@@ -108,6 +110,7 @@
       - "templates/grafana/dashboards/System Service Scanner.json"
       - "templates/grafana/dashboards/System Service WAN.json"
   include_tasks: roles/grafana/shared/add_datasource.yml
+  tags: ['grafana_config']
   when: "grafana_enabled"
 
 - name: register grafana configs
@@ -120,6 +123,7 @@
       - "templates/grafana/dashboards/System Service Netflow Overview.json"
       - "templates/grafana/dashboards/System Service Netflow World Map.json"
   include_tasks: roles/grafana/shared/add_datasource.yml
+  tags: ['grafana_config']
   when: "grafana_enabled and netflow_collector"
 
 - name: synchronize webui
@@ -144,7 +148,8 @@
     i18n_files: [ { language: "de", file: "templates/webui/system_service.de.json" } ]
     icons: [ 'templates/webui/icons/system_service_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
-  
+  tags: ['apache_webui_config']
+
 - name: copy service apache config
   vars:
     service_name: "system_service"
@@ -155,18 +160,21 @@
           ProxyPassReverse http://127.0.0.1:8507/metrics/
         </Location>
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  tags: ['apache_config']
 
 - name: copy service fluentd config
   vars:
     service_name: "system_service"
     service_is_container: yes
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: register systemd service watcher
   vars:
     name: "system_service"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
@@ -174,6 +182,7 @@
     container_name: "system_service"
     container_after: [ "network-online.target", "mosquitto", "influxdb" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger device_ping handler
   vars:

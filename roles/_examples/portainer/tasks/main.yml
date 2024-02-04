@@ -52,13 +52,15 @@
     sub_domain: "portainer"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/portainer.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: create systemd service
   vars:
     container_name: "portainer"
-  import_tasks: roles/container/shared/add_docker_service.yml
-
+  include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
+  
 #- name: register update notifier
 #  vars:
 #    name: "portainer"
@@ -68,10 +70,11 @@
 #      repository: "portainer",
 #      pattern: "^([0-9\\.]+)-alpine$"
 #    }
-#  import_tasks: roles/update_service/shared/add_software.yml
+#  include_tasks: roles/update_service/shared/add_software.yml
+#  tags: ['update_notifier_config']
 
 - name: trigger portainer handler
   vars:
     notify: "restart portainer"
     service: "portainer.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

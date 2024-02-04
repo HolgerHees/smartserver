@@ -69,10 +69,12 @@
   vars:
     name: "Influxdb Cleanup"
     cmd: "find {{database_backup_path}}influxdb/ -mindepth 1  -type d -mtime +3 -exec rm -rf {} +;"
-    file: "ansible_influxdb"
+    group: "influxdb"
+    log: "dump_cleanup"
     hour: "0"
     minute: "45"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: register webui
   vars:
@@ -81,6 +83,7 @@
     i18n_files: [ { language: "de", file: "templates/webui/influxdb.de.json" } ]
     icons: [ 'templates/webui/icons/influxdb_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: copy apache vhost
   vars:
@@ -88,17 +91,20 @@
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/influxdb.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/influxdb.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
     
 - name: create systemd service
   vars:
     container_name: "influxdb"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register update notifier
   vars:
@@ -110,6 +116,7 @@
       pattern: "^([0-9\\.]+)-alpine$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger influxdb handler

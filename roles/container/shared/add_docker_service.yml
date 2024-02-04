@@ -11,4 +11,5 @@
   vars:
     name: "{{container_name}}"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"

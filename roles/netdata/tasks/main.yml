@@ -162,6 +162,7 @@
 #      - { retention: "0", name: "999d", interval: "1h", every: "1d" }
 #    backup: yes
 #  include_tasks: roles/influxdb/shared/add_bucket.yml
+#  tags: ["cron_job", "backup_restore"]
 #  when: "influxdb_enabled"
   
 # ***** OTHER *****
@@ -173,6 +174,7 @@
 #    dashboards:
 #      - "templates/grafana/dashboards/Server Health.json"
 #  include_tasks: roles/grafana/shared/add_datasource.yml
+#  tags: ['grafana_config']
 #  when: "grafana_enabled"
 
 - name: register webui
@@ -183,6 +185,7 @@
     listener: { "sub_domain": "netdata", "js_file": "templates/webui/netdata.listener.js" }
     icons: [ 'templates/webui/icons/netdata_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
+  tags: ['apache_webui_config']
 
 - name: copy apache vhost
   vars:
@@ -190,14 +193,17 @@
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/netdata.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: create cron job
   vars:
     name: "Netdata error check"
     cmd: "/opt/scripts/netdata_to_alertmanager"
-    file: "ansible_netdata"
+    group: "netdata"
+    log: "alertmanager"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   when: "monitoring_enabled"
 
 # ***** FINALIZE *****
@@ -206,12 +212,14 @@
     name: "netdata"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: register systemd service watcher
   vars:
     name: "netdata"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: register system package dependency
@@ -219,6 +227,7 @@
     tag: "netdata"
     packages: [ "netdata" ]
   include_tasks: roles/update_service/shared/add_dependency.yml
+  tags: ['update_system_config']
   when: "update_service_system_check_enabled"
 
 - name: register update notifier
@@ -233,6 +242,7 @@
       version: "package:netdata"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger netdata handler

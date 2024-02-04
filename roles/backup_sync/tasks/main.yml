@@ -63,18 +63,20 @@
     name: "backup"
     rules_file: "templates/loki/rules.yml"
   include_tasks: roles/loki/shared/add_config.yml
+  tags: ['loki_config']
+  when: "monitoring_enabled"
 
 - name: create cron job => is_production
   vars:
     name: "Backup sync {{item.name}}"
     cmd: "/opt/backup_sync/sync.py --job {{item.name}}"
-    log: "backup_sync"
-    file: "ansible_backup_sync"
+    group: "backup_sync"
     day: "{{item.schedule.day if 'day' in item.schedule else '*'}}"
     weekday: "{{item.schedule.weekday if 'weekday' in item.schedule else '*'}}"
     hour: "{{item.schedule.hour if 'hour' in item.schedule else '*'}}"
     minute: "{{item.schedule.minute if 'minute' in item.schedule else '*'}}"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   with_items: "{{backup_syncs}}"
   when: "is_production"
 
@@ -99,4 +101,5 @@
       version: "v{{rclone_version}}" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"

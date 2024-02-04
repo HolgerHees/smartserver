@@ -51,7 +51,9 @@
   vars:
     name: "Letsencrypt renew job"
     cmd: "docker exec apache2 sh -c \"certbot renew -q --deploy-hook=\\\"apachectl -k graceful\\\"\""
-    file: "ansible_letsencrypt"
+    group: "apache"
+    log: "letsencrypt"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']

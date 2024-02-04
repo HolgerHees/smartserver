@@ -32,7 +32,7 @@
   vars:
     name: "Electric Meter"
     cmd: "/opt/electricmeter/strom.perl"
-    file: "ansible_electricmeter"
+    group: "electricmeter"
     minute: "*/5"
-  import_tasks: roles/cron/shared/add_cronjob.yml
+  include_tasks: roles/cron/shared/add_cronjob.yml
   when: "is_production|bool"

@@ -31,44 +31,54 @@
 - name: "create discovery all cron job"
   vars:
     name: "LibreNMS Discovery All"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery-wrapper.py 8 > /dev/null 2>&1\""
-    file: "ansible_librenms"
+    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery-wrapper.py 8 > /dev/null\""
+    group: "librenms"
+    log: "discovery_all"
     hour: "*/6"
     minute: "33"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: "create discovery new cron job"
   vars:
     name: "LibreNMS Discovery New"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery.php  -h new > /dev/null 2>&1\""
-    file: "ansible_librenms"
+    cmd: "docker exec librenms sh -c \"/opt/librenms/discovery.php  -h new > /dev/null\""
+    group: "librenms"
+    log: "discovery_new"
     hour: "*"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: "create poller cron job"
   vars:
     name: "LibreNMS Poller"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null 2>&1\""
-    file: "ansible_librenms"
+    cmd: "docker exec librenms sh -c \"/opt/librenms/cronic /opt/librenms/poller-wrapper.py 8 > /dev/null\""
+    group: "librenms"
+    log: "poller"
     hour: "*"
     minute: "*/{{librenms_poller_interval}}"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: "create daily cron job"
   vars:
     name: "LibreNMS Daily"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/daily.sh > /dev/null 2>&1\""
-    file: "ansible_librenms"
+    cmd: "docker exec --user librenms librenms sh -c \"/opt/librenms/daily.sh > /dev/null\""
+    group: "librenms"
+    log: "daily"
     hour: "0"
     minute: "15"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: "create alerts cron job"
   vars:
     name: "LibreNMS Alerts"
-    cmd: "docker exec librenms sh -c \"/opt/librenms/alerts.php > /dev/null 2>&1\""
-    file: "ansible_librenms"
+    cmd: "docker exec librenms sh -c \"/opt/librenms/alerts.php > /dev/null\""
+    group: "librenms"
+    log: "alerts"
     hour: "*"
     minute: "*"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']

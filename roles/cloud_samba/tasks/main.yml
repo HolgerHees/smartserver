@@ -116,6 +116,7 @@
     container_binds:
       - "wireguard_cloud"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger cloud_samba handler
   vars:

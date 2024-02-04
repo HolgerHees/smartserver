@@ -6,7 +6,7 @@
       - alert: Backup sync '{{item.name}}' not working
         expr: |
             absent_over_time(
-              {group="backup_sync"}
+              {group="crony_backup_sync"}
               |~ "{{item.name | upper}}: Backup sync finished after"
               [36h]
             )

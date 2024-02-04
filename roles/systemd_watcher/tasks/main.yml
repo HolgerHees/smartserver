@@ -10,6 +10,7 @@
   vars:
     name: "Systemd watcher"
     cmd: "/opt/scripts/systemd_watcher_service_check"
-    file: "ansible_systemd_watcher"
+    group: "systemd_watcher"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']

@@ -61,7 +61,7 @@
       - "saddr {{docker_prometheus_ip}} daddr {{docker_postfix_ip}}"
       - "saddr {{docker_postfix_ip}} proto tcp dport {{vault_mailserver_port}} outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: add container name
   vars:
@@ -140,6 +140,7 @@
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: register loki rules
@@ -147,26 +148,30 @@
     name: "postfix"
     rules_file: "templates/loki/rules.yml"
   include_tasks: roles/loki/shared/add_config.yml
+  tags: ['loki_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
   vars:
     container_name: "postfix"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: create cron 'ping' job
   vars:
     name: "Daily Ping"
     cmd: "printf \"Subject: Daily test message\\nThis is a test message to confirm that mail delivery is working\" | /usr/sbin/sendmail root"
-    file: "ansible_postfix"
+    group: "postfix"
     hour: "1"
     minute: "0"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: register systemd service watcher
   vars:
     name: "postfix"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: register system package dependency
@@ -174,6 +179,7 @@
     tag: "postfix"
     packages: [ "postfix" ]
   include_tasks: roles/update_service/shared/add_dependency.yml
+  tags: ['update_system_config']
   when: "update_service_system_check_enabled"
 
 - name: trigger postfix handler

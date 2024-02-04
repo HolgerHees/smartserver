@@ -165,6 +165,7 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/docker.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: synchronize docker tools
@@ -231,6 +232,7 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/podman.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
   
 #http://download.opensuse.org/repositories/devel:/kubic/openSUSE_Tumbleweed/x86_64/
@@ -355,6 +357,7 @@
   vars:
     name: "macvlan_bridge"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled and macvlan_range | length > 0"
 
 - name: trigger macvlan_bridge handler
@@ -368,6 +371,7 @@
   vars:
     name: "docker"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: trigger docker handler
@@ -380,6 +384,7 @@
 #  vars:
 #    name: "podman.socket"
 #  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+#  tags: ['systemd_watcher_config']
 #  when: "monitoring_enabled"
 
 #- name: trigger podman handler

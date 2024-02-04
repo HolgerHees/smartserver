@@ -12,6 +12,7 @@
   vars:
     name: "{{'ssh' if is_ubuntu else 'sshd'}}"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: trigger sshd handler

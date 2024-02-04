@@ -96,6 +96,7 @@
     network_internal: no
     network_firewall_subnet: "{{vpn_cloud_subnet}}.0.0/16"
   include_tasks: roles/container/shared/create_docker_network.yml
+  tags: ['firewall_config']
 
 - name: create docker container
   docker_container:
@@ -152,7 +153,7 @@
       "{{cloud_vpn.peers[peer].port}}": "{{cloud_vpn.peers[peer].port}}",
       {% endfor %}
       }
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
   
 - name: prepare ferm rules
   set_fact:
@@ -163,7 +164,7 @@
       {% endfor %}
       "daddr {{vpn_cloud_services.local.gateway}} proto udp dport {{cloud_vpn.interface.port}}"
       ]
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 # ***** FINALIZE *****
 - name: allow cloud service
@@ -171,7 +172,7 @@
     name: "wireguard_cloud"
     rules: "{{wireguard_cloud_ferm_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: create systemd service
   vars:
@@ -179,6 +180,7 @@
     trigger_name: "wireguard_cloud"
     container_post_exec: "/opt/docker/add_gateway {{vpn_cloud_subnet}}.0.0/16 {{vpn_cloud_services.local.gateway}}"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger wireguard_cloud handler
   vars:

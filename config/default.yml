@@ -447,7 +447,7 @@ default_variables: {
     #     destination: "googledrive:/backup",
     #     sources: [
     #       { name: "data", path: "{{backup_path}}", filter: [ "- /smartserver/**" ] },
-    #       { name: "nextcloud", path: "{{nextcloud_data_path}}" }
+    #       { name: "nextcloud", path: "{{nextcloud_data_path}}", filter: [ "- /appdata**", "- /updater**" }
     #     ],
     #     bandwidth_limit: "02:00,30M 05:00,20M 06:00,5M 23:00,10M"
     #   }

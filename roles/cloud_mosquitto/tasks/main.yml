@@ -59,6 +59,7 @@
 #  vars:
 #    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
 #  include_tasks: roles/fluentd/shared/add_config.yml
+#  tags: ['fluentd_config']
 
 - name: create systemd service
   vars:
@@ -66,6 +67,7 @@
     container_routes:
       - { "subnet": "{{vpn_cloud_subnet}}.0.0/16", "gateway": "{{vpn_cloud_services.local.gateway}}"}
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 #- name: register update notifier
 #  vars:
@@ -77,6 +79,7 @@
 #      pattern: "^([0-9\\.]+)$" 
 #    }
 #  include_tasks: roles/update_service/shared/add_software.yml
+#  tags: ['update_notifier_config']
 #  when: "update_service_software_check_enabled"
 
 - name: trigger cloud_mosquitto handler

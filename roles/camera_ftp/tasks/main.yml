@@ -90,14 +90,14 @@
   set_fact:
     ftp_rules: "{{ (ftp_rules | default([])) + [ 'saddr ' + docker_camera_ftp_ip + ' proto tcp sport 20 daddr ' + item ] }}"
   with_items: "{{ intern_networks }}"
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: allow ftp service
   vars:
     name: "ftp"
     rules: "{{ftp_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 #- name: clean old docker images => image does not exists
 #  shell: "docker rmi -f $(docker images --filter \"dangling=true\" -q)"
@@ -108,15 +108,17 @@
   vars:
     name: "Camera Cleanup"
     cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +{{ftp_max_file_age}} -exec rm {} +"
-    file: "ansible_ftp_camera"
+    group: "camera_ftp"
     hour: "0"
     minute: "50"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 - name: create systemd service
   vars:
     container_name: "vsftpd"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger vsftpd handler
   vars:

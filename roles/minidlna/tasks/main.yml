@@ -88,6 +88,7 @@
   vars:
     container_name: "minidlna"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger minidlna handler
   vars:

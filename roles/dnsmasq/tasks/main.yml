@@ -120,7 +120,7 @@
   set_fact:
     dns_rules: "{{ (dns_rules | default([])) + [ 'saddr ' + docker_dns_ip + ' daddr ' + item ] }}"
   with_items: "{{ dns_forward_ip_addresses }}"
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: allow dns service
   vars:
@@ -128,12 +128,13 @@
     rules: "{{dns_rules}}"
     instant_activation: True
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: create systemd service
   vars:
     container_name: "dnsmasq"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 # must be called before container is activated. Otherwise the container can't start because of the systemd_resolver on ubuntu which uses the same port
 - name: enable dnsmasq

@@ -195,19 +195,20 @@
       {% endfor %}
       "daddr {{default_server_ip}} proto udp dport {{mobile_vpn_internal_port}}"
       ]
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: allow mobile vpn service
   vars:
     name: "wireguard_mobile"
     rules: "{{vpn_admin_ip_rules}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: create systemd service
   vars:
     container_name: "wireguard_mobile"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger wireguard_mobile handler
   vars:

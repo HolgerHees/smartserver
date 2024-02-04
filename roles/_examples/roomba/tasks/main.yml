@@ -53,12 +53,13 @@
 - name: register systemd service watcher
   vars:
     name: "roomba"
-  import_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "is_production|bool" # restart handler is also disabled if no production
 
 - name: trigger roomba handler
   vars:
     notify: "restart roomba"
     service: "roomba.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml
   when: "is_production|bool" # restart handler is also disabled if no production

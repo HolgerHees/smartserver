@@ -23,7 +23,7 @@
     image_version: "{{onlyoffice_version}}"
     files:
       - roles/onlyoffice/templates/container/Dockerfile
-  import_tasks: roles/container/shared/build_docker_image.yml
+  include_tasks: roles/container/shared/build_docker_image.yml
 
 - name: create docker container
   docker_container:
@@ -70,14 +70,15 @@
       - "saddr {{docker_onlyoffice_ip}} daddr {{docker_mysql_ip}}"
       - "saddr {{docker_onlyoffice_ip}} daddr {{docker_redis_ip}}"
       - "saddr {{docker_onlyoffice_ip}} daddr {{default_server_ip}} proto tcp dport 443"
-  import_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  include_tasks: roles/firewall/shared/allow_service.yml
+  tags: ['firewall_config']
 
 - name: add container name
   vars:
     host_name: "onlyoffice"
     host_ip_address: "{{docker_onlyoffice_ip}}"
-  import_tasks: roles/_shared/add_to_hosts.yml
+  include_tasks: roles/_shared/add_to_hosts.yml
+
 
 # ***** DATABASE *****
 - name: create database
@@ -86,31 +87,30 @@
     username: "{{vault_onlyoffice_mysql_username}}"
     password: "{{vault_onlyoffice_mysql_password}}"
     backup: no
-  import_tasks: roles/mysql/shared/add_database.yml
+  include_tasks: roles/mysql/shared/add_database.yml
+  tags: ['cron_job','backup_restore']
   
 # ***** FINALIZE *****
-#- name: copy fluentd config
-#  vars:
-#    config_file: "templates/etc/fluent/_.ansible.d/mosquitto.conf"
-#  import_tasks: roles/fluentd/shared/add_config.yml
-
 - name: copy apache vhost
   vars:
     sub_domain: "onlyoffice"
     usergroup: "user"
     include: "templates/etc/apache2/_.ansible.vhost.d/onlyoffice.inc"
-  import_tasks: roles/apache/shared/add_vhost.yml
+  include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/onlyoffice.conf"
-  import_tasks: roles/fluentd/shared/add_config.yml
+  include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
 
 - name: create systemd service
   vars:
     container_name: "onlyoffice"
     container_after: [ "mysql", "redis" ]
-  import_tasks: roles/container/shared/add_docker_service.yml
+  include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: register update notifier
   vars:
@@ -121,10 +121,11 @@
       repository: "onlyoffice/documentserver", 
       pattern: "^([0-9\\.]+)$" 
     }
-  import_tasks: roles/update_service/shared/add_software.yml
+  include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
 
 - name: trigger onlyoffice handler
   vars:
     notify: "restart onlyoffice"
     service: "onlyoffice.service"
-  import_tasks: roles/_shared/service_check.yml
+  include_tasks: roles/_shared/service_check.yml

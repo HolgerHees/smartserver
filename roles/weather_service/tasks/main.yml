@@ -51,7 +51,7 @@
       - "saddr {{docker_weather_service_ip}} daddr {{docker_cloud_mosquitto_ip if weather_mqtt_server == 'cloud_mosquitto' else docker_mosquitto_ip}}"
       - "saddr {{docker_weather_service_ip}} proto tcp dport 443 outerface {{default_network_interface}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
 
 - name: check mysql service
   include_tasks: roles/mysql/shared/wait_until_ready.yml
@@ -142,7 +142,8 @@
     i18n_files: [ { language: "de", file: "templates/webui/weather_service.de.json" } ]
     icons: [ 'templates/webui/icons/weather_service.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
-  
+  tags: ['apache_webui_config']
+
 # ***** FINALIZE *****
 - name: register prometheus rules & metrics
   vars:
@@ -150,6 +151,7 @@
     rules_file: "templates/prometheus/rules.yml"
     scrape_file: "templates/prometheus/scrape.yml"
   include_tasks: roles/prometheus/shared/add_config.yml
+  tags: ['prometheus_config']
   when: "monitoring_enabled"
 
 - name: copy service apache config
@@ -157,12 +159,14 @@
     service_name: "weather_service"
     service_host: "{{docker_weather_service_ip}}"
   include_tasks: roles/shared_libs/shared/add_apache_service_config.yml
+  tags: ['apache_config']
 
 - name: copy service fluentd config
   vars:
     service_name: "weather_service"
     service_is_container: yes
   include_tasks: roles/shared_libs/shared/add_fluentd_service_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
@@ -170,6 +174,7 @@
     container_name: "weather_service"
     container_after: [ "cloud_mosquitto", "mysql" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger weather_service handler
   vars:

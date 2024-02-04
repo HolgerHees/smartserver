@@ -52,7 +52,7 @@
 #      tags: always
 
     # needed by all roles which needs to register their own fluentd handler
-    # search for "import_tasks: roles/fluentd/shared/add_config.yml" to see which ones
+    # search for "include_tasks: roles/fluentd/shared/add_config.yml" to see which ones
     # creates /etc/fluent/_.ansible.d
     - { import_role: { name: fluentd, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'fluentd' ],                                         when: "monitoring_enabled" }
 
@@ -60,12 +60,12 @@
     - { import_role: { name: apache, tasks_from: ensure_www_user_exists, handlers_from: empty }, tags: [ 'always' ] }
 
     # needed by all roles which needs to register their own vhost
-    # search for "import_tasks: roles/apache/shared/add_vhost.yml" to see which ones
+    # search for "include_tasks: roles/apache/shared/add_vhost.yml" to see which ones
     # creates {{global_etc}}apache2/(_.ansible.conf.d & _.ansible.vhost.d)
     - { import_role: { name: apache, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache', "apache_config" ] }
 
     # needed by all roles which needs to register menu entries in the web ui like
-    # search for "import_tasks: roles/apache_webui/shared/add_webui.yml" to see which ones
+    # search for "include_tasks: roles/apache_webui/shared/add_webui.yml" to see which ones
     # creates {{htdocs_path}}main/components
     - { import_role: { name: apache_webui, tasks_from: create_shared_folder, handlers_from: empty }, tags: [ 'apache_webui', "apache_webui_config", ] }
 

@@ -51,7 +51,7 @@
 #    name: "postfix"
 #    rules: [ "saddr {{docker_speedtest_ip}} daddr 34.117.59.81 proto tcp dport 443 outerface {{default_network_interface}}" ]
 #  include_tasks: roles/firewall/shared/allow_service.yml
-#  tags: [ 'firewall_config' ]
+#  tags: ['firewall_config']
 
 - name: register webui
   vars:
@@ -60,24 +60,28 @@
     i18n_files: [ { language: "de", file: "templates/webui/speedtest.de.json" } ]
     icons: [ 'templates/webui/icons/speedtest_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
-
+  tags: ['apache_webui_config']
+  
 - name: copy apache vhost
   vars:
     sub_domain: "speedtest"
     usergroup: "admin"
     include: "templates/etc/apache2/_.ansible.vhost.d/speedtest.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
+  tags: ['apache_config']
 
 - name: copy fluentd config
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/speedtest.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
     
 - name: create systemd service
   vars:
     container_name: "speedtest"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register update notifier
   vars:
@@ -89,6 +93,7 @@
       pattern: "^v([0-9\\.]+)$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger speedtest handler

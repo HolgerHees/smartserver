@@ -70,7 +70,7 @@
     rules:
       - "saddr {{docker_fluentd_ip}} daddr {{docker_loki_ip}}"
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
   
 - name: add container name
   vars:
@@ -83,6 +83,7 @@
     container_name: "fluentd"
     container_after: [ "loki" ]
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
   
 - name: register update notifier
   vars:
@@ -94,6 +95,7 @@
       pattern: "^v([0-9\\.]+)-debian.*$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 # ***** FINALIZE *****
@@ -101,6 +103,7 @@
   vars:
     name: "fluentd"
   include_tasks: roles/systemd_watcher/shared/add_watcher.yml
+  tags: ['systemd_watcher_config']
   when: "monitoring_enabled"
 
 - name: trigger fluentd handler

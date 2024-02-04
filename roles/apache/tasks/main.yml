@@ -296,6 +296,7 @@
   vars:
     config_file: "templates/etc/fluent/_.ansible.d/apache.conf"
   include_tasks: roles/fluentd/shared/add_config.yml
+  tags: ['fluentd_config']
   when: "monitoring_enabled"
   
 - name: allow letsencrypt service
@@ -303,12 +304,13 @@
     name: "http.letsencrypt"
     rules: [ "daddr {{default_server_ip}} proto tcp dport 80" ]
   include_tasks: roles/firewall/shared/allow_service.yml
-  tags: [ 'firewall_config' ]
+  tags: ['firewall_config']
   
 - name: create systemd service
   vars:
     container_name: "apache2"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: register apache update notifier
   vars:
@@ -320,6 +322,7 @@
       pattern: "^([0-9\\.]+)$"
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: register openidc update notifier
@@ -333,6 +336,7 @@
       version: "v{{openidc_version}}" 
     }
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 - name: trigger apache2 handler

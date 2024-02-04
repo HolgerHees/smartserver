@@ -162,9 +162,11 @@
   vars:
     name: "Nextcloud Previewupdates"
     cmd: "docker exec php sh -c \"php -f {{htdocs_path}}nextcloud/occ preview:pre-generate > /dev/null\""
-    file: "ansible_nextcloud"
+    group: "nextcloud"
+    log: "preview_generator"
     minute: "*/15"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
 
 # ***** FINALIZE NEWS INSTALLATION *****
 - name: prepare news config folder
@@ -296,6 +298,7 @@
     icons: "{{nextcloud_additional_icons}}"
   include_tasks: roles/apache_webui/shared/add_webui.yml
   when: "nextcloud_additional_apps | length > 0"
+  tags: ['apache_webui_config']
 
 - name: register update notifier
   vars:
@@ -304,6 +307,7 @@
     url: "https://apps.nextcloud.com/apps/"
     config: {}
   include_tasks: roles/update_service/shared/add_software.yml
+  tags: ['update_notifier_config']
   when: "update_service_software_check_enabled"
 
 #- name: apply patches

@@ -131,6 +131,7 @@
     name: "cloud_nfs"
     rules_file: "templates/loki/rules.yml"
   include_tasks: roles/loki/shared/add_config.yml
+  tags: ['loki_config']
   when: "monitoring_enabled"
 
 - name: create systemd service
@@ -143,6 +144,7 @@
     container_binds:
       - "wireguard_cloud"
   include_tasks: roles/container/shared/add_docker_service.yml
+  tags: ['systemd_watcher_config']
 
 - name: trigger cloud_nfs handler
   vars:
