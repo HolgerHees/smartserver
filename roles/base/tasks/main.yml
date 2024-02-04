@@ -19,7 +19,7 @@
     
     - { mode: "u=rwx,g=rx,o=rx", path: "{{projects_path}}" }
     - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}" }
-    - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}/dumps" }
+    - { mode: "u=rwx,g=rx,o=", path: "{{backup_path}}databases" }
 
     - { mode: "u=rwx,g=rx,o=", path: "/opt/scripts" }
 
