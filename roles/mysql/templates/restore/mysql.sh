@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-FILE=`ls -td {{backup_path}}mysql/{{database}}* 2>/dev/null | head -n 1`
+FILE=`ls -td ./mysql/{{database}}* 2>/dev/null | head -n 1`
 
 read -r -p "Are you sure to import '$FILE' into mysql database '{{database}}'? [y/N] " response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]

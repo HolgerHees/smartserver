@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-FOLDER=`ls -td {{backup_path}}influxdb/{{database}}* 2>/dev/null | head -n 1`
+FOLDER=`ls -td ./influxdb/{{database}}* 2>/dev/null | head -n 1`
 FOLDER_NAME="$(basename -- $FOLDER)"
 
 read -r -p "Are you sure to import '$FOLDER' into influxdb database '{{database}}'? [y/N] " response
