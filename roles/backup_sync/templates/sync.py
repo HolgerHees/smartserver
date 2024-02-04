@@ -70,87 +70,85 @@ def validateSourceAndDestination(config, job_config):
 
     return [is_remote, rclone_config, None]
 
-def prepareBackupCommand(config, job_config):
-    backup_env = {"PATH": "/usr/bin/"}
-    backup_cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
-    #backup_cmd.append("--copy-links")
-
-    if job_config.bandwidth_limit:
-        backup_cmd.append("--bwlimit")
-        backup_cmd.append(job_config.bandwidth_limit)
-
-    if rclone_config:
-        backup_cmd.append("--config=\"{}\"".format(rclone_config))
-
+def prepareCommandEnv(config, job_config, rclone_config):
+    env = {"PATH": "/usr/bin/"}
     if job_config.password:
         result = subprocess.run([config.rclone_cmd, "obscure", job_config.password], encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if result.returncode != 0:
-            return [None, None, "Obscuration of password failed\n" + result.stdout]
+            return [None, "Obscuration of password failed\n" + result.stdout]
 
         password = result.stdout.strip()
 
-        backup_env["RCLONE_CONFIG_BACKUP_TYPE"] = "crypt"
-        backup_env["RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION"] = "standard"
-        backup_env["RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION"] = "true"
-        backup_env["RCLONE_CONFIG_BACKUP_PASSWORD"] = password
-    else:
-        backup_cmd.append("sync")
+        env["RCLONE_CONFIG_BACKUP_TYPE"] = "crypt"
+        env["RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION"] = "standard"
+        env["RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION"] = "true"
+        env["RCLONE_CONFIG_BACKUP_PASSWORD"] = password
+    return [ env, None ]
 
-    backup_cmd.append("--local-no-check-updated")
-
-    return [backup_env, backup_cmd, None]
-
-def prepareSourceBackupCommand(is_single_source, index, source_config, job_config, backup_cmd):
-    sync_backup_cmd = backup_cmd.copy()
-
-    # non encrypted local backups can skip checksum check for performance reasons
-    #if not is_remote:
-    #    backup_cmd.append("--ignore-checksum")
-
+def getDestination(job_config, source_config):
     destination = job_config.destination
     if not destination.endswith(os.path.sep):
         destination += os.path.sep
     if source_config["name"]:
         destination += source_config["name"] + os.path.sep
+    return destination
+
+def prepareSourceRestoreCommand(source_config, job_config, rclone_config):
+    cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
+
+    if rclone_config:
+        cmd.append("--config=\"{}\"".format(rclone_config))
+
+    destination = getDestination(job_config, source_config)
+    if job_config.password:
+        cmd.append("--crypt-remote")
+        cmd.append(destination)
+        destination = "backup:"
+
+    cmd.append("sync")
+    cmd.append(destination)
+    cmd.append("<YOUR_TARGET>")
+
+    return cmd
+
+def prepareSourceBackupCommand(is_single_source, index, source_config, job_config, rclone_config):
+    cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
+
+    if rclone_config:
+        cmd.append("--config=\"{}\"".format(rclone_config))
+
+    if job_config.bandwidth_limit:
+        cmd.append("--bwlimit")
+        cmd.append(job_config.bandwidth_limit)
 
     index_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     if not is_single_source:
         index_name = "{}_{}".format(source_config["name"] if source_config["name"] else "source{}".format(index), index_name)
     logfile = job_config.logfile.replace("[INDEX]", index_name)
 
-    sync_backup_cmd.append("--log-file")
-    sync_backup_cmd.append(logfile)
-
-    #if source["excludes"]:
-    #    for exclude in source["excludes"]:
-    #        sync_backup_cmd.append("--exclude")
-    #        sync_backup_cmd.append(prepareFilterTerm(exclude))
-
-    #if source["includes"]:
-    #    for include in source["includes"]:
-    #        sync_backup_cmd.append("--include")
-    #        sync_backup_cmd.append(prepareFilterTerm(include))
+    cmd.append("--log-file")
+    cmd.append(logfile)
 
     if source_config["filter"]:
         for filter in source_config["filter"]:
-            sync_backup_cmd.append("--filter")
-            sync_backup_cmd.append(filter)
+            cmd.append("--filter")
+            cmd.append(filter)
 
     if source_config["options"]:
         for option in source_config["options"]:
-            sync_backup_cmd.append(option)
+            cmd.append(option)
 
+    destination = getDestination(job_config, source_config)
     if job_config.password:
-        sync_backup_cmd.append("--crypt-remote")
-        sync_backup_cmd.append(destination)
-        sync_backup_cmd.append("sync")
-        sync_backup_cmd.append(source_config["path"])
-        sync_backup_cmd.append("backup:")
-    else:
-        sync_backup_cmd.append(source_config["path"])
-        sync_backup_cmd.append(destination)
+        cmd.append("--crypt-remote")
+        cmd.append(destination)
+        destination = "backup:"
 
-    return sync_backup_cmd
+    cmd.append("sync")
+    cmd.append(source_config["path"])
+    cmd.append(destination)
+
+    return cmd
 
 job_config, error_message = loadJobConfig()
 if error_message:
@@ -162,7 +160,8 @@ if error_message:
     logError(error_message)
     exit(1)
 
-backup_env, backup_cmd, error_message = prepareBackupCommand(config, job_config)
+
+cmd_env, error_message = prepareCommandEnv(config, job_config, rclone_config)
 if error_message:
     logError(error_message)
     exit(1)
@@ -173,13 +172,21 @@ with open(job_config.lockfile, "w") as lock_file_fd:
 
         start = time.time()
         logInfo("Starting backup sync")
+        #for source_config in job_config.sources:
+        #    ['/opt/backup_sync/bin/rclone', '--links', '--log-level', 'INFO', '--crypt-remote', '/dataRaid/cloud/remote/pbolle/data/', 'sync', 'backup:', '<YOUR_TARGET>']
+
+        #for source_config in job_config.sources:
+        #    source_restore_cmd = prepareSourceRestoreCommand(source_config, job_config, rclone_config)
+        #    print(" ".join(source_restore_cmd))
+        #    continue
+
         index = 1
         is_single_source = len(job_config.sources) < 2
         for source_config in job_config.sources:
-            sync_backup_cmd = prepareSourceBackupCommand(is_single_source, index, source_config, job_config, backup_cmd)
-            #print(sync_backup_cmd)
-
-            result = subprocess.run(sync_backup_cmd, env=backup_env, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            source_backup_cmd = prepareSourceBackupCommand(is_single_source, index, source_config, job_config, rclone_config)
+            #print(source_backup_cmd)
+            #continue
+            result = subprocess.run(source_backup_cmd, env=cmd_env, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if result.returncode != 0:
                 fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
                 end = time.time()
