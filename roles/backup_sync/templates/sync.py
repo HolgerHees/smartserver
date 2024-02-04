@@ -168,7 +168,7 @@ if error_message:
     logError(error_message)
     exit(1)
 
-for source_config in job_config.sources:
+'''for source_config in job_config.sources:
     source_restore_rclone_cmd = prepareSourceRestoreCommand(source_config, job_config, rclone_config)
 
     with open("{}restore_template".format(config.config_dir), "r") as f:
@@ -192,7 +192,7 @@ for source_config in job_config.sources:
         os.chmod(old_script_file_path,750)
 
         os.system("cp {} {}rclone".format(config.rclone_cmd, config.restore_script_path))
-        os.chmod("{}rclone".format(config.restore_script_path),750)
+        os.chmod("{}rclone".format(config.restore_script_path),750)'''
 
 error_message = validateSourceAndDestination(config, job_config)
 if error_message:
