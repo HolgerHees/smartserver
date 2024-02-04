@@ -5,10 +5,10 @@ class ArgsParser():
             if type(config[key]) == type(True):
                 value = True if value == "yes" else False
 
-        if hasattr(parameter[key], "__len__"):
-            parameter[key].append(value)
-        else:
+        if isinstance(parameter[key], str) or not hasattr(parameter[key], "__len__"):
             parameter[key] = value
+        else:
+            parameter[key].append(value)
     
     @staticmethod
     def parse(config, argv):

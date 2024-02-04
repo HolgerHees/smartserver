@@ -1,0 +1,19 @@
+#!/bin/sh
+
+ENCRYPTED="<ENCRYPTED>"
+CMD="<CMD>"
+
+read -e -p "Enter source: " SOURCE
+
+read -e -p "Enter destination: " DESTINATION
+
+if [[ "$ENCRYPTED" == "1" ]]; then
+    read -s -p "Enter password: " PASSWORD
+
+    export RCLONE_CONFIG_BACKUP_TYPE="crypt"
+    export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"
+    export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"
+    export RCLONE_CONFIG_BACKUP_PASSWORD="$PASSWORD"
+fi
+
+eval "$CMD"

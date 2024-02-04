@@ -45,10 +45,11 @@
 
 - name: prepare config
   template:
-    src: "templates/config.py"
-    dest: "/opt/backup_sync/config/config.py"
-  loop_control:
-    label: "name: '{{item.name}}'"
+    src: "templates/{{item}}"
+    dest: "/opt/backup_sync/config/{{item}}"
+  with_items:
+    - "config.py"
+    - "restore_template"
 
 - name: prepare job configs
   template:

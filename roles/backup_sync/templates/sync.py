@@ -30,7 +30,7 @@ def logError(msg):
     sys.stderr.flush()
 
 def loadJobConfig():
-    args_cfg = { "job": None }
+    args_cfg = { "job": None}
     args_values = ArgsParser.parse(args_cfg,sys.argv)
 
     if not args_values["job"]:
@@ -42,7 +42,7 @@ def loadJobConfig():
     except ModuleNotFoundError:
         return [None, "Job '{}' not found".format(args_values["job"])]
 
-def validateSourceAndDestination(config, job_config):
+def validateRCloneConfig(config, job_config):
     is_remote = job_config.destination[0:1] != '/'
     if is_remote:
         rclone_config = "{}rclone/{}.config".format(config.config_dir,job_config.name)
@@ -50,25 +50,28 @@ def validateSourceAndDestination(config, job_config):
             return [None, None, "No configuration '{}' for non local destination '{}' found".format(rclone_config, job_config.destination)]
     else:
         rclone_config = None
-        with open("/etc/fstab") as f:
-            fstab_data = f.read()
-            path = job_config.destination
-            while path != '/':
-                #print(path)
-                if path in fstab_data:
-                    logInfo("Check mountpoint '{}'".format(path))
-                    result = subprocess.run(["/usr/bin/mountpoint", path], encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                    if result.returncode != 0:
-                        return [None, None, "Mountpoint '{}' not mounted".format(path)]
-                    break
-                path = os.path.dirname(path)
+    return [is_remote, rclone_config, None]
+
+def validateSourceAndDestination(config, job_config):
+    with open("/etc/fstab") as f:
+        fstab_data = f.read()
+        path = job_config.destination
+        while path != '/':
+            #print(path)
+            if path in fstab_data:
+                logInfo("Check mountpoint '{}'".format(path))
+                result = subprocess.run(["/usr/bin/mountpoint", path], encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                if result.returncode != 0:
+                    return "Mountpoint '{}' not mounted".format(path)
+                break
+            path = os.path.dirname(path)
 
     for source in job_config.sources:
         if not os.path.exists(source["path"]):
             logError()
-            return [None, None, "Source path '{}' does not exist".format(source["path"])]
+            return "Source path '{}' does not exist".format(source["path"])
 
-    return [is_remote, rclone_config, None]
+    return None
 
 def prepareCommandEnv(config, job_config, rclone_config):
     env = {"PATH": "/usr/bin/"}
@@ -94,74 +97,104 @@ def getDestination(job_config, source_config):
     return destination
 
 def prepareSourceRestoreCommand(source_config, job_config, rclone_config):
-    cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
+    rclone_restore_cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
 
     if rclone_config:
-        cmd.append("--config=\"{}\"".format(rclone_config))
+        rclone_restore_cmd.append("--config=\"{}\"".format(rclone_config))
 
-    destination = getDestination(job_config, source_config)
+    source = "$SOURCE"
     if job_config.password:
-        cmd.append("--crypt-remote")
-        cmd.append(destination)
-        destination = "backup:"
+        rclone_restore_cmd.append("--crypt-remote")
+        rclone_restore_cmd.append(source)
+        source = "backup:"
 
-    cmd.append("sync")
-    cmd.append(destination)
-    cmd.append("<YOUR_TARGET>")
+    rclone_restore_cmd.append("sync")
+    rclone_restore_cmd.append(source)
+    rclone_restore_cmd.append("$DESTINATION")
 
-    return cmd
+    return rclone_restore_cmd
 
 def prepareSourceBackupCommand(is_single_source, index, source_config, job_config, rclone_config):
-    cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
+    rclone_backup_cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
 
     if rclone_config:
-        cmd.append("--config=\"{}\"".format(rclone_config))
+        rclone_backup_cmd.append("--config=\"{}\"".format(rclone_config))
 
     if job_config.bandwidth_limit:
-        cmd.append("--bwlimit")
-        cmd.append(job_config.bandwidth_limit)
+        rclone_backup_cmd.append("--bwlimit")
+        rclone_backup_cmd.append(job_config.bandwidth_limit)
 
     index_name = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     if not is_single_source:
         index_name = "{}_{}".format(source_config["name"] if source_config["name"] else "source{}".format(index), index_name)
     logfile = job_config.logfile.replace("[INDEX]", index_name)
 
-    cmd.append("--log-file")
-    cmd.append(logfile)
+    rclone_backup_cmd.append("--log-file")
+    rclone_backup_cmd.append(logfile)
 
     if source_config["filter"]:
         for filter in source_config["filter"]:
-            cmd.append("--filter")
-            cmd.append(filter)
+            rclone_backup_cmd.append("--filter")
+            rclone_backup_cmd.append(filter)
 
     if source_config["options"]:
         for option in source_config["options"]:
-            cmd.append(option)
+            rclone_backup_cmd.append(option)
 
     destination = getDestination(job_config, source_config)
     if job_config.password:
-        cmd.append("--crypt-remote")
-        cmd.append(destination)
+        rclone_backup_cmd.append("--crypt-remote")
+        rclone_backup_cmd.append(destination)
         destination = "backup:"
 
-    cmd.append("sync")
-    cmd.append(source_config["path"])
-    cmd.append(destination)
+    rclone_backup_cmd.append("sync")
+    rclone_backup_cmd.append(source_config["path"])
+    rclone_backup_cmd.append(destination)
 
-    return cmd
+    return rclone_backup_cmd
 
 job_config, error_message = loadJobConfig()
 if error_message:
     logError(error_message)
     exit(1)
 
-is_remote, rclone_config, error_message = validateSourceAndDestination(config, job_config)
+is_remote, rclone_config, error_message = validateRCloneConfig(config, job_config)
 if error_message:
     logError(error_message)
     exit(1)
 
-
 cmd_env, error_message = prepareCommandEnv(config, job_config, rclone_config)
+if error_message:
+    logError(error_message)
+    exit(1)
+
+for source_config in job_config.sources:
+    source_restore_rclone_cmd = prepareSourceRestoreCommand(source_config, job_config, rclone_config)
+
+    with open("{}restore_template".format(config.config_dir), "r") as f:
+        new_script_template = f.read()
+    new_script_template = new_script_template.replace("<ENCRYPTED>",'1' if job_config.password else '0')
+    new_script_template = new_script_template.replace("<CMD>"," ".join(source_restore_rclone_cmd))
+
+    old_script_file_path = "{}restore_{}.sh".format(config.restore_script_path,job_config.name)
+    if os.path.exists(old_script_file_path):
+        with open(old_script_file_path, "r") as f:
+            old_script_template = f.read()
+    else:
+        old_script_template = ""
+
+    if new_script_template != old_script_template:
+        if not os.path.exists(config.restore_script_path):
+            os.mkdir(config.restore_script_path)
+
+        with open(old_script_file_path, "w") as f:
+            f.write(new_script_template)
+        os.chmod(old_script_file_path,750)
+
+        os.system("cp {} {}rclone".format(config.rclone_cmd, config.restore_script_path))
+        os.chmod("{}rclone".format(config.restore_script_path),750)
+
+error_message = validateSourceAndDestination(config, job_config)
 if error_message:
     logError(error_message)
     exit(1)
@@ -175,18 +208,14 @@ with open(job_config.lockfile, "w") as lock_file_fd:
         #for source_config in job_config.sources:
         #    ['/opt/backup_sync/bin/rclone', '--links', '--log-level', 'INFO', '--crypt-remote', '/dataRaid/cloud/remote/pbolle/data/', 'sync', 'backup:', '<YOUR_TARGET>']
 
-        #for source_config in job_config.sources:
-        #    source_restore_cmd = prepareSourceRestoreCommand(source_config, job_config, rclone_config)
-        #    print(" ".join(source_restore_cmd))
-        #    continue
-
         index = 1
         is_single_source = len(job_config.sources) < 2
         for source_config in job_config.sources:
-            source_backup_cmd = prepareSourceBackupCommand(is_single_source, index, source_config, job_config, rclone_config)
-            #print(source_backup_cmd)
+            source_backup_rclone_cmd = prepareSourceBackupCommand(is_single_source, index, source_config, job_config, rclone_config)
+            #print(source_backup_rclone_cmd)
             #continue
-            result = subprocess.run(source_backup_cmd, env=cmd_env, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+            result = subprocess.run(source_backup_rclone_cmd, env=cmd_env, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if result.returncode != 0:
                 fcntl.flock(lock_file_fd, fcntl.LOCK_UN)
                 end = time.time()
@@ -202,5 +231,6 @@ with open(job_config.lockfile, "w") as lock_file_fd:
         end = time.time()
         duration = datetime.timedelta(seconds=round(end - start))
         logInfo("Backup sync finished after {}".format(duration))
-    except IOError:
+    except IOError as e:
+        raise e
         logInfo("Sync already running")
