@@ -16,6 +16,7 @@
     - "/opt/backup_sync/config/jobs"
     - "/opt/backup_sync/config/rclone"
     - "{{global_log}}backup_sync"
+    - "{{config_path}}backup/"
 
 # RCLONE
 - name: install archive
@@ -45,16 +46,22 @@
 
 - name: prepare config
   template:
-    src: "templates/{{item}}"
-    dest: "/opt/backup_sync/config/{{item}}"
-  with_items:
-    - "config.py"
-    - "restore_template"
+    src: "templates/config.py"
+    dest: "/opt/backup_sync/config/config.py"
 
 - name: prepare job configs
   template:
     src: "templates/job_config.py"
     dest: "/opt/backup_sync/config/jobs/{{item.name}}.py"
+  loop_control:
+    label: "name: '{{item.name}}'"
+  with_items: "{{backup_syncs}}"
+
+- name: prepare job restore scripts
+  template:
+    src: "templates/restore_template"
+    dest: "{{config_path}}backup/{{item.name}}.sh"
+    mode: 0700
   loop_control:
     label: "name: '{{item.name}}'"
   with_items: "{{backup_syncs}}"

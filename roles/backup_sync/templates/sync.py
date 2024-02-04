@@ -88,32 +88,6 @@ def prepareCommandEnv(config, job_config, rclone_config):
         env["RCLONE_CONFIG_BACKUP_PASSWORD"] = password
     return [ env, None ]
 
-def getDestination(job_config, source_config):
-    destination = job_config.destination
-    if not destination.endswith(os.path.sep):
-        destination += os.path.sep
-    if source_config["name"]:
-        destination += source_config["name"] + os.path.sep
-    return destination
-
-def prepareSourceRestoreCommand(source_config, job_config, rclone_config):
-    rclone_restore_cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
-
-    if rclone_config:
-        rclone_restore_cmd.append("--config=\"{}\"".format(rclone_config))
-
-    source = "$SOURCE"
-    if job_config.password:
-        rclone_restore_cmd.append("--crypt-remote")
-        rclone_restore_cmd.append(source)
-        source = "backup:"
-
-    rclone_restore_cmd.append("sync")
-    rclone_restore_cmd.append(source)
-    rclone_restore_cmd.append("$DESTINATION")
-
-    return rclone_restore_cmd
-
 def prepareSourceBackupCommand(is_single_source, index, source_config, job_config, rclone_config):
     rclone_backup_cmd = [config.rclone_cmd, "--one-file-system", "--links", "--log-level", "INFO"]
 
@@ -141,7 +115,12 @@ def prepareSourceBackupCommand(is_single_source, index, source_config, job_confi
         for option in source_config["options"]:
             rclone_backup_cmd.append(option)
 
-    destination = getDestination(job_config, source_config)
+    destination = job_config.destination
+    if not destination.endswith(os.path.sep):
+        destination += os.path.sep
+    if source_config["name"]:
+        destination += source_config["name"] + os.path.sep
+
     if job_config.password:
         rclone_backup_cmd.append("--crypt-remote")
         rclone_backup_cmd.append(destination)
@@ -167,32 +146,6 @@ cmd_env, error_message = prepareCommandEnv(config, job_config, rclone_config)
 if error_message:
     logError(error_message)
     exit(1)
-
-'''for source_config in job_config.sources:
-    source_restore_rclone_cmd = prepareSourceRestoreCommand(source_config, job_config, rclone_config)
-
-    with open("{}restore_template".format(config.config_dir), "r") as f:
-        new_script_template = f.read()
-    new_script_template = new_script_template.replace("<ENCRYPTED>",'1' if job_config.password else '0')
-    new_script_template = new_script_template.replace("<CMD>"," ".join(source_restore_rclone_cmd))
-
-    old_script_file_path = "{}restore_{}.sh".format(config.restore_script_path,job_config.name)
-    if os.path.exists(old_script_file_path):
-        with open(old_script_file_path, "r") as f:
-            old_script_template = f.read()
-    else:
-        old_script_template = ""
-
-    if new_script_template != old_script_template:
-        if not os.path.exists(config.restore_script_path):
-            os.mkdir(config.restore_script_path)
-
-        with open(old_script_file_path, "w") as f:
-            f.write(new_script_template)
-        os.chmod(old_script_file_path,750)
-
-        os.system("cp {} {}rclone".format(config.rclone_cmd, config.restore_script_path))
-        os.chmod("{}rclone".format(config.restore_script_path),750)'''
 
 error_message = validateSourceAndDestination(config, job_config)
 if error_message:
