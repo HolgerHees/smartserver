@@ -101,7 +101,7 @@ def prepareCommand(is_single_source, index, source_config, job_config, remote_co
     # rsync can be replaced completly if rclone has full metadata support
     if job_config.sync_type == 'rclone':
         # "--delete-excluded" should not be included, because of multi source support
-        cmd = [config.rclone_cmd, "--links", "--log-level", "INFO", "--one-file-system", "--create-empty-src-dirs"]
+        cmd = [config.rclone_cmd, "--links", "--log-level", "INFO", "--one-file-system"]
     else:
         # "--delete-excluded" should not be included, because of multi source support
         cmd = [config.rsync_cmd, "-avz", source_config["path"], destination, "--delete"]
@@ -137,6 +137,8 @@ def prepareCommand(is_single_source, index, source_config, job_config, remote_co
         cmd.append("sync")
         cmd.append(source_config["path"])
         cmd.append(destination)
+
+        cmd.append("--create-empty-src-dirs")
 
     return cmd
 
