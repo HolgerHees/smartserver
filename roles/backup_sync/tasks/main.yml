@@ -3,6 +3,24 @@
     rclone_version: "1.65.2"
   tags: [ 'update_notifier_config' ]
   
+#- name: "validate 'name' conditions"
+#  assert:
+#    success_msg: "Config attribute 'source.name' check successful"
+#    fail_msg: "Sources should either all have 'name' or none"
+#    that: "(item.sources | selectattr('name', 'defined') | list | length == item.sources | length ) or (item.sources | selectattr('name', 'undefined') | list | length == item.sources | length)"
+#  loop_control:
+#    label: "name: '{{item.name}}'"
+#  loop: "{{backup_syncs}}"
+
+#- name: "validate 'password' conditions"
+#  assert:
+#    success_msg: "Config attribute 'password' check successful"
+#    fail_msg: "Passwords are only supported with 'rclone'"
+#    that: "'password' in item and ( item.type | default('rclone') ) != 'rclone'"
+#  loop_control:
+#    label: "name: '{{item.name}}'"
+#  loop: "{{backup_syncs}}"
+
 # FOLDER
 - name: prepare needed folder
   file:
@@ -56,8 +74,7 @@
     rclone_remote: "{{ '' if item.destination[0:1] == '/'  else item.destination.split(':') | first }}"
   template:
     src: "templates/job_config.py"
-    dest: "/opt/backup_sync/config/jobs/{{item.name}}.py"
-  failed_when: "(item.sources | selectattr('name', 'defined') | list | length != item.sources | length ) and (item.sources | selectattr('name', 'undefined') | list | length != item.sources | length)" # name check validation
+    dest: "/opt/backup_sync/config/jobs/{{item.name}}"
   loop_control:
     label: "name: '{{item.name}}', type: '{{sync_type}}'"
   with_items: "{{backup_syncs}}"

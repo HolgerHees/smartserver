@@ -427,6 +427,7 @@ default_variables: {
     # - 'filter' are based on rclone filter terms
     # - 'options' can be any rclone option
     # - 'bandwidth_limit' is based on rclone syntax too
+    # - 'password' will enable encryption
 
     # The MAIN LIMITATION is, it support metadata like, creation date, modification data, owner and group only for files and only if it is a supported remote backend or local backend
     # - check https://rclone.org/docs/#metadata and https://rclone.org/overview/#features
@@ -466,9 +467,10 @@ default_variables: {
 
     # Instead of rclone, you can also force rsync as a sync tool. It has some limitations as also some advantages
     # 1. It can only sync local to local folders
-    # 2. Filter syntax is mostly similar to rclone
-    # 3. It supports only simple 'bandwidth_limit' without any time indication
-    # 4. The 'options' parameter is differet compared to rclone
+    # 2. 'filter' syntax is mostly similar to rclone
+    # 3. 'bandwidth_limit' supports only simple format without any time indication
+    # 4. 'password' parameter for encryption is not supported
+    # 4. 'options' parameter is differet compared to rclone
     # 5. But the advantages is, it supports metadata for files and folder
     # *** EXAMPLE rsync for backup_syncs ***
     #   {
