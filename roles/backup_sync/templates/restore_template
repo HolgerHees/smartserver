@@ -1,29 +1,51 @@
 #!/bin/sh
-{% if "password" in item %}
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
-then
-    echo "Please run script as 'source ${BASH_SOURCE[0]}' to set CRYPT ENV VARS correctly"
-    exit
+RCLONE_BIN="/opt/backup_sync/bin/rclone"
+
+RCLONE_CONFIG="{% if item.destination[0:1] != '/' %}/opt/backup_sync/config/rclone/{{ item.destination | split(':') | first }}.config{% endif %}"
+BWLIMIT="{% if 'bandwidth_limit' in item %}{{ item.bandwidth_limit}}{% endif %}"
+SOURCE_DIR="{{item.destination}}{%if item.sources | selectattr('name', 'defined') | list | length > 0 %}<SUBSDIR>/{% endif %}"
+PASSWORD_CHECK="{% if 'password' in item %}1{% else %}0{% endif %}"
+
+if [ ! -f "$RCLONE_BIN" ]; then
+    echo "$RCLONE_BIN does not exist."
 fi
 
-read -s -p "Enter password: " PASSWORD
-echo ""
+if [ "$RCLONE_CONFIG" != "" ] && [ ! -f "$RCLONE_CONFIG" ]; then
+    echo "$RCLONE_CONFIG does not exist."
+fi
 
-PASSWORD=$(/opt/backup_sync/bin/rclone obscure $PASSWORD)
+if [ "$PASSWORD_CHECK" == "1" ]; then
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+    then
+        echo "Please run script as 'source ${BASH_SOURCE[0]}' to set CRYPT ENV VARS correctly"
+        exit
+    fi
 
-export RCLONE_CONFIG_BACKUP_TYPE="crypt"
-export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"
-export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"
-export RCLONE_CONFIG_BACKUP_PASSWORD="$PASSWORD"
-{% endif %}
+    read -s -p "Enter password: " PASSWORD
+    echo ""
+
+    PASSWORD=$($RCLONE_BIN obscure $PASSWORD)
+
+    export RCLONE_CONFIG_BACKUP_TYPE="crypt"
+    export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"
+    export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"
+    export RCLONE_CONFIG_BACKUP_PASSWORD="$PASSWORD"
+fi
 
 read -e -p "Enter destination: " DESTINATION
 
-echo -n "/opt/backup_sync/bin/rclone --links --log-level INFO"
+echo -n "$RCLONE_BIN --links --log-level INFO"
 
-{% if item.destination[0:1] != '/' %}echo -n " --config /opt/backup_sync/config/rclone/{{ item.destination | split(':') | first }}.config"
-{% endif %}
+if [ "$RCLONE_CONFIG" != "" ]; then
+    echo -n " --config $RCLONE_CONFIG"
+fi
 
-{% if "password" in item %}echo " --crypt-remote {{item.destination}}{%if item.sources | selectattr('name', 'defined') | list | length > 0 %}<SUBSDIR>/{% endif %} sync backup: $DESTINATION"
-{% else %}echo " sync {{item.destination}}{%if item.sources | selectattr('name', 'defined') | list | length > 0 %}<SUBSDIR>/{% endif %} $DESTINATION"
-{% endif %}
+if [ "$BWLIMIT" != "" ]; then
+    echo -n " --bwlimit '{{ item.bandwidth_limit}}'"
+fi
+
+if [ "$PASSWORD_CHECK" == "1" ]; then
+    echo " --crypt-remote $SOURCE_DIR sync backup: $DESTINATION"
+else
+    echo " sync $SOURCE_DIR $DESTINATION"
+fi

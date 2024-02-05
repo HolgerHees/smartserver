@@ -419,16 +419,26 @@ default_variables: {
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # **** BEGIN BACKUP SYNC                                                           ***
-    # This service runs rclone to copy a local source folder to local or remote destination folder
+    # This service runs a sync of a local source folder to local or remote destination folder
     # Roles:
     # - 'backup_sync'
 
-    # To learn more about filter check https://rclone.org/filtering/
-    # To learn more, how to setup different remote storage targets check https://rclone.org/overview/
+    # The default used tool is rclone https://rclone.org/. It supports different backends like S3, GoogleDrive Micrsofot OneDrive etc
+    # - 'filter' are based on rclone filter terms
+    # - 'options' can be any rclone option
+    # - 'bandwidth_limit' is based on rclone syntax too
+
+    # The MAIN LIMITATION is, it support metadata like, creation date, modification data, owner and group only for files and only if it is a supported remote backend or local backend
+    # - check https://rclone.org/docs/#metadata and https://rclone.org/overview/#features
+
+    # If you use a custom remote like "mygoogledrive" (2. example) you have to create a configuration in '/opt/backup_sync/config/rclone/mybackup.conf' with a '[mygoogledrive]' part in it.
+    # For details how to create, check https://rclone.org/overview/
+
+    # If a source contains a name, a subfolder with that name is created in destination (2. Example). Otherwise it is merged (1. example)
 
     backup_sync_enabled:                      { default: "{{backup_syncs is defined and backup_syncs | length > 0}}" },
     backup_syncs:                             { optional: yes },
-    # *** EXAMPLE for backup_syncs ***
+    # *** EXAMPLE rclone for backup_syncs ***
     # [
     #   {
     #     name: "smartserver",
@@ -441,15 +451,35 @@ default_variables: {
     #     bandwidth_limit: "10M"
     #   },
     #   {
-    #     name: "googledrive",
+    #     name: "mybackup",
     #     schedule: { hour: "2", minute: "0" },
     #     password: "{{vault_backup_password}}",
-    #     destination: "googledrive:/backup",
+    #     destination: "mygoogledrive:/backup",
     #     sources: [
     #       { name: "data", path: "{{backup_path}}", filter: [ "- /smartserver/**" ] },
     #       { name: "nextcloud", path: "{{nextcloud_data_path}}", filter: [ "- /appdata**", "- /updater**" }
     #     ],
     #     bandwidth_limit: "02:00,30M 05:00,20M 06:00,5M 23:00,10M"
+    #   }
+    # ]
+
+    # Instead of rclone, you can also force rsync as a sync tool. It has some limitations as also some advantages
+    # 1. It can only sync local to local folders
+    # 2. Filter syntax is mostly similar to rclone
+    # 3. It supports only simple 'bandwidth_limit' without any time indication
+    # 4. The 'options' parameter is differet compared to rclone
+    # 5. But the advantages is, it supports metadata for files and folder
+    # *** EXAMPLE rsync for backup_syncs ***
+    #   {
+    #     name: "smartserver",
+    #     type: "rsync",
+    #     schedule: { hour: "0", minute: "0" },
+    #     destination: "{{backup_path}}smartserver/",
+    #     sources: [
+    #       { path: "{{base_path}}", filter: [ "- /var/**", "- /tmp/**" ] },
+    #       { path: "{{base_path}}", filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ], options: [ "--ignore-errors" ] }
+    #     ],
+    #     bandwidth_limit: "10M"
     #   }
     # ]
     # **** END BACKUP SYNC                                                             ***

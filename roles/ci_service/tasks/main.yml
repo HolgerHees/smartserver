@@ -114,7 +114,7 @@
 - name: create check cron job
   vars:
     name: "Continues integration job"
-    cmd: "/opt/ci_service/ci_job_handler  start"
+    cmd: "/opt/ci_service/ci_job_handler start > /dev/null"
     group: "ci_service"
     log: "job"
     minute: "*/5"

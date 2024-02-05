@@ -50,20 +50,27 @@
     dest: "/opt/backup_sync/config/config.py"
 
 - name: prepare job configs
+  vars:
+    sync_type: "{{item.type | default('rclone')}}"
+    rclone_config: "{{ '' if item.destination[0:1] == '/'  else item.name + '.config' }}"
+    rclone_remote: "{{ '' if item.destination[0:1] == '/'  else item.destination.split(':') | first }}"
   template:
     src: "templates/job_config.py"
     dest: "/opt/backup_sync/config/jobs/{{item.name}}.py"
   loop_control:
-    label: "name: '{{item.name}}'"
+    label: "name: '{{item.name}}', type: '{{sync_type}}'"
   with_items: "{{backup_syncs}}"
 
 - name: prepare job restore scripts
+  vars:
+    sync_type: "{{item.type | default('rclone')}}"
   template:
     src: "templates/restore_template"
     dest: "{{config_path}}backup/{{item.name}}.sh"
     mode: 0700
   loop_control:
-    label: "name: '{{item.name}}'"
+    label: "name: '{{item.name}}', type: '{{sync_type}}'"
+  when: "sync_type != 'rsync'"
   with_items: "{{backup_syncs}}"
 
 - name: register loki rules
@@ -85,6 +92,8 @@
     minute: "{{item.schedule.minute if 'minute' in item.schedule else '*'}}"
   include_tasks: roles/cron/shared/add_cronjob.yml
   tags: ['cron_job']
+  loop_control:
+    label: "name: '{{item.name}}'"
   with_items: "{{backup_syncs}}"
   when: "is_production"
 

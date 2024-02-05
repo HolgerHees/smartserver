@@ -30,7 +30,7 @@ then
     echo "$JSON"  | systemd-cat -t $journal_type -p 3
 
     finished=`date '+%d.%m.%Y %H:%M:%S'`
-    LOGS=$(journalctl --since "$started" -t test -t crony | tail -n 50)
+    LOGS=$(journalctl --since "$started" -t $journal_type | tail -n 50)
 
     SUBJECT="CRON '$name' failed at $finished"
 
@@ -42,5 +42,5 @@ then
     echo -e "$MESSAGE" | mail -s "$SUBJECT" root
 #else
 #    JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "failed" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
-#    echo "$JSON"  | systemd-cat -t crony -p 6
+#    echo "$JSON"  | systemd-cat -t $journal_type -p 6
 fi
