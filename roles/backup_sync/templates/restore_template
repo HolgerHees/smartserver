@@ -1,51 +1,117 @@
 #!/bin/sh
-RCLONE_BIN="/opt/backup_sync/bin/rclone"
+RCLONE_PATH="/opt/backup_sync/bin/"
 
 RCLONE_CONFIG="{% if item.destination[0:1] != '/' %}/opt/backup_sync/config/rclone/{{ item.destination | split(':') | first }}.config{% endif %}"
 BWLIMIT="{% if 'bandwidth_limit' in item %}{{ item.bandwidth_limit}}{% endif %}"
-SOURCE_DIR="{{item.destination}}{%if item.sources | selectattr('name', 'defined') | list | length > 0 %}<SUBSDIR>/{% endif %}"
 PASSWORD_CHECK="{% if 'password' in item %}1{% else %}0{% endif %}"
 
-if [ ! -f "$RCLONE_BIN" ]; then
-    echo "$RCLONE_BIN does not exist."
+declare -a SOURCES
+{% for source in item.sources %}
+SOURCES[{{loop.index0}}]="{{ item.destination + ( '/' if item.destination[-1:] != '/' else '' ) + source.name + '/' }}"
+{% endfor %}
+SOURCE_LENGTH="{% raw %}${#SOURCES[@]}{% endraw %}"
+
+
+SCRIPT=$(realpath "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
+
+export PATH="$PATH:$RCLONE_PATH:$SCRIPTPATH"
+
+RCLONE_BIN=$(type -a -P rclone)
+
+if ! command -v rclone &> /dev/null
+then
+    echo "Command 'rclone' could not be found. Please install from https://rclone.org/downloads/"
+    exit 1
 fi
 
 if [ "$RCLONE_CONFIG" != "" ] && [ ! -f "$RCLONE_CONFIG" ]; then
     echo "$RCLONE_CONFIG does not exist."
 fi
 
-if [ "$PASSWORD_CHECK" == "1" ]; then
-    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
-    then
-        echo "Please run script as 'source ${BASH_SOURCE[0]}' to set CRYPT ENV VARS correctly"
-        exit
-    fi
+if [ "$SOURCE_LENGTH" == "1" ];
+then
+    SOURCE="${SOURCES[0]}"
+else
+    i=1
+    for source in ${SOURCES[@]}
+    do
+        echo "$i) $source"
+        let i++
+    done
 
+    SOURCE=""
+    while [ true ]
+    do
+        read -e -p "Please choose your backup source: " SELECTED_SOURCE
+
+        let SELECTED_SOURCE--
+
+        SOURCE="${SOURCES[$SELECTED_SOURCE]}"
+
+        if [ "$SOURCE" == "" ];
+        then
+            echo "Invalid option"
+        else
+            break
+        fi
+    done
+    echo ""
+fi
+
+read -e -p "Enter destination: " DESTINATION
+DESTINATION=$(echo $DESTINATION | sed 's![^/]$!&/!')
+echo ""
+
+if [ "$PASSWORD_CHECK" == "1" ]; then
     read -s -p "Enter password: " PASSWORD
     echo ""
 
     PASSWORD=$($RCLONE_BIN obscure $PASSWORD)
 
+    echo ""
+
     export RCLONE_CONFIG_BACKUP_TYPE="crypt"
+    echo 'export RCLONE_CONFIG_BACKUP_TYPE="crypt"'
+
     export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"
+    echo 'export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"'
+
     export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"
+    echo 'export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"'
+
     export RCLONE_CONFIG_BACKUP_PASSWORD="$PASSWORD"
+    echo 'export RCLONE_CONFIG_BACKUP_PASSWORD="'$PASSWORD'"'
 fi
 
-read -e -p "Enter destination: " DESTINATION
-
-echo -n "$RCLONE_BIN --links --log-level INFO"
+CMD="$RCLONE_BIN --links --log-level INFO"
 
 if [ "$RCLONE_CONFIG" != "" ]; then
-    echo -n " --config $RCLONE_CONFIG"
+    CMD="$CMD --config $RCLONE_CONFIG"
 fi
 
 if [ "$BWLIMIT" != "" ]; then
-    echo -n " --bwlimit '{{ item.bandwidth_limit}}'"
+    CMD="$CMD --bwlimit '02:00,30M 05:00,20M 06:00,5M 23:00,10M'"
 fi
 
 if [ "$PASSWORD_CHECK" == "1" ]; then
-    echo " --crypt-remote $SOURCE_DIR sync backup: $DESTINATION"
+    CMD="$CMD --crypt-remote $SOURCE sync backup: $DESTINATION"
 else
-    echo " sync $SOURCE_DIR $DESTINATION"
+    CMD="$CMD sync $SOURCE $DESTINATION"
 fi
+
+echo ""
+echo "$CMD"
+
+echo ""
+PROCEED=""
+while [ true ]
+do
+    read -p "Do you want to execute? (y/N) " ANSWER
+    if [ "$ANSWER" == "y" ];
+    then
+        eval "$CMD"
+    fi
+
+    break
+done
