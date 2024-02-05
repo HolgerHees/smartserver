@@ -435,6 +435,7 @@ default_variables: {
     # For details how to create, check https://rclone.org/overview/
 
     # If a source contains a name, a subfolder with that name is created in destination (2. Example). Otherwise it is merged (1. example)
+    # Mixing of sources with a name and sources without a name is not supportedand with raise an error
 
     backup_sync_enabled:                      { default: "{{backup_syncs is defined and backup_syncs | length > 0}}" },
     backup_syncs:                             { optional: yes },

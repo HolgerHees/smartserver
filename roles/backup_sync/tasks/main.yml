@@ -57,6 +57,7 @@
   template:
     src: "templates/job_config.py"
     dest: "/opt/backup_sync/config/jobs/{{item.name}}.py"
+  failed_when: "(item.sources | selectattr('name', 'defined') | list | length != item.sources | length ) and (item.sources | selectattr('name', 'undefined') | list | length != item.sources | length)" # name check validation
   loop_control:
     label: "name: '{{item.name}}', type: '{{sync_type}}'"
   with_items: "{{backup_syncs}}"
@@ -64,13 +65,13 @@
 - name: prepare job restore scripts
   vars:
     sync_type: "{{item.type | default('rclone')}}"
+    merged_sources: "{{ item.sources | selectattr('name', 'defined') | list | length != item.sources | length }}"
   template:
     src: "templates/restore_template"
     dest: "{{config_path}}backup/{{item.name}}.sh"
     mode: 0700
   loop_control:
     label: "name: '{{item.name}}', type: '{{sync_type}}'"
-  when: "sync_type != 'rsync'"
   with_items: "{{backup_syncs}}"
 
 - name: register loki rules
