@@ -31,12 +31,12 @@
     command_handling: "compatibility"
     env:
       DOCKER_INFLUXDB_INIT_MODE: "setup"
-      DOCKER_INFLUXDB_INIT_USERNAME: "{{vault_influxdb_admin_username}}"
-      DOCKER_INFLUXDB_INIT_PASSWORD: "{{vault_influxdb_admin_password}}"
+      DOCKER_INFLUXDB_INIT_USERNAME: "{{influxdb_admin_username}}"
+      DOCKER_INFLUXDB_INIT_PASSWORD: "{{influxdb_admin_password}}"
       DOCKER_INFLUXDB_INIT_ORG: "default-org"
       DOCKER_INFLUXDB_INIT_BUCKET: "default-bucket"
       DOCKER_INFLUXDB_INIT_RETENTION: "1w"
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{vault_influxdb_admin_token}}"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{influxdb_admin_token}}"
       INFLUXD_REPORTING_DISABLED: "true"
 #      INFLUXDB_LOGGING_FORMAT: "json"
 #      INFLUXDB_DATA_WAL_FSYNC_DELAY: "1s"
@@ -137,5 +137,5 @@
   when: "influxdb_container_result.changed"
   
 - name: create cli config token => config does not exists
-  shell: "docker exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{vault_influxdb_admin_token}}' --active\""
+  shell: "docker exec influxdb sh -c \"influx config create --config-name default --host-url http://localhost:8086 --org default-org --token '{{influxdb_admin_token}}' --active\""
   when: "influxdb_container_result.changed and '\tdefault\t' not in influxdb_config_result.stdout"

@@ -101,6 +101,6 @@ MaxAuthTries 3
 
 #PidFile /etc/ssh/run/sshd.pid
 
-AllowUsers {{vault_ssh_vpn_username}}
+AllowUsers {{ssh_vpn_username}}
 
 #Subsystem       sftp    /usr/lib/ssh/sftp-server

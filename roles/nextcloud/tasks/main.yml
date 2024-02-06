@@ -66,8 +66,8 @@
 - name: create database
   vars:
     database: "nextcloud"
-    username: "{{vault_nextcloud_mysql_username}}"
-    password: "{{vault_nextcloud_mysql_password}}"
+    username: "{{nextcloud_mysql_username}}"
+    password: "{{nextcloud_mysql_password}}"
     backup: yes
     backup_cleanup: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 -e \\\"DELETE FROM nextcloud.oc_filecache WHERE path LIKE 'appdata%';\\\"\""
   include_tasks: roles/mysql/shared/add_database.yml
@@ -95,13 +95,13 @@
   when: "database_added"
 
 - name: backup old admin folder => database does not exists
-  command: "mv {{nextcloud_data_path}}{{vault_nextcloud_admin_username}}/ {{nextcloud_data_path}}{{vault_nextcloud_admin_username}}-{{lookup('pipe', 'date +%Y%m%d-%H%M')}}/"
+  command: "mv {{nextcloud_data_path}}{{nextcloud_admin_username}}/ {{nextcloud_data_path}}{{nextcloud_admin_username}}-{{lookup('pipe', 'date +%Y%m%d-%H%M')}}/"
   failed_when: no
   changed_when: no
   when: "database_added"
 
 - name: initialise nextcloud => database does not exists
-  shell: "docker exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{vault_nextcloud_mysql_username}}' --database-pass '{{vault_nextcloud_mysql_password}}' --admin-user '{{vault_nextcloud_admin_username}}' --admin-pass '{{vault_nextcloud_admin_password}}'\""
+  shell: "docker exec -i php sh -c \"cd {{htdocs_path}}nextcloud-{{nextcloud_version}} && php occ maintenance:install --data-dir '{{nextcloud_data_path}}' --database 'mysql' --database-host 'mysql' --database-name 'nextcloud'  --database-user '{{nextcloud_mysql_username}}' --database-pass '{{nextcloud_mysql_password}}' --admin-user '{{nextcloud_admin_username}}' --admin-pass '{{nextcloud_admin_password}}'\""
   when: "database_added"
 
 - name: disable password policy => database does not exists
@@ -217,8 +217,6 @@
   #when: "database_added"
   tags: [ 'user' ]
   
-#  shell: "docker exec php sh -c \"export OC_PASS={{vault_userpasswords[item].web_password}}; php {{htdocs_path}}nextcloud/occ user:add --password-from-env --group=\\\"users\\\" {{item}}\""
-
 # OC_PASS is never used, because authentification is done by apache.
 # 
 # one side effect is that basic auth works only for dav clients
@@ -244,7 +242,7 @@
 
 # password update is normally not necessary, because it is not used. Instead the apache auth (htpasswd or oauth) is used
 #- name: update admin user
-#  shell: "docker exec php sh -c \"export OC_PASS={{vault_nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{vault_nextcloud_admin_username}}\""
+#  shell: "docker exec php sh -c \"export OC_PASS={{nextcloud_admin_password}}; php {{htdocs_path}}nextcloud/occ user:resetpassword --password-from-env {{nextcloud_admin_username}}\""
 #  register: result
 #  failed_when: "'Successfully reset password for' not in result.stdout"
 #  changed_when: False
@@ -283,8 +281,8 @@
 
 - name: add admin web user
   vars:
-    username: "{{vault_nextcloud_admin_username}}"
-    password: "{{vault_nextcloud_admin_password}}"
+    username: "{{nextcloud_admin_username}}"
+    password: "{{nextcloud_admin_password}}"
     fullname: "Nextcloud System User"
     usergroups: []
   include_tasks: roles/user/shared/add_web_user.yml
@@ -304,7 +302,7 @@
     sub_domain: "nextcloud"
     usergroup: "user"
     additional_users:
-      - "{{vault_nextcloud_admin_username}}"
+      - "{{nextcloud_admin_username}}"
     additional_env: yes
     include: "templates/etc/apache2/_.ansible.vhost.d/nextcloud.inc"
   include_tasks: roles/apache/shared/add_vhost.yml

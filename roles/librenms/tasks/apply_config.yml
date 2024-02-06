@@ -21,7 +21,7 @@
   with_items: "{{librenms_devices}}"
   
 - name: "set api token"
-  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO api_tokens (user_id,token_hash,description,disabled) VALUES (1,'{{vault_librenms_api_token | replace('$', '\\\\\\$') }}','web app usage',0);\\\"\""
+  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 librenms -e \\\"INSERT IGNORE INTO api_tokens (user_id,token_hash,description,disabled) VALUES (1,'{{librenms_api_token | replace('$', '\\\\\\$') }}','web app usage',0);\\\"\""
   changed_when: no
   
 - name: "set http user"

@@ -32,6 +32,8 @@
     owner: "root"
     group: "root"
     mode: 0750
+  loop_control:
+    label: "{{item}}"
   with_items: "{{cloud_vpn.peers}}"
 
 - name: prepare samba mount points
@@ -41,6 +43,8 @@
     owner: "root"
     group: "root"
     mode: 0750
+  loop_control:
+    label: "{{item}}"
   with_items: "{{cloud_vpn.peers}}"
 
 - name: copy startup script

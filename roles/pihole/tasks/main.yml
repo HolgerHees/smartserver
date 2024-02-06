@@ -68,7 +68,7 @@
     pihole_env: |
       {
         "TZ": "{{timezone}}",
-        "WEBPASSWORD": "{{vault_pihole_password}}",
+        "WEBPASSWORD": "{{pihole_password}}",
         "DNS1": "127.0.0.11",
         "DNS2": "no"
         {% if dns_enabled and dns_type == 'pihole' %}

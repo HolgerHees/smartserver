@@ -52,8 +52,8 @@
     env:
       SSH_GID: "10002"
       SSH_UID: "10002"
-      SSH_USERNAME: "{{vault_ssh_vpn_username}}"
-      SSH_PASSWORD: "{{vault_ssh_vpn_password}}"
+      SSH_USERNAME: "{{ssh_vpn_username}}"
+      SSH_PASSWORD: "{{ssh_vpn_password}}"
       TZ: "{{timezone}}"
     log_driver: journald
     log_options:
@@ -66,16 +66,16 @@
     volumes:
       - '{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z'
       - '{{global_etc}}ssh_vpn/util:/etc/ssh/util:z'
-      - '{{global_etc}}ssh_vpn/run:/home/{{vault_ssh_vpn_username}}/.ssh:z'
+      - '{{global_etc}}ssh_vpn/run:/home/{{ssh_vpn_username}}/.ssh:z'
     published_ports:
-     - "{{vault_ssh_vpn_internal_port}}:{{vault_ssh_vpn_internal_port}}/tcp"
+     - "{{ssh_vpn_internal_port}}:{{ssh_vpn_internal_port}}/tcp"
   notify: "restart ssh_vpn"
   
 # ***** FINALIZE *****
 - name: prepare iptables rules
   set_fact:
-    ssh_vpn_rules: "{{ (ssh_vpn_rules | default([])) + [ 'proto tcp saddr ' + item + ' dport ' + vault_ssh_vpn_internal_port ] }}"
-  with_items: "{{ vault_ssh_vpn_allowed_ips }}"
+    ssh_vpn_rules: "{{ (ssh_vpn_rules | default([])) + [ 'proto tcp saddr ' + item + ' dport ' + ssh_vpn_internal_port ] }}"
+  with_items: "{{ ssh_vpn_allowed_ips }}"
   tags: [ 'firewall_config' ]
         
 - name: allow ssh_vpn service

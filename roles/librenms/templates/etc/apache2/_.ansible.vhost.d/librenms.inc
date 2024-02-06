@@ -7,6 +7,6 @@
   
   RequestHeader unset Authorization
   RequestHeader set "X-Remote-User" "librenms"
-  RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
+  RequestHeader set "X-Auth-Token" "{{librenms_api_token}}"
 </Location>
 

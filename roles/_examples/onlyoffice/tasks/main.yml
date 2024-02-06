@@ -35,7 +35,7 @@
     env:
       TZ: "{{timezone}}"
       JWT_ENABLED: "true"
-      JWT_SECRET: "{{vault_onlyoffice_shared_key}}"
+      JWT_SECRET: "{{onlyoffice_shared_key}}"
       USE_UNAUTHORIZED_STORAGE: "true"
       REDIS_SERVER_HOST: "redis"
       REDIS_SERVER_PORT: "6379"
@@ -43,8 +43,8 @@
       DB_HOST: "mysql"
       DB_PORT: "3306"
       DB_NAME: "onlyoffice"
-      DB_USER: "{{vault_onlyoffice_mysql_username}}"
-      DB_PWD: "{{vault_onlyoffice_mysql_password}}"
+      DB_USER: "{{onlyoffice_mysql_username}}"
+      DB_PWD: "{{onlyoffice_mysql_password}}"
     log_driver: journald
     log_options:
       tag: onlyoffice
@@ -84,8 +84,8 @@
 - name: create database
   vars:
     database: "onlyoffice"
-    username: "{{vault_onlyoffice_mysql_username}}"
-    password: "{{vault_onlyoffice_mysql_password}}"
+    username: "{{onlyoffice_mysql_username}}"
+    password: "{{onlyoffice_mysql_password}}"
     backup: no
   include_tasks: roles/mysql/shared/add_database.yml
   tags: ['cron_job','backup_restore']

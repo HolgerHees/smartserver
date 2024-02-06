@@ -10,8 +10,10 @@
   tags: [ 'user' ]
 
 - name: "add new user"
-  shell: "docker exec influxdb sh -c \"influx user create --name {{item}} --password {{vault_userpasswords[item].web_password}} --org default-org\""
+  shell: "docker exec influxdb sh -c \"influx user create --name {{item}} --password {{userdata[item].password}} --org default-org\""
   when: "item not in influxdb_user_result.stdout and 'admin' in userdata[item].groups"
+  loop_control:
+    label: "{{item}}"
   with_items: "{{userdata}}"
   tags: [ 'user' ]
 
@@ -19,11 +21,13 @@
   shell: |
     spawn docker exec -it influxdb sh -c "influx user password --name {{item}}"
     expect "Please type your new password:"
-    send "{{vault_userpasswords[item].web_password}}\n" 
+    send "{{userdata[item].password}}\n"
     expect "Please type your new password again:"
-    send "{{vault_userpasswords[item].web_password}}\n" 
+    send "{{userdata[item].password}}\n"
     exit 0
   when: "item in influxdb_user_result.stdout"
+  loop_control:
+    label: "{{item}}"
   with_items: "{{userdata}}"
   changed_when: False
   tags: [ 'user' ]

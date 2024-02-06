@@ -27,10 +27,10 @@ deployment_config_path = "{{deployment_config_path}}"
 deployment_inventory_path = "{{deployment_inventory_path}}"
 deployment_directory = "{{deployment_path}}"
 
-git_remote = "{{vault_deployment_config_git}}"
+git_remote = "{{deployment_config_git}}"
 
 global_config = { 
-  "github_access_token": "{{vault_deployment_token_git if vault_deployment_token_git is defined else ''}}"
+  "github_access_token": "{{deployment_token_git if deployment_token_git is defined else ''}}"
 }
 
 os_type = "{{os_type}}"

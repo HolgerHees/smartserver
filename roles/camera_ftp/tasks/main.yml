@@ -51,8 +51,8 @@
     state: present
 #    recreate: true
     env:
-      FTP_USER: "{{vault_ftp_username}}"
-      FTP_PASS: "{{vault_ftp_password}}"
+      FTP_USER: "{{camera_ftp_username}}"
+      FTP_PASS: "{{camera_ftp_password}}"
       FTP_UID: "{{system_users['ftp'].id}}"
       FTP_GID: "{{system_groups['ftp'].id}}"
       ONLY_UPLOAD: "YES"
@@ -107,7 +107,7 @@
 - name: create cron job
   vars:
     name: "Camera Cleanup"
-    cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +{{ftp_max_file_age}} -exec rm {} +"
+    cmd: "find {{global_lib}}/camera_service/upload/ -name \"*.jpg\" -mmin +{{camera_ftp_max_file_age}} -exec rm {} +"
     group: "camera_ftp"
     hour: "0"
     minute: "50"

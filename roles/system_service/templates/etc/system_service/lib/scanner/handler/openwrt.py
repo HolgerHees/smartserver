@@ -67,8 +67,6 @@ class OpenWRT(_handler.Handler):
             self._setDeviceMetricState(openwrt_ip, -1)
 
         while self._isRunning():
-            #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
-            
             for openwrt_ip in self.openwrt_devices:
                 try:
                     if self._isSuspended(openwrt_ip):

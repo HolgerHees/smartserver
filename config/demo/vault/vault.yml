@@ -1,79 +1,22 @@
-vault_mailserver_username: "test@test.com"
-vault_mailserver_password: "default123"
-vault_mailserver_host: "smtp.gmail.com"
-vault_mailserver_port: "587"
+vault_mailserver_password:              "test123"
 
 vault_userpasswords: {
-    testuser1: { samba_password: "test12345", web_password: "test12345" },
-    testuser2: { samba_password: "test12345", web_password: "test12345" },
-    testuser3: { samba_password: "test12345", web_password: "test12345" }
+    testuser1: "test12345",
+    testuser2: "test12345",
+    testuser3: "test12345",
 }
 
-vault_form_auth_passphrase: "8924jkhf2/8?23"
+vault_form_auth_passphrase:             "8924jkhf2/8?23"
 
-vault_pihole_password: "<password>"
+vault_default_database_password:        "default123"
+vault_default_admin_password:           "default123"
+vault_default_api_token:                "lasd6213k1jsl12nd098sdk2j3"
 
-vault_ftp_username: "ftp"
-vault_ftp_password: "default123"
+vault_nextcloud_instance_id:            "234sdgzw87399443s"
+vault_nextcloud_password_salt:          "9ad9aus92z4ij20j20idj928912hd1jd0"
+vault_nextcloud_secret:                 "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
 
-vault_influxdb_admin_password: "default123"
-vault_influxdb_admin_token: "lkjfdh7123kjas"
-vault_shared_mysql_password: "default123"
+vault_camera_ftp_password:              "default123"
 
-vault_nextcloud_instance_id: "234sdgzw87399443s"
-vault_nextcloud_password_salt: "9ad9aus92z4ij20j20idj928912hd1jd0"
-vault_nextcloud_secret: "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
-vault_nextcloud_mysql_password: "default123"
-vault_nextcloud_admin_password: "default123"
-
-vault_openhab_config_git: "https://github.com/HolgerHees/openhab-config.git"
-vault_openhab_mysql_password: "default123"
-
-vault_librenms_mysql_password: "default123"
-vault_librenms_api_token: "lasd6213k1jsl12nd098sdk2j3"
-
-vault_openwrt_api_password: "äaslfdk324kj2l4"
-vault_fritzbox_api_password: "default123"
-
-# ****** OPTIONAL VARIABLES ******
-# variables are optional and only necessary if they are referenced in one of the optional roles or configurations
-
-# used in generic optional role 'wirguard_cloud'
-vault_cloud_vpn_keys: {
-    peer1: "<public_key>",
-    peer2: "<public_key>"
-}
-
-# used in generic optional role 'cloudsync'
-vault_cloudsync_password: "default123"
-
-# used in custom external openhab config repository
-#vault_telegram_bots: {
-#    bot_testuser1: { # for user1
-#        chat_id: "<chat_id>",
-#        chat_token: "<chat_token>"
-#    }
-#}
-vault_pushover_api_key: "<api_key>"
-vault_pushover_user_key: "<user_key>"
-
-vault_hue_user_id: "<userid>"
-vault_homecontrol_client_id: "<vault_homecontrol_client_id>"
-vault_homecontrol_client_secret: "<vault_homecontrol_client_secret>"
-vault_homecontrol_washer: "<vault_homecontrol_washer>"
-vault_homecontrol_dishwasher: "<vault_homecontrol_dishwasher>"
-vault_homecontrol_coffeemaker: "<vault_homecontrol_coffeemaker>"
-vault_garbage_calendar_url: "<google_ical_url>"
-vault_tuya_humidifier_product_id: "<vault_tuya_humidifier_product_id>"
-vault_tuya_humidifier_device_id: "<vault_tuya_humidifier_device_id>"
-vault_tuya_humidifier_local_key: "<vault_tuya_humidifier_local_key>"
-
-# used in custom external openhab config repository and custom role 'apache_proxy'
-vault_wallmounted_tablet_password: "default123"
-
-vault_automower_device_username: "automower"
-vault_automower_device_password: "default123"
-
-# used in custom role 'apache_proxy'
-vault_camera_device_username: "admin"
-vault_camera_device_password: "default123"
+vault_system_service_openwrt_api_password: "default123"
+system_service_fritzbox_api_password:      "default123"

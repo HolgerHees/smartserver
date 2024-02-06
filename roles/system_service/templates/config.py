@@ -7,12 +7,12 @@ server_name = "{{server_name}}"
 server_domain = "{{server_domain}}"
 server_ip = "{{default_server_ip}}"
 
-default_isp = { {% for key in default_isp %}"{{key}}": "{{default_isp[key] | join('|')}}",{% endfor %} }
+default_isp = { {% for key in system_service_default_isp %}"{{key}}": "{{system_service_default_isp[key] | join('|')}}",{% endfor %} }
 
-netflow_bind_ip = {{ '"0.0.0.0"' if netflow_collector else 'None' }}
-netflow_bind_port = {{ '2055' if netflow_collector else 'None' }}
+netflow_bind_ip = {{ '"0.0.0.0"' if system_service_netflow_collector else 'None' }}
+netflow_bind_port = {{ '2055' if system_service_netflow_collector else 'None' }}
 netflow_incoming_traffic = {
-{% for data in netflow_incoming_traffic %}
+{% for data in system_service_netflow_incoming_traffic %}
   "{{data.target}}": { "name": "{{data.name}}", "allowed": { {% for key in data.allowed %} "{{key}}": "{{data.allowed[key] | join('|')}}", {% endfor %} }, "logs": "{{data.logs | default('')}}" },
 {% endfor %}
 }
@@ -20,27 +20,27 @@ netflow_incoming_traffic = {
 service_ip = "127.0.0.1"
 service_port = "8507"
 
-librenms_token = "{% if librenms_devices|length > 0 %}{{vault_librenms_api_token if vault_librenms_api_token is defined else ''}}{% endif %}"
+librenms_token = "{% if librenms_devices|length > 0 %}{{librenms_api_token if librenms_api_token is defined else ''}}{% endif %}"
 librenms_rest = "{% if librenms_devices|length > 0 %}http://librenms:8000/api/v0/{% endif %}";
 librenms_poller_interval = {{librenms_poller_interval | int * 60}}
 
-openwrt_username = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_username | default('')}}{% endif %}"
-openwrt_password = "{% if openwrt_devices|length > 0 %}{{vault_openwrt_api_password | default('')}}{% endif %}"
+openwrt_username = "{% if openwrt_devices|length > 0 %}{{system_service_openwrt_api_username | default('')}}{% endif %}"
+openwrt_password = "{% if openwrt_devices|length > 0 %}{{system_service_openwrt_api_password | default('')}}{% endif %}"
 openwrt_devices = [{% if openwrt_devices|length > 0 %}"{{openwrt_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
-fritzbox_username = "{% if fritzbox_devices|length > 0 %}{{vault_fritzbox_api_username}}{% endif %}"
-fritzbox_password = "{% if fritzbox_devices|length > 0 %}{{vault_fritzbox_api_password}}{% endif %}"
+fritzbox_username = "{% if fritzbox_devices|length > 0 %}{{system_service_fritzbox_api_username}}{% endif %}"
+fritzbox_password = "{% if fritzbox_devices|length > 0 %}{{system_service_fritzbox_api_password}}{% endif %}"
 fritzbox_devices = [{% if fritzbox_devices|length > 0 %}"{{fritzbox_devices | map(attribute='host') | list | join('","') }}"{% endif %}]
 
 influxdb_rest = "http://influxdb:8086"
 influxdb_database = "system_info"
-influxdb_token = "{{vault_influxdb_admin_token}}"
+influxdb_token = "{{influxdb_admin_token}}"
 
 loki_websocket = "ws://loki:3100"
 
 mqtt_host = "mosquitto"
 
-traffic_blocker_enabled = {{ 'True' if traffic_blocker and netflow_incoming_traffic | length > 0 else 'False' }}
+traffic_blocker_enabled = {{ 'True' if system_service_traffic_blocker and system_service_netflow_incoming_traffic | length > 0 else 'False' }}
 traffic_blocker_treshold = {
   "netflow_observed": 20,
   "netflow_scanning": 10,
@@ -89,6 +89,6 @@ user_devices = {
 {% endfor %}
 }
 
-fping_test_hosts = [ {% for host in fping_test_hosts %}"{{host}}", {% endfor %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %} ]
+fping_test_hosts = [ {% for host in system_service_fping_test_hosts %}"{{host}}", {% endfor %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %} ]
 
-speedtest_server_id = "{{external_speedtest_server_id}}"
+speedtest_server_id = "{{system_service_speedtest_server_id}}"

@@ -57,8 +57,8 @@
 #      OBSERVIUM_ADMIN_USER: "admin"
 #      OBSERVIUM_ADMIN_PASS: "admin"
       DB_HOST: "mysql"
-      DB_USERNAME: "{{vault_librenms_mysql_username}}"
-      DB_PASSWORD: "{{vault_librenms_mysql_password}}"
+      DB_USERNAME: "{{librenms_mysql_username}}"
+      DB_PASSWORD: "{{librenms_mysql_password}}"
       DB_DATABASE: "librenms"
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
@@ -117,8 +117,8 @@
 - name: create database
   vars:
     database: "librenms"
-    username: "{{vault_librenms_mysql_username}}"
-    password: "{{vault_librenms_mysql_password}}"
+    username: "{{librenms_mysql_username}}"
+    password: "{{librenms_mysql_password}}"
     backup: yes
   include_tasks: roles/mysql/shared/add_database.yml
   tags: ['cron_job','backup_restore']

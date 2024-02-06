@@ -8,12 +8,12 @@ class SystemConfig
     
 	public static function getOpenHabMysql()
 	{
-		return new DBConnectorOpenhab( "mysql", "{{vault_openhab_mysql_username}}", "{{vault_openhab_mysql_password}}", "openhab" );
+		return new DBConnectorOpenhab( "mysql", "{{openhab_mysql_username}}", "{{openhab_mysql_password}}", "openhab" );
 	}
 	
 	public static function getOpenHabInfluxDB()
 	{
-		return new DBConnectorInflux( "influxdb", "8086", "openhab", "{{vault_influxdb_admin_token}}", null );
+		return new DBConnectorInflux( "influxdb", "8086", "openhab", "{{influxdb_admin_token}}", null );
 	}
 	
 	public static function getOpenHabRest()

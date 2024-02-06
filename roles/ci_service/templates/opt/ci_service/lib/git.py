@@ -19,7 +19,7 @@ def initRepository(repository_dir, repository_url, build_dir):
           log.error( u"error: {}".format(cloneResult.stdout.decode("utf-8")), flush=True )
 
 def updateRepository(repository_dir,branch):
-    # git ls-remote {{vault_deployment_config_git}} HEAD
+    # git ls-remote {{deployment_config_git}} HEAD
     count = 0
     while True:
         try:

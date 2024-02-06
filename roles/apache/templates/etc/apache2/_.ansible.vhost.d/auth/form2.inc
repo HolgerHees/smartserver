@@ -11,7 +11,7 @@ Alias /_auth/ "{{htdocs_path}}_auth/"
     AuthFormLogoutLocation "/_auth/relogin/"
 
     Session on
-    SessionCryptoPassphrase {{vault_form_auth_passphrase}}
+    SessionCryptoPassphrase {{form_auth_passphrase}}
     SessionCookieName session_form Path=/;Domain={{server_domain}};Secure;HttpOnly
     SessionMaxAge 1
 </Location>

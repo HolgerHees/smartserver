@@ -75,6 +75,6 @@ mx.GuestWifi = (function( ret ) {
     return ret;
 })({});
 
-{% for name in vault_wifi_networks %}{% if vault_wifi_networks[name]["type"] == "public" %}
+{% for name in wifi_networks %}{% if wifi_networks[name]["type"] == "public" %}
 subGroup.addHtml('guest_wifi', '<div class="service guestwifi" style="text-align: center;text-shadow: var(--submenu-shadow-service-info);"><img class="obfuscated" src="/guest_wifi/?name={{name}}&obfuscated=1"><div class="wifiname">{{name}}</div></div>', {"init": [ mx.GuestWifi.init ] }, 'admin', 380, '{i18n_Guest Wifi}', '{i18n_QRCode}', "guest_wifi.svg");
 {% endif %}{% endfor %}

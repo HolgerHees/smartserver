@@ -40,8 +40,6 @@ class LibreNMS(_handler.Handler):
         self._initNextRuns()
 
         while self._isRunning():
-            #RequestHeader set "X-Auth-Token" "{{vault_librenms_api_token}}"
-            
             if not self._isSuspended():
                 try:
                     self._processLibreNMS()

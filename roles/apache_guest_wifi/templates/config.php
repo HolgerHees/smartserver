@@ -1,6 +1,6 @@
 <?php
 $wifi_networks = [
-{% for name in vault_wifi_networks %}{% if vault_wifi_networks[name]["type"] == "public" %}
-    '{{name}}' => '{{vault_wifi_networks[name]["password"]}}',
+{% for name in wifi_networks %}{% if wifi_networks[name]["type"] == "public" %}
+    '{{name}}' => '{{wifi_networks[name]["password"]}}',
 {% endif %}{% endfor %}
 ];

@@ -1,5 +1,5 @@
 {% for username in userdata %}{% if item in userdata[username].groups %}
-{% if vault_openid_connect_url is defined %}Require claim email:{{userdata[username].email}}
+{% if openid_connect_url is defined %}Require claim email:{{userdata[username].email}}
 {% endif %}
 Require user {{username}}
 {% endif %}{% endfor %}

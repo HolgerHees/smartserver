@@ -1,3 +1,7 @@
+- name: validate user
+  include_tasks: "roles/user/tasks/validate_config.yml"
+  tags: ["all", "user"]
+
 - name: validate dhcp_reservations
   include_tasks: "roles/dnsmasq/tasks/validate_config.yml"
   tags: ["all", "dnsmasq", "pihole" ]

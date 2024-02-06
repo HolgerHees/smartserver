@@ -151,12 +151,6 @@
   with_items: "{{prepared_app_configs}}"
   when: "prepared_app_configs is defined"
 
-#- name: set onlyoffice shared key # must be separate to avoid visibile shared key in console log
-#  shell: "docker exec mysql sh -c \"mysql -u root -h 127.0.0.1 nextcloud -e \\\"INSERT INTO oc_appconfig (appid, configkey, configvalue) VALUES ('onlyoffice', 'jwt_secret', '{{vault_onlyoffice_shared_key}}') ON DUPLICATE KEY UPDATE configvalue='{{vault_onlyoffice_shared_key}}';\\\"\""
-#  register: set_shared_key_result
-#  changed_when: no
-#  failed_when: set_shared_key_result.rc != 0
-
 # ***** PREVIEW GENERATOR CRON JOB *****
 - name: create previewgenerator incremental cron job
   vars:

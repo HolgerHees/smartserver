@@ -35,4 +35,5 @@
     group: "electricmeter"
     minute: "*/5"
   include_tasks: roles/cron/shared/add_cronjob.yml
+  tags: ['cron_job']
   when: "is_production|bool"

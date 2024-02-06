@@ -30,10 +30,10 @@
   changed_when: "image_name not in image_local_exists.stdout"
  
 #- name: "container : check docker remote image exists"
-#  shell: "docker search {{vault_dockerhub_username}}/{{image_name}}:{{image_version}}"
+#  shell: "docker search {{dockerhub_username}}/{{image_name}}:{{image_version}}"
 #  register: image_remote_exists
 #  changed_when: "image_name not in image_remote_exists.stdout"
-#  when: "image_upload | default(False) and vault_dockerhub_username is not defined"
+#  when: "image_upload | default(False) and dockerhub_username is not defined"
 
 - name: "container : copy dockerfiles"
   template:
@@ -63,5 +63,5 @@
   when: "docker_build.changed"
 
 #- name: "container : push image to docker registry"
-#  shell: "docker push {{vault_dockerhub_username}}/{{image_name}}:{{image_version}}"
+#  shell: "docker push {{dockerhub_username}}/{{image_name}}:{{image_version}}"
 #  when: "docker_build.changed or ( image_remote_exists.skipped | default(False) and image_name not in image_remote_exists.stdout )"

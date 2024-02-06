@@ -12,8 +12,8 @@ password = 'password'   #mqtt password
 #broker = None #if not using local mqtt broker
 
 address = '{{roomba_ip}}'
-blid = '{{vault_roomba_blid}}'
-roombaPassword = '{{vault_roomba_password}}'
+blid = '{{roomba_blid}}'
+roombaPassword = '{{roomba_password}}'
 
 def broker_on_connect(client, userdata, flags, rc):
     print("Broker Connected with result code "+str(rc))

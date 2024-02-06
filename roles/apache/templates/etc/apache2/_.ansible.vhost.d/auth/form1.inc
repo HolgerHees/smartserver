@@ -14,7 +14,7 @@ RewriteMap lookupFullname "txt:/etc/apache2/_.ansible.auth/auth_user_fullnames.t
     AuthUserFile    /etc/apache2/_.ansible.auth/.htpasswd
 
     Session On
-    SessionCryptoPassphrase {{vault_form_auth_passphrase}}
+    SessionCryptoPassphrase {{form_auth_passphrase}}
     SessionCookieName session_form Path=/;Domain={{server_domain}};Secure;HttpOnly
     #SessionMaxAge 86400
     SessionMaxAge 0

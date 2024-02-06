@@ -47,12 +47,12 @@
     env:
       SSH_GID: "10002"
       SSH_UID: "10002"
-      SSH_USERNAME: "{{vault_ssh_vpn_username}}"
-      SSH_PASSWORD: "{{vault_ssh_vpn_password}}"
+      SSH_USERNAME: "{{ssh_vpn_username}}"
+      SSH_PASSWORD: "{{ssh_vpn_password}}"
       TZ: "{{timezone}}"
     network: "mobile_vpn"
     published_ports:
-      - "4444:{{vault_ssh_vpn_internal_port}}/tcp"
+      - "4444:{{ssh_vpn_internal_port}}/tcp"
     volumes:
       - "{{global_etc}}ssh_vpn/sshd_config:/etc/ssh/sshd_config:z"
       - "{{global_etc}}ssh_vpn/util:/etc/ssh/util:z"

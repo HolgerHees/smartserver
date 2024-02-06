@@ -137,8 +137,8 @@
 - name: create database
   vars:
     database: "shared"
-    username: "{{vault_shared_mysql_username}}"
-    password: "{{vault_shared_mysql_password}}"
+    username: "{{shared_mysql_username}}"
+    password: "{{shared_mysql_password}}"
     backup: yes
   include_tasks: roles/mysql/shared/add_database.yml
   tags: ['cron_job','backup_restore']

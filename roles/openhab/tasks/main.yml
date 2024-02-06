@@ -79,7 +79,7 @@
   vars:
     git_clone_name: "config"
     git_clone_path: "{{projects_path}}openhab_config"
-    git_clone_url: "{{vault_openhab_config_git}}"
+    git_clone_url: "{{openhab_config_git}}"
     git_owner:  "{{openhab_user}}"
     git_group:  "{{openhab_group}}"
     git_mode:  "u=rwX,g=rX,o="
@@ -477,8 +477,8 @@
 - name: create database
   vars:
     database: "openhab"
-    username: "{{vault_openhab_mysql_username}}"
-    password: "{{vault_openhab_mysql_password}}"
+    username: "{{openhab_mysql_username}}"
+    password: "{{openhab_mysql_password}}"
     backup: yes
   include_tasks: roles/mysql/shared/add_database.yml
   tags: ['cron_job','backup_restore']
@@ -546,8 +546,8 @@
 
 #- name: add admin web user
 #  vars:
-#    username: "{{vault_openhab_tablet_username}}"
-#    password: "{{vault_openhab_tablet_password}}"
+#    username: "{{openhab_tablet_username}}"
+#    password: "{{openhab_tablet_password}}"
 #    fullname: "Openhab Tablet User"
 #    usergroups: []
 #  include_tasks: roles/user/shared/add_web_user.yml
@@ -558,7 +558,7 @@
     sub_domain: "openhab"
     usergroup: "user"
 #    additional_users:
-#      - "{{vault_openhab_tablet_username}}"
+#      - "{{openhab_tablet_username}}"
     include: "templates/etc/apache2/_.ansible.vhost.d/openhab.inc"
   include_tasks: roles/apache/shared/add_vhost.yml
   tags: ['apache_config']

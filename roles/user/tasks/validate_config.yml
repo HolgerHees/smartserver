@@ -1,0 +1,16 @@
+- name: "validate user: process config"
+  vars:
+    mandatory_base_fields: "{{ ['name', 'email', 'groups', 'password'] }}"
+    allowed_groups: "{{ ['admin', 'user'] }}"
+    config_result: |
+      [
+          {% for user in userdata.values() %}
+              {% if mandatory_base_fields | difference(user.keys()) | length > 0 %}
+                  "{{user.name if 'name' in user else '<user ' + ( loop.index | string ) + '>'}}: missing attribute(s) {{ mandatory_base_fields | difference(user.keys()) }}",
+              {% endif %}
+          {% endfor %}
+      ]
+  debug:
+    msg: "{{ config_result if config_result | length > 0 else 'Config is ok'}}"
+  failed_when: "config_result | length > 0"
+  tags: ["all", "user"]

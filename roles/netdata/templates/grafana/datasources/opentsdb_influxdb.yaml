@@ -19,5 +19,5 @@ datasources:
       "httpHeaderName1": "Authorization"
       "httpMode": "POST"
     secureJsonData:
-      "httpHeaderValue1": "Token {{vault_influxdb_admin_token}}"
+      "httpHeaderValue1": "Token {{influxdb_admin_token}}"
     editable: false

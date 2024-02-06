@@ -1,6 +1,6 @@
 FROM alpine:{{image_version}}
 
-EXPOSE {{vault_ssh_vpn_internal_port}}
+EXPOSE {{ssh_vpn_internal_port}}
 #COPY rootfs /
 
 RUN apk add --no-cache openssh python2 python3 tzdata
