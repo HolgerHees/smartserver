@@ -19,4 +19,4 @@ vault_nextcloud_secret:                 "890w3hf083hfuishf8834uf938jtoi23j3r928u
 vault_camera_ftp_password:              "default123"
 
 vault_system_service_openwrt_api_password: "default123"
-system_service_fritzbox_api_password:      "default123"
+vault_system_service_fritzbox_api_password: "default123"

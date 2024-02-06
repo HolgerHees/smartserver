@@ -89,6 +89,6 @@ user_devices = {
 {% endfor %}
 }
 
-fping_test_hosts = [ {% for host in system_service_fping_test_hosts %}"{{host}}", {% endfor %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %} ]
+fping_test_hosts = [ {% for host in system_service_fping_test_hosts %}"{{host}}", {% endfor %}{% if cloud_vpn is defined %}{% for peer in cloud_vpn.peers %}"{{cloud_vpn.peers[peer].host}}", {% endfor %}{% endif %} ]
 
 speedtest_server_id = "{{system_service_speedtest_server_id}}"
