@@ -7,16 +7,13 @@
   set_fact:
     config_path: "config/{{inventory_hostname}}/"
     before_var_keys: "{{vars.keys()}}"
-  tags: always
 
 # load initial environment variables
 - name: load env vars
   include_vars: "{{config_path}}env.yml"
-  tags: always
 
 - name: load vault vars
   include_vars: "{{config_path}}vault/vault.yml"
-  tags: always
 
 - name: check if vault is encrypted
   shell: "head -1 {{config_path}}vault/vault.yml | grep \"\\$ANSIBLE_VAULT\""
@@ -29,14 +26,12 @@
   set_fact:
     host_ip: "{{ production_ip if production_ip in ansible_all_ipv4_addresses else ( staging_ip if staging_ip in ansible_all_ipv4_addresses else '' ) }}"
     custom_var_keys: "{{ vars.keys() | difference(before_var_keys + ['config_path', 'before_var_keys', 'vault_check_result']) }}"
-  tags: always
 
 # check for a valid main ip
 - name: check for valid ip
   assert:
     that: host_ip != ''
     msg: "No valid ip found. Allowed are: production ({{ production_ip if production_ip else 'disabled' }}), staging ({{ staging_ip if staging_ip else 'disabled' }})"
-  tags: always
 
 # set environment specific variables [pre]
 - name: set env state vars
@@ -64,14 +59,12 @@
     #host_server_arpa:                  "{{host_ip | ipaddr('revdns')}}"
     #host_server_subnet:                "{{host_ip.rsplit('.',1)[0]}}"
     host_server_network:               "{{( ( host_ip + '/' + ansible_facts[ansible_default_ipv4['interface']]['ipv4']['netmask'] ) | ipaddr('subnet') )}}"
-  tags: always
 
 # **** load initial environment variables ****
 - name: load default vars
   include_defaults:
     file: "config/default.yml"
     custom_var_keys: "{{custom_var_keys}}"
-  tags: always
 
 - name: check for parsing errors of 'config/default.yml'
   debug:
@@ -184,9 +177,3 @@
                 "{{network}}",
             {% endfor %}
         ]
-
-- name: validate dhcp reservations
-  include_tasks: "validate_dhcp_reservations.yml"
-  tags: [ 'dnsmasq', "pihole" ]
-  when: "dhcp_enabled"
-

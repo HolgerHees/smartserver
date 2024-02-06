@@ -1,0 +1,9 @@
+- name: validate dhcp_reservations
+  include_tasks: "roles/dnsmasq/tasks/validate_config.yml"
+  tags: ["all", "dnsmasq", "pihole" ]
+  when: "dhcp_enabled"
+
+- name: validate backup_sync
+  include_tasks: "roles/backup_sync/tasks/validate_config.yml"
+  tags: ["all", "backup_sync"]
+  when: "backup_sync_enabled"

@@ -9,6 +9,7 @@ logfile         = "{{global_log}}backup_sync/{{item.name}}_[INDEX].log"
 sync_type       = "{{sync_type}}"
 
 rclone_config       = {% if rclone_config %}"{{rclone_config}}"{% else %}False{% endif %}
+
 rclone_remote       = {% if rclone_remote %}"{{rclone_remote}}"{% else %}False{% endif %}
 
 destination     = '{{item.destination}}'

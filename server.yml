@@ -16,7 +16,8 @@
 
     # ************ INIT CONFIG ***********
     - { import_role: { name: base, tasks_from: init, handlers_from: empty }, tags: [ 'always' ] }                                                                                                   # detect environment and load configs
-    # ************************************  
+    - { import_role: { name: base, tasks_from: validate, handlers_from: empty } }                                                                                                                   # config validator, without tags => is checked inside
+    # ************************************
     #- name:
     #  debug:  
     #    msg: "{{ansible_facts}}" 

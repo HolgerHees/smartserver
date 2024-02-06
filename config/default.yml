@@ -37,7 +37,7 @@ default_variables: {
     
     public_domain:                            { default: "public.{{server_domain}}" },
 
-    userdata: {},
+    userdata:                                 {},
     # *** EXAMPLE for userdata ***
     # {
     #     testuser1: {
@@ -60,8 +60,8 @@ default_variables: {
     #         }
     #     }
     # }
-    
-    vault_userpasswords: {},
+
+    vault_userpasswords:                      {},
     # *** EXAMPLE for vault_userpasswords ***
     # {
     #     testuser1: {
@@ -70,7 +70,7 @@ default_variables: {
     #     }
     # }
 
-    network_devices: { default: [] },                                                                               # used for librenms, system_service (network monitoring) and openwrt => they are preprocessed at the end of this config file
+    network_devices:                          { optional: yes},                                                     # used for librenms, system_service (network monitoring) and openwrt => they are preprocessed at the end of this config file
     # *** EXAMPLE for network_devices ***
     # [
     #     {
@@ -423,55 +423,52 @@ default_variables: {
     # Roles:
     # - 'backup_sync'
 
-    # The default used tool is rclone https://rclone.org/. It supports different backends like S3, GoogleDrive Micrsofot OneDrive etc
-    # - 'filter' are based on rclone filter terms
-    # - 'options' can be any rclone option
-    # - 'bandwidth_limit' is based on rclone syntax too
-    # - 'password' will enable encryption
-
-    # The MAIN LIMITATION is, it support metadata like, creation date, modification data, owner and group only for files and only if it is a supported remote backend or local backend
-    # - check https://rclone.org/docs/#metadata and https://rclone.org/overview/#features
-
-    # If you use a custom remote like "mygoogledrive" (2. example) you have to create a configuration in '/opt/backup_sync/config/rclone/mybackup.conf' with a '[mygoogledrive]' part in it.
-    # For details how to create, check https://rclone.org/overview/
-
-    # If a source contains a name, a subfolder with that name is created in destination (2. Example). Otherwise it is merged (1. example)
-    # Mixing of sources with a name and sources without a name is not supportedand with raise an error
-
     backup_sync_enabled:                      { default: "{{backup_syncs is defined and backup_syncs | length > 0}}" },
     backup_syncs:                             { optional: yes },
+
+    # The most flexible type is rclone https://rclone.org/. It supports different backends like S3, GoogleDrive Micrsofot OneDrive etc https://rclone.org/overview/
+    # The MAIN LIMITATION is, it support metadata like, creation date, modification data, owner and group only for files and only if it is a supported remote backend or local backend
+    # - check https://rclone.org/docs/#metadata and https://rclone.org/overview/#features
+    # If you use a custom destination like "mygoogledrive:/" (2. example) you have to create a configuration in '/opt/backup_sync/config/rclone/mybackup.conf' with a '[mygoogledrive]' part in it.
+
     # *** EXAMPLE rclone for backup_syncs ***
     # [
     #   {
-    #     name: "smartserver",
-    #     schedule: { hour: "0", minute: "0" },
-    #     destination: "{{backup_path}}smartserver/",
-    #     sources: [
-    #       { path: "{{base_path}}", filter: [ "- /var/**", "- /tmp/**" ] },
-    #       { path: "{{base_path}}", filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ], options: [ "--local-no-check-updated" ] }
+    #     name: "smartserver",                                                                                      # sync name (mandatory)
+    #     type: "rclone",                                                                                           # sync tool (mandatory)
+    #     schedule: { hour: "0", minute: "0" },                                                                     # time to run (mandatory)
+    #     destination: "{{backup_path}}smartserver/",                                                               # sync destination (mandatory and can be any type of remote, supported by rclone)
+    #     sources: [                                                                                                # source config (mandatory, at least one)
+    #       {
+    #         path: "{{base_path}}",                                                                                # source directory to sync (mandatory)
+    #         filter: [ "- /var/**", "- /tmp/**" ]                                                                  # filter based on rclone filter terms (optional)
+    #       },
+    #       {
+    #         path: "{{base_path}}",  filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ],
+    #         options: [ "--local-no-check-updated" ]                                                               # can be any rclone option (optional)
+    #       }
     #     ],
-    #     bandwidth_limit: "10M"
+    #     bandwidth_limit: "10M"                                                                                    # bandwidth limitation (optional)
     #   },
     #   {
     #     name: "mybackup",
+    #     type: "rclone",
     #     schedule: { hour: "2", minute: "0" },
     #     password: "{{vault_backup_password}}",
     #     destination: "mygoogledrive:/backup",
     #     sources: [
-    #       { name: "data", path: "{{backup_path}}", filter: [ "- /smartserver/**" ] },
+    #       {
+    #         name: "data",                                                                                         # source name (optional)
+    #         path: "{{backup_path}}", filter: [ "- /smartserver/**" ] },
     #       { name: "nextcloud", path: "{{nextcloud_data_path}}", filter: [ "- /appdata**", "- /updater**" }
     #     ],
-    #     bandwidth_limit: "02:00,30M 05:00,20M 06:00,5M 23:00,10M"
+    #     bandwidth_limit: "02:00,30M 05:00,20M 06:00,5M 23:00,10M"                                                 # time depending bandwidth limitation (optional)
     #   }
     # ]
 
     # Instead of rclone, you can also force rsync as a sync tool. It has some limitations as also some advantages
-    # 1. It can only sync local to local folders
-    # 2. 'filter' syntax is mostly similar to rclone
-    # 3. 'bandwidth_limit' supports only simple format without any time indication
-    # 4. 'password' parameter for encryption is not supported
-    # 4. 'options' parameter is differet compared to rclone
-    # 5. But the advantages is, it supports metadata for files and folder
+    # It can only sync local to local folders. But the advantages is, it supports metadata for files and folder
+
     # *** EXAMPLE rsync for backup_syncs ***
     #   {
     #     name: "smartserver",
@@ -479,12 +476,24 @@ default_variables: {
     #     schedule: { hour: "0", minute: "0" },
     #     destination: "{{backup_path}}smartserver/",
     #     sources: [
-    #       { path: "{{base_path}}", filter: [ "- /var/**", "- /tmp/**" ] },
-    #       { path: "{{base_path}}", filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ], options: [ "--ignore-errors" ] }
+    #       {
+    #         path: "{{base_path}}",
+    #         filter: [ "- /var/**", "- /tmp/**" ] },                                                               # filter based on rsync filter terms (optional)
+    #       {
+    #         path: "{{base_path}}",
+    #         filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ],
+    #         options: [ "--ignore-errors" ]                                                                        # can be any rsync option (optional)
+    #       }
     #     ],
-    #     bandwidth_limit: "10M"
+    #     bandwidth_limit: "10M"                                                                                    # bandwidth limitation (optional) !!! Time depending limitation is not supported !!!
     #   }
     # ]
+
+
+    # !!! DETAILS about source names !!!
+    # If a source contains a name, a subfolder with that name is created in destination (2. Example). Otherwise it is merged (1. example)
+    # Mixing of sources with a name and sources without a name is not supportedand with raise an error
+
     # **** END BACKUP SYNC                                                             ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

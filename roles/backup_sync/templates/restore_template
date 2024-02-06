@@ -16,6 +16,7 @@ SOURCES[{{loop.index0}}]="{{ item.destination + ( '/' if item.destination[-1:] !
 
 SOURCE_LENGTH="{% raw %}${#SOURCES[@]}{% endraw %}"
 
+# search for sync binary
 if [ "$SYNC_TYPE" == "rclone" ];
 then
     SCRIPT=$(realpath "$0")
@@ -42,6 +43,7 @@ else
     fi
 fi
 
+# choose source path
 if [ "$SOURCE_LENGTH" == "1" ];
 then
     SOURCE="${SOURCES[0]}"
@@ -53,65 +55,93 @@ else
         let i++
     done
 
-    SOURCE=""
     while [ true ]
     do
         read -e -p "Please choose your backup source: " SELECTED_SOURCE
-
-        let SELECTED_SOURCE--
-
-        SOURCE="${SOURCES[$SELECTED_SOURCE]}"
-
-        if [ "$SOURCE" == "" ];
+        if [ "$SELECTED_SOURCE" != "" ];
         then
-            echo "Invalid option"
-        else
-            break
+            # integer check
+            if ! [ "$SELECTED_SOURCE" -eq "$SELECTED_SOURCE" ] 2> /dev/null;
+            then
+                echo "ERROR: Invalid option"
+            else
+                let SELECTED_SOURCE--
+                SOURCE="${SOURCES[$SELECTED_SOURCE]}"
+
+                if [ "$SOURCE" == "" ];
+                then
+                    echo "ERROR: Invalid option"
+                else
+                    break
+                fi
+            fi
         fi
     done
     echo ""
 fi
 
+# choose destination path
 while [ true ]
 do
     read -e -p "Enter destination: " DESTINATION
     DESTINATION=$(echo $DESTINATION | sed 's![^/]$!&/!')
 
     if [ ! -d "$DESTINATION" ]; then
-        echo "'$DESTINATION' does not exists."
+        echo "ERROR: '$DESTINATION' does not exists"
     else
         break
     fi
 done
-echo ""
 
+# warn if destination is not empty
 if [ -n "$(ls -A "$DESTINATION" 2>/dev/null)" ]
 then
-    echo "'$DESTINATION' contains files and will be cleaned."
-    echo ""
+    echo "WARNING: '$DESTINATION' not empty and will be cleaned"
 fi
+echo ""
 
+# prepare sync command
 if [ "$SYNC_TYPE" == "rclone" ];
 then
     if [ "$PASSWORD_CHECK" == "1" ]; then
-        read -s -p "Enter password: " PASSWORD
-        echo ""
-        echo ""
 
-        PASSWORD=$($SYNC_BINARY_BIN obscure $PASSWORD)
+        while [ true ]
+        do
+            read -s -p "Enter password: " PASSWORD
+            echo ""
 
+            PASSWORD=$($SYNC_BINARY_BIN obscure $PASSWORD 2>/dev/null)
+
+            if [ "$PASSWORD" != "" ];
+            then
+                export RCLONE_CONFIG_BACKUP_TYPE="crypt"
+                export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"
+                export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"
+                export RCLONE_CONFIG_BACKUP_PASSWORD="$PASSWORD"
+
+                # if source exists, validate password
+                if [ -d "$SOURCE" ]; then
+                    ENCRYPTED_FILENAME=$(ls -AU $SOURCE | head -1)
+                    DESCRYPTED_FILENAME=$($SYNC_BINARY_BIN cryptdecode backup: $ENCRYPTED_FILENAME 2>/dev/null)
+
+                    if echo "$DESCRYPTED_FILENAME" | grep -q "ailed to decrypt";
+                    then
+                        echo "ERROR: Password invalid"
+                    else
+                        echo "INFO: Password confirmed"
+                        break
+                    fi
+                else
+                    break
+                fi
+            fi
+        done
+
+        echo ""
         echo "#### START SCRIPT SNIPPED ####"
-
-        export RCLONE_CONFIG_BACKUP_TYPE="crypt"
         echo 'export RCLONE_CONFIG_BACKUP_TYPE="crypt"'
-
-        export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"
         echo 'export RCLONE_CONFIG_BACKUP_FILENAME_ENCRYPTION="standard"'
-
-        export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"
         echo 'export RCLONE_CONFIG_BACKUP_DIRECTORY_NAME_ENCRYPTION="true"'
-
-        export RCLONE_CONFIG_BACKUP_PASSWORD="$PASSWORD"
         echo 'export RCLONE_CONFIG_BACKUP_PASSWORD="'$PASSWORD'"'
         echo ""
     else
@@ -149,7 +179,7 @@ echo "$CMD"
 echo "#### END SCRIPT SNIPPED ######"
 echo ""
 
-PROCEED=""
+# execute sync command
 while [ true ]
 do
     read -p "Do you want to execute? (y/N) " ANSWER
@@ -160,3 +190,4 @@ do
 
     break
 done
+

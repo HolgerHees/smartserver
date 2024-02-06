@@ -1,0 +1,28 @@
+- name: "validate backup_sync: process config"
+  vars:
+    mandatory_base_fields: "{{ ['name', 'type', 'schedule', 'destination', 'sources'] }}"
+    config_result: |
+      [
+          {% for config in backup_syncs %}
+              {% if mandatory_base_fields | difference(config.keys()) | length > 0 %}
+                  "{{config.name if 'name' in config else '<config ' + ( loop.index | string ) + '>'}}: missing attribute(s) {{ mandatory_base_fields | difference(config.keys()) }}",
+              {% else %}
+                  {% if 'password' in config and config.type != 'rclone' %}
+                      "{{config.name}}: passwords are only supported with 'rclone'",
+                  {% endif %}
+                  {% if 'bandwidth_limit' in config and config.type != 'rclone' and ( config.bandwidth_limit | regex_search('[^0-9a-zA-Z]+') ) %}
+                      "{{config.name}}: timebased bandwidth limit is only supported for rclone",
+                  {% endif %}
+                  {% if config.sources | selectattr('path', 'defined') | list | length != config.sources | length %}
+                      "{{config.name}}: missing source attribute ['path']",
+                  {% endif %}
+                  {% if (config.sources | selectattr('name', 'defined') | list | length != config.sources | length ) and (config.sources | selectattr('name', 'undefined') | list | length != config.sources | length) %}
+                      "{{config.name}}: sources should either all have 'name' or none of them should have a 'name'",
+                  {% endif %}
+              {% endif %}
+          {% endfor %}
+      ]
+  debug:
+    msg: "{{ config_result if config_result | length > 0 else 'Config is ok'}}"
+  failed_when: "config_result | length > 0"
+  tags: ["all", "backup_sync"]
