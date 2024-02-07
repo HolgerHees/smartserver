@@ -13,7 +13,7 @@ mx.UNCore = (function( ret ) {
         mx.I18N.process(document);
         
         let socket = mx.ServiceSocket.init('system_service');
-        socket.on("connect", (socket) => socket.emit('call', "speedtest"));
+        socket.on("connect", () => socket.emit('call', "speedtest"));
         socket.on("speedtest", function(data) {
             let btn = mx.$(".speedtest.button");
             if( data["is_running"] )

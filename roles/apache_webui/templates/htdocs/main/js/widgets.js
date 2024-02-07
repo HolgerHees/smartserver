@@ -172,7 +172,9 @@ mx.Widgets = (function( ret ) {
                     let missing_preloads = widgets.filter( (widget) => widget._preload.filter( (preload) => preload == null ).length > 0  );
                     if( missing_preloads.length == 0 ) callback();
                 };
-                widget.refresh();
+
+                if( widget.init != undefined ) widget.init();
+                else if( widget.refresh != undefined ) widget.refresh();
             });
         }
     }
@@ -190,7 +192,7 @@ mx.Widgets = (function( ret ) {
             }
             else
             {
-                widget.refresh();
+                if( widget.refresh != undefined ) widget.refresh();
             }
         });
     }

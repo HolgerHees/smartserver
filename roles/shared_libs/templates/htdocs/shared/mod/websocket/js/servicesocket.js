@@ -1,36 +1,37 @@
 mx.ServiceSocket = (function( ret ) {
-    var socket = null;
-
-    function handleErrors()
+    ret.init = function(service_name)
     {
-        mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
-    }
-    ret.on = function( topic, callback)
-    {
+        var errorCallback = null;
 
-    }
-    ret.init = function( service_name)
-    {
-        socket = io("/", {path: '/' + service_name + '/api/socket.io' });
-        socket.on('connect_error', err => handleErrors(err))
-        socket.on('connect_failed', err => handleErrors(err))
-        socket.on('disconnect', err => handleErrors(err))
+        function onError(err)
+        {
+            if( !errorCallback ) mx.Error.handleErrors( mx.I18N.get( "Service is currently not available") );
+            else errorCallback(err);
+        }
 
-        return {
-            "on": function(topic, callback) {
-                if( topic == "connect" )
-                {
-                    socket.on('connect', function() {
-                        mx.Error.confirmSuccess();
-                        callback(socket);
-                    });
-                }
-                else
-                {
-                    socket.on(topic, callback );
-                }
+        function onConnect()
+        {
+            if( !errorCallback ) mx.Error.confirmSuccess();
+        }
+
+        var socket = io("/", {path: '/' + service_name + '/api/socket.io' });
+        socket.on('connect_error', err => onError(err));
+        socket.on('connect_failed', err => onError(err));
+        socket.on('disconnect', err => onError(err));
+        socket.on('connect', err => onConnect());
+
+        var _on = socket.on.bind(socket);
+        socket.on = function(topic, callback) {
+            if( topic == "error" )
+            {
+                errorCallback = callback;
+            }
+            else
+            {
+                _on(topic, callback );
             }
         }
+        return socket;
     }
     return ret
 })( mx.ServiceSocket || {} );

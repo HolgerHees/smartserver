@@ -140,9 +140,9 @@ class CmdExecuter(watcher.Watcher):
         self.killed_job = False
         self.killed_logfile = None
 
-    def getJobStatus(self):
+    def getJobStatus(self, refresh = True):
         if self.isRunning():
-            return {"job": self.current_cmd_type if self.current_cmd_type else self.getExternalCmdType(), "state": "running", "started": self.current_started.astimezone().isoformat() if self.current_started else None, "finished": None, "exit_code": None }
+            return {"job": self.current_cmd_type if self.current_cmd_type else self.getExternalCmdType(refresh), "state": "running", "started": self.current_started.astimezone().isoformat() if self.current_started else None, "finished": None, "exit_code": None }
         else:
             return {"job": None, "state": "idle", "started": None, "finished": None, "exit_code": None }
 
@@ -325,6 +325,7 @@ class CmdExecuter(watcher.Watcher):
             self.event.clear()
                 
     def _refreshExternalCmdType(self): 
+        emitJobStatus = False
         if not self.isDaemonJobRunning():
             if self.external_cmd_type_pid is None or not processlist.Processlist.checkPid(self.external_cmd_type_pid):
                 external_cmd_type = None
@@ -343,20 +344,23 @@ class CmdExecuter(watcher.Watcher):
                                 break
                 
                 if external_cmd_type is None and self.external_cmd_type is not None:
-                    self.handler.emitJobStatus(self.getJobStatus())
+                    emitJobStatus = True
                     self.process_watcher.refresh()
 
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
         else:
             if self.external_cmd_type is not None:
-                self.handler.emitJobStatus(self.getJobStatus())
+                emitJobStatus = True
                 self.process_watcher.refresh()
 
             self.external_cmd_type = None
             self.external_cmd_type_pid = None
 
         self.external_cmd_type_refreshed = datetime.now()
+
+        if emitJobStatus:
+            self.handler.emitJobStatus(self.getJobStatus(False))
 
     def getExternalCmdType(self, refresh = True):
         self.external_cmd_type_requested = datetime.now()

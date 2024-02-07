@@ -54,39 +54,31 @@ mx.Widgets.CustomWeather = (function( ret ) {
     style.type = 'text/css';
     style.appendChild(document.createTextNode(css));
 
-    var last_data_modified = null;
-    var values = {};
-    var content = "";
+    let data = {}
+    function processData(_data)
+    {
+        if( !( "currentAirTemperatureInCelsius" in _data || "currentCloudsAsSVG" in _data ) ) return;
+
+        data = {...data, ..._data};
+
+        let content = "";
+        content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + data["currentCloudsAsSVG"] + "</span>";
+        content += "<span>" + data["currentAirTemperatureInCelsius"].toFixed(1) + "°C</span>";
+
+        ret.show(0, content );
+    }
+
+    ret.init = function()
+    {
+        let socket = mx.ServiceSocket.init('weather_service');
+        socket.on("connect", () => socket.emit('initCurrentData'));
+        socket.on("initCurrentData", (data) => processData( data ) );
+        socket.on("changedCurrentData", (data) => processData( data ) );
+        socket.on("error", (err) => ret.alert(0, "Weather N/A") );
+    }
 
     ret.click = function(event){
         mx.Actions.openEntryById(event, 'workspace-weather-weather');
-    }
-
-    ret.refresh = function()
-    {
-        mx.Widgets.fetchContent("POST", "/weather_service/api/data/", function(data)
-        {
-            if( data != null )
-            {
-                let cloudData = JSON.parse(data)
-                last_data_modified = cloudData["last_data_modified"];
-
-                if( Object.keys(cloudData["changed_data"]).length > 0 )
-                {
-                    values = {...values, ...cloudData["changed_data"]};
-
-                    content = "";
-                    content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + values["currentCloudsAsSVG"] + "</span>";
-                    content += "<span>" + values["currentAirTemperatureInCelsius"].toFixed(1) + "°C</span>";
-                }
-
-                ret.show(0, content );
-            }
-            else
-            {
-                ret.alert(0, "Weather N/A");
-            }
-        }, mx.Core.encodeDict( {"type": "widget", "fields": ["currentAirTemperatureInCelsius","currentCloudsAsSVG"].join(","), "last_data_modified": last_data_modified } ) );
     }
     return ret;
 })( mx.Widgets.Object( "user", [ { id: "customWeather", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );

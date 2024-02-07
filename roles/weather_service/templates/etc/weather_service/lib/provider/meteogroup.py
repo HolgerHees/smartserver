@@ -70,7 +70,7 @@ class Fetcher(object):
       
         r = requests.post(token_url, data=fields, auth=(self.config.api_username, self.config.api_password))
         if r.status_code != 200:
-            raise AuthException("Failed getting auth token. Code: {}, Raeson: {}".format(r.status_code, r.reason))
+            raise AuthException("Failed getting auth token. Code: {}, Raeson: {}".format(r.status_code, r.text))
         else:
             data = json.loads(r.text)
             if "access_token" in data:
@@ -83,7 +83,7 @@ class Fetcher(object):
         headers = {"Authorization": "Bearer {}".format(self.auth)}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
-            raise RequestDataException("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.reason))
+            raise RequestDataException("Failed getting data. Code: {}, Raeson: {}".format(r.status_code, r.text))
         else:
             return json.loads(r.text)
       

@@ -2,6 +2,7 @@ import traceback
 import logging
 from datetime import datetime, timedelta
 import os
+import threading
 
 import time
 
@@ -13,12 +14,14 @@ from lib.helper.forecast import WeatherBlock, WeatherHelper
 
 class ProviderConsumer():
     '''Handler client'''
-    def __init__(self, config, mqtt, db, station_consumer ):
+    def __init__(self, config, mqtt, db, station_consumer, handler ):
         location = config.location.split(",")
         self.latitude = float(location[0])
         self.longitude = float(location[1])
 
+        self.handler = handler
         self.station_consumer = station_consumer
+        self.station_consumer.registerProviderConsumer(self)
 
         self.is_running = False
 
@@ -44,6 +47,10 @@ class ProviderConsumer():
         self.last_consume_error = None
 
         self.current_is_raining = False
+
+        self.station_fallback_lock = threading.Lock()
+        self.station_fallback_data = None
+        self.station_cloud_timer = None
 
         with self.db.open() as db:
             self.field_names = db.getFields()
@@ -161,6 +168,16 @@ class ProviderConsumer():
 
             if is_refreshed:
                 self.consume_refreshed[state_name] = time.time()
+
+                # notify station fallback values
+                if state_name == "current":
+                    with self.station_fallback_lock:
+                        if self.station_fallback_data is not None:
+                            for field, value in self._buildFallbackStationValues().items():
+                                if field not in self.station_fallback_data or self.station_fallback_data[field] != value:
+                                    self.station_fallback_data[field] = value
+                                    self.notifyStationValue(field, value)
+
         except DBException:
             self.consume_errors[state_name] = time.time()
         #except MySQLdb._exceptions.OperationalError as e:
@@ -181,35 +198,130 @@ class ProviderConsumer():
                 self.icon_cache[icon_name] = f.read()
         return self.icon_cache[icon_name]
 
-    def getCurrentValues(self, last_modified, requested_fields = None):
+    def _buildFallbackStationValues(self):
+        result = {}
+        with self.db.open() as db:
+            mapping = {
+                'currentAirTemperatureInCelsius': "airTemperatureInCelsius",
+                'currentPerceivedTemperatureInCelsius': "feelsLikeTemperatureInCelsius",
+                'currentWindGustInKilometerPerHour': "maxWindSpeedInKilometerPerHour",
+                'currentWindSpeedInKilometerPerHour': "windSpeedInKilometerPerHour",
+                'currentRainLastHourInMillimeter': "precipitationAmountInMillimeter",
+                'currentUvIndex': "uvIndexWithClouds"
+            }
+            for field, _field in mapping.items():
+                if _field is not None and _field in self.current_values:
+                    result[field] = self.current_values[_field]
+                else:
+                    result[field] = -1
+
+            end = datetime.now()
+            start = end.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
+            result["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+
+    def _buildCloudSVG(self):
+        with self.db.open() as db:
+            data = db.getOffset(0)
+            if data is not None:
+                #logging.info(data)
+                block = WeatherBlock(data['datetime'])
+                block.apply(data)
+
+                currentRain = 0
+                currentRainLevel = self.station_consumer.getValue("rainLevel")
+                if currentRainLevel is None:
+                    currentRain = data["precipitationAmountInMillimeter"]
+                elif currentRainLevel > 0:
+                    if self.current_is_raining or currentRainLevel > 2:
+                        currentRain = 0.1
+
+                        currentRain15Min = self.station_consumer.getValue("rainLast15MinInMillimeter")
+                        if currentRain15Min * 4 > currentRain:
+                            currentRain = currentRain15Min * 4
+
+                        currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
+                        if currentRain1Hour > currentRain:
+                            currentRain = currentRain1Hour
+                self.current_is_raining = currentRain > 0
+
+                block.setPrecipitationAmountInMillimeter(currentRain)
+
+                cloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
+                if cloudCoverInOcta is None:
+                    cloudCoverInOcta = data["effectiveCloudCoverInOcta"]
+                block.effectiveCloudCoverInOcta = cloudCoverInOcta
+                #logging.info("{}".format(block.effectiveCloudCoverInOcta))
+
+                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
+
+                return self.getCachedIcon(icon_name)
+        return None
+
+    def _notifyCloudValue(self):
+        self.station_cloud_timer = None
+        self.handler.emitChangedCurrentData("currentCloudsAsSVG", self._buildCloudSVG())
+
+    def notifyStationValue(self, field, value):
+        with self.station_fallback_lock:
+            self.station_fallback_data = None
+        self.handler.emitChangedCurrentData(field, value)
+
+        if field in ["rainLevel", "rainLast15MinInMillimeter", "rainLastHourInMillimeter", "cloudCoverInOcta"]:
+            if self.station_cloud_timer is not None:
+                self.station_cloud_timer.cancel()
+            self.station_cloud_timer = threading.Timer(15, self._notifyCloudValue)
+            self.station_cloud_timer.start()
+
+    def getCurrentValues(self):
+        result, _ = self.station_consumer.getValues(-1, None)
+
+        if result is None:
+            with self.station_fallback_lock:
+                self.station_fallback_data = None
+
+            result = self._buildFallbackStationValues()
+        else:
+            with self.station_fallback_lock:
+                self.station_fallback_data = []
+
+        result["currentCloudsAsSVG"] = self._buildCloudSVG()
+        return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def getCurrentValuesOld(self, last_modified, requested_fields = None):
         result, _last_modified = self.station_consumer.getValues(last_modified, requested_fields)
 
-        if result is None and last_modified < self.consume_refreshed["forecast"]:
-            result = {}
-            with self.db.open() as db:
-                mapping = {
-                    'currentAirTemperatureInCelsius': "airTemperatureInCelsius",
-                    'currentPerceivedTemperatureInCelsius': "feelsLikeTemperatureInCelsius",
-                    'currentWindGustInKilometerPerHour': "maxWindSpeedInKilometerPerHour",
-                    'currentWindSpeedInKilometerPerHour': "windSpeedInKilometerPerHour",
-                    'currentRainLastHourInMillimeter': "precipitationAmountInMillimeter",
-                    'currentUvIndex': "uvIndexWithClouds"
-                }
-                for field, _field in mapping.items():
-                    if _field is not None and _field in self.current_values:
-                        result[field] = self.current_values[_field]
-                    else:
-                        result[field] = -1
+        if result is None:
+            with self.station_fallback_lock:
+                self.station_fallback_data = None
 
-                end = datetime.now()
-                start = end.replace(hour=0, minute=0, second=0, microsecond=0)
-
-                values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
-                result["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+            if last_modified < self.consume_refreshed["current"]:
+                result = self._buildFallbackStationValues()
+        else:
+            with self.station_fallback_lock:
+                self.station_fallback_data = []
 
         return [result, _last_modified]
 
-    def getWidgetSVG(self, last_modified, requested_fields):
+    def getWidgetSVGOld(self, last_modified, requested_fields):
         # curl -d 'type=widget' -H "Content-Type: application/x-www-form-urlencoded" -X POST http://172.16.0.201/data/
 
         result = {}
@@ -222,41 +334,9 @@ class ProviderConsumer():
                 if self.consume_refreshed["forecast"] > last_modified:
                     last_modified = self.consume_refreshed["forecast"]
 
-                with self.db.open() as db:
-                    data = db.getOffset(0)
-                    if data is not None:
-                        #logging.info(data)
-                        block = WeatherBlock(data['datetime'])
-                        block.apply(data)
-
-                        currentRain = 0
-                        currentRainLevel = self.station_consumer.getValue("rainLevel")
-                        if currentRainLevel is None:
-                            currentRain = data["precipitationAmountInMillimeter"]
-                        elif currentRainLevel > 0:
-                            if self.current_is_raining or currentRainLevel > 2:
-                                currentRain = 0.1
-
-                                currentRain15Min = self.station_consumer.getValue("rainLast15MinInMillimeter")
-                                if currentRain15Min * 4 > currentRain:
-                                    currentRain = currentRain15Min * 4
-
-                                currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
-                                if currentRain1Hour > currentRain:
-                                    currentRain = currentRain1Hour
-                        self.current_is_raining = currentRain > 0
-
-                        block.setPrecipitationAmountInMillimeter(currentRain)
-
-                        cloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
-                        if cloudCoverInOcta is None:
-                            cloudCoverInOcta = data["effectiveCloudCoverInOcta"]
-                        block.effectiveCloudCoverInOcta = cloudCoverInOcta
-                        #logging.info("{}".format(block.effectiveCloudCoverInOcta))
-
-                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
-
-                        result["currentCloudsAsSVG"] = self.getCachedIcon(icon_name)
+                currentCloudsAsSVG = self._buildCloudSVG()
+                if currentCloudsAsSVG is not None:
+                    result["currentCloudsAsSVG"] = currentCloudsAsSVG
 
         return [ result, last_modified ]
 

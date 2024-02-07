@@ -21,6 +21,11 @@ class StationConsumer():
 
         self.last_consume_error = None
 
+        self.provider_consumer = None
+
+    def registerProviderConsumer(self, provider_consumer):
+        self.provider_consumer = provider_consumer
+
     def start(self):
         self._restore()
         if not os.path.exists(self.dump_path):
@@ -54,6 +59,8 @@ class StationConsumer():
         value = msg.payload.decode("utf-8")
         value = float(value) if "." in value else int(value)
         self.station_values[ topic[3] ] = { "time": time.time(), "value": value  }
+
+        self.provider_consumer.notifyStationValue( topic[3], value )
 
     def getValue(self, key, fallback = None ):
         return self.station_values[key]["value"] if key in self.station_values else fallback

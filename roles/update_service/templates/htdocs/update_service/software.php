@@ -62,7 +62,7 @@ mx.SNCore = (function( ret ) {
     ret.init = function()
     { 
         let socket = mx.ServiceSocket.init('update_service');
-        socket.on("connect", (socket) => socket.emit('initSoftware'));
+        socket.on("connect", () => socket.emit('initSoftware'));
         socket.on("initSoftware", (data) => processData( data ) );
         socket.on("updateSoftware", (data) => processData( data ) );
         socket.on("job_status", (data) => jobStatus(data) );
