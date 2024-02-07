@@ -268,7 +268,7 @@ class ProviderConsumer():
             self.station_fallback_data = None
         self.handler.emitChangedCurrentData(field, value)
 
-        if field in ["rainLevel", "rainLast15MinInMillimeter", "rainLastHourInMillimeter", "cloudCoverInOcta"]:
+        if field in ["currentRainLevel", "currentRainLast15MinInMillimeter", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
             if self.station_cloud_timer is not None:
                 self.station_cloud_timer.cancel()
             self.station_cloud_timer = threading.Timer(15, self._notifyCloudValue)
@@ -276,7 +276,6 @@ class ProviderConsumer():
 
     def getCurrentValues(self):
         result, _ = self.station_consumer.getValues(-1, None)
-
         if result is None:
             with self.station_fallback_lock:
                 self.station_fallback_data = None

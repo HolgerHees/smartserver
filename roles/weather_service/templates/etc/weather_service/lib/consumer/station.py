@@ -60,7 +60,7 @@ class StationConsumer():
         value = float(value) if "." in value else int(value)
         self.station_values[ topic[3] ] = { "time": time.time(), "value": value  }
 
-        self.provider_consumer.notifyStationValue( topic[3], value )
+        self.provider_consumer.notifyStationValue( "current{}{}".format(topic[3][0].upper(),topic[3][1:]), value )
 
     def getValue(self, key, fallback = None ):
         return self.station_values[key]["value"] if key in self.station_values else fallback
