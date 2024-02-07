@@ -54,6 +54,7 @@ mx.Widgets.CustomWeather = (function( ret ) {
     style.type = 'text/css';
     style.appendChild(document.createTextNode(css));
 
+    let socket = null;
     let data = {}
     function processData(_data)
     {
@@ -68,13 +69,21 @@ mx.Widgets.CustomWeather = (function( ret ) {
         ret.show(0, content );
     }
 
+    ret.clean = function()
+    {
+        if( socket == null ) return;
+        _socket = socket;
+        socket = null;
+        _socket.close();
+    }
+
     ret.init = function()
     {
-        let socket = mx.ServiceSocket.init('weather_service');
+        socket = mx.ServiceSocket.init('weather_service');
         socket.on("connect", () => socket.emit('initCurrentData'));
         socket.on("initCurrentData", (data) => processData( data ) );
         socket.on("changedCurrentData", (data) => processData( data ) );
-        socket.on("error", (err) => ret.alert(0, "Weather N/A") );
+        socket.on("error", (err) => socket != null ? ret.alert(0, "Weather N/A") : null );
     }
 
     ret.click = function(event){

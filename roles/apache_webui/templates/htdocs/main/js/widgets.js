@@ -13,6 +13,8 @@ mx.Widgets = (function( ret ) {
     let last_needed_size = 0;
     let last_max_size = 0;
 
+    let initialized = -1;
+
     ret.get = function()
     {
         result = [];
@@ -154,6 +156,8 @@ mx.Widgets = (function( ret ) {
         }
         else
         {
+            initialized = 0;
+
             widgets.forEach(function(widget, index)
             {
                 widget._preload = [];
@@ -176,7 +180,17 @@ mx.Widgets = (function( ret ) {
                 if( widget.init != undefined ) widget.init();
                 else if( widget.refresh != undefined ) widget.refresh();
             });
+
+            if( initialized == -1 ) clean();
         }
+    }
+
+    function clean()
+    {
+        widgets.forEach(function(widget)
+        {
+            if( widget.clean != undefined ) widget.clean();
+        });
     }
 
     ret.refresh = function()
@@ -195,6 +209,17 @@ mx.Widgets = (function( ret ) {
                 if( widget.refresh != undefined ) widget.refresh();
             }
         });
+
+        initialized = 1;
+    }
+
+    ret.clean = function()
+    {
+        if( initialized == -1 ) return;
+
+        if( initialized == 1 ) clean();
+
+        initialized = -1;
     }
 
     ret.click = function( event, index, i )

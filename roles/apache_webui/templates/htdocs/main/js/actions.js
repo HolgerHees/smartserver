@@ -12,7 +12,9 @@ mx.Actions = (function( ret ) {
     var demoMode = null;
     var menuPanel = null;
     var visualisationType = null;
-    
+
+    var widgetsInitialized = false;
+
     function setTitle(title)
     {
         document.title = title;
@@ -262,6 +264,7 @@ mx.Actions = (function( ret ) {
     function hideMenuContent()
     {
         mx.Timer.clean();
+        mx.Widgets.clean();
 
         if( inlineElement.style.display == "" )
         {
@@ -288,9 +291,15 @@ mx.Actions = (function( ret ) {
 
     function showMenuContent(content, callbacks, title )
     {
-        setTitle(title);
-        
         mx.Timer.clean();
+        mx.Widgets.clean();
+
+        _showMenuContent(content, callbacks, title );
+    }
+
+    function _showMenuContent(content, callbacks, title )
+    {
+        setTitle(title);
 
         if( inlineElement.style.display != "" )
         {
@@ -445,6 +454,7 @@ mx.Actions = (function( ret ) {
     ret.openHome = function(event)
     {
         mx.Timer.clean();
+        mx.Widgets.clean();
 
         inlineElement.classList.remove("content");
 
@@ -472,7 +482,7 @@ mx.Actions = (function( ret ) {
         mx.Widgets.preload(function(){
             if( !isActive || isIFrameVisible() )
             {
-                showMenuContent( content, {"init": [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ] }, subGroup.getTitle());
+                _showMenuContent( content, {"init": [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ] }, subGroup.getTitle());
 
                 mx.History.addMenu(subGroup);
 
@@ -484,7 +494,6 @@ mx.Actions = (function( ret ) {
                 mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
                 mx.Actions.refreshHome();
             }
-
             if( !isActive )
             {
                 if( visualisationType != "desktop" ) menuPanel.close();
