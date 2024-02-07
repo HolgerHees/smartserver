@@ -29,6 +29,9 @@ then
     JSON=$(jq -c -n --arg job "$name" --arg code "$RESULT" --arg cmd "$command" --arg error_out "failed" '{"job":"\($job)","code":"\($code)","cmd":"\($cmd)","message":"\($error_out)"}');
     echo "$JSON"  | systemd-cat -t $journal_type -p 3
 
+    # wait until all logs arrive in journald
+    sleep 1
+
     finished=`date '+%d.%m.%Y %H:%M:%S'`
     LOGS=$(journalctl --since "$started" -t $journal_type | tail -n 50)
 

@@ -1,7 +1,6 @@
 {{logrotate_path}} {
   su root root
   rotate 7
-  copytruncate
   daily
   compress
   missingok
