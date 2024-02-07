@@ -13,6 +13,7 @@ class ActionModule(ActionBase):
 
         config_file = self._task.args.get('file')
         custom_var_keys = self._task.args.get('custom_var_keys')
+        vault_var_keys = self._task.args.get('vault_var_keys')
 
         result = super(ActionModule, self).run(task_vars=task_vars)
 
@@ -34,6 +35,8 @@ class ActionModule(ActionBase):
                     # remove known variables to get a list of unknown variables
                     if default_var_name in custom_var_keys:
                         custom_var_keys.remove(default_var_name)
+                    if default_var_name in vault_var_keys:
+                        vault_var_keys.remove(default_var_name)
 
                     if "dependency" in default_var_value:
                         dependencies[default_var_name] = default_var_value["dependency"]
@@ -97,6 +100,8 @@ class ActionModule(ActionBase):
         # process unknown variables as custom vars
         for additional_custom_var_key in custom_var_keys:
             parser_result[additional_custom_var_key] = {"name": additional_custom_var_key, "state": "custom"}
+        for additional_vault_var_keys in vault_var_keys:
+            parser_result[additional_vault_var_keys] = {"name": additional_vault_var_keys, "state": "vault"}
 
         # process missing dependencies
         missing_dependencies = {}
@@ -151,6 +156,7 @@ class ActionModule(ActionBase):
 
         result['ansible_facts']["parser_errors"] = error_messages
         result['ansible_facts']["parser_custom_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "custom", parser_result_values))))
+        result['ansible_facts']["parser_vault_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "vault", parser_result_values))))
         result['ansible_facts']["parser_adjusted_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "adjusted", parser_result_values))))
         result['ansible_facts']["parser_default_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "default", parser_result_values))))
         result['ansible_facts']["parser_unneeded_variables"] = list(map(lambda d: d['name'], list(filter( lambda item: item["state"] == "unneeded", parser_result_values))))

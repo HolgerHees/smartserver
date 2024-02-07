@@ -479,7 +479,7 @@ default_variables: {
     #       {
     #         path: "{{base_path}}",
     #         filter: [ "- /var/lib/docker/**", "- /var/lib/ci_service/**", "+ /var/**", "+ /tmp/**" ],
-    #         options: [ "--ignore-errors" ]                                                                        # can be any rsync option (optional)
+    #         options: [ "--local-no-check-updated" ]                                                               # can be any rsync option (optional), "--local-no-check-updated" is not a rsync option, but supported too.
     #       }
     #     ],
     #     bandwidth_limit: "10M"                                                                                    # bandwidth limitation (optional) !!! Time depending limitation is not supported !!!
@@ -619,6 +619,35 @@ default_variables: {
     # **** END VCONTROLD SERVICE                                                       ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# **** BEGIN DYNAMIC VARIABLES                                                     ***
+
+# Theese variables are generated dynamicly in 'roles/base/tasks/init.yml' based on detected environment
+
+# has_encrypted_vault                       yes/no
+
+# is_suse                                   yes/no
+# is_fedora                                 yes/no
+# is_rhel                                   yes/no
+# is_ubuntu                                 yes/no
+# os_type                                   rhel/fedora/ubuntu/opensuse
+
+# is_production                             yes/no
+
+# default_server_ip                         Default IPv4 Address
+# default_server_gateway                    Default IPv4 Address
+# default_network_interface                 Default Interface name like 'eth0'
+# default_server_arpa                       Default reversed IPv4 Address
+# default_server_subnet                     Default Subnet like 192.168.0
+# default_server_network                    Default Network like 192.168.0.0/24
+# host_server_network                       Network like 192.168.0.0/24 related to production_ip or staging_ip
+#
+# default_server_ipv6                       Default IPv6 Address
+# default_server_gateway_ipv6               Default IPv6 Address
+# default_server_network_ipv6               Default IPv6 Network
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# **** END DYNAMIC VARIABLES                                                       ***
 
 project_name:                     "smartserver"
 
