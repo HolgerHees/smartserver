@@ -51,6 +51,7 @@ class ProviderConsumer():
         self.station_fallback_lock = threading.Lock()
         self.station_fallback_data = None
         self.station_cloud_timer = None
+        self.station_cloud_svg = None
 
         with self.db.open() as db:
             self.field_names = db.getFields()
@@ -262,7 +263,11 @@ class ProviderConsumer():
 
     def _notifyCloudValue(self):
         self.station_cloud_timer = None
-        self.handler.emitChangedCurrentData("currentCloudsAsSVG", self._buildCloudSVG())
+
+        currentCloudsAsSVG = self._buildCloudSVG()
+        if self.station_cloud_svg != currentCloudsAsSVG:
+            self.handler.emitChangedCurrentData("currentCloudsAsSVG", currentCloudsAsSVG)
+            self.station_cloud_svg = currentCloudsAsSVG
 
     def notifyStationValue(self, field, value):
         with self.station_fallback_lock:
@@ -289,7 +294,7 @@ class ProviderConsumer():
             with self.station_fallback_lock:
                 self.station_fallback_data = []
 
-        result["currentCloudsAsSVG"] = self._buildCloudSVG()
+        result["currentCloudsAsSVG"] = self.station_cloud_svg if self.station_cloud_svg is not None else self._buildCloudSVG()
         return result
 
 
@@ -324,7 +329,7 @@ class ProviderConsumer():
 
         return [result, _last_modified]
 
-    def getWidgetSVGOld(self, last_modified, requested_fields):
+    def getWidgetSVG(self, last_modified, requested_fields):
         # curl -d 'type=widget' -H "Content-Type: application/x-www-form-urlencoded" -X POST http://172.16.0.201/data/
 
         result = {}
