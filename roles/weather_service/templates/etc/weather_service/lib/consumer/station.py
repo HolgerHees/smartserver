@@ -58,9 +58,11 @@ class StationConsumer():
 
         value = msg.payload.decode("utf-8")
         value = float(value) if "." in value else int(value)
-        self.station_values[ topic[3] ] = { "time": time.time(), "value": value  }
+        field = topic[3]
 
-        self.provider_consumer.notifyStationValue( "current{}{}".format(topic[3][0].upper(),topic[3][1:]), value )
+        if field not in self.station_values or self.station_values[field]["value"] != value:
+            self.provider_consumer.notifyStationValue( "current{}{}".format(field[0].upper(),field[1:]), value )
+        self.station_values[field] = { "time": time.time(), "value": value  }
 
     def getValue(self, key, fallback = None ):
         return self.station_values[key]["value"] if key in self.station_values else fallback

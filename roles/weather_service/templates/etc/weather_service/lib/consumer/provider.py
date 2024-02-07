@@ -174,9 +174,10 @@ class ProviderConsumer():
                     with self.station_fallback_lock:
                         if self.station_fallback_data is not None:
                             for field, value in self._buildFallbackStationValues().items():
-                                if field not in self.station_fallback_data or self.station_fallback_data[field] != value:
-                                    self.station_fallback_data[field] = value
-                                    self.notifyStationValue(field, value)
+                                if field in self.station_fallback_data and self.station_fallback_data[field] == value:
+                                    continue
+                                self.station_fallback_data[field] = value
+                                self.notifyCurrentValue(field, value)
 
         except DBException:
             self.consume_errors[state_name] = time.time()
@@ -266,6 +267,9 @@ class ProviderConsumer():
     def notifyStationValue(self, field, value):
         with self.station_fallback_lock:
             self.station_fallback_data = None
+        self.notifyCurrentValue(field, value)
+
+    def notifyCurrentValue(self, field, value):
         self.handler.emitChangedCurrentData(field, value)
 
         if field in ["currentRainLevel", "currentRainLast15MinInMillimeter", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
