@@ -17,7 +17,7 @@ require "./shared/libs/auth.php";
         echo "        mx.User.groups = " . json_encode(Auth::getGroups()) . ";\n";
 ?>
     </script>
-    <?php echo Ressources::getModules(["/main/"]); ?>
+    <?php echo Ressources::getModules(["/shared/mod/websocket/", "/main/"]); ?>
     <script>
         var pageTheme = null;
 
