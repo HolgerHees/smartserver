@@ -1,9 +1,19 @@
 # **** DEFAULT Variables ***
 #
-# - Variables a 'default' attribute are assigned as global facts if there is no custom variable defined
-# - Variables without a 'default' attribute are MANDATORY except there is a 'optional' attribute
-# - If the 'optional' attribute applies to False it behaves like a MANDATORY variable.
-# - If the 'optional' attribute applies to TRUE, the 'optional' attribute is a 'template term' and the variable is defined. You will see a warning about a leftover variable which can be cleaned.
+# - Variables with a 'default' attribute are created if there is no variable defined in your configuration
+# - Variables without a 'default' attribute and without a 'optional' attribute are mandatory
+#   - HINT: You get an error if you have not defined this variable in your configuration
+#
+# - Variables with a 'optional' attribute are not mandatory and must not be defined in your confiuration
+#
+# - Variables with a 'dependency' condition are only used if the condition applies to True.
+#   - If the condition applies to True, the variable behaves like decribed before
+#   - If the condition applies to False, the variable is ignored
+#       - HINT: You get a warning if you defined this variable in your configuration, because its unneeded
+#
+# - Variables with a 'requirement' condition, requires other variables or features
+#   - This condition are a comma seperated list of individual conditions
+#   - HINT: If one of the condition applies to False, you get an error
 #
 # **************************
 default_variables: {
@@ -76,7 +86,8 @@ default_variables: {
     # ]
 
     deployment_config_git:                    { default: "https://github.com/HolgerHees/smartserver.git" },         # used deployment, update_service and ci_service role
-    deployment_token_git:                     { optional: yes },                                                    # used in update_service or ci_service in case of a private repository
+    deployment_token_git:                     { optional: yes,                                                      # used in update_service or ci_service in case of a private repository
+                                                dependency: "{{deployment_config_git is defined}}" },               # (INFO: 'dependency' is not nessecarry, because 'deployment_config_git' is mandatory)
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -87,7 +98,7 @@ default_variables: {
     mailserver_password:                      {},                                                                   # "<mypassword>" => password from your email server
     mailserver_host:                          {},                                                                   # "smtp.gmail.com" => smtp address from your email server
     mailserver_port:                          { default: "587",                                                     # "smtp port from your email server
-                                                optional: "{{mailserver_host is not defined}}" },
+                                                dependency: "{{mailserver_host is defined}}" },                     # (INFO: 'dependency' not nessecarry, because 'mailserver_host' is mandatory)
     # *** END OUTGOING MAIL SERVER                                                     ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -103,9 +114,9 @@ default_variables: {
     authenticated_ip_addresses:               { default: [] },                                                      # apache access always allowed for ipaddresses e.g. from wallmounted tablets
 
     openid_connect_url:                       { optional: yes },                                                    # 'optional' means disabled is not defined, to enable check documentation urls to get the right values
-    openid_connect_client_id:                 { optional: "{{openid_connect_url is not defined}}" },
-    openid_connect_client_secret:             { optional: "{{openid_connect_url is not defined}}" },
-    openid_connect_passphrase:                { optional: "{{openid_connect_url is not defined}}" },
+    openid_connect_client_id:                 { dependency: "{{openid_connect_url is defined}}" },
+    openid_connect_client_secret:             { dependency: "{{openid_connect_url is defined}}" },
+    openid_connect_passphrase:                { dependency: "{{openid_connect_url is defined}}" },
 
     form_auth_passphrase:                     {},                                                                   # "8924jkhf2/8?23" => a random phrase which is used by form based apache login to encrypt sessions
     # *** END APACHE AUTH                                                              ***
@@ -137,12 +148,12 @@ default_variables: {
     # - 'grafana'
     grafana_enabled:                          { default: yes },                                                     # enabled by default
     grafana_app_username:                     { default: "admin",
-                                                optional: "{{not grafana_enabled}}" },
+                                                dependency: "{{grafana_enabled}}" },
 
     # Roles:
     # - 'netdata'
     netdata_enabled:                          { default: yes,                                                       # enabled by default
-                                                dependency: "influxdb_enabled" },
+                                                requirement: "influxdb_enabled" },
     # *** END MONITORING                                                               ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -152,13 +163,13 @@ default_variables: {
     # Roles:
     # - 'librenms'
     librenms_enabled:                         { default: "{{librenms_devices | length > 0}}",
-                                                dependency: "mysql_enabled,redis_enabled" },                        # enabled if there are network_devices with attribute 'snmp_method'
+                                                requirement: "mysql_enabled,redis_enabled" },                        # enabled if there are network_devices with attribute 'snmp_method'
     librenms_poller_interval:                 { default: 5,                                                         # interval in minutes
-                                                optional: "{{not librenms_enabled}}" },
+                                                dependency: "{{librenms_enabled}}" },
     librenms_mysql_username:                  { default: "librenms",
-                                                optional: "{{not librenms_enabled}}" },
-    librenms_mysql_password:                  { optional: "{{not librenms_enabled}}" },
-    librenms_api_token:                       { optional: "{{not librenms_enabled}}" },
+                                                dependency: "{{librenms_enabled}}" },
+    librenms_mysql_password:                  { dependency: "{{librenms_enabled}}" },
+    librenms_api_token:                       { dependency: "{{librenms_enabled}}" },
     # **** END LIBRENMS                                                                ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -180,39 +191,41 @@ default_variables: {
     dns_enabled:                              { default: "{{dns_type is defined}}" },                               # enabled by define a 'dns_type'
     dns_type:                                 { optional: yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
     dns_overrides:                            { default: [],
-                                                optional: "{{not dns_enabled}}" },
+                                                dependency: "{{dns_enabled}}" },
      # *** EXAMPLE for dns_overrides ***
      # [
      #     {ip: {{default_server_subnet}}.73, custom_dns: "tv.other.domain.com"}
      # ]
-    dns_default_domain:                       { default: "lan", optional: "{{not dns_enabled}}" },
+    dns_default_domain:                       { default: "lan",
+                                                dependency: "{{dns_enabled}}" },
 
     # This enables dhcp for 'dnsmasq' or 'pihole'
     dhcp_enabled:                             { default: "{{dhcp_type is defined}}" },                              # enabled by define a 'dhcp_type'
     dhcp_type:                                { optional: yes },                                                    # 'dnsmasq' or 'pihole' (pihole_ip must be defined)
     dhcp_range_start:                         { default: "{{default_server_subnet}}.151",
-                                                optional: "{{not dhcp_enabled}}" },
+                                                dependency: "{{dhcp_enabled}}" },
     dhcp_range_end:                           { default: "{{default_server_subnet}}.200",
-                                                optional: "{{not dhcp_enabled}}" },
+                                                dependency: "{{dhcp_enabled}}" },
     dhcp_reservations:                        { default: [],                                                        # dhcp entries
-                                                optional: "{{not dhcp_enabled}}" },
+                                                dependency: "{{dhcp_enabled}}" },
      # *** EXAMPLE for dhcp_reservations ***
      # [
      #     { mac: 12:34:56:78:90:11, ip: {{default_server_subnet}}.73, hostname: tv-livingroom, custom_dns: ["smarttv"]}
      # ]
     dhcp_dns_server:                          { default: "{{ pihole_ip if pihole_ip is defined else default_server_ip }}",
-                                                optional: "{{not dhcp_enabled}}" },
+                                                dependency: "{{dhcp_enabled}}" },
 
     # Pihole and dlna ip's should be part of a contiguous area at the end of your server network
     # This contiguous area is configured as a subnet which is routed completely to a virtual macvlan bridge interface and is not usable for other device ip's anymore
     pihole_enabled:                           { default: "{{pihole_ip is defined}}" },
     pihole_ip:                                { optional: yes },                                                    # pihole ip address from same network as your server ip
-    pihole_ipv6:                              { optional: yes },                                                    # pihole ipv6 address from same network as your server ip
+    pihole_ipv6:                              { optional: yes,                                                      # pihole ipv6 address from same network as your server ip
+                                                dependency: "{{pihole_enabled}}" },
     pihole_whitelist_domains:                 { default: [ "www.googleadservices.com", "analytics.google.com", "clickserve.dartsearch.net", "ad.doubleclick.net" ],
-                                                optional: "{{not pihole_enabled}}" },                               # domains are needed to use google search results
+                                                dependency: "{{pihole_enabled}}" },                               # domains are needed to use google search results
     pihole_addlist_urls:                      { default: [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-only/hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts" ],
-                                                optional: "{{not pihole_enabled}}" },
-    pihole_password:                          { optional: "{{not pihole_enabled}}" },                               # used to login into pihole
+                                                dependency: "{{pihole_enabled}}" },
+    pihole_password:                          { dependency: "{{pihole_enabled}}" },                               # used to login into pihole
     # *** END DNS SERVER                                                               ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -224,8 +237,8 @@ default_variables: {
     # - 'wireguard_mobile'
     mobile_vpn_enabled:                       { default: "yes" },                                                   # enabled by default
     mobile_vpn_internal_port:                 { default: "51828",
-                                                optional: "{{not mobile_vpn_enabled}}" },                           # the port, used on your server
-    mobile_vpn_public_port:                   { optional: "{{not mobile_vpn_enabled}}" },                           # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
+                                                dependency: "{{mobile_vpn_enabled}}" },                           # the port, used on your server
+    mobile_vpn_public_port:                   { dependency: "{{mobile_vpn_enabled}}" },                           # the public port, reachable from outside. (e.g. forwarded port on your dsl router)
     # to complete the setup you have to configure port forwarding on your internet router where you forward the public port to your internal port
     # *** END VPN                                                                      ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -237,16 +250,16 @@ default_variables: {
     # - 'influxdb'
     influxdb_enabled:                         { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
     influxdb_admin_username:                  { default: "admin",                                                   # used to login into influxdb webui
-                                                optional: "{{not influxdb_enabled}}" },
-    influxdb_admin_password:                  { optional: "{{not influxdb_enabled}}" },
-    influxdb_admin_token:                     { optional: "{{not influxdb_enabled}}" },                             # "lkjfdh7123kjas" => token used for internal command line operations
+                                                dependency: "{{influxdb_enabled}}" },
+    influxdb_admin_password:                  { dependency: "{{influxdb_enabled}}" },
+    influxdb_admin_token:                     { dependency: "{{influxdb_enabled}}" },                             # "lkjfdh7123kjas" => token used for internal command line operations
 
     # Roles:
     # - 'mysql'
     mysql_enabled:                            { default: yes },                                                     # enabled by default, be careful with disabling and check dependencies before.
     shared_mysql_username:                    { default: "shared",                                                  # used for internal data
-                                                optional: "{{not mysql_enabled}}" },
-    shared_mysql_password:                    { optional: "{{not mysql_enabled}}" },
+                                                dependency: "{{mysql_enabled}}" },
+    shared_mysql_password:                    { dependency: "{{mysql_enabled}}" },
 
     # Roles:
     # - 'redis'
@@ -265,7 +278,8 @@ default_variables: {
     # - 'minidlna'
     dlna_enabled:                             { default: "{{dlna_ip is defined and ( dlna_volumes | length ) > 0}}"},
     dlna_ip:                                  { optional: yes },                                                    # dlna ip address from same network as your server ip
-    dlna_ipv6:                                { optional: yes },                                                    # dlna ipv6 address from same network as your server ip
+    dlna_ipv6:                                { optional: yes,
+                                                dependency: "{{dlna_enabled}}" },                                   # dlna ipv6 address from same network as your server ip
     # *** END DLNA SERVER                                                              ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -276,18 +290,18 @@ default_variables: {
     # - 'nextcloud'
     # - 'nextcloud_libreoffice'
     nextcloud_enabled:                        { default: yes,                                                       # enabled by default
-                                                dependency: "mysql_enabled,redis_enabled" },
-    nextcloud_instance_id:                    { optional: "{{not nextcloud_enabled}}" },                            # "234sdgzw87399443s" => used internally
-    nextcloud_password_salt:                  { optional: "{{not nextcloud_enabled}}" },                            # "9ad9aus92z4ij20j20idj928912hd1jd0"
-    nextcloud_secret:                         { optional: "{{not nextcloud_enabled}}" },                            # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
+                                                requirement: "mysql_enabled,redis_enabled" },
+    nextcloud_instance_id:                    { dependency: "{{nextcloud_enabled}}" },                            # "234sdgzw87399443s" => used internally
+    nextcloud_password_salt:                  { dependency: "{{nextcloud_enabled}}" },                            # "9ad9aus92z4ij20j20idj928912hd1jd0"
+    nextcloud_secret:                         { dependency: "{{nextcloud_enabled}}" },                            # "890w3hf083hfuishf8834uf938jtoi23j3r928ur982rj2in3diuhe2u1423984uu23jh4ji23n2ji3nd23092i293u20293r9jujiuaawf"
     nextcloud_mysql_username:                 { default: "nextcloud",                                               # used for nextcloud data
-                                                optional: "{{not nextcloud_enabled}}" },
-    nextcloud_mysql_password:                 { optional: "{{not nextcloud_enabled}}" },
+                                                dependency: "{{nextcloud_enabled}}" },
+    nextcloud_mysql_password:                 { dependency: "{{nextcloud_enabled}}" },
     nextcloud_admin_username:                 { default: "admin",                                                   # used to login as a nextcloud data
-                                                optional: "{{not nextcloud_enabled}}" },
-    nextcloud_admin_password:                 { optional: "{{not nextcloud_enabled}}" },
+                                                dependency: "{{nextcloud_enabled}}" },
+    nextcloud_admin_password:                 { dependency: "{{nextcloud_enabled}}" },
     nextcloud_additional_apps:                { default: [],                                                        # additional apps for nextcloud
-                                                optional: "{{not nextcloud_enabled}}" },
+                                                dependency: "{{nextcloud_enabled}}" },
     # *** EXAMPLE for nextcloud_additional_apps ***
     # [
     #     {
@@ -310,11 +324,11 @@ default_variables: {
     # - 'openhab'
     # - 'openhab_toolbox'
     openhab_enabled:                          { default: yes,                                                       # enabled by default
-                                                dependency: "mysql_enabled,influxdb_enabled,mosquitto_enabled" },
-    openhab_config_git:                       { optional: "{{not openhab_enabled}}" },                              # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
+                                                requirement: "mysql_enabled,influxdb_enabled,mosquitto_enabled" },
+    openhab_config_git:                       { dependency: "{{openhab_enabled}}" },                              # a cloned git url of "https://github.com/HolgerHees/openhab-config.git"
     openhab_mysql_username:                   { default: "openhab",                                                 # used for openhab data
-                                                optional: "{{not openhab_enabled}}" },
-    openhab_mysql_password:                   { optional: "{{not openhab_enabled}}" },
+                                                dependency: "{{openhab_enabled}}" },
+    openhab_mysql_password:                   { dependency: "{{openhab_enabled}}" },
     # *** END OPENHAB                                                                  ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -338,10 +352,10 @@ default_variables: {
     #         snapshot_password: { optional: yes }                                                                  # password to authenticate external url
     #     }
     # ]
-    camera_ftp_username:                      { optional: "{{not camera_enabled}}" },                               # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
-    camera_ftp_password:                      { optional: "{{not camera_enabled}}" },
+    camera_ftp_username:                      { dependency: "{{camera_enabled}}" },                               # "ftp" => used for e.g. camera image uploads ('optional' means disabled is not defined)
+    camera_ftp_password:                      { dependency: "{{camera_enabled}}" },
     camera_ftp_max_file_age:                  { default: "{{2 * 24 * 60}}",                                         # images, older then 2 days are discarded
-                                                optional: "{{not camera_enabled}}" },
+                                                dependency: "{{camera_enabled}}" },
     # **** END CAMERA SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -352,9 +366,11 @@ default_variables: {
     # - 'update_service'
     update_service_enabled:                   { default: "{{ update_service_software_check_enabled or update_service_system_check_enabled}}" }, # enabled is system check or software check
     update_service_software_check_enabled:    { default: yes },                                                     # enables the update check for software (version check of running containers) used inside deployment roles / container
-    update_service_software_check_email:      { optional: yes },                                                    # "testadmin@test.com" => sends a notification email after each check, if new software is available
+    update_service_software_check_email:      { optional: yes,                                                      # "testadmin@test.com" => sends a notification email after each check, if new software is available
+                                                dependency: "{{update_service_software_check_enabled}}" },
     update_service_system_check_enabled:      { default: yes },                                                     # enables the update check (os updates or smartserver updates) for this deployment
-    update_service_system_check_email:        { optional: yes },                                                    # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+    update_service_system_check_email:        { optional: yes,                                                      # "testadmin@test.com" => sends a notification email after each check, if new smartserver deployment updates are available
+                                                dependency: "{{update_service_system_check_enabled}}" },
     # **** END UPDATE SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -364,13 +380,13 @@ default_variables: {
     # Roles:
     # - 'system_service'
     system_service_enabled:                   { default: yes,                                                       # enabled by default
-                                                dependency: "influxdb_enabled,mosquitto_enabled" },
+                                                requirement: "influxdb_enabled,mosquitto_enabled" },
 
     system_service_fping_test_hosts:          { default: [ "8.8.8.8" ],                                             # reachability check in system_service
-                                                optional: "{{not system_service_enabled}}" },
+                                                dependency: "{{system_service_enabled}}" },
 
     system_service_default_isp:               { default: {},                                                        # is used to detect a fallback internet connection in system_service
-                                                optional: "{{not system_service_enabled}}" },
+                                                dependency: "{{system_service_enabled}}" },
     # *** EXAMPLE for default_isp ***
     # {
     #     org: [ ".+ Sverige AB" ],                                                                                 # external ip must be registered to a organisation or isp named ".+ Sverige AB"
@@ -379,13 +395,13 @@ default_variables: {
     # }
 
     system_service_traffic_blocker:           { default: yes,                                                       # enabled or disabled automatic ip blocking based on several decissions (additionally there must be a propper configured 'netflow_incoming_traffic' variable)
-                                                optional: "{{not system_service_enabled}}" },
+                                                dependency: "{{system_service_enabled}}" },
     # 1. if suspicious traffic arrives the apache webserver => which traffic, can be configured in the variable 'netflow_incoming_traffic' and the attribute 'log'
     # 2. if unexcpected traffic arrives the network  => which traffic, can be configured  in the variable 'netflow_incoming_traffic' and the attribute 'allowed'
     system_service_netflow_collector:         { default: no,                                                        # enable netflow collector in system_service
-                                                optional: "{{not system_service_enabled}}" },
+                                                dependency: "{{system_service_enabled}}" },
     system_service_netflow_incoming_traffic:  { default: [],                                                        # from internet expected and allowed traffic, (used to detect netflow traffic direction and for traffic blocker to decide which traffic is suspicious)
-                                                optional: "{{not system_service_enabled}}" },
+                                                dependency: "{{system_service_enabled}}" },
     # *** EXAMPLE for netflow_incoming_traffic ***
     # {
     #   { target: "{{production_ip}}:80", name: "http", allowed: { hostname: [ ".+\\\\.internetnord\\\\.de", ".+letsencrypt\\\\.org" ] }, log="apache" }, # Letsencrypt, CLOUD PING Test
@@ -400,16 +416,16 @@ default_variables: {
     # 'name' is just used as an identifier
     # 'target' is a combination of the target ip and port number
     system_service_speedtest_server_id:       { default: "auto",                                                    # used for speedtest
-                                                optional: "{{not system_service_enabled}}" },
+                                                dependency: "{{system_service_enabled}}" },
 
     system_service_openwrt_api_username:      { default: "api",                                                     # will be used to fetch network structure related data from openwrt
-                                                optional: "{{not system_service_enabled or openwrt_devices | length == 0}}" },
-    system_service_openwrt_api_password:      { optional: "{{not system_service_enabled or openwrt_devices | length == 0}}" },
-    #"vault_openwrt_root_password:             { optional: "{{openwrt_devices | length == 0}}" },
+                                                dependency: "{{system_service_enabled and openwrt_devices | length > 0}}" },
+    system_service_openwrt_api_password:      { dependency: "{{system_service_enabled and openwrt_devices | length > 0}}" },
+    #"vault_openwrt_root_password:             { optional: yes, dependency: "{{system_service_enabled and openwrt_devices | length > 0}}" },
 
     system_service_fritzbox_api_username:     { default: "api",                                                     # will be used to fetch network structure related data from avm fritzbox
-                                                optional: "{{not system_service_enabled or fritzbox_devices | length == 0}}" },
-    system_service_fritzbox_api_password:     { optional: "{{not system_service_enabled or fritzbox_devices | length == 0}}" },
+                                                dependency: "{{system_service_enabled and fritzbox_devices | length > 0}}" },
+    system_service_fritzbox_api_password:     { dependency: "{{system_service_enabled and fritzbox_devices | length > 0}}" },
     # **** END SYSTEM SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -515,15 +531,15 @@ default_variables: {
     # Roles:
     # - 'weather_service'
     weather_service_enabled:                  { default: yes,                                                       # enabled by default
-                                                dependency: "mysql_enabled{{',mosquitto_enabled' if weather_mqtt_server == 'mosquitto' else ''}}" },
+                                                requirement: "mysql_enabled{{',mosquitto_enabled' if weather_mqtt_server == 'mosquitto' else ''}}" },
     weather_api_provider:                     { default: "openmeteo",                                               # 'openmeteo' (https://open-meteo.com/), 'meteogroup' (https://api.weather.mg/ => needs credentials) or 'listener'
-                                                optional: "{{not weather_service_enabled}}" },
+                                                dependency: "{{weather_service_enabled}}" },
     weather_mqtt_server:                      { default: "mosquitto",                                               # 'mosquitto' or 'cloud_mosquitto'
-                                                optional: "{{not weather_service_enabled}}" },
+                                                dependency: "{{weather_service_enabled}}" },
     weather_mqtt_publish_topic:               { default: "{{server_name}}",
-                                                optional: "{{not weather_service_enabled or weather_api_provider == 'listener'}}" }, # the main topic prefix where you publish weather data
-    weather_api_username:                     { optional: "{{not weather_service_enabled or weather_api_provider != 'meteogroup'}}" },
-    weather_api_password:                     { optional: "{{not weather_service_enabled or weather_api_provider != 'meteogroup'}}" },
+                                                dependency: "{{weather_service_enabled and weather_api_provider != 'listener'}}" }, # the main topic prefix where you publish weather data
+    weather_api_username:                     { dependency: "{{weather_service_enabled and weather_api_provider == 'meteogroup'}}" },
+    weather_api_password:                     { dependency: "{{weather_service_enabled and weather_api_provider == 'meteogroup'}}" },
     # *** END WEATHER SERVICE                                                          ***
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

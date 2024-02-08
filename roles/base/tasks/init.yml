@@ -68,6 +68,12 @@
     custom_var_keys: "{{custom_var_keys}}"
     vault_var_keys: "{{vault_var_keys}}"
 
+#- name:
+#  debug:
+#    msg:
+#      - "{{authenticated_ip_addresses}}"
+#      - "{{userdata}}"
+
 - name: check for parsing errors of 'config/default.yml'
   debug:
     msg: |
@@ -82,11 +88,19 @@
       {% else %}Config file successfully loaded{% endif %}
   failed_when: "parser_errors | length > 0"
 
-#- name: check for parsing errors of 'config/default.yml'
-#  assert:
-#    that: no
-#    fail_msg: "{{item}}"
-#  with_items: "{{parser_errors}}"
+- name: check for missing requirements
+  debug:
+    msg: |
+      {% if parser_missing_requirements | length > 0 %}
+      [
+        "The following features have unfulfilled requirements",
+        "",
+        {% for missing_dependency in parser_missing_requirements %}
+          "- '{{missing_dependency}}' requires ['{{ parser_missing_requirements[missing_dependency] | join(', ')}}']",
+        {% endfor %}
+      ]
+      {% else %}All requirements fulfilled{% endif %}
+  failed_when: "parser_missing_requirements | length > 0"
 
 - name: check for missing mandatory variables in your {{config_path}}env.yml
   debug:
@@ -96,25 +110,11 @@
         "The following mandatory variables has to be defined",
         "",
         {% for missing_variable in parser_missing_variables %}
-          "- '{{missing_variable['name']}}' is missing",
+          "- '{{missing_variable}}' is missing",
         {% endfor %}
       ]
       {% else %}All mandatory variables are defined{% endif %}
   failed_when: "parser_missing_variables | length > 0"
-
-- name: check for missing dependencies
-  debug:
-    msg: |
-      {% if parser_missing_dependencies | length > 0 %}
-      [
-        "The following features have unfulfilled dependencies",
-        "",
-        {% for missing_dependency in parser_missing_dependencies %}
-          "- '{{missing_dependency}}' depends on ['{{ parser_missing_dependencies[missing_dependency] | join(', ')}}']",
-        {% endfor %}
-      ]
-      {% else %}All dependencies fulfilled{% endif %}
-  failed_when: "parser_missing_dependencies | length > 0"
 
 - name: show defined variables
   debug:
@@ -149,7 +149,7 @@
         "",
         {% endif %}
         {% if parser_unneeded_variables | length > 0 %}
-        "LEFTOVER VARIABLES (Related features are not active, but the variables still exists in '{{config_path}}env.yml' or '{{config_path}}vault/vault.yml' and can be removed or commented out)",
+        "LEFTOVER VARIABLES (Related feature is not active, but the variable still exists in '{{config_path}}env.yml' and can be removed)",
         {% for row in ( parser_unneeded_variables | join(' - ') | wordwrap(120, false, '\n') | split('\n') ) %}
           "- {{row | regex_replace('^\s*-',' ') | regex_replace('-\s*$',' ') | trim()}}",
         {% endfor %}
