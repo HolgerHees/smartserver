@@ -8,7 +8,7 @@ from smartserver.confighelper import ConfigHelper
 
 class StationConsumer():
     '''Handler client'''
-    def __init__(self, config, mqtt):
+    def __init__(self, config, mqtt, provider_consumer):
         self.mqtt = mqtt
 
         self.is_running = False
@@ -21,9 +21,6 @@ class StationConsumer():
 
         self.last_consume_error = None
 
-        self.provider_consumer = None
-
-    def registerProviderConsumer(self, provider_consumer):
         self.provider_consumer = provider_consumer
 
     def start(self):
@@ -42,6 +39,9 @@ class StationConsumer():
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
             self.station_values = data["station_values"]
+            for key, data in self.station_values.items():
+                key = "current{}{}".format(key[0].upper(),key[1:])
+                self.provider_consumer.notifyStationValue(False, key, data["value"], data["time"] )
             logging.info("Loaded {} consumer (station) values".format(len(self.station_values)))
 
     def _dump(self):
@@ -61,36 +61,30 @@ class StationConsumer():
         field = topic[3]
 
         if field not in self.station_values or self.station_values[field]["value"] != value:
-            self.provider_consumer.notifyStationValue( "current{}{}".format(field[0].upper(),field[1:]), value )
+            self.provider_consumer.notifyStationValue(True, "current{}{}".format(field[0].upper(),field[1:]), value, time.time() )
         self.station_values[field] = { "time": time.time(), "value": value  }
 
-    def getValue(self, key, fallback = None ):
-        return self.station_values[key]["value"] if key in self.station_values else fallback
+    #def getValue(self, key, fallback = None ):
+    #    return self.station_values[key]["value"] if key in self.station_values else fallback
 
-    def getValues(self, last_modified, requested_fields = None ):
-        _last_modified = last_modified
-        if len(self.station_values) > 0:
-            result = {}
-            for key, data in self.station_values.items():
-                key = "current{}{}".format(key[0].upper(),key[1:])
-                if requested_fields is not None and key not in requested_fields:
-                    continue
-                if last_modified < data["time"]:
-                    result[key] = data["value"]
-                    if _last_modified < data["time"]:
-                        _last_modified = data["time"]
-        else:
-            result = None
-        return [result, _last_modified]
+    #def getValues(self):
+    #    if len(self.station_values) > 0:
+    #        result = {}
+    #        for key, data in self.station_values.items():
+    #            key = "current{}{}".format(key[0].upper(),key[1:])
+    #            result[key] = data["value"]
+    #    else:
+    #        result = None
+    #    return result
 
-    def getLastModified(self, last_modified, requested_fields = None ):
-        _last_modified = last_modified
-        for key, data in self.station_values.items():
-            if requested_fields is not None and key not in requested_fields:
-                continue
-            if last_modified < data["time"] and _last_modified < data["time"]:
-                _last_modified = data["time"]
-        return _last_modified
+    #def getLastModified(self, last_modified, requested_fields = None ):
+    #    _last_modified = last_modified
+    #    for key, data in self.station_values.items():
+    #        if requested_fields is not None and key not in requested_fields:
+    #            continue
+    #        if last_modified < data["time"] and _last_modified < data["time"]:
+    #            _last_modified = data["time"]
+    #    return _last_modified
 
     def getStateMetrics(self):
         has_any_update = False

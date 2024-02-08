@@ -19,13 +19,14 @@ from smartserver.confighelper import ConfigHelper
 
 
 class Info(threading.Thread):
-    def __init__(self, config, ipcache ):
+    def __init__(self, config, handler, ipcache ):
         threading.Thread.__init__(self)
 
         self.is_running = False
         self.event = threading.Event()
 
         self.config = config
+        self.handler = handler
 
         self.ipcache = ipcache
 
@@ -72,7 +73,11 @@ class Info(threading.Thread):
         try:
             while self._isRunning():
                 #logging.info("CHECK")
-                self.default_isp_connection_active = self.checkIP(self.active_service)
+                default_isp_connection_active = self.checkIP(self.active_service)
+                if default_isp_connection_active != self.default_isp_connection_active:
+                    self.handler.emitChangedWidgetData("isp_state", self.default_isp_connection_active)
+                self.default_isp_connection_active = default_isp_connection_active
+
                 #logging.info("RESULT: {}".format(self.default_isp_connection_active))
                 #logging.info("active_service: {}".format(self.active_service))
 
@@ -80,9 +85,12 @@ class Info(threading.Thread):
                     break
 
                 if self.default_isp_connection_active:
-                    self.wan_active = True
+                    wan_active = True
                 else:
-                    self.wan_active = self.checkConnection()
+                    wan_active = self.checkConnection()
+                if wan_active != self.wan_active:
+                    self.handler.emitChangedWidgetData("online_state", wan_active)
+                self.wan_active = wan_active
 
                 self.event.wait(60)
 

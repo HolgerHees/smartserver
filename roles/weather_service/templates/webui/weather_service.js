@@ -1,7 +1,7 @@
 var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('weather', 100, '{i18n_Weatherforecast}', 'weather_service.svg');
 subGroup.addUrl('weather', '/weather_service/detailOverview/', 'user', 1000, '{i18n_Weatherforecast}', '{i18n_Meteo Group}', 'weather_service.svg', false);
 
-mx.Widgets.CustomWeather = (function( ret ) {
+mx.Widgets.CustomWeather = (function( widget ) {
     css = `:root {
         --widget-value-color-weather-sun: #ffdb26;
         --widget-value-color-weather-snowflake: white;
@@ -54,7 +54,6 @@ mx.Widgets.CustomWeather = (function( ret ) {
     style.type = 'text/css';
     style.appendChild(document.createTextNode(css));
 
-    let socket = null;
     let data = {}
     function processData(_data)
     {
@@ -66,29 +65,22 @@ mx.Widgets.CustomWeather = (function( ret ) {
         content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + data["currentCloudsAsSVG"] + "</span>";
         content += "<span>" + data["currentAirTemperatureInCelsius"].toFixed(1) + "°C</span>";
 
-        ret.show(0, content );
+        widget.show(0, content );
     }
 
-    ret.clean = function()
+    widget.init = function()
     {
-        if( socket == null ) return;
-        _socket = socket;
-        socket = null;
-        _socket.close();
-    }
-
-    ret.init = function()
-    {
-        socket = mx.ServiceSocket.init('weather_service');
-        socket.on("connect", () => socket.emit('initCurrentData'));
+        let socket = widget.getServiceSocket('weather_service');
+        socket.on("connect", () => socket.emit('initData',["initCurrentData"]));
         socket.on("initCurrentData", (data) => processData( data ) );
         socket.on("changedCurrentData", (data) => processData( data ) );
-        socket.on("error", (err) => socket != null ? ret.alert(0, "Weather N/A") : null );
+        socket.on("error", (err) => widget.alert(0, "Weather N/A") );
     }
 
-    ret.click = function(event){
+    widget.click = function(event){
         mx.Actions.openEntryById(event, 'workspace-weather-weather');
     }
-    return ret;
+    return widget;
 })( mx.Widgets.Object( "user", [ { id: "customWeather", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );
+
 

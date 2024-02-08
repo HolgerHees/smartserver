@@ -14,11 +14,12 @@ from lib.trafficwatcher.helper.helper import TrafficGroup
 
 
 class TrafficBlocker(threading.Thread):
-    def __init__(self, config, watcher, influxdb, debugging_ips):
+    def __init__(self, config, watcher, handler, influxdb, debugging_ips):
         threading.Thread.__init__(self)
 
         self.config = config
         self.watcher = watcher
+        self.handler = handler
 
         self.is_running = False
 
@@ -109,6 +110,7 @@ class TrafficBlocker(threading.Thread):
 
                     now = time.time()
                     blocked_ips = None
+                    changed = False
                     with self.config_lock:
                         for ip, groups in ip_traffic_state.items():
                             #logging.info("===> {} {}".format(ip, groups))
@@ -156,6 +158,7 @@ class TrafficBlocker(threading.Thread):
                                         }
 
                                     if ip not in blocked_ips:
+                                        changed = True
                                         Helper.blockIp(ip)
                                         blocked_ips.append(ip)
                                         logging.info("BLOCK IP {} after {} samples ({} - {} - {})".format(ip, group_data["count"], group_data["connection_type"], group_data["blocklist_name"], group_data["traffic_group"]))
@@ -164,6 +167,9 @@ class TrafficBlocker(threading.Thread):
 
                         if blocked_ips is not None:
                             self.blocked_ips = blocked_ips
+
+                    if changed:
+                        self.handler.emitChangedWidgetData("blocked_ips", len(self.blocked_ips) )
 
                     end_processing = time.time()
                     logging.info("Processing of {} in {} seconds".format(suspicious_ips, round(end_processing - start_processing,3)))
@@ -177,12 +183,15 @@ class TrafficBlocker(threading.Thread):
             self.is_running = False
 
     def _unblock_and_restore(self):
+        changed = False
+
         with self.config_lock:
             now = time.time()
             blocked_ips = Helper.getBlockedIps()
 
             # restore state
             for ip in [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "blocked" and ip not in blocked_ips]:
+                changed = True
                 Helper.blockIp(ip)
                 blocked_ips.append(ip)
                 logging.info("BLOCK IP {} restored for state: blocked".format(ip))
@@ -208,11 +217,15 @@ class TrafficBlocker(threading.Thread):
                 else:
                     logging.info("UNBLOCK IP {} restored for missing state".format(ip))
 
+                changed = True
                 Helper.unblockIp(ip)
                 blocked_ips.remove(ip)
 
             self.blocked_ips = blocked_ips
             self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
+
+            if changed:
+                self.handler.emitChangedWidgetData("blocked_ips", len(self.blocked_ips))
 
     def _restore(self):
         self.valid_list_file, data = ConfigHelper.loadConfig(self.dump_config_path, self.config_version )

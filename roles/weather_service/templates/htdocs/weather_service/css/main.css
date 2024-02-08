@@ -214,6 +214,7 @@ body{
 }
 .current .summary .column.cloud {
     width: min-content;
+    min-width: 58px;
 }
 .current .summary .separator {
     /*border-left: var(--widget-border);*/

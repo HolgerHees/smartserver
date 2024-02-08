@@ -54,7 +54,7 @@ class Speedtest():
             return
 
         self.is_testing = True
-        self.handler.notifySpeedtestData()
+        self.handler.emitChangedSpeedtestData(self.is_testing)
 
         messurement_values = []
         try:
@@ -155,7 +155,7 @@ class Speedtest():
 
             self.is_testing = False
 
-            self.handler.notifySpeedtestData()
+            self.handler.emitChangedSpeedtestData(self.is_testing)
 
     def getStateMetrics(self):
         metrics = []
@@ -171,8 +171,8 @@ class Speedtest():
 
         return metrics
 
-    def getWebSocketData(self):
-        return { "is_running": self.is_testing }
+    def isTesting(self):
+        return self.is_testing
 
     def getMessurements(self):
         return []

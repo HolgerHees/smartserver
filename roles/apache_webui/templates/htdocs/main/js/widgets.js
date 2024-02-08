@@ -160,6 +160,10 @@ mx.Widgets = (function( ret ) {
 
             widgets.forEach(function(widget, index)
             {
+                if( widget._initialized ) widget._destroy();
+
+                if( initialized != 0 ) return;
+
                 widget._preload = [];
                 for( let i = 0; i < widget.getCount(); i++ )
                 {
@@ -168,6 +172,8 @@ mx.Widgets = (function( ret ) {
             });
             widgets.forEach(function(widget)
             {
+                if( initialized != 0 ) return;
+
                 widget._show = widget.show;
                 widget.show = function(index, msg)
                 {
@@ -177,19 +183,18 @@ mx.Widgets = (function( ret ) {
                     if( missing_preloads.length == 0 ) callback();
                 };
 
-                if( widget.init != undefined ) widget.init();
-                else if( widget.refresh != undefined ) widget.refresh();
+                widget._init();
             });
 
-            if( initialized == -1 ) clean();
+            if( initialized == -1 ) _destroy();
         }
     }
 
-    function clean()
+    function _destroy()
     {
         widgets.forEach(function(widget)
         {
-            if( widget.clean != undefined ) widget.clean();
+            if( widget._initialized ) widget._destroy();
         });
     }
 
@@ -217,7 +222,7 @@ mx.Widgets = (function( ret ) {
     {
         if( initialized == -1 ) return;
 
-        if( initialized == 1 ) clean();
+        if( initialized == 1 ) _destroy();
 
         initialized = -1;
     }
@@ -233,7 +238,10 @@ mx.Widgets = (function( ret ) {
 mx.Widgets.Object = function(group, config)
 {
     return (function( ret ) {
+        let socket = null;
         let last_msg = {};
+
+        ret.getServiceSocket = function(service){ return socket = mx.ServiceSocket.init(service); }
         ret.getId = function(index) { return config[index]["id"]; }
         ret.getOrder = function(index) { return config[index]["order"]; }
         ret.getCount = function() { return config.length; }
@@ -241,10 +249,15 @@ mx.Widgets.Object = function(group, config)
         ret.hasAction = function(index) { return config[index]["click"] != undefined; }
         ret.click = function(event, index) { config[index]["click"](event); }
         ret.reset = function(){ last_msg = {}; }
-        ret.alert = function(index, msg)
-        {
-            ret.show(index, "<span class=\"error\">" + msg + "</span>");
-        }
+        ret.alert = function(index, msg){ ret.show(index, "<span class=\"error\">" + msg + "</span>"); }
+
+        ret._init = function(){ ret._initialized = true; ret.init(); }
+        ret._destroy = function(){ ret._initialized = false; if( socket ) socket.close(); }
+        ret._initialized = function(){ return initialized; }
+
+        ret.init = function(){ if( ret.refresh != undefined ) ret.refresh(); }
+        //ret.refresh = function(){ console.log("not implemented"); }
+
         ret.show = function(index, msg)
         {
             let isInitialLoad = last_msg[index] == undefined

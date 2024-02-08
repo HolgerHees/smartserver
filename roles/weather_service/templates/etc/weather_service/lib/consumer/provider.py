@@ -14,14 +14,12 @@ from lib.helper.forecast import WeatherBlock, WeatherHelper
 
 class ProviderConsumer():
     '''Handler client'''
-    def __init__(self, config, mqtt, db, station_consumer, handler ):
+    def __init__(self, config, mqtt, db, handler ):
         location = config.location.split(",")
         self.latitude = float(location[0])
         self.longitude = float(location[1])
 
         self.handler = handler
-        self.station_consumer = station_consumer
-        self.station_consumer.registerProviderConsumer(self)
 
         self.is_running = False
 
@@ -34,8 +32,6 @@ class ProviderConsumer():
 
         self.processed_current_values = None
         self.processed_forecast_values = None
-
-        self.current_values = None
 
         self.consume_errors = { "forecast": 0, "current": 0, "summery": 0 }
         self.consume_refreshed = { "forecast": 0, "current": 0, "summery": 0 }
@@ -53,8 +49,12 @@ class ProviderConsumer():
         self.station_cloud_timer = None
         self.station_cloud_svg = None
 
+        self.station_values = {}
+        self.station_values_last_modified = 0
+
         with self.db.open() as db:
             self.field_names = db.getFields()
+            self.current_values = db.getOffset(0)
 
     def start(self):
         self._restore()
@@ -74,6 +74,8 @@ class ProviderConsumer():
         self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
         if data is not None:
             self.consume_refreshed = data["consume_refreshed"]
+
+
             logging.info("Loaded consumer (provider) values")
 
     def _dump(self):
@@ -114,6 +116,8 @@ class ProviderConsumer():
                             logging.info(u"Current data not updated: Topic: " + msg.topic + ", message:" + str(msg.payload))
 
                         self.current_values = self.processed_current_values
+                        self.current_values["datetime"] = validFrom
+
                         self.processed_current_values = None
                 else:
                     if self.processed_current_values is None:
@@ -180,6 +184,9 @@ class ProviderConsumer():
                                 self.station_fallback_data[field] = value
                                 self.notifyCurrentValue(field, value)
 
+                elif state_name == "forecast":
+                    self.notifyWeekValues()
+
         except DBException:
             self.consume_errors[state_name] = time.time()
         #except MySQLdb._exceptions.OperationalError as e:
@@ -200,17 +207,24 @@ class ProviderConsumer():
                 self.icon_cache[icon_name] = f.read()
         return self.icon_cache[icon_name]
 
+    def stationValuesOutdated(self):
+        return time.time() - self.station_values_last_modified > 60 * 60 * 1
+
     def _buildFallbackStationValues(self):
         result = {}
-        with self.db.open() as db:
-            mapping = {
-                'currentAirTemperatureInCelsius': "airTemperatureInCelsius",
-                'currentPerceivedTemperatureInCelsius': "feelsLikeTemperatureInCelsius",
-                'currentWindGustInKilometerPerHour': "maxWindSpeedInKilometerPerHour",
-                'currentWindSpeedInKilometerPerHour': "windSpeedInKilometerPerHour",
-                'currentRainLastHourInMillimeter': "precipitationAmountInMillimeter",
-                'currentUvIndex': "uvIndexWithClouds"
-            }
+        mapping = {
+            'currentAirTemperatureInCelsius': "airTemperatureInCelsius",
+            'currentPerceivedTemperatureInCelsius': "feelsLikeTemperatureInCelsius",
+            'currentWindGustInKilometerPerHour': "maxWindSpeedInKilometerPerHour",
+            'currentWindSpeedInKilometerPerHour': "windSpeedInKilometerPerHour",
+            'currentRainLastHourInMillimeter': "precipitationAmountInMillimeter",
+            'currentUvIndex': "uvIndexWithClouds"
+        }
+
+        if self.current_values is None:
+            for field, _field in mapping.items():
+                result[field] = -1
+        else:
             for field, _field in mapping.items():
                 if _field is not None and _field in self.current_values:
                     result[field] = self.current_values[_field]
@@ -220,46 +234,56 @@ class ProviderConsumer():
             end = datetime.now()
             start = end.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
+            with self.db.open() as db:
+                values = db.getRangeSum(start, end, ["precipitationAmountInMillimeter"])
+
             result["currentRainDailyInMillimeter"] = values["precipitationAmountInMillimeter"]
+        return result
 
     def _buildCloudSVG(self):
-        with self.db.open() as db:
-            data = db.getOffset(0)
-            if data is not None:
-                #logging.info(data)
-                block = WeatherBlock(data['datetime'])
-                block.apply(data)
+        if self.current_values is None:
+            return None
 
-                currentRain = 0
-                currentRainLevel = self.station_consumer.getValue("rainLevel")
-                if currentRainLevel is None:
-                    currentRain = data["precipitationAmountInMillimeter"]
-                elif currentRainLevel > 0:
-                    if self.current_is_raining or currentRainLevel > 2:
-                        currentRain = 0.1
+        block = WeatherBlock(self.current_values['datetime'])
+        block.apply(self.current_values)
 
-                        currentRain15Min = self.station_consumer.getValue("rainLast15MinInMillimeter")
-                        if currentRain15Min * 4 > currentRain:
-                            currentRain = currentRain15Min * 4
+        currentRain = 0
+        currentRainLevel = self.station_values["currentRainLevel"] if not self.stationValuesOutdated() else None
+        if currentRainLevel is None:
+            currentRain = self.current_values["precipitationAmountInMillimeter"]
+        elif currentRainLevel > 0:
+            if self.current_is_raining or currentRainLevel > 2:
+                currentRain = 0.1
+                currentRain15Min = self.station_values["currentRainLast15MinInMillimeter"]
+                if currentRain15Min * 4 > currentRain:
+                    currentRain = currentRain15Min * 4
 
-                        currentRain1Hour = self.station_consumer.getValue("rainLastHourInMillimeter")
-                        if currentRain1Hour > currentRain:
-                            currentRain = currentRain1Hour
-                self.current_is_raining = currentRain > 0
+                currentRain1Hour = self.station_values["currentRainLastHourInMillimeter"]
+                if currentRain1Hour > currentRain:
+                    currentRain = currentRain1Hour
+        self.current_is_raining = currentRain > 0
 
-                block.setPrecipitationAmountInMillimeter(currentRain)
+        block.setPrecipitationAmountInMillimeter(currentRain)
 
-                cloudCoverInOcta = self.station_consumer.getValue("cloudCoverInOcta")
-                if cloudCoverInOcta is None:
-                    cloudCoverInOcta = data["effectiveCloudCoverInOcta"]
-                block.effectiveCloudCoverInOcta = cloudCoverInOcta
-                #logging.info("{}".format(block.effectiveCloudCoverInOcta))
+        cloudCoverInOcta = self.station_values["currentCloudCoverInOcta"] if not self.stationValuesOutdated() else None
+        if cloudCoverInOcta is None:
+            cloudCoverInOcta = self.current_values["effectiveCloudCoverInOcta"]
+        block.effectiveCloudCoverInOcta = cloudCoverInOcta
+        #logging.info("{}".format(block.effectiveCloudCoverInOcta))
 
-                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
+        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, block)
 
-                return self.getCachedIcon(icon_name)
-        return None
+        return self.getCachedIcon(icon_name)
+
+    def notifyStationValue(self, is_update, field, value, time):
+        self.station_values[field] = value;
+        if time > self.station_values_last_modified:
+            self.station_values_last_modified = time
+
+        if is_update:
+            with self.station_fallback_lock:
+                self.station_fallback_data = None
+            self.notifyCurrentValue(field, value)
 
     def _notifyCloudValue(self):
         self.station_cloud_timer = None
@@ -268,11 +292,6 @@ class ProviderConsumer():
         if self.station_cloud_svg != currentCloudsAsSVG:
             self.handler.emitChangedCurrentData("currentCloudsAsSVG", currentCloudsAsSVG)
             self.station_cloud_svg = currentCloudsAsSVG
-
-    def notifyStationValue(self, field, value):
-        with self.station_fallback_lock:
-            self.station_fallback_data = None
-        self.notifyCurrentValue(field, value)
 
     def notifyCurrentValue(self, field, value):
         self.handler.emitChangedCurrentData(field, value)
@@ -284,157 +303,109 @@ class ProviderConsumer():
             self.station_cloud_timer.start()
 
     def getCurrentValues(self):
-        result, _ = self.station_consumer.getValues(-1, None)
-        if result is None:
+        result = {}
+        if not self.stationValuesOutdated():
+            result = self.station_values
             with self.station_fallback_lock:
                 self.station_fallback_data = None
-
-            result = self._buildFallbackStationValues()
         else:
             with self.station_fallback_lock:
-                self.station_fallback_data = []
+                self.station_fallback_data = self._buildFallbackStationValues()
+            result = self.station_fallback_data
 
-        result["currentCloudsAsSVG"] = self.station_cloud_svg if self.station_cloud_svg is not None else self._buildCloudSVG()
+        if self.station_cloud_svg is None:
+            self.station_cloud_svg = self._buildCloudSVG()
+
+        result["currentCloudsAsSVG"] = self.station_cloud_svg
         return result
 
+    def _convertToDictList(self, blockList):
+        result = []
+        for block in blockList:
+            result.append(block.to_dict())
+        return result
 
+    def notifyWeekValues(self):
+        self.handler.emitChangedWeekData()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def getCurrentValuesOld(self, last_modified, requested_fields = None):
-        result, _last_modified = self.station_consumer.getValues(last_modified, requested_fields)
-
-        if result is None:
-            with self.station_fallback_lock:
-                self.station_fallback_data = None
-
-            if last_modified < self.consume_refreshed["current"]:
-                result = self._buildFallbackStationValues()
-        else:
-            with self.station_fallback_lock:
-                self.station_fallback_data = []
-
-        return [result, _last_modified]
-
-    def getWidgetSVG(self, last_modified, requested_fields):
-        # curl -d 'type=widget' -H "Content-Type: application/x-www-form-urlencoded" -X POST http://172.16.0.201/data/
-
-        result = {}
-        if requested_fields is None or "currentCloudsAsSVG" in requested_fields:
-            _station_last_modified = self.station_consumer.getLastModified(last_modified, ["rainLevel", "rainLast15MinInMillimeter", "rainLastHourInMillimeter", "cloudCoverInOcta"])
-
-            if last_modified < self.consume_refreshed["forecast"] or last_modified < _station_last_modified:
-                if _station_last_modified > last_modified:
-                    last_modified = _station_last_modified
-                if self.consume_refreshed["forecast"] > last_modified:
-                    last_modified = self.consume_refreshed["forecast"]
-
-                currentCloudsAsSVG = self._buildCloudSVG()
-                if currentCloudsAsSVG is not None:
-                    result["currentCloudsAsSVG"] = currentCloudsAsSVG
-
-        return [ result, last_modified ]
-
-    def getDetailOverviewValues(self, last_modified, requested_fields, requested_day = None):
+    def getWeekValues(self, requested_day = None):
         activeDay = datetime.now() if requested_day is None else datetime.strptime(requested_day, '%Y-%m-%d')
         activeDay = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        #isToday = activeDay.strftime('%Y-%m-%d') == datetime.now().strftime('%Y-%m-%d')
-
         values = {}
 
-        if last_modified < self.consume_refreshed["forecast"]:
-            last_modified = self.consume_refreshed["forecast"]
-            with self.db.open() as db:
-                start = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
-                end = activeDay.replace(hour=23, minute=59, second=59, microsecond=0)
+        with self.db.open() as db:
+            start = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
+            end = activeDay.replace(hour=23, minute=59, second=59, microsecond=0)
 
-                # DAY VALUES
-                if "dayList" in requested_fields:
-                    todayValues = [];
-                    dayList = db.getRangeList(start, end)
-                    if len(dayList) > 0:
-                        minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
+            # DAY VALUES
+            todayValues = [];
+            dayList = db.getRangeList(start, end)
+            if len(dayList) > 0:
+                minTemperature, maxTemperature, maxWindSpeed, sumSunshine, sumRain = WeatherHelper.calculateSummary(dayList)
 
-                        current_value = WeatherBlock( dayList[0]['datetime'] )
+                current_value = WeatherBlock( dayList[0]['datetime'] )
 
-                        index = 0;
-                        for hourlyData in dayList:
-                            if index > 0 and index % 3 == 0:
-                                #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
-                                current_value.setEnd(hourlyData['datetime'])
-                                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                                current_value.setSVG(self.getCachedIcon(icon_name))
-                                todayValues.append( current_value )
-                                current_value = WeatherBlock( hourlyData['datetime'] )
-                            current_value.apply(hourlyData)
-                            index += 1
-
-                        current_value.setEnd(current_value.getStart() + timedelta(hours=3))
+                index = 0;
+                for hourlyData in dayList:
+                    if index > 0 and index % 3 == 0:
+                        #_datetime = hourlyData['datetime'].replace(minute=0, second=0);
+                        current_value.setEnd(hourlyData['datetime'])
                         icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
                         current_value.setSVG(self.getCachedIcon(icon_name))
-                        todayValues.append(current_value)
+                        todayValues.append( current_value )
+                        current_value = WeatherBlock( hourlyData['datetime'] )
+                    current_value.apply(hourlyData)
+                    index += 1
 
-                    else:
-                        minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = activeDay = None
+                current_value.setEnd(current_value.getStart() + timedelta(hours=3))
+                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                current_value.setSVG(self.getCachedIcon(icon_name))
+                todayValues.append(current_value)
 
-                    values["dayList"] = todayValues
-                    values["dayActive"] = activeDay
-                    values["dayMinTemperature"] = minTemperature
-                    values["dayMaxTemperature"] = maxTemperature
-                    values["dayMaxWindSpeed"] = maxWindSpeed
-                    values["daySumSunshine"] = sumSunshine
-                    values["daySumRain"] = sumRain
+            else:
+                minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = activeDay = None
 
-                if requested_day is None and "weekList" in requested_fields:
-                    # WEEK VALUES
-                    weekValues = []
+            values["dayList"] = self._convertToDictList(todayValues)
+            values["dayActive"] = activeDay.isoformat()
+            values["dayMinTemperature"] = minTemperature
+            values["dayMaxTemperature"] = maxTemperature
+            values["dayMaxWindSpeed"] = maxWindSpeed
+            values["daySumSunshine"] = sumSunshine
+            values["daySumRain"] = sumRain
 
-                    weekFrom = datetime.now().replace(hour=0, minute=0, second=0)
-                    weekList = db.getWeekList(weekFrom)
-                    if len(weekList) > 0:
-                        minTemperatureWeekly, maxTemperatureWeekly, maxWindSpeedWeekly, sumSunshineWeekly, sumRainWeekly = WeatherHelper.calculateSummary(weekList)
+            # WEEK VALUES
+            weekValues = []
 
-                        start = weekList[0]['datetime'].replace(hour=0, minute=0, second=0)
-                        current_value = WeatherBlock( start )
-                        index = 1
-                        for hourlyData in weekList:
-                            _datetime = hourlyData['datetime'].replace(hour=0, minute=0, second=0);
-                            if _datetime != current_value.getStart():
-                                current_value.setEnd(_datetime)
-                                icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                                current_value.setSVG(self.getCachedIcon(icon_name))
-                                weekValues.append(current_value)
-                                current_value = WeatherBlock( _datetime )
-                            current_value.apply(hourlyData)
-                            index += 1
-                    else:
-                        minTemperatureWeekly = maxTemperatureWeekly = maxWindSpeedWeekly = sumSunshineWeekly = sumRainWeekly = None
+            weekFrom = datetime.now().replace(hour=0, minute=0, second=0)
+            weekList = db.getWeekList(weekFrom)
+            if len(weekList) > 0:
+                minTemperatureWeekly, maxTemperatureWeekly, maxWindSpeedWeekly, sumSunshineWeekly, sumRainWeekly = WeatherHelper.calculateSummary(weekList)
 
-                    values["weekList"] = weekValues
-                    values["weekMinTemperature"] = minTemperatureWeekly
-                    values["weekMaxTemperature"] = maxTemperatureWeekly
-                    values["weekMaxWindSpeed"] = maxWindSpeedWeekly
-                    values["weekSumSunshine"] = sumSunshineWeekly
-                    values["weekSumRain"] = sumRainWeekly
+                start = weekList[0]['datetime'].replace(hour=0, minute=0, second=0)
+                current_value = WeatherBlock( start )
+                index = 1
+                for hourlyData in weekList:
+                    _datetime = hourlyData['datetime'].replace(hour=0, minute=0, second=0);
+                    if _datetime != current_value.getStart():
+                        current_value.setEnd(_datetime)
+                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+                        current_value.setSVG(self.getCachedIcon(icon_name))
+                        weekValues.append(current_value)
+                        current_value = WeatherBlock( _datetime )
+                    current_value.apply(hourlyData)
+                    index += 1
+            else:
+                minTemperatureWeekly = maxTemperatureWeekly = maxWindSpeedWeekly = sumSunshineWeekly = sumRainWeekly = None
 
-                #current_value.setEnd(weekList[-1]['datetime'] + timedelta(hours=24))
-                #todayValues.append(current_value)
+            values["weekList"] = self._convertToDictList(weekValues)
+            values["weekMinTemperature"] = minTemperatureWeekly
+            values["weekMaxTemperature"] = maxTemperatureWeekly
+            values["weekMaxWindSpeed"] = maxWindSpeedWeekly
+            values["weekSumSunshine"] = sumSunshineWeekly
+            values["weekSumRain"] = sumRainWeekly
 
-        return [ values, last_modified ]
+        return values
 
     def getTodayOverviewValues(self):
         with self.db.open() as db:

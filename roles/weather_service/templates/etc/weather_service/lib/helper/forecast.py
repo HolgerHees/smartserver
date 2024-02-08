@@ -27,8 +27,14 @@ class WeatherBlock():
 
         self.svg = None
 
-    def to_json(self):
-        return self.__dict__
+    def to_dict(self):
+        result = {}
+        for key, value in self.__dict__.items():
+            if key in ["start", "end"]:
+                result[key] = value.isoformat()
+            else:
+                result[key] = value
+        return result
 
     def setStart(self, start):
         self.start = start

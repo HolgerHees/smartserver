@@ -524,17 +524,18 @@ default_variables: {
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # *** BEGIN WEATHER SERVICE                                                        ***
-    # There are 2 modes how you can run weather service. Local mode and cloud mode
-    # 1. If you enable weather service, you run the local mode by default. Here you fetch the data from openmeteo and published via the local mqtt to the weather consumer
+    # There are 3 modes how you can run weather service. Local mqtt mode and cloud mqtt mode and dummy mqtt mode
+    # 1. If you enable weather service, you run the local mqtt mode by default. Here you fetch the data from openmeteo and published via the local mqtt to the weather consumer
     # 2. If you specify the weather_mqtt_server as 'cloud_mosquitto' you can share the data with an additional cloud instance.
+    # 3. The third dummy mqtt mode is only a fallback for cases where the local mqtt service is disabled.
     # The reason why it is based on mqtt, because the data can be shared with friend via the cloud service or other services like openhab
     # Roles:
     # - 'weather_service'
     weather_service_enabled:                  { default: yes,                                                       # enabled by default
-                                                requirement: "mysql_enabled{{',mosquitto_enabled' if weather_mqtt_server == 'mosquitto' else ''}}" },
+                                                requirement: "mysql_enabled" },
     weather_api_provider:                     { default: "openmeteo",                                               # 'openmeteo' (https://open-meteo.com/), 'meteogroup' (https://api.weather.mg/ => needs credentials) or 'listener'
                                                 dependency: "{{weather_service_enabled}}" },
-    weather_mqtt_server:                      { default: "mosquitto",                                               # 'mosquitto' or 'cloud_mosquitto'
+    weather_mqtt_server:                      { default: "{{'mosquitto' if mosquitto_enabled else 'dummy'}}",       # 'mosquitto', 'cloud_mosquitto' or 'dummy'
                                                 dependency: "{{weather_service_enabled}}" },
     weather_mqtt_publish_topic:               { default: "{{server_name}}",
                                                 dependency: "{{weather_service_enabled and weather_api_provider != 'listener'}}" }, # the main topic prefix where you publish weather data

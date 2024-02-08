@@ -231,7 +231,7 @@ class Scanner(threading.Thread):
             
         [ changed_data, msg ] = self._convertEvents(events, has_connection_changes)
 
-        self.handler.notifyNetworkData(changed_data, msg)
+        self.handler.emitChangedNetworkData(changed_data, msg)
 
     def _convertEvents(self, events, has_connection_changes):
         full_device_update_needed = has_connection_changes

@@ -96,9 +96,10 @@ class TrafficWatcher(threading.Thread):
         self.netflow = NetflowProcessor(config, self, self.ipcache )
         self.logcollector = LogCollector(config, self, self.ipcache )
 
-        self.trafficblocker = TrafficBlocker(config, self, self.influxdb, self.debugging_ips)
+        self.trafficblocker = TrafficBlocker(config, self, handler, self.influxdb, self.debugging_ips)
 
         self.config = config
+        self.handler = handler
 
         self.connections = []
         self.processed_connections = []
@@ -134,6 +135,8 @@ class TrafficWatcher(threading.Thread):
         self.trafficblocker.start()
 
         schedule.every().minute.at(":00").do(self._cleanTrafficState)
+        schedule.every().minute.at(":00").do(self._calculateTrafficStateSummery)
+
         self.influxdb.register(self.getMessurements)
 
         super().start()
@@ -163,6 +166,8 @@ class TrafficWatcher(threading.Thread):
         if self.is_running:
             # must stay here, because it depends from initialized traffic state
             self.logcollector.start()
+
+        self._calculateTrafficStateSummery()
 
         self.is_initialized = True
 
@@ -342,28 +347,35 @@ class TrafficWatcher(threading.Thread):
 
     def getTrafficStateSummery(self):
         if self.is_initialized:
-            try:
-                now = time.strftime("%Y-%m-%d %H:%M")
-                if self.last_traffic_summery is None or self.last_traffic_summery[1] != now:
-                    #start_time = time.time()
-                    count_values = {}
-                    results = self.influxdb.query('SELECT SUM("traffic_count") FROM "autogen"."trafficflow" WHERE time >= now() - 362m AND time <= now() - 2m AND "group"::tag != \'normal\' GROUP BY "group"::tag')
-                    if results is not None:
-                        for result in results:
-                            count_values[result["tags"]["group"]] = result["values"][0][1]
-                    end_time = time.time()
-                    #logging.info(round(end_time-start_time, 3))
-                    #logging.info(results)
-                    self._fillTrafficGroups(count_values)
-                    self.last_traffic_summery = [ count_values, now ]
-
-                return self.last_traffic_summery[0]
-            except requests.exceptions.ConnectionError as e:
-                logging.info("InfluxDB not ready. '{}'".format(str(e)))
+            return self.last_traffic_summery[0]
 
         count_values = {}
         self._fillTrafficGroups(count_values)
         return count_values
+
+    def _calculateTrafficStateSummery(self):
+        try:
+            now = time.strftime("%Y-%m-%d %H:%M")
+            if self.last_traffic_summery is None or self.last_traffic_summery[1] != now:
+                #start_time = time.time()
+                count_values = {}
+                results = self.influxdb.query('SELECT SUM("traffic_count") FROM "autogen"."trafficflow" WHERE time >= now() - 362m AND time <= now() - 2m AND "group"::tag != \'normal\' GROUP BY "group"::tag')
+                if results is not None:
+                    for result in results:
+                        count_values[result["tags"]["group"]] = result["values"][0][1]
+                end_time = time.time()
+                #logging.info(round(end_time-start_time, 3))
+                #logging.info(results)
+                self._fillTrafficGroups(count_values)
+
+                is_changed = self.last_traffic_summery is None or count_values["observed"] != self.last_traffic_summery[0]["observed"] or count_values["scanning"] != self.last_traffic_summery[0]["scanning"] or count_values["intruded"] != self.last_traffic_summery[0]["intruded"]
+                self.last_traffic_summery = [ count_values, now ]
+                if is_changed:
+                    self.handler.emitChangedWidgetData("traffic_states", self.last_traffic_summery[0])
+
+            return self.last_traffic_summery[0]
+        except requests.exceptions.ConnectionError as e:
+            logging.info("InfluxDB not ready. '{}'".format(str(e)))
 
     def _initTrafficEvents(self):
         #logging.info("_initTrafficEvents")

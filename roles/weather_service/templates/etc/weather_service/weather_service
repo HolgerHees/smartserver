@@ -12,7 +12,8 @@ from lib.provider.openmeteo import OpenMeteo
 from lib.consumer.provider import ProviderConsumer
 from lib.consumer.station import StationConsumer
 from lib.consumer.astro import AstroConsumer
-from lib.mqtt import MQTT
+from lib.broker.mqtt import MQTT as MQTTBroker
+from lib.broker.dummy import Dummy as DummyBroker
 from lib.db import DB
 from lib.helper.forecast import WeatherBlock
 
@@ -30,7 +31,7 @@ class Handler(Server):
         self.db = DB(config)
         self.scheduler = Scheduler("weatcher_service")
 
-        self.mqtt = MQTT(config)
+        self.mqtt = DummyBroker(config) if config.mosquitto_host == "dummy" else MQTTBroker(config)
 
         if config.api_provider == 'meteogroup':
             self.provider = MeteoGroup(config, self.db, self.mqtt)
@@ -43,9 +44,13 @@ class Handler(Server):
             logging.error("Unknown provider '{}'. Publishing disabled".format(config.api_provider))
             self.provider = None
 
-        self.astro_consumer = AstroConsumer(config)
-        self.station_consumer = StationConsumer(config, self.mqtt)
-        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self.station_consumer, self)
+        self.astro_consumer = AstroConsumer(config, self)
+        self.provider_consumer = ProviderConsumer(config, self.mqtt, self.db, self)
+
+        if config.mosquitto_host != "dummy":
+            self.station_consumer = StationConsumer(config, self.mqtt, self.provider_consumer)
+        else:
+            self.station_consumer = None
 
         self.startup_timestamp = round(datetime.now().timestamp(),3)
 
@@ -58,7 +63,8 @@ class Handler(Server):
         self.scheduler.start()
         self.mqtt.start()
         self.provider_consumer.start()
-        self.station_consumer.start()
+        if self.station_consumer:
+            self.station_consumer.start()
         self.astro_consumer.start()
 
         if self.provider != None:
@@ -71,7 +77,8 @@ class Handler(Server):
             self.provider.terminate()
 
         self.astro_consumer.terminate()
-        self.station_consumer.terminate()
+        if self.station_consumer:
+            self.station_consumer.terminate()
         self.provider_consumer.terminate()
         self.mqtt.terminate()
         self.scheduler.terminate()
@@ -97,58 +104,22 @@ class Handler(Server):
 
     def _serialize(self, obj):
         """JSON serializer for objects not serializable by default json code"""
-
         if isinstance(obj, WeatherBlock):
-            return obj.to_json()
-
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-
-        #if isinstance(obj, Decimal):
-        #    return float(obj)
+            return obj.to_dict()
 
         return obj.__dict__
 
-    def getData(self, type):
-        result = {
-            "status": 0,
-            "changed_data": {}
-        }
-
-        last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp
-
-        force = self.checkLastDataModified("startup", last_data_modified)
-
-        if type == "week":
-            _requested_fields = self.getRequestValue("fields")
-            requested_fields = _requested_fields.split(",") if _requested_fields else None
-
-            _values, _last_modified = self.astro_consumer.getValues(self.getLastDataModified("astro") if not force else -1, requested_fields)
-            last_data_modified["astro"] = _last_modified
-            result["changed_data"] |= _values
-
-            _values, _last_modified = self.provider_consumer.getWidgetSVG(self.getLastDataModified("clouds") if not force else -1, requested_fields)
-            last_data_modified["clouds"] = _last_modified
-            result["changed_data"] |= _values
-
-            requested_day = self.getRequestValue("day")
-            _values, _last_modified = self.provider_consumer.getDetailOverviewValues(self.getLastDataModified("provider") if not force else -1, requested_fields, requested_day)
-            last_data_modified["provider"] = _last_modified
-            result["changed_data"] |= _values
-
-            _values, _last_modified = self.provider_consumer.getCurrentValuesOld(self.getLastDataModified("station") if not force else -1, requested_fields)
-            last_data_modified["station"] = _last_modified
-            result["changed_data"] |= _values
-        elif type == "today":
-            _values = self.provider_consumer.getTodayOverviewValues()
-            #last_data_modified["week"] = _last_modified
-            result["changed_data"] |= _values
-
-        result["last_data_modified"] = last_data_modified
-
+    def getTodayData(self):
+        result = self.provider_consumer.getTodayOverviewValues()
         return json.dumps(result, default=self._serialize)
-        #pass
+
+    def emitChangedWeekData(self):
+         self.emitSocketData('changedWeekData', None)
+
+    def emitInitialWeekData(self, day = None):
+         data = self.provider_consumer.getWeekValues(day)
+         #logging.info("Emit initial week data")
+         self.emitSocketData('initWeekData', data)
 
     def emitChangedCurrentData(self, field, value):
          #logging.info("Emit changed current data")
@@ -158,8 +129,19 @@ class Handler(Server):
 
     def emitInitialCurrentData(self):
          data = self.provider_consumer.getCurrentValues()
-         logging.info("Emit initial current data")
+         #logging.info("Emit initial current data")
          self.emitSocketData('initCurrentData', data)
+
+    def emitChangedAstroData(self, field, value):
+         #logging.info("Emit changed current data")
+         data = {}
+         data[field] = value
+         self.emitSocketData('changedAstroData', data)
+
+    def emitInitialAstroData(self):
+         data = self.astro_consumer.getValues()
+         #logging.info("Emit initial astro data")
+         self.emitSocketData('initAstroData', data)
 
     def getStateMetrics(self):
         metrics = []
@@ -169,17 +151,27 @@ class Handler(Server):
         if self.provider is not None:
             metrics += self.provider.getStateMetrics()
         metrics += self.provider_consumer.getStateMetrics()
-        metrics += self.station_consumer.getStateMetrics()
+        if self.station_consumer:
+            metrics += self.station_consumer.getStateMetrics()
 
         return "{}\n".format( "\n".join(metrics) )
 
-@serverSocket.on('initCurrentData')
-def initCurrentData():
-    handler.emitInitialCurrentData()
+@serverSocket.on('getWeekData')
+def getWeekData(day):
+    handler.emitInitialWeekData(day)
 
-@serverWeb.route('/data/', methods = ['POST'])
+@serverSocket.on('initData')
+def initData( types ):
+    if "initWeekData" in types:
+        handler.emitInitialWeekData()
+    if "initCurrentData" in types:
+        handler.emitInitialCurrentData()
+    if "initAstroData" in types:
+        handler.emitInitialAstroData()
+
+@serverWeb.route('/todayData/', methods = ['POST'])
 def data():
-    return handler.getData(handler.getRequestValue("type"))
+    return handler.getTodayData()
 
 @serverWeb.route('/metrics/', methods = ['GET'])
 def metrics():

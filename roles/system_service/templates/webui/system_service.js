@@ -3,42 +3,43 @@ mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_wan',
 {% if system_service_netflow_collector %}
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_netflow', { "url": '//grafana.{host}/d/system-service-netflow-overview/system-service-netflow-overview', "callback": mx.Grafana.applyTheme }, 'admin', 212, '{i18n_WAN traffic}', '{i18n_Netflow}', "system_service_logo.svg", false);
 
-mx.Widgets.TrafficAlerts = (function( ret ) {
-    let url = "/system_service/api/widget_state/";
-    ret.refresh = function()
+mx.Widgets.TrafficAlerts = (function( widget ) {
+    let data = {}
+
+    function processData(_data)
     {
-        mx.Widgets.fetchContent("GET", url, function(data)
-        {
-            if( data != null )
-            {
-                let traffic = "";
-                let json = JSON.parse(data);
-                let wan_isp_state = json["wan_isp_state"];
-                let wan_online_state = json["wan_online_state"];
+        data = {...data, ..._data};
 
-                let msg = wan_online_state == "online" ? "<font class=\"icon-globe\"></font>" : "<font class=\"icon-globe\" style=\"color:var(--color-red)\"></font>";
-                if( wan_isp_state == "fallback" ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-yellow)\"></font>";
+        let traffic = "";
+        let wan_isp_state = data["wan_isp_state"];
+        let wan_online_state = data["wan_online_state"];
 
-                ret.show(0, mx.I18N.get("WAN","widget_system") + ": <strong>" + msg + "</strong>" );
+        let msg = wan_online_state == "online" ? "<font class=\"icon-globe\"></font>" : "<font class=\"icon-globe\" style=\"color:var(--color-red)\"></font>";
+        if( wan_isp_state == "fallback" ) msg += "<font class=\"icon-attention\" style=\"color:var(--color-yellow)\"></font>";
 
-                traffic += json["traffic_states"]["observed"] == 0 ? json["traffic_states"]["observed"] : "<font style=\"color:var(--color-green)\">" + json["traffic_states"]["observed"] + "</font>";
-                traffic += "/";
-                traffic += json["traffic_states"]["scanning"] == 0 ? json["traffic_states"]["scanning"] : "<font style=\"color:var(--color-yellow)\">" + json["traffic_states"]["scanning"] + "</font>";
-                traffic += "/";
-                traffic += json["traffic_states"]["intruded"] == 0 ? json["traffic_states"]["intruded"] : "<font style=\"color:var(--color-red)\">" + json["traffic_states"]["intruded"] + "</font>";
+        widget.show(0, mx.I18N.get("WAN","widget_system") + ": <strong>" + msg + "</strong>" );
 
-                blocked = json["traffic_states"]["blocked"] > 0 ? " <font class=\"icon-block\"></font><strong>" + json["traffic_states"]["blocked"] + "</strong>" : "";
+        traffic += data["traffic_states"]["observed"] == 0 ? data["traffic_states"]["observed"] : "<font style=\"color:var(--color-green)\">" + data["traffic_states"]["observed"] + "</font>";
+        traffic += "/";
+        traffic += data["traffic_states"]["scanning"] == 0 ? data["traffic_states"]["scanning"] : "<font style=\"color:var(--color-yellow)\">" + data["traffic_states"]["scanning"] + "</font>";
+        traffic += "/";
+        traffic += data["traffic_states"]["intruded"] == 0 ? data["traffic_states"]["intruded"] : "<font style=\"color:var(--color-red)\">" + data["traffic_states"]["intruded"] + "</font>";
 
-                ret.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>" + blocked);
-            }
-            else
-            {
-                ret.alert(0, "System Service: N/A");
-                ret.alert(1, "");
-            }
-        } );
+        blocked = data["blocked_traffic"] > 0 ? " <font class=\"icon-block\"></font><strong>" + data["blocked_traffic"] + "</strong>" : "";
+
+        widget.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>" + blocked);
     }
-    return ret;
+
+    widget.init = function()
+    {
+        let socket = widget.getServiceSocket('system_service');
+        socket.on("connect", () => socket.emit('initData',["initWidgetData"]));
+        socket.on("initWidgetData", (data) => processData( data ) );
+        socket.on("changedWidgetData", (data) => processData( data ) );
+        socket.on("error", function(){ widget.alert(0, "Weather N/A"); widget.alert(1, ""); } );
+    }
+
+    return widget;
 })( mx.Widgets.Object( "admin", [ { id: "wanAlerts", order: 100, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-system_service_wan') } }, { id: "trafficAlerts", order: 102, click: function(event){
     let entry = mx.Menu.getMainGroup('admin').getSubGroup('system').getEntry('system_service_netflow');
     mx.Actions.openEntry(entry, entry.getUrl() + "&var-Filters=group|!%3D|normal" );

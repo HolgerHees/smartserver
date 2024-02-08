@@ -1,7 +1,7 @@
 <?php
 $ch = curl_init();
 
-curl_setopt($ch, CURLOPT_URL, $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["SERVER_NAME"]  . "/weather_service/api/data/");
+curl_setopt($ch, CURLOPT_URL, $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["SERVER_NAME"]  . "/weather_service/api/todayData/");
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, "type=today");
 
@@ -10,8 +10,7 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $result = curl_exec($ch);
 curl_close($ch);
 
-$data = json_decode($result);
-$values = $data->changed_data;
+$values = json_decode($result);
 
 /******* OVERVIEW ************/
 $blockConfigs = array(

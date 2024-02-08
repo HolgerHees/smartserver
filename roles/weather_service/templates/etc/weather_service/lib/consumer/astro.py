@@ -1,42 +1,51 @@
 import logging
 from datetime import datetime, timedelta
+import schedule
 
 from lib.helper.forecast import WeatherHelper
 
 
 class AstroConsumer():
     '''Handler client'''
-    def __init__(self, config):
+    def __init__(self, config, handler):
         self.is_running = False
+
+        self.handler = handler
 
         location = config.location.split(",")
         self.latitude = float(location[0])
         self.longitude = float(location[1])
 
+        self.astroSunrise = None;
+        self.astroSunset = None;
+
     def start(self):
         self.is_running = True
+
+        self._initData()
+
+        schedule.every().hour.at("00:00").do(self.refresh)
 
     def terminate(self):
         self.is_running = False
 
-    def getValues(self, last_modified, requested_fields = None ):
-        result = {}
-        _last_modified = last_modified
-
+    def _initData(self):
         activeDay = datetime.now()
         activeDay = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
         activeTimestamp = datetime.timestamp(activeDay)
 
-        if last_modified < activeTimestamp:
-            sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude)
+        sunrise, sunset = WeatherHelper.getSunriseAndSunset(self.latitude, self.longitude)
+        self.astroSunrise = sunrise.isoformat()
+        self.astroSunset = sunset.isoformat()
 
-            _last_modified = activeTimestamp
-            if "astroSunrise" in requested_fields:
-                result["astroSunrise"] = sunrise.isoformat()
-            if "astroSunset" in requested_fields:
-                result["astroSunset"] = sunset.isoformat()
+    def refresh(self):
+        self._initData()
 
-        return [result, _last_modified]
+        self.handler.emitChangedAstroData("astroSunrise", self.astroSunrise)
+        self.handler.emitChangedAstroData("astroSunset", self.astroSunset)
+
+    def getValues(self):
+        return { "astroSunrise": self.astroSunrise, "astroSunset": self.astroSunset }
 
     #def getLastModified(self, last_modified, requested_fields = None ):
     #    _last_modified = last_modified
