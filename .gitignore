@@ -1,6 +1,7 @@
 /.vagrant/
 /.vscode/
 config/*
+config/demo/backup/*
 !config/demo/
 !config/default.yml
 /ansible.cfg

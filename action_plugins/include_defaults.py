@@ -26,8 +26,7 @@ class ActionModule(ActionBase):
         other_errors = [] # contains error data from template parsing
 
         requirement_checks = {} # variables with requirement attribute
-        dependency_checks = {} # variables with dependency attribute
-        used_variables = {} # variables where the dependency check was true or they are optional without a dependency
+        post_checks = {} # variables with dependency or optional attributes
         parser_result = {}
         result['ansible_facts'] = {}
 
@@ -49,12 +48,12 @@ class ActionModule(ActionBase):
 
                     # variable with a dependency is processed later, after default variables are applied
                     if "dependency" in default_var_value:
-                        dependency_checks[default_var_name] = default_var_value
+                        post_checks[default_var_name] = default_var_value
                         continue
 
                     # optional variable is processed later, after default variables are applied
                     if "optional" in default_var_value:
-                        used_variables[default_var_name] = default_var_value
+                        post_checks[default_var_name] = default_var_value
                         continue
 
                     # adjusted variables (without optional and dependeny) already defined in task_vars and don't need to process
@@ -79,21 +78,18 @@ class ActionModule(ActionBase):
             #self._display.v('Test "%s" "%s"' % (var_name, result['ansible_facts'][var_name]))
 
         # process dependency_checks (check if a variable is used or not)
-        for default_var_name, default_var_value in dependency_checks.items():
-            is_allowed = self.render(default_var_name, default_var_value["dependency"], False, missing_vars, other_errors)
-            if is_allowed:
-                used_variables[default_var_name] = default_var_value
-                continue
+        for default_var_name, default_var_value in post_checks.items():
+            if "dependency" in default_var_value:
+                is_allowed = self.render(default_var_name, default_var_value["dependency"], False, missing_vars, other_errors)
+                if not is_allowed:
+                    if default_var_name in task_vars:
+                        # variables that are defined, but not needed
+                        parser_result[default_var_name] = {"name": default_var_name, "state": "unneeded"}
+                    else:
+                        # variables that are not defined, but also not needed => unused
+                        parser_result[default_var_name] = {"name": default_var_name, "state": "unused"}
+                    continue
 
-            if default_var_name in task_vars:
-                # variables that are defined, but not needed
-                parser_result[default_var_name] = {"name": default_var_name, "state": "unneeded"}
-            else:
-                # variables that are not defined, but also not needed => unused
-                parser_result[default_var_name] = {"name": default_var_name, "state": "unused"}
-
-        # process used variables (where dependency is true or they are optional)
-        for default_var_name, default_var_value in used_variables.items():
             # adjusted variables already defined in task_vars
             if default_var_name in task_vars:
                 parser_result[default_var_name] = {"name": default_var_name, "state": "adjusted"}
@@ -108,6 +104,8 @@ class ActionModule(ActionBase):
 
             # mandatory variable with a default value
             if "default" in default_var_value:
+                #if default_var_name in ["weather_api_provider","weather_mqtt_publish_topic","weather_api_username","weather_api_password"]:
+                #    self._display.v('Test "%s"' % (default_var_name))
                 parser_result[default_var_name] = {"name": default_var_name, "state": "default"}
                 result['ansible_facts'][default_var_name] = task_vars[default_var_name] = self.render(default_var_name, default_var_value["default"], default_var_value["default"], missing_vars, other_errors)
                 continue
@@ -164,7 +162,6 @@ class ActionModule(ActionBase):
                 for used_in_var_name in missing_vars[missing_var_name]:
                     if used_in_var_name in parser_result:
                         parser_result[used_in_var_name]["state"] = "unknown"
-
         for missing_var_name, missing_var_value in missing_vars.items():
             error_messages.append(u"Variable '{}' used in ['{}'] is missing".format(missing_var_name, "','".join(missing_var_value)))
 
@@ -174,7 +171,7 @@ class ActionModule(ActionBase):
         parser_result_values = list(parser_result.values())
         parser_result_values.sort(key=lambda variable: variable["name"])
 
-        result['ansible_facts'].update( { "parser_custom_variables": [], "parser_vault_variables": [], "parser_adjusted_variables": [], "parser_default_variables": [], "parser_unneeded_variables": [], "parser_unused_variables": [], "parser_missing_variables": [] } )
+        result['ansible_facts'].update( { "parser_custom_variables": [], "parser_vault_variables": [], "parser_adjusted_variables": [], "parser_default_variables": [], "parser_unneeded_variables": [], "parser_unused_variables": [], "parser_missing_variables": [],  "parser_unknown_variables": [] } )
         for parser_result_value in parser_result_values:
             result['ansible_facts']["parser_{}_variables".format(parser_result_value["state"])].append(parser_result_value["name"])
 
