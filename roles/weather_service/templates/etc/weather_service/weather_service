@@ -20,7 +20,7 @@ from lib.helper.forecast import WeatherBlock
 from smartserver.scheduler import Scheduler
 from smartserver.server import Server, serverWeb, serverSocket
 
-import config
+from config import config
 
 
 class Handler(Server):
@@ -90,58 +90,48 @@ class Handler(Server):
             self.event.wait(60)
             self.event.clear()
 
-            #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
+    def emitWeekData(self, sid, day):
+        data = self.provider_consumer.getWeekValues(day)
+        self.emitSocketData('data', data, sid)
+        self.setSocketClientValue(sid, "day", day)
 
-    def checkLastDataModified(self,key, last_data_modified):
-        form_key = "last_data_modified[{}]".format(key)
-        value = self.getRequestValue(form_key)
-        return not value or float(value) < last_data_modified[key]
+    def notifyChangedWeekData(self):
+        if not self.isSocketRoomActive("details"):
+            return
 
-    def getLastDataModified(self,key):
-        form_key = "last_data_modified[{}]".format(key)
-        value = self.getRequestValue(form_key)
-        return float(value) if value else 0
+        for sid in self.getSocketClients("details"):
+            day = self.getSocketClientValue(sid, "day")
+            data = self.provider_consumer.getWeekValues(day)
+            self.emitSocketData('data', data, sid)
 
-    def _serialize(self, obj):
-        """JSON serializer for objects not serializable by default json code"""
-        if isinstance(obj, WeatherBlock):
-            return obj.to_dict()
+    def notifyChangedAstroData(self, field, value):
+        if not self.isSocketRoomActive("details"):
+            return
 
-        return obj.__dict__
+        self.emitSocketData('data', { field: value }, "details")
+
+    def notifyChangedCurrentData(self, field, value):
+        if self.isSocketRoomActive("widget") and field in ["currentAirTemperatureInCelsius","currentCloudsAsSVG"]:
+           self.emitSocketData('data', { field: value }, "widget")
+
+        if self.isSocketRoomActive("details"):
+           self.emitSocketData('data', { field: value }, "details")
+
+    def onSocketRoomJoin(self, sid, room, data = None):
+        super().onSocketRoomJoin(sid, room, data)
+
+        current_data = self.provider_consumer.getCurrentValues()
+
+        if room == "widget":
+            self.emitSocketData('data', {"currentAirTemperatureInCelsius": current_data["currentAirTemperatureInCelsius"], "currentCloudsAsSVG": current_data["currentCloudsAsSVG"] }, room)
+
+        elif room == "details":
+            week_data = self.provider_consumer.getWeekValues(data)
+            astro_data = self.astro_consumer.getValues()
+            self.emitSocketData('data', current_data | week_data | astro_data, room)
 
     def getTodayData(self):
-        result = self.provider_consumer.getTodayOverviewValues()
-        return json.dumps(result, default=self._serialize)
-
-    def emitChangedWeekData(self):
-         self.emitSocketData('changedWeekData', None)
-
-    def emitInitialWeekData(self, day = None):
-         data = self.provider_consumer.getWeekValues(day)
-         #logging.info("Emit initial week data")
-         self.emitSocketData('initWeekData', data)
-
-    def emitChangedCurrentData(self, field, value):
-         #logging.info("Emit changed current data")
-         data = {}
-         data[field] = value
-         self.emitSocketData('changedCurrentData', data)
-
-    def emitInitialCurrentData(self):
-         data = self.provider_consumer.getCurrentValues()
-         #logging.info("Emit initial current data")
-         self.emitSocketData('initCurrentData', data)
-
-    def emitChangedAstroData(self, field, value):
-         #logging.info("Emit changed current data")
-         data = {}
-         data[field] = value
-         self.emitSocketData('changedAstroData', data)
-
-    def emitInitialAstroData(self):
-         data = self.astro_consumer.getValues()
-         #logging.info("Emit initial astro data")
-         self.emitSocketData('initAstroData', data)
+        return json.dumps(self.provider_consumer.getTodayOverviewValues())
 
     def getStateMetrics(self):
         metrics = []
@@ -158,16 +148,7 @@ class Handler(Server):
 
 @serverSocket.on('getWeekData')
 def getWeekData(day):
-    handler.emitInitialWeekData(day)
-
-@serverSocket.on('initData')
-def initData( types ):
-    if "initWeekData" in types:
-        handler.emitInitialWeekData()
-    if "initCurrentData" in types:
-        handler.emitInitialCurrentData()
-    if "initAstroData" in types:
-        handler.emitInitialAstroData()
+    handler.emitWeekData(handler.getSocketClient(), day)
 
 @serverWeb.route('/todayData/', methods = ['POST'])
 def data():

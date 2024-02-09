@@ -60,8 +60,8 @@ class CmdExecuter(watcher.Watcher):
         
         self.external_cmd_type = None
         self.external_cmd_type_pid = None
-        self.external_cmd_type_refreshed = None
-        self.external_cmd_type_requested = datetime.now() - timedelta(hours=1)
+
+        self.current_pids = []
 
         self.is_running = True
         self.event = threading.Event()
@@ -140,18 +140,21 @@ class CmdExecuter(watcher.Watcher):
         self.killed_job = False
         self.killed_logfile = None
 
-    def getJobStatus(self, refresh = True):
-        if self.isRunning():
-            return {"job": self.current_cmd_type if self.current_cmd_type else self.getExternalCmdType(refresh), "state": "running", "started": self.current_started.astimezone().isoformat() if self.current_started else None, "finished": None, "exit_code": None }
-        else:
-            return {"job": None, "state": "idle", "started": None, "finished": None, "exit_code": None }
+    def getJobStatus(self):
+        if self.current_cmd_type != None:
+            return {"job": self.current_cmd_type, "type": "daemon", "started": self.current_started.astimezone().isoformat() if self.current_started else None}
+        external_cmd = self.external_cmd_type
+        if external_cmd != None:
+            return {"job": external_cmd, "type": "manual", "started": None}
+
+        return {"job": None, "type": None, "started": None}
 
     def restoreLock(self,cmd_type,start_time,file_name):
         self.current_cmd_type = cmd_type
         self.current_started = start_time
         self.current_logfile = file_name
 
-        self.handler.emitJobStatus(self.getJobStatus())
+        self.handler.notifyExecutorJobStatus(self.getJobStatus())
         
     def lock(self, cmd_type, file_name):
         if self.current_started != None:
@@ -161,24 +164,25 @@ class CmdExecuter(watcher.Watcher):
             self.current_started = datetime.now()
             self.current_logfile = file_name
 
-            self.handler.emitJobStatus(self.getJobStatus())
-
             self.resetKilledJobState()
+
+            self.handler.notifyExecutorJobStatus(self.getJobStatus())
             return True
 
     def _unlock(self, exit_code):
         self.initJobs()
 
-        status = self.getJobStatus()
-        status["state"] = "finished"
-        status["finished"] = datetime.now().astimezone().isoformat()
-        status["exit_code"] = exit_code
-        self.handler.emitJobStatus(status)
+        #status = self.getJobStatus()
+        #status["state"] = "finished"
+        #status["finished"] = datetime.now().astimezone().isoformat()
+        #status["exit_code"] = exit_code
 
         self.current_cmd_type = None
         self.current_started = None
         self.current_logfile = None
         self.current_child = None
+
+        self.handler.notifyExecutorJobStatus(self.getJobStatus())
 
     def finishRun(self, job_log_file, exit_status, start_time, cmd_type, username):
         duration = datetime.now() - start_time
@@ -321,52 +325,78 @@ class CmdExecuter(watcher.Watcher):
         while self.is_running:
             self._refreshExternalCmdType()
             threading.Event()
-            self.event.wait( 1 if (datetime.now() - self.external_cmd_type_requested).total_seconds() < 10 else 60)
+            self.event.wait( 1 if self.handler.areSocketClientsActive() else 60)
             self.event.clear()
-                
+
     def _refreshExternalCmdType(self): 
-        emitJobStatus = False
+        #start = time.time()
+
+        notifyJobStatus = False
         if not self.isDaemonJobRunning():
             if self.external_cmd_type_pid is None or not processlist.Processlist.checkPid(self.external_cmd_type_pid):
+
                 external_cmd_type = None
                 external_cmd_type_pid = None
-                pids = processlist.Processlist.getPids(" |".join( CmdExecuter.process_mapping.keys()))
-                if pids is not None:
-                    for pid in pids:
+
+                # 10 times faster then processlist.Processlist.getPids(" |".join( CmdExecuter.process_mapping.keys()))
+                current_pids = processlist.Processlist.getPids()
+                if current_pids is not None and current_pids != self.current_pids:
+                    for pid in set(current_pids) - set(self.current_pids):
                         cmdline = processlist.Processlist.getCmdLine(pid)
-                        if cmdline is not None:
-                            for term in CmdExecuter.process_mapping:
-                                if "{} ".format(term) in cmdline:
-                                    external_cmd_type_pid = pid
-                                    external_cmd_type = CmdExecuter.process_mapping[term]
-                                    break
-                            if external_cmd_type is not None:
+                        if not cmdline:
+                            continue
+                        for term in CmdExecuter.process_mapping:
+                            if "{} ".format(term) in cmdline:
+                                external_cmd_type_pid = pid
+                                external_cmd_type = CmdExecuter.process_mapping[term]
                                 break
+                        if external_cmd_type is not None:
+                            break
+                        #logging.info("check {} {}".format(pid,cmdline))
+                    self.current_pids = current_pids
+
+                #pids = processlist.Processlist.getPids(" |".join( CmdExecuter.process_mapping.keys()))
+                #if pids is not None:
+                #    for pid in pids:
+                #        cmdline = processlist.Processlist.getCmdLine(pid)
+                #        if cmdline is not None:
+                #            for term in CmdExecuter.process_mapping:
+                #                if "{} ".format(term) in cmdline:
+                #                    external_cmd_type_pid = pid
+                #                    external_cmd_type = CmdExecuter.process_mapping[term]
+                #                    break
+                #            if external_cmd_type is not None:
+                #                break
                 
                 if external_cmd_type is None and self.external_cmd_type is not None:
-                    emitJobStatus = True
                     self.process_watcher.refresh()
+
+                if external_cmd_type != self.external_cmd_type:
+                    notifyJobStatus = True
 
                 self.external_cmd_type = external_cmd_type
                 self.external_cmd_type_pid = external_cmd_type_pid
+            else:
+                self.current_pids = []
         else:
             if self.external_cmd_type is not None:
-                emitJobStatus = True
                 self.process_watcher.refresh()
+                notifyJobStatus = True
 
             self.external_cmd_type = None
             self.external_cmd_type_pid = None
+            self.current_pids = []
 
-        self.external_cmd_type_refreshed = datetime.now()
+        #end = time.time()
+        #logging.info("processlist: {}".format(end-start))
 
-        if emitJobStatus:
-            self.handler.emitJobStatus(self.getJobStatus(False))
+        if notifyJobStatus:
+            self.handler.notifyExecutorJobStatus(self.getJobStatus())
+
+    def triggerSocketClientsActive(self):
+        self.event.set()
 
     def getExternalCmdType(self, refresh = True):
-        self.external_cmd_type_requested = datetime.now()
         if refresh:
             self._refreshExternalCmdType()
-        else:
-            if (self.external_cmd_type_requested - self.external_cmd_type_refreshed).total_seconds() > 2:
-                self.event.set()
         return self.external_cmd_type

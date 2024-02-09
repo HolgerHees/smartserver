@@ -19,9 +19,12 @@ repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 
 
 class JobWatcher(): 
-    def __init__(self):
+    def __init__(self, handler):
         self.terminated = False
         self.state = None
+
+        self.handler = handler
+
         self.initState()
         
         self.all_jobs = []
@@ -56,6 +59,8 @@ class JobWatcher():
         with self.condition:
             self.condition.notifyAll()
 
+        self.handler.notifyChangedJobsData()
+
     def changedState(self, event):
         self.lock.acquire()
         try:
@@ -66,6 +71,8 @@ class JobWatcher():
             self.lock.release()
         with self.condition:
             self.condition.notifyAll()
+
+        self.handler.notifyChangedStateData()
 
     def initState(self):
         self.state = status.getState(config.status_file)
@@ -102,7 +109,6 @@ class JobWatcher():
         self.all_jobs = all_jobs
         self.running_jobs = running_jobs
         self.last_none_running_job = last_none_running_job
-        self.last_mtime = round(datetime.now().timestamp(),3)
                         
     def isJobRunning(self):
         return self.state is not None and self.state["status"] == "running";
@@ -188,9 +194,6 @@ class JobWatcher():
             
     def getJobs(self):
         return self.all_jobs
-                            
-    def getLastRefreshAsTimestamp(self):
-        return self.last_mtime
 
 class NetworkException(Exception):
     pass

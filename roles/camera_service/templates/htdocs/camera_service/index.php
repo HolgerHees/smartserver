@@ -23,9 +23,9 @@ require "../shared/libs/ressources.php";
 
     mx.OnDocReady.push( function(){
         let socket = mx.ServiceSocket.init('camera_service');
-        socket.on("connect", () => socket.emit('init', camera_name));
+        socket.on("connect", () => socket.emit('join', camera_name));
         socket.on("init", (data) => mx.Gallery.init(data));
-        socket.on("change_" + camera_name, (data) => mx.Gallery.update(data));
+        socket.on("update", (data) => mx.Gallery.update(data));
     });
 </script>
 <div class="slots"></div>

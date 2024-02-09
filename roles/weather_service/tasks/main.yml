@@ -7,6 +7,7 @@
     mode: 0750
   with_items:
     - "{{global_etc}}weather_service/"
+    - "{{global_etc}}weather_service/config/"
     - "{{global_lib}}weather_service/"
 
 - name: build docker image
@@ -85,13 +86,11 @@
 
 - name: copy config
   template:
-    src: "templates{{item.src}}"
-    dest: "{{item.dest}}"
+    src: "templates/config.py"
+    dest: "{{global_etc}}weather_service/config/config.py"
     owner: root
     group: root
     mode: 0640
-  with_items:
-    - { src: "/config.py", dest: "{{global_etc}}weather_service/config.py" }
   notify: "restart weather_service"
 
 - name: synchronize daemon

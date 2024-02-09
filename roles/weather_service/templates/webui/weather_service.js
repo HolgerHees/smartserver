@@ -57,8 +57,6 @@ mx.Widgets.CustomWeather = (function( widget ) {
     let data = {}
     function processData(_data)
     {
-        if( !( "currentAirTemperatureInCelsius" in _data || "currentCloudsAsSVG" in _data ) ) return;
-
         data = {...data, ..._data};
 
         let content = "";
@@ -71,9 +69,8 @@ mx.Widgets.CustomWeather = (function( widget ) {
     widget.init = function()
     {
         let socket = widget.getServiceSocket('weather_service');
-        socket.on("connect", () => socket.emit('initData',["initCurrentData"]));
-        socket.on("initCurrentData", (data) => processData( data ) );
-        socket.on("changedCurrentData", (data) => processData( data ) );
+        socket.on("connect", () => socket.emit("join", "widget"));
+        socket.on("data", (data) => processData( data ) );
         socket.on("error", (err) => widget.alert(0, "Weather N/A") );
     }
 
@@ -82,5 +79,3 @@ mx.Widgets.CustomWeather = (function( widget ) {
     }
     return widget;
 })( mx.Widgets.Object( "user", [ { id: "customWeather", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );
-
-

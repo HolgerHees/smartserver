@@ -371,7 +371,7 @@ class TrafficWatcher(threading.Thread):
                 is_changed = self.last_traffic_summery is None or count_values["observed"] != self.last_traffic_summery[0]["observed"] or count_values["scanning"] != self.last_traffic_summery[0]["scanning"] or count_values["intruded"] != self.last_traffic_summery[0]["intruded"]
                 self.last_traffic_summery = [ count_values, now ]
                 if is_changed:
-                    self.handler.emitChangedWidgetData("traffic_states", self.last_traffic_summery[0])
+                    self.handler.notifyChangedBlockTrafficStatesData("traffic_states", self.last_traffic_summery[0])
 
             return self.last_traffic_summery[0]
         except requests.exceptions.ConnectionError as e:

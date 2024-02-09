@@ -9,14 +9,9 @@ require "config.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/shared/mod/logfile/","/update_service/"]); ?>
+<?php echo Ressources::getModules(["/shared/mod/websocket/", "/shared/mod/logfile/","/update_service/"]); ?>
 <script>
     mx.UNCore = (function( ret ) {
-        var job_is_running = null;
-        var job_running_type = null;
-        var job_cmd_type = null;
-        var job_started = null;
-        
         var updateJobStarted = false;
         
         var systemUpdatesCount = 0;
@@ -31,6 +26,143 @@ require "config.php";
         var refreshDaemonStateTimer = 0;
         
         var daemonApiUrl = mx.Host.getBase() + '../api/'; 
+
+        var daemonNeedsRestart = false;
+        var job_state = {}
+
+        function processRunningJobDetails(data)
+        {
+            job_state = {...job_state, ...data};
+
+            let job_is_running = job_state["job"] != null;
+            let job_running_type = job_state["type"];
+            let job_cmd_type = job_state["job"];
+            let job_started = job_state["started"];
+
+            var msg = "";
+            var currentRunningStateElement = mx.$("#currentRunningState");
+            var currentRunningActionsElement = mx.$("#currentRunningActions");
+
+            if( job_is_running )
+            {
+                var logfile = job_state["logfile"];
+                if( logfile && job_started)
+                {
+                    var logfile_name = logfile.substring(0,logfile.length - 4);
+                    var logfile_parts = logfile_name.split("-");
+
+                    action_msg_1 = "<span class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + logfile_parts[0] + "','" + logfile_parts[3] + "','" + logfile_parts[4] + "')\">";
+                    action_msg_2 = "</span>";
+
+                    var runtime = Math.round( ( (new Date()).getTime() - Date.parse(job_started) ) / 1000 );
+
+                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": runtime, "4": mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+
+                    if( job_state["killable"] )
+                    {
+                        currentRunningActionsElement.style.display= "block";
+                    }
+                    else
+                    {
+                        currentRunningActionsElement.style.display= "";
+                        currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
+                    }
+                }
+                else
+                {
+                    msg = "<span class=\"icon-attention yellow\"></span> " + mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
+                    currentRunningActionsElement.style.display= ""
+                }
+            }
+            else
+            {
+                currentRunningActionsElement.style.display="";
+                currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
+
+                if( job_state["workflow"] )
+                {
+                    switch (job_state["workflow"]) {
+                        case 'killed':
+                            msg = mx.I18N.get("Last process was killed")
+                            break;
+                        case 'stopped':
+                            msg = mx.I18N.get("Last process was stopped")
+                            break;
+                        default:
+                            let reasons = job_state["workflow"].split(",");
+                            if( reasons.indexOf("wrong_system_update_hash") != -1 && reasons.indexOf("wrong_smartserver_update_hash") != -1 )
+                            {
+                                msg = mx.I18N.get("Last process was stopped, because of new system and smartserver updates");
+                            }
+                            else if( reasons.indexOf("wrong_system_update_hash") != -1 )
+                            {
+                                msg = mx.I18N.get("Last process was stopped, because of new system updates");
+                            }
+                            else if( reasons.indexOf("wrong_smartserver_update_hash") != -1 )
+                            {
+                                msg = mx.I18N.get("Last process was stopped, because of new smartserver updates");
+                            }
+                            break;
+                    }
+
+                    msg = "<span class=\"icon-attention red\"></span> " + msg;
+                }
+                else
+                {
+                    msg = mx.I18N.get("No update process is running");
+                }
+            }
+
+            if( currentRunningStateElement.innerHTML != msg )  currentRunningStateElement.innerHTML = msg;
+
+            if( mx.UpdateServiceActions.getDialog() != null )
+            {
+                let dialog = mx.UpdateServiceActions.getDialog();
+                if( dialog.getId() != "killProcess" )
+                {
+                    if( job_is_running )
+                    {
+                        let msg = mx.I18N.get("'{}' disabled, because of a running job");
+                        msg = msg.fill(dialog.getElement(".continue").innerHTML);
+                        dialog.setInfo(msg);
+                        dialog.setActionDisabled(".continue",true);
+                    }
+                    else
+                    {
+                        dialog.setInfo("");
+                        dialog.setActionDisabled(".continue",false);
+                    }
+                }
+            }
+
+            if( job_is_running )
+            {
+                mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? null: "kill");
+            }
+            else
+            {
+                if( daemonNeedsRestart )
+                {
+                    mx.UpdateServiceHelper.setExclusiveButtonsState(false, "restart");
+                }
+                else
+                {
+                    mx.UpdateServiceHelper.setExclusiveButtonsState(true, null );
+                }
+            }
+        }
+
+        function processDataNew(data)
+        {
+            if( "update_server_needs_restart" in data )
+            {
+                daemonNeedsRestart = data["update_server_needs_restart"];
+                var needsRestartElement = mx.$("#serverNeedsRestart");
+                needsRestartElement.style.display = daemonNeedsRestart ? "flex" : "";
+            }
+
+            if( data["job_status"] ) processRunningJobDetails(data["job_status"]);
+        }
 
         function processData(last_data_modified, changed_data)
         {
@@ -138,135 +270,20 @@ require "config.php";
         function handleDaemonState(state)
         {
             window.clearTimeout(refreshDaemonStateTimer);
-           
-            var daemonNeedsRestart = state["update_server_needs_restart"];
-            var needsRestartElement = mx.$("#serverNeedsRestart");
-            needsRestartElement.style.display = daemonNeedsRestart ? "flex" : "";
-            
+
             job_is_running = state["job_is_running"];
-            job_running_type = state["job_running_type"];
-            job_cmd_type = state["job_cmd_type"];
-            job_started = state["job_started"];
-            
             last_data_modified = state["last_data_modified"];
-            
-            var msg = "";
-            var currentRunningStateElement = mx.$("#currentRunningState");
-            var currentRunningActionsElement = mx.$("#currentRunningActions");
             
             if( job_is_running )
             {
-                var logfile = state["job_logfile"];
-                if( logfile && job_started)
-                {
-                    var logfile_name = logfile.substring(0,logfile.length - 4);
-                    var data = logfile_name.split("-");
-
-                    action_msg_1 = "<span class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + data[0] + "','" + data[3] + "','" + data[4] + "')\">";
-                    action_msg_2 = "</span>";
-                
-                    var runtime = Math.round( ( (new Date()).getTime() - Date.parse(job_started) ) / 1000 );
-                    
-                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": runtime, "4": mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
-                    
-                    if( state["job_killable"] )
-                    {
-                        currentRunningActionsElement.style.display= "block";
-                    }
-                    else
-                    {
-                        currentRunningActionsElement.style.display= "";
-                        currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
-                    }
-                }
-                else
-                {
-                    msg = "<span class=\"icon-attention yellow\"></span> " + mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
-                    currentRunningActionsElement.style.display= ""
-                }
-                
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 1000);
             }
             else
             {
-                currentRunningActionsElement.style.display="";
-                currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
-
-                if( state["workflow_state"] )
-                {
-                    switch (state["workflow_state"]) {
-                        case 'killed':
-                            msg = mx.I18N.get("Last process was killed")
-                            break;
-                        case 'stopped':
-                            msg = mx.I18N.get("Last process was stopped")
-                            break;
-                        default:
-                            let reasons = state["workflow_state"].split(",");
-                            if( reasons.indexOf("wrong_system_update_hash") != -1 && reasons.indexOf("wrong_smartserver_update_hash") != -1 ) 
-                            {
-                                msg = mx.I18N.get("Last process was stopped, because of new system and smartserver updates");
-                            }
-                            else if( reasons.indexOf("wrong_system_update_hash") != -1 )
-                            {
-                                msg = mx.I18N.get("Last process was stopped, because of new system updates");
-                            }
-                            else if( reasons.indexOf("wrong_smartserver_update_hash") != -1 )
-                            {
-                                msg = mx.I18N.get("Last process was stopped, because of new smartserver updates");
-                            }
-                            break;
-                    }
-
-                    msg = "<span class=\"icon-attention red\"></span> " + msg;
-                }
-                else
-                {
-                    msg = mx.I18N.get("No update process is running");
-                }
-
                 refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
             }
-           
-            if( currentRunningStateElement.innerHTML != msg )  currentRunningStateElement.innerHTML = msg;
 
             if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
-                 
-            if( mx.UpdateServiceActions.getDialog() != null )
-            {
-                let dialog = mx.UpdateServiceActions.getDialog();
-                if( dialog.getId() != "killProcess" ) 
-                { 
-                    if( job_is_running )
-                    {
-                        let msg = mx.I18N.get("'{}' disabled, because of a running job");
-                        msg = msg.fill(dialog.getElement(".continue").innerHTML);
-                        dialog.setInfo(msg);
-                        dialog.setActionDisabled(".continue",true);
-                    }
-                    else
-                    {
-                        dialog.setInfo("");
-                        dialog.setActionDisabled(".continue",false);
-                    }
-                }
-            }
-            
-            if( job_is_running )
-            {
-                mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? null: "kill");
-            }
-            else
-            {
-                if( daemonNeedsRestart )
-                {
-                    mx.UpdateServiceHelper.setExclusiveButtonsState(false, "restart");
-                }
-                else
-                {
-                    mx.UpdateServiceHelper.setExclusiveButtonsState(true, null );
-                }
-            }
         }
         
         function refreshDaemonState(last_data_modified,callback)
@@ -338,6 +355,11 @@ require "config.php";
         
         ret.init = function()
         { 
+            socket = mx.ServiceSocket.init('update_service');
+            socket.on("connect", () => socket.emit("join", "updates") );
+            socket.on("data", (data) => processDataNew( data ) );
+
+
             mx.I18N.process(document);
             mx.UpdateServiceActions.init(daemonApiUrl);
             

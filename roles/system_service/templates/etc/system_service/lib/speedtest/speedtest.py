@@ -54,7 +54,7 @@ class Speedtest():
             return
 
         self.is_testing = True
-        self.handler.emitChangedSpeedtestData(self.is_testing)
+        self.handler.notifyChangedSpeedtestData(self.is_testing)
 
         messurement_values = []
         try:
@@ -155,7 +155,7 @@ class Speedtest():
 
             self.is_testing = False
 
-            self.handler.emitChangedSpeedtestData(self.is_testing)
+            self.handler.notifyChangedSpeedtestData(self.is_testing)
 
     def getStateMetrics(self):
         metrics = []

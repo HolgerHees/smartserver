@@ -25,7 +25,7 @@ class Handler(Server):
         
         self.startup_timestamp = round(datetime.now().timestamp(),3)
         
-        self.job_watcher = job_watcher.JobWatcher()
+        self.job_watcher = job_watcher.JobWatcher(self)
 
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
         
@@ -39,38 +39,26 @@ class Handler(Server):
         self.job_watcher.terminate()
         super().terminate()
                 
-    def getState(self):
-        
-        last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp
-        last_data_modified["jobs"] = self.job_watcher.getLastRefreshAsTimestamp()
-        changed_data = {}
-        
-        value = self.getRequestValue("last_data_modified[startup]")
-        force = not value or float(value) < last_data_modified["startup"]
-                
-        value = self.getRequestValue("last_data_modified[jobs]")
-        if force or not value or float(value) < last_data_modified["jobs"]:
-            changed_data["jobs"] = self.job_watcher.getJobs()
+    def notifyChangedStateData(self):
+        if not self.isSocketRoomActive("widget"):
+            return
 
-        result = { 
-            "status": 0, 
-            "last_data_modified": last_data_modified,
-            "changed_data": changed_data
-        }
+        self.emitSocketData('data', {"is_running": self.job_watcher.isJobRunning(), "last_job_failed": self.job_watcher.lastJobFailed() }, "widget")
 
-        return json.dumps(result)
+    def notifyChangedJobsData(self):
+        if not self.isSocketRoomActive("details"):
+            return
 
-    def getWidgetState(self):
-        return json.dumps({"is_running": self.job_watcher.isJobRunning(), "last_job_failed": self.job_watcher.lastJobFailed() })
-      
-@serverWeb.route('/widget_state/', methods = ['GET'])
-def widget_state():
-    return handler.getWidgetState()
+        self.emitSocketData('data', {"jobs": self.job_watcher.getJobs() }, "details")
 
-@serverWeb.route('/state/', methods = ['POST'])
-def state():     
-    return handler.getState()
-  
+    def onSocketRoomJoin(self, sid, room, data = None):
+        super().onSocketRoomJoin(sid, room, data)
+
+        if room == "widget":
+            self.emitSocketData('data', {"is_running": self.job_watcher.isJobRunning(), "last_job_failed": self.job_watcher.lastJobFailed() }, room)
+
+        elif room == "details":
+            self.emitSocketData('data', {"jobs": self.job_watcher.getJobs() }, room)
+
 handler = Handler()
 handler.start()

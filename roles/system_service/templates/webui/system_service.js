@@ -2,7 +2,6 @@ mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_scann
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_wan', { "url": '//grafana.{host}/d/system-service-wan/system-service-wan', "callback": mx.Grafana.applyTheme }, 'admin', 212, '{i18n_WAN connection}', '{i18n_Speed & reachability}', "system_service_logo.svg", false);
 {% if system_service_netflow_collector %}
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_netflow', { "url": '//grafana.{host}/d/system-service-netflow-overview/system-service-netflow-overview', "callback": mx.Grafana.applyTheme }, 'admin', 212, '{i18n_WAN traffic}', '{i18n_Netflow}', "system_service_logo.svg", false);
-
 mx.Widgets.TrafficAlerts = (function( widget ) {
     let data = {}
 
@@ -33,10 +32,9 @@ mx.Widgets.TrafficAlerts = (function( widget ) {
     widget.init = function()
     {
         let socket = widget.getServiceSocket('system_service');
-        socket.on("connect", () => socket.emit('initData',["initWidgetData"]));
-        socket.on("initWidgetData", (data) => processData( data ) );
-        socket.on("changedWidgetData", (data) => processData( data ) );
-        socket.on("error", function(){ widget.alert(0, "Weather N/A"); widget.alert(1, ""); } );
+        socket.on("connect", () => socket.emit('join',"widget"));
+        socket.on("data", (data) => processData( data ) );
+        socket.on("error", function(){ widget.alert(0, "System Service N/A"); widget.alert(1, ""); } );
     }
 
     return widget;

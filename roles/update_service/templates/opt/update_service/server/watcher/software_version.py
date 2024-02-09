@@ -17,8 +17,9 @@ class SoftwareVersionWatcher(watcher.Watcher):
         
     def notifyChange(self, event):
         self.initSoftwareState(True)
-        self.handler.emitUpdateSoftwareData(self.software)
-        
+        self.handler.notifyWatcherSoftwareVersions( "software", self.software)
+        self.handler.notifyWatcherSoftwareVersions( "update_cound", self.update_count)
+
     def initSoftwareState(self, shouldRetry):
         self.software = self.readJsonFile(config.software_version_state_file,shouldRetry,{})
         self.update_count = 0
@@ -27,7 +28,7 @@ class SoftwareVersionWatcher(watcher.Watcher):
                 if len(state["updates"]) > 0:
                     self.update_count += 1
         self.last_modified = self.getNowAsTimestamp()
-        
+
     def getLastModifiedAsTimestamp(self):
         return self.last_modified
       

@@ -7,6 +7,7 @@
     mode: "{{item.mode}}"
   with_items:
     -  { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}camera_service/", owner: "root", group: "root" }
+    -  { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}camera_service/config/", owner: "root", group: "root" }
     -  { mode: "u=rwx,g=rx,o=", path: "{{global_lib}}camera_service/", owner: "root", group: "root" }
     -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
     -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/cache/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
@@ -66,7 +67,7 @@
 - name: copy config
   template:
     src: "templates/config.py"
-    dest: "{{global_etc}}camera_service/config.py"
+    dest: "{{global_etc}}camera_service/config/config.py"
     owner: root
     group: root
     mode: 0640

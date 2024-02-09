@@ -231,7 +231,7 @@ class Scanner(threading.Thread):
             
         [ changed_data, msg ] = self._convertEvents(events, has_connection_changes)
 
-        self.handler.emitChangedNetworkData(changed_data, msg)
+        self.handler.notifyChangedNetworkData(changed_data, msg)
 
     def _convertEvents(self, events, has_connection_changes):
         full_device_update_needed = has_connection_changes
@@ -312,7 +312,7 @@ class Scanner(threading.Thread):
 
         return [ changed_data, msg ]
     
-    def getWebSocketData(self):
+    def getNetworkData(self):
         devices = self.cache.getDevices() + self.virtual_devices
         return self._prepareChanges(devices, [], [], False, devices, self.cache.getGroups(), [], [], self.cache.getStats(), [], [])
 

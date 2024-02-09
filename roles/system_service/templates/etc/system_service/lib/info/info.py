@@ -75,7 +75,7 @@ class Info(threading.Thread):
                 #logging.info("CHECK")
                 default_isp_connection_active = self.checkIP(self.active_service)
                 if default_isp_connection_active != self.default_isp_connection_active:
-                    self.handler.emitChangedWidgetData("isp_state", self.default_isp_connection_active)
+                    self.handler.notifyChangedInfoData("isp_state", self.default_isp_connection_active)
                 self.default_isp_connection_active = default_isp_connection_active
 
                 #logging.info("RESULT: {}".format(self.default_isp_connection_active))
@@ -89,7 +89,7 @@ class Info(threading.Thread):
                 else:
                     wan_active = self.checkConnection()
                 if wan_active != self.wan_active:
-                    self.handler.emitChangedWidgetData("online_state", wan_active)
+                    self.handler.notifyChangedInfoData("online_state", wan_active)
                 self.wan_active = wan_active
 
                 self.event.wait(60)

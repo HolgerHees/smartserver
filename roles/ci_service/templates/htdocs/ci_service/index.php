@@ -6,21 +6,21 @@ require "config.php";
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/shared/mod/logfile/","/ci_service/"]); ?>
+<?php echo Ressources::getModules(["/shared/mod/websocket/", "/shared/mod/logfile/","/ci_service/"]); ?>
 <script>
 function initPage()
 {
     var daemonApiUrl = mx.Host.getBase() + 'api/'; 
     var refreshDaemonStateTimer = null;
     
-    function processData(last_data_modified, changed_data)
+    function processData(data)
     {
-        if( changed_data.hasOwnProperty("jobs") )
+        if( "jobs" in data )
         {
-            changed_data["jobs"].sort(function(a,b){ return a["timestamp"] == b["timestamp"] ? 0 : ( a["timestamp"] < b["timestamp"] ? 1 : -1 ); });
+            data["jobs"].sort(function(a,b){ return a["timestamp"] == b["timestamp"] ? 0 : ( a["timestamp"] < b["timestamp"] ? 1 : -1 ); });
             
             let rows = [];
-            changed_data["jobs"].forEach(function(job)
+            data["jobs"].forEach(function(job)
             {
                 let date = new Date(job["timestamp"] * 1000);
                 
@@ -68,46 +68,10 @@ function initPage()
         }
     }
     
-    function handleDaemonState(state)
-    {
-        window.clearTimeout(refreshDaemonStateTimer);
-        
-        if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
-        
-        refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
-    }
-    
-    function refreshDaemonState(last_data_modified, callback)
-    {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl + "state/" );
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-            
-            if( this.status == 200 ) 
-            {
-                var response = JSON.parse(this.response);
-                handleDaemonState(response);
-                
-                if( callback ) callback();
-            }
-            else
-            {
-                let timeout = 15000;
-                refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
-            }
-        };
-        
-        xhr.send(mx.Core.encodeDict( { "last_data_modified": last_data_modified } ));
-    }
-    
-    refreshDaemonState(null, function(){
-        //console.log("init");
-    });
-        
+    let socket = mx.ServiceSocket.init('ci_service');
+    socket.on("connect", () => socket.emit('join',"details"));
+    socket.on("data", (data) => processData( data ) );
+
     //mx.CIList.init(mx.$$('div.row'),mx.$("div.table"), 'div.state', 'span.state','span.runtime');
     //mx.CIList.startUpdateProcess();
     mx.Page.refreshUI();

@@ -37,9 +37,9 @@ class Handler(Server):
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
         operating_system = plugin.OperatingSystem()
                 
-        self.process_watcher = ProcessWatcher(operating_system)
-        self.system_update_watcher = SystemUpdateWatcher(self.process_watcher, operating_system)
-        self.dependency_watcher = DependencyWatcher( self.system_update_watcher)
+        self.process_watcher = ProcessWatcher(self, operating_system)
+        self.system_update_watcher = SystemUpdateWatcher(self, self.process_watcher, operating_system)
+        self.dependency_watcher = DependencyWatcher(self, self.system_update_watcher)
         self.deployment_state_watcher = DeploymentStateWatcher()
         self.deployment_tags_watcher = DeploymentTagsWatcher()
         self.software_versions_watcher = SoftwareVersionWatcher(self)
@@ -83,6 +83,7 @@ class Handler(Server):
             self.software_versions_watcher.notifyChange(event)
         elif event["path"].startswith(self.service_base_path):
             self.service_need_restart = True
+            self.notifyWatcherState()
             
     def checkLastDataModified(self,key,last_data_modified):
         form_key = "last_data_modified[{}]".format(key)
@@ -96,11 +97,6 @@ class Handler(Server):
             
         result = { 
             "status": 0, 
-            "job_is_running": running_type is not None, 
-            "job_running_type": running_type, 
-            "job_cmd_type": cmd_type, 
-            "job_started": current_job_started.isoformat() if current_job_started is not None else None,
-            "workflow_state": self.cmd_workflow.getWorkflowState()
         }
         
         last_data_modified = {}
@@ -111,56 +107,45 @@ class Handler(Server):
         value = self.getRequestValue("last_data_modified[startup]")
         force = not value or float(value) < last_data_modified["startup"]
 
-        if state_type == "widget":
-            result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
-            result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-            result["component_updates"] = self.software_versions_watcher.getVersionCount()
-            result["needs_attention"] = ( result["workflow_state"] is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
-            result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
-        else:
-            last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
-            last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
-            last_data_modified["processes_refreshed"] = self.process_watcher.getLastRefreshAsTimestamp()
+        last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
+        last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
+        last_data_modified["processes_refreshed"] = self.process_watcher.getLastRefreshAsTimestamp()
 
-            last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
-            last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
-            last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
-            last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
-            last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
-            last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
-            
-            if force or self.checkLastDataModified("outdated_processes",last_data_modified):
-                changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
-            if force or self.checkLastDataModified("outdated_roles",last_data_modified):
-                changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
-            if force or self.checkLastDataModified("deployment_state",last_data_modified):
-                changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedVault()
-            if force or self.checkLastDataModified("deployment_tags",last_data_modified):
-                changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
+        last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
+        last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
+        last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
+        last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
 
-            if force or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
-                changed_data["is_reboot_needed"] = {
-                    "all": self.system_update_watcher.isRebootNeeded(),
-                    "core": self.process_watcher.isRebootNeededByCoreUpdate(),
-                    "outdated": self.process_watcher.isRebootNeededByOutdatedProcesses(),
-                    "installed": self.system_update_watcher.isRebootNeededByInstalledPackages()
-                }
-                
-            if force or self.checkLastDataModified("system_updates",last_data_modified):
-                changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
-                changed_data["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
-            if force or self.checkLastDataModified("smartserver_changes",last_data_modified):
-                changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
-                changed_data["smartserver_changes_hash"] = self.system_update_watcher.getSmartserverChangesHash()
-                changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
-                changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
-            if force or self.checkLastDataModified("jobs",last_data_modified):
-                changed_data["jobs"] = self.cmd_executer.getJobs()
-                
-            result["job_logfile"] = self.cmd_executer.getCurrentJobLogfile()
-            result["job_killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
-            result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
-                
+        if force or self.checkLastDataModified("outdated_processes",last_data_modified):
+            changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
+        if force or self.checkLastDataModified("outdated_roles",last_data_modified):
+            changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
+        if force or self.checkLastDataModified("deployment_state",last_data_modified):
+            changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedVault()
+        if force or self.checkLastDataModified("deployment_tags",last_data_modified):
+            changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
+
+        if force or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
+            changed_data["is_reboot_needed"] = {
+                "all": self.system_update_watcher.isRebootNeeded(),
+                "core": self.process_watcher.isRebootNeededByCoreUpdate(),
+                "outdated": self.process_watcher.isRebootNeededByOutdatedProcesses(),
+                "installed": self.system_update_watcher.isRebootNeededByInstalledPackages()
+            }
+
+        if force or self.checkLastDataModified("system_updates",last_data_modified):
+            changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
+            changed_data["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
+        if force or self.checkLastDataModified("smartserver_changes",last_data_modified):
+            changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
+            changed_data["smartserver_changes_hash"] = self.system_update_watcher.getSmartserverChangesHash()
+            changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
+            changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
+        if force or self.checkLastDataModified("jobs",last_data_modified):
+            changed_data["jobs"] = self.cmd_executer.getJobs()
+
         result["last_data_modified"] = last_data_modified
         result["changed_data"] = changed_data
         return json.dumps(result)
@@ -195,20 +180,92 @@ class Handler(Server):
         else:
             return self.buildResult(1, u"Job not started" )
 
-    def emitUpdateSoftwareData(self, data):
-         logging.info("Emit update software data")
-         self.emitSocketData('updateSoftware', data)
+    def notifyExecutorJobStatus(self, data):
+        if self.isSocketRoomActive("software"):
+            self.emitSocketData('data', { "job_status": data }, "software")
 
-    def emitInitialSoftwareData(self):
-         data = self.software_versions_watcher.getSoftwareVersions()
-         logging.info("Emit initial software data")
-         self.emitSocketData('initSoftware', data)
-         if self.cmd_executer.isDaemonJobRunning():
-             self.emitSocketData('job_status', self.cmd_executer.getJobStatus())
+        elif self.isSocketRoomActive("widget"):
+            self.emitSocketData('data', { "job_status": data }, "widget")
 
-    def emitJobStatus(self, data):
-         logging.info("Emit job status '{}'".format(data["job"]))
-         self.emitSocketData('job_status', data)
+        elif self.isSocketRoomActive("updates"):
+            result = {}
+            result["job_status"] = data
+            result["job_status"]["logfile"] = self.cmd_executer.getCurrentJobLogfile()
+            result["job_status"]["killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
+            self.emitSocketData('data', result, "updates")
+
+    def notifyWatcherSoftwareVersions(self, field, data):
+        if field == "software":
+            if self.isSocketRoomActive("software"):
+                self.emitSocketData('data', { "software_versions": data }, "software")
+        elif field == "update_cound":
+            if self.isSocketRoomActive("widget"):
+                self.emitSocketData('data', { "component_updates": data }, "widget")
+
+    def notifyWatcherSystemUpdates(self):
+        if not self.isSocketRoomActive("widget"):
+            return
+
+        result = {}
+        result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
+        result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
+        self.emitSocketData('data', result, "widget")
+
+    def _buildWidgetResult(self):
+        result = {}
+        result["workflow_state"] = self.cmd_workflow.getWorkflowState()
+        result["needs_attention"] = ( result["workflow_state"] is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
+        result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
+        return result
+
+    def notifyWatcherState(self):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('data', self._buildWidgetResult(), "widget")
+
+        elif self.isSocketRoomActive("updates"):
+            result = {}
+            result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
+            self.emitSocketData('data', result, "updates")
+
+    def notifyWorkflowState(self):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('data', self._buildWidgetResult(), "widget")
+        elif self.isSocketRoomActive("updates"):
+            self.emitSocketData('data', { "job_status": { "workflow": self.cmd_workflow.getWorkflowState() } }, "updates")
+
+    def onSocketRoomJoin(self, sid, room, data = None):
+        super().onSocketRoomJoin(sid, room, data)
+
+        if room == "widget":
+            result = {}
+            result["job_status"] = self.cmd_executer.getJobStatus()
+
+            result["component_updates"] = self.software_versions_watcher.getVersionCount()
+
+            result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
+            result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
+
+            result["workflow_state"] = self.cmd_workflow.getWorkflowState()
+            result["needs_attention"] = ( result["workflow_state"] is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
+            result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
+            self.emitSocketData('data', result, room)
+
+        elif room == "software":
+            self.emitSocketData('data', { "job_status": self.cmd_executer.getJobStatus(), "software_versions": self.software_versions_watcher.getSoftwareVersions() }, room)
+
+        elif room == "updates":
+            result = {}
+            result["job_status"] = self.cmd_executer.getJobStatus()
+            result["job_status"]["logfile"] = self.cmd_executer.getCurrentJobLogfile()
+            result["job_status"]["killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
+            result["job_status"]["workflow"] = self.cmd_workflow.getWorkflowState()
+            result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
+            self.emitSocketData('data', result, room)
+
+    def onSocketConnect(self, sid):
+        super().onSocketConnect(sid)
+
+        self.cmd_executer.triggerSocketClientsActive()
 
 @serverWeb.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
 def refreshSoftwareVersionCheck():

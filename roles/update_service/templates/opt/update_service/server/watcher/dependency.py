@@ -11,7 +11,8 @@ from server.watcher import watcher
 
 
 class DependencyWatcher(watcher.Watcher): 
-    def __init__(self, system_update_watcher ):
+    def __init__(self, handler, system_update_watcher ):
+        self.handler = handler
         self.system_update_watcher = system_update_watcher
         
         self.outdated_roles = {}
@@ -26,6 +27,8 @@ class DependencyWatcher(watcher.Watcher):
         else:
             del self.outdated_roles[name]
         self.postProcess()
+
+        self.handler.notifyWatcherState()
 
     def initOutdatedRoles(self):
         outdated_roles = {}

@@ -41,15 +41,11 @@ class AstroConsumer():
     def refresh(self):
         self._initData()
 
-        self.handler.emitChangedAstroData("astroSunrise", self.astroSunrise)
-        self.handler.emitChangedAstroData("astroSunset", self.astroSunset)
+        self.handler.notifyChangedAstroData("astroSunrise", self.astroSunrise)
+        self.handler.notifyChangedAstroData("astroSunset", self.astroSunset)
 
     def getValues(self):
         return { "astroSunrise": self.astroSunrise, "astroSunset": self.astroSunset }
-
-    #def getLastModified(self, last_modified, requested_fields = None ):
-    #    _last_modified = last_modified
-    #    return _last_modified
 
     def getStateMetrics(self):
         return ["weather_service_state{{type=\"consumer_astro\",group=\"running\"}} {}".format(1 if self.is_running else 0)]

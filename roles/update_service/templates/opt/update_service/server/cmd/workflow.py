@@ -185,6 +185,7 @@ class CmdWorkflow:
         
     def _runWorkflow(self, workflow):   
         self.workflow_state = None
+        self.handler.notifyWatcherState()
 
         while len(workflow) > 0:
             cmd_block = workflow.pop(0)
@@ -204,9 +205,11 @@ class CmdWorkflow:
                         continue
                     else:
                         self.workflow_state = "stopped"
+                        self.handler.notifyWatcherState()
                         break
                 elif type(_cmd_block) == str:
                     self.workflow_state = _cmd_block
+                    self.handler.notifyWatcherState()
                     break
                 else:
                     logging.info("Run Workflow function '{}'".format(cmd_block["function"]))
@@ -284,6 +287,7 @@ class CmdWorkflow:
     def killWorkflow(self):
         self.cmd_executer.killProcess()
         self.workflow_state = "killed"
+        self.handler.notifyWatcherState()
         
     def getWorkflowState(self):
         return self.workflow_state

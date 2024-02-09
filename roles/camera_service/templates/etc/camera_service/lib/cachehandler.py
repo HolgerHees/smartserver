@@ -84,7 +84,7 @@ class CacheHandler(threading.Thread):
                 except queue.Empty:
                     for camera_name in changes:
                         if len(changes[camera_name]["added"]) > 0 or len(changes[camera_name]["removed"]) > 0:
-                            self.handler.emitChangedData(camera_name, changes[camera_name])
+                            self.handler.notifyChangedData(camera_name, changes[camera_name])
                     changes = {};
                     self.event.wait()
                     self.event.clear()
@@ -161,7 +161,7 @@ class CacheHandler(threading.Thread):
                     changes["removed"].append(picture_name)
 
             if self.is_initialized and (len(changes["added"]) > 0 or len(changes["removed"]) > 0):
-                self.handler.emitChangedData(camera_name, changes)
+                self.handler.notifyChangedData(camera_name, changes)
 
     def cleanCachedImages(self, camera_name, picture_name):
         cleaned = False

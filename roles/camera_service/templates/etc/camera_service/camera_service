@@ -11,7 +11,7 @@ from smartserver.scheduler import Scheduler
 
 from lib.cachehandler import CacheHandler
 
-import config
+from config import config
 
 
 class Handler(Server):
@@ -51,14 +51,17 @@ class Handler(Server):
             self.event.clear()
             #requests.exceptions.ConnectionError, urllib3.exceptions.MaxRetryError, urllib3.exceptions.NewConnectionError
 
-    def emitChangedData(self, camera_name, changed_data):
-        logging.info("Emit changed cache data for camera '{}'".format(camera_name))
-        self.emitSocketData('change_' + camera_name, changed_data)
+    def notifyChangedData(self, camera_name, changed_data):
+        if not self.isSocketRoomActive(camera_name):
+            return
 
-    def emitInitialData(self, camera_name):
-        data = self.cache_handler.getCacheData(camera_name);
-        logging.info("Emit initial cache data for camera '{}'".format(camera_name))
-        self.emitSocketData('init', data)
+        self.emitSocketData('update', changed_data, camera_name)
+
+    def onSocketRoomJoin(self, sid, room, data = None):
+        super().onSocketRoomJoin(sid, room, data)
+
+        camera_data = self.cache_handler.getCacheData(room);
+        self.emitSocketData('init', camera_data)
 
     def getStateMetrics(self):
         metrics = []
@@ -69,10 +72,6 @@ class Handler(Server):
 @serverWeb.route('/metrics/', methods = ['GET'])
 def metrics():
     return handler.getStateMetrics()
-
-@serverSocket.on('init')
-def on_init(camera_name):
-    handler.emitInitialData(camera_name)
 
 handler = Handler()
 handler.start()

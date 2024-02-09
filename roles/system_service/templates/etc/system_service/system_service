@@ -80,72 +80,66 @@ class Handler(Server):
         self.mqtt.terminate()
 
         super().terminate()
-        
-    def triggerSpeedtest(self):
-        self.speedtest.triggerSpeedtest()
 
-    def emitChangedSpeedtestData(self, is_testing):
-        logging.info("Emit changed speedtest")
-        self.emitSocketData('changedSpeedtestData', { "is_running": is_testing })
+    def notifyChangedInfoData(self, type, data):
+        if not self.isSocketRoomActive("widget"):
+            return
 
-    def emitInitialSpeedtestData(self):
-        logging.info("Emit initial speedtest")
-        self.emitSocketData('initSpeedtestData', { "is_running": self.speedtest.isTesting() })
-
-    def emitChangedNetworkData(self, changed_data, msg):
-        logging.info("Emit changed network {}".format(msg))
-        self.emitSocketData('changedNetworkData', changed_data)
-
-    def emitInitialNetworkData(self):
-        [ data, msg ] = self.scanner.getWebSocketData();
-        logging.info("Emit initial network {}".format(msg))
-        data["root"] = self.scanner.getGatewayMAC()
-        self.emitSocketData('initNetworkData', data)
-
-    def emitChangedWidgetData(self, type, data):
         result = {}
         if type == "isp_state":
             result["wan_isp_state"] = "default" if data else "fallback"
         elif type == "online_state":
             result["wan_online_state"] = "online" if data else "offline"
-        elif type == "blocked_ips":
-            result["traffic_states"] = {}
-            result["traffic_states"]["blocked"] = data
-        elif type == "traffic_states":
-            result["traffic_states"] = data
-        self.emitSocketData("changedWidgetData", result);
 
-    def emitChangedWidgetTrafficData(self):
-        result = {}
-        result["traffic_states"] = self.trafficwatcher.getTrafficStateSummery()
-        self.emitSocketData("initWidgetData", result);
+        self.emitSocketData("data", result, "widget");
 
-    def emitInitialWidgetData(self):
-        result = {}
-        result["wan_isp_state"] = "default" if self.info.isDefaultConnection() else "fallback"
-        result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
-        result["blocked_traffic"] = len(self.trafficwatcher.getBlockedIPs())
-        result["traffic_states"] = self.trafficwatcher.getTrafficStateSummery()
-        self.emitSocketData("initWidgetData", result);
+    def notifyChangedBlockTrafficData(self, type, data):
+        if not self.isSocketRoomActive("widget"):
+            return
 
-    def getStateMetrics(self):
-        metrics = []
-        metrics += self.trafficwatcher.getStateMetrics()
+        self.emitSocketData("data", {"blocked_traffic": data}, "widget");
 
-        metrics += self.scanner.getStateMetrics()
-        metrics += self.speedtest.getStateMetrics()
-        metrics += self.fping.getStateMetrics()
+    def notifyChangedBlockTrafficStatesData(self, type, data):
+        if not self.isSocketRoomActive("widget"):
+            return
 
-        metrics += self.info.getStateMetrics()
+        self.emitSocketData("data", {"traffic_states": data}, "widget");
 
-        metrics += self.ipcache.getStateMetrics()
+    def notifyChangedNetworkData(self, changed_data, msg):
+        if not self.isSocketRoomActive("network"):
+            return
 
-        metrics += self.influxdb.getStateMetrics()
-        metrics += self.mqtt.getStateMetrics()
+        logging.info("Emit changed network {}".format(msg))
+        self.emitSocketData('data', changed_data, "network")
 
-        metrics += self.scheduler.getStateMetrics()
+    def notifyChangedSpeedtestData(self, is_testing):
+        if not self.isSocketRoomActive("speedtest"):
+            return
 
-        return "{}\n".format( "\n".join(metrics) )
+        self.emitSocketData('data', { "is_running": is_testing }, "speedtest")
+
+    def onSocketRoomJoin(self, sid, room, data = None):
+        super().onSocketRoomJoin(sid, room, data)
+
+        if room == "widget":
+            result = {}
+            result["wan_isp_state"] = "default" if self.info.isDefaultConnection() else "fallback"
+            result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
+            result["blocked_traffic"] = len(self.trafficwatcher.getBlockedIPs())
+            result["traffic_states"] = self.trafficwatcher.getTrafficStateSummery()
+            self.emitSocketData("data", result, room);
+
+        elif room == "speedtest":
+            self.emitSocketData('data', { "is_running": self.speedtest.isTesting() }, room)
+
+        elif room == "network":
+            [ data, msg ] = self.scanner.getNetworkData();
+            logging.info("Emit initial network {}".format(msg))
+            data["root"] = self.scanner.getGatewayMAC()
+            self.emitSocketData('data', data, room)
+
+    def triggerSpeedtest(self):
+        self.speedtest.triggerSpeedtest()
 
     def getConnectionState(self):
         if self.info.isConnectionOnline():
@@ -172,6 +166,31 @@ class Handler(Server):
 
         return json.dumps(result)
 
+    def getStateMetrics(self):
+        metrics = []
+        metrics += self.trafficwatcher.getStateMetrics()
+
+        metrics += self.scanner.getStateMetrics()
+        metrics += self.speedtest.getStateMetrics()
+        metrics += self.fping.getStateMetrics()
+
+        metrics += self.info.getStateMetrics()
+
+        metrics += self.ipcache.getStateMetrics()
+
+        metrics += self.influxdb.getStateMetrics()
+        metrics += self.mqtt.getStateMetrics()
+
+        metrics += self.scheduler.getStateMetrics()
+
+        return "{}\n".format( "\n".join(metrics) )
+
+@serverWeb.route('/triggerSpeedtest/', methods = ['GET'])
+def speedtest():
+    #logging.info(request.headers.get('User-Agent'))
+    handler.triggerSpeedtest()
+    return "ok"
+
 # needed for grafana wan dashboard
 @serverWeb.route('/observed_ips/', methods = ['POST'])
 def observed_ips():
@@ -187,26 +206,6 @@ def metrics():
     #logging.info(request.headers.get('User-Agent'))
     #return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
     return handler.getStateMetrics()
-
-@serverWeb.route('/triggerSpeedtest/', methods = ['GET'])
-def speedtest():
-    #logging.info(request.headers.get('User-Agent'))
-    handler.triggerSpeedtest()
-    return "ok"
-
-@serverSocket.on('initData')
-def initData(type):
-    if "initWidgetData" in type:
-        handler.emitInitialWidgetData()
-
-    if "getWidgetTrafficData" in type:
-        handler.emitChangedWidgetTrafficData()
-
-    if "initNetworkData" in type:
-        handler.emitInitialNetworkData()
-
-    if "initSpeedtestData" in type:
-        handler.emitInitialSpeedtestData()
 
 handler = Handler()
 handler.start()

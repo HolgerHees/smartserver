@@ -98,27 +98,37 @@ class ProviderConsumer():
             #logging.info("Topic " + msg.topic + ", message:" + str(msg.payload))
             if state_name == u"current":
                 if is_refreshed:
-                    with self.db.open() as db:
-                        datetime_str = msg.payload.decode("utf-8")
-                        #logging.info(datetime_str)
-                        #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
-                        validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
-                        update_values = []
-                        for field in self.processed_current_values:
-                            self.processed_current_values[field] = float(self.processed_current_values[field]) if "." in self.processed_current_values[field] else int(self.processed_current_values[field])
-                            if field in self.field_names:
-                                update_values.append("`{}`='{}'".format(field,self.processed_current_values[field]))
+                    if self.processed_current_values is not None:
+                        currentIsModified = False
+                        with self.db.open() as db:
+                            datetime_str = msg.payload.decode("utf-8")
+                            #logging.info(datetime_str)
+                            #datetime_str = u"{0}{1}".format(datetime_str[:-3],datetime_str[-2:])
+                            validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
+                            update_values = []
+                            for field in self.processed_current_values:
+                                self.processed_current_values[field] = float(self.processed_current_values[field]) if "." in self.processed_current_values[field] else int(self.processed_current_values[field])
+                                if field in self.field_names:
+                                    update_values.append("`{}`='{}'".format(field,self.processed_current_values[field]))
 
-                        if db.hasEntry(validFrom.timestamp()):
-                            isModified = db.update(validFrom.timestamp(),update_values)
-                            logging.info(u"Current data processed • Updated {}".format( "yes" if isModified else "no" ))
-                        else:
-                            logging.info(u"Current data not updated: Topic: " + msg.topic + ", message:" + str(msg.payload))
-
-                        self.current_values = self.processed_current_values
-                        self.current_values["datetime"] = validFrom
+                            if db.hasEntry(validFrom.timestamp()):
+                                currentIsModified = db.update(validFrom.timestamp(),update_values)
+                                self.current_values = db.getOffset(0)
+                                logging.info(u"Current data processed • Updated {}".format( "yes" if currentIsModified else "no" ))
+                            else:
+                                logging.info(u"Current data not updated: Topic: " + msg.topic + ", message:" + str(msg.payload))
 
                         self.processed_current_values = None
+                        if currentIsModified:
+                            with self.station_fallback_lock:
+                                if self.station_fallback_data is not None:
+                                    for field, value in self._buildFallbackStationValues().items():
+                                        if field in self.station_fallback_data and self.station_fallback_data[field] == value:
+                                            continue
+                                        self.station_fallback_data[field] = value
+                                        self.notifyCurrentValue(field, value)
+                    else:
+                        logging.info("Current not processed")
                 else:
                     if self.processed_current_values is None:
                         self.processed_current_values = {}
@@ -126,9 +136,10 @@ class ProviderConsumer():
             elif state_name == u"forecast":
                 if is_refreshed:
                     if self.processed_forecast_values is not None:
+                        forecastsIsModified = False
+                        updateCount = 0
+                        insertCount = 0
                         with self.db.open() as db:
-                            updateCount = 0
-                            insertCount = 0
                             for datetime_str in self.processed_forecast_values:
                                 validFrom = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S%z')
 
@@ -140,6 +151,7 @@ class ProviderConsumer():
                                 try:
                                     isModified = db.insertOrUpdate(validFrom.timestamp(),update_values)
                                     if isModified:
+                                        forecastsIsModified = True
                                         if isUpdate:
                                             updateCount += 1
                                         else:
@@ -147,9 +159,11 @@ class ProviderConsumer():
                                 except Exception as e:
                                     logging.info(update_values)
                                     raise e
-                            logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_forecast_values),updateCount,insertCount))
 
-                            self.processed_forecast_values = None
+                        logging.info("Forcecasts processed • Total: {}, Updated: {}, Inserted: {}".format(len(self.processed_forecast_values),updateCount,insertCount))
+                        self.processed_forecast_values = None
+                        if forecastsIsModified:
+                            self.handler.notifyChangedWeekData()
                     else:
                         logging.info("Forcecasts not processed")
                 else:
@@ -173,19 +187,6 @@ class ProviderConsumer():
 
             if is_refreshed:
                 self.consume_refreshed[state_name] = time.time()
-
-                # notify station fallback values
-                if state_name == "current":
-                    with self.station_fallback_lock:
-                        if self.station_fallback_data is not None:
-                            for field, value in self._buildFallbackStationValues().items():
-                                if field in self.station_fallback_data and self.station_fallback_data[field] == value:
-                                    continue
-                                self.station_fallback_data[field] = value
-                                self.notifyCurrentValue(field, value)
-
-                elif state_name == "forecast":
-                    self.notifyWeekValues()
 
         except DBException:
             self.consume_errors[state_name] = time.time()
@@ -290,11 +291,11 @@ class ProviderConsumer():
 
         currentCloudsAsSVG = self._buildCloudSVG()
         if self.station_cloud_svg != currentCloudsAsSVG:
-            self.handler.emitChangedCurrentData("currentCloudsAsSVG", currentCloudsAsSVG)
+            self.handler.notifyChangedCurrentData("currentCloudsAsSVG", currentCloudsAsSVG)
             self.station_cloud_svg = currentCloudsAsSVG
 
     def notifyCurrentValue(self, field, value):
-        self.handler.emitChangedCurrentData(field, value)
+        self.handler.notifyChangedCurrentData(field, value)
 
         if field in ["currentRainLevel", "currentRainLast15MinInMillimeter", "currentRainLastHourInMillimeter", "currentCloudCoverInOcta"]:
             if self.station_cloud_timer is not None:
@@ -324,9 +325,6 @@ class ProviderConsumer():
         for block in blockList:
             result.append(block.to_dict())
         return result
-
-    def notifyWeekValues(self):
-        self.handler.emitChangedWeekData()
 
     def getWeekValues(self, requested_day = None):
         activeDay = datetime.now() if requested_day is None else datetime.strptime(requested_day, '%Y-%m-%d')
@@ -453,7 +451,7 @@ class ProviderConsumer():
             else:
                 minTemperature = maxTemperature = maxWindSpeed = sumSunshine = sumRain = None
 
-            values["dayList"] = todayValues
+            values["dayList"] = self._convertToDictList(todayValues)
             values["dayMinTemperature"] = minTemperature
             values["dayMaxTemperature"] = maxTemperature
             values["dayMaxWindSpeed"] = maxWindSpeed

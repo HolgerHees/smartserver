@@ -12,8 +12,10 @@ from server.watcher import watcher
 
 
 class SystemUpdateWatcher(watcher.Watcher): 
-    def __init__(self, process_watcher, operating_system ):
+    def __init__(self, handler, process_watcher, operating_system ):
         super().__init__()
+
+        self.handler = handler
       
         self.process_watcher = process_watcher
         self.reboot_required_packages = operating_system.getRebootRequiredPackages()
@@ -32,6 +34,8 @@ class SystemUpdateWatcher(watcher.Watcher):
         
     def notifyChange(self, event):
         self.initSystemState(True)
+        self.handler.notifyWatcherSystemUpdates()
+        self.handler.notifyWatcherState()
         
     def parseTime(self, datetimeStr):
         datetimeStr = "{}{}".format(datetimeStr[0:-3],datetimeStr[-2:])

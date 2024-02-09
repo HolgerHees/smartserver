@@ -14,6 +14,7 @@ function getSVG( $icon, $id)
 <script>
 mx.WeatherCore = (function( ret ) {
     var active_day = null;
+    var data = {};
 
     function buildRow(id, time, cloud, maxTemperature, minTemperature, sunshineDuration, precipitationProbability, precipitationAmount, windSpeed, windDirection, clickDate)
     {
@@ -42,12 +43,14 @@ mx.WeatherCore = (function( ret ) {
         return row;
     }
 
-    function processCurrentData(data)
+    function processData(changed_data)
     {
-        if( "currentAirTemperatureInCelsius" in data) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentAirTemperatureInCelsius"]) + ' °C';
-        if( "currentPerceivedTemperatureInCelsius" in data) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentPerceivedTemperatureInCelsius"]) + ' °C';
+        data = {...data, ...changed_data};
 
-        if( "currentWindSpeedInKilometerPerHour" in data || "currentWindSpeedInKilometerPerHour" in data )
+        if( "currentAirTemperatureInCelsius" in changed_data) mx.$(".current .summary .temperature .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentAirTemperatureInCelsius"]) + ' °C';
+        if( "currentPerceivedTemperatureInCelsius" in changed_data) mx.$(".current .summary .perceived .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentPerceivedTemperatureInCelsius"]) + ' °C';
+
+        if( "currentWindSpeedInKilometerPerHour" in changed_data || "currentWindSpeedInKilometerPerHour" in changed_data )
         {
             let windSpeed = mx.WeatherHelper.formatNumber(data["currentWindSpeedInKilometerPerHour"]);
             let windGust = mx.WeatherHelper.formatNumber(data["currentWindGustInKilometerPerHour"]);
@@ -59,7 +62,7 @@ mx.WeatherCore = (function( ret ) {
             mx.$(".current .summary .wind .value").innerHTML = wind + ' km/h';
         }
 
-        if( "currentRainLastHourInMillimeter" in data || "currentRainDailyInMillimeter" in data )
+        if( "currentRainLastHourInMillimeter" in changed_data || "currentRainDailyInMillimeter" in changed_data )
         {
             let rainValue = mx.WeatherHelper.formatNumber(data["currentRainLastHourInMillimeter"]);
             let rainDaily = mx.WeatherHelper.formatNumber(data["currentRainDailyInMillimeter"]);
@@ -71,30 +74,24 @@ mx.WeatherCore = (function( ret ) {
             mx.$(".current .summary .rain .value").innerHTML = rain + ' mm';
         }
 
-        if( "currentCloudsAsSVG" in data) mx.$(".current .cloud").innerHTML = mx.WeatherHelper.formatNumber(data["currentCloudsAsSVG"]);
+        if( "currentCloudsAsSVG" in changed_data) mx.$(".current .cloud").innerHTML = mx.WeatherHelper.formatNumber(data["currentCloudsAsSVG"]);
 
-        if( "currentUvIndex" in data) mx.$(".current .uv .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentUvIndex"]);
-    }
+        if( "currentUvIndex" in changed_data) mx.$(".current .uv .value").innerHTML = mx.WeatherHelper.formatNumber(data["currentUvIndex"]);
 
-    function processAstroData(data)
-    {
-        if( "astroSunrise" in data)
+        if( "astroSunrise" in changed_data)
         {
             let sunrise = new Date();
             sunrise.setTime(Date.parse(data["astroSunrise"]));
             mx.$(".current .sunrise .value").innerHTML = mx.WeatherHelper.formatHour(sunrise);
         }
-        if( "astroSunset" in data)
+        if( "astroSunset" in changed_data)
         {
             let sunset = new Date();
             sunset.setTime(Date.parse(data["astroSunset"]));
             mx.$(".current .sunset .value").innerHTML = mx.WeatherHelper.formatHour(sunset);
         }
-    }
 
-    function processWeekData(data)
-    {
-        if( "dayActive" in data )
+        if( "dayActive" in changed_data )
         {
             if( data["dayActive"] )
             {
@@ -111,7 +108,7 @@ mx.WeatherCore = (function( ret ) {
 
         let now = new Date();
 
-        if( "dayList" in data)
+        if( "dayList" in changed_data)
         {
             mx.$(".today .summary .temperature .value span.min").innerHTML = mx.WeatherHelper.formatNumber(data["dayMinTemperature"]);
             mx.$(".today .summary .temperature .value span.max").innerHTML = mx.WeatherHelper.formatNumber(data["dayMaxTemperature"]);
@@ -152,7 +149,7 @@ mx.WeatherCore = (function( ret ) {
             if( active_id ) mx.$("#" + active_id ).classList.add("active");
         }
 
-        if( "weekList" in data)
+        if( "weekList" in changed_data)
         {
             mx.$(".week .summary .temperature .value span.min").innerHTML = mx.WeatherHelper.formatNumber(data["weekMinTemperature"]);
             mx.$(".week .summary .temperature .value span.max").innerHTML = mx.WeatherHelper.formatNumber(data["weekMaxTemperature"]);
@@ -291,10 +288,10 @@ mx.WeatherCore = (function( ret ) {
     ret.init = function()
     {
         socket = mx.ServiceSocket.init('weather_service');
-        socket.on("connect", function(){ socket.emit('initData', ["initWeekData","initCurrentData","initAstroData"]); } );
+        socket.on("connect", () => socket.emit("join", "details", active_day == null ? null : active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()) ) );
+        socket.on("data", (data) => processData( data ) );
 
-        socket.on("initWeekData", (data) => processWeekData( data ) );
-        socket.on("changedWeekData", function(data){
+        /*socket.on("changedWeekData", function(data){
             if( active_day == null ) return;
             socket.emit('initWeekData', active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()));
         });
@@ -303,7 +300,7 @@ mx.WeatherCore = (function( ret ) {
         socket.on("changedCurrentData", (data) => processCurrentData( data ) );
 
         socket.on("initAstroData", (data) => processAstroData( data ) );
-        socket.on("changedAstroData", (data) => processAstroData( data ) );
+        socket.on("changedAstroData", (data) => processAstroData( data ) );*/
 
         mx.I18N.process(document);
 

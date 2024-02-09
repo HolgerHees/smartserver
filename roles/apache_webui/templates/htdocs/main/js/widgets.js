@@ -14,6 +14,7 @@ mx.Widgets = (function( ret ) {
     let last_max_size = 0;
 
     let initialized = -1;
+    let init_timer = null;
 
     ret.get = function()
     {
@@ -157,6 +158,16 @@ mx.Widgets = (function( ret ) {
         else
         {
             initialized = 0;
+            init_timer = window.setTimeout(function()
+            {
+                init_timer = null;
+                let missing_preloads = widgets.filter( (widget) => widget._preload.filter( (preload) => preload == null ).length > 0  );
+                console.log("missing preloads");
+                missing_preloads.forEach(function(widget)
+                {
+                    console.log("- widget: " + widget.getId(0));
+                });
+            }, 2000);
 
             widgets.forEach(function(widget, index)
             {
@@ -180,7 +191,15 @@ mx.Widgets = (function( ret ) {
                     widget._preload[index] = msg;
 
                     let missing_preloads = widgets.filter( (widget) => widget._preload.filter( (preload) => preload == null ).length > 0  );
-                    if( missing_preloads.length == 0 ) callback();
+                    if( missing_preloads.length == 0 )
+                    {
+                        if( init_timer != null )
+                        {
+                            window.clearTimeout(init_timer);
+                            init_timer = null;
+                        }
+                        callback();
+                    }
                 };
 
                 widget._init();

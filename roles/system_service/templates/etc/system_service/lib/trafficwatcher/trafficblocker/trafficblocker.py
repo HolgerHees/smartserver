@@ -169,7 +169,7 @@ class TrafficBlocker(threading.Thread):
                             self.blocked_ips = blocked_ips
 
                     if changed:
-                        self.handler.emitChangedWidgetData("blocked_ips", len(self.blocked_ips) )
+                        self.handler.notifyChangedBlockTrafficData("blocked_ips", len(self.blocked_ips) )
 
                     end_processing = time.time()
                     logging.info("Processing of {} in {} seconds".format(suspicious_ips, round(end_processing - start_processing,3)))
@@ -225,7 +225,7 @@ class TrafficBlocker(threading.Thread):
             self.approved_ips = [ip for ip, data in self.config_map["observed_ips"].items() if data["state"] == "approved"]
 
             if changed:
-                self.handler.emitChangedWidgetData("blocked_ips", len(self.blocked_ips))
+                self.handler.notifyChangedBlockTrafficData("blocked_ips", len(self.blocked_ips))
 
     def _restore(self):
         self.valid_list_file, data = ConfigHelper.loadConfig(self.dump_config_path, self.config_version )
