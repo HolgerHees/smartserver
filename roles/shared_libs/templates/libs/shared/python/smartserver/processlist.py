@@ -1,5 +1,7 @@
 import subprocess
 import re
+import time
+import logging
 
 import sys
 import os
@@ -114,13 +116,19 @@ class Processlist():
             slash = line.find('/')
             if slash == -1 or line.find('00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
                 continue
-            line = line.replace('\n', '')
+            #line = line.strip()
+            #line = line.replace('\n', '')
             filename = line[slash:]
             filename = filename.split(';')[0]
             filename = filename.strip()
-            if filename not in files:
-                files.append(filename)
-        return files
+
+            if filename[-9:] != "(deleted)":
+                continue
+            filename = filename[:-10]
+
+            #if filename not in files:
+            files.append(filename)
+        return set(files)
 
     @staticmethod
     def getPids(pattern=None,ppid=None):
@@ -152,57 +160,20 @@ class Processlist():
     def getCmdLine(pid):
         return Processlist._getCmdline(pid)
         
-    #@staticmethod
-    #def getPids():
-    #    result = subprocess.run([ "/usr/bin/ps", "-axo", "pid" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-    #    lines = result.stdout.decode("utf-8").split("\n")
-    #    pids = [line.strip() for line in lines]
-    #    return pids
-        
-    #@staticmethod
-    #def getProcesslist():
-    #    result = subprocess.run([ "/usr/bin/ps", "-axo", "pid,ppid,uid,user,comm,unit" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-    #    lines = result.stdout.decode("utf-8").split("\n")
-    #    processes = {}
-    #    for line in lines:
-    #        if not line:
-    #           continue
-            
-    #        columns = line.split(" ")
-    #        columns = [column for column in columns if column ]
-    #        if columns[5] == "-":
-    #            columns[5] = ""
-    #        pid = columns.pop(0)
-    #        processes[pid] = columns
-    #    return processes
-
     @staticmethod
     def getOutdatedProcessIds():
-        #result = subprocess.run([ "/usr/bin/lsof -n +c0 2> /dev/null | grep \"deleted\" | grep -vP \"[0-9]+ (/tmp/|/run/|/mem|/proc)\"" ], shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        #result = subprocess.run([ "/usr/bin/lsof", "-n", "+c0", "+aL1", "/" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        
-        #result = subprocess.run([ "/usr/bin/lsof", "-t", "-n", "+aL1", "/" ], shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None )
-        #outdated_pids = result.stdout.decode("utf-8").strip().split("\n")
-        
-        
-        #result = subprocess.run([ "/usr/bin/systemctl", "list-unit-files", "--state=enabled,disabled", "--no-pager", "--output=json" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        #if result.returncode != 0:
-        #    raise Exception(result.stdout.decode("utf-8"))
-        #json_data = json.loads(result.stdout.decode("utf-8"))
-        #valid_services = []
-        #for service in json_data:
-        #    if service['unit_file'].endswith('.service'):
-        #         valid_services.append(service['unit_file'][:-8])
-
+        #start = time.time()
         outdated_pids = set()
         for pid in Processlist.getPids():
             for fn in Processlist._getOpenFiles(pid):
-                # if the file is deleted 
-                if re.search('^(?!.*/tmp/|/var/|/run/).*\(deleted\)$', fn):
-                #if fn.find('(deleted)') != -1:
+                #logging.info(":{}:".format(fn))
+                # if the file is deleted
+                if re.search('^(?!.*/tmp/|/var/|/run/).*$', fn):
                     outdated_pids.add(pid)
                     break
-                  
+        #end = time.time()
+        #logging.info(end-start)
+
         outdated = {}
         if len(outdated_pids) > 0:
             user_map = Processlist._getUserMap()
