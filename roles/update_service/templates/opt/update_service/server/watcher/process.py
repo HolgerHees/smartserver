@@ -102,7 +102,7 @@ class ProcessWatcher(watcher.Watcher):
         self.is_reboot_needed_by_outdated_processes = is_reboot_needed
         self.oudated_processes_modified = self.getNowAsTimestamp()
 
-        self.handler.notifyWatcherState()
+        self.handler.notifyWatcherProcessState()
 
     def _refresh(self):
         with self.lock:
@@ -153,7 +153,7 @@ class ProcessWatcher(watcher.Watcher):
         if not self.is_reboot_needed_by_core_update:
             self.prioritized_state_refresh_after_reboot = None
 
-    def getOudatedProcesses(self):
+    def getOutdatedProcesses(self):
         return list(self.outdated_processes.values())
       
     def getOutdatedServices(self):

@@ -168,11 +168,20 @@ class Server():
     def getRequestHeader(self, field):
         return request.headers[field] if field in request.headers else None
 
-    def getRequestValue(self, field):
-        return request.form[field] if field in request.form else None
+    #def getRequestValue(self, field):
+    #    return request.form[field] if field in request.form else None
 
-    def getRequestValues(self, field):
-        return request.form
+    #def getRequestValues(self, field):
+    #    return request.form
+
+    def buildStatusResult(self, code, message):
+        return {
+            "code": code,
+            "message": message
+        }
+
+    def getSocketParamValue(self, params, field):
+        return params[field] if field in params else None
 
     def _socketWatcherInfo(self):
         self.socket_watcher_timer = None

@@ -18,7 +18,7 @@ class SoftwareVersionWatcher(watcher.Watcher):
     def notifyChange(self, event):
         self.initSoftwareState(True)
         self.handler.notifyWatcherSoftwareVersions( "software", self.software)
-        self.handler.notifyWatcherSoftwareVersions( "update_cound", self.update_count)
+        self.handler.notifyWatcherSoftwareVersions( "update_count", self.update_count)
 
     def initSoftwareState(self, shouldRetry):
         self.software = self.readJsonFile(config.software_version_state_file,shouldRetry,{})

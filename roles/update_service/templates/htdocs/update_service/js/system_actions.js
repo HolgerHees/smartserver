@@ -2,18 +2,25 @@ mx.UpdateServiceActions = (function( ret ) {
   
     var dialog = null;
     
-    var daemonApiUrl = null; 
+    var socket = null;
         
     function runAction(btn, action, parameter, response_callback)
     {
         if( !parameter ) parameter = {};
-        parameter["last_data_modified"] = mx.UNCore.getLastDataModified();
 
         mx.UNCore.setUpdateJobStarted( parameter.hasOwnProperty("system_updates_hash") || parameter.hasOwnProperty("smartserver_changes_hash") );
-        
+
         // needs to be asynchrone to allow ripple effect
         window.setTimeout(function() { btn.classList.add("disabled"); },0);
-        
+
+        socket.emit(action,parameter);
+
+
+
+
+
+        /*parameter["last_data_modified"] = mx.UNCore.getLastDataModified();
+
         var xhr = new XMLHttpRequest();
         xhr.open("POST", daemonApiUrl + action + "/" );
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -57,7 +64,7 @@ mx.UpdateServiceActions = (function( ret ) {
             }
         };
         
-        xhr.send(mx.Core.encodeDict(parameter));
+        xhr.send(mx.Core.encodeDict(parameter));*/
     }
     
     function dialogClose()
@@ -417,7 +424,7 @@ mx.UpdateServiceActions = (function( ret ) {
 
     ret.actionRestartDaemon = function(btn)
     {
-        confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <span class='important'>restart update daemon</span>?"),"red",null, mx.UpdateServiceHelper.announceRestart );
+        confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <span class='important'>restart update daemon</span>?"),"red", null);
         /*, function(response){
         window.clearTimeout(refreshDaemonStateTimer);
         confirmAction(btn,'restartDaemon',null,mx.I18N.get("You want to <span class='important'>restart update daemon</span>?"),"red", function(response){
@@ -442,9 +449,9 @@ mx.UpdateServiceActions = (function( ret ) {
         return dialog;
     }
     
-    ret.init = function( _daemonApiUrl )
+    ret.init = function( _socket )
     {
-        daemonApiUrl = _daemonApiUrl;
+        socket = _socket;
     }
 
     return ret;

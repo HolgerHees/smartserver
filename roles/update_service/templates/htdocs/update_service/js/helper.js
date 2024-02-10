@@ -1,22 +1,4 @@
 mx.UpdateServiceHelper = (function( ret ) {
-    let isRestarting = false;
-    
-    ret.confirmRestarting = function()
-    {
-        isRestarting = false;
-    }
-
-    ret.announceRestart = function()
-    {
-        isRestarting = true
-        window.setTimeout(function(){ isRestarting = false; },5000);
-    }
-    
-    ret.isRestarting = function()
-    {
-        return isRestarting;
-    }
-
     ret.setToogle = function(btnElement,detailElement)
     {
         if( btnElement != null ) 

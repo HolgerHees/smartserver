@@ -71,7 +71,8 @@
               }
             ]
           },
-          "unit": "string"
+          "unit": "string",
+          "unitScale": true
         },
         "overrides": [
           {
@@ -399,22 +400,6 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Logs"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 80
-              },
-              {
-                "id": "filterable",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "LE"
             },
             "properties": [
@@ -439,48 +424,6 @@
                     "type": "value"
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "LG"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "observed": {
-                        "color": "#8ca000",
-                        "index": 0,
-                        "text": "O"
-                      },
-                      "scanning": {
-                        "color": "#F2CC0C",
-                        "index": 1,
-                        "text": "S"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              },
-              {
-                "id": "custom.width",
-                "value": 30
-              },
-              {
-                "id": "filterable",
-                "value": true
               }
             ]
           },
@@ -622,7 +565,7 @@
           }
         ]
       },
-      "pluginVersion": "10.2.3",
+      "pluginVersion": "10.3.1",
       "targets": [
         {
           "datasource": {
@@ -713,6 +656,12 @@
                 "service::tag"
               ],
               "type": "tag"
+            },
+            {
+              "params": [
+                "is_blocked::tag"
+              ],
+              "type": "tag"
             }
           ],
           "measurement": "trafficflow",
@@ -743,14 +692,6 @@
               {
                 "params": [
                   "log_count"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "blocked"
                 ],
                 "type": "field"
               }
@@ -834,6 +775,10 @@
               },
               "ip_type": {
                 "aggregations": []
+              },
+              "is_blocked": {
+                "aggregations": [],
+                "operation": "groupby"
               },
               "location_city": {
                 "aggregations": [],
@@ -929,29 +874,27 @@
               "location_zip": false,
               "source_port": true
             },
+            "includeByName": {},
             "indexByName": {
               "Time": 0,
-              "blocked": 3,
-              "destination_port": 18,
-              "direction": 14,
+              "destination_port": 15,
+              "direction": 11,
               "duration (sum)": 1,
-              "extern_group": 15,
-              "extern_host": 17,
-              "extern_ip": 16,
+              "extern_group": 12,
+              "extern_host": 14,
+              "extern_ip": 13,
               "group": 2,
-              "intern_host": 13,
-              "intern_ip": 12,
-              "location_city": 21,
-              "location_country_name": 20,
-              "location_org": 19,
-              "log_count (sum)": 6,
-              "log_group": 7,
-              "log_type": 8,
-              "protocol": 9,
-              "service": 11,
-              "tcp_flags": 10,
-              "traffic_count": 4,
-              "traffic_group": 5
+              "intern_host": 10,
+              "intern_ip": 9,
+              "is_blocked": 3,
+              "location_city": 18,
+              "location_country_name": 17,
+              "location_org": 16,
+              "log_count (sum)": 5,
+              "protocol": 6,
+              "service": 8,
+              "tcp_flags": 7,
+              "traffic_count": 4
             },
             "renameByName": {
               "Time": "Time",
@@ -971,6 +914,7 @@
               "intern_host": "Intern Hosts",
               "intern_ip": "Intern IP",
               "ip_type": "IP Type",
+              "is_blocked": "BLK",
               "last": "Traffic",
               "location_city": "City",
               "location_country_code": "Country Code",
@@ -1028,6 +972,6 @@
   "timezone": "",
   "title": "Detailed Traffic Events",
   "uid": "system-service-netflow-details",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }

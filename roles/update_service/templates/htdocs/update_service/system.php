@@ -23,16 +23,26 @@ require "config.php";
         var hasEncryptedVault = false;
         var deploymentTags = [];
 
-        var refreshDaemonStateTimer = 0;
-        
-        var daemonApiUrl = mx.Host.getBase() + '../api/'; 
-
         var daemonNeedsRestart = false;
-        var job_state = {}
+        var job_state = {};
+        var workflow_state = null;
+        var last_refreshed_state = {};
+        var job_runtime_interval = null;
+        var job_runtime_started = null;
+
+        function calculateRuntime()
+        {
+            let runtime = Math.round( ( (new Date()).getTime() - job_runtime_started ) / 1000 );
+
+            mx.$("#runtime_duration_placeholder").innerText = runtime;
+            mx.$("#runtime_unit_placeholder").innerText = mx.I18N.get( runtime == 1 ? "second" : "seconds" );
+        }
 
         function processRunningJobDetails(data)
         {
-            job_state = {...job_state, ...data};
+            if( "job_status" in data ) job_state = {...job_state, ...data["job_status"]};
+
+            if( "workflow_status" in data ) workflow_state = data["workflow_status"];
 
             let job_is_running = job_state["job"] != null;
             let job_running_type = job_state["type"];
@@ -43,20 +53,26 @@ require "config.php";
             var currentRunningStateElement = mx.$("#currentRunningState");
             var currentRunningActionsElement = mx.$("#currentRunningActions");
 
+            if( job_runtime_interval != null && ( !job_is_running || !job_started ) )
+            {
+                window.clearInterval(job_runtime_interval);
+                job_runtime_interval = null;
+                job_runtime_started = null;
+            }
+
             if( job_is_running )
             {
                 var logfile = job_state["logfile"];
-                if( logfile && job_started)
+                if( logfile && job_started )
                 {
-                    var logfile_name = logfile.substring(0,logfile.length - 4);
-                    var logfile_parts = logfile_name.split("-");
+                    let logfile_name = logfile.substring(0,logfile.length - 4);
+                    let logfile_parts = logfile_name.split("-");
 
                     action_msg_1 = "<span class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + logfile_parts[0] + "','" + logfile_parts[3] + "','" + logfile_parts[4] + "')\">";
                     action_msg_2 = "</span>";
 
-                    var runtime = Math.round( ( (new Date()).getTime() - Date.parse(job_started) ) / 1000 );
-
-                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": runtime, "4": mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+                    job_runtime_started = Date.parse(job_started)
+                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": "<span id='runtime_duration_placeholder'></span>", "4": "<span id='runtime_unit_placeholder'></span>" });
 
                     if( job_state["killable"] )
                     {
@@ -79,9 +95,9 @@ require "config.php";
                 currentRunningActionsElement.style.display="";
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
 
-                if( job_state["workflow"] )
+                if( workflow_state )
                 {
-                    switch (job_state["workflow"]) {
+                    switch (workflow_state) {
                         case 'killed':
                             msg = mx.I18N.get("Last process was killed")
                             break;
@@ -89,7 +105,7 @@ require "config.php";
                             msg = mx.I18N.get("Last process was stopped")
                             break;
                         default:
-                            let reasons = job_state["workflow"].split(",");
+                            let reasons = workflow_state.split(",");
                             if( reasons.indexOf("wrong_system_update_hash") != -1 && reasons.indexOf("wrong_smartserver_update_hash") != -1 )
                             {
                                 msg = mx.I18N.get("Last process was stopped, because of new system and smartserver updates");
@@ -150,10 +166,22 @@ require "config.php";
                     mx.UpdateServiceHelper.setExclusiveButtonsState(true, null );
                 }
             }
+
+            if( job_runtime_started != null &&job_runtime_interval == null )
+            {
+                calculateRuntime();
+                job_runtime_interval = window.setInterval(calculateRuntime,1000);
+            }
         }
 
-        function processDataNew(data)
+        function processData(data)
         {
+            if( data["has_encrypted_vault"] ) hasEncryptedVault = data["has_encrypted_vault"];
+
+            if( data["deployment_tags"] ) deploymentTags = data["deployment_tags"];
+
+            let updateBehaviorChanged = false;
+
             if( "update_server_needs_restart" in data )
             {
                 daemonNeedsRestart = data["update_server_needs_restart"];
@@ -161,94 +189,69 @@ require "config.php";
                 needsRestartElement.style.display = daemonNeedsRestart ? "flex" : "";
             }
 
-            if( data["job_status"] ) processRunningJobDetails(data["job_status"]);
-        }
+            processRunningJobDetails(data);
 
-        function processData(last_data_modified, changed_data)
-        {
-            if( changed_data.hasOwnProperty("has_encrypted_vault") ) hasEncryptedVault = changed_data["has_encrypted_vault"];
-            
-            if( changed_data.hasOwnProperty("deployment_tags") ) deploymentTags = changed_data["deployment_tags"];
-                 
-            let updateBehaviorChanged = false;
-            
-            const [ lastUpdateDate, lastUpdateMsg ] = mx.UpdateServiceTemplates.getLastFullRefresh(last_data_modified);
+            if( data["outdated_roles"] || data["outdated_processes"] ) mx.UpdateServiceTemplates.setSystemOutdatedDetails( data["outdated_roles"], data["outdated_processes"], "#systemStateHeader", "#systemStateDetails", "#roleStateHeader", "#roleStateDetails" );
+
+            if( data["is_reboot_needed"] ) mx.UpdateServiceTemplates.setSystemStateDetails(data["is_reboot_needed"],"#systemRebootState");
+
+            if( data["smartserver_pull"] ) mx.UpdateServiceTemplates.setSmartserverChangeState(data["smartserver_pull"], "#smartserverChangeState");
+
+            if( data["jobs"] ) mx.UpdateServiceTemplates.setJobDetails(data["jobs"], "#lastRunningJobsHeader", "#lastRunningJobsDetails");
+
+            if( data["system_updates"] )
+            {
+                systemUpdatesCount = mx.UpdateServiceTemplates.setSystemUpdateDetails(data["system_updates"], "#systemUpdateHeader", "#systemUpdateDetails");
+                updateBehaviorChanged = true;
+            }
+
+            if( data["smartserver_changes"] )
+            {
+                smartserverChangesCount = mx.UpdateServiceTemplates.setSmartserverChangeDetails(data["smartserver_changes"], "#smartserverChangeHeader", "#smartserverChangeDetails");
+                updateBehaviorChanged = true;
+            }
+
+            if( data["last_refreshed"] ) last_refreshed_state = {...last_refreshed_state, ...data["last_refreshed"] };
+
+            const [ lastUpdateDate, lastUpdateMsg ] = mx.UpdateServiceTemplates.getLastFullRefresh(last_refreshed_state);
             let lastUpdateDateElement = mx.$("#lastUpdateDateFormatted");
-            if( lastUpdateMsg != lastUpdateDateElement.innerHTML ) 
+            if( lastUpdateMsg != lastUpdateDateElement.innerHTML )
             {
                 lastUpdateDateElement.innerHTML = lastUpdateMsg;
                 if( lastUpdateDate == null ) lastUpdateDateElement.classList.add("red");
                 else lastUpdateDateElement.classList.remove("red");
-                 
+
                 updateBehaviorChanged = true
             }
-            
-            if( changed_data.hasOwnProperty("outdated_processes") || changed_data.hasOwnProperty("outdated_roles") )
-            {
-                mx.UpdateServiceTemplates.setSystemOutdatedDetails(last_data_modified, changed_data, "#systemStateHeader", "#systemStateDetails", "#roleStateHeader", "#roleStateDetails" );
-            }
-            
-            if( changed_data.hasOwnProperty("is_reboot_needed") )
-            {
-                mx.UpdateServiceTemplates.setSystemStateDetails(last_data_modified, changed_data,"#systemRebootState")
-            }
 
-            if( changed_data.hasOwnProperty("system_updates") )
-            {
-                systemUpdatesCount = mx.UpdateServiceTemplates.setSystemUpdateDetails(last_data_modified, changed_data, lastUpdateDate, "#systemUpdateHeader", "#systemUpdateDetails");
-                updateBehaviorChanged = true;
-            }
-            
-            if( changed_data.hasOwnProperty("smartserver_changes") )
-            {
-                smartserverChangesCount = mx.UpdateServiceTemplates.setSmartserverChangeDetails(last_data_modified, changed_data, lastUpdateDate, "#smartserverChangeHeader", "#smartserverChangeDetails");
-                updateBehaviorChanged = true;
-            }
-            
-            if( changed_data.hasOwnProperty("smartserver_code") )
-            {
-                mx.UpdateServiceTemplates.setSmartserverChangeState(last_data_modified, changed_data, "#smartserverChangeState");
-            }
-            
-            if( changed_data.hasOwnProperty("jobs") )
-            {
-                mx.UpdateServiceTemplates.setJobDetails(last_data_modified, changed_data, "#lastRunningJobsHeader", "#lastRunningJobsDetails");
-            }
+            if( updateBehaviorChanged ) mx.UpdateServiceTemplates.setWorkflow(systemUpdatesCount, smartserverChangesCount, "#updateWorkflow");
 
-            if( updateBehaviorChanged )
-            {
-                mx.UpdateServiceTemplates.setWorkflow(systemUpdatesCount, smartserverChangesCount, lastUpdateDate, "#updateWorkflow");
-            }
-            
             let systemUpdatesHashChanged = false;
             let smartserverChangesHashChanged = false;
             let updateHashRefreshed = false;
-            if( changed_data.hasOwnProperty("system_updates_hash") )
+            if( data["system_updates_hash"] )
             {
                 updateHashRefreshed = true;
-                if( systemUpdatesHash != changed_data["system_updates_hash"] ) systemUpdatesHashChanged = true;
-                systemUpdatesHash = changed_data["system_updates_hash"];
+                if( systemUpdatesHash != data["system_updates_hash"] ) systemUpdatesHashChanged = true;
+                systemUpdatesHash = data["system_updates_hash"];
             }
-            if( changed_data.hasOwnProperty("smartserver_changes_hash") )
+            if( data["smartserver_changes_hash"] )
             {
                 updateHashRefreshed = true;
-                if( smartserverChangesHash != changed_data["smartserver_changes_hash"] ) smartserverChangesHashChanged = true;
-                smartserverChangesHash = changed_data["smartserver_changes_hash"];
+                if( smartserverChangesHash != data["smartserver_changes_hash"] ) smartserverChangesHashChanged = true;
+                smartserverChangesHash = data["smartserver_changes_hash"];
             }
-            
-            //console.log(changed_data );
-            //console.log(updateJobStarted + " " + updateHashRefreshed + " " + updateHashChanged );
-            
+
             if( updateJobStarted && updateHashRefreshed )
             {
                 updateJobStarted = false;
                 if( systemUpdatesHashChanged || smartserverChangesHashChanged )
                 {
-                    let body = ""; 
-                    if( systemUpdatesHashChanged && smartserverChangesHashChanged ) body += mx.I18N.get("There are new system and smartserver update available!");  
-                    else if( systemUpdatesHashChanged ) body += mx.I18N.get("There are new system update available!");  
-                    else if( smartserverChangesHashChanged ) body += mx.I18N.get("There are new smartserver update available!");  
-            
+                    let body = "";
+                    if( systemUpdatesHashChanged && smartserverChangesHashChanged ) body += mx.I18N.get("There are new system and smartserver update available!");
+                    else if( systemUpdatesHashChanged ) body += mx.I18N.get("There are new system update available!");
+                    else if( smartserverChangesHashChanged ) body += mx.I18N.get("There are new smartserver update available!");
+
                     let infoDialog = mx.Dialog.init({
                         id: "stoppedUpdate",
                         title: mx.I18N.get("Installation stopped!"),
@@ -263,78 +266,10 @@ require "config.php";
                     mx.Page.refreshUI(infoDialog.getRootElement());
                 }
             }
-            
-            if( Object.keys(changed_data).length > 0 ) mx.Page.refreshUI();
-        }
-        
-        function handleDaemonState(state)
-        {
-            window.clearTimeout(refreshDaemonStateTimer);
 
-            job_is_running = state["job_is_running"];
-            last_data_modified = state["last_data_modified"];
-            
-            if( job_is_running )
-            {
-                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 1000);
-            }
-            else
-            {
-                refreshDaemonStateTimer = window.setTimeout(function(){ refreshDaemonState(state["last_data_modified"], null) }, 5000);
-            }
+            if( Object.keys(data).length > 0 ) mx.Page.refreshUI();
+        }
 
-            if( Object.keys(state["changed_data"]).length > 0 ) processData(state["last_data_modified"], state["changed_data"]);
-        }
-        
-        function refreshDaemonState(last_data_modified,callback)
-        {
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", daemonApiUrl + "state/" );
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            
-            //application/x-www-form-urlencoded
-            
-            xhr.withCredentials = true;
-            xhr.onreadystatechange = function() {
-                if (this.readyState != 4) return;
-                
-                if( this.status == 200 ) 
-                {
-                    var response = JSON.parse(this.response);
-                    if( response["status"] == "0" )
-                    {
-                        mx.Error.confirmSuccess();
-                        mx.UpdateServiceHelper.confirmRestarting();
-                        
-                        handleDaemonState(response);
-                        
-                        if( callback ) callback();
-                    }
-                    else
-                    {
-                        mx.Error.handleServerError(response["message"])
-                    }
-                }
-                else
-                {
-                    let timeout = 15000;
-                    if( this.status == 0 || this.status == 503 ) 
-                    {
-                        mx.Error.handleError( mx.I18N.get( mx.UpdateServiceHelper.isRestarting() ? "Service is restarting" : "Service is currently not available")  );
-                        timeout = mx.UpdateServiceHelper.isRestarting() ? 1000 : 15000;
-                    }
-                    else
-                    {
-                        if( this.status != 401 ) mx.Error.handleRequestError(this.status, this.statusText, this.response);
-                    }
-                    
-                    refreshDaemonStateTimer = mx.Page.handleRequestError(this.status,daemonApiUrl,function(){ refreshDaemonState(last_data_modified, callback) }, timeout);
-                }
-            };
-            
-            xhr.send(mx.Core.encodeDict( { "type": "update", "last_data_modified": last_data_modified } ));
-        }
-        
         ret.setUpdateJobStarted = function( _updateJobStarted ){ updateJobStarted = _updateJobStarted; }
         
         ret.hasEncryptedVault = function(){ return hasEncryptedVault; }
@@ -351,17 +286,17 @@ require "config.php";
 
         ret.getUpdateHashes = function(){ return { "system_updates_hash": systemUpdatesHash, "smartserver_changes_hash": smartserverChangesHash }; }
         
-        ret.handleDaemonState = function(state){ handleDaemonState(state); }
+        ret.handleDaemonState = function(state){ console.log(state); }
         
         ret.init = function()
         { 
             socket = mx.ServiceSocket.init('update_service');
             socket.on("connect", () => socket.emit("join", "updates") );
-            socket.on("data", (data) => processDataNew( data ) );
+            socket.on("data", (data) => processData( data ) );
 
 
             mx.I18N.process(document);
-            mx.UpdateServiceActions.init(daemonApiUrl);
+            mx.UpdateServiceActions.init(socket);
             
             mx.Selectbutton.init({
                 values: [
@@ -373,18 +308,6 @@ require "config.php";
                     button: "#searchUpdates"
                 }
             });
-          
-            refreshDaemonState(null, function(){
-                window.setTimeout(function(){
-                    var initialLists = ["systemProcesses","smartserverRoles"];
-                    initialLists.forEach(function(id){
-                        var element = mx.$("#" + id);
-                        if( element ) element.click();
-                    });
-                },100);
-            });
-
-            mx.Page.refreshUI();            
         }
         return ret;
     })( mx.UNCore || {} );

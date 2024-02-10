@@ -11,13 +11,18 @@ require "config.php";
 <script>
 mx.SNCore = (function( ret ) {
   
-    var daemonApiUrl = mx.Host.getBase() + '../api/';
+    var socket = null;
     var jobtimer = null;
 
     function setLoadingGear(data)
     {
         mx.SoftwareVersionsTemplates.setLoadingGear(data);
         jobtimer = window.setTimeout(function(){ setLoadingGear(data); }, 1000);
+    }
+
+    ret.startSoftwareCheck = function()
+    {
+        socket.emit("refreshSoftwareVersionCheck");
     }
 
     function processData(data)
@@ -40,7 +45,7 @@ mx.SNCore = (function( ret ) {
 
     ret.init = function()
     { 
-        let socket = mx.ServiceSocket.init('update_service');
+        socket = mx.ServiceSocket.init('update_service');
         socket.on("connect", () => socket.emit('join','software'));
         socket.on("data", (data) => processData( data ) );
     }

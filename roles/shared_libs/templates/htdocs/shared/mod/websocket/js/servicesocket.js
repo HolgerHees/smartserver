@@ -19,11 +19,18 @@ mx.ServiceSocket = (function( ret ) {
             if( !errorCallback ) mx.Error.confirmSuccess();
         }
 
+        function onStatus(status)
+        {
+            if( status["code"] == 0 ) console.info(status["message"]);
+            else console.error(status["message"]);
+        }
+
         var socket = io("/", {path: '/' + service_name + '/api/socket.io' });
         socket.on('connect_error', err => onError(err));
         socket.on('connect_failed', err => onError(err));
         socket.on('disconnect', err => onError(err));
         socket.on('connect', err => onConnect());
+        socket.on('status', data => onStatus(data));
 
         var _on = socket.on.bind(socket);
         var _close = socket.close.bind(socket);

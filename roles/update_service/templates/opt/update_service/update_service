@@ -40,8 +40,8 @@ class Handler(Server):
         self.process_watcher = ProcessWatcher(self, operating_system)
         self.system_update_watcher = SystemUpdateWatcher(self, self.process_watcher, operating_system)
         self.dependency_watcher = DependencyWatcher(self, self.system_update_watcher)
-        self.deployment_state_watcher = DeploymentStateWatcher()
-        self.deployment_tags_watcher = DeploymentTagsWatcher()
+        self.deployment_state_watcher = DeploymentStateWatcher(self)
+        self.deployment_tags_watcher = DeploymentTagsWatcher(self)
         self.software_versions_watcher = SoftwareVersionWatcher(self)
 
         self.cmd_builder = CmdBuilder( self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
@@ -83,102 +83,89 @@ class Handler(Server):
             self.software_versions_watcher.notifyChange(event)
         elif event["path"].startswith(self.service_base_path):
             self.service_need_restart = True
-            self.notifyWatcherState()
+            self.notifyHandlerRestartState()
             
-    def checkLastDataModified(self,key,last_data_modified):
-        form_key = "last_data_modified[{}]".format(key)
-        value = self.getRequestValue(form_key)
-        return not value or float(value) < last_data_modified[key]
-            
-    def buildSuccessResult(self, running_type, cmd_type, state_type ):
-        #self.logger.info(__file__)
-        
-        current_job_started = self.cmd_executer.getCurrentJobStarted()
-            
-        result = { 
-            "status": 0, 
-        }
-        
-        last_data_modified = {}
-        last_data_modified["startup"] = self.startup_timestamp
-
-        changed_data = {}
-        
-        value = self.getRequestValue("last_data_modified[startup]")
-        force = not value or float(value) < last_data_modified["startup"]
-
-        last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
-        last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
-        last_data_modified["processes_refreshed"] = self.process_watcher.getLastRefreshAsTimestamp()
-
-        last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
-        last_data_modified["system_updates"] = self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp()
-        last_data_modified["smartserver_changes"] = self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
-        last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
-
-        if force or self.checkLastDataModified("outdated_processes",last_data_modified):
-            changed_data["outdated_processes"] = self.process_watcher.getOudatedProcesses()
-        if force or self.checkLastDataModified("outdated_roles",last_data_modified):
-            changed_data["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
-        if force or self.checkLastDataModified("deployment_state",last_data_modified):
-            changed_data["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedVault()
-        if force or self.checkLastDataModified("deployment_tags",last_data_modified):
-            changed_data["deployment_tags"] = self.deployment_tags_watcher.getTags()
-
-        if force or self.checkLastDataModified("system_updates",last_data_modified) or self.checkLastDataModified("system_reboot",last_data_modified) or self.checkLastDataModified("outdated_processes",last_data_modified):
-            changed_data["is_reboot_needed"] = {
-                "all": self.system_update_watcher.isRebootNeeded(),
-                "core": self.process_watcher.isRebootNeededByCoreUpdate(),
-                "outdated": self.process_watcher.isRebootNeededByOutdatedProcesses(),
-                "installed": self.system_update_watcher.isRebootNeededByInstalledPackages()
-            }
-
-        if force or self.checkLastDataModified("system_updates",last_data_modified):
-            changed_data["system_updates"] = self.system_update_watcher.getSystemUpdates()
-            changed_data["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
-        if force or self.checkLastDataModified("smartserver_changes",last_data_modified):
-            changed_data["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
-            changed_data["smartserver_changes_hash"] = self.system_update_watcher.getSmartserverChangesHash()
-            changed_data["smartserver_code"] = self.system_update_watcher.getSmartserverCode()
-            changed_data["smartserver_pull"] = self.system_update_watcher.getSmartserverPullAsTimestamp()
-        if force or self.checkLastDataModified("jobs",last_data_modified):
-            changed_data["jobs"] = self.cmd_executer.getJobs()
-
-        result["last_data_modified"] = last_data_modified
-        result["changed_data"] = changed_data
-        return json.dumps(result)
-
-    def buildResult(self, status, message):
-        return json.dumps({ 
-            "status": status, 
-            "message": message
-        })
-     
-    def getState(self, state_type):
-        if self.cmd_executer.isDaemonJobRunning():
-            return self.buildSuccessResult("daemon",self.cmd_executer.getCurrentJobCmdType(), state_type)
-
-        external_cmd_type = self.cmd_executer.getExternalCmdType(False)
-        if external_cmd_type:
-            return self.buildSuccessResult("manual",external_cmd_type, state_type)
-        else:
-            return self.buildSuccessResult(None, None, state_type)
-              
     def runWorkflow(self, workflow, state_type, checkGlobalRunning ):
         is_success = self.cmd_workflow.runWorkflow( workflow, checkGlobalRunning )
         if is_success :
-            return self.getState(state_type)
+            return self.buildStatusResult(0, u"Job started")
         else:
-            return self.buildResult(1, u"Job not started" )
+            return self.buildStatusResult(1, u"Job not started" )
 
-    def runWorkflow2(self, workflow, state_type, checkGlobalRunning ):
-        is_success = self.cmd_workflow.runWorkflow( workflow, checkGlobalRunning )
-        if is_success :
-            return self.buildResult(0, u"Job started")
-        else:
-            return self.buildResult(1, u"Job not started" )
+    def _fillWidgetAttention(self, result = {}):
+        workflow_state = self.cmd_workflow.getWorkflowState()
+        result["needs_attention"] = ( workflow_state is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in workflow_state ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
+        return result
+
+    def _fillWidgetActions(self, result = {}):
+        result["needs_action"] = len(self.process_watcher.getOutdatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
+        return result
+
+    def _fillUpdatesRebootNeeded(self, result = {}):
+        result["is_reboot_needed"] = {
+            "all": self.system_update_watcher.isRebootNeeded(),
+            "core": self.process_watcher.isRebootNeededByCoreUpdate(),
+            "outdated": self.process_watcher.isRebootNeededByOutdatedProcesses(),
+            "installed": self.system_update_watcher.isRebootNeededByInstalledPackages()
+        }
+        return result
+
+    def _fillUpdatesNeedsRestart(self, result = {}):
+        result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
+        return result
+
+    def notifyWatcherTagState(self):
+        if self.isSocketRoomActive("updates"):
+            self.emitSocketData('data', { "deployment_tags": self.deployment_tags_watcher.getTags() }, "updates")
+
+    def notifyWatcherDeploymentState(self):
+        if self.isSocketRoomActive("updates"):
+            self.emitSocketData('data', { "has_encrypted_vault": self.deployment_state_watcher.hasEncryptedVault() }, "updates")
+
+    def notifyWatcherProcessState(self):
+        if self.isSocketRoomActive("widget"):
+            result = self._fillWidgetActions()
+            result = self._fillWidgetAttention(result)
+            self.emitSocketData('data', result, "widget")
+        elif self.isSocketRoomActive("updates"):
+            result = self._fillUpdatesRebootNeeded()
+            result = self._fillUpdatesNeedsRestart(result)
+            result["last_refreshed"] = { "processes": self.process_watcher.getLastRefreshAsTimestamp() }
+            result["outdated_processes"] = self.process_watcher.getOutdatedProcesses()
+            self.emitSocketData('data', result, "updates")
+
+    def notifyWatcherDependencyState(self):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('data', self._fillWidgetActions(), "widget")
+        elif self.isSocketRoomActive("updates"):
+            self.emitSocketData('data', { "outdated_roles": self.dependency_watcher.getOutdatedRoles() }, "updates")
+
+    def notifyWatcherSystemUpdates(self):
+        if self.isSocketRoomActive("widget"):
+            result = self._fillWidgetActions()
+            result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
+            result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
+            self.emitSocketData('data', result, "widget")
+        elif self.isSocketRoomActive("updates"):
+            result = self._fillUpdatesRebootNeeded()
+            result["system_updates"] = self.system_update_watcher.getSystemUpdates()
+            result["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
+            result["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
+            result["smartserver_changes_hash"] = self.system_update_watcher.getSmartserverChangesHash()
+            result["smartserver_pull"] = { "code": self.system_update_watcher.getSmartserverCode(), "time": self.system_update_watcher.getSmartserverPullAsTimestamp() }
+            result["last_refreshed"] = {
+                "system_updates": self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp(),
+                "smartserver_changes": self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
+            }
+            self.emitSocketData('data', result, "updates")
+
+    def notifyWatcherSoftwareVersions(self, field, data):
+        if field == "software":
+            if self.isSocketRoomActive("software"):
+                self.emitSocketData('data', { "software_versions": data }, "software")
+        elif field == "update_count":
+            if self.isSocketRoomActive("widget"):
+                self.emitSocketData('data', { "component_updates": data }, "widget")
 
     def notifyExecutorJobStatus(self, data):
         if self.isSocketRoomActive("software"):
@@ -192,46 +179,24 @@ class Handler(Server):
             result["job_status"] = data
             result["job_status"]["logfile"] = self.cmd_executer.getCurrentJobLogfile()
             result["job_status"]["killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
+            if result["job_status"]["job"] is None:
+                result["jobs"] = self.cmd_executer.getJobs()
             self.emitSocketData('data', result, "updates")
 
-    def notifyWatcherSoftwareVersions(self, field, data):
-        if field == "software":
-            if self.isSocketRoomActive("software"):
-                self.emitSocketData('data', { "software_versions": data }, "software")
-        elif field == "update_cound":
-            if self.isSocketRoomActive("widget"):
-                self.emitSocketData('data', { "component_updates": data }, "widget")
-
-    def notifyWatcherSystemUpdates(self):
-        if not self.isSocketRoomActive("widget"):
-            return
-
-        result = {}
-        result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
-        result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-        self.emitSocketData('data', result, "widget")
-
-    def _buildWidgetResult(self):
-        result = {}
-        result["workflow_state"] = self.cmd_workflow.getWorkflowState()
-        result["needs_attention"] = ( result["workflow_state"] is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
-        result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
-        return result
-
-    def notifyWatcherState(self):
+    def notifyHandlerRestartState(self):
         if self.isSocketRoomActive("widget"):
-            self.emitSocketData('data', self._buildWidgetResult(), "widget")
+            self.emitSocketData('data', self._fillWidgetAttention(), "widget")
 
         elif self.isSocketRoomActive("updates"):
-            result = {}
-            result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
-            self.emitSocketData('data', result, "updates")
+            self.emitSocketData('data', self._fillUpdatesNeedsRestart(), "updates")
 
     def notifyWorkflowState(self):
         if self.isSocketRoomActive("widget"):
-            self.emitSocketData('data', self._buildWidgetResult(), "widget")
+            result = self._fillWidgetAttention()
+            result["workflow_state"] = self.cmd_workflow.getWorkflowState()
+            self.emitSocketData('data', result, "widget")
         elif self.isSocketRoomActive("updates"):
-            self.emitSocketData('data', { "job_status": { "workflow": self.cmd_workflow.getWorkflowState() } }, "updates")
+            self.emitSocketData('data', { "workflow_status": self.cmd_workflow.getWorkflowState() }, "updates")
 
     def onSocketRoomJoin(self, sid, room, data = None):
         super().onSocketRoomJoin(sid, room, data)
@@ -246,8 +211,9 @@ class Handler(Server):
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
 
             result["workflow_state"] = self.cmd_workflow.getWorkflowState()
-            result["needs_attention"] = ( result["workflow_state"] is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in result["workflow_state"] ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
-            result["needs_action"] = len(self.process_watcher.getOudatedProcesses()) > 0 or len(self.dependency_watcher.getOutdatedRoles()) > 0 or self.system_update_watcher.isRebootNeeded()
+
+            result = self._fillWidgetAttention(result)
+            result = self._fillWidgetActions(result)
             self.emitSocketData('data', result, room)
 
         elif room == "software":
@@ -255,11 +221,42 @@ class Handler(Server):
 
         elif room == "updates":
             result = {}
+            result["jobs"] = self.cmd_executer.getJobs()
             result["job_status"] = self.cmd_executer.getJobStatus()
             result["job_status"]["logfile"] = self.cmd_executer.getCurrentJobLogfile()
             result["job_status"]["killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
-            result["job_status"]["workflow"] = self.cmd_workflow.getWorkflowState()
-            result["update_server_needs_restart"] = self.service_need_restart or self.process_watcher.isUpdateServiceOutdated()
+
+            result["workflow_status"] = self.cmd_workflow.getWorkflowState()
+
+            result = self._fillUpdatesNeedsRestart(result)
+
+            result["has_encrypted_vault"] = self.deployment_state_watcher.hasEncryptedVault()
+            result["deployment_tags"] = self.deployment_tags_watcher.getTags()
+
+            result["outdated_roles"] = self.dependency_watcher.getOutdatedRoles()
+
+            result = self._fillUpdatesRebootNeeded(result)
+            result["outdated_processes"] = self.process_watcher.getOutdatedProcesses()
+
+            result["system_updates"] = self.system_update_watcher.getSystemUpdates()
+            result["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
+            result["smartserver_changes"] = self.system_update_watcher.getSmartserverChanges()
+            result["smartserver_changes_hash"] = self.system_update_watcher.getSmartserverChangesHash()
+            result["smartserver_pull"] = { "code": self.system_update_watcher.getSmartserverCode(), "time": self.system_update_watcher.getSmartserverPullAsTimestamp() }
+
+            result["last_refreshed"] = {
+                "processes": self.process_watcher.getLastRefreshAsTimestamp(),
+                "system_updates": self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp(),
+                "smartserver_changes": self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
+            }
+
+            #last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
+            #last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
+            #last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
+            #last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
+            #last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
+            #last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
+
             self.emitSocketData('data', result, room)
 
     def onSocketConnect(self, sid):
@@ -267,80 +264,97 @@ class Handler(Server):
 
         self.cmd_executer.triggerSocketClientsActive()
 
-@serverWeb.route('/refreshSoftwareVersionCheck/', methods = ['POST'])
+@serverSocket.on('refreshSoftwareVersionCheck')
 def refreshSoftwareVersionCheck():
     cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
-    return handler.runWorkflow2([ cmd ], "software", True);
+    status = handler.runWorkflow([ cmd ], "software", True);
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
-@serverWeb.route('/state/', methods = ['POST'])
-def state():     
-    return handler.getState(handler.getRequestValue('type'))
-  
-@serverWeb.route('/refreshSystemUpdateCheck/', methods = ['POST'])
-def refreshSystemUpdateCheck():
-    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(handler.getRequestHeader('X-Forwarded-User'),handler.getRequestValue('type'))
-    return handler.runWorkflow([ cmd ], "update", True );
+@serverSocket.on('refreshSystemUpdateCheck')
+def refreshSystemUpdateCheck(params):
+    cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(handler.getRequestHeader('X-Forwarded-User'),params["type"] if "type" in params else None)
+    status = handler.runWorkflow([ cmd ], "update", True );
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
-@serverWeb.route('/restartService/', methods = ['POST'])
-def restartService():
-    cmd = handler.cmd_builder.buildRestartServiceCmdBlock(handler.getRequestHeader('X-Forwarded-User'),handler.getRequestValue('service'))
-    return handler.runWorkflow([ cmd ], "update", True );
-      
-@serverWeb.route('/restartDaemon/', methods = ['POST'])
-def restartDaemon():
+@serverSocket.on('restartService')
+def restartService(params):
+    if "service" not in params:
+        status = handler.buildStatusResult(1, "Missing parameter 'service'");
+    else:
+        cmd = handler.cmd_builder.buildRestartServiceCmdBlock(handler.getRequestHeader('X-Forwarded-User'),params["service"])
+        status = handler.runWorkflow([ cmd ], "update", True );
+    handler.emitSocketData("status", status, handler.getSocketClient())
+
+@serverSocket.on('restartDaemon')
+def restartDaemon(params):
     cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
-    return handler.runWorkflow([ cmd ], "update", False );
+    status = handler.runWorkflow([ cmd ], "update", False );
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
-@serverWeb.route('/installSystemUpdates/', methods = ['POST'])
-def installSystemUpdates():
-    cmds = [
-        handler.cmd_builder.buildSystemUpdateCheckBlock( handler.getRequestHeader('X-Forwarded-User'), "system_update" ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.validateUpdateHashes", { "system_updates_hash": handler.getRequestValue('system_updates_hash'), "smartserver_changes_hash": None } ),
-        handler.cmd_builder.buildInstallSystemUpdateCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
-    ]
-    return handler.runWorkflow(cmds, "update", True );
+@serverSocket.on('installSystemUpdates')
+def installSystemUpdates(params):
+    if "system_updates_hash" not in params:
+        status = handler.buildStatusResult(1, "Missing parameter 'system_updates_hash'");
+    else:
+        cmds = [
+            handler.cmd_builder.buildSystemUpdateCheckBlock( handler.getRequestHeader('X-Forwarded-User'), "system_update" ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.validateUpdateHashes", { "system_updates_hash": params["system_updates_hash"], "smartserver_changes_hash": None } ),
+            handler.cmd_builder.buildInstallSystemUpdateCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
+        ]
+        status = handler.runWorkflow(cmds, "update", True );
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
-@serverWeb.route('/deploySmartserverUpdates/', methods = ['POST'])
-def deploySmartserverUpdates():
-    value = handler.getRequestValue('tags')
+@serverSocket.on('deploySmartserverUpdates')
+def deploySmartserverUpdates(params):
+    value = params["tags"] if "tags" in params else None
     tags = value.split(",") if value else []
-    confirm = handler.getRequestValue('confirm') == "1"
+    confirm = ( params["confirm"] if "confirm" in params else False ) == True
     if len(tags) > 0 or confirm:
-        password = value = handler.getRequestValue('password')
+        password = params["password"] if "password" in params else None
         if "all" in tags:
             tags = []
         elif confirm:
             tags.append("confirm_deployment")
         cmd = handler.cmd_builder.buildDeploymentSmartserverUpdateCmdBlock(handler.getRequestHeader('X-Forwarded-User'), password, tags )
         if cmd:
-            return handler.runWorkflow([ cmd ], "update", True );
+            status = handler.runWorkflow([ cmd ], "update", True );
         else:
-            return make_response("Deployment state file missing, empty or not readable", 501);
+            status = handler.buildStatusResult(1, "Deployment state file missing, empty or not readable");
     else:
-            return make_response("Missing tag", 501);
+        status = handler.buildStatusResult(1, "Missing tag");
 
-@serverWeb.route('/systemReboot/', methods = ['POST'])
-def systemReboot():
+    handler.emitSocketData("status", status, handler.getSocketClient())
+
+@serverSocket.on('systemReboot')
+def systemReboot(params):
     cmd = handler.cmd_builder.buildSystemRebootCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
-    return handler.runWorkflow([ cmd ], "update", True );
+    status = handler.runWorkflow([ cmd ], "update", True );
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
-@serverWeb.route('/updateWorkflow/', methods = ['POST'])
-def updateWorkflow():
-    workflow = [
-        handler.cmd_builder.buildSystemUpdateCheckBlock( handler.getRequestHeader('X-Forwarded-User'), None ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.validateUpdateHashes", { "system_updates_hash": handler.getRequestValues("system_updates_hash"), "smartserver_changes_hash": handler.getRequestValues("smartserver_changes_hash") } ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", handler.getRequestValues() ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildSystemRebootCmdBlockIfNecessary", handler.getRequestValues() ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildRestartDaemonCmdBlockIfNecessary", handler.getRequestValues() ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildRestartServiceCmdBlockIfNecessary", handler.getRequestValues() ),
-        handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", handler.getRequestValues() )
-    ]
-    return handler.runWorkflow(workflow, "update", True );
+@serverSocket.on('updateWorkflow')
+def updateWorkflow(params):
+    if "system_updates_hash" not in params:
+        status = handler.buildStatusResult(1, "Missing parameter 'system_updates_hash'");
+    elif "smartserver_changes_hash" not in params:
+        status = handler.buildStatusResult(1, "Missing parameter 'smartserver_changes_hash'");
+    else:
+        workflow = [
+            handler.cmd_builder.buildSystemUpdateCheckBlock( handler.getRequestHeader('X-Forwarded-User'), None ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.validateUpdateHashes", { "system_updates_hash": params["system_updates_hash"], "smartserver_changes_hash": params["smartserver_changes_hash"] } ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildInstallSystemUpdateCmdBlockIfNecessary", params ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildSystemRebootCmdBlockIfNecessary", params ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildRestartDaemonCmdBlockIfNecessary", params ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildRestartServiceCmdBlockIfNecessary", params ),
+            handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", params )
+        ]
+        status = handler.runWorkflow(workflow, "update", True );
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
-@serverWeb.route('/killProcess/', methods = ['POST'])
-def killProcess():
+@serverSocket.on('killProcess')
+def killProcess(params):
     handler.cmd_workflow.killWorkflow()
-    return handler.getState("update")
+    status = handler.buildStatusResult(0, u"Job killed")
+    handler.emitSocketData("status", status, handler.getSocketClient())
 
 @serverSocket.on('initSoftware')
 def initSoftware():

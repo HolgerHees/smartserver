@@ -72,12 +72,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         "deployment_update": "smartserver update"
     };
 
-    ret.getLastFullRefresh = function(last_data_modified)
+    ret.getLastFullRefresh = function(data)
     {
         let last_update = 0;
-        if( last_update == 0 || last_data_modified["processes_refreshed"] < last_update ) last_update = last_data_modified["processes_refreshed"];
-        if( last_update == 0 || last_data_modified["system_updates"] < last_update ) last_update = last_data_modified["system_updates"];
-        if( last_update == 0 || last_data_modified["smartserver_changes"] < last_update ) last_update = last_data_modified["smartserver_changes"];
+        if( last_update == 0 || data["processes"] < last_update ) last_update = data["processes"];
+        if( last_update == 0 || data["system_updates"] < last_update ) last_update = data["system_updates"];
+        if( last_update == 0 || data["smartserver_changes"] < last_update ) last_update = data["smartserver_changes"];
       
         let date = null;
         let dateFormatted = null;
@@ -98,12 +98,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return [ date, msg ];
     }
     
-    ret.setSystemOutdatedDetails = function(last_data_modified, changed_data, process_header_id, process_table_id, role_header_id, role_table_id )
+    ret.setSystemOutdatedDetails = function(outdated_roles, outdated_processes, process_header_id, process_table_id, role_header_id, role_table_id )
     {
         let processHeaderElement = mx.$(process_header_id);
         let processTableElement = mx.$(process_table_id);
 
-        outdatedProcessData = changed_data.hasOwnProperty("outdated_processes") ? changed_data["outdated_processes"] : outdatedProcessData;
+        outdatedProcessData = outdated_processes ? outdated_processes : outdatedProcessData;
         //outdatedProcessData = [ {'pid': 1, 'ppid': 2, 'uid': 3, 'user': 4, 'command': 5, 'service' : 6 } ];
         
         let processCount = outdatedProcessData.length;
@@ -172,7 +172,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
         
 
-        outdatedRoleData = changed_data.hasOwnProperty("outdated_roles") ? changed_data["outdated_roles"] : outdatedRoleData;
+        outdatedRoleData = outdated_roles ? outdated_roles : outdatedRoleData;
         //outdatedRoleData = [ "test" ];
         
         let roleHeaderElement = mx.$(role_header_id);
@@ -228,15 +228,15 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
     }
 
-    ret.setSystemStateDetails = function(last_data_modified, changed_data, element_id)
+    ret.setSystemStateDetails = function(data, element_id)
     {
         let element = mx.$(element_id);
         
-        if( changed_data["is_reboot_needed"]["all"] )
+        if( data["all"] )
         { 
             let reasons = {};
-            if( changed_data["is_reboot_needed"]["core"] || changed_data["is_reboot_needed"]["installed"] ) reasons["1"] = mx.I18N.get("system updates");
-            if( changed_data["is_reboot_needed"]["outdated"] ) reasons["2"] = mx.I18N.get("outdated processes");
+            if( data["core"] || data["installed"] ) reasons["1"] = mx.I18N.get("system updates");
+            if( data["outdated"] ) reasons["2"] = mx.I18N.get("outdated processes");
                              
             let reasonKeys = Object.keys(reasons);
             let isMultiReason = reasonKeys.length > 1;
@@ -257,17 +257,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
     }
     
-    ret.setSystemUpdateDetails = function(last_data_modified, changed_data, last_full_update, header_id, table_id)
+    ret.setSystemUpdateDetails = function(data, header_id, table_id)
     {
         let headerElement = mx.$(header_id);
         let tableElement = mx.$(table_id);
 
-        //changed_data["system_updates"] = [ { 'name': 1, 'current': 2, 'update': 3, 'arch': 4 } ];
-        let updateCount = changed_data["system_updates"].length;
-        
-        //let date = last_data_modified["system_updates"] ? new Date(last_data_modified["system_updates"] * 1000) : null;
-        //if( last_full_update.getTime() == date.getTime() ) date = null;
-        //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
+        let updateCount = data.length;
         
         if( updateCount > 0 )
         {
@@ -281,11 +276,11 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
             detailsMsg = "<div class=\"row\">";
             
-            let update = changed_data["system_updates"][0];
+            let update = data[0];
             let has_current = update["current"] != null;
             
             let rows = [];
-            changed_data["system_updates"].forEach(function(update)
+            data.forEach(function(update)
             {
                 let columns = [ { "value": update["name"] } ];
                 if( has_current ) columns.push({ "value": update["current"] });
@@ -418,14 +413,10 @@ mx.UpdateServiceTemplates = (function( ret ) {
         mx.UpdateServiceHelper.initTable(headerElement,tableElement);
     }
     
-    ret.setSmartserverChangeDetails = function(last_data_modified, changed_data, last_full_update, header_id, table_id)
+    ret.setSmartserverChangeDetails = function(data, header_id, table_id)
     {
-        let updateCount = changed_data["smartserver_changes"].length;
+        let updateCount = data.length;
         
-        //let date = last_data_modified["smartserver_changes"] ? new Date(last_data_modified["smartserver_changes"] * 1000) : null;
-        //if( last_full_update.getTime() == date.getTime() ) date = null;
-        //const [ dateFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
-      
         let headerElement = mx.$(header_id);
         let tableElement = mx.$(table_id);
 
@@ -437,7 +428,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             
             headerMsg = "<div class=\"info\">" + mx.I18N.get(i18n_main_msg).fill(updateCount) + "</div><div class=\"buttons\"><div class=\"form button exclusive\" onclick=\"mx.UpdateServiceActions.actionDeployUpdates(this)\">" + mx.I18N.get("Install") + "</div><div class=\"form button toggle\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'smartserverChangeDetails')\"></div></div>";
             
-            let table = buildSSC('commits',true, headerElement, tableElement, changed_data["smartserver_changes"]);
+            let table = buildSSC('commits',true, headerElement, tableElement, data);
 
             headerElement.innerHTML = headerMsg;
 
@@ -461,11 +452,11 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return updateCount;
     }
     
-    ret.setSmartserverChangeState = function(last_data_modified, changed_data, element_id)
+    ret.setSmartserverChangeState = function(data, element_id)
     {
         let element = mx.$(element_id);
         
-        let code = changed_data["smartserver_code"];
+        let code = data["code"];
         
         if( code )
         {           
@@ -474,7 +465,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
             msg = "<div class=\"info\"><div class=\"sub\"><span class=\"" + iconClass + "\"></span> <span style='overflow:hidden;'><span class='nobr' style='margin-right: 8px;'>" + mx.I18N.get(updateMsg);
             if( code != "missing" ) 
             {
-                let date = new Date(changed_data["smartserver_pull"] * 1000);
+                let date = new Date(data["time"] * 1000);
                 const [ lastPullFormatted, dateType ] = mx.UpdateServiceHelper.formatDate(date);
                 subMsg = mx.I18N.get("Last git pull: {}").fill( lastPullFormatted );
               
@@ -502,9 +493,9 @@ mx.UpdateServiceTemplates = (function( ret ) {
         return mx.I18N.get(active_manuell_cmd_type_map[cmd_type]);
     }
 
-    ret.setJobDetails = function(last_data_modified, changed_data, header_id, table_id)
+    ret.setJobDetails = function( data, header_id, table_id)
     {        
-        let jobs = changed_data["jobs"];
+        let jobs = data;
         let last_job = null;
         
         let headerElement = mx.$(header_id);
@@ -583,14 +574,12 @@ mx.UpdateServiceTemplates = (function( ret ) {
         }
     }
     
-    ret.setWorkflow = function(systemUpdatesCount, smartserverChangeCount, lastUpdateDate, element_id)
+    ret.setWorkflow = function(systemUpdatesCount, smartserverChangeCount, element_id)
     {
         let element = mx.$(element_id);
         
         if( systemUpdatesCount > 0 || smartserverChangeCount > 0 )
         {
-            let duration = (new Date()).getTime() - lastUpdateDate.getTime();
-            
             let key = "";
             if( systemUpdatesCount + smartserverChangeCount > 1 ) 
             {

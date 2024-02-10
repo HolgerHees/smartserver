@@ -35,7 +35,6 @@ class SystemUpdateWatcher(watcher.Watcher):
     def notifyChange(self, event):
         self.initSystemState(True)
         self.handler.notifyWatcherSystemUpdates()
-        self.handler.notifyWatcherState()
         
     def parseTime(self, datetimeStr):
         datetimeStr = "{}{}".format(datetimeStr[0:-3],datetimeStr[-2:])

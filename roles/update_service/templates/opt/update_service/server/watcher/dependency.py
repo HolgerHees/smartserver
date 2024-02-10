@@ -28,7 +28,7 @@ class DependencyWatcher(watcher.Watcher):
             del self.outdated_roles[name]
         self.postProcess()
 
-        self.handler.notifyWatcherState()
+        self.handler.notifyWatcherDependencyState()
 
     def initOutdatedRoles(self):
         outdated_roles = {}

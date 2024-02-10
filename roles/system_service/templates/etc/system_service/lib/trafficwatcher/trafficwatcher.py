@@ -540,12 +540,12 @@ class TrafficWatcher(threading.Thread):
                 values["location_geohash"] = pc["location_geohash"]
                 base_tags["location_has_geohash"] = 1
 
-            values["blocked"] = 1 if is_blocked else 0
-
             base_tags_r = []
             for name, value in base_tags.items():
                 base_tags_r.append(str(value))
             key = ",".join(base_tags_r)
+
+            state_tags["is_blocked"] = 1 if is_blocked else 0
 
             # dummy values needed for a propper delete query
             state_tags["group"] = "-"
