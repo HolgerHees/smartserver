@@ -45,7 +45,7 @@ class Handler(Server):
         self.software_versions_watcher = SoftwareVersionWatcher(self)
 
         self.cmd_builder = CmdBuilder( self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
-        self.cmd_executer = CmdExecuter( self, self.process_watcher )
+        self.cmd_executer = CmdExecuter( self, self.process_watcher, operating_system )
         self.cmd_workflow = CmdWorkflow( self, self.cmd_executer, self.cmd_builder )
         
         self.service_base_path = os.path.dirname(__file__)
@@ -193,7 +193,6 @@ class Handler(Server):
     def notifyWorkflowState(self):
         if self.isSocketRoomActive("widget"):
             result = self._fillWidgetAttention()
-            result["workflow_state"] = self.cmd_workflow.getWorkflowState()
             self.emitSocketData('data', result, "widget")
         elif self.isSocketRoomActive("updates"):
             self.emitSocketData('data', { "workflow_status": self.cmd_workflow.getWorkflowState() }, "updates")
@@ -209,8 +208,6 @@ class Handler(Server):
 
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-
-            result["workflow_state"] = self.cmd_workflow.getWorkflowState()
 
             result = self._fillWidgetAttention(result)
             result = self._fillWidgetActions(result)

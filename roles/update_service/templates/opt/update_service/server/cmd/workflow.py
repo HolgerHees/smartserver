@@ -31,7 +31,7 @@ class CmdWorkflow:
         self.cmd_executer = cmd_executer
         self.cmd_builder = cmd_builder
         
-        self.workflow_state = None
+        self.workflow_state = "done"
 
     def handleRunningStates(self):
         thread = threading.Thread(target=self._handleRunningStates, args=())
@@ -119,7 +119,7 @@ class CmdWorkflow:
         last_seen_time = waiting_start
         last_log_time = waiting_start
         last_cmd_type = None
-        while True:
+        while self.workflow_state == "running":
             now = datetime.now().timestamp()
             inactivity_time = now - last_seen_time
             waiting_time = round(now - waiting_start)
@@ -154,10 +154,21 @@ class CmdWorkflow:
             
         return can_proceed
 
-    def _resumeWorkflow(self,workflow, job_log_file, start_time_str):
-        start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT) 
+    def _preWorkflow(self, workflow):
+        self.workflow_state = "running"
+        self.handler.notifyWorkflowState()
+        return 1 if len(workflow) > 0 else 0
 
-        exit_code = 1
+    def _pastWorkflow(self, exit_code):
+        if self.workflow_state == "running":
+            self.workflow_state = "done" if exit_code == 0 else "stopped"
+        self.handler.notifyWorkflowState()
+
+    def _resumeWorkflow(self,workflow, job_log_file, start_time_str):
+        exit_code = self._preWorkflow(workflow)
+
+        start_time = datetime.strptime(start_time_str, CmdExecuter.START_TIME_STR_FORMAT)
+
         with open(job_log_file, 'a') as f:
             cmd_block = workflow.pop(0)
 
@@ -180,12 +191,15 @@ class CmdWorkflow:
                  
         self.cmd_executer.finishRun(job_log_file,exit_code,start_time,cmd_block["cmd_type"],cmd_block["username"])
                       
-        if exit_code == 0 and len(workflow) > 0:
-            self._runWorkflow( workflow )
-        
-    def _runWorkflow(self, workflow):   
-        self.workflow_state = None
-        self.handler.notifyWorkflowState()
+        if exit_code == 0:
+            if len(workflow) > 0:
+                self._runWorkflow( workflow )
+                return
+
+        self._pastWorkflow(exit_code)
+
+    def _runWorkflow(self, workflow):
+        exit_code = self._preWorkflow(workflow)
 
         while len(workflow) > 0:
             cmd_block = workflow.pop(0)
@@ -205,11 +219,9 @@ class CmdWorkflow:
                         continue
                     else:
                         self.workflow_state = "stopped"
-                        self.handler.notifyWorkflowState()
                         break
                 elif type(_cmd_block) == str:
                     self.workflow_state = _cmd_block
-                    self.handler.notifyWorkflowState()
                     break
                 else:
                     logging.info("Run Workflow function '{}'".format(cmd_block["function"]))
@@ -233,6 +245,7 @@ class CmdWorkflow:
               
             # ***** RUN CMD *****
             [start_time, job_log_name, job_log_file] = self.cmd_executer.initLogFilename(cmd_block)
+
             with open(job_log_file, 'w') as f:
                 lf = LogFile(f)
 
@@ -254,7 +267,7 @@ class CmdWorkflow:
                     self.cmd_executer.finishRun(job_log_file, exit_code, start_time, cmd_block["cmd_type"] ,cmd_block["username"])
                 
             # ***** FINALIZE *****
-            if exit_code != 0 or self.workflow_state is not None:
+            if exit_code != 0 or self.workflow_state != "running":
                 if os.path.isfile(config.deployment_workflow_file):
                     os.unlink(config.deployment_workflow_file)
                     
@@ -273,6 +286,8 @@ class CmdWorkflow:
             if is_interuptable_workflow:
                 break
 
+        self._pastWorkflow(exit_code)
+
     def runWorkflow(self, workflow, check_global_running ):
         is_running = self.cmd_executer.isRunning() if check_global_running else self.cmd_executer.isDaemonJobRunning()
         if not is_running:
@@ -287,10 +302,13 @@ class CmdWorkflow:
     def killWorkflow(self):
         self.cmd_executer.killProcess()
         self.workflow_state = "killed"
-        self.handler.notifyWorkflowState()
+        #self.handler.notifyWorkflowState()
         
     def getWorkflowState(self):
         return self.workflow_state
+
+    def isWorkflowActive(self):
+        return self.workflow_active
         
     def _prepareTestWorkflow(self,cmd_block):
         for cmd in cmd_block["cmds"]:

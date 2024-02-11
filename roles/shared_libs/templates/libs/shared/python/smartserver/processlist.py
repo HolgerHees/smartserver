@@ -11,9 +11,6 @@ import timeit
 import json
 
 class Processlist():
-    ppids = {}
-    pids = {}
-
     # credits goes to https://raw.githubusercontent.com/rpm-software-management/yum-utils/master/needs-restarting.py
     @staticmethod
     def _getUserMap():
@@ -105,28 +102,21 @@ class Processlist():
     @staticmethod
     def _getOpenFiles(pid):
         files = []
-        smaps = '/proc/%s/smaps' % pid
         try:
-            with open(smaps, 'r') as maps_f:
-                maps = maps_f.readlines()
+            with open('/proc/%s/smaps' % pid, 'r') as f:
+                smaps = f.readlines()
         except (IOError, OSError) as e:
             return files
 
-        for line in maps:
+        for line in smaps:
             slash = line.find('/')
             if slash == -1 or line.find('00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
                 continue
-            #line = line.strip()
-            #line = line.replace('\n', '')
             filename = line[slash:]
-            filename = filename.split(';')[0]
-            filename = filename.strip()
-
+            filename = filename.split(';')[0].strip()
             if filename[-9:] != "(deleted)":
                 continue
             filename = filename[:-10]
-
-            #if filename not in files:
             files.append(filename)
         return set(files)
 
@@ -166,8 +156,6 @@ class Processlist():
         outdated_pids = set()
         for pid in Processlist.getPids():
             for fn in Processlist._getOpenFiles(pid):
-                #logging.info(":{}:".format(fn))
-                # if the file is deleted
                 if re.search('^(?!.*/tmp/|/var/|/run/).*$', fn):
                     outdated_pids.add(pid)
                     break

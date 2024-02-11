@@ -25,7 +25,7 @@ require "config.php";
 
         var daemonNeedsRestart = false;
         var job_state = {};
-        var workflow_state = null;
+        var workflow_status = null;
         var last_refreshed_state = {};
         var job_runtime_interval = null;
         var job_runtime_started = null;
@@ -33,16 +33,21 @@ require "config.php";
         function calculateRuntime()
         {
             let runtime = Math.round( ( (new Date()).getTime() - job_runtime_started ) / 1000 );
-
-            mx.$("#runtime_duration_placeholder").innerText = runtime;
-            mx.$("#runtime_unit_placeholder").innerText = mx.I18N.get( runtime == 1 ? "second" : "seconds" );
+            if( runtime == 0 )
+            {
+                mx.$("#runtime_duration_placeholder").innerText = mx.I18N.get("is started");
+            }
+            else
+            {
+                mx.$("#runtime_duration_placeholder").innerText = mx.I18N.get("is running since {1}").fill({"1": runtime + " " + mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+            }
         }
 
         function processRunningJobDetails(data)
         {
             if( "job_status" in data ) job_state = {...job_state, ...data["job_status"]};
 
-            if( "workflow_status" in data ) workflow_state = data["workflow_status"];
+            if( "workflow_status" in data ) workflow_status = data["workflow_status"];
 
             let job_is_running = job_state["job"] != null;
             let job_running_type = job_state["type"];
@@ -72,7 +77,7 @@ require "config.php";
                     action_msg_2 = "</span>";
 
                     job_runtime_started = Date.parse(job_started)
-                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": "<span id='runtime_duration_placeholder'></span>", "4": "<span id='runtime_unit_placeholder'></span>" });
+                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": "<span id='runtime_duration_placeholder'></span>"});
 
                     if( job_state["killable"] )
                     {
@@ -90,14 +95,23 @@ require "config.php";
                     currentRunningActionsElement.style.display= ""
                 }
             }
+            else if( workflow_status == "running" )
+            {
+                msg = "<span class=\"icon-attention yellow\"></span> " + mx.I18N.get("Process is still ongoing and will continue soon");
+                currentRunningActionsElement.style.display= "block";
+            }
             else
             {
                 currentRunningActionsElement.style.display="";
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
 
-                if( workflow_state )
+                if( workflow_status == "done" )
                 {
-                    switch (workflow_state) {
+                    msg = mx.I18N.get("No update process is running");
+                }
+                else
+                {
+                    switch (workflow_status) {
                         case 'killed':
                             msg = mx.I18N.get("Last process was killed")
                             break;
@@ -105,7 +119,7 @@ require "config.php";
                             msg = mx.I18N.get("Last process was stopped")
                             break;
                         default:
-                            let reasons = workflow_state.split(",");
+                            let reasons = workflow_status.split(",");
                             if( reasons.indexOf("wrong_system_update_hash") != -1 && reasons.indexOf("wrong_smartserver_update_hash") != -1 )
                             {
                                 msg = mx.I18N.get("Last process was stopped, because of new system and smartserver updates");
@@ -123,10 +137,6 @@ require "config.php";
 
                     msg = "<span class=\"icon-attention red\"></span> " + msg;
                 }
-                else
-                {
-                    msg = mx.I18N.get("No update process is running");
-                }
             }
 
             if( currentRunningStateElement.innerHTML != msg )  currentRunningStateElement.innerHTML = msg;
@@ -136,7 +146,7 @@ require "config.php";
                 let dialog = mx.UpdateServiceActions.getDialog();
                 if( dialog.getId() != "killProcess" )
                 {
-                    if( job_is_running )
+                    if( workflow_status == "running" )
                     {
                         let msg = mx.I18N.get("'{}' disabled, because of a running job");
                         msg = msg.fill(dialog.getElement(".continue").innerHTML);
@@ -151,7 +161,7 @@ require "config.php";
                 }
             }
 
-            if( job_is_running )
+            if( workflow_status == "running" )
             {
                 mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? null: "kill");
             }
@@ -188,8 +198,6 @@ require "config.php";
                 var needsRestartElement = mx.$("#serverNeedsRestart");
                 needsRestartElement.style.display = daemonNeedsRestart ? "flex" : "";
             }
-
-            processRunningJobDetails(data);
 
             if( data["outdated_roles"] || data["outdated_processes"] ) mx.UpdateServiceTemplates.setSystemOutdatedDetails( data["outdated_roles"], data["outdated_processes"], "#systemStateHeader", "#systemStateDetails", "#roleStateHeader", "#roleStateDetails" );
 
@@ -266,6 +274,8 @@ require "config.php";
                     mx.Page.refreshUI(infoDialog.getRootElement());
                 }
             }
+
+            processRunningJobDetails(data);
 
             if( Object.keys(data).length > 0 ) mx.Page.refreshUI();
         }

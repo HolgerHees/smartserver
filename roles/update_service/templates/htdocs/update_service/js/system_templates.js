@@ -28,18 +28,18 @@ mx.UpdateServiceTemplates = (function( ret ) {
     }
     
     let active_service_cmd_type_map = {
-        "system_reboot": "{1}System reboot{2} is running since {3} {4}",
-        "daemon_restart": "{1}Daemon restart{2} is running since {3} {4}",
-        "software_check": "{1}Software check{2} is running since {3} {4}",
+        "system_reboot": "{1}System reboot{2} {3}",
+        "daemon_restart": "{1}Daemon restart{2} {3}",
+        "software_check": "{1}Software check{2} {3}",
 
-        "update_check": "{1}Update check{2} is running since {3} {4}",
-        "system_update_check": "{1}System update check{2} is running since {3} {4}",
-        "deployment_update_check": "{1}Smartserver update check{2} is running since {3} {4}",
-        "process_check": "{1}Process check{2} is running since {3} {4}",
+        "update_check": "{1}Update check{2} {3}",
+        "system_update_check": "{1}System update check{2} {3}",
+        "deployment_update_check": "{1}Smartserver update check{2} {3}",
+        "process_check": "{1}Process check{2} {3}",
 
-        "service_restart": "{1}Service restart{2} is running since {3} {4}",
-        "system_update": "{1}System update{2} is running since {3} {4}",
-        "deployment_update": "{1}Smartserver update{2} is running since {3} {4}"
+        "service_restart": "{1}Service restart{2} {3}",
+        "system_update": "{1}System update{2} {3}",
+        "deployment_update": "{1}Smartserver update{2} {3}"
     }
     
     let last_cmd_type_map = {

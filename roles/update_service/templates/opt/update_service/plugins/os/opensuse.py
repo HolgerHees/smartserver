@@ -31,7 +31,10 @@ class OperatingSystem(Os):
         return updates
           
     def getRebootState(self):
-        result = command.exec([ "/usr/bin/zypper", "needs-rebooting" ], exitstatus_check = False)
+        cmd = [ "/usr/bin/zypper", "needs-rebooting" ]
+        self._startCommand(cmd)
+        result = command.exec(cmd, exitstatus_check = False)
+        self._endCommand(cmd)
         return result.returncode != 0
 
     def getInstalledVersion(self, packagename ):

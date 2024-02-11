@@ -37,7 +37,7 @@ mx.UpdateServiceHelper = (function( ret ) {
                 }
                 else
                 {
-                    element.classList.remove("disabled"); 
+                    element.classList.remove("disabled");
                 }
             });
         }
@@ -47,11 +47,11 @@ mx.UpdateServiceHelper = (function( ret ) {
             {
                 if( excludeClass != null && element.classList.contains(excludeClass) )
                 {
-                    element.classList.remove("disabled"); 
+                    element.classList.remove("disabled");
                 }
                 else
                 {
-                    element.classList.add("disabled"); 
+                    element.classList.add("disabled");
                 }
             });
         }
