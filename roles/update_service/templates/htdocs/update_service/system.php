@@ -27,30 +27,41 @@ require "config.php";
         var job_state = {};
         var workflow_status = null;
         var last_refreshed_state = {};
-        var job_runtime_interval = null;
-        var job_runtime_started = null;
         var workflow_timer = null;
+        var last_msg = null;
+
+        var job_runtime_ref = null;
+        var job_runtime_timer = null;
+        var job_runtime_started = null;
 
         function calculateRuntime()
         {
             let runtime = Math.round( ( (new Date()).getTime() - job_runtime_started ) / 1000 );
-            if( runtime == 0 )
+            if( runtime == 0 ) return mx.I18N.get("is started");
+            return mx.I18N.get("is running since {1}").fill({"1": runtime + " " + mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+        }
+
+        function runtimeRefresh()
+        {
+            let now = window.performance.now();
+            mx.$("#runtime_duration_placeholder").innerText = calculateRuntime();
+
+            if( job_runtime_timer != null )
             {
-                mx.$("#runtime_duration_placeholder").innerText = mx.I18N.get("is started");
-            }
-            else
-            {
-                mx.$("#runtime_duration_placeholder").innerText = mx.I18N.get("is running since {1}").fill({"1": runtime + " " + mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+                let diff = now - job_runtime_ref;
+                let duration = 2000 - diff;
+                if( duration <= 0 ) duration = 1000;
+                job_runtime_ref = window.performance.now();
+                job_runtime_timer = window.setTimeout(runtimeRefresh, duration );
             }
         }
 
-        function stopRuntimeInterval()
+        function stopRuntimeTimer()
         {
-            if( job_runtime_interval != null )
+            if( job_runtime_timer != null )
             {
-                window.clearInterval(job_runtime_interval);
-                job_runtime_interval = null;
-                job_runtime_started = null;
+                window.clearTimeout(job_runtime_timer);
+                job_runtime_timer = null;
             }
         }
 
@@ -86,8 +97,20 @@ require "config.php";
                     action_msg_1 = "<span class=\"detailView\" onClick=\"mx.UpdateServiceActions.openDetails(this,'" + logfile_parts[0] + "','" + logfile_parts[3] + "','" + logfile_parts[4] + "')\">";
                     action_msg_2 = "</span>";
 
-                    job_runtime_started = Date.parse(job_started)
-                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type).fill({"1": action_msg_1, "2": action_msg_2, "3": "<span id='runtime_duration_placeholder'></span>"});
+                    job_runtime_started = Date.parse(job_started);
+
+                    msg = mx.UpdateServiceTemplates.getActiveServiceJobName(job_cmd_type);
+
+                    if( last_msg != msg )
+                    {
+                        last_msg = msg;
+
+                        currentRunningStateElement.innerHTML = msg.fill({"1": action_msg_1, "2": action_msg_2, "3": "<span id='runtime_duration_placeholder'>" + calculateRuntime() + "</span>"});
+
+                        stopRuntimeTimer();
+                        job_runtime_ref = window.performance.now();
+                        job_runtime_timer = window.setTimeout(runtimeRefresh,1000);
+                    }
 
                     if( job_state["killable"] )
                     {
@@ -101,10 +124,12 @@ require "config.php";
                 }
                 else
                 {
-                    stopRuntimeInterval();
+                    stopRuntimeTimer();
+
+                    currentRunningActionsElement.style.display= ""
 
                     msg = "<span class=\"icon-attention yellow\"></span> " + mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
-                    currentRunningActionsElement.style.display= ""
+                    if( last_msg != msg )  currentRunningStateElement.innerHTML = last_msg = msg;
                 }
             }
             else if( workflow_status == "running" || workflow_status == "waiting" )
@@ -112,16 +137,17 @@ require "config.php";
                 // delay waiting workflow_status, to give follow up job a chance to start
                 workflow_timer = window.setTimeout(function()
                 {
-                    stopRuntimeInterval();
+                    workflow_timer = null;
+
+                    stopRuntimeTimer();
+
                     currentRunningActionsElement.style.display= "block";
                     currentRunningStateElement.innerHTML = "<span class=\"icon-attention yellow\"></span> " + mx.I18N.get("Process is still ongoing and will continue soon");;
                 }, 1000);
-
-                msg = currentRunningStateElement.innerHTML;
             }
             else
             {
-                stopRuntimeInterval();
+                stopRuntimeTimer();
 
                 currentRunningActionsElement.style.display="";
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
@@ -158,9 +184,8 @@ require "config.php";
 
                     msg = "<span class=\"icon-attention red\"></span> " + msg;
                 }
+                if( last_msg != msg )  currentRunningStateElement.innerHTML = last_msg = msg;
             }
-
-            if( currentRunningStateElement.innerHTML != msg )  currentRunningStateElement.innerHTML = msg;
 
             if( mx.UpdateServiceActions.getDialog() != null )
             {
@@ -196,12 +221,6 @@ require "config.php";
                 {
                     mx.UpdateServiceHelper.setExclusiveButtonsState(true, null );
                 }
-            }
-
-            if( job_runtime_started != null && job_runtime_interval == null )
-            {
-                calculateRuntime();
-                job_runtime_interval = window.setInterval(calculateRuntime,1000);
             }
         }
 
