@@ -9,17 +9,17 @@ mx.Widgets.AvailableUpdates = (function( widget ) {
         data = {...data, ..._data};
 
         let content = "";
-        let job_is_running = data["job_status"]["job"] != null;
+        let is_running = data["is_running"];
         let needs_attention = data["needs_attention"];
         let needs_action = data["needs_action"];
         let available_system_uddates = data["system_updates"];
         let available_smartserver_changes = data["smartserver_changes"];
 
-        if( job_is_running || needs_attention || needs_action || available_system_uddates > 0 || available_smartserver_changes > 0 )
+        if( is_running || needs_attention || needs_action || available_system_uddates > 0 || available_smartserver_changes > 0 )
         {
             content = mx.I18N.get("Updates","widget_system") + ": <strong>";
 
-            if( job_is_running ) content += "<font class=\"icon-spin2 animate-spin\"></font>"
+            if( is_running ) content += "<font class=\"icon-spin2 animate-spin\"></font>"
 
             if( needs_action ) content += "<font class=\"icon-attention\" style=\"color:var(--color-red)\"></font>";
             else if( needs_attention ) content += "<font class=\"icon-attention\" style=\"color:var(--color-yellow)\"></font>";

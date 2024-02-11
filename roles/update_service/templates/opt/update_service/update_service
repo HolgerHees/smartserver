@@ -171,9 +171,6 @@ class Handler(Server):
         if self.isSocketRoomActive("software"):
             self.emitSocketData('data', { "job_status": data }, "software")
 
-        elif self.isSocketRoomActive("widget"):
-            self.emitSocketData('data', { "job_status": data }, "widget")
-
         elif self.isSocketRoomActive("updates"):
             result = {}
             result["job_status"] = data
@@ -193,6 +190,7 @@ class Handler(Server):
     def notifyWorkflowState(self):
         if self.isSocketRoomActive("widget"):
             result = self._fillWidgetAttention()
+            result["is_running"] = self.cmd_workflow.getWorkflowState() in ["running", "waiting"]
             self.emitSocketData('data', result, "widget")
         elif self.isSocketRoomActive("updates"):
             self.emitSocketData('data', { "workflow_status": self.cmd_workflow.getWorkflowState() }, "updates")
@@ -202,13 +200,10 @@ class Handler(Server):
 
         if room == "widget":
             result = {}
-            result["job_status"] = self.cmd_executer.getJobStatus()
-
             result["component_updates"] = self.software_versions_watcher.getVersionCount()
-
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-
+            result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_RUNNING]
             result = self._fillWidgetAttention(result)
             result = self._fillWidgetActions(result)
             self.emitSocketData('data', result, room)

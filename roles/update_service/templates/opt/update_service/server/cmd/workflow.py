@@ -26,12 +26,18 @@ MAX_WORKFLOW_WAITING_TIME = 1800
 
 
 class CmdWorkflow: 
+    STATE_DONE = "done"
+    STATE_RUNNING = "running"
+    STATE_WAITING = "waiting"
+    STATE_KILLED = "killed"
+    STATE_STOPPED = "stopped"
+
     def __init__(self,handler, cmd_executer, cmd_builder ):
         self.handler = handler
         self.cmd_executer = cmd_executer
         self.cmd_builder = cmd_builder
         
-        self.workflow_state = "done"
+        self.workflow_state = CmdWorkflow.STATE_DONE
 
     def handleRunningStates(self):
         thread = threading.Thread(target=self._handleRunningStates, args=())
@@ -119,7 +125,8 @@ class CmdWorkflow:
         last_seen_time = waiting_start
         last_log_time = waiting_start
         last_cmd_type = None
-        while self.workflow_state == "running":
+        self.workflow_state = CmdWorkflow.STATE_WAITING
+        while self.workflow_state == CmdWorkflow.STATE_WAITING:
             now = datetime.now().timestamp()
             inactivity_time = now - last_seen_time
             waiting_time = round(now - waiting_start)
@@ -137,6 +144,7 @@ class CmdWorkflow:
                 msg = "Not able to proceed due still running '{}'".format(last_cmd_type)
                 logging.info(msg)
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
+                self.workflow_state = CmdWorkflow.STATE_STOPPED
                 break
                 
             if round(now - last_log_time) >= 15:
@@ -151,17 +159,20 @@ class CmdWorkflow:
                 self.cmd_executer.logInterruptedCmd(lf, "{}\n".format(msg))
                 
             time.sleep(2)
-            
+
+        if can_proceed:
+            self.workflow_state == CmdWorkflow.STATE_RUNNING
+
         return can_proceed
 
     def _preWorkflow(self, workflow):
-        self.workflow_state = "running"
+        self.workflow_state = CmdWorkflow.STATE_RUNNING
         self.handler.notifyWorkflowState()
         return 1 if len(workflow) > 0 else 0
 
     def _pastWorkflow(self, exit_code):
-        if self.workflow_state == "running":
-            self.workflow_state = "done" if exit_code == 0 else "stopped"
+        if self.workflow_state == CmdWorkflow.STATE_RUNNING:
+            self.workflow_state = CmdWorkflow.STATE_DONE if exit_code == 0 else CmdWorkflow.STATE_STOPPED
         self.handler.notifyWorkflowState()
 
     def _resumeWorkflow(self,workflow, job_log_file, start_time_str):
@@ -218,7 +229,7 @@ class CmdWorkflow:
                     if _cmd_block:
                         continue
                     else:
-                        self.workflow_state = "stopped"
+                        self.workflow_state = CmdWorkflow.STATE_STOPPED
                         break
                 elif type(_cmd_block) == str:
                     self.workflow_state = _cmd_block
@@ -267,7 +278,7 @@ class CmdWorkflow:
                     self.cmd_executer.finishRun(job_log_file, exit_code, start_time, cmd_block["cmd_type"] ,cmd_block["username"])
                 
             # ***** FINALIZE *****
-            if exit_code != 0 or self.workflow_state != "running":
+            if exit_code != 0 or self.workflow_state != CmdWorkflow.STATE_RUNNING:
                 if os.path.isfile(config.deployment_workflow_file):
                     os.unlink(config.deployment_workflow_file)
                     

@@ -174,7 +174,7 @@ class DeploymentUpdate:
             #print(last_deployment)
             #print(commit_lines)
             #print(committed_changes)
-            
+
             filtered_files = {}
             #lines = [ele.split("\t") for ele in uncommitted_changes]
             #lines = [ele.strip().split(" ",1) for ele in uncommitted_changes]
@@ -195,6 +195,9 @@ class DeploymentUpdate:
                     if path not in filtered_files or "A" in flag:
                         filtered_files[path] = {"flag": flag, "path": path}
                             
+            print(filtered_files)
+            print(uncommitted_changes)
+
             files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
             config_files = {}
             for filename in files:

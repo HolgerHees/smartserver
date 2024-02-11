@@ -29,6 +29,7 @@ require "config.php";
         var last_refreshed_state = {};
         var job_runtime_interval = null;
         var job_runtime_started = null;
+        var workflow_timer = null;
 
         function calculateRuntime()
         {
@@ -40,6 +41,16 @@ require "config.php";
             else
             {
                 mx.$("#runtime_duration_placeholder").innerText = mx.I18N.get("is running since {1}").fill({"1": runtime + " " + mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+            }
+        }
+
+        function stopRuntimeInterval()
+        {
+            if( job_runtime_interval != null )
+            {
+                window.clearInterval(job_runtime_interval);
+                job_runtime_interval = null;
+                job_runtime_started = null;
             }
         }
 
@@ -58,11 +69,10 @@ require "config.php";
             var currentRunningStateElement = mx.$("#currentRunningState");
             var currentRunningActionsElement = mx.$("#currentRunningActions");
 
-            if( job_runtime_interval != null && ( !job_is_running || !job_started ) )
+            if( workflow_timer != null )
             {
-                window.clearInterval(job_runtime_interval);
-                job_runtime_interval = null;
-                job_runtime_started = null;
+                window.clearTimeout(workflow_timer);
+                workflow_timer = null;
             }
 
             if( job_is_running )
@@ -91,17 +101,28 @@ require "config.php";
                 }
                 else
                 {
+                    stopRuntimeInterval();
+
                     msg = "<span class=\"icon-attention yellow\"></span> " + mx.UpdateServiceTemplates.getActiveManuellJobName(job_cmd_type);
                     currentRunningActionsElement.style.display= ""
                 }
             }
-            else if( workflow_status == "running" )
+            else if( workflow_status == "running" || workflow_status == "waiting" )
             {
-                msg = "<span class=\"icon-attention yellow\"></span> " + mx.I18N.get("Process is still ongoing and will continue soon");
-                currentRunningActionsElement.style.display= "block";
+                // delay waiting workflow_status, to give follow up job a chance to start
+                workflow_timer = window.setTimeout(function()
+                {
+                    stopRuntimeInterval();
+                    currentRunningActionsElement.style.display= "block";
+                    currentRunningStateElement.innerHTML = "<span class=\"icon-attention yellow\"></span> " + mx.I18N.get("Process is still ongoing and will continue soon");;
+                }, 1000);
+
+                msg = currentRunningStateElement.innerHTML;
             }
             else
             {
+                stopRuntimeInterval();
+
                 currentRunningActionsElement.style.display="";
                 currentRunningActionsElement.querySelector(".button").classList.remove("disabled");
 
@@ -146,7 +167,7 @@ require "config.php";
                 let dialog = mx.UpdateServiceActions.getDialog();
                 if( dialog.getId() != "killProcess" )
                 {
-                    if( workflow_status == "running" )
+                    if( workflow_status == "running" || workflow_status == "waiting" )
                     {
                         let msg = mx.I18N.get("'{}' disabled, because of a running job");
                         msg = msg.fill(dialog.getElement(".continue").innerHTML);
@@ -161,7 +182,7 @@ require "config.php";
                 }
             }
 
-            if( workflow_status == "running" )
+            if( workflow_status == "running" || workflow_status == "waiting" )
             {
                 mx.UpdateServiceHelper.setExclusiveButtonsState(false, job_running_type == "manual" ? null: "kill");
             }
@@ -177,7 +198,7 @@ require "config.php";
                 }
             }
 
-            if( job_runtime_started != null &&job_runtime_interval == null )
+            if( job_runtime_started != null && job_runtime_interval == null )
             {
                 calculateRuntime();
                 job_runtime_interval = window.setInterval(calculateRuntime,1000);
