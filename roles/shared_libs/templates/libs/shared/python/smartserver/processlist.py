@@ -110,7 +110,7 @@ class Processlist():
 
         for line in smaps:
             slash = line.find('/')
-            if slash == -1 or line.find('00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
+            if slash == -1 or line.find(' 00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
                 continue
             filename = line[slash:]
             filename = filename.split(';')[0].strip()
@@ -138,8 +138,13 @@ class Processlist():
                 return None
         else:
             pids = []
-            for fn in glob.glob('/proc/[0123456789]*'):
-                pids.append(os.path.basename(fn))
+            with os.scandir("/proc/") as it:
+                for entry in it:
+                    if not entry.is_dir() or not entry.name.isnumeric():
+                        continue
+                    pids.append(entry.name)
+            #for fn in glob.glob('/proc/[0123456789]*'):
+            #    pids.append(os.path.basename(fn))
             return pids
 
     @staticmethod
@@ -156,9 +161,11 @@ class Processlist():
         outdated_pids = set()
         for pid in Processlist.getPids():
             for fn in Processlist._getOpenFiles(pid):
-                if re.search('^(?!.*/tmp/|/var/|/run/).*$', fn):
+                if re.search('^(?!.*/(tmp|var|run)).*$', fn):
                     outdated_pids.add(pid)
                     break
+
+        #logging.info(outdated_pids)
         #end = time.time()
         #logging.info(end-start)
 

@@ -5,6 +5,7 @@ from plugins.os.os import Os
 
 from smartserver import command
 
+
 class OperatingSystem(Os):
     def getSystemUpdateCmds(self):
         return [ "/usr/bin/dnf update -y" ]
@@ -35,10 +36,8 @@ class OperatingSystem(Os):
         return updates
       
     def getRebootState(self):
-        cmd = [ "/usr/bin/needs-restarting", "-r" ]
-        self._startCommand(cmd)
-        result = command.exec(cmd, exitstatus_check = False)
-        self._endCommand(cmd)
+        with self.lockCmd([ "/usr/bin/needs-restarting", "-r" ]) as cmd:
+            result = command.exec(cmd, exitstatus_check = False)
         return result.returncode == 1
 
     def getInstalledVersion(self, packagename ):

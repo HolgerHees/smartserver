@@ -37,6 +37,8 @@ class Handler(Server):
         plugin = importlib.import_module("plugins.os.{}".format(config.os_type))
         operating_system = plugin.OperatingSystem()
                 
+        self.high_accuracy = False
+
         self.process_watcher = ProcessWatcher(self, operating_system)
         self.system_update_watcher = SystemUpdateWatcher(self, self.process_watcher, operating_system)
         self.dependency_watcher = DependencyWatcher(self, self.system_update_watcher)
@@ -45,7 +47,7 @@ class Handler(Server):
         self.software_versions_watcher = SoftwareVersionWatcher(self)
 
         self.cmd_builder = CmdBuilder( self.dependency_watcher, self.process_watcher, self.system_update_watcher, self.deployment_state_watcher, operating_system)
-        self.cmd_executer = CmdExecuter( self, self.process_watcher, operating_system )
+        self.cmd_executer = CmdExecuter( self, self.process_watcher )
         self.cmd_workflow = CmdWorkflow( self, self.cmd_executer, self.cmd_builder )
         
         self.service_base_path = os.path.dirname(__file__)
@@ -188,9 +190,11 @@ class Handler(Server):
             self.emitSocketData('data', self._fillUpdatesNeedsRestart(), "updates")
 
     def notifyWorkflowState(self):
+        self._triggerHighAccuracy()
+
         if self.isSocketRoomActive("widget"):
             result = self._fillWidgetAttention()
-            result["is_running"] = self.cmd_workflow.getWorkflowState() in ["running", "waiting"]
+            result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_WAITING ]
             self.emitSocketData('data', result, "widget")
         elif self.isSocketRoomActive("updates"):
             self.emitSocketData('data', { "workflow_status": self.cmd_workflow.getWorkflowState() }, "updates")
@@ -203,7 +207,7 @@ class Handler(Server):
             result["component_updates"] = self.software_versions_watcher.getVersionCount()
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-            result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_RUNNING]
+            result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_WAITING ]
             result = self._fillWidgetAttention(result)
             result = self._fillWidgetActions(result)
             self.emitSocketData('data', result, room)
@@ -254,7 +258,17 @@ class Handler(Server):
     def onSocketConnect(self, sid):
         super().onSocketConnect(sid)
 
-        self.cmd_executer.triggerSocketClientsActive()
+        self._triggerHighAccuracy()
+
+    def _triggerHighAccuracy(self):
+        enabled = self.areSocketClientsActive() or self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_WAITING ]
+        if self.high_accuracy != enabled:
+            self.high_accuracy = enabled
+            self.cmd_executer.triggerHighAccuracy()
+
+    def isHightAccuracy(self):
+        return self.high_accuracy
+
 
 @serverSocket.on('refreshSoftwareVersionCheck')
 def refreshSoftwareVersionCheck():

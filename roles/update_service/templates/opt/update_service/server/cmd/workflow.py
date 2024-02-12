@@ -113,7 +113,7 @@ class CmdWorkflow:
         thread.start()
         
     def _waitToProceed(self, lf, min_process_inactivity_time, min_waiting_time, max_waiting_time, suffix ):
-        if min_waiting_time == 0 and not self.cmd_executer.isExternalJobRunning():
+        if min_waiting_time == 0 and self.cmd_executer.getExternalCmdType() == None:
             return True
         
         msg = "Waiting a maximum of {}s for {}s of inactivity to {}".format(max_waiting_time, min_process_inactivity_time, suffix)
@@ -131,8 +131,8 @@ class CmdWorkflow:
             inactivity_time = now - last_seen_time
             waiting_time = round(now - waiting_start)
             
-            if self.cmd_executer.isExternalJobRunning():
-                external_cmd_type = self.cmd_executer.getExternalCmdType()
+            external_cmd_type = self.cmd_executer.getExternalCmdType()
+            if external_cmd_type != None:
                 last_seen_time = now
                 last_cmd_type = external_cmd_type if external_cmd_type is not None else self.cmd_executer.getCurrentJobCmdType()
 
@@ -300,12 +300,10 @@ class CmdWorkflow:
         self._pastWorkflow(exit_code)
 
     def runWorkflow(self, workflow, check_global_running ):
-        is_running = self.cmd_executer.isRunning() if check_global_running else self.cmd_executer.isDaemonJobRunning()
-        if not is_running:
+        if not self.cmd_executer.isRunning(check_global_running):
             thread = threading.Thread(target=self._runWorkflow, args=(workflow,))
             thread.start()
             time.sleep(0.5)
-            
             return True
         else:
             return False
