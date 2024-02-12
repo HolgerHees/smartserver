@@ -37,3 +37,17 @@
             severity: critical
         annotations:
             url: "https://{{server_domain}}/?ref=admin|system|grafana_logs"
+
+      - alert: Log missing
+        expr: |
+            absent_over_time(
+              {env="fluentd"}
+              [15m]
+            )
+        for: 0s
+        labels:
+            notifyGroup: "logs-fluentd"
+            severity: critical
+        annotations:
+            summary: "No loki logs since 15 minutes."
+            url: "https://smartmarvin.de/?ref=admin|system|grafana_logs"

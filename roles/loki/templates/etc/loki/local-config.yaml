@@ -7,7 +7,10 @@ server:
   http_listen_port: 3100
   http_server_read_timeout: 300s # allow longer time span queries
   http_server_write_timeout: 300s # allow longer time span queries
-  
+  grpc_server_max_recv_msg_size: 8388608
+  grpc_server_max_send_msg_size: 8388608
+  grpc_server_max_concurrent_streams: 200
+
 # will fix a lot of "context canceled" log messages
 # https://github.com/grafana/loki/pull/5077/files#diff-025adfc5a8f641b9f5a1869996e3297b6c17f13933f52354cd9b375548ad7970R399
 query_range:
