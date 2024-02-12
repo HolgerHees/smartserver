@@ -44,7 +44,6 @@ class CmdExecuter(watcher.Watcher):
 
         self.external_cmd_type = None
         
-        self.last_jobs_modified = 0
         self.jobs = []
         self.initJobs()
 
@@ -63,7 +62,6 @@ class CmdExecuter(watcher.Watcher):
 
     def initJobs(self):
         _jobs = []
-        _last_jobs_modified = 0
         
         files = glob.glob(u"{}*.log".format(config.job_log_folder))
         files.sort(key=os.path.getmtime, reverse=True)
@@ -78,22 +76,13 @@ class CmdExecuter(watcher.Watcher):
             job["state"] = data[2];
             job["type"] = data[3];
             job["user"] = data[4].split(".")[0]
-            
-            job_timestamp = round(os.path.getmtime(name),3)
-            if job_timestamp > _last_jobs_modified:
-                _last_jobs_modified = job_timestamp
-            
             _jobs.append(job)
             
         self.jobs = _jobs;
-        self.last_jobs_modified = _last_jobs_modified
 
     def getJobs(self):
         return self.jobs
-        
-    def getLastJobsModifiedAsTimestamp(self):
-        return self.last_jobs_modified
-      
+
     def getCurrentJobStarted(self):
         return self.current_started
       

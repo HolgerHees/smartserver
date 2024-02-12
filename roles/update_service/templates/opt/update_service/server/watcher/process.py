@@ -1,5 +1,4 @@
 import threading
-from datetime import datetime, timedelta
 import re
 import logging
 import time
@@ -34,18 +33,16 @@ class ProcessWatcher(watcher.Watcher):
         self.operating_system = operating_system
 
         self.is_running = True
-        self.last_refresh = self.last_cleanup = datetime.now() - timedelta(hours=24) # to force a full refresh
+        self.last_refresh = self.last_cleanup = 0 # to force a full refresh
 
-        self.forced_reboot_state_refresh_after_reboot = ( datetime.now() + timedelta(minutes=5) ) if time.monotonic() < 300 else None
+        self.forced_reboot_state_refresh_after_reboot = time.time() + 300 if time.monotonic() < 300 else None
         
         self.is_reboot_needed_by_core_update = False
-        self.system_reboot_modified = self.getStartupTimestamp()
         
         self.is_reboot_needed_by_outdated_processes = False
         self.is_update_service_outdated = False
         self.outdated_services = []
         self.outdated_processes = {}
-        self.oudated_processes_modified = self.getStartupTimestamp()
         
         self.external_cmd_type = None
         self.external_cmd_type_pid = None
@@ -58,18 +55,17 @@ class ProcessWatcher(watcher.Watcher):
         self.thread.start()
 
     def _checkProcesses(self):
+        force_refresh = False
         while self.is_running:
-            timeout = 900
-
-            if ( datetime.now() - self.last_refresh ).total_seconds() >= 900:
+            if force_refresh or ( time.time() - self.last_refresh ) >= 900:
                 self.refresh()
             else:
                 self.cleanup()
 
-            if self.forced_reboot_state_refresh_after_reboot is not None or len(self.outdated_processes) > 0:
-                timeout = 15
-
+            timeout = 15 if self.forced_reboot_state_refresh_after_reboot is not None or len(self.outdated_processes) > 0 else 900
             self.event.wait(timeout)
+
+            force_refresh = self.event.is_set()
             self.event.clear()
         
     def terminate(self):
@@ -87,12 +83,12 @@ class ProcessWatcher(watcher.Watcher):
                 logging.info("new outdated processe(s)")
                 self._processOutdatedProcesses(outdated_processes)
 
-            self.last_refresh = datetime.now()
+            self.last_refresh = self.last_cleanup = time.time()
 
     def cleanup(self):
         if self.forced_reboot_state_refresh_after_reboot is not None:
             if self.is_reboot_needed_by_core_update:
-                if datetime.now() < self.forced_reboot_state_refresh_after_reboot:
+                if time.time() < self.forced_reboot_state_refresh_after_reboot:
                     with self.lock:
                         self._refreshRebootState()
                 else:
@@ -105,6 +101,8 @@ class ProcessWatcher(watcher.Watcher):
                 if len(self.outdated_processes) != len(outdated_processes):
                     logging.info("{} outdated processe(s) cleaned".format( len(self.outdated_processes) - len(outdated_processes) ))
                     self._processOutdatedProcesses(outdated_processes)
+
+        self.last_cleanup = time.time()
 
     def _processOutdatedProcesses(self, outdated_processes):
         is_reboot_needed = False
@@ -134,7 +132,6 @@ class ProcessWatcher(watcher.Watcher):
 
         self.is_update_service_outdated = is_update_service_outdated
         self.is_reboot_needed_by_outdated_processes = is_reboot_needed
-        self.oudated_processes_modified = self.getNowAsTimestamp()
 
         self.handler.notifyWatcherProcessState()
 
@@ -143,7 +140,6 @@ class ProcessWatcher(watcher.Watcher):
         if self.is_reboot_needed_by_core_update != is_reboot_needed_by_core_update:
             logging.info("Reboot state changed to '{}'".format( 'needed' if is_reboot_needed_by_core_update else 'not needed'))
             self.is_reboot_needed_by_core_update = is_reboot_needed_by_core_update
-            self.system_reboot_modified = self.getNowAsTimestamp()
 
         if not self.is_reboot_needed_by_core_update:
             self.forced_reboot_state_refresh_after_reboot = None
@@ -194,11 +190,10 @@ class ProcessWatcher(watcher.Watcher):
             external_cmd_type_pid = None
 
         if self.external_cmd_type != external_cmd_type:
+            if self.external_cmd_type != None:
+                self.event.set()
             self.external_cmd_type = external_cmd_type
             self.external_cmd_type_pid = external_cmd_type_pid
-
-            self.last_refresh = datetime.now() - timedelta(hours=24)
-            self.event.set()
 
         return self.external_cmd_type
 
@@ -220,11 +215,5 @@ class ProcessWatcher(watcher.Watcher):
     def isRebootNeededByOutdatedProcesses(self):
         return self.is_reboot_needed_by_outdated_processes
       
-    def getOutdatedProcessesLastModifiedAsTimestamp(self):
-        return self.oudated_processes_modified
-
-    def getSystemRebootLastModifiedAsTimestamp(self):
-        return self.system_reboot_modified
-
     def getLastRefreshAsTimestamp(self):
-        return round(self.last_refresh.timestamp(),3)
+        return round(self.last_refresh,3)

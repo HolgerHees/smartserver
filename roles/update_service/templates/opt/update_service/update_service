@@ -246,13 +246,6 @@ class Handler(Server):
                 "smartserver_changes": self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
             }
 
-            #last_data_modified["outdated_roles"] = self.dependency_watcher.getLastModifiedAsTimestamp()
-            #last_data_modified["deployment_state"] = self.deployment_state_watcher.getLastModifiedAsTimestamp()
-            #last_data_modified["deployment_tags"] = self.deployment_tags_watcher.getLastModifiedAsTimestamp()
-            #last_data_modified["outdated_processes"] = self.process_watcher.getOutdatedProcessesLastModifiedAsTimestamp()
-            #last_data_modified["system_reboot"] = self.process_watcher.getSystemRebootLastModifiedAsTimestamp()
-            #last_data_modified["jobs"] = self.cmd_executer.getLastJobsModifiedAsTimestamp()
-
             self.emitSocketData('data', result, room)
 
     def onSocketConnect(self, sid):
