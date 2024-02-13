@@ -86,8 +86,9 @@ default_variables: {
     # ]
 
     deployment_config_git:                    { default: "https://github.com/HolgerHees/smartserver.git" },         # used deployment, update_service and ci_service role
-    deployment_token_git:                     { optional: yes,                                                      # used in update_service or ci_service in case of a private repository
-                                                dependency: "{{deployment_config_git is defined}}" },               # (INFO: 'dependency' is not nessecarry, because 'deployment_config_git' is mandatory)
+
+    github_auth_token:                        { optional: yes,                                                      # used in update_service (to avoid rate limits https://docs.github.com/de/rest/rate-limit/rate-limit) or ci_service (for pushing ci states to a private repository)
+                                                dependency: "{{deployment_config_git is defined or update_service_enabled}}" }, # (INFO: 'dependency' is not nessecarry, because 'deployment_config_git' is mandatory)
 
 
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

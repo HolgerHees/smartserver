@@ -30,6 +30,7 @@ mx.SNCore = (function( ret ) {
         if( "job_status" in data && data["job_status"]["job"] == "software_check" )
         {
             setLoadingGear(data["job_status"]["started"]);
+            return;
         }
         else if( jobtimer )
         {

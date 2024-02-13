@@ -10,6 +10,8 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
     
     function formatVersion(version)
     {
+        if( version == undefined ) version = "unknown";
+
         // git hashes
         if( version.length > 20 ) return version.substr(0,7);
         
@@ -27,12 +29,13 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
     {
         let date = new Date(job_started);
         let now = new Date();
-        let duration = Math.round( ( now.getTime() - date.getTime() )  / 1000 );
+        let runtime = Math.round( ( now.getTime() - date.getTime() )  / 1000 );
         
         let action_1 = "<div class=\"detailView\" onclick=\"document.location.href='../system/'\">";
         let action_2 = "</div>";
         
-        let msg = mx.I18N.get("{1}Software check{2} is running since {3} {4}").fill({"1": action_1, "2": action_2, "3": duration, "4": mx.I18N.get( duration == 1 ? "second" : "seconds" ) })
+        let duration = runtime == 0 ? mx.I18N.get("is started") : mx.I18N.get("is running since {1}").fill({"1": runtime + " " + mx.I18N.get( runtime == 1 ? "second" : "seconds" ) });
+        let msg = mx.I18N.get("{1}Software check{2} {3}").fill({"1": action_1, "2": action_2, "3": duration })
         
         document.body.querySelector(".list").innerHTML = "<div class=\"is_running\">" + msg + "</div>";
     }
@@ -83,7 +86,7 @@ mx.SoftwareVersionsTemplates = (function( ret ) {
                 columns.push({"value": "<span class=\"" + icon + "\"></span>", "class": "typeLink", "events": { "click": function(){ mx.SNCore.openUrl(event,state["url"]); } } });
                 columns.push({"value": state["name"] });
 
-                let latestDate = new Date( state["current"]["date"] );
+                let latestDate = state["current"]["date"] ? new Date( state["current"]["date"] ) : new Date();
 
                 columns.push({"value": formatVersion(state["current"]["version"]), "data": {"tooltip": "Version " + formatVersion(state["current"]["version"]) + " from " + formatDatetime(latestDate)} });
 

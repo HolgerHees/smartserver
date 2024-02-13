@@ -45,12 +45,12 @@ elif cmd == "clean":
         exit(1)
 elif cmd == "stop":
     stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir,config.lib_dir,branch)
-    if stopped_state_obj != None and config.access_token != "":
+    if stopped_state_obj != None and config.auth_token != "":
         log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-        GitHub.setState(repository_owner,config.access_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
+        GitHub.setState(repository_owner,config.auth_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
               
         log.info(u"Cancel pending github state on commit '{}'".format(stopped_state_obj["git_hash"]))
-        GitHub.cancelPendingStates(repository_owner, config.access_token, stopped_state_obj["git_hash"], "Build skipped")
+        GitHub.cancelPendingStates(repository_owner, config.auth_token, stopped_state_obj["git_hash"], "Build skipped")
     exit(0)
 elif cmd == "start" or cmd == "restart":
     if not info.Info.isDefaultConnectionActive():
@@ -89,7 +89,7 @@ elif cmd == "start" or cmd == "restart":
                 
                 job_obj = job.Job(config.log_dir, config.lib_dir, config.repository_dir, config.status_file, branch, current_git_hash, commit )
                 
-                if config.access_token != "":
+                if config.auth_token != "":
                     # get all github states
                     deployment_states = GitHub.getStates(repository_owner,current_git_hash)
 
@@ -103,7 +103,7 @@ elif cmd == "start" or cmd == "restart":
                             elif start_os != deployment['os']:
                                 continue
 
-                        GitHub.setState(repository_owner,config.access_token,current_git_hash,"pending",deployment['os'],"Build pending")
+                        GitHub.setState(repository_owner,config.auth_token,current_git_hash,"pending",deployment['os'],"Build pending")
                         _deployments.append(deployment)
 
                     deployments = _deployments
@@ -115,8 +115,8 @@ elif cmd == "start" or cmd == "restart":
                     successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
 
                     if not successful:
-                        if config.access_token != "":
-                            GitHub.setState(repository_owner,config.access_token,current_git_hash,"failure",deployment['os'],"Build failed")
+                        if config.auth_token != "":
+                            GitHub.setState(repository_owner,config.auth_token,current_git_hash,"failure",deployment['os'],"Build failed")
                             
                         log_url = "https://{}/ci_service/details/?datetime={}&config={}&os={}&branch={}&hash={}".format(config.server_host,start_time_str,deployment['config'],deployment['os'],branch,current_git_hash)
                         log_url = urllib.parse.quote_plus(log_url)
@@ -132,21 +132,21 @@ elif cmd == "start" or cmd == "restart":
                         is_failed_job = True
                         break
                     else:
-                        if config.access_token != "":
-                            GitHub.setState(repository_owner,config.access_token,current_git_hash,"success",deployment['os'],"Build succeeded")
+                        if config.auth_token != "":
+                            GitHub.setState(repository_owner,config.auth_token,current_git_hash,"success",deployment['os'],"Build succeeded")
                 
                 status.setState(config.status_file,u"finished")
 
-                if is_failed_job and config.access_token != "":
-                    GitHub.cancelPendingStates(repository_owner, config.access_token, current_git_hash, "Build skipped")
+                if is_failed_job and config.auth_token != "":
+                    GitHub.cancelPendingStates(repository_owner, config.auth_token, current_git_hash, "Build skipped")
 
                 helper.log( u"Check for commit {} finished".format(current_git_hash))
             except:
                 helper.log( traceback.format_exc(), "err" )
                 status.setState(config.status_file,u"crashed")
 
-                if config.access_token != "":
-                    GitHub.cancelPendingStates(repository_owner, config.access_token, current_git_hash, "Build crashed")
+                if config.auth_token != "":
+                    GitHub.cancelPendingStates(repository_owner, config.auth_token, current_git_hash, "Build crashed")
             exit(0)
         else:
             exit(0)

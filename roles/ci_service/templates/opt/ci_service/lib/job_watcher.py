@@ -170,14 +170,14 @@ class JobWatcher():
         if len(invalid_jobs) > 0:
             self.lock.acquire()
             try:
-                if config.access_token != "" and self.state is not None:
+                if config.auth_token != "" and self.state is not None:
                     # process git hashes
                     for git_hash in git_hashes: 
                         logging.info("Clean states of git hash '{}'".format(git_hash))
                         for deployment in git_hashes[git_hash]:
                             try:
-                                GitHub.setState(repository_owner,config.access_token,git_hash,"error", deployment,"Build crashed")
-                                GitHub.cancelPendingStates(repository_owner, config.access_token, git_hash, "Build skipped")
+                                GitHub.setState(repository_owner,config.auth_token,git_hash,"error", deployment,"Build crashed")
+                                GitHub.cancelPendingStates(repository_owner, config.auth_token, git_hash, "Build skipped")
                             except requests.exceptions.ConnectionError as e:
                                 self.logger.info(str(e))
                                 raise NetworkException("Github network issues")

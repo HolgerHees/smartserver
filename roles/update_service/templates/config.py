@@ -30,7 +30,7 @@ deployment_directory = "{{deployment_path}}"
 git_remote = "{{deployment_config_git}}"
 
 global_config = { 
-  "github_access_token": "{{deployment_token_git if deployment_token_git is defined else ''}}"
+  "github_auth_token": "{{github_auth_token if github_auth_token is defined else ''}}"
 }
 
 os_type = "{{os_type}}"

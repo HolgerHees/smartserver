@@ -26,7 +26,7 @@ class Application(App):
         super().__init__(job_config)
 
         self.plugin_config = job_config["config"]
-        self.access_token = global_config['github_access_token']
+        self.auth_token = global_config['github_auth_token']
         self.operating_system = operating_system
         self.current_version = None
 
@@ -52,8 +52,8 @@ class Application(App):
             
     def _requestData(self,url):
         req = urllib.request.Request(url)
-        if self.access_token:
-            req.add_header('Authorization', "token {}".format(self.access_token))
+        if self.auth_token:
+            req.add_header('Authorization', "token {}".format(self.auth_token))
         
         raw = self._requestUrl(req)
         return json.loads(raw)

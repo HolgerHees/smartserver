@@ -8,7 +8,7 @@ build_dir = "{{global_build}}"
 repository_dir = "{{global_build}}ci_job"
 
 repository_url = "{{deployment_config_git}}"
-access_token = "{{deployment_token_git if deployment_token_git is defined else ''}}"
+auth_token = "{{github_auth_token if github_auth_token is defined else ''}}"
 
 service_ip = "127.0.0.1"
 service_port = "8506"
