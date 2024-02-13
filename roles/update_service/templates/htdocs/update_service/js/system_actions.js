@@ -14,57 +14,6 @@ mx.UpdateServiceActions = (function( ret ) {
         window.setTimeout(function() { btn.classList.add("disabled"); },0);
 
         socket.emit(action,parameter);
-
-
-
-
-
-        /*parameter["last_data_modified"] = mx.UNCore.getLastDataModified();
-
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", daemonApiUrl + action + "/" );
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-            
-            if( response_callback )
-            {
-                response_callback(this);
-            }
-            else
-            {
-                if( this.status == 200 ) 
-                {
-                    var response = JSON.parse(this.response);
-                    if( response["status"] == "0" )
-                    {
-                        mx.Error.confirmSuccess();
-
-                        mx.UNCore.handleDaemonState(response);
-                    }
-                    else
-                    {
-                        mx.Error.handleServerError(response["message"]);
-                    }
-                }
-                else if( mx.UpdateServiceHelper.isRestarting() )
-                {
-                    mx.Error.handleError( mx.I18N.get( "Service is restarting" ) );
-                }
-                else if( this.status == 0 || this.status == 503 )
-                {
-                    mx.Error.handleError( mx.I18N.get( "Service is currently not available")  );
-                }
-                else
-                {
-                    mx.Error.handleRequestError(this.status, this.statusText, this.response);
-                }
-            }
-        };
-        
-        xhr.send(mx.Core.encodeDict(parameter));*/
     }
     
     function dialogClose()
@@ -279,7 +228,7 @@ mx.UpdateServiceActions = (function( ret ) {
 
                     if( !hasErrors )
                     {
-                        dialog.close(); 
+                        dialogClose();
                         
                         if( args )
                         {
