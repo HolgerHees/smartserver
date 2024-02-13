@@ -117,7 +117,7 @@ class DBConnection():
 
     def getWeekList(self, start):
         try:
-            self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` < DATE_ADD(CURDATE(), INTERVAL 8 DAY) ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S')))
+            self.cursor.execute("SELECT * FROM {} WHERE `datetime` >= '{}' AND `datetime` < DATE_ADD(CURDATE(), INTERVAL 7 DAY) ORDER BY `datetime`".format(self.config.db_table, start.strftime('%Y-%m-%d %H:%M:%S')))
             self.db.state = 1
             return self._convertRows(self.cursor.fetchall())
         except MySQLdb._exceptions.OperationalError as e:

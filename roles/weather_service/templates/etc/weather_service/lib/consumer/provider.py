@@ -326,6 +326,12 @@ class ProviderConsumer():
             result.append(block.to_dict())
         return result
 
+    def _applyWeekDay(self, current_value, weekValues):
+        current_value.setEnd((current_value.getStart() + timedelta(hours=24)).replace(hour=0, minute=0, second=0))
+        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
+        current_value.setSVG(self.getCachedIcon(icon_name))
+        weekValues.append(current_value)
+
     def getWeekValues(self, requested_day = None):
         activeDay = datetime.now() if requested_day is None else datetime.strptime(requested_day, '%Y-%m-%d')
         activeDay = activeDay.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -386,13 +392,12 @@ class ProviderConsumer():
                 for hourlyData in weekList:
                     _datetime = hourlyData['datetime'].replace(hour=0, minute=0, second=0);
                     if _datetime != current_value.getStart():
-                        current_value.setEnd(_datetime)
-                        icon_name = WeatherHelper.convertOctaToSVG(self.latitude, self.longitude, current_value)
-                        current_value.setSVG(self.getCachedIcon(icon_name))
-                        weekValues.append(current_value)
+                        self._applyWeekDay(current_value, weekValues)
                         current_value = WeatherBlock( _datetime )
                     current_value.apply(hourlyData)
                     index += 1
+
+                self._applyWeekDay(current_value, weekValues)
             else:
                 minTemperatureWeekly = maxTemperatureWeekly = maxWindSpeedWeekly = sumSunshineWeekly = sumRainWeekly = None
 
