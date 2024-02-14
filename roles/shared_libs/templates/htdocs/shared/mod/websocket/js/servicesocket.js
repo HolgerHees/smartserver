@@ -4,12 +4,21 @@ mx.ServiceSocket = (function( ret ) {
         var initialized = true;
         var errorCallback = null;
 
+        window.addEventListener("beforeunload", (event) => { initialized = false; });
+
         function onError(err)
         {
             if( !initialized ) return;
 
             if( !errorCallback ) mx.Error.handleError( mx.I18N.get( "Service is currently not available") );
             else errorCallback(err);
+        }
+
+        function onDisconnect(err)
+        {
+            if( !initialized ) return;
+
+            onError(err);
         }
 
         function onConnect()
@@ -28,7 +37,7 @@ mx.ServiceSocket = (function( ret ) {
         var socket = io("/", {path: '/' + service_name + '/api/socket.io' });
         socket.on('connect_error', err => onError(err));
         socket.on('connect_failed', err => onError(err));
-        socket.on('disconnect', err => onError(err));
+        socket.on('disconnect', err => onDisconnect(err));
         socket.on('connect', err => onConnect());
         socket.on('status', data => onStatus(data));
 
