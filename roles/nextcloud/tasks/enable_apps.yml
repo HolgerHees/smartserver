@@ -24,6 +24,7 @@
   with_items:
     - dashboard
     - collectives
+    - jsloader
 #    - tasks
 #    - notes
 
@@ -41,9 +42,8 @@
   when: "'- ' + item + ':' not in app_list_result.stdout"
   with_items:
     - user_saml
-#    - onlyoffice
     - richdocuments
-    - jsloader
+#    - jsloader
     - previewgenerator
     - bookmarks
     - contacts
@@ -127,8 +127,7 @@
 #      - { app: "onlyoffice", name: "verify_peer_off", value: "false" }
 #      - { app: "onlyoffice", name: "versionHistory", value: "true" }
 
-      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
-#      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(\\.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
+#      - { app: "jsloader", name: "snippet", value: "document.domain='{{server_domain}}'; if( window.parent != window && window.parent == window.top ){ var found = document.location.hostname.match(/(fa|ba)(.|-).*/); var script = document.createElement('script'); script.src = 'https://' + ( found ? found[1] + '.' : '' ) + '{{server_domain}}' + '/main/listener/frame.js'; document.head.appendChild(script); }" }
 
       - { app: "previewgenerator", name: "squareSizes", value: "256" }
       - { app: "previewgenerator", name: "widthSizes", value: "256" }
@@ -253,10 +252,9 @@
   when: "item not in app_status.stdout.split('Disabled')[0]"
   with_items:
     - user_saml
-#    - onlyoffice
     - richdocuments
 #    - collectives
-    - jsloader
+#    - jsloader
     - previewgenerator
     - keeweb
     - news
