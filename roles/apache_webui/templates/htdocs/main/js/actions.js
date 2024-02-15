@@ -70,8 +70,16 @@ mx.Actions = (function( ret ) {
     
     function iFrameMessageEventHandler(event)
     {
-        if( typeof event.data == 'object' && 'type' in event.data && [ 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
+        if( typeof event.data == 'object' && 'type' in event.data && [ 'ping', 'load', 'title', 'pushState', 'popState', 'replaceState' ].includes(event.data['type']) )
         {
+            //console.log(event.data['type']);
+
+            if( event.data['type'] == 'ping' )
+            {
+                clearIFrameTimer();
+                return;
+            }
+
             setTitle(event.data["title"]);
 
             if( event.data['type'] != "title" )
@@ -110,7 +118,7 @@ mx.Actions = (function( ret ) {
 
     function clearIFrameTimer()
     {
-        if( iframeLoadingTimer ) 
+        if( iframeLoadingTimer )
         {
             clearTimeout(iframeLoadingTimer);
             iframeLoadingTimer = null; 
@@ -147,7 +155,7 @@ mx.Actions = (function( ret ) {
                 }
 
                 showError("loading");
-            },10000);
+            },2000);
         }
         else
         {
@@ -171,7 +179,7 @@ mx.Actions = (function( ret ) {
         hideMenuContent();
         hideProgress();
 
-        clearIFrameTimer();
+        //clearIFrameTimer();
 
         if( iframeElement.style.display != "" )
         {
