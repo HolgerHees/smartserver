@@ -195,14 +195,14 @@ require "./shared/libs/auth.php";
         
             initContent();
 
-            if( mx.User.memberOf("admin") )
+            if( mx.User.memberOf("admin") && mx.Alarms )
             {
                 // defined in netdata.js (/components/)
                 mx.Alarms.init('.alarm.button','.alarm.button .badge');
             }
             else
             {
-                mx.$(".alarm.button").style.display = 'none';
+                mx.$$(".alarm.button").forEach((element) => element.style.display = 'none');
             }
             
             mx.$(".spacer").innerHTML = document.location.hostname;
