@@ -8,16 +8,6 @@ class Ressources
         return $lang;
     }
 
-    private static function streamI18N($i18n_file)
-    {
-        $stream = fopen($i18n_file, 'r');
-        $content = stream_get_contents($stream);
-        $content = str_replace("'","\\'",$content);
-        $content = str_replace("\n","",$content);
-        echo "mx.Translations.push('".$content."');\n";
-        fclose($stream);
-    }
-
     private static function getI18NFile($dir)
     {
         $lang = Ressources::getLang();
@@ -25,10 +15,22 @@ class Ressources
         return is_file( $i18n_file ) ? $i18n_file : null;
     }
 
-    private static function stream($path,$suffix)
+    private static function getI18NContent($i18n_file)
+    {
+        $stream = fopen($i18n_file, 'r');
+        $content = stream_get_contents($stream);
+        $content = str_replace("'","\\'",$content);
+        $content = str_replace("\n","",$content);
+        $content = "mx.Translations.push('".$content."');\n";
+        fclose($stream);
+        return $content;
+    }
+
+    private static function getContent($path,$suffix)
     {
         $len = strlen($suffix);
         $files = scandir($path);
+        $content = "";
         foreach ($files as $name)
         {
             if (in_array($name,array(".","..")))
@@ -39,10 +41,11 @@ class Ressources
             if( substr($name,-$len) === $suffix )
             {
                 $stream = fopen($path.$name, 'r');
-                echo trim(stream_get_contents($stream))."\n";
+                $content .= trim(stream_get_contents($stream))."\n";
                 fclose($stream);
             }
         }
+        return $content;
     }
     
     private static function getVersion($dir, $path, $suffixes, $type)
@@ -156,23 +159,20 @@ class Ressources
         return $html;
     }
 
-    public static function dump($type, $dir, $path)
+    public static function build($type, $dir, $path)
     {
         $dir = Ressources::prepareDir($type, $dir);
       
         switch($type)
         {
           case 'css':
-              header('Content-Type: text/css; charset=utf-8');
-              Ressources::stream($dir,'.css');
-              break;
+              return array( 'text/css; charset=utf-8', Ressources::getContent($dir,'.css') );
 
           case 'js':
-              header('Content-Type: application/javascript; charset=utf-8');
-              Ressources::stream($dir,'.js');
+              $content = Ressources::getContent($dir,'.js');
               if( $path == "/shared/" )
               {
-                  echo '
+                  $content .= '
                     for (var n in mx.OnScriptReady) {
                         mx.OnScriptReady[n].call();
                     }
@@ -207,21 +207,21 @@ class Ressources
                       if( substr($name,-3) === '.js' )
                       {
                           $stream = fopen($dir.$name, 'r');
-                          echo stream_get_contents($stream);
+                          $content .= stream_get_contents($stream);
                           fclose($stream);
                       }
                       else if( substr($name,-8) === '.' . $lang . '.json' )
                       {
-                          Ressources::streamI18N($dir.$name);
+                          $content .= Ressources::getI18NContent($dir.$name);
                       }
                   }
               }
               else
               {
                   $i18n_file = Ressources::getI18NFile($dir);
-                  if( $i18n_file ) Ressources::streamI18N($i18n_file);
+                  if( $i18n_file ) $content .= Ressources::getI18NContent($i18n_file);
               }
-              break;
+              return array( 'application/javascript; charset=utf-8', $content );
         }
     }
 }

@@ -303,7 +303,6 @@ class CmdWorkflow:
         if not self.cmd_executer.isRunning(check_global_running):
             thread = threading.Thread(target=self._runWorkflow, args=(workflow,))
             thread.start()
-            time.sleep(0.5)
             return True
         else:
             return False

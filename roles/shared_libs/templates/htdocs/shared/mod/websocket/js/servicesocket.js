@@ -21,7 +21,7 @@ mx.ServiceSocket = (function( ret ) {
             onError(err);
         }
 
-        function onConnect()
+        function onConnect(data)
         {
             if( !initialized ) return;
 
@@ -34,12 +34,12 @@ mx.ServiceSocket = (function( ret ) {
             else console.error(status["message"]);
         }
 
-        var socket = io("/", {path: '/' + service_name + '/api/socket.io' });
-        socket.on('connect_error', err => onError(err));
-        socket.on('connect_failed', err => onError(err));
-        socket.on('disconnect', err => onDisconnect(err));
-        socket.on('connect', err => onConnect());
-        socket.on('status', data => onStatus(data));
+        var socket = io("/", {path: '/' + service_name + '/api/socket.io', transports: ["polling", "websocket"] });
+        socket.on('connect_error', onError );
+        socket.on('connect_failed', onError);
+        socket.on('disconnect', onDisconnect );
+        socket.on('connect', onConnect );
+        socket.on('status', onStatus );
 
         var _on = socket.on.bind(socket);
         var _close = socket.close.bind(socket);

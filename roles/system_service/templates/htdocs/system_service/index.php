@@ -332,9 +332,8 @@ mx.UNCore = (function( ret ) {
         //refreshDaemonState(null, function(state){});
         
         let socket = mx.ServiceSocket.init('system_service');
-        socket.on("connect", () => socket.emit('initData', "initNetworkData"));
-        socket.on("initNetworkData", (data) => processData(data));
-        socket.on("ChangedNetworkData", (data) => processData(data));
+        socket.on("connect", () => socket.emit('join', "network"));
+        socket.on("data", (data) => processData(data));
 
         mx.$("#networkToolbar .networkDisplay.button").addEventListener("click",function()
         {

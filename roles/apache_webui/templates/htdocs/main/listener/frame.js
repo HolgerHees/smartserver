@@ -1,3 +1,26 @@
+window.addEventListener("message", function(event)
+{
+    if( typeof event.data != 'object' || !event.data['type'] || ![ 'css' ].includes(event.data['type']) ) return;
+
+    switch (event.data['type']) {
+        case 'css':
+            if( event.data['content'] )
+            {
+                var node = document.createElement('style');
+                node.appendChild(document.createTextNode(event.data['content']));
+            }
+            else
+            {
+                var node = document.createElement("link");
+                node.href = event.data['src'];
+                node.rel = "stylesheet";
+                node.type = "text/css";
+            }
+            document.head.appendChild(node);
+            break;
+    }
+});
+
 if( window.parent != window && window.parent == window.top )
 {
     window.top.postMessage({ type: 'ping' }, "*");
@@ -11,16 +34,11 @@ if( window.parent != window && window.parent == window.top )
         }
         else
         {
-            //let title = null;
             head.setAttribute("frame-initialized", "true");
-
-            //console.log(document.querySelector('title'));
-            //console.log(document.querySelector('title'));
 
             function postMessage(type)
             {
                 //console.log("post");
-                //title = document.title;
                 window.top.postMessage({ type: type, url: window.location.href, title: document.title }, "*");
             }
 
@@ -33,8 +51,6 @@ if( window.parent != window && window.parent == window.top )
                 postMessage("load");
 
                 new MutationObserver(function(mutations) {
-                    //if( title == document.title ) return;
-                    //console.log("observer change :" + title + ":" + document.title);
                     postMessage("title");
                 }).observe(
                     document.querySelector('title'),
@@ -42,7 +58,6 @@ if( window.parent != window && window.parent == window.top )
                 );
 
                 window.addEventListener("popstate",function(event) { postMessage("popState"); });
-                //browser.webNavigation.onHistoryStateUpdated.addListener(function()
                 var _pushState = history.pushState;
                 history.pushState = function() {
                     _pushState.apply(this, arguments);
@@ -57,7 +72,6 @@ if( window.parent != window && window.parent == window.top )
 
             if (document.readyState === "complete" || document.readyState === "interactive")
             {
-                //console.log("already done");
                 init();
             }
             else

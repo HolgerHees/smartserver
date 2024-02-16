@@ -43,16 +43,16 @@ require "config.php";
 
         function runtimeRefresh()
         {
-            let now = window.performance.now();
             mx.$("#runtime_duration_placeholder").innerText = calculateRuntime();
 
             if( job_runtime_timer != null )
             {
-                let diff = now - job_runtime_ref;
-                let duration = 2000 - diff;
-                if( duration <= 0 ) duration = 1000;
-                job_runtime_ref = window.performance.now();
-                job_runtime_timer = window.setTimeout(runtimeRefresh, duration );
+                let now = window.performance.now();
+                let duration = now - job_runtime_ref;
+                let sleep = 2000 - duration;
+                if( sleep < 0 ) sleep = 1000 - ( ( sleep % 1000 ) * -1 );
+                job_runtime_ref = now;
+                job_runtime_timer = window.setTimeout(runtimeRefresh, sleep );
             }
         }
 
