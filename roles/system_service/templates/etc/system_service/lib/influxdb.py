@@ -52,6 +52,7 @@ class InfluxDB(threading.Thread):
 
         self.is_running = False
         self.event.set()
+        self.join()
 
     def run(self):
         logging.info("Influxdb started")

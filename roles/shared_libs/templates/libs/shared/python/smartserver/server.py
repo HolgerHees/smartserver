@@ -9,7 +9,7 @@ import threading
 
 from flask import Flask, request
 from flask_socketio import SocketIO, join_room, leave_room
-from werkzeug.serving import WSGIRequestHandler
+from werkzeug.serving import WSGIRequestHandler, make_server
 
 from datetime import datetime, timezone
 
@@ -72,6 +72,8 @@ class Server():
 
         self.socket_watcher_timer = None
 
+        self.socketio_lock = threading.Lock()
+
         def shutdown(signum, frame):
             self.terminate()
             
@@ -100,8 +102,10 @@ class Server():
             _init(self, *args, **kwargs)
             _run = self.run
 
+            #logging.info("Thread '{}' started: {} => {} => {}".format(self.name, str(_run), str(_self), sys._getframe(1).f_code.co_name))
+
             def run(*args, **kwargs):
-                _self.thread_debugger[self.name] = str(_run)
+                _self.thread_debugger[self.name] = [ str(_run), str(_self) ]
                 try:
                     _run(*args, **kwargs)
                 except:
@@ -126,22 +130,40 @@ class Server():
             Server.serverHandler = self
 
             WSGIRequestHandler.protocol_version = "HTTP/1.1"
-            serverSocket.run(app=serverWeb, use_reloader=False, host=self.ip, port=self.port, allow_unsafe_werkzeug=True)
-            #app.run(debug=False, use_reloader=False, threaded=True, host="0.0.0.0", port='80')
+            _run_wsgi = WSGIRequestHandler.run_wsgi
+            def run_wsgi(self) -> None:
+                try:
+                    _run_wsgi(self)
+                except AssertionError as e:
+                    # can happen on closed websocket connections
+                    if str(e) == "write() before start_response" and self.connection._closed:
+                        #logging.info(self.connection._closed)
+                        #logging.info(self.environ)
+                        return
+                    raise e
+            WSGIRequestHandler.run_wsgi = run_wsgi
+
+            logging.info("Server listen on http://{}:{}/".format(self.ip, self.port))
+            self.server = make_server(self.ip, self.port, serverWeb, threaded = True)
+            self.server.passthrough_errors = True
+            self.server.serve_forever()
+
+            #serverSocket.run(app=serverWeb, use_reloader=False, host=self.ip, port=self.port, allow_unsafe_werkzeug=True)
         except ShutdownException as e:
             pass
         except Exception as e:
+
             logging.error(traceback.format_exc())
 
         for thread in threading.enumerate():
             if thread.name == "MainThread":
                 continue
-            logging.warning("Thread '{}' is still running: {}".format(thread.name, self.thread_debugger[thread.name]))
+            logging.warning("Thread '{}' is still running: {} => {}".format(thread.name, self.thread_debugger[thread.name][0], self.thread_debugger[thread.name][1]))
 
         logging.info("Server stopped")
 
     def terminate(self):
-        logging.info("Shutdown server")
+        logging.info("Server shutdown")
 
         if self.filewatcher is not None:
             self.filewatcher.terminate()
@@ -247,7 +269,8 @@ class Server():
 
     def emitSocketData(self, topic, data, to = None):
         logging.info("Websocket: emit '{}' to '{}'".format(topic, to))
-        with serverWeb.app_context():
+        #with serverWeb.app_context():
+        with self.socketio_lock:
             return serverSocket.emit(topic, data, to = to)
 
 @serverSocket.on_error_default

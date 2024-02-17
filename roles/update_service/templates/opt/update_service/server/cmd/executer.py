@@ -51,11 +51,14 @@ class CmdExecuter(watcher.Watcher):
         self.event = threading.Event()
         self.extern_cmd_lock = threading.Lock()
         self.thread = threading.Thread(target=self._checkExternalCmdTypes, args=())
+
+    def start(self):
         self.thread.start()
 
     def terminate(self):
         self.is_running = False
         self.event.set()
+        self.thread.join()
             
     def isInterruptableJob(self,cmd_type):
         return cmd_type in [ "system_reboot", "daemon_restart" ]
@@ -292,10 +295,14 @@ class CmdExecuter(watcher.Watcher):
         return 0
     
     def _checkExternalCmdTypes(self):
+        logging.info("CmdExecuter started")
+
         while self.is_running:
             self._refreshExternalCmdType()
             self.event.wait( 1 if self.handler.isHightAccuracy() else 60)
             self.event.clear()
+
+        logging.info("CmdExecuter stopped")
 
     def _refreshExternalCmdType(self):
         with self.extern_cmd_lock:

@@ -140,6 +140,7 @@ class LogCollector(threading.Thread):
             if self.timer is not None:
                 self.timer.cancel()
             self.event.set()
+            self.join()
 
     def run(self):
         logging.info("Log collector started")

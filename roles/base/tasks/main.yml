@@ -29,6 +29,14 @@
     state: latest
   when: is_rhel
 
+- name: uninstall obsolete packages => is_rhel or is_fedora
+  yum:
+    name: [
+      python3-flask
+    ]
+    state: present
+  when: is_rhel or is_fedora
+
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: [
@@ -54,7 +62,6 @@
 
       , sshpass
       
-      , python3-flask
       , python3-inotify
 
       , python3-setuptools
@@ -67,6 +74,14 @@
     ]
     state: present
   when: is_rhel or is_fedora
+
+- name: uninstall obsolete packages => is_ubuntu
+  apt:
+    name: [
+      python3-flask
+    ]
+    state: present
+  when: is_ubuntu
 
 - name: install required packages => is_ubuntu
   apt:
@@ -100,9 +115,17 @@
       , python3-pip
       , python3-passlib
     ]
-    state: present
+    state: absent
   when: is_ubuntu
   
+- name: uninstall obsolete packages => is_suse
+  zypper:
+    name: [
+      python3-Flask
+    ]
+    state: absent
+  when: is_suse
+
 - name: install required packages => is_suse
   zypper:
     name: [  
@@ -130,7 +153,6 @@
       
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
-      , python3-Flask      # used for daemon services like update_service and ci_service
       , python3-pyinotify  # used for daemon services like update_service and ci_service
       
       , python3-setuptools
@@ -145,6 +167,7 @@
 - name: install pexpect
   pip:
     name:
+      - flask=={{flask_version_os}} # used for daemon services like update_service and ci_service
       - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service and ci_service
       - simple-websocket # used for daemon services like update_service and ci_service
       - pexpect          # needed for ansible expect module (openvpn)

@@ -195,9 +195,6 @@ class DeploymentUpdate:
                     if path not in filtered_files or "A" in flag:
                         filtered_files[path] = {"flag": flag, "path": path}
                             
-            print(filtered_files)
-            print(uncommitted_changes)
-
             files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
             config_files = {}
             for filename in files:

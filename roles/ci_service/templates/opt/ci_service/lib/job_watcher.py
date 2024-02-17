@@ -20,7 +20,7 @@ repository_owner = GitHub.getRepositoryOwner(config.repository_url)
 
 class JobWatcher(): 
     def __init__(self, handler):
-        self.terminated = False
+        self.is_running = False
         self.state = None
 
         self.handler = handler
@@ -40,13 +40,17 @@ class JobWatcher():
         self.condition = threading.Condition()
         self.lock = threading.Lock()
 
-        thread = threading.Thread(target=self._jobWatcher, args=())
-        thread.start()
+        self.thread = threading.Thread(target=self._jobWatcher, args=())
         
+    def start(self):
+        self.is_running = True
+        self.thread.start()
+
     def terminate(self):
-        self.terminated = True
+        self.is_running = False
         with self.condition:
             self.condition.notifyAll()
+        self.thread.join()
         
     def changedJobs(self, event):
         self.lock.acquire()
@@ -119,7 +123,7 @@ class JobWatcher():
     def _jobWatcher(self):
         self._cleanJobs()
 
-        while not self.terminated:
+        while not self.is_running:
             try:
                 if self.job_activity_pid is None or not service.checkPid(self.job_activity_pid):
                     self.job_activity_pid = service.getPid()

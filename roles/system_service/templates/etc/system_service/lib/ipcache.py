@@ -81,6 +81,7 @@ class IPCache(threading.Thread):
         if self.is_running and self.valid_cache_file and os.path.exists(self.dump_path):
             self._dump()
         self.is_running = False
+        self.join()
 
     def run(self):
         logging.info("IP cache started")

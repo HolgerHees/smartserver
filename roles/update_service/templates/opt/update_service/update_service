@@ -63,6 +63,9 @@ class Handler(Server):
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
         
     def start(self):
+        self.process_watcher.start()
+        self.cmd_executer.start()
+
         self.cmd_workflow.handleRunningStates()
 
         super().start()

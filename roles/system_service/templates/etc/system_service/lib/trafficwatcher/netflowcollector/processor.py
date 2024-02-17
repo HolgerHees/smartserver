@@ -382,6 +382,7 @@ class Processor(threading.Thread):
 
     def terminate(self):
         self.is_running = False
+        self.join()
 
     def start(self):
         self.is_running = True

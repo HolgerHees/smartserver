@@ -35,6 +35,10 @@ class Handler(Server):
         elif event["path"] == config.status_file:
             self.job_watcher.changedState(event)
     
+    def start(self):
+        self.job_watcher.start()
+        super().start()
+
     def terminate(self):
         self.job_watcher.terminate()
         super().terminate()

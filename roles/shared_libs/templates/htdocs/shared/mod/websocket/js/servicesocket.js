@@ -34,7 +34,7 @@ mx.ServiceSocket = (function( ret ) {
             else console.error(status["message"]);
         }
 
-        var socket = io("/", {path: '/' + service_name + '/api/socket.io', transports: ["polling", "websocket"] });
+        var socket = io("/", {path: '/' + service_name + '/api/socket.io', transports: ["websocket"] });
         socket.on('connect_error', onError );
         socket.on('connect_failed', onError);
         socket.on('disconnect', onDisconnect );

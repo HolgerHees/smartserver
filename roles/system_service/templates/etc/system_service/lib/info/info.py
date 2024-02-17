@@ -64,6 +64,7 @@ class Info(threading.Thread):
 
         self.is_running = False
         self.event.set()
+        self.join()
 
     def _isRunning(self):
         return self.is_running

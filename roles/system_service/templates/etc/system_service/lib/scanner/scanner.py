@@ -90,6 +90,7 @@ class Scanner(threading.Thread):
                
         self.is_running = False
         self.cache.getEventTrigger().set()
+        self.join()
 
     #def dispatch(self, source_handler, events):
     #    self.event_queue.append([source_handler,events])

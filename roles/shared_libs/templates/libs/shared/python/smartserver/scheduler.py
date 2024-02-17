@@ -17,6 +17,7 @@ class Scheduler(threading.Thread):
     def terminate(self):
         self.is_running = False
         self.event.set()
+        self.join()
 
     def run(self):
         logging.info("Scheduler started")

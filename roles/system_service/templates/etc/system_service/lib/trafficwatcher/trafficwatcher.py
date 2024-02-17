@@ -153,6 +153,7 @@ class TrafficWatcher(threading.Thread):
         self.blocklists.terminate()
 
         self.event.set()
+        self.join()
 
     def run(self):
         logging.info("Init traffic state")

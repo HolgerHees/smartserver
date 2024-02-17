@@ -15,7 +15,7 @@ class FileWatcher(pyinotify.ProcessEvent):
 
         wm = pyinotify.WatchManager()
         self.notifier = pyinotify.ThreadedNotifier(wm, default_proc_fun=self)
-        self.notifier.daemon = True
+        #self.notifier.daemon = True
         self.notifier.start()
 
         self.wm = wm
@@ -116,5 +116,8 @@ class FileWatcher(pyinotify.ProcessEvent):
       
     def terminate(self):
         self.is_running = False
+
         self.validation_event.set()
+        self.validation_job.join()
+
         self.notifier.stop()

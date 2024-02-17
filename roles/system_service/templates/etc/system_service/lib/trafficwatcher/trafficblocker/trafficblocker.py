@@ -62,6 +62,7 @@ class TrafficBlocker(threading.Thread):
                 self._dump()
             self.is_running = False
             self.event.set()
+            self.join()
 
     def run(self):
         logging.info("IP traffic blocker started")

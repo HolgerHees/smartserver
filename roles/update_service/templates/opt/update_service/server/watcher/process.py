@@ -52,9 +52,18 @@ class ProcessWatcher(watcher.Watcher):
         self.lock = threading.Lock()
 
         self.thread = threading.Thread(target=self._checkProcesses, args=())
+
+    def start(self):
         self.thread.start()
 
+    def terminate(self):
+        self.is_running = False
+        self.event.set()
+        self.thread.join()
+
     def _checkProcesses(self):
+        logging.info("ProcessWatcher started")
+
         force_refresh = False
         while self.is_running:
             if force_refresh or ( time.time() - self.last_refresh ) >= 900:
@@ -67,10 +76,8 @@ class ProcessWatcher(watcher.Watcher):
 
             force_refresh = self.event.is_set()
             self.event.clear()
-        
-    def terminate(self):
-        self.is_running = False
-        self.event.set()
+
+        logging.info("ProcessWatcher stopped")
 
     def refresh(self):
         with self.lock:

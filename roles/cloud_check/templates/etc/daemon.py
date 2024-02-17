@@ -236,6 +236,7 @@ class PeerJob(threading.Thread):
     def terminate(self):
         self.is_running = False
         self.event.set()
+        self.join()
 
         Helper.logInfo("Terminate polling job for peer '{}'".format(self.peer))
 
@@ -418,6 +419,7 @@ class Handler(threading.Thread):
     def terminate(self):
         self.is_running = False
         self.event.set()
+        self.join()
 
         for job in self.peer_jobs.values():
             job.terminate()
