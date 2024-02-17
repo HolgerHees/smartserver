@@ -170,7 +170,7 @@
       - flask=={{flask_version_os}} # used for daemon services like update_service and ci_service
       - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service and ci_service
       - simple-websocket # used for daemon services like update_service and ci_service
-#      - pexpect          # needed for ansible expect module (openvpn)
+      - pexpect          # needed for update_service
   
 - name: set sysctl inotify related values
   lineinfile:
