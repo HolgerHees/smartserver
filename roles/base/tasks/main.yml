@@ -164,13 +164,13 @@
     state: present
   when: is_suse
        
-- name: install pexpect
+- name: install needed python packages
   pip:
     name:
       - flask=={{flask_version_os}} # used for daemon services like update_service and ci_service
       - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service and ci_service
       - simple-websocket # used for daemon services like update_service and ci_service
-      - pexpect          # needed for ansible expect module (openvpn)
+#      - pexpect          # needed for ansible expect module (openvpn)
   
 - name: set sysctl inotify related values
   lineinfile:

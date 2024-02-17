@@ -87,7 +87,7 @@ class Scanner(threading.Thread):
     def terminate(self):
         for handler in self.registered_handler:
             handler.terminate()
-               
+
         self.is_running = False
         self.cache.getEventTrigger().set()
         self.join()
@@ -119,8 +119,8 @@ class Scanner(threading.Thread):
                     if len(_events) > 0:
                         self._dispatch(_source_handler, _events)
 
-                    self.cache.getEventTrigger().wait()
-                    self.cache.getEventTrigger().clear()
+                self.cache.getEventTrigger().wait()
+                self.cache.getEventTrigger().clear()
 
             logging.info("Scanner stopped")
         except Exception:

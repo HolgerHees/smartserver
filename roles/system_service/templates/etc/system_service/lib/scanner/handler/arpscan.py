@@ -163,6 +163,7 @@ class DeviceChecker(threading.Thread):
 
         self.is_running = False
         self.event.set()
+        self.join()
         
 class DHCPListener(threading.Thread):
     def __init__(self, arpscanner, cache, interface):
@@ -257,11 +258,12 @@ class DHCPListener(threading.Thread):
     def terminate(self):
         self.is_running = False
         self.event.set()
+        self.join()
 
         if self.dhcpListenerProcess != None:
             self.dhcpListenerProcess.terminate()
 
-class ArpScanner(_handler.Handler): 
+class ArpScanner(_handler.Handler):
     def __init__(self, config, cache ):
         super().__init__(config,cache)
         

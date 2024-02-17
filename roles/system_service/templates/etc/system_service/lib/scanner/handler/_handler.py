@@ -68,6 +68,7 @@ class Handler:
             #logging.info("Shutdown {}".format(self.__class__.__name__.lower()))
             self.is_running = False
             self.event.set()
+            self.thread.join()
         
     def _wait(self, timeout):
         #logging.info("wait {}".format(self.__class__.__name__))
