@@ -119,10 +119,8 @@ mx.Menu = (function( ret ) {
 
                                         //getUrl: function(){ return typeof entry['url'] === 'object' ? entry['url']['callback'](entry['url']['url']) : entry['url']; },
 
-                                        getNewWindow: function(){ return entry['options']['target'] ? true : false; },
-
-                                        //disableLoadingGear: function(){ entry['loadingGearEnabled'] = false},
-                                        isLoadingGearEnabled: function(){ return true; }
+                                        getNewWindow: function(){ return entry['options']['target'] ? entry['options']['target'] == '_blank' : false; },
+                                        isLoadingGearEnabled: function(){ return 'loading_gear' in entry['options'] ? entry['options']['loading_gear'] : true; },
                                     }
                                 };
                             },
