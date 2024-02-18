@@ -13,14 +13,19 @@ mx.Actions = (function( ret ) {
     var menuPanel = null;
     var visualisationType = null;
 
-    var framePingCallback = null;
-    var menuContentDestructor = null;
+    var activeCallbacks = {};
 
     function setTitle(title)
     {
         document.title = title;
     }
     
+    function setActiveCallbacks(type, callbacks)
+    {
+        if( activeCallbacks[type] != null && activeCallbacks[type]["destructor"] != undefined ) activeCallbacks[type]["destructor"]();
+        activeCallbacks[type] = callbacks;
+    }
+
     function loadHandler(url,type)
     {
         /*if( type == 'replaceState' )
@@ -77,11 +82,7 @@ mx.Actions = (function( ret ) {
 
             if( event.data['type'] == 'ping' )
             {
-                if( framePingCallback != null )
-                {
-                    iframeElement.contentWindow.postMessage(framePingCallback(), "*");
-                    framePingCallback = null;
-                }
+                if( activeCallbacks["iframe"] != null && activeCallbacks["iframe"]["ping"] != undefined ) iframeElement.contentWindow.postMessage(activeCallbacks["iframe"]["ping"](), "*");
                 clearIFrameTimer();
                 return;
             }
@@ -133,8 +134,7 @@ mx.Actions = (function( ret ) {
     
     function setIFrameUrl(url, callbacks, title, showLoadingGear = true )
     {
-
-        if( callbacks && callbacks["ping"] != undefined ) framePingCallback = callbacks["ping"];
+        setActiveCallbacks("iframe", callbacks);
 
         setTitle( title ? title : "");
 
@@ -164,7 +164,7 @@ mx.Actions = (function( ret ) {
 
     function removeIFrameUrl()
     {
-        framePingCallback = null;
+        setActiveCallbacks("iframe", null);
         iframeElement.removeAttribute('src');
     }
        
@@ -268,11 +268,7 @@ mx.Actions = (function( ret ) {
     {
         mx.Timer.clean();
 
-        if( menuContentDestructor != null )
-        {
-            menuContentDestructor();
-            menuContentDestructor = null;
-        }
+        setActiveCallbacks("menu", null);
 
         if( inlineElement.style.display == "" )
         {
@@ -303,15 +299,7 @@ mx.Actions = (function( ret ) {
 
         mx.Timer.clean();
 
-        if( menuContentDestructor != null )
-        {
-            menuContentDestructor();
-            menuContentDestructor = null;
-        }
-        if( callbacks["destructor"] != undefined )
-        {
-            menuContentDestructor = callbacks["destructor"];
-        }
+        setActiveCallbacks("menu", callbacks);
 
         if( inlineElement.style.display != "" )
         {
@@ -365,7 +353,7 @@ mx.Actions = (function( ret ) {
             }, 0);
         }
     }
-    
+
     ret.showError = function(errorType, parameter)
     {
         showError(errorType, parameter);
