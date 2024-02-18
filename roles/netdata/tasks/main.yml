@@ -182,7 +182,6 @@
     name: "netdata"
     js_file: "templates/webui/netdata.js"
     i18n_files: [ { language: "de", file: "templates/webui/netdata.de.json" } ]
-    listener: { "sub_domain": "netdata", "js_file": "templates/webui/netdata.listener.js" }
     icons: [ 'templates/webui/icons/netdata_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']

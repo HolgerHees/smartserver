@@ -1,5 +1,4 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('alertmanager', '//alertmanager.{host}/','admin', 212, '{i18n_Alertmanager}', '{i18n_Alertmanager_Admin}', 'alertmanager_logo.svg', false);
-
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('alertmanager', ['admin'], '//alertmanager.{host}/', { 'order': 212, 'title': '{i18n_Alertmanager}', 'info': '{i18n_Alertmanager_Admin}', 'icon': 'alertmanager_logo.svg' });
 
 mx.Alarms = (function( ret ) {
     var buttonSelector;

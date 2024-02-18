@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('influxdb_ui', '//influxdb.{host}/','admin', 211, '{i18n_Influxdb}', '{i18n_Influxdb_Admin}', 'influxdb_logo.svg', false);
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('influxdb_ui', ['admin'], '//influxdb.{host}/', { 'order': 211, 'title': '{i18n_Influxdb}', 'info': '{i18n_Influxdb_Admin}', 'icon': 'influxdb_logo.svg' });

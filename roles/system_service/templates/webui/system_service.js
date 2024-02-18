@@ -1,7 +1,7 @@
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_scanner', '/system_service/', 'admin', 212, '{i18n_Networkstructure}', '{i18n_Devices, Services & Structure}', "system_service_logo.svg", false);
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_wan', { "url": '//grafana.{host}/d/system-service-wan/system-service-wan', "callback": mx.Grafana.applyTheme }, 'admin', 212, '{i18n_WAN connection}', '{i18n_Speed & reachability}', "system_service_logo.svg", false);
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_scanner', ['admin'], '/system_service/', { 'order': 212, 'title': '{i18n_Networkstructure}', 'info': '{i18n_Devices, Services & Structure}', 'icon': 'system_service_logo.svg' });
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_wan', ['admin'], '//grafana.{host}/d/system-service-wan/system-service-wan', { 'order': 212, 'title': '{i18n_WAN connection}', 'info': '{i18n_Speed & reachability}', 'icon': 'system_service_logo.svg', 'callbacks': { 'url': mx.Grafana.applyTheme } });
 {% if system_service_netflow_collector %}
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_netflow', { "url": '//grafana.{host}/d/system-service-netflow-overview/system-service-netflow-overview', "callback": mx.Grafana.applyTheme }, 'admin', 212, '{i18n_WAN traffic}', '{i18n_Netflow}', "system_service_logo.svg", false);
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_netflow', ['admin'], '//grafana.{host}/d/system-service-netflow-overview/system-service-netflow-overview', { 'order': 212, 'title': '{i18n_WAN traffic}', 'info': '{i18n_Netflow}', 'icon': 'system_service_logo.svg', 'callbacks': { 'url': mx.Grafana.applyTheme } });
 mx.Widgets.TrafficAlerts = (function( widget ) {
     let data = {}
 

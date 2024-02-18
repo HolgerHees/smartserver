@@ -1,12 +1,12 @@
 mx.Netdata = (function( ret ) {
   ret.applyTheme = function(url)
   {
-      url += url.includes("?") ? '&' : '?';
-      url += "theme=" + ( mx.Page.isDarkTheme() ? "slate": "white" );
-      return url;
+      js = "let settings = localStorage.getItem('userSettings'); if( settings ){ settings = JSON.parse(settings); settings['theme'] = '" +  (mx.Page.isDarkTheme() ? 'dark' : 'light') +"'; console.log(settings['theme']); localStorage.setItem('userSettings', JSON.stringify(settings)); console.log(settings); }";
+
+      return { 'type': 'js', 'content': js };
   }
   return ret;
-})( mx.Netdata || {} ); 
+})( mx.Netdata || {} );
 
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('netdata',{ "url": '//netdata.{host}/', "callback": mx.Netdata.applyTheme }, 'admin', 110, '{i18n_Server State}', '{i18n_Netdata}', "netdata_logo.svg", false);
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('netdata', ['admin'], '//netdata.{host}/', { 'order': 110, 'title': '{i18n_Server State}', 'info': '{i18n_Netdata}', 'icon': 'netdata_logo.svg', 'callbacks': { 'ping': mx.Netdata.applyTheme } });
 

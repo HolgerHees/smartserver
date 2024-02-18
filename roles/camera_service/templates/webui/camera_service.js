@@ -4,13 +4,8 @@ html += '<div data-preview-interval="5000" data-fullscreen-interval="2000" data-
 {% endfor %}
 html += '</div>';
 
-var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', 900, '{i18n_Cameras}', 'device_camera.svg');
-cameraSubGroup.addHtml('cameras', html, {"init": [ function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); } ], "post": [ function(){ mx.ImageWatcher.post('.service.imageWatcher > div', 'cameras'); } ] }, 'user', 100 );
+var cameraSubGroup = mx.Menu.getMainGroup('automation').addSubGroup('cameras', { 'order': 900, 'title': '{i18n_Cameras}', 'icon': 'device_camera.svg' });
+cameraSubGroup.addHtml('cameras', ['user'], html, { 'order': 100, 'callbacks': {"init": [ function(){ mx.ImageWatcher.init('.service.imageWatcher > div'); } ], "post": [ function(){ mx.ImageWatcher.post('.service.imageWatcher > div', 'cameras'); } ] }});
 {% for camera in camera_devices %}{% if 'ftp_upload_name' in camera %}
-cameraSubGroup.addUrl('{{camera['uid']}}','/camera_service/?sub={{camera['ftp_upload_name']}}', 'user');
+cameraSubGroup.addUrl( '{{camera['uid']}}', ['user'], '/camera_service/?sub={{camera['ftp_upload_name']}}' );
 {% endif %}{% endfor %}
-
-/*var subGroup = mx.Menu.getMainGroup('admin').getSubGroup('devices');
-{% for camera in camera_devices %}
-subGroup.addUrl('{{camera['uid']}}', '{{camera['external_url']}}', 'admin', 310, '{i18n_Camera} {{camera['name']}}', '{{camera['details']}}', "device_camera.svg", true);
-{% endfor %}*/

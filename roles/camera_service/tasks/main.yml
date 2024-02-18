@@ -129,7 +129,7 @@
 
 - name: register webui
   vars:
-    name: "cameras"
+    name: "camera_service"
     js_file: "templates/webui/camera_service.js"
     i18n_files: [ { language: "de", file: "templates/webui/camera_service.de.json" } ]
     icons: []

@@ -1,4 +1,4 @@
-mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('ci', '/ci_service/', 'admin', 320, '{i18n_CI Service}', '{i18n_Continues Integration}', "ci_service_logo.svg", false);
+mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('ci', ['admin'], '/ci_service/', { 'order': 320, 'title': '{i18n_CI Service}', 'info': '{i18n_Continues Integration}', 'icon': 'ci_service_logo.svg' });
 mx.Widgets.CiState = (function( widget ) {
     let data = {}
     function processData(_data)

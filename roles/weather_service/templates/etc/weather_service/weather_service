@@ -154,10 +154,6 @@ def getWeekData(day):
 def data():
     return handler.getTodayData()
 
-@serverWeb.route('/metrics/', methods = ['GET'])
-def metrics():
-    return handler.getStateMetrics()
-
 handler = Handler()
 handler.start()
 

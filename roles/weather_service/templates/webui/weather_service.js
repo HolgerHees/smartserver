@@ -1,5 +1,5 @@
-var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('weather', 100, '{i18n_Weatherforecast}', 'weather_service.svg');
-subGroup.addUrl('weather', '/weather_service/detailOverview/', 'user', 1000, '{i18n_Weatherforecast}', '{i18n_Meteo Group}', 'weather_service.svg', false);
+var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('weather', { 'order': 100, 'title': '{i18n_Weatherforecast}', 'icon': 'weather_service.svg' });
+subGroup.addUrl(  'weather', ['user'], '/weather_service/detailOverview/', { 'order': 1000, 'title': '{i18n_Weatherforecast}', 'info': '{i18n_Meteo Group}', 'icon': 'weather_service.svg' });
 
 mx.Widgets.CustomWeather = (function( widget ) {
     css = `:root {

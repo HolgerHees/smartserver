@@ -69,10 +69,6 @@ class Handler(Server):
         metrics += self.cache_handler.getStateMetrics()
         return "{}\n".format( "\n".join(metrics) )
 
-@serverWeb.route('/metrics/', methods = ['GET'])
-def metrics():
-    return handler.getStateMetrics()
-
 handler = Handler()
 handler.start()
 

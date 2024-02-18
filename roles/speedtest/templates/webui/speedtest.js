@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('speedtest', '//speedtest.{host}/','admin', 360, '{i18n_Speedtest}', '{i18n_Network performance}', 'speedtest_logo.svg', true);
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('speedtest', ['admin'], '//speedtest.{host}/', { 'order': 360, 'title': '{i18n_Speedtest}', 'info': '{i18n_Network performance}', 'icon': 'speedtest_logo.svg', 'target': '_blank' });

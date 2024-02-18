@@ -201,12 +201,6 @@ def observed_ips():
 def wan_state():
     return handler.getConnectionState()
 
-@serverWeb.route('/metrics/', methods = ['GET'])
-def metrics():
-    #logging.info(request.headers.get('User-Agent'))
-    #return handler.getStateMetrics( "Prometheus" in request.headers.get('User-Agent') )
-    return handler.getStateMetrics()
-
 handler = Handler()
 handler.start()
 

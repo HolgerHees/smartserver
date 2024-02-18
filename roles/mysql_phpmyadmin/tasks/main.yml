@@ -38,7 +38,6 @@
     name: "phpmyadmin"
     js_file: "templates/webui/phpmyadmin.js"
     i18n_files: [ { language: "de", file: "templates/webui/phpmyadmin.de.json" } ]
-    listener: { "prefix": "mysql", "js_file": "templates/webui/phpmyadmin.listener.js" }
     icons: [ 'templates/webui/icons/phpmyadmin_logo.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']

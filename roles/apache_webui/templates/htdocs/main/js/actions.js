@@ -13,6 +13,7 @@ mx.Actions = (function( ret ) {
     var menuPanel = null;
     var visualisationType = null;
 
+    var framePingCallback = null;
     var menuContentDestructor = null;
 
     function setTitle(title)
@@ -76,6 +77,11 @@ mx.Actions = (function( ret ) {
 
             if( event.data['type'] == 'ping' )
             {
+                if( framePingCallback != null )
+                {
+                    iframeElement.contentWindow.postMessage(framePingCallback(), "*");
+                    framePingCallback = null;
+                }
                 clearIFrameTimer();
                 return;
             }
@@ -125,8 +131,11 @@ mx.Actions = (function( ret ) {
         }
     }
     
-    function setIFrameUrl(url, title, showLoadingGear = true )
+    function setIFrameUrl(url, callbacks, title, showLoadingGear = true )
     {
+
+        if( callbacks && callbacks["ping"] != undefined ) framePingCallback = callbacks["ping"];
+
         setTitle( title ? title : "");
 
         //if( iframeElement.getAttribute("src") != url )
@@ -147,7 +156,7 @@ mx.Actions = (function( ret ) {
             showIFrame();
         }
         
-        iframeElement.setAttribute('src', url );
+        iframeElement.setAttribute('src', callbacks && callbacks["url"] != undefined ? callbacks["url"](url) : url );
 
         hideMenuContent();
         //}
@@ -155,6 +164,7 @@ mx.Actions = (function( ret ) {
 
     function removeIFrameUrl()
     {
+        framePingCallback = null;
         iframeElement.removeAttribute('src');
     }
        
@@ -403,7 +413,7 @@ mx.Actions = (function( ret ) {
 
             //showIFrame();
 
-            setIFrameUrl(new_url, entry.getTitle(), entry.isLoadingGearEnabled() );
+            setIFrameUrl(new_url, entry.getCallbacks(), entry.getTitle(), entry.isLoadingGearEnabled() );
         }
         else
         {

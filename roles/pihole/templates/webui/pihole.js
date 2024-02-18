@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('adblocker', 'http://{{pihole_ip}}/admin/', 'admin', 330, '{i18n_AdBlocker}', '{i18n_PiHole}', "pihole_logo.svg", true);
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('adblocker', ['admin'], 'http://{{pihole_ip}}/admin/', { 'order': 330, 'title': '{i18n_AdBlocker}', 'info': '{i18n_PiHole}', 'icon': 'pihole_logo.svg', 'target': '_blank' });

@@ -1,8 +1,40 @@
-var subGroup = mx.Menu.getMainGroup('automation').addSubGroup('openhab', 100, '{i18n_Openhab}', 'openhab_logo.svg');
+mx.OpenHAB = (function( ret ) {
+    ret.applyTheme = function(url)
+    {
+        var css = `
+          header, header > * {
+            max-height: 56px !important;
+            min-height: 56px !important;
+          }`;
 
-subGroup.addUrl('basicui', '//openhab.{host}/basicui/app', 'user', 100, '{i18n_Homecontrol}', '{i18n_Basic UI}', 'openhab_basicui.svg', false);
-subGroup.addUrl('habot', '//openhab.{host}/habot', 'user', 120, '{i18n_Chatbot}', '{i18n_Habot}', 'openhab_habot.svg', false);
+        if( mx.Page.isDarkTheme() )
+        {
+            css += `
+              body[data-theme="default"] {
+                  --body-bg: #202124 !important;
+                  --header-bg: rgba(25,118,210,0.3) !important;
+              }
+            `;
+        }
+        else
+        {
+            css += `
+              body[data-theme="default"] {
+                  --body-bg: white !important;
+                  --header-bg: #1976D2 !important;
+              }
+           `;
+        }
 
-subGroup.addUrl('mainui', '//openhab.{host}/', 'admin', 210, '{i18n_Administration}', '{i18n_Main UI}', 'openhab_adminui.svg', false);
-//subGroup.getEntry('mainui').disableLoadingGear();
-subGroup.addUrl('metrics', { "url": '//grafana.{host}/d/openhab_metrics/openhab_metrics', "callback": mx.Grafana.applyTheme },'admin', 220, '{i18n_Metrics}', '{i18n_Grafana}', 'grafana_logs.svg', false);
+        return { 'type': 'css', 'content': css };
+    }
+    return ret;
+})( mx.OpenHAB || {} );
+
+var subGroup = mx.Menu.getMainGroup('automation').addSubGroup('openhab', { 'order': 100, 'title': '{i18n_Openhab}', 'icon': 'openhab_logo.svg' });
+
+subGroup.addUrl('basicui', ['user'], '//openhab.{host}/basicui/app', { 'order': 100, 'title': '{i18n_Homecontrol}', 'info': '{i18n_Basic UI}', 'icon': 'openhab_basicui.svg', 'callbacks': { 'ping': mx.OpenHAB.applyTheme } });
+subGroup.addUrl('habot', ['user'], '//openhab.{host}/habot', { 'order': 120, 'title': '{i18n_Chatbot}', 'info': '{i18n_Habot}', 'icon': 'openhab_habot.svg' });
+
+subGroup.addUrl('mainui', ['user'], '//openhab.{host}/', { 'order': 210, 'title': '{i18n_Administration}', 'info': '{i18n_Main UI}', 'icon': 'openhab_adminui.svg' });
+subGroup.addUrl('metrics', ['admin'], '//grafana.{host}/d/openhab_metrics/openhab_metrics', { 'order': 220, 'title': '{i18n_Metrics}', 'info': '{i18n_Grafana}', 'icon': 'grafana_logs.svg', 'callbacks': { 'url': mx.Grafana.applyTheme } });

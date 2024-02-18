@@ -7,7 +7,7 @@ import traceback
 import logging
 import threading
 
-from flask import Flask, request
+from flask import Flask, request, Response
 from flask_socketio import SocketIO, join_room, leave_room
 from werkzeug.serving import WSGIRequestHandler, make_server
 
@@ -272,6 +272,13 @@ class Server():
         #with serverWeb.app_context():
         with self.socketio_lock:
             return serverSocket.emit(topic, data, to = to)
+
+    def getStateMetrics(self):
+        return ""
+
+@serverWeb.route('/metrics/', methods = ['GET'])
+def metrics():
+    return Response(Server.serverHandler.getStateMetrics(), mimetype='text/plain')
 
 @serverSocket.on_error_default
 def on_error(e):

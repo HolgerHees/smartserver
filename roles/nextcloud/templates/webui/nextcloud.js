@@ -1,8 +1,8 @@
-var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('nextcloud', 100, '{i18n_Nextcloud}','nextcloud_logo.svg');
-subGroup.addUrl('documents','//nextcloud.{host}/index.php/apps/files/', ['user'], 100, '{i18n_Files}', '{i18n_Documents}', 'nextcloud_files.svg', false);
-subGroup.addUrl('notes','//nextcloud.{host}/index.php/apps/notes/', ['user'], 110, '{i18n_Notes}', '{i18n_Note Infos}', 'nextcloud_notes.svg', false);
-subGroup.addUrl('deck','//nextcloud.{host}/index.php/apps/deck/', ['user'], 110, '{i18n_Tasks}', '{i18n_Deck}', 'nextcloud_deck.svg', false);
-subGroup.addUrl('photos','//nextcloud.{host}/index.php/apps/photos/', ['user'], 111, '{i18n_Photos}', '{i18n_Gallery}', 'nextcloud_photos.svg', false);
-subGroup.addUrl('news','//nextcloud.{host}/index.php/apps/news/', ['user'], 120, '{i18n_News}', '{i18n_RSSFeeds}', 'nextcloud_news.svg', false);
-subGroup.addUrl('keeweb','//nextcloud.{host}/index.php/apps/keeweb/', ['user'], 130, '{i18n_Keys}', '{i18n_Passwords}', 'nextcloud_passwords.svg', false);
+var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('nextcloud', { 'order': 100, 'title': '{i18n_Nextcloud}', 'icon': 'nextcloud_logo.svg' });
+subGroup.addUrl('documents', ['user'], '//nextcloud.{host}/index.php/apps/files/', { 'order': 100, 'title': '{i18n_Files}', 'info': '{i18n_Documents}', 'icon': 'nextcloud_files.svg' });
+subGroup.addUrl('notes', ['user'], '//nextcloud.{host}/index.php/apps/notes/', { 'order': 110, 'title': '{i18n_Notes}', 'info': '{i18n_Note Infos}', 'icon': 'nextcloud_notes.svg' });
+subGroup.addUrl('deck', ['user'], '//nextcloud.{host}/index.php/apps/deck/', { 'order': 110, 'title': '{i18n_Tasks}', 'info': '{i18n_Deck}', 'icon': 'nextcloud_deck.svg' });
+subGroup.addUrl('photos', ['user'], '//nextcloud.{host}/index.php/apps/photos/', { 'order': 111, 'title': '{i18n_Photos}', 'info': '{i18n_Gallery}', 'icon': 'nextcloud_photos.svg' });
+subGroup.addUrl('news', ['user'], '//nextcloud.{host}/index.php/apps/news/', { 'order': 120, 'title': '{i18n_News}', 'info': '{i18n_RSSFeeds}', 'icon': 'nextcloud_news.svg' });
+subGroup.addUrl('keeweb', ['user'], '//nextcloud.{host}/index.php/apps/keeweb/', { 'order': 130, 'title': '{i18n_Keys}', 'info': '{i18n_Passwords}', 'icon': 'nextcloud_passwords.svg' });
 

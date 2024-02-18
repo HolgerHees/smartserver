@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('prometheus_ui', '//prometheus.{host}/','admin', 212, '{i18n_Prometheus}', '{i18n_Prometheus_Admin}', 'prometheus_logo.svg', false);
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('prometheus_ui', ['admin'], '//prometheus.{host}/', { 'order': 212, 'title': '{i18n_Prometheus}', 'info': '{i18n_Prometheus_Admin}', 'icon': 'prometheus_logo.svg' });

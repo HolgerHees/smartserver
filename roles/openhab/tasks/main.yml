@@ -530,7 +530,6 @@
     name: "openhab"
     js_file: "templates/webui/openhab.js"
     i18n_files: [ { language: "de", file: "templates/webui/openhab.de.json" } ]
-    listener: { "sub_domain": "openhab", "prefix": "basicui", "js_file": "templates/webui/openhab.listener.js" }
     icons: [ 'templates/webui/icons/openhab_logo.svg', 'templates/webui/icons/openhab_basicui.svg', 'templates/webui/icons/openhab_adminui.svg', 'templates/webui/icons/openhab_habot.svg', 'templates/webui/icons/openhab_habpanel.svg' ]
   include_tasks: roles/apache_webui/shared/add_webui.yml
   tags: ['apache_webui_config']

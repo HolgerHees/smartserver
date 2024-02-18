@@ -1,1 +1,1 @@
-mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('mysql', '/mysql/', 'admin', 220, '{i18n_MySQL}', '{i18n_phpMyAdmin}', "phpmyadmin_logo.svg", false);
+mx.Menu.getMainGroup('admin').getSubGroup('tools').addUrl('mysql', ['admin'], '/mysql/', { 'order': 220, 'title': '{i18n_MySQL}', 'info': '{i18n_phpMyAdmin}', 'icon': 'phpmyadmin_logo.svg' });
