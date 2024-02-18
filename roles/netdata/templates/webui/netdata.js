@@ -2,7 +2,6 @@ mx.Netdata = (function( ret ) {
   ret.applyTheme = function(url)
   {
       js = "let settings = localStorage.getItem('userSettings'); if( settings ){ settings = JSON.parse(settings); settings['theme'] = '" +  (mx.Page.isDarkTheme() ? 'dark' : 'light') +"'; console.log(settings['theme']); localStorage.setItem('userSettings', JSON.stringify(settings)); console.log(settings); }";
-
       return { 'type': 'js', 'content': js };
   }
   return ret;

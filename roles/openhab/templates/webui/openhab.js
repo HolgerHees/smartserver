@@ -1,31 +1,9 @@
 mx.OpenHAB = (function( ret ) {
-    ret.applyTheme = function(url)
+    ret.generateThemeCSS = function(url)
     {
-        var css = `
-          header, header > * {
-            max-height: 56px !important;
-            min-height: 56px !important;
-          }`;
-
-        if( mx.Page.isDarkTheme() )
-        {
-            css += `
-              body[data-theme="default"] {
-                  --body-bg: #202124 !important;
-                  --header-bg: rgba(25,118,210,0.3) !important;
-              }
-            `;
-        }
-        else
-        {
-            css += `
-              body[data-theme="default"] {
-                  --body-bg: white !important;
-                  --header-bg: #1976D2 !important;
-              }
-           `;
-        }
-
+        var css = `header, header > * { max-height: 56px !important; min-height: 56px !important; }`;
+        if( mx.Page.isDarkTheme() ) css += `body { --body-bg: #202124 !important; --header-bg: rgba(25,118,210,0.3) !important; }`;
+        else css += `body { --body-bg: white !important; --header-bg: #1976D2 !important; }`;
         return { 'type': 'css', 'content': css };
     }
     return ret;
