@@ -8,15 +8,12 @@ import logging
 
 import time
 
-import pexpect 
-from pexpect.exceptions import EOF, TIMEOUT
-
 from datetime import datetime, timedelta
 
 from config import config
 
-from smartserver.logfile import LogFile
 from smartserver import command
+from smartserver import pexpect
 from smartserver import processlist
 
 from server.watcher import watcher
@@ -34,9 +31,6 @@ class CmdExecuter(watcher.Watcher):
         self.handler = handler
         self.process_watcher = process_watcher
 
-        self.killed_job = False
-        self.killed_logfile = None
-        
         self.current_cmd_type = None
         self.current_started = None
         self.current_logfile = None
@@ -60,7 +54,7 @@ class CmdExecuter(watcher.Watcher):
         self.event.set()
         self.thread.join()
             
-    def isInterruptableJob(self,cmd_type):
+    def isInterruptiveJob(self,cmd_type):
         return cmd_type in [ "system_reboot", "daemon_restart" ]
 
     def initJobs(self):
@@ -83,6 +77,8 @@ class CmdExecuter(watcher.Watcher):
             
         self.jobs = _jobs;
 
+        self.handler.notifyChangedCmdExecuterJobsRefreshed(self.jobs)
+
     def getJobs(self):
         return self.jobs
 
@@ -94,26 +90,12 @@ class CmdExecuter(watcher.Watcher):
       
     def getCurrentJobCmdType(self):
         return self.current_cmd_type
-      
+
     def isRunning(self, check_global_running):
         if self.current_cmd_type != None:
             return True
 
         return self.getExternalCmdType() != None if check_global_running else False
-
-    def isKilledJob(self):
-        return self.killed_job
-      
-    def getKilledLogfile(self):
-        return self.killed_logfile
-       
-    def setKilledJobState(self):
-        self.killed_job = True
-        self.killed_logfile = self.current_logfile
-
-    def resetKilledJobState(self):
-        self.killed_job = False
-        self.killed_logfile = None
 
     def getJobStatus(self):
         if self.current_cmd_type != None:
@@ -127,7 +109,7 @@ class CmdExecuter(watcher.Watcher):
         self.current_started = start_time
         self.current_logfile = file_name
 
-        self.handler.notifyExecutorJobStatus(self.getJobStatus())
+        self.handler.notifyChangedCmdExecuterJobState(self.getJobStatus())
         
     def lock(self, cmd_type, file_name):
         if self.current_started != None:
@@ -137,13 +119,10 @@ class CmdExecuter(watcher.Watcher):
             self.current_started = datetime.now()
             self.current_logfile = file_name
 
-            self.resetKilledJobState()
-
-            self.handler.notifyExecutorJobStatus(self.getJobStatus())
+            self.handler.notifyChangedCmdExecuterJobState(self.getJobStatus())
             return True
 
     def _unlock(self, exit_code):
-        self.initJobs()
 
         #status = self.getJobStatus()
         #status["state"] = "finished"
@@ -155,18 +134,30 @@ class CmdExecuter(watcher.Watcher):
         self.current_logfile = None
         self.current_child = None
 
-        self.handler.notifyExecutorJobStatus(self.getJobStatus())
+        self.handler.notifyChangedCmdExecuterJobState(self.getJobStatus())
 
     def finishRun(self, job_log_file, exit_status, start_time, cmd_type, username):
-        duration = datetime.now() - start_time
+        if self.current_child is not None and self.current_child.isTerminated():
+            state = "stopped"
+        else:
+            state = "success" if exit_status == 0 else "failed"
+
         start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
-        status_msg = "success" if exit_status == 0 else "failed"
-        finished_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,round(duration.total_seconds(),1),status_msg, cmd_type,username)
+
+        duration = datetime.now() - start_time
+        finished_log_name = CmdExecuter._getLogFilename(start_time_str, round(duration.total_seconds(),1), state, cmd_type, username)
         finished_log_file = u"{}{}".format(config.job_log_folder,finished_log_name)
+
+        notification_topic = CmdExecuter.getTopicName(start_time_str, cmd_type, username)
+        self.handler.notifyChangedCmdExecuterState(state, notification_topic)
 
         os.rename(job_log_file, finished_log_file)
         self.current_logfile = finished_log_name
         self._unlock(exit_status)
+
+        self.initJobs()
+
+        return state
 
     def initLogFilename(self, cmd_block):
         username = cmd_block["username"]
@@ -174,21 +165,22 @@ class CmdExecuter(watcher.Watcher):
         
         start_time = datetime.now()
         start_time_str = start_time.strftime(CmdExecuter.START_TIME_STR_FORMAT)
-        job_log_name = u"{}-{}-{}-{}-{}.log".format(start_time_str,0,"running", cmd_type,username)
+
+        job_log_name = CmdExecuter._getLogFilename(start_time_str, 0, "running", cmd_type, username)
         job_log_file = u"{}{}".format(config.job_log_folder,job_log_name)
         
-        return [start_time, job_log_name, job_log_file]
+        return [start_time, start_time_str, job_log_name, job_log_file]
 
     def logInterruptedCmd(self, lf, msg ):
         # no need for a newline for interruptable commands
-        lf.write(msg)
+        lf.writeLine(msg)
 
     def runFunction(self,cmd_type, _cmd, lf):
         name = _cmd["function"]
       
         msg = u"Run function '{}' - '{}'".format(cmd_type, name)
         logging.info(msg)
-        lf.write(u"{}\n".format(msg))
+        lf.writeLine(u"{}".format(msg))
 
         function = self.handler
         for part in name.split("."):
@@ -207,51 +199,35 @@ class CmdExecuter(watcher.Watcher):
 
         msg = u"Start cmd '{}' - '{}'".format(cmd_type, cmd)
         logging.info(msg)
-        lf.write(u"{}\n".format(msg))
-        lf.getFile().write("\n")
-        lf.getFile().flush()
+        lf.writeLine(u"{}".format(msg))
+        lf.writeRaw("\n")
         
         if env is None:
             env = {}
         env["PATH"] = CmdExecuter.env_path
         env["HOME"] = CmdExecuter.home_path
 
-        self.current_child = child = pexpect.spawn(cmd, timeout=3600, cwd=cwd, env=env)
-        child.logfile_read = lf
-        
-        if interaction is not None:
-            patterns = list(interaction.keys())
-            responses = list(interaction.values())
-        else:
-            patterns = None
-            responses = None
-            
-        while child.isalive():
-            try:
-                index = child.expect(patterns)
-                child.sendline(responses[index])
-            except TIMEOUT:
-                break
-            except EOF:
-                break
-
-        child.close()
-        exit_status = child.exitstatus
+        self.current_child = pexpect.Process(cmd, timeout=3600, logfile=lf, cwd=cwd, env=env, interaction=interaction)
+        self.current_child.start()
+        exit_status = self.current_child.getExitCode()
+        #if exit_status != 0 and self.current_child.isTerminated():
+        #    exit_status = 0
 
         delta = datetime.now() - start_time
         delta = delta - timedelta(microseconds = delta.microseconds)
         duration = str(delta)
 
-        if self.isInterruptableJob(cmd_type):
+        if self.isInterruptiveJob(cmd_type):
             if exit_status is None: # can happen if service process get killed as part of interruptable job
                 exit_status = 0
         else:
-            lf.getFile().write("\n")
             if exit_status == 0:
-                lf.write("The command exited successful after {}\n".format(duration))
+                self._writeWrapppedLog(lf, "The command exited successful after {}".format(duration))
 
-        if exit_status != 0:
-            lf.write("The command exited with {} (unsuccessful) after {}\n".format(exit_status,duration))
+        if self.current_child.isTerminated():
+            self._writeWrapppedLog(lf, "The command was stopped after {}".format(duration))
+        elif exit_status != 0:
+            self._writeWrapppedLog(lf, "The command exited with {} (unsuccessful) after {}".format(exit_status,duration))
             
         return exit_status
         
@@ -263,7 +239,7 @@ class CmdExecuter(watcher.Watcher):
         try:
             for _cmd in cmd_block["cmds"]:
                 if exit_status == 0:
-                    lf.getFile().write("\n")
+                    lf.writeRaw("\n")
                     
                 if "function" in _cmd:
                     step = _cmd["function"]
@@ -271,7 +247,7 @@ class CmdExecuter(watcher.Watcher):
                 else:
                     step = _cmd["cmd"]
                     exit_status = self.runCmd(cmd_type,_cmd,lf)
-                
+
                 if exit_status != 0:
                     break
 
@@ -282,17 +258,13 @@ class CmdExecuter(watcher.Watcher):
             exit_status = 1
             logging.error(traceback.format_exc())
             ex_type, ex_value, ex_traceback = sys.exc_info()
-            lf.write("The command '{}' - '{}' exited with '{}: {}'.\n".format(cmd_type,step,type(e).__name__,ex_value))
+            self._writeWrapppedLog(lf, "The command '{}' - '{}' exited with '{}: {}'.".format(cmd_type,step,type(e).__name__,ex_value))
             
         return exit_status
 
     def killProcess(self):
-        child = self.current_child
-        if child is not None:
-            self.setKilledJobState()
-            returncode = subprocess.call(['sudo', 'kill', str(child.pid)])
-            return returncode
-        return 0
+        if self.current_child is not None:
+            self.current_child.terminate()
     
     def _checkExternalCmdTypes(self):
         logging.info("CmdExecuter started")
@@ -309,11 +281,44 @@ class CmdExecuter(watcher.Watcher):
             external_cmd_type = self.process_watcher.refreshExternalCmdType(self.current_cmd_type != None)
             if self.external_cmd_type != external_cmd_type:
                 self.external_cmd_type = external_cmd_type
-                self.handler.notifyExecutorJobStatus(self.getJobStatus())
+                self.handler.notifyChangedCmdExecuterJobState(self.getJobStatus())
+                self.handler.notifyChangedExternalCmdState()
 
-    def getExternalCmdType(self):
-        self._refreshExternalCmdType()
+    def getExternalCmdType(self, refresh=True):
+        if refresh:
+            self._refreshExternalCmdType()
         return self.external_cmd_type
 
     def triggerHighAccuracy(self):
         self.event.set()
+
+    def _writeWrapppedLog(self, lf, msg):
+        lf.writeRaw("\n")
+        lf.writeLine(msg)
+
+    @staticmethod
+    def _getLogFilename(time_str, duration, state, cmd_type, username ):
+        return u"{}-{}-{}-{}-{}.log".format(time_str, duration, state, cmd_type, username)
+
+    @staticmethod
+    def getTopicName(time_str, cmd_type, username):
+        return u"{}-{}-{}".format(time_str,cmd_type,username)
+
+    @staticmethod
+    def getLogfiles(log_folder, time_str, cmd_type, username):
+        logfilename = CmdExecuter._getLogFilename(time_str, '*', '*', cmd_type, username)
+        return glob.glob("{}{}".format(log_folder, logfilename));
+
+    @staticmethod
+    def getLogFileDetails(filename):
+        data = os.path.basename(filename).split("-")
+
+        timestamp = datetime.strptime(data[0],"%Y.%m.%d_%H.%M.%S").timestamp()
+        return {
+            "date": data[0],
+            "duration": data[1],
+            "state": data[2],
+            "cmd": data[3],
+            "username": data[4][:-4],
+            "timestamp": timestamp
+        }

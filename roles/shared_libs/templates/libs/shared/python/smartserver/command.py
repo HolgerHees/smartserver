@@ -1,6 +1,8 @@
 import subprocess
 import os
 import time
+import logging
+
 
 def exec2(cmd, cwd=None, isRunningCallback=None):
     if isRunningCallback is not None:
@@ -24,13 +26,25 @@ def exec2(cmd, cwd=None, isRunningCallback=None):
         result = subprocess.run(cmd, encoding="utf-8", shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd )
         return result.returncode, result.stdout.strip()
 
-def exec( cmd, shell=False, check=False, capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None, exitstatus_check=True):
+def exec( cmd, shell=False, check=False, capture_output=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=None, exitstatus_check=True, nsenter=False):
     if not capture_output:
         stdout = subprocess.DEVNULL
+
+    if nsenter:
+        shell = True
+        _cmd = [ "/usr/bin/nsenter", "-t", "1", "-m", "-u", "-n", "-i", "sh", "-c" ]
+        if cwd:
+            _cmd.append( "'cd {} && {}'".format(cwd, " ".join(cmd) ))
+        else:
+            _cmd.append( "'{}'".format( " ".join(cmd) ))
+        cmd = " ".join(_cmd)
+
     result = subprocess.run(cmd, shell=shell, check=check, stdout=stdout, stderr=stderr, cwd=cwd )
     if exitstatus_check and result.returncode != 0:
         raise Exception(result.stdout.decode("utf-8"))
     return result
- 
-def sendEmail(email, subject, message):
-    exec( [ u"echo -e \"{}\" | mail -s \"{}\" {}".format(message, subject, email) ], shell=True )
+
+def sendEmail(email, subject, message, nsenter=False):
+    exec( [ u"echo -e \"{}\" | mail -s \"{}\" {}".format(message, subject, email) ], shell=True, nsenter=nsenter )
+
+

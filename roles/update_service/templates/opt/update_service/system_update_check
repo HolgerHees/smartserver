@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/opt/update_service/env/bin/python3
 
 import subprocess
 import os

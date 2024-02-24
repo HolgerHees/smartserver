@@ -57,13 +57,11 @@ mx.Widgets = (function( ret ) {
     }
 
     ret.init = function(innerRoot, outerRoot) {
+        widgets.forEach(function(widget){ widget._init(); });
+
         spacer_widget = mx._$(".spacer", innerRoot);
         possible_left_widgets = mx._$$(".possibleLeft", innerRoot);
-        let widgets = mx._$$(".widget", innerRoot)
-        widgets.forEach(function(widget)
-        {
-            new ResizeObserver(mx.Widgets.handleResize).observe(widget);
-        });
+        mx._$$(".widget", innerRoot).forEach(function(widget){ new ResizeObserver(mx.Widgets.handleResize).observe(widget); });
         new ResizeObserver(mx.Widgets.handleResize).observe(outerRoot);
     }
 
@@ -117,150 +115,19 @@ mx.Widgets = (function( ret ) {
             last_max_size = max_size;
         }
     }
-
-    ret.fetchContent = function(method, url, callback, data)
-    {
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url );
-        if( method == "POST" ) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-        xhr.withCredentials = true;
-        xhr.onreadystatechange = function() {
-            if (this.readyState != 4) return;
-
-            if( this.status == 200 )
-            {
-                if( callback ) callback(this.response);
-            }
-            else
-            {
-                let timeout = 15000;
-
-                callback(null);
-                //mx.Page.handleRequestError(this.status, url,function(){ mx.Widgets.fetchContent(method, url, callback, data ) }, timeout);
-            }
-        };
-
-        if( data) xhr.send( data );
-        else xhr.send();
-    }
-    ret.register = function(widget, index)
-    {
-        widgets.push(widget);
-    }
-
-    ret.preload = function( callback )
-    {
-        if( widgets.length == 0 )
-        {
-            callback();
-        }
-        else
-        {
-            initialized = 0;
-            init_timer = window.setTimeout(function()
-            {
-                init_timer = null;
-                let missing_preloads = widgets.filter( (widget) => widget._preload.filter( (preload) => preload == null ).length > 0  );
-                console.log("missing preloads");
-                missing_preloads.forEach(function(widget)
-                {
-                    console.log("- widget: " + widget.getId(0));
-                });
-            }, 2000);
-
-            widgets.forEach(function(widget, index)
-            {
-                if( widget._initialized ) widget._destroy();
-
-                if( initialized != 0 ) return;
-
-                widget._preload = [];
-                for( let i = 0; i < widget.getCount(); i++ )
-                {
-                    widget._preload[i] = null;
-                }
-            });
-            widgets.forEach(function(widget)
-            {
-                if( initialized != 0 ) return;
-
-                widget._show = widget.show;
-                widget.show = function(index, msg)
-                {
-                    widget._preload[index] = msg;
-
-                    let missing_preloads = widgets.filter( (widget) => widget._preload.filter( (preload) => preload == null ).length > 0  );
-                    if( missing_preloads.length == 0 )
-                    {
-                        if( init_timer != null )
-                        {
-                            window.clearTimeout(init_timer);
-                            init_timer = null;
-                        }
-                        callback();
-                    }
-                };
-
-                widget._init();
-            });
-
-            if( initialized == -1 ) _destroy();
-        }
-    }
-
-    function _destroy()
-    {
-        widgets.forEach(function(widget)
-        {
-            if( widget._initialized ) widget._destroy();
-        });
-    }
-
-    ret.refresh = function()
-    {
-        widgets.forEach(function(widget)
-        {
-            if( widget._preload != undefined )
-            {
-                widget.show = widget._show;
-                widget._preload.forEach( (msg,index) => widget.show(index, msg) );
-                delete widget._show;
-                delete widget._preload;
-            }
-            else
-            {
-                if( widget.refresh != undefined ) widget.refresh();
-            }
-        });
-
-        initialized = 1;
-    }
-
-    ret.clean = function()
-    {
-        if( initialized == -1 ) return;
-
-        if( initialized == 1 ) _destroy();
-
-        initialized = -1;
-    }
-
-    ret.click = function( event, index, i )
-    {
-        widgets[index].click(event, i);
-    }
-
+    ret.register = function(widget, index) { widgets.push(widget); }
+    ret.clean = function(){ widgets.forEach(function(widget){ widget._destroy(); });  }
+    ret.click = function( event, index, i ){ widgets[index].click(event, i); }
     return ret;
 })( mx.Widgets || {} );
 
-mx.Widgets.Object = function(group, config)
+mx.Widgets.Object = function(service, group, config)
 {
-    return (function( ret ) {
-        let socket = null;
-        let last_msg = {};
+    let widget = (function( ret ) {
+        let data = null;
+        var last_msg = {};
+        var active = false;
 
-        ret.getServiceSocket = function(service){ return socket = mx.ServiceSocket.init(service); }
         ret.getId = function(index) { return config[index]["id"]; }
         ret.getOrder = function(index) { return config[index]["order"]; }
         ret.getCount = function() { return config.length; }
@@ -268,14 +135,15 @@ mx.Widgets.Object = function(group, config)
         ret.hasAction = function(index) { return config[index]["click"] != undefined; }
         ret.click = function(event, index) { config[index]["click"](event); }
         ret.reset = function(){ last_msg = {}; }
-        ret.alert = function(index, msg){ ret.show(index, "<span class=\"error\">" + msg + "</span>"); }
+        ret.alert = function(index, msg){ if( active ){ ret.show(index, "<span class=\"error\">" + msg + "</span>"); } }
+        ret.isActive = function(){ return active; }
+        ret.activate = function(flag){ active=flag; }
 
-        ret._init = function(){ ret._initialized = true; ret.init(); }
-        ret._destroy = function(){ ret._initialized = false; if( socket ) socket.close(); }
-        ret._initialized = function(){ return initialized; }
+        ret._init = function(){ active=true; widget.processData(data); };
+        ret._destroy = function(){ active=false; };
 
-        ret.init = function(){ if( ret.refresh != undefined ) ret.refresh(); }
-        //ret.refresh = function(){ console.log("not implemented"); }
+        ret._processData = function(_data){ data = {...data, ..._data}; if(active){ widget.processData(data); } }
+        ret._processAlert = function(){ data = null; if(active){ widget.processData(data); } }
 
         ret.show = function(index, msg)
         {
@@ -323,4 +191,12 @@ mx.Widgets.Object = function(group, config)
         if( mx.User.memberOf(group) ) mx.Widgets.register(ret);
         return ret;
     })( {} );
+
+    mx.OnSharedModWebsocketReady.push(function(){
+        socket = mx.ServiceSocket.init(service, "widget");
+        socket.on("data", (data) => widget._processData(data) );
+        socket.on("error", (err) => widget._processAlert() );
+    });
+
+    return widget;
 }

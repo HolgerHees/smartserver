@@ -29,6 +29,16 @@
     state: latest
   when: is_rhel
 
+- name: cleanup => is_rhel or is_fedora
+  yum:
+    name: [
+        python3-werkzeug
+      , python3-flask
+      , python3-inotify
+    ]
+    state: absent
+  when: is_rhel or is_fedora
+
 - name: install required packages => is_rhel or is_fedora
   yum:
     name: [
@@ -54,9 +64,6 @@
 
       , sshpass
       
-      , python3-flask
-      , python3-inotify
-
       , python3-setuptools
       , python3-pip
       , python3-passlib
@@ -67,6 +74,16 @@
     ]
     state: present
   when: is_rhel or is_fedora
+
+- name: cleanup packages => is_ubuntu
+  apt:
+    name: [
+        python3-werkzeug
+      , python3-flask
+      , python3-pyinotify
+    ]
+    state: absent
+  when: is_ubuntu
 
 - name: install required packages => is_ubuntu
   apt:
@@ -92,10 +109,7 @@
       , make
 
       , sshpass
-      
-      , python3-flask
-      , python3-pyinotify
-      
+
       , python3-setuptools
       , python3-pip
       , python3-passlib
@@ -103,6 +117,16 @@
     state: present
   when: is_ubuntu
   
+- name: cleanup packages => is_suse
+  zypper:
+    name: [
+        python3-Werkzeug   # used for daemon services like update_service
+      , python3-Flask      # used for daemon services like update_service
+      , python3-pyinotify  # used for daemon services like update_service
+    ]
+    state: absent
+  when: is_suse
+
 - name: install required packages => is_suse
   zypper:
     name: [  
@@ -130,9 +154,6 @@
       
       , sshpass            # used for ssh accessibility checks (e.g. openhab => wait until ready)
 
-      , python3-Flask      # used for daemon services like update_service and ci_service
-      , python3-pyinotify  # used for daemon services like update_service and ci_service
-      
       , python3-setuptools
       , python3-pip
       , python3-passlib    # used by ansible htpasswd module (user role), must be added here as the add web user task is a shared task
@@ -141,15 +162,7 @@
     ]
     state: present
   when: is_suse
-       
-- name: install needed python packages
-  pip:
-    name:
-      #- flask=={{flask_version_os}} # used for daemon services like update_service and ci_service
-      - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service and ci_service
-      - simple-websocket # used for daemon services like update_service and ci_service
-      - pexpect          # needed for update_service
-  
+
 - name: set sysctl inotify related values
   lineinfile:
     path: /etc/sysctl.conf

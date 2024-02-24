@@ -1,8 +1,6 @@
 <?php
 require "../shared/libs/i18n.php";
 require "../shared/libs/ressources.php";
-
-require "config.php";
 ?>
 <html>
 <head>
@@ -10,8 +8,8 @@ require "config.php";
 <?php echo Ressources::getModules(["/shared/mod/websocket/", "/update_service/"]); ?>
 <script>
 mx.SNCore = (function( ret ) {
-  
-    var socket = null;
+    ret.socket = null;
+
     var jobtimer = null;
 
     function setLoadingGear(data)
@@ -22,10 +20,10 @@ mx.SNCore = (function( ret ) {
 
     ret.startSoftwareCheck = function()
     {
-        socket.emit("refreshSoftwareVersionCheck");
+        mx.SNCore.socket.emit("refreshSoftwareVersionCheck");
     }
 
-    function processData(data)
+    ret.processData = function(data)
     {
         if( "job_status" in data && data["job_status"]["job"] == "software_check" )
         {
@@ -44,13 +42,6 @@ mx.SNCore = (function( ret ) {
         }
     }
 
-    ret.init = function()
-    { 
-        socket = mx.ServiceSocket.init('update_service');
-        socket.on("connect", () => socket.emit('join','software'));
-        socket.on("data", (data) => processData( data ) );
-    }
-
     ret.openUrl = function(event,url)
     {
         event.stopPropagation();
@@ -60,9 +51,12 @@ mx.SNCore = (function( ret ) {
     return ret;
 })( mx.SNCore || {} );
     
-mx.OnDocReady.push( mx.SNCore.init );
+var processData = mx.OnDocReadyWrapper( mx.SNCore.processData );
 
-
+mx.OnSharedModWebsocketReady.push(function(){
+    mx.SNCore.socket = mx.ServiceSocket.init('update_service', 'software');
+    mx.SNCore.socket.on("data", (data) => processData( data ) );
+});
 </script>
 </head>
 <body class="software">

@@ -2,7 +2,7 @@
  
 stop()
 {
-    echo "Shutting down weather service"
+    echo "Shutting down ci service"
     PID="$(pidof python3)"
     kill -s TERM $PID
     wait
@@ -13,7 +13,7 @@ start()
 {
     /opt/shared/python/install.py
 
-    /opt/weather_service/weather_service &
+    {{global_opt}}ci_service/ci_service &
 }
 
 start

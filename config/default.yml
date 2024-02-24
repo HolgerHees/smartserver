@@ -679,6 +679,7 @@ htdocs_path:                      "{{base_path}}htdocs/"
 global_etc:                       "{{base_path}}etc/"
 global_tmp:                       "{{base_path}}tmp/"
 global_build:                     "{{base_path}}build/"
+global_opt:                       "{{base_path}}opt/"
 global_log:                       "{{base_path}}var/log/"
 global_lib:                       "{{base_path}}var/lib/"
 

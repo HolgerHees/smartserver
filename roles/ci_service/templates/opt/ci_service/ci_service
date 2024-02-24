@@ -4,65 +4,251 @@ import logging
 import json
 from datetime import datetime
 
-from smartserver.server import Server, serverWeb
+import pyinotify
 
-from lib import log
+from smartserver.server import Server, serverWeb
+from smartserver.github import GitHub
+from smartserver import info
+
 from lib import job_watcher
+from lib import job_runner
+from lib import service
+from lib import virtualbox
+from lib import status
+from lib import git
 
 from config import config
 
+from smartserver import command
+
+import glob
+from smartserver import logfile
 
 watched_data_files = [
-    config.status_file,
     config.log_dir
 ]
 
 class Handler(Server):
     def __init__(self):
-        log.setLogger(logging)
 
-        super().__init__("ci_service", config.service_ip, "8506" )
+        super().__init__("ci_service", config.service_ip, config.service_port )
         
         self.startup_timestamp = round(datetime.now().timestamp(),3)
         
-        self.job_watcher = job_watcher.JobWatcher(self)
+        self.job_state = status.State(config)
+
+        self.job_watcher = job_watcher.JobWatcher(self, config)
+        self.job_executor = job_runner.JobExecutor(self, self.job_state, config)
 
         self.initWatchedFiles( watched_data_files, self.fileChangeTriggered )
-        
+
+        self.has_leftovers = False
+
     def fileChangeTriggered(self, event):
-        if event["path"] == config.log_dir.rstrip("/"):
-            self.job_watcher.changedJobs(event)
-        elif event["path"] == config.status_file:
-            self.job_watcher.changedState(event)
+        if not ( event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_DELETE ) ):
+            return
+
+        self.job_watcher.changedJobs(event)
     
     def start(self):
-        self.job_watcher.start()
+        self.cleanup()
         super().start()
 
     def terminate(self):
-        self.job_watcher.terminate()
+        self.job_state.terminate()
         super().terminate()
-                
-    def notifyChangedStateData(self):
-        if not self.isSocketRoomActive("widget"):
-            return
 
-        self.emitSocketData('data', {"is_running": self.job_watcher.isJobRunning(), "last_job_failed": self.job_watcher.lastJobFailed() }, "widget")
+    def cleanup(self):
+        vid = self.job_state.getVID()
+        if vid is not None:
+            name = virtualbox.destroyMachine(vid)
+            if name != None:
+                logging.info(u"Crashed VM - vid: '{}', name: '{}' - cleaned.".format(vid,name))
+            else:
+                logging.info(u"Crashed VM - vid: '{}', not found.".format(vid))
+            self.job_state.setVID(None)
 
-    def notifyChangedJobsData(self):
-        if not self.isSocketRoomActive("details"):
-            return
+        if self.job_state.getState() in ["running","crashed"] :
+            logging.info(u"Set job '{}' state to 'stopped'".format(vid,name))
+            self.job_state.setState("stopped")
+            self.job_executor.cleanLogfile()
 
-        self.emitSocketData('data', {"jobs": self.job_watcher.getJobs() }, "details")
+        self.job_executor.cleanLeftoversLogfiles()
+
+        leftovers = virtualbox.getMachineLeftovers(config.lib_dir, {})
+        if len(leftovers) > 0:
+            self.self.has_leftovers = True
+            for leftover in leftovers:
+                logging.error(u"Leftover - name: '{}', path: '{}'".format(leftover,leftovers[leftover]))
+
+    def notifyChangedExecutorRunnerState(self, is_running):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('widget:data', {"is_running": is_running}, "widget")
+
+    def notifyChangedJobWatcherData(self):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('widget:data', {"last_job_failed": self.job_watcher.lastJobFailed() }, "widget")
+
+        if self.isSocketRoomActive("overview"):
+            self.emitSocketData('overview:data', {"jobs": self.job_watcher.getJobs() }, "overview")
+
+    def notifyChangedJobRunnerState(self, state, topic):
+        if self.isSocketRoomActive("details_" + topic):
+            self.emitSocketData("details_" + topic + ':data', { "job": {"state": state } }, "details_" + topic)
+
+    def notifyChangedJobRunnerLog(self, line, topic):
+        if self.isSocketRoomActive("details_" + topic):
+            self.emitSocketData("details_" + topic + ':data', { "logline": logfile.LogFormatter.formatLine(line) }, "details_" + topic)
 
     def onSocketRoomJoin(self, sid, room, data = None):
         super().onSocketRoomJoin(sid, room, data)
 
         if room == "widget":
-            self.emitSocketData('data', {"is_running": self.job_watcher.isJobRunning(), "last_job_failed": self.job_watcher.lastJobFailed() }, room)
+            self.emitSocketData('widget:data', {"is_running": self.job_executor.isRunning(), "last_job_failed": self.job_watcher.lastJobFailed() }, room)
+
+        elif room == "overview":
+            self.emitSocketData('overview:data', {"jobs": self.job_watcher.getJobs() }, room)
 
         elif room == "details":
-            self.emitSocketData('data', {"jobs": self.job_watcher.getJobs() }, room)
+            files = job_runner.JobRunner.getLogfiles(config.log_dir, data["datetime"], data["config"], data["os"], data["branch"], data["hash"])
+            if len(files) == 0:
+                self.emitSocketData('details:data', { "error": "No file found" }, room)
+                return
+
+            if len(files) > 1:
+                self.emitSocketData('details:data', { "error": "Too many files found" }, room)
+                return
+
+            result = {}
+            if self.job_executor.isRunning():
+                update_topic = job_runner.JobRunner.getTopicName(data["datetime"], data["config"], data["os"], data["branch"], data["hash"])
+                result["topic"] = "details_" + update_topic
+
+            result["job"] = job_runner.JobRunner.getLogFileDetails(files[0])
+            result["job"]["subject"] = result["job"]["subject"].replace("_", " ")
+
+            logformatter = logfile.LogFormatter(files[0]);
+            result["log"] = []
+            for logline in logformatter:
+                result["log"].append(logline)
+            self.emitSocketData('details:data', result, room)
+
+    def processStatus(self):
+        result = []
+        if self.job_executor.isRunning():
+            result.append(u"Main process")
+            if self.job_executor.isTerminated():
+                result.append(u"    is terminating")
+            else:
+                result.append(u"    is running")
+
+        processes = service.getRunningProcesses(config.lib_dir)
+        if len(processes) > 0:
+            result.append(u"Following sub processes are running.")
+            for process in processes:
+                result.append(u"    {}".format(process))
+
+        machines, leftovers = virtualbox.getAllMachines(config.lib_dir)
+        if len(machines.keys()) > 0:
+            result.append(u"Following machines are registered.")
+            for vid,name in machines.items():
+                result.append(u"  VM - vid: '{}', name: '{}'".format(vid,name))
+
+        if len(leftovers.keys()) > 0:
+            result.append(u"Following leftovers found.")
+            for leftover in leftovers:
+                result.append(u"  LO - name: '{}', path: '{}'".format(leftover,leftovers[leftover]))
+
+        if len(result) == 0:
+            result.append(u"No process is running and everything is clean.")
+
+        return "\n".join(result)
+
+    def processCleanup(self):
+        result = []
+        if self.job_executor.isRunning():
+            if self.job_executor.isTerminated():
+                result.append(u"Job for commit '{}' still in termination.".format(self.job_executor.getGitHash()))
+            else:
+                result.append(u"Job for commit '{}' still running.".format(self.job_executor.getGitHash()))
+        else:
+            machines = virtualbox.getRegisteredMachines()
+            destroyed_machines = virtualbox.destroyMachines(machines)
+            for data in destroyed_machines:
+                result.append(u"VM - vid: '{}', name: '{}' - destroyed.".format(data["vid"],data["name"]))
+
+            destroyed_leftovers = virtualbox.destroyMachinesLeftovers(config.lib_dir, machines)
+            for name in destroyed_leftovers:
+                result.append(u"Leftover name: '{}' - destroyed.".format(name))
+
+            if len(destroyed_machines) == 0 and len(destroyed_leftovers) == 0:
+                result.append(u"Nothing to clean")
+        return "\n".join(result)
+
+    def processStop(self):
+        result = []
+        if self.job_executor.isRunning():
+            if self.job_executor.isTerminated():
+                result.append(u"Job for commit '{}' still in termination.".format(self.job_executor.getGitHash()))
+            else:
+                self.job_executor.terminate()
+                result.append(u"Job for commit '{}' terminated.".format(self.job_executor.getGitHash()))
+        else:
+            result.append(u"Nothing stopped.")
+        return "\n".join(result)
+
+    def processStart(self):
+        result = []
+        if not info.Info.isDefaultConnectionActive():
+            result.append("Skip job, because default isp connection is inactive")
+        elif self.job_executor.isRunning():
+            if self.job_executor.isTerminated():
+                result.append(u"Job for commit '{}' still in termination.".format(self.job_executor.getGitHash()))
+            else:
+                result.append(u"Job for commit '{}' still running.".format(self.job_executor.getGitHash()))
+        else:
+            cmd = self.getRequestValue("cmd")
+            start_os = self.getRequestValue("start_os")
+
+            if self.job_state.getState() in ["running","crashed"]:
+                result.append(u"Can't start check. Unexpected state {} for commit '{}' was crashing.".format(self.job_state.getState(), self.job_state.getGitHash()))
+                return "\n".join(result)
+            processed_git_hash = self.job_state.getGitHash()
+
+            git.initRepository(config.repository_dir, config.repository_url)
+
+            git.updateRepository(config.repository_dir, config.branch)
+
+            current_git_hash = git.getHash(config.repository_dir)
+
+            if processed_git_hash == current_git_hash and cmd != "restart":
+                result.append(u"Nothing to do. Commit '{}' already processed.".format(current_git_hash))
+            else:
+                result.append(u"Check for commit '{}' started.".format(current_git_hash))
+                self.job_executor.start(current_git_hash, start_os)
+
+        return "\n".join(result)
+
+    def getStateMetrics(self):
+        return [
+            "ci_service_state{{job=\"ci_service\",type=\"leftover\",}} {}".format("1" if self.has_leftovers else "0")
+        ]
+
+@serverWeb.route('/status/', methods = ['GET'])
+def processStatus():
+    return handler.processStatus()
+
+@serverWeb.route('/clean/', methods = ['GET'])
+def processCleanup():
+    return handler.processCleanup()
+
+@serverWeb.route('/stop/', methods = ['GET'])
+def processStop():
+    return handler.processStop()
+
+@serverWeb.route('/start/', methods = ['POST'])
+def processStart():
+    return handler.processStart()
 
 handler = Handler()
 handler.start()

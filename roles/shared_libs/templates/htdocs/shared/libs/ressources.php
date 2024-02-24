@@ -135,25 +135,50 @@ class Ressources
         return "/shared/ressources/?type=" . $type . "&version=" . $version . "&path=" . urlencode($path);
     }
 
-    public static function getModule($path)
+    private static function prepareModuleReadyName($path)
+    {
+        $func_name = [];
+        $names = explode("/", trim($path,"/"));
+        foreach( $names as $name )
+        {
+            if( empty($name) ) continue;
+
+            $_parts = explode("_", $name);
+
+            foreach( $_parts as $_part )
+            {
+                $func_name[] = ucfirst($_part);
+            }
+        }
+        $func_name = implode("", $func_name);
+        return "On" . $func_name . "Ready";
+    }
+
+    public static function getModule($path, $async=True)
     {
         $html = "";
         $dir = __DIR__ . "/../.." . $path;
         if( is_dir($dir."css/") ) $html .= '    <link href="' . Ressources::preparePath("css", $path, [".css"] ) . '" rel="stylesheet">'."\n";
-        if( is_dir($dir."js/") ) $html .= '    <script src="' . Ressources::preparePath("js", $path, [".js"] ) . '"></script>'."\n";
+        if( is_dir($dir."js/") ) $html .= '    <script' . ( $async ? " async": "" ) . ' src="' . Ressources::preparePath("js", $path, [".js"] ) . '"></script>'."\n";
         return $html;
     }
 
-    public static function getModules($paths)
+    public static function getModules($paths, $async=True)
     {
-        $html = "<script>
-        if(typeof mx === 'undefined') var mx = {};
-        mx = {...mx, ...{ OnScriptReady: [], OnDocReady: [], Translations: [] } };\n";
-        $html .= "    </script>\n";
-        $html .= Ressources::getModule("/shared/");
+        $html = "<script>";
+        $html .= "if(typeof mx === 'undefined') var mx = {};";
+        $html .= "mx = {...mx, ...{ OnDocReadyWrapper: function(callback){ let args = []; let obj = [function(){ args.push(arguments); }, callback, args]; mx._OnDocReadyWrapper.push(obj); return function(){ obj[0](...arguments); }; }";
+        $html .= ", _OnDocReadyWrapper: [], OnDocReady: [], OnScriptReady: [], OnReadyTrigger: function(){ mx.OnReadyCounter -= 1; }, OnReadyCounter: " . (count($paths) + 1);
         foreach ($paths as $path)
         {
-            $html .= Ressources::getModule($path);
+            $html .= ", " . Ressources::prepareModuleReadyName($path) . ": []";
+        }
+        $html .= ", Translations: [] } };\n";
+        $html .= "    </script>\n";
+        $html .= Ressources::getModule("/shared/", $async);
+        foreach ($paths as $path)
+        {
+            $html .= Ressources::getModule($path, $async);
         }
 
         return $html;
@@ -173,24 +198,39 @@ class Ressources
               if( $path == "/shared/" )
               {
                   $content .= '
-                    for (var n in mx.OnScriptReady) {
-                        mx.OnScriptReady[n].call();
+                    mx._docReady = false;
+                    mx.OnReadyTrigger();
+                    mx.OnReadyTrigger = function() {
+                        mx.OnReadyCounter -= 1;
+                        if( mx.OnReadyCounter > 0 ) return;
+
+                        for (var func of mx.OnScriptReady) { func(); }
+                        mx.OnScriptReady = { push: function(func) { func(); } };
+
+                        processDocReady();
                     }
 
-                    mx.OnScriptReady = {
-                        push: function(func) {
-                            func.call();
+                    function processDocReady()
+                    {
+                        if( mx.OnReadyCounter > 0 || !mx._docReady ) return;
+
+                        for (var func of mx.OnDocReady) { func(); }
+                        mx.OnDocReady = { push: function(func) { func(); } };
+
+                        for(var wrapper of mx._OnDocReadyWrapper) {
+                            for( var args of wrapper[2] ){ wrapper[1](...args) };
+                            wrapper[0] = wrapper[1];
                         }
-                    };
-
-                    if (document.readyState === "complete" || document.readyState === "interactive")
-                    {
-                        mx.Core.OnDocReady();
                     }
-                    else
+
+                    function triggerDocReady()
                     {
-                        document.addEventListener("DOMContentLoaded", mx.Core.OnDocReady);
-                    }';
+                        mx._docReady = true;
+                        processDocReady();
+                    }
+
+                    if (document.readyState === "complete" || document.readyState === "interactive") triggerDocReady();
+                    else document.addEventListener("DOMContentLoaded", triggerDocReady);';
               }
               else if( $path == "/main/" )
               {
@@ -215,11 +255,18 @@ class Ressources
                           $content .= Ressources::getI18NContent($dir.$name);
                       }
                   }
+                  $content .= '
+                    mx.OnReadyTrigger();';
               }
               else
               {
+                  $ready_name = Ressources::prepareModuleReadyName($path);
                   $i18n_file = Ressources::getI18NFile($dir);
                   if( $i18n_file ) $content .= Ressources::getI18NContent($i18n_file);
+                  $content .= '
+                    mx.OnReadyTrigger();
+                    for (var n in mx.' . $ready_name . ') { mx.' . $ready_name . '[n](); }
+                    mx.' . $ready_name . ' = { push: function(func) { func(); } };';
               }
               return array( 'application/javascript; charset=utf-8', $content );
         }

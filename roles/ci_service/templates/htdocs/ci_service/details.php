@@ -1,102 +1,132 @@
 <?php
-require "../shared/libs/logfile.php";
 require "../shared/libs/ressources.php";
-
-require "inc/job.php";
-require "config.php";
-
-$datetime = isset($_GET['datetime']) ? $_GET['datetime'] : "";
-$config = isset($_GET['config']) ? $_GET['config'] : "";
-$os = isset($_GET['os']) ? $_GET['os'] : "";
-$branch = isset($_GET['branch']) ? $_GET['branch'] : "";
-$hash = isset($_GET['hash']) ? $_GET['hash'] : "";
-
-$matches = glob($log_folder . $datetime . '-*-' . $config . '-' . $os . '-' . $branch . '-' . $hash . '*.log' );
-
-if( sizeof($matches) == 1 )
-{
-    $logfile = new LogFile($log_folder,basename($matches[0]));
-    $logfile->init(0);
-
-    $job = new Job(basename($matches[0]));
-}
-else if( sizeof($matches) > 1 )
-{
-    echo 'too many files found';
-    print_r($matches);
-    exit();
-}
-else
-{
-    echo 'no file found';
-    exit();
-}
 ?>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?php echo Ressources::getModules(["/shared/mod/logfile/"]); ?>
+<?php echo Ressources::getModules(["/shared/mod/websocket/", "/shared/mod/logfile/"]); ?>
 
 <link rel="stylesheet" href="../css/core.css">
 <script src="../js/core.js"></script>
 <script>
-function initPage()
-{
-    var body = mx.$('body');
-    var goToControl = document.querySelector('div.goToControl');
-    mx.Logfile.init(<?php echo $job->getDuration(); ?>,mx.$("div.state"),mx.$("span.state"),mx.$('span.runtime'), mx.$('div.log'), mx.Host.getBase() + '../details_update/' );
-    
-<?php if( $job->getState() == 'running' ){ ?>
-    mx.Logfile.startUpdateProcess(<?php echo $logfile->getBytes(); ?>);
-<?php } else { ?>
-    var scrollControl = document.querySelector('div.scrollControl');
-    scrollControl.style.display = "none";
-    goToControl.classList.add("singleButton");
-<?php } ?>
+mx.CICore = (function( ret ) {
+    const params = new URLSearchParams(window.location.search);
+    ret.log_datetime = params.get("datetime");
+    ret.log_config = params.get("config");
+    ret.log_os = params.get("os");
+    ret.log_branch = params.get("branch");
+    ret.log_hash = params.get("hash");
 
-    mx.$('div.log').addEventListener("scroll", function(e) { 
-        mx.Logfile.checkScrollPosition(e,body,goToControl,true);
-    },false);
+    var initialized = false;
+    var header = null;
 
-    window.addEventListener("scroll",function(e)
-    {
-        mx.Logfile.checkScrollPosition(e,body,goToControl,false);
-    });
-    mx.Logfile.checkScrollPosition(null,body,goToControl,false);
+    var logContainer = null;
+    var scrollControl = null;
+    var goToControl = null;
+    var runtimeControl = null;
 
-    mx.Page.refreshUI();
-}
-mx.OnDocReady.push( initPage );
+    var stateColorElement = null;
+    var stateTextElement = null;
+
+    ret.socket = null;
+
+    ret.processData = function(data){
+
+        if( data["logline"] )
+        {
+            let div = document.createElement("div");
+            div.innerHTML = data["logline"];
+            let clone = div.firstChild.cloneNode(true);
+            logContainer.appendChild(clone);
+
+            mx.Logfile.triggerUpdate();
+        }
+        else
+        {
+            if( data["error"] )
+            {
+                mx.Error.handleError(data["error"]);
+            }
+            else
+            {
+                //header.dataset.duration = data["job"]["duration"];
+                runtimeControl.dataset.state = data["job"]["state"];
+
+                stateColorElement.className="state " + data["job"]["state"];
+                stateTextElement.className="state " + data["job"]["state"];
+                stateTextElement.innerHTML = mx.Logfile.formatState(data["job"]["state"]);
+
+                if( !initialized )
+                {
+                    if( data["topic"] )
+                    {
+                        mx.CICore.socket.emit('join',data["topic"]);
+                        mx.CICore.socket.on("data", (data) => processData( data ), data["topic"] );
+                    }
+
+                    mx.$('span.branch',header).innerHTML = data["job"]["branch"];
+                    mx.$('span.username',header).innerHTML = data["job"]["author"];
+                    mx.$('div.subject div',header).innerHTML = data["job"]["subject"];
+                    mx.$('div.config',header).innerHTML = data["job"]["config"];
+                    mx.$('div.deployment',header).innerHTML = data["job"]["deployment"];
+
+                    mx.$('div.gitlink > span.hash',header).onclick = function(){ mx.CICore.openGitCommit(event,'https://github.com/HolgerHees/smartserver/commit/' + data["job"]["git_hash"] ); };
+                    mx.$('div.gitlink > span.hash > span',header).innerHTML = data["job"]["git_hash"].substring(0,7);
+
+                    let startTime = new Date(data["job"]["timestamp"] * 1000);
+
+                    mx.Logfile.initData(startTime, data["job"]["duration"], data["log"] )
+
+                    mx.$('div > span.datetime',header).innerHTML = startTime.toLocaleString();
+
+                    mx.Page.refreshUI();
+                }
+                initialized = true;
+            }
+        }
+    };
+
+    ret.init = function(){
+        header = mx.$('div.header > div.row');
+
+        logContainer = mx.$('div.log');
+        scrollControl = document.querySelector('div.scrollControl');
+        goToControl = document.querySelector('div.goToControl');
+        runtimeControl = mx.$('div > span.runtime',header);
+
+        stateColorElement = mx.$('div.state',header);
+        stateTextElement = mx.$('div.gitlink > span.state',header);
+
+        mx.Logfile.init(logContainer, scrollControl, goToControl, runtimeControl);
+    };
+
+    return ret;
+})( mx.CICore || {} );
+
+mx.OnDocReady.push(mx.CICore.init);
+
+var processData = mx.OnDocReadyWrapper( mx.CICore.processData );
+
+mx.OnSharedModWebsocketReady.push(function(){
+    mx.CICore.socket = mx.ServiceSocket.init('ci_service', "details", function(){ return { "datetime": mx.CICore.log_datetime, "config": mx.CICore.log_config, "os": mx.CICore.log_os, "branch": mx.CICore.log_branch, "hash": mx.CICore.log_hash} } );
+    mx.CICore.socket.on("data", (data) => processData( data ) );
+});
 </script>
 </head>
 <body>
-<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "CI Test - <?php echo $config . '-' . $os . '-' . $branch; ?>"); } );</script>
-<?php
-    echo '<div class ="header form table logfileBox">
-
-    <div id="' . $job->getHash() . '" data-state="' . $job->getState() . '" data-duration="' . $job->getDuration() . '" class="row" onClick="mx.CICore.openOverview(event)">
-    <div class="state ' . $job->getState() . '"></div>
-    <div><span class="icon-down branch">' . $job->getBranch() . '</span><span class="username">' . $job->getAuthor(). '<span></div>
-    <div class="subject"><div>' . $job->getSubject() . '</div></div>
-        
-    <div>' . $job->getConfig() . '</div>
-    <div>' . $job->getOs() . '</div>
-
-    <div>' . LogFile::formatState($job->getState()) . '<span class="hash icon-resize-horizontal" onClick="mx.CICore.openGitCommit(event,\'https://github.com/HolgerHees/smartserver/commit/'.$job->getGitHash().'\');"><span>' . substr($job->getGitHash(),0,7) . '</span><span class="icon-export"></span></span></div>
-    
-    <div><span class="runtime icon-clock">' . LogFile::formatDuration($job->getDuration()) . '</span><span class="datetime icon-calendar-empty">' . $job->getDateTime()->format('d.m.Y H:i:s') . '</span></div>
+<script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "CI Test - " + mx.CICore.log_config + "-" + mx.CICore.log_os + "-" + mx.CICore.log_branch); } );</script>
+<div class ="header form table logfileBox">
+    <div class="row" onClick="mx.CICore.openOverview(event)">
+        <div class="state"></div>
+        <div><span class="icon-down branch"></span><span class="username"><span></div>
+        <div class="subject"><div></div></div>
+        <div class="config"></div>
+        <div class="deployment"></div>
+        <div class="gitlink"><span class="state"></span><span class="hash icon-resize-horizontal" onClick=""><span></span><span class="icon-export"></span></span></div>
+        <div><span class="runtime icon-clock"></span><span class="datetime icon-calendar-empty"></span></div>
     </div>
-
-    </div><div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>';
-
-    echo '<div class="logContainer"><div class="log">';
-    
-    foreach( $logfile->getLines() as $line )
-    {
-        echo LogFile::getLogLine($line);
-    }
-    
-    echo '</div></div>';
-?>
+</div>
+<div class="scrollControl" onClick="mx.Logfile.toggleBottomScroll()"></div><div class="goToControl"><div></div></div>
+<div class="logContainer"><div class="log"></div></div>
 </body>
 </html>

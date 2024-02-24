@@ -1,6 +1,5 @@
 var subGroup = mx.Menu.getMainGroup('workspace').addSubGroup('weather', { 'order': 100, 'title': '{i18n_Weatherforecast}', 'icon': 'weather_service.svg' });
 subGroup.addUrl(  'weather', ['user'], '/weather_service/detailOverview/', { 'order': 1000, 'title': '{i18n_Weatherforecast}', 'info': '{i18n_Meteo Group}', 'icon': 'weather_service.svg' });
-
 mx.Widgets.CustomWeather = (function( widget ) {
     css = `:root {
         --widget-value-color-weather-sun: #ffdb26;
@@ -54,10 +53,9 @@ mx.Widgets.CustomWeather = (function( widget ) {
     style.type = 'text/css';
     style.appendChild(document.createTextNode(css));
 
-    let data = {}
-    function processData(_data)
+    widget.processData = function(data)
     {
-        data = {...data, ..._data};
+        if( data == null ) return widget.alert(0, "Weather N/A");
 
         let content = "";
         content += "<span style='display:inline-block;vertical-align: middle; padding-bottom: 4px;height:23px;width:23px;padding-left: 10px;padding-right: 15px;'>" + data["currentCloudsAsSVG"] + "</span>";
@@ -65,17 +63,8 @@ mx.Widgets.CustomWeather = (function( widget ) {
 
         widget.show(0, content );
     }
-
-    widget.init = function()
-    {
-        let socket = widget.getServiceSocket('weather_service');
-        socket.on("connect", () => socket.emit("join", "widget"));
-        socket.on("data", (data) => processData( data ) );
-        socket.on("error", (err) => widget.alert(0, "Weather N/A") );
-    }
-
     widget.click = function(event){
         mx.Actions.openEntryById(event, 'workspace-weather-weather');
     }
     return widget;
-})( mx.Widgets.Object( "user", [ { id: "customWeather", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );
+})( mx.Widgets.Object( "weather_service", "user", [ { id: "customWeather", order: 600, click: function(event){ mx.Widgets.CustomWeather.click(event); } } ] ) );

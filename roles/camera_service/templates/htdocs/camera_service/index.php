@@ -4,29 +4,29 @@ require "../shared/libs/ressources.php";
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta name="viewport" content="height=device-height, 
-      width=device-width, initial-scale=1.0, 
-      minimum-scale=1.0, maximum-scale=1.0, 
-      user-scalable=no, target-densitydpi=device-dpi">
-    <?php echo Ressources::getModules(["/shared/mod/websocket/","/camera_service/"]); ?>
+<meta name="viewport" content="height=device-height,
+  width=device-width, initial-scale=1.0,
+  minimum-scale=1.0, maximum-scale=1.0,
+  user-scalable=no, target-densitydpi=device-dpi">
+<?php echo Ressources::getModules(["/shared/mod/websocket/","/camera_service/"]); ?>
+<script>
+const params = new URLSearchParams(window.location.search);
+const camera_name = params.get("sub");
+
+var initData = mx.OnDocReadyWrapper(function(data){ mx.Gallery.init(data); });
+var updateData = mx.OnDocReadyWrapper(function(data){ mx.Gallery.update(data); });
+
+mx.OnSharedModWebsocketReady.push(function(){
+    let socket = mx.ServiceSocket.init('camera_service', camera_name);
+    socket.on("init", (data) => initData(data));
+    socket.on("update", (data) => updateData(data));
+});
+
+</script>
 </head>
 <body>
 <script>mx.OnScriptReady.push( function(){ mx.Page.initFrame(null, "Gallery"); } );</script>
-<?php
-    if( empty($_GET["sub"]) ) exit;
-    $sub_folder = $_GET['sub'];
-?>
 <script>
-    var theme = document.cookie.split( ';' ).map( function( x ) { return x.trim().split( '=' ); } ).reduce( function( a, b ) { a[ b[ 0 ] ] = b[ 1 ]; return a; }, {} )[ "theme" ];
-    if( theme ) document.body.classList.add(theme);
-    var camera_name = "<?php echo $sub_folder; ?>";
-
-    mx.OnDocReady.push( function(){
-        let socket = mx.ServiceSocket.init('camera_service');
-        socket.on("connect", () => socket.emit('join', camera_name));
-        socket.on("init", (data) => mx.Gallery.init(data));
-        socket.on("update", (data) => mx.Gallery.update(data));
-    });
 </script>
 <div class="slots"></div>
 <div id="gallery">

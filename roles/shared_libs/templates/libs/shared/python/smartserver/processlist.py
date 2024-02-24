@@ -108,12 +108,15 @@ class Processlist():
         except (IOError, OSError) as e:
             return files
 
+        # inspired by https://github.com/stdevel/yum-plugin-needs-restarting/blob/master/needs-restarting.py
         for line in smaps:
             slash = line.find('/')
             if slash == -1 or line.find(' 00:') != -1: # if we don't have a '/' or if we fine 00: in the file then it's not _REALLY_ a file
                 continue
+            line = line.replace('\n', '')
             filename = line[slash:]
-            filename = filename.split(';')[0].strip()
+            filename = filename.split(';')[0]
+            filename = filename.strip()
             if filename[-9:] != "(deleted)":
                 continue
             filename = filename[:-10]
@@ -122,14 +125,16 @@ class Processlist():
 
     @staticmethod
     def getPids(pattern=None,ppid=None):
-        if pattern is not None:
+        if pattern is not None or ppid is not None:
             cmd = [ "/usr/bin/pgrep" ]
             if ppid is None:
                 cmd.append("-f")
             else:
                 cmd.append("-fP")
                 cmd.append(str(ppid))
-            cmd.append(pattern)
+
+            if pattern is not None:
+                cmd.append(pattern)
             
             result = subprocess.run(cmd, shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
             if result.returncode == 0:

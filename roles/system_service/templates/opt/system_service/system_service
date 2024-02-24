@@ -82,41 +82,30 @@ class Handler(Server):
         super().terminate()
 
     def notifyChangedInfoData(self, type, data):
-        if not self.isSocketRoomActive("widget"):
-            return
+        if self.isSocketRoomActive("widget"):
+            result = {}
+            if type == "isp_state":
+                result["wan_isp_state"] = "default" if data else "fallback"
+            elif type == "online_state":
+                result["wan_online_state"] = "online" if data else "offline"
 
-        result = {}
-        if type == "isp_state":
-            result["wan_isp_state"] = "default" if data else "fallback"
-        elif type == "online_state":
-            result["wan_online_state"] = "online" if data else "offline"
-
-        self.emitSocketData("data", result, "widget");
+            self.emitSocketData("widget:data", result, "widget");
 
     def notifyChangedBlockTrafficData(self, type, data):
-        if not self.isSocketRoomActive("widget"):
-            return
-
-        self.emitSocketData("data", {"blocked_traffic": data}, "widget");
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData("widget:data", {"blocked_traffic": data}, "widget");
 
     def notifyChangedBlockTrafficStatesData(self, type, data):
-        if not self.isSocketRoomActive("widget"):
-            return
-
-        self.emitSocketData("data", {"traffic_states": data}, "widget");
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData("widget:data", {"traffic_states": data}, "widget");
 
     def notifyChangedNetworkData(self, changed_data, msg):
-        if not self.isSocketRoomActive("network"):
-            return
-
-        logging.info("Emit changed network {}".format(msg))
-        self.emitSocketData('data', changed_data, "network")
+        if self.isSocketRoomActive("network"):
+            self.emitSocketData('network:data', changed_data, "network")
 
     def notifyChangedSpeedtestData(self, is_testing):
-        if not self.isSocketRoomActive("speedtest"):
-            return
-
-        self.emitSocketData('data', { "is_running": is_testing }, "speedtest")
+        if self.isSocketRoomActive("speedtest"):
+            self.emitSocketData('speedtest:data', { "is_running": is_testing }, "speedtest")
 
     def onSocketRoomJoin(self, sid, room, data = None):
         super().onSocketRoomJoin(sid, room, data)
@@ -127,16 +116,16 @@ class Handler(Server):
             result["wan_online_state"] = "online" if self.info.isConnectionOnline() else "offline"
             result["blocked_traffic"] = len(self.trafficwatcher.getBlockedIPs())
             result["traffic_states"] = self.trafficwatcher.getTrafficStateSummery()
-            self.emitSocketData("data", result, room);
+            self.emitSocketData("widget:data", result, room);
 
         elif room == "speedtest":
-            self.emitSocketData('data', { "is_running": self.speedtest.isTesting() }, room)
+            self.emitSocketData('speedtest:data', { "is_running": self.speedtest.isTesting() }, room)
 
         elif room == "network":
             [ data, msg ] = self.scanner.getNetworkData();
             logging.info("Emit initial network {}".format(msg))
             data["root"] = self.scanner.getGatewayMAC()
-            self.emitSocketData('data', data, room)
+            self.emitSocketData('network:data', data, room)
 
     def triggerSpeedtest(self):
         self.speedtest.triggerSpeedtest()

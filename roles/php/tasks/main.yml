@@ -38,7 +38,6 @@
       netdata: "{{default_server_ip}}" # fix to make netdata reachable
     volumes:
       - '{{htdocs_path}}:{{htdocs_path}}:z'
-      - '{{global_log}}:{{global_log}}:z'                         # needed by update service and ci service
       - '{{nextcloud_data_path}}:{{nextcloud_data_path}}:z'       # needed by nextcloud role
       - '{{projects_path}}toolbox:{{projects_path}}toolbox:z'     # needed by openhab_toolbox role
     exposed_ports:

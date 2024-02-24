@@ -29,11 +29,14 @@ class Handler(Server):
         self.initWatchedFiles( watched_directories, self.fileChangeTriggered )
 
     def fileChangeTriggered(self, event):
+        if not ( event["mask"] & ( pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO | pyinotify.IN_DELETE ) ):
+            return
+
         #logging.info(event);
         if event["pathname"][:len(config.upload_path)] == config.upload_path:
-            self.cache_handler.uploadChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
+            self.cache_handler.uploadChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO ))
         elif event["pathname"][:len(config.cache_path)] == config.cache_path:
-            self.cache_handler.cacheChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO ))
+            self.cache_handler.cacheChangeTriggered(event["pathname"], event["time"], event["mask"] & ( pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO ))
 
     def start(self):
         self.scheduler.start()
@@ -55,13 +58,13 @@ class Handler(Server):
         if not self.isSocketRoomActive(camera_name):
             return
 
-        self.emitSocketData('update', changed_data, camera_name)
+        self.emitSocketData(camera_name + ':update', changed_data, camera_name)
 
     def onSocketRoomJoin(self, sid, room, data = None):
         super().onSocketRoomJoin(sid, room, data)
 
         camera_data = self.cache_handler.getCacheData(room);
-        self.emitSocketData('init', camera_data)
+        self.emitSocketData(room + ':init', camera_data)
 
     def getStateMetrics(self):
         metrics = []

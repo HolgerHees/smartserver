@@ -13,6 +13,7 @@ div.form.table > div.row > div.subject > div{
 div.form.table > div.row > div > span.hash {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 div.form.table > div.row > div > span.hash {
    cursor: pointer;

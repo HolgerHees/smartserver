@@ -1,7 +1,9 @@
 import os
+import logging
 
-from lib import helper
-from lib import log
+from smartserver import command
+from smartserver import nsenter
+
 
 def deltree(target):
     for d in os.listdir(target):
@@ -13,7 +15,8 @@ def deltree(target):
     os.rmdir(target)
 
 def getRegisteredMachines():
-    result = helper.execCommand("VBoxManage list vms")
+    with nsenter.Host():
+        result = command.exec([ "VBoxManage", "list", "vms" ])
     lines = result.stdout.decode("utf-8").strip().split("\n");
     machines = {}
     for line in lines:
@@ -33,53 +36,42 @@ def getMachineLeftovers(lib_dir, machines):
             leftovers[file] = "{}VirtualMachines/{}".format(lib_dir,file)
     return leftovers
  
+def destroyMachines(machines):
+    destroyed = []
+    for vid in machines.keys():
+        name = destroyMachine(vid)
+        destroyed.append({"vid": vid, "name": name})
+    return destroyed
+
 def destroyMachine(vid):
-    vmCleaned = False
     if vid != None:
         machines = getRegisteredMachines()
         if vid in machines:
             name = machines[vid]
-            log.info(u"VM - vid: '{}', name: '{}' - destroyed.".format(vid,name))
-            helper.execCommand("VBoxManage controlvm \"{}\" poweroff".format(vid), exitstatus_check=False)
-            helper.execCommand("VBoxManage unregistervm --delete \"{}\"".format(vid), exitstatus_check=False)
-            
-            vmCleaned = True
-        else:
-            log.error(u"VM - vid: '{}' not found.".format(vid))
-    return vmCleaned
+            with nsenter.Host():
+                command.exec( [ "VBoxManage", "controlvm", vid, "poweroff" ], exitstatus_check=False)
+                command.exec( [ "VBoxManage", "unregistervm", "--delete", vid ], exitstatus_check=False)
+            return name
+    return None
 
 def destroyMachineLeftover(leftover,lib_dir,machines):
-    leftoverCleaned = False
     if leftover != None:
         leftovers = getMachineLeftovers(lib_dir,machines)
         if leftover in leftovers:
-            log.info(u"Leftover: '{}' cleaned.".format(leftover))
             deltree(leftovers[leftover])
-            leftoverCleaned = True
-        else:
-            log.error(u"Leftover: '{}' not found.".format(leftover))
-    return leftoverCleaned
+            return leftover
+    return None
 
-def checkMachines(lib_dir, show_info):
+def destroyMachinesLeftovers(lib_dir,machines):
+    destroyed = []
+    leftovers = virtualbox.getMachineLeftovers(config.lib_dir,machines)
+    for leftover in leftovers:
+        name = virtualbox.destroyMachineLeftover(leftover,config.lib_dir,machines)
+        destroyed.append({"name": name})
+    return destroyed
+
+def getAllMachines(lib_dir):
     machines = getRegisteredMachines()
-    if len(machines.keys()) > 0:
-        if show_info:
-            log.info(u"Following machines are registered.")
-            for vid,name in machines.items():
-                log.info(u"  VM - vid: '{}', name: '{}'".format(vid,name))
-        else:
-            log.info(u"Some machines are still there.")
-    elif show_info:
-        log.info(u"No machines are registered.")
-        
     leftovers = getMachineLeftovers(lib_dir, machines)
-    if len(leftovers.keys()) > 0:
-        if show_info:
-            log.info(u"Following leftovers found.")
-            for leftover in leftovers:
-                log.info(u"  LO - name: '{}', path: '{}'".format(leftover,leftovers[leftover]))
-        else:
-            log.info(u"Some leftovers are still there.")
-    elif show_info:
-        log.info(u"No machine leftovers found.")
-        
+    return [ machines, leftovers ]
+

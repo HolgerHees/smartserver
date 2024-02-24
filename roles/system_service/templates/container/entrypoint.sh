@@ -13,7 +13,7 @@ start()
 {
     /opt/shared/python/install.py
 
-    /etc/system_service/system_service &
+    /opt/system_service/system_service &
 }
 
 start

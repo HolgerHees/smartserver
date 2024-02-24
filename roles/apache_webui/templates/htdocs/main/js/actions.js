@@ -478,30 +478,28 @@ mx.Actions = (function( ret ) {
         content += '<div class="bottom"><div class="image"><div class="imageCopyright">' + mx.MainImage.getCopyright() + '</div><div class="imageTitle">' + mx.MainImage.getTitle() + '</div></div></div>';
         content += '</div>';
 
-        mx.Widgets.preload(function(){
-            if( !isActive || isIFrameVisible() )
-            {
-                showMenuContent( content, {"init": [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], "destructor": mx.Widgets.clean }, subGroup.getTitle());
+        if( !isActive || isIFrameVisible() )
+        {
+            showMenuContent( content, {"init": [ function(){ mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box")); }, mx.Actions.refreshHome ], "destructor": mx.Widgets.clean }, subGroup.getTitle());
 
-                mx.History.addMenu(subGroup);
+            mx.History.addMenu(subGroup);
 
-                mx.Menu.activateMenu(null); // collapse open submenu
-            }
-            else
-            {
-                mx.$('#content #submenu').innerHTML = content;
-                mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
-                mx.Actions.refreshHome();
-            }
-            if( !isActive )
-            {
-                if( visualisationType != "desktop" ) menuPanel.close();
-            }
-            else
-            {
-                if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
-            }
-        });
+            mx.Menu.activateMenu(null); // collapse open submenu
+        }
+        else
+        {
+            mx.$('#content #submenu').innerHTML = content;
+            mx.Widgets.init(mx.$(".service.home .widgets"), mx.$(".outer_widgets_box"));
+            mx.Actions.refreshHome();
+        }
+        if( !isActive )
+        {
+            if( visualisationType != "desktop" ) menuPanel.close();
+        }
+        else
+        {
+            if( typeof event != "undefined" && visualisationType != "desktop" ) menuPanel.close();
+        }
     };
 
     ret.refreshHome = function(event)
@@ -522,8 +520,6 @@ mx.Actions = (function( ret ) {
 
         mx.$('#content #submenu .time').innerHTML = time;
         mx.$('#content #submenu .slogan').innerHTML = prefix + ', ' + mx.User.name;
-
-        mx.Widgets.refresh();
 
         mx.Timer.register(mx.Actions.refreshHome, 60000 - (s * 1000));
     }

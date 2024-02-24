@@ -10,9 +10,11 @@ class GitHub():
         return repository_owner.replace(".git","")
 
     @staticmethod
-    def getStates(repository_owner, git_hash ):
+    def getStates(repository_owner, access_token, git_hash ):
+        headers = { "Authorization": "token {}".format(access_token) } if git_hash else {}
+
         statusUrl = "https://api.github.com/repos/{}/statuses/{}".format(repository_owner,git_hash)
-        result = requests.get(statusUrl)
+        result = requests.get(statusUrl, headers=headers)
 
         if result.status_code != 200:
             raise Exception( "Unable to get git status. Code: {}, Body: {}".format(result.status_code,result.text) )
@@ -39,11 +41,7 @@ class GitHub():
     # https://developer.github.com/v3/repos/statuses/
     @staticmethod
     def setState(repository_owner, access_token, git_hash, state, context, description ):
-        headers = {
-            "Authorization": "token {}".format(access_token),
-            # This header allows for beta access to Checks API
-            #"Accept": 'application/vnd.github.antiope-preview+json'
-        }
+        headers = { "Authorization": "token {}".format(access_token) }
         data = {
             "state": state,
             "context": context,
@@ -56,7 +54,7 @@ class GitHub():
           
     @staticmethod
     def cancelPendingStates(repository_owner, access_token, git_hash, context ):
-        states = GitHub.getStates(repository_owner,git_hash)
+        states = GitHub.getStates(repository_owner,access_token,git_hash)
         for deployment in states:
             if states[deployment] != "pending":
                 continue

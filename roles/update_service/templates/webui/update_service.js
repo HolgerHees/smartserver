@@ -3,10 +3,13 @@
 {% if update_service_system_check_enabled %}
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('update_system', ['admin'], '/update_service/system/', { 'order': 311, 'title': '{i18n_Updates}', 'info': '{i18n_System updates}', 'icon': 'update_system_logo.svg' });
 mx.Widgets.AvailableUpdates = (function( widget ) {
-    let data = {}
-    function processData(_data)
+    widget.processData = function(data)
     {
-        data = {...data, ..._data};
+        if( data == null )
+        {
+            widget.alert(0, "Update Service N/A");
+            return
+        }
 
         let content = "";
         let is_running = data["is_running"];
@@ -34,14 +37,6 @@ mx.Widgets.AvailableUpdates = (function( widget ) {
 
         widget.show(0, content );
     }
-
-    widget.init = function()
-    {
-        let socket = widget.getServiceSocket('update_service');
-        socket.on("connect", () => socket.emit("join", "widget"));
-        socket.on("data", (data) => processData( data ) );
-        socket.on("error", (err) => widget.alert(0, "Update Service N/A") );
-    }
     return widget;
-})( mx.Widgets.Object( "admin", [ { id: "availableUpdates", order: 50, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-update_system') } } ] ) );
+})( mx.Widgets.Object( "update_service", "admin", [ { id: "availableUpdates", order: 50, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-update_system') } } ] ) );
 {% endif %}

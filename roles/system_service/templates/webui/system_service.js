@@ -3,11 +3,14 @@ mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_wan',
 {% if system_service_netflow_collector %}
 mx.Menu.getMainGroup('admin').getSubGroup('system').addUrl('system_service_netflow', ['admin'], '//grafana.{host}/d/system-service-netflow-overview/system-service-netflow-overview', { 'order': 212, 'title': '{i18n_WAN traffic}', 'info': '{i18n_Netflow}', 'icon': 'system_service_logo.svg', 'callbacks': { 'url': mx.Grafana.applyTheme } });
 mx.Widgets.TrafficAlerts = (function( widget ) {
-    let data = {}
-
-    function processData(_data)
+    widget.processData = function(data)
     {
-        data = {...data, ..._data};
+        if( data == null )
+        {
+            widget.alert(0, "System Service N/A");
+            widget.alert(1, "");
+            return
+        }
 
         let traffic = "";
         let wan_isp_state = data["wan_isp_state"];
@@ -28,17 +31,8 @@ mx.Widgets.TrafficAlerts = (function( widget ) {
 
         widget.show(1, mx.I18N.get("Traffic","widget_system") + ": <strong>" + traffic + "</strong>" + blocked);
     }
-
-    widget.init = function()
-    {
-        let socket = widget.getServiceSocket('system_service');
-        socket.on("connect", () => socket.emit('join',"widget"));
-        socket.on("data", (data) => processData( data ) );
-        socket.on("error", function(){ widget.alert(0, "System Service N/A"); widget.alert(1, ""); } );
-    }
-
     return widget;
-})( mx.Widgets.Object( "admin", [ { id: "wanAlerts", order: 100, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-system_service_wan') } }, { id: "trafficAlerts", order: 102, click: function(event){
+})( mx.Widgets.Object( "system_service", "admin", [ { id: "wanAlerts", order: 100, click: function(event){ mx.Actions.openEntryById(event, 'admin-system-system_service_wan') } }, { id: "trafficAlerts", order: 102, click: function(event){
     let entry = mx.Menu.getMainGroup('admin').getSubGroup('system').getEntry('system_service_netflow');
     mx.Actions.openEntry(entry, entry.getUrl() + "&var-Filters=group|!%3D|normal" );
     //mx.Actions.openEntryById(event,'admin-system-system_service_netflow')

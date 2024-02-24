@@ -32,5 +32,5 @@ class Scheduler(threading.Thread):
 
     def getStateMetrics(self):
         return [
-            "{}_process{{type=\"scheduler\",}} {}".format(self.name, "1" if self.is_running else "0")
+            "{}_process{{type=\"scheduler\"}} {}".format(self.name, "1" if self.is_running else "0")
         ]

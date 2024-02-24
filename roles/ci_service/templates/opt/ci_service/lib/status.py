@@ -1,49 +1,73 @@
 import os
+import logging
+import json
+import threading
 
-def getData(status_file):
-    data = ["","","","",""]
-    if os.path.isfile(status_file):
-        with open(status_file, 'r') as f:
-            data = f.readline().strip().split(":")
-    return data
-  
-def setData(status_file,data):
-    with open(status_file, 'w') as f:
-        f.write(":".join(data))
-  
-def getState(status_file):
-    if os.path.isfile(status_file):
-        data = getData(status_file)
-        if data[0] == "":
-            data[0] = None
-        if data[1] == "":
-            data[1] = None
-        if data[2] == "":
-            data[2] = None
-        if data[3] == "":
-            data[3] = None
-        if data[4] == "":
-            data[4] = None
-        return { "status": data[0], "config": data[1], "deployment": data[2], "git_hash": data[3], "vid": data[4], "last_modified": os.path.getmtime(status_file) }
-    return None
-  
-def setState(status_file,status):
-    data = getData(status_file)
-    data[0] = status if status != None else ""
-    setData(status_file,data)
+from smartserver.confighelper import ConfigHelper
 
-def setDeployment(status_file,config,deployment):
-    data = getData(status_file)
-    data[1] = config if config != None else ""
-    data[2] = deployment if deployment != None else ""
-    setData(status_file,data)
+class State():
+    def __init__(self, config):
+        self.version = 1
+        self.dump_path = config.status_file
+        self.valid_cache_file = False
 
-def setGitHash(status_file,git_hash):
-    data = getData(status_file)
-    data[3] = git_hash if git_hash != None else ""
-    setData(status_file,data)
+        self.data = None
 
-def setVID(status_file,vid):
-    data = getData(status_file)
-    data[4] = vid if vid != None else ""
-    setData(status_file,data)
+        self.lock = threading.Lock()
+
+        self._restore()
+
+    def terminate(self):
+        if self.valid_cache_file and os.path.exists(self.dump_path):
+            self._dump()
+
+    def _restore(self):
+        self.valid_cache_file, data = ConfigHelper.loadConfig(self.dump_path, self.version )
+        if data is not None:
+            self.data = data["data"]
+            logging.info("Loaded state")
+        else:
+            self.data = { "status": None, "config": None, "deployment": None, "git_hash": None, "vid": None}
+            if self.valid_cache_file:
+                self._dump()
+
+    def _dump(self):
+        if self.valid_cache_file:
+            with self.lock:
+                ConfigHelper.saveConfig(self.dump_path, self.version, { "data": self.data } )
+                logging.info("Saved state")
+
+    def setState(self, status):
+        with self.lock:
+            self.data["status"] = status
+
+    def getState(self):
+        return self.data["status"]
+
+    def setDeployment(self, deployment):
+        with self.lock:
+            self.data["deployment"] = deployment
+
+    def getDeployment(self):
+        return self.data["deployment"]
+
+    def setConfig(self, config):
+        with self.lock:
+            self.data["config"] = config
+
+    def getConfig(self):
+        return self.data["config"]
+
+    def setGitHash(self, git_hash):
+        with self.lock:
+            self.data["git_hash"] = git_hash
+
+    def getGitHash(self):
+        return self.data["git_hash"]
+
+    def setVID(self, vid):
+        with self.lock:
+            self.data["vid"] = vid
+
+    def getVID(self):
+        return self.data["vid"]

@@ -1,10 +1,12 @@
 require 'getoptlong'
 
 opts = GetoptLong.new(
-    [ '--help', '-h', GetoptLong::NO_ARGUMENT ],
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ],
     ['--config', GetoptLong::REQUIRED_ARGUMENT], 
     ['--os', GetoptLong::REQUIRED_ARGUMENT ],
-    ['--ansible', GetoptLong::OPTIONAL_ARGUMENT ]
+    ['--ansible', GetoptLong::OPTIONAL_ARGUMENT ],
+    ['--color', GetoptLong::OPTIONAL_ARGUMENT ],
+    ['--force', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
 setup_os = ""

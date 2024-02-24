@@ -13,7 +13,7 @@ start()
 {
     /opt/shared/python/install.py
 
-    /etc/camera_service/camera_service &
+    /opt/camera_service/camera_service &
 }
 
 start

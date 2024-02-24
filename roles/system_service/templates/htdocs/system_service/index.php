@@ -167,7 +167,7 @@ mx.UNCore = (function( ret ) {
         }
     }
 
-    function processData(data)
+    ret.processData = function(data)
     {
         //console.log(rootNode);
 
@@ -331,10 +331,6 @@ mx.UNCore = (function( ret ) {
         
         //refreshDaemonState(null, function(state){});
         
-        let socket = mx.ServiceSocket.init('system_service');
-        socket.on("connect", () => socket.emit('join', "network"));
-        socket.on("data", (data) => processData(data));
-
         mx.$("#networkToolbar .networkDisplay.button").addEventListener("click",function()
         {
             isTable = !isTable;
@@ -412,6 +408,13 @@ mx.UNCore = (function( ret ) {
 })( mx.UNCore || {} );
 
 mx.OnDocReady.push( mx.UNCore.init );
+
+var processData = mx.OnDocReadyWrapper( mx.UNCore.processData );
+
+mx.OnSharedModWebsocketReady.push(function(){
+    let socket = mx.ServiceSocket.init('system_service', "network");
+    socket.on("data", (data) => processData(data));
+});
 </script>
 </head>
 <body class="inline">

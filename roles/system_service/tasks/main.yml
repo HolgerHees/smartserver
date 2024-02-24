@@ -11,14 +11,14 @@
     group: root
     mode: 0750
   with_items:
-    - "{{global_etc}}system_service/"
-    - "{{global_etc}}system_service/config"
+    - "{{global_opt}}system_service/"
+    - "{{global_opt}}system_service/config"
     - "{{global_lib}}system_service/"
 
 - name: synchronize service
   synchronize:
-    src: "templates/etc/{{item.path}}"
-    dest: "{{global_etc}}system_service/"
+    src: "templates/opt/{{item.path}}"
+    dest: "{{global_opt}}system_service/"
     archive: no
     checksum: yes
     group: yes
@@ -36,7 +36,7 @@
 - name: copy service config
   template:
     src: "templates/config.py"
-    dest: "{{global_etc}}system_service/config/config.py"
+    dest: "{{global_opt}}system_service/config/config.py"
     owner: root
     group: root
     mode: 0750
@@ -72,7 +72,7 @@
       - "8507"
       - "2055/udp"
     volumes:
-      - '{{global_etc}}system_service/:/etc/system_service:ro,z'
+      - '{{global_opt}}system_service/:/opt/system_service:ro,z'
       - "{{global_lib}}system_service/:/var/lib/system_service:rw,z"
       - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart system_service"

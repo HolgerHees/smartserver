@@ -17,5 +17,5 @@ db_password     = "{{shared_mysql_password}}"
 location        = "{{location}}"
 timezone        = "{{timezone}}"
 
-icon_path       = "/etc/weather_service/icons/svg/"
+icon_path       = "/opt/weather_service/icons/svg/"
 lib_path        = "/var/lib/weather_service/"

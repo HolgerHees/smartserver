@@ -6,8 +6,8 @@
     group: "{{item.group}}"
     mode: "{{item.mode}}"
   with_items:
-    -  { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}camera_service/", owner: "root", group: "root" }
-    -  { mode: "u=rwx,g=rx,o=", path: "{{global_etc}}camera_service/config/", owner: "root", group: "root" }
+    -  { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}camera_service/", owner: "root", group: "root" }
+    -  { mode: "u=rwx,g=rx,o=", path: "{{global_opt}}camera_service/config/", owner: "root", group: "root" }
     -  { mode: "u=rwx,g=rx,o=", path: "{{global_lib}}camera_service/", owner: "root", group: "root" }
     -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
     -  { mode: "u=rwx,g=rx,o=rx", path: "{{htdocs_path}}/camera_service/cache/", owner: "{{system_users['www'].name}}", group: "{{system_groups['www'].name}}" }
@@ -50,7 +50,7 @@
         ipv4_address: "{{docker_camera_service_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}camera_service/:/etc/camera_service:ro,z'
+      - '{{global_opt}}camera_service/:/opt/camera_service:ro,z'
       - "{{global_lib}}camera_service/:/var/lib/camera_service:rw,z"
       - '{{htdocs_path}}camera_service/cache/:/var/lib/camera_service/cache:rw,z'
       - '/opt/shared/python:/opt/shared/python:ro,z'
@@ -67,7 +67,7 @@
 - name: copy config
   template:
     src: "templates/config.py"
-    dest: "{{global_etc}}camera_service/config/config.py"
+    dest: "{{global_opt}}camera_service/config/config.py"
     owner: root
     group: root
     mode: 0640
@@ -75,8 +75,8 @@
 
 - name: synchronize daemon
   synchronize:
-    src: "templates/etc/camera_service/{{item}}/"
-    dest: "{{global_etc}}camera_service/{{item}}/"
+    src: "templates/opt/camera_service/{{item}}/"
+    dest: "{{global_opt}}camera_service/{{item}}/"
     archive: no
     checksum: yes
     group: yes
@@ -92,8 +92,8 @@
 
 - name: copy daemon
   copy:
-    src: "templates/etc/camera_service/camera_service"
-    dest: "{{global_etc}}camera_service/camera_service"
+    src: "templates/opt/camera_service/camera_service"
+    dest: "{{global_opt}}camera_service/camera_service"
     owner: root
     group: root
     mode: 0750
@@ -113,14 +113,6 @@
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"
   
-- name: copy htdocs configs
-  template:
-    src: "templates/config.php"
-    dest: "{{htdocs_path}}/camera_service/config.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: "u=rwX,g=rX,o="
-
 - name: copy proxy config
   vars:
     config_file: "templates/etc/apache2/_.ansible.d/cameras.conf"

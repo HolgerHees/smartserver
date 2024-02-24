@@ -13,7 +13,8 @@ function getSVG( $icon, $id)
 <?php echo Ressources::getModules(["/shared/mod/websocket/", "/weather_service/"]); ?>
 <script>
 mx.WeatherCore = (function( ret ) {
-    var active_day = null;
+    ret.socket = null;
+    ret.active_day = null;
     var data = {};
 
     function buildRow(id, time, cloud, maxTemperature, minTemperature, sunshineDuration, precipitationProbability, precipitationAmount, windSpeed, windDirection, clickDate)
@@ -43,7 +44,83 @@ mx.WeatherCore = (function( ret ) {
         return row;
     }
 
-    function processData(changed_data)
+    function initButtons()
+    {
+        var weekButton = document.getElementById("weekButton");
+        weekButton.addEventListener("click",function(){
+            var todayHeadline = document.querySelector(".forecast .today .headline");
+
+            var weekList = document.querySelector(".forecast .week");
+            weekList.style.top = mx.Core.getOffsets(todayHeadline)["top"] + "px";
+
+            if( weekList.classList.contains("open") )
+            {
+              weekButton.innerHTML = mx.I18N.get("Week");
+              weekButton.classList.remove("open");
+              weekList.classList.remove("open");
+              window.setTimeout(function(){
+                if( !weekButton.classList.contains("open") )
+                {
+                  weekButton.style.zIndex = "";
+                  weekButton.classList.remove("animated");
+                }
+              },300);
+            }
+            else
+            {
+              weekButton.classList.add("animated");
+              window.setTimeout(function(){
+                weekButton.innerHTML = mx.I18N.get("Close");
+                weekButton.style.zIndex = "101";
+                weekButton.classList.add("open");
+                weekList.classList.add("open");
+              },0);
+            }
+        });
+
+        // LOCATION => 52.3476672,13.6215805 lat / long
+        // target => 1516323.13/6863234.61
+
+        var rainButton = document.querySelector("#rainButton");
+        var rainFrame = document.querySelector("#rainFrame iframe");
+        rainFrame.src="about:blank";
+        rainButton.addEventListener("click",function(){
+            var url = "https://embed.windy.com/embed2.html?lat=52.344&lon=13.618&detailLat=52.316&detailLon=13.392&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
+            //window.open(url);
+            if( rainFrame.parentNode.classList.contains("open") )
+            {
+              rainButton.classList.remove("open");
+              rainButton.innerHTML = mx.I18N.get("Radar");
+              rainFrame.parentNode.classList.remove("open");
+              rainFrame.src="";
+              window.setTimeout(function(){
+                if( !weekButton.classList.contains("open") )
+                {
+                  rainButton.style.zIndex = "";
+                  rainButton.classList.remove("animated");
+                }
+              },300);
+            }
+            else
+            {
+              rainButton.classList.add("animated");
+              window.setTimeout(function(){
+                rainButton.innerHTML = mx.I18N.get("Close");
+                rainButton.style.zIndex = "101";
+                rainButton.classList.add("open");
+                rainFrame.parentNode.classList.add("open");
+                rainFrame.src=url;
+              },0);
+            }
+        });
+    }
+    function refreshWeek(day)
+    {
+        console.log("emit");
+        mx.WeatherCore.socket.emit('getWeekData', day);
+    }
+
+    ret.processData = function(changed_data)
     {
         data = {...data, ...changed_data};
 
@@ -95,13 +172,13 @@ mx.WeatherCore = (function( ret ) {
         {
             if( data["dayActive"] )
             {
-                active_day = new Date();
-                active_day.setTime(Date.parse(data["dayActive"]));
-                mx.$(".today .title").innerHTML = mx.WeatherHelper.formatDay(active_day);
+                mx.WeatherCore.active_day = new Date();
+                mx.WeatherCore.active_day.setTime(Date.parse(data["dayActive"]));
+                mx.$(".today .title").innerHTML = mx.WeatherHelper.formatDay(mx.WeatherCore.active_day);
             }
             else
             {
-                active_day = null;
+                mx.WeatherCore.active_day = null;
                 mx.$(".today .title").innerHTML = "";
             }
         }
@@ -205,103 +282,13 @@ mx.WeatherCore = (function( ret ) {
             element.classList.remove("active");
         });
 
-        if( active_day ) mx.$("#week_" + active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()) ).classList.add("active");
+        if( mx.WeatherCore.active_day ) mx.$("#week_" + mx.WeatherCore.active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(mx.WeatherCore.active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(mx.WeatherCore.active_day.getDate()) ).classList.add("active");
 
         if( mx.$(".week").classList.contains("open") ) document.getElementById("weekButton").click();
     }
 
-    function initButtons()
-    {
-        var weekButton = document.getElementById("weekButton");
-        weekButton.addEventListener("click",function(){
-            var todayHeadline = document.querySelector(".forecast .today .headline");
-
-            var weekList = document.querySelector(".forecast .week");
-            weekList.style.top = mx.Core.getOffsets(todayHeadline)["top"] + "px";
-
-            if( weekList.classList.contains("open") )
-            {
-              weekButton.innerHTML = mx.I18N.get("Week");
-              weekButton.classList.remove("open");
-              weekList.classList.remove("open");
-              window.setTimeout(function(){
-                if( !weekButton.classList.contains("open") )
-                {
-                  weekButton.style.zIndex = "";
-                  weekButton.classList.remove("animated");
-                }
-              },300);
-            }
-            else
-            {
-              weekButton.classList.add("animated");
-              window.setTimeout(function(){
-                weekButton.innerHTML = mx.I18N.get("Close");
-                weekButton.style.zIndex = "101";
-                weekButton.classList.add("open");
-                weekList.classList.add("open");
-              },0);
-            }
-        });
-
-        // LOCATION => 52.3476672,13.6215805 lat / long
-        // target => 1516323.13/6863234.61
-
-        var rainButton = document.querySelector("#rainButton");
-        var rainFrame = document.querySelector("#rainFrame iframe");
-        rainFrame.src="about:blank";
-        rainButton.addEventListener("click",function(){
-            var url = "https://embed.windy.com/embed2.html?lat=52.344&lon=13.618&detailLat=52.316&detailLon=13.392&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
-            //window.open(url);
-            if( rainFrame.parentNode.classList.contains("open") )
-            {
-              rainButton.classList.remove("open");
-              rainButton.innerHTML = mx.I18N.get("Radar");
-              rainFrame.parentNode.classList.remove("open");
-              rainFrame.src="";
-              window.setTimeout(function(){
-                if( !weekButton.classList.contains("open") )
-                {
-                  rainButton.style.zIndex = "";
-                  rainButton.classList.remove("animated");
-                }
-              },300);
-            }
-            else
-            {
-              rainButton.classList.add("animated");
-              window.setTimeout(function(){
-                rainButton.innerHTML = mx.I18N.get("Close");
-                rainButton.style.zIndex = "101";
-                rainButton.classList.add("open");
-                rainFrame.parentNode.classList.add("open");
-                rainFrame.src=url;
-              },0);
-            }
-        });
-    }
-    var socket = null;
-    function refreshWeek(day)
-    {
-        socket.emit('getWeekData', day);
-    }
     ret.init = function()
     {
-        socket = mx.ServiceSocket.init('weather_service');
-        socket.on("connect", () => socket.emit("join", "details", active_day == null ? null : active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()) ) );
-        socket.on("data", (data) => processData( data ) );
-
-        /*socket.on("changedWeekData", function(data){
-            if( active_day == null ) return;
-            socket.emit('initWeekData', active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(active_day.getDate()));
-        });
-
-        socket.on("initCurrentData", (data) => processCurrentData( data ) );
-        socket.on("changedCurrentData", (data) => processCurrentData( data ) );
-
-        socket.on("initAstroData", (data) => processAstroData( data ) );
-        socket.on("changedAstroData", (data) => processAstroData( data ) );*/
-
         mx.I18N.process(document);
 
         initButtons();
@@ -312,6 +299,15 @@ mx.WeatherCore = (function( ret ) {
 })( mx.WeatherCore || {} );
 
 mx.OnDocReady.push( mx.WeatherCore.init );
+
+var processData = mx.OnDocReadyWrapper( mx.WeatherCore.processData );
+
+mx.OnSharedModWebsocketReady.push(function(){
+    mx.WeatherCore.socket = mx.ServiceSocket.init('weather_service', 'details', function(){
+        return mx.WeatherCore.active_day == null ? null : mx.WeatherCore.active_day.getFullYear() + '-' + mx.WeatherHelper.formatLeadingZero(mx.WeatherCore.active_day.getMonth() + 1) + '-' + mx.WeatherHelper.formatLeadingZero(mx.WeatherCore.active_day.getDate())
+    });
+    mx.WeatherCore.socket.on("data", (data) => processData( data ) );
+});
 
 </script>
 </head>

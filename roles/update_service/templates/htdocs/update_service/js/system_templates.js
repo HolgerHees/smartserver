@@ -518,7 +518,8 @@ mx.UpdateServiceTemplates = (function( ret ) {
             let action_msg_2 = "</span>";
             
             let state_msg = mx.I18N.get(last_job["state"] == "success" ? "was successful" : last_job["state"]);
-            let icon = last_job["state"] == "failed" || last_job["state"] == "crashed" ? "icon-attention red" : "icon-ok green";
+
+            let icon = mx.Logfile.getIcon(last_job["state"]);
             
             let last_job_sentence = mx.I18N.get(last_cmd_type_map[last_job["type"]]);
             let timestamp = last_job["timestamp"] + Math.round( last_job["duration"] );
@@ -526,7 +527,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
 
             let msg = last_job_sentence.fill({"1": action_msg_1, "2": action_msg_2, "3": dateFormatted, "4": state_msg });
           
-            headerMsg = "<div class=\"info\"><span class=\"" + icon + "\"></span> " + msg;
+            headerMsg = "<div class=\"info\"><span class='logstate " + last_job["state"] + "'>" + icon + "</span> " + msg;
             headerMsg += "</div><div class=\"buttons\"><div class=\"form button toggle\" onclick=\"mx.UpdateServiceHelper.toggleTable(this,'lastRunningJobsDetails')\"></div></div>";
 
             let rows = [];
@@ -539,7 +540,7 @@ mx.UpdateServiceTemplates = (function( ret ) {
                         { "class": "state " + job["state"] },
                         { "value": mx.I18N.get(cmd_type_map[job["type"]]) },
                         { "value": job["user"] },
-                        { "value": mx.Logfile.formatState(job["state"]) },
+                        { "value": '<span class="state ' + job["state"] + '">' + mx.Logfile.formatState(job["state"]) + '</span>' },
                         { "value": mx.Logfile.formatDuration( job["duration"].split(".")[0] ) },
                         { "value": date.toLocaleString(), "class": "indexLogDate" },
                     ]

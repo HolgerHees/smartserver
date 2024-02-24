@@ -6,8 +6,8 @@
     group: root
     mode: 0750
   with_items:
-    - "{{global_etc}}weather_service/"
-    - "{{global_etc}}weather_service/config/"
+    - "{{global_opt}}weather_service/"
+    - "{{global_opt}}weather_service/config/"
     - "{{global_lib}}weather_service/"
 
 - name: build docker image
@@ -38,7 +38,7 @@
         ipv4_address: "{{docker_weather_service_ip}}"
     networks_cli_compatible: yes
     volumes:
-      - '{{global_etc}}weather_service/:/etc/weather_service:ro,z'
+      - '{{global_opt}}weather_service/:/opt/weather_service:ro,z'
       - "{{global_lib}}weather_service/:/var/lib/weather_service:rw,z"
       - '/opt/shared/python:/opt/shared/python:ro,z'
   notify: "restart weather_service"
@@ -87,7 +87,7 @@
 - name: copy config
   template:
     src: "templates/config.py"
-    dest: "{{global_etc}}weather_service/config/config.py"
+    dest: "{{global_opt}}weather_service/config/config.py"
     owner: root
     group: root
     mode: 0640
@@ -95,8 +95,8 @@
 
 - name: synchronize daemon
   synchronize:
-    src: "templates/etc/weather_service/{{item}}/"
-    dest: "{{global_etc}}weather_service/{{item}}/"
+    src: "templates/opt/weather_service/{{item}}/"
+    dest: "{{global_opt}}weather_service/{{item}}/"
     archive: no
     checksum: yes
     group: yes
@@ -113,8 +113,8 @@
 
 - name: copy daemon
   copy:
-    src: "templates/etc/weather_service/weather_service"
-    dest: "{{global_etc}}weather_service/weather_service"
+    src: "templates/opt/weather_service/weather_service"
+    dest: "{{global_opt}}weather_service/weather_service"
     owner: root
     group: root
     mode: 0750

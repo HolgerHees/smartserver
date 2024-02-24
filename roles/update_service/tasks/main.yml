@@ -16,9 +16,28 @@
   with_items:
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_service" }
     - { mode: "u=rwx,g=rx,o=", path: "/opt/update_service/config" }
+    - { mode: "u=rwx,g=rx,o=", path: "/opt/update_service/env" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_lib}}update_service/outdated_roles" }
     - { mode: "u=rwx,g=rx,o=rx", path: "{{global_log}}update_service/" }
+
+- name: install needed python packages
+  pip:
+    name:
+      - flask==1.0.4
+      - Werkzeug==2.0.3
+      - flask-socketio=={{flask_socketio_version}} # used for daemon services like update_service
+      - simple-websocket
+      - pexpect
+      - pyinotify
+      - requests
+    virtualenv: /opt/update_service/env
+    virtualenv_command: "python3 -m venv"
+  register: installer_state
+
+- name: install python libs
+  shell: "/opt/update_service/env/bin/python3 /opt/shared/python/install.py"
+  when: installer_state.changed
 
 - name: synchronize service
   synchronize:
@@ -62,15 +81,6 @@
     rsync_opts:
       - "--chown={{system_users['www'].name}}:{{system_groups['www'].name}}"
       - "--chmod=D755,F644"
-  tags: ['apache_webui_page']
-
-- name: copy webui config
-  template:
-    src: "templates/config.php"
-    dest: "{{htdocs_path}}update_service/config.php"
-    owner: "{{system_users['www'].name}}"
-    group: "{{system_groups['www'].name}}"
-    mode: 0750
   tags: ['apache_webui_page']
 
 - name: register webui

@@ -185,65 +185,66 @@ class DHCPListener(threading.Thread):
         is_supended = False
         
         while self.is_running:
-            output = self.dhcpListenerProcess.stdout.readline()
-            #self.dhcpListenerProcess.stdout.flush()
-            if output == '':# and self.dhcpListenerProcess.poll() is not None:
-                if not self.is_running:
-                    break
-                raise Exception("DHCP Listener stopped")
-
             if is_supended:
                 logging.warning("Resume DHCPListener")
                 is_supended = False
 
-            line = output.strip()
-            if "BOOTP/DHCP" in line:
-                client_mac = None
-                client_ip = None
+            output = self.dhcpListenerProcess.stdout.readline()
+            #self.dhcpListenerProcess.stdout.flush()
+            if output == '':
+                if not self.is_running:
+                    break
+                if self.dhcpListenerProcess.poll() is not None:
+                    raise Exception("DHCP Listener stopped")
             else:
-                if line.startswith("Client-Ethernet-Address"):
-                    match = re.search(r"^Client-Ethernet-Address ({})$".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), line)
-                    if match:
-                        client_mac = match[1]
-                    else:
-                        logging.error("Can't parse Mac")
-                        client_mac = None
-
-                elif line.startswith("Requested-IP") and client_mac is not None:
-                    match = re.search(r"^Requested-IP.*?({})$".format("[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"), line)
-                    if match:
-                        client_ip = match[1]
-                    else:
-                        logging.error("Can't parse IP")
-                        client_ip = None
-                        continue
-
-                    try:
-                        client_dns = self.cache.nslookup(client_ip)
-
-                        self.cache.lock(self)
-
-                        device = self.cache.getDevice(client_mac)
-                        device.setIP("dhcp_listener", 75, client_ip)
-                        device.setDNS("nslookup", 1, client_dns)
-                        self.cache.confirmDevice( self, device )
-                        logging.info("New dhcp request for {}".format(device))
-
-                        self.arpscanner._refreshDevice( device, True )
-
-                        self.cache.unlock(self)
-
-                    except Exception as e:
-                        self.cache.cleanLocks(self)
-                        logging.error("DHCPListener checker got unexpected exception. Will suspend for 15 minutes.")
-                        logging.error(traceback.format_exc())
-                        is_supended = True
-
-                    if is_supended:
-                        self.event.wait(900)
-
+                line = output.strip()
+                if "BOOTP/DHCP" in line:
                     client_mac = None
                     client_ip = None
+                else:
+                    if line.startswith("Client-Ethernet-Address"):
+                        match = re.search(r"^Client-Ethernet-Address ({})$".format("[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}:[a-z0-9]{2}"), line)
+                        if match:
+                            client_mac = match[1]
+                        else:
+                            logging.error("Can't parse Mac")
+                            client_mac = None
+
+                    elif line.startswith("Requested-IP") and client_mac is not None:
+                        match = re.search(r"^Requested-IP.*?({})$".format("[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"), line)
+                        if match:
+                            client_ip = match[1]
+                        else:
+                            logging.error("Can't parse IP")
+                            client_ip = None
+                            continue
+
+                        try:
+                            client_dns = self.cache.nslookup(client_ip)
+
+                            self.cache.lock(self)
+
+                            device = self.cache.getDevice(client_mac)
+                            device.setIP("dhcp_listener", 75, client_ip)
+                            device.setDNS("nslookup", 1, client_dns)
+                            self.cache.confirmDevice( self, device )
+                            logging.info("New dhcp request for {}".format(device))
+
+                            self.arpscanner._refreshDevice( device, True )
+
+                            self.cache.unlock(self)
+
+                        except Exception as e:
+                            self.cache.cleanLocks(self)
+                            logging.error("DHCPListener checker got unexpected exception. Will suspend for 15 minutes.")
+                            logging.error(traceback.format_exc())
+                            is_supended = True
+
+                        if is_supended:
+                            self.event.wait(900)
+
+                        client_mac = None
+                        client_ip = None
                             
         rc = self.dhcpListenerProcess.poll()
         

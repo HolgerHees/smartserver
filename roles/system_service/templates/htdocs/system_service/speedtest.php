@@ -1,5 +1,4 @@
 <?php
-require "../shared/libs/i18n.php";
 require "../shared/libs/ressources.php";
 ?>
 <html style="background-color: transparent !important;">
@@ -8,10 +7,8 @@ require "../shared/libs/ressources.php";
 <?php echo Ressources::getModules(["/shared/mod/websocket/","/system_service/"]); ?>
 <script>
 mx.UNCore = (function( ret ) {
-    function processData(data)
+    ret.processData = function(data)
     {
-        console.log(data);
-
         let btn = mx.$(".speedtest.button");
         if( data["is_running"] )
         {
@@ -33,19 +30,11 @@ mx.UNCore = (function( ret ) {
     ret.init = function()
     { 
         mx.I18N.process(document);
-        
-        let socket = mx.ServiceSocket.init('system_service');
-        socket.on("connect", () => socket.emit('initData', "initSpeedtestData"));
-        socket.on("initSpeedtestData", (data) => processData(data));
-        socket.on("changedSpeedtestData", (data) => processData(data));
     }
 
     ret.trigger = function()
     {
-        if( mx.$(".speedtest.button").classList.contains("disabled") )
-        {
-            return;
-        }
+        if( mx.$(".speedtest.button").classList.contains("disabled") ) return;
 
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open( "GET", "/system_service/api/triggerSpeedtest/", false );
@@ -55,6 +44,13 @@ mx.UNCore = (function( ret ) {
 })( mx.UNCore || {} );
 
 mx.OnDocReady.push( mx.UNCore.init );
+
+var processData = mx.OnDocReadyWrapper( mx.UNCore.processData );
+
+mx.OnSharedModWebsocketReady.push(function(){
+    let socket = mx.ServiceSocket.init('system_service', "speedtest");
+    socket.on("data", (data) => processData(data));
+});
 </script>
 </head>
 <body class="inline" style="background-color: transparent !important;">

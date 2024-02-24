@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/opt/update_service/env/bin/python3
 
 import logging
 import glob
@@ -18,6 +18,7 @@ from server.watcher.deployment_tags import DeploymentTagsWatcher
 from server.watcher.software_version import SoftwareVersionWatcher
 
 from smartserver.server import Server, serverWeb, serverSocket
+from smartserver import logfile
 
 from config import config
 
@@ -97,6 +98,10 @@ class Handler(Server):
         else:
             return self.buildStatusResult(1, u"Job not started" )
 
+    def _fillWidgetRunning(self, result = {}):
+         result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_WAITING ] or self.cmd_executer.getExternalCmdType(False) != None
+         return result
+
     def _fillWidgetAttention(self, result = {}):
         workflow_state = self.cmd_workflow.getWorkflowState()
         result["needs_attention"] = ( workflow_state is not None and CmdBuilder.CHECK_WRONG_UPDATE_STATE_SUFFIX in workflow_state ) or ( self.service_need_restart or self.process_watcher.isUpdateServiceOutdated() )
@@ -121,37 +126,40 @@ class Handler(Server):
 
     def notifyWatcherTagState(self):
         if self.isSocketRoomActive("updates"):
-            self.emitSocketData('data', { "deployment_tags": self.deployment_tags_watcher.getTags() }, "updates")
+            self.emitSocketData('updates:data', { "deployment_tags": self.deployment_tags_watcher.getTags() }, "updates")
 
     def notifyWatcherDeploymentState(self):
         if self.isSocketRoomActive("updates"):
-            self.emitSocketData('data', { "has_encrypted_vault": self.deployment_state_watcher.hasEncryptedVault() }, "updates")
+            self.emitSocketData('updates:data', { "has_encrypted_vault": self.deployment_state_watcher.hasEncryptedVault() }, "updates")
 
     def notifyWatcherProcessState(self):
         if self.isSocketRoomActive("widget"):
             result = self._fillWidgetActions()
             result = self._fillWidgetAttention(result)
-            self.emitSocketData('data', result, "widget")
-        elif self.isSocketRoomActive("updates"):
+            self.emitSocketData('widget:data', result, "widget")
+
+        if self.isSocketRoomActive("updates"):
             result = self._fillUpdatesRebootNeeded()
             result = self._fillUpdatesNeedsRestart(result)
             result["last_refreshed"] = { "processes": self.process_watcher.getLastRefreshAsTimestamp() }
             result["outdated_processes"] = self.process_watcher.getOutdatedProcesses()
-            self.emitSocketData('data', result, "updates")
+            self.emitSocketData('updates:data', result, "updates")
 
     def notifyWatcherDependencyState(self):
         if self.isSocketRoomActive("widget"):
-            self.emitSocketData('data', self._fillWidgetActions(), "widget")
-        elif self.isSocketRoomActive("updates"):
-            self.emitSocketData('data', { "outdated_roles": self.dependency_watcher.getOutdatedRoles() }, "updates")
+            self.emitSocketData('widget:data', self._fillWidgetActions(), "widget")
+
+        if self.isSocketRoomActive("updates"):
+            self.emitSocketData('updates:data', { "outdated_roles": self.dependency_watcher.getOutdatedRoles() }, "updates")
 
     def notifyWatcherSystemUpdates(self):
         if self.isSocketRoomActive("widget"):
             result = self._fillWidgetActions()
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-            self.emitSocketData('data', result, "widget")
-        elif self.isSocketRoomActive("updates"):
+            self.emitSocketData('widget:data', result, "widget")
+
+        if self.isSocketRoomActive("updates"):
             result = self._fillUpdatesRebootNeeded()
             result["system_updates"] = self.system_update_watcher.getSystemUpdates()
             result["system_updates_hash"] = self.system_update_watcher.getSystemUpdatesHash()
@@ -162,45 +170,60 @@ class Handler(Server):
                 "system_updates": self.system_update_watcher.getSystemUpdatesLastModifiedAsTimestamp(),
                 "smartserver_changes": self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
             }
-            self.emitSocketData('data', result, "updates")
+            self.emitSocketData('updates:data', result, "updates")
 
     def notifyWatcherSoftwareVersions(self, field, data):
         if field == "software":
             if self.isSocketRoomActive("software"):
-                self.emitSocketData('data', { "software_versions": data }, "software")
+                self.emitSocketData('software:data', { "software_versions": data }, "software")
         elif field == "update_count":
             if self.isSocketRoomActive("widget"):
-                self.emitSocketData('data', { "component_updates": data }, "widget")
+                self.emitSocketData('widget:data', { "component_updates": data }, "widget")
 
-    def notifyExecutorJobStatus(self, data):
+    def notifyHandlerRestartState(self):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('widget:data', self._fillWidgetAttention(), "widget")
+
+        if self.isSocketRoomActive("updates"):
+            self.emitSocketData('updates:data', self._fillUpdatesNeedsRestart(), "updates")
+
+    def notifyWorkflowState(self):
+        if self.isSocketRoomActive("widget"):
+            result = self._fillWidgetAttention()
+            result = self._fillWidgetRunning(result);
+            self.emitSocketData('widget:data', result, "widget")
+
+        if self.isSocketRoomActive("updates"):
+            self.emitSocketData('updates:data', { "workflow_status": self.cmd_workflow.getWorkflowState() }, "updates")
+
+    def notifyChangedExternalCmdState(self):
+        if self.isSocketRoomActive("widget"):
+            self.emitSocketData('widget:data', self._fillWidgetRunning(), "widget")
+
+    def notifyChangedCmdExecuterJobsRefreshed(self, data):
+        if self.isSocketRoomActive("updates"):
+            result = {}
+            result["jobs"] = self.cmd_executer.getJobs()
+            self.emitSocketData('updates:data', result, "updates")
+
+    def notifyChangedCmdExecuterJobState(self, data):
         if self.isSocketRoomActive("software"):
-            self.emitSocketData('data', { "job_status": data }, "software")
+            self.emitSocketData('software:data', { "job_status": data }, "software")
 
-        elif self.isSocketRoomActive("updates"):
+        if self.isSocketRoomActive("updates"):
             result = {}
             result["job_status"] = data
             result["job_status"]["logfile"] = self.cmd_executer.getCurrentJobLogfile()
             result["job_status"]["killable"] = self.cmd_executer.getCurrentJobCmdType() != "system_reboot"
-            if result["job_status"]["job"] is None:
-                result["jobs"] = self.cmd_executer.getJobs()
-            self.emitSocketData('data', result, "updates")
+            self.emitSocketData('updates:data', result, "updates")
 
-    def notifyHandlerRestartState(self):
-        if self.isSocketRoomActive("widget"):
-            self.emitSocketData('data', self._fillWidgetAttention(), "widget")
+    def notifyChangedCmdExecuterState(self, state, topic):
+        if self.isSocketRoomActive("update_details_" + topic):
+            self.emitSocketData("update_details_" + topic + ":data", { "job": {"state": state } }, "update_details_" + topic)
 
-        elif self.isSocketRoomActive("updates"):
-            self.emitSocketData('data', self._fillUpdatesNeedsRestart(), "updates")
-
-    def notifyWorkflowState(self):
-        self._triggerHighAccuracy()
-
-        if self.isSocketRoomActive("widget"):
-            result = self._fillWidgetAttention()
-            result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_WAITING ]
-            self.emitSocketData('data', result, "widget")
-        elif self.isSocketRoomActive("updates"):
-            self.emitSocketData('data', { "workflow_status": self.cmd_workflow.getWorkflowState() }, "updates")
+    def notifyChangedCmdExecuterLog(self, line, topic):
+        if self.isSocketRoomActive("update_details_" + topic):
+            self.emitSocketData("update_details_" + topic + ":data", { "logline": logfile.LogFormatter.formatLine(line) }, "update_details_" + topic)
 
     def onSocketRoomJoin(self, sid, room, data = None):
         super().onSocketRoomJoin(sid, room, data)
@@ -210,13 +233,13 @@ class Handler(Server):
             result["component_updates"] = self.software_versions_watcher.getVersionCount()
             result["system_updates"] = len(self.system_update_watcher.getSystemUpdates())
             result["smartserver_changes"] = len(self.system_update_watcher.getSmartserverChanges())
-            result["is_running"] = self.cmd_workflow.getWorkflowState() in [ CmdWorkflow.STATE_RUNNING, CmdWorkflow.STATE_WAITING ]
             result = self._fillWidgetAttention(result)
+            result = self._fillWidgetRunning(result);
             result = self._fillWidgetActions(result)
-            self.emitSocketData('data', result, room)
+            self.emitSocketData('widget:data', result, room)
 
         elif room == "software":
-            self.emitSocketData('data', { "job_status": self.cmd_executer.getJobStatus(), "software_versions": self.software_versions_watcher.getSoftwareVersions() }, room)
+            self.emitSocketData('software:data', { "job_status": self.cmd_executer.getJobStatus(), "software_versions": self.software_versions_watcher.getSoftwareVersions() }, room)
 
         elif room == "updates":
             result = {}
@@ -249,7 +272,30 @@ class Handler(Server):
                 "smartserver_changes": self.system_update_watcher.getSmartserverChangesLastModifiedAsTimestamp()
             }
 
-            self.emitSocketData('data', result, room)
+            self.emitSocketData('updates:data', result, room)
+
+        elif room == "update_details":
+            files = CmdExecuter.getLogfiles(config.job_log_folder, data["datetime"], data["cmd"], data["username"])
+            if len(files) == 0:
+                self.emitSocketData('update_details:data', {"error": "No file found" }, room)
+                return
+
+            if len(files) > 1:
+                self.emitSocketData('update_details:data', {"error": "Too many files found" }, room)
+                return
+
+            result = {}
+            if self.cmd_executer.isRunning(False):
+                update_topic = CmdExecuter.getTopicName(data["datetime"], data["cmd"], data["username"])
+                result["topic"] = "update_details_" + update_topic
+
+            result["job"] = CmdExecuter.getLogFileDetails(files[0])
+
+            logformatter = logfile.LogFormatter(files[0]);
+            result["log"] = []
+            for logline in logformatter:
+                result["log"].append(logline)
+            self.emitSocketData('update_details:data', result, room)
 
     def onSocketConnect(self, sid):
         super().onSocketConnect(sid)
@@ -270,13 +316,13 @@ class Handler(Server):
 def refreshSoftwareVersionCheck():
     cmd = handler.cmd_builder.buildSoftwareVersionCheckCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     status = handler.runWorkflow([ cmd ], "software", True);
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("software:status", status, handler.getSocketClient())
 
 @serverSocket.on('refreshSystemUpdateCheck')
 def refreshSystemUpdateCheck(params):
     cmd = handler.cmd_builder.buildSystemUpdateCheckBlock(handler.getRequestHeader('X-Forwarded-User'),params["type"] if "type" in params else None)
     status = handler.runWorkflow([ cmd ], "update", True );
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('restartService')
 def restartService(params):
@@ -285,13 +331,13 @@ def restartService(params):
     else:
         cmd = handler.cmd_builder.buildRestartServiceCmdBlock(handler.getRequestHeader('X-Forwarded-User'),params["service"])
         status = handler.runWorkflow([ cmd ], "update", True );
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('restartDaemon')
 def restartDaemon(params):
     cmd = handler.cmd_builder.buildRestartDaemonCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     status = handler.runWorkflow([ cmd ], "update", False );
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('installSystemUpdates')
 def installSystemUpdates(params):
@@ -304,7 +350,7 @@ def installSystemUpdates(params):
             handler.cmd_builder.buildInstallSystemUpdateCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
         ]
         status = handler.runWorkflow(cmds, "update", True );
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('deploySmartserverUpdates')
 def deploySmartserverUpdates(params):
@@ -325,13 +371,13 @@ def deploySmartserverUpdates(params):
     else:
         status = handler.buildStatusResult(1, "Missing tag");
 
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('systemReboot')
 def systemReboot(params):
     cmd = handler.cmd_builder.buildSystemRebootCmdBlock(handler.getRequestHeader('X-Forwarded-User'))
     status = handler.runWorkflow([ cmd ], "update", True );
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('updateWorkflow')
 def updateWorkflow(params):
@@ -350,13 +396,13 @@ def updateWorkflow(params):
             handler.cmd_builder.buildFunctionBlock( handler.getRequestHeader('X-Forwarded-User'), "cmd_builder.buildDeploymentSmartserverUpdateCmdBlockIfNecessary", params )
         ]
         status = handler.runWorkflow(workflow, "update", True );
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('killProcess')
 def killProcess(params):
     handler.cmd_workflow.killWorkflow()
     status = handler.buildStatusResult(0, u"Job killed")
-    handler.emitSocketData("status", status, handler.getSocketClient())
+    handler.emitSocketData("updates:status", status, handler.getSocketClient())
 
 @serverSocket.on('initSoftware')
 def initSoftware():

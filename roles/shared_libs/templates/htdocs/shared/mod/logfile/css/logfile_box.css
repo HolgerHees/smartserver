@@ -23,42 +23,49 @@ div.form.table.logfileBox > div.row > div > span:first-child {
 div.form.table.logfileBox > div.row > div.running {
   background-color: #ffd768;
 }
+span.logstate.running,
 div.form.table.logfileBox > div.row > div > span.state.running {
   color: #ffd768;
 }
 div.form.table.logfileBox > div.row > div.success {
   background-color: var(--color-green);
 }
+span.logstate.success,
 div.form.table.logfileBox > div.row > div > span.state.success {
   color: var(--color-green);
 }
 div.form.table.logfileBox > div.row > div.stopped {
   background-color: #959595;
 }
+span.logstate.stopped,
 div.form.table.logfileBox > div.row > div > span.state.stopped {
   color: #959595;
 }
 div.form.table.logfileBox > div.row > div.crashed {
   background-color: var(--color-red);
 }
+span.logstate.crashed,
 div.form.table.logfileBox > div.row > div > span.state.crashed {
   color: var(--color-red);
 }
 div.form.table.logfileBox > div.row > div.retry {
   background-color: #541edc;
 }
+span.logstate.retry,
 div.form.table.logfileBox > div.row > div > span.state.retry {
   color: #541edc;
 }
 div.form.table.logfileBox > div.row > div.failed {
   background-color: var(--color-red);
 }
+span.logstate.failed,
 div.form.table.logfileBox > div.row > div > span.state.failed {
   color: var(--color-red);
 }
 div.form.table.logfileBox > div.row > div > span.state {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 div.form.table.logfileBox > div.row > div > span.state > span.text {
   padding-right: 5px;

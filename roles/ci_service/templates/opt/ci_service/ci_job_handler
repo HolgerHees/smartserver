@@ -1,161 +1,52 @@
 #!/usr/bin/python3
 
-import os
-import traceback
 import sys
 
-import urllib.parse
-
-from lib import helper
-from lib import status
-from lib import service
-from lib import job
-from lib import git
-from lib import log
+import logging
+import requests
 
 from config import config
 
-from smartserver.github import GitHub
-from smartserver import command
-from smartserver import info
 
-import pexpect 
+handler = logging.StreamHandler(sys.stdout)
 
-branch = "master"
-
-#deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "fedora" }, { "config": "demo", "os": "ubuntu" } ]
-deployments = [ { "config": "demo", "os": "suse" }, { "config": "demo", "os": "alma" }, { "config": "demo", "os": "ubuntu" } ]
-
-repository_owner = GitHub.getRepositoryOwner(config.repository_url)
+logging.basicConfig(
+    handlers = [handler],
+    level=logging.INFO,
+    datefmt="%d.%m.%Y %H:%M:%S"
+)
 
 cmd = ""
 if len(sys.argv) >= 2:
     cmd = sys.argv[1]
     
 if cmd == "status":
-    service.showRunningJobs(config.lib_dir)
+    result = requests.get("http://{}:{}/status/".format(config.service_ip, config.service_port))
+    print(result.text)
     exit(0)
 elif cmd == "clean":
-    if len(sys.argv) == 3:
-        vid = sys.argv[2]
-        service.cleanRunningJobs(vid,config.lib_dir)
-        exit(0)
-    else:
-        log.error(u"Missing vid:\n\nUsage: ./ci_service clean <vid>|all")
-        exit(1)
+    result = requests.get("http://{}:{}/clean/".format(config.service_ip, config.service_port))
+    print(result.text)
+    exit(0)
 elif cmd == "stop":
-    stopped_state_obj = service.stopRunningJob(config.status_file,config.log_dir,config.lib_dir,branch)
-    if stopped_state_obj != None and config.auth_token != "":
-        log.info(u"Set github state to '{}' for deployment '{}' on commit '{}'".format("error", stopped_state_obj['deployment'], stopped_state_obj["git_hash"]))
-        GitHub.setState(repository_owner,config.auth_token,stopped_state_obj["git_hash"],"error",stopped_state_obj['deployment'],"Build stopped")
-              
-        log.info(u"Cancel pending github state on commit '{}'".format(stopped_state_obj["git_hash"]))
-        GitHub.cancelPendingStates(repository_owner, config.auth_token, stopped_state_obj["git_hash"], "Build skipped")
+    result = requests.get("http://{}:{}/stop/".format(config.service_ip, config.service_port))
+    print(result.text)
     exit(0)
 elif cmd == "start" or cmd == "restart":
-    if not info.Info.isDefaultConnectionActive():
-        log.info("Skip job, because default isp connection is inactive")
-        exit(0)
-
-    processed_git_hash = service.checkRunningJob(config.status_file)
-
-    git.initRepository(config.repository_dir, config.repository_url, config.build_dir)
-
-    git.updateRepository(config.repository_dir,branch)
-
-    current_git_hash = git.getHash(config.repository_dir)
-
-    if processed_git_hash != current_git_hash or cmd == "restart":
-        if cmd == "restart":
-            if len(sys.argv) == 3:
-                start_os = sys.argv[2]
-            else:
-                log.error(u"Missing type:\n\nUsage: ./ci_service restart <os>|failed|all")
-                exit(1)
+    if cmd == "restart":
+        if len(sys.argv) == 3:
+            start_os = sys.argv[2]
         else:
-            start_os = "all"
-                
-        status.setState(config.status_file,u"running")
-        log.info(u"Check for commit '{}' started.".format(current_git_hash))
-
-        pid = os.fork()
-        if pid == 0:
-            try:
-                helper.log( u"Check for commit {} started".format(current_git_hash))
-                
-                status.setGitHash(config.status_file,current_git_hash)
-                
-                commit = git.getLog(config.repository_dir,current_git_hash)
-                
-                job_obj = job.Job(config.log_dir, config.lib_dir, config.repository_dir, config.status_file, branch, current_git_hash, commit )
-                
-                if config.auth_token != "":
-                    # get all github states
-                    deployment_states = GitHub.getStates(repository_owner,current_git_hash)
-
-                    # mark all non successful jobs as pending and clean others
-                    _deployments = []
-                    for deployment in deployments:
-                        if start_os != "all":
-                            if start_os == "failed":
-                                if deployment['os'] in deployment_states and deployment_states[deployment['os']] == "success":
-                                    continue
-                            elif start_os != deployment['os']:
-                                continue
-
-                        GitHub.setState(repository_owner,config.auth_token,current_git_hash,"pending",deployment['os'],"Build pending")
-                        _deployments.append(deployment)
-
-                    deployments = _deployments
-                
-                is_failed_job = False
-                for deployment in deployments:
-                    status.setDeployment(config.status_file,deployment['config'],deployment['os'])
-                    
-                    successful, start_time_str, error_reason = job_obj.startCheck( deployment['config'], deployment['os'], None )
-
-                    if not successful:
-                        if config.auth_token != "":
-                            GitHub.setState(repository_owner,config.auth_token,current_git_hash,"failure",deployment['os'],"Build failed")
-                            
-                        log_url = "https://{}/ci_service/details/?datetime={}&config={}&os={}&branch={}&hash={}".format(config.server_host,start_time_str,deployment['config'],deployment['os'],branch,current_git_hash)
-                        log_url = urllib.parse.quote_plus(log_url)
-                        
-                        body = "Reason: {}".format(error_reason)
-                        body += "\n\n"
-                        body += "Logs: https://{}/?ref=admin|system|ci|{}".format(config.server_host,log_url)
-                        body += "\n\n"
-                        body += "Commit: https://github.com/{}/commit/{}".format(repository_owner,current_git_hash)
-                        
-                        command.sendEmail("root", "CI Test for '{}' on '{}' not successful".format(deployment['config'],deployment['os']),body)
-                        
-                        is_failed_job = True
-                        break
-                    else:
-                        if config.auth_token != "":
-                            GitHub.setState(repository_owner,config.auth_token,current_git_hash,"success",deployment['os'],"Build succeeded")
-                
-                status.setState(config.status_file,u"finished")
-
-                if is_failed_job and config.auth_token != "":
-                    GitHub.cancelPendingStates(repository_owner, config.auth_token, current_git_hash, "Build skipped")
-
-                helper.log( u"Check for commit {} finished".format(current_git_hash))
-            except:
-                helper.log( traceback.format_exc(), "err" )
-                status.setState(config.status_file,u"crashed")
-
-                if config.auth_token != "":
-                    GitHub.cancelPendingStates(repository_owner, config.auth_token, current_git_hash, "Build crashed")
-            exit(0)
-        else:
-            exit(0)
+            logging.error(u"Missing type:\n\nUsage: ./ci_service restart <os>|failed|all")
+            exit(1)
     else:
-        log.info(u"Nothing to do. Commit '{}' already processed.".format(current_git_hash))
-        exit(0)
+        start_os = "all"
+    result = requests.post("http://{}:{}/start/".format(config.service_ip, config.service_port), data={"cmd": cmd, "start_os": start_os })
+    print(result.text)
+    exit(0)
 elif cmd != "":
-    log.error(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop|clean|status>".format(cmd))
+    logging.error(u"Unknown command: '{}'\n\nUsage: ./ci_service <start|restart|stop|clean|status>".format(cmd))
     exit(1)
 else:
-    log.error(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop|clean|status>")
+    logging.error(u"Missing command:\n\nUsage: ./ci_service <start|restart|stop|clean|status>")
     exit(1)

@@ -290,18 +290,5 @@ mx.Core = (function( ret ) {
         return [].concat.apply([], query).join('&');
     }
 
-    ret.OnDocReady = function()
-    {
-        for (var n in mx.OnDocReady) {
-            mx.OnDocReady[n].call();
-        }
-
-        mx.OnDocReady = {
-            push: function(func) {
-                func.call();
-            }
-        };
-    };
-
     return ret;
 })( mx.Core || {} );

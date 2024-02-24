@@ -69,11 +69,14 @@ div.scrollControl, div.goToControl {
     right: 0;
     width: 15px;
     height: 15px;
-    opacity: 0.9;
     margin: 15px;
+    opacity: 0;
     cursor: pointer;
 }
-div.scrollControl:hover, div.goToControl:hover {
+div.scrollControl.enabled, div.goToControl.enabled {
+    opacity: 0.9;
+}
+div.scrollControl.enabled:hover, div.goToControl.enabled:hover {
     opacity: 1.0;
 }
 
