@@ -8,17 +8,15 @@ import glob
 from datetime import datetime, timezone
 from collections import Counter
 
-from config import config
-
 from smartserver.github import GitHub
 from smartserver import command
 
 class DeploymentUpdate:
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config
         
         self.deployment_state = None
-        if os.path.isfile(config.deployment_state_file):
+        if os.path.isfile(self.config.deployment_state_file):
             with open(config.deployment_state_file, 'r') as f:
                 try:
                     self.deployment_state = json.load(f)
@@ -54,8 +52,8 @@ class DeploymentUpdate:
             uncommitted_changes = result.stdout.decode("utf-8").strip().split("\n")
 
             last_deployment_state = {}
-            if os.path.isfile(config.deployment_state_file):
-                with open(config.deployment_state_file, 'r') as f:
+            if os.path.isfile(self.config.deployment_state_file):
+                with open(self.config.deployment_state_file, 'r') as f:
                     last_deployment_state = json.load(f)
             
             repository_owner = GitHub.getRepositoryOwner(self.config.git_remote) if "github" in self.config.git_remote else None
@@ -69,7 +67,7 @@ class DeploymentUpdate:
                     commits = result.stdout.decode("utf-8").strip().split("\n")
                     last_git_hash = commits[0].split("\t")[0]
 
-                    result = GitHub.getStates(repository_owner,last_git_hash)
+                    result = GitHub.getStates(repository_owner, self.config.global_config["github_auth_token"], last_git_hash)
                     
                     states = Counter(result.values())
                     
@@ -195,12 +193,12 @@ class DeploymentUpdate:
                     if path not in filtered_files or "A" in flag:
                         filtered_files[path] = {"flag": flag, "path": path}
                             
-            files = glob.glob("{}/**/**/*".format(config.deployment_config_path), recursive = True)
+            files = glob.glob("{}/**/**/*".format(self.config.deployment_config_path), recursive = True)
             config_files = {}
             for filename in files:
                 file_stat = os.stat(filename)
                 if file_stat.st_mtime > last_deployment.timestamp():
-                    path = filename[len(config.deployment_directory):]
+                    path = filename[len(self.config.deployment_directory):]
                     config_files[path] = {"flag": "M", "path": path}
 
             lines = list(config_files.values()) + list(filtered_files.values())

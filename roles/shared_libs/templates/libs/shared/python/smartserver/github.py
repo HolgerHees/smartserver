@@ -11,7 +11,7 @@ class GitHub():
 
     @staticmethod
     def getStates(repository_owner, access_token, git_hash ):
-        headers = { "Authorization": "token {}".format(access_token) } if git_hash else {}
+        headers = { "Authorization": "token {}".format(access_token) } if access_token else None
 
         statusUrl = "https://api.github.com/repos/{}/statuses/{}".format(repository_owner,git_hash)
         result = requests.get(statusUrl, headers=headers)
